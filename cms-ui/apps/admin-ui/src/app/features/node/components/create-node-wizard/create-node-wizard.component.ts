@@ -1,22 +1,17 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
 import { FeatureOperations, LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
-import { WizardComponent } from '@admin-ui/shared';
-import { Wizard } from '@admin-ui/shared';
+import { Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Language, Node, NodeCreateRequest, NodeFeatureModel, NodeHostnameType, NodePreviewurlType, Raw } from '@gentics/cms-models';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { createNestedControlValidator } from '@gentics/cms-components';
+import { Language, Node, NodeCreateRequest, NodeFeatureModel, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
-import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import { NodePropertiesFormData } from '..';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
-import { NodePropertiesComponent } from '../node-properties/node-properties.component';
+import { NodePropertiesComponent, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-
-const FG_PROPERTIES_DEFAULT: Partial<NodePropertiesFormData> = {
-    hostnameType: NodeHostnameType.VALUE,
-    meshPreviewUrlType: NodePreviewurlType.VALUE,
-};
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     urlRenderWayFiles: 0,
@@ -28,7 +23,9 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
 })
-export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<Node<Raw>> {
+export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
+
+    public readonly NodePropertiesMode = NodePropertiesMode;
 
     @ViewChild(WizardComponent, { static: true })
     wizard: WizardComponent;
@@ -37,12 +34,12 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
     nodeProperties: NodePropertiesComponent;
 
     /** Form data of tab 'Properties' */
-    fgProperties: UntypedFormGroup;
+    fgProperties: FormControl<NodePropertiesFormData>;
 
     isChildNode: boolean;
 
     /** form of tab 'Publishing' */
-    fgPublishing: UntypedFormGroup;
+    fgPublishing: FormControl<NodePublishingPropertiesFormData>;
 
     /** form of tab 'Node Features' */
     fgNodeFeatures: UntypedFormGroup;
@@ -75,34 +72,17 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
         );
     }
 
-    ngAfterViewInit(): void {
-        // We must set the default values here, because if we do it in initForms() the form
-        // will not emit an invalid value, because of the missing properties.
-        this.fgProperties.patchValue({ data: FG_PROPERTIES_DEFAULT });
-        this.fgPublishing.patchValue({ data: FG_PUBLISHING_DEFAULT });
-
-        this.fgProperties.get('data').valueChanges
-            .subscribe(() => this.isChildNode = this.nodeProperties.isChildNode);
-    }
-
-    onPublishingStepActivate(): void {
-        const publishingProps: NodePublishingPropertiesFormData = this.fgPublishing.value.data;
-        if (!publishingProps.fileSystemBinaryDir && !publishingProps.fileSystemPagesDir) {
-            publishingProps.fileSystemBinaryDir = '';
-            publishingProps.fileSystemPagesDir = '';
-            this.fgPublishing.patchValue({ data: publishingProps });
-        }
-    }
-
     private initForms(): void {
-        this.fgProperties = new UntypedFormGroup({
-            data: new UntypedFormControl(null, Validators.required),
-        });
+        this.fgProperties = new FormControl<NodePropertiesFormData>(null, [
+            Validators.required,
+            createNestedControlValidator(),
+        ]);
         this.fgPropertiesValid$ = createFormValidityTracker(this.fgProperties);
 
-        this.fgPublishing = new UntypedFormGroup({
-            data: new UntypedFormControl({}, Validators.required),
-        });
+        this.fgPublishing = new FormControl(FG_PUBLISHING_DEFAULT as any, [
+            Validators.required,
+            createNestedControlValidator(),
+        ]);
         this.fgPublishingValid$ = createFormValidityTracker(this.fgPublishing);
 
         this.fgNodeFeatures = new UntypedFormGroup({
@@ -128,41 +108,20 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
     }
 
     private createNode(): Observable<Node<Raw>> {
-        const nodeProperties: NodePropertiesFormData = this.getFormData(this.fgProperties);
-        const publishingData: NodePublishingPropertiesFormData = this.getFormData(this.fgPublishing);
+        const { description, ...nodeProperties } = this.fgProperties.value;
+        const publishingData: NodePublishingPropertiesFormData = this.fgPublishing.value;
 
         const nodeCreateReq: NodeCreateRequest = {
-            node: {
-                name: nodeProperties.name,
-                https: !!nodeProperties.https,
-                host: nodeProperties.hostnameType === NodeHostnameType.VALUE ? nodeProperties.hostname : null,
-                hostProperty: nodeProperties.hostnameType === NodeHostnameType.PROPERTY ? nodeProperties.hostnameProperty : '',
-                meshPreviewUrl: nodeProperties.meshPreviewUrlType === NodePreviewurlType.VALUE ? nodeProperties.meshPreviewUrl : null,
-                meshPreviewUrlProperty: nodeProperties.meshPreviewUrlType === NodePreviewurlType.PROPERTY ? nodeProperties.meshPreviewUrlProperty : '',
-                insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
-                disablePublish: !!publishingData.disableUpdates,
-                publishFs: !!publishingData.fileSystem,
-                publishFsPages: !!publishingData.fileSystemPages,
-                publishDir: publishingData.fileSystemPagesDir || undefined,
-                publishFsFiles: !!publishingData.fileSystemFiles,
-                binaryPublishDir: publishingData.fileSystemBinaryDir || undefined,
-                publishContentMap: !!publishingData.contentRepository,
-                publishContentMapPages: !!publishingData.contentRepositoryPages,
-                publishContentMapFiles: !!publishingData.contentRepositoryFiles,
-                publishContentMapFolders: !!publishingData.contentRepositoryFolders,
-                publishImageVariants: !!nodeProperties.publishImageVariants,
-                pubDirSegment: !!nodeProperties.pubDirSegment,
-                omitPageExtension: !!publishingData.omitPageExtension,
-                pageLanguageCode: publishingData.pageLanguageCode || null,
-            },
+            node: nodeProperties,
+            description,
         };
         if (typeof nodeProperties.inheritedFromId === 'number') {
             // Strange, but we need the ID of the parent's root folder.
             nodeCreateReq.node.masterId = this.appState.now.entity.node[nodeProperties.inheritedFromId].folderId;
         }
-        if (nodeProperties.description) {
-            nodeCreateReq.description = nodeProperties.description;
-        }
+        // if (nodeProperties.description) {
+        //     nodeCreateReq.description = nodeProperties.description;
+        // }
         if (typeof publishingData.urlRenderWayPages === 'number') {
             nodeCreateReq.node.urlRenderWayPages = publishingData.urlRenderWayPages;
         }

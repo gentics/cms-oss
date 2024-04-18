@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ApplicationStateService, FeaturesActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { createPatternValidator } from '@gentics/cms-components';
 import { EditableFileProps, Feature, NodeFeature } from '@gentics/cms-models';
+import { createMultiValuePatternValidator } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
-import { switchMap, filter, map } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'file-properties-form',
     templateUrl: './file-properties-form.tpl.html',
     styleUrls: ['./file-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class FilePropertiesForm {
 
     @Input()
@@ -51,8 +51,8 @@ export class FilePropertiesForm {
             name: new UntypedFormControl(this.properties.name || '', Validators.required),
             description: new UntypedFormControl(this.properties.description || ''),
             forceOnline: new UntypedFormControl(this.properties.forceOnline),
-            niceUrl: new UntypedFormControl(this.properties.niceUrl || '', createPatternValidator(this.urlPattern, true)),
-            alternateUrls: new UntypedFormControl(this.properties.alternateUrls || [], createPatternValidator(this.urlPattern, true)),
+            niceUrl: new UntypedFormControl(this.properties.niceUrl || '', createMultiValuePatternValidator(this.urlPattern)),
+            alternateUrls: new UntypedFormControl(this.properties.alternateUrls || [], createMultiValuePatternValidator(this.urlPattern)),
         });
 
         this.form.get('niceUrl').disable({ emitEvent: false });

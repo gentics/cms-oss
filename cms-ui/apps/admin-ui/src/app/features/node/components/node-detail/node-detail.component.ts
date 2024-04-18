@@ -34,8 +34,9 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { AbstractControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { createNestedControlValidator } from '@gentics/cms-components';
 import {
     Feature,
     Folder,
@@ -44,8 +45,6 @@ import {
     Node,
     NodeFeature,
     NodeFeatureModel,
-    NodeHostnameType,
-    NodePreviewurlType,
     NodeSaveRequest,
     NormalizableEntityType,
     Normalized,
@@ -66,7 +65,7 @@ import {
 } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
-import { NodePropertiesFormData } from '../node-properties/node-properties.component';
+import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 
 /**
@@ -81,6 +80,7 @@ import { NodePublishingPropertiesFormData } from '../node-publishing-properties/
 export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperations> implements OnInit {
 
     public readonly NodeDetailTabs = NodeDetailTabs;
+    public readonly NodePropertiesMode = NodePropertiesMode;
 
     @SelectState(state => state.features.global[Feature.DEVTOOLS])
     featureDevtoolsIsEnabled$: Observable<boolean>;
@@ -97,10 +97,10 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     public allowedToUpdate = false;
 
     /** Form data of tab 'Properties' */
-    fgProperties: UntypedFormGroup;
+    fgProperties: FormControl<NodePropertiesFormData>;
 
     /** form of tab 'Publishing' */
-    fgPublishing: UntypedFormGroup;
+    fgPublishing: FormControl<NodePublishingPropertiesFormData>;
 
     /** form of tab 'Node Features' */
     fgNodeFeatures: UntypedFormGroup;
@@ -282,24 +282,13 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
      */
     updateNode(): Promise<Node<Raw>> {
         // assemble payload with conditional properties
-        const nodeProperties: NodePropertiesFormData = this.fgProperties.value.data;
+        const { description, ...nodeProperties } = this.fgProperties.value;
         const nodeSave: NodeSaveRequest = {
             node: {
                 id: this.currentEntity.id,
-                ...(nodeProperties.name && { name: nodeProperties.name }),
-                https: nodeProperties.https,
-                host: nodeProperties.hostnameType === NodeHostnameType.VALUE ? nodeProperties.hostname : '',
-                hostProperty: nodeProperties.hostnameType === NodeHostnameType.PROPERTY ? nodeProperties.hostnameProperty : '',
-                meshPreviewUrl: nodeProperties.meshPreviewUrlType === NodePreviewurlType.VALUE ? nodeProperties.meshPreviewUrl : '',
-                meshPreviewUrlProperty: nodeProperties.meshPreviewUrlType === NodePreviewurlType.PROPERTY ? nodeProperties.meshPreviewUrlProperty : '',
-                insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
-                pubDirSegment: nodeProperties.pubDirSegment,
-                publishImageVariants: nodeProperties.publishImageVariants,
-                // TODO: Need repositiry browser support for editing this property
-                // ...(this.nodeProperties.defaultFileFolderId && { defaultFileFolderId: this.nodeProperties.defaultFileFolderId }),
-                // ...(this.nodeProperties.defaultImageFolderId && { defaultImageFolderId: this.nodeProperties.defaultImageFolderId }),
+                ...nodeProperties,
             },
-            description: nodeProperties.description,
+            description: description,
         };
 
         return this.nodeOperations.update(nodeSave.node.id, nodeSave).pipe(
@@ -320,38 +309,22 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
      * Requests changes of node by id to CMS
      */
     updatePublishing(): Promise<Node<Raw>> {
-        // assemble payload with conditional properties
-        const fgPublishingData: NodePublishingPropertiesFormData = this.fgPublishing.value.data;
-        // Parsing the cr-repo ID to a number, as the API only supports the number ID and not the global ID.
-        let crId = fgPublishingData.contentRepositoryId || null;
-        if (crId != null) {
-            if (typeof crId === 'string') {
-                crId = parseInt(crId, 10);
-            }
-            if (isNaN(crId) || !isFinite(crId)) {
-                crId = null;
-            }
-        }
 
         const nodeSave: NodeSaveRequest = {
             node: {
                 id: this.currentEntity.id,
-                contentRepositoryId: crId || 0,
-                disablePublish: fgPublishingData.disableUpdates,
-                publishFs: fgPublishingData.fileSystem,
-                publishFsPages: fgPublishingData.fileSystemPages,
-                publishDir: fgPublishingData.fileSystemPagesDir,
-                publishFsFiles: fgPublishingData.fileSystemFiles,
-                binaryPublishDir: fgPublishingData.fileSystemBinaryDir,
-                publishContentMap: fgPublishingData.contentRepository,
-                publishContentMapPages: fgPublishingData.contentRepositoryPages,
-                publishContentMapFiles: fgPublishingData.contentRepositoryFiles,
-                publishContentMapFolders: fgPublishingData.contentRepositoryFolders,
-                urlRenderWayPages: fgPublishingData.urlRenderWayPages,
-                urlRenderWayFiles: fgPublishingData.urlRenderWayFiles,
-                omitPageExtension: fgPublishingData.omitPageExtension,
-                pageLanguageCode: fgPublishingData.pageLanguageCode,
-            } as Node<Raw>,
+                ...this.fgPublishing.value,
+                // Default some properties which may be `null` because they are disabled
+                publishFs: this.fgPublishing.value?.publishFs ?? false,
+                publishFsPages: this.fgPublishing.value?.publishFsPages ?? false,
+                publishFsFiles: this.fgPublishing.value?.publishFsFiles ?? false,
+                publishContentMapFiles: this.fgPublishing.value?.publishContentMapFiles ?? false,
+                publishContentMapFolders: this.fgPublishing.value?.publishContentMapFolders ?? false,
+                publishContentMapPages: this.fgPublishing.value?.publishContentMapPages ?? false,
+
+                publishDir: this.fgPublishing.value?.publishDir || '',
+                binaryPublishDir: this.fgPublishing.value?.binaryPublishDir || '',
+            },
         };
 
         return this.nodeOperations.update(nodeSave.node.id, nodeSave).pipe(
@@ -435,29 +408,6 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     }
 
     /**
-     * Set new value of form 'Publishing'
-     */
-    private fgPublishingUpdate(node: Node): void {
-        this.patchFormGroup<NodePublishingPropertiesFormData>(this.fgPublishing, {
-            disableUpdates: node.disablePublish,
-            fileSystem: node.publishFs,
-            fileSystemPages: node.publishFsPages,
-            fileSystemPagesDir: node.publishDir,
-            fileSystemFiles: node.publishFsFiles,
-            fileSystemBinaryDir: node.binaryPublishDir,
-            contentRepository: node.publishContentMap,
-            contentRepositoryPages: node.publishContentMapPages,
-            contentRepositoryFiles: node.publishContentMapFiles,
-            contentRepositoryFolders: node.publishContentMapFolders,
-            contentRepositoryId: node.contentRepositoryId,
-            urlRenderWayPages: node.urlRenderWayPages,
-            urlRenderWayFiles: node.urlRenderWayFiles,
-            omitPageExtension: node.omitPageExtension,
-            pageLanguageCode: node.pageLanguageCode,
-        });
-    }
-
-    /**
      * Set new value of form 'Node Features'
      */
     private fgNodeFeaturesUpdate(features: IndexById<Partial<Record<NodeFeature, boolean>>>, availFeatures: NodeFeatureModel[]): void {
@@ -474,9 +424,9 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     }
 
     private initForms(): void {
-        this.fgProperties = this.createFormGroup(true);
+        this.fgProperties = new FormControl<NodePropertiesFormData>(this.currentEntity || {} as any, Validators.required);
         this.fgPropertiesSaveDisabled$ = createFormSaveDisabledTracker(this.fgProperties);
-        this.fgPublishing = this.createFormGroup(true);
+        this.fgPublishing = new FormControl<NodePublishingPropertiesFormData>(this.currentEntity || {} as any, Validators.required)
         this.fgPublishingSaveDisabled$ = createFormSaveDisabledTracker(this.fgPublishing);
         this.fgNodeFeatures = this.createFormGroup(false);
         this.fgNodeFeaturesSaveDisabled$ = createFormSaveDisabledTracker(this.fgNodeFeatures);
@@ -511,35 +461,34 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     private fgPropertiesUpdate(node: Node): void {
         if (!node) {
             this.fgProperties.reset();
-            this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
-                hostnameType: NodeHostnameType.VALUE
-            });
             this.fgProperties.markAsPristine();
             return;
         }
 
-        this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
-            name: node.name,
-            inheritedFromId: node.inheritedFromId !== node.id ? node.inheritedFromId : null,
-            https: node.https,
-            hostnameType: node.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE,
-            hostname: node.host,
-            hostnameProperty: node.hostProperty,
-            meshPreviewUrlType: node.meshPreviewUrlProperty ? NodePreviewurlType.PROPERTY : NodePreviewurlType.VALUE,
-            meshPreviewUrl: node.meshPreviewUrl,
-            meshPreviewUrlProperty: node.meshPreviewUrlProperty,
-            insecurePreviewUrl: node.insecurePreviewUrl,
-            defaultFileFolderId: node.defaultFileFolderId || null,
-            defaultImageFolderId: node.defaultImageFolderId || null,
-            pubDirSegment: node.pubDirSegment,
-            publishImageVariants: node.publishImageVariants,
-        });
+        this.fgProperties.patchValue(node);
+        this.fgProperties.markAsPristine();
+        this.fgProperties.updateValueAndValidity();
+    }
+
+    /**
+     * Set new value of form 'Publishing'
+     */
+    private fgPublishingUpdate(node: Node): void {
+        if (!node) {
+            this.fgPublishing.reset();
+            this.fgPublishing.markAsPristine();
+            return;
+        }
+
+        this.fgPublishing.patchValue(node);
+        this.fgPublishing.markAsPristine();
+        this.fgPublishing.updateValueAndValidity();
     }
 
     private onRootFolderChange(rootFolder: Folder): void {
-        this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
-            description: rootFolder ? rootFolder.description : '',
-        });
+        // this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
+        //     description: rootFolder ? rootFolder.description : '',
+        // });
     }
 
     private patchFormGroup<T>(formGroup: UntypedFormGroup, changes: Partial<T>): void {
@@ -548,7 +497,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             ...changes,
         };
 
-        formGroup.setValue({ data: patched }, { emitEvent: false });
+        formGroup.patchValue({ data: patched }, { emitEvent: false });
         formGroup.markAsPristine();
         formGroup.updateValueAndValidity();
     }

@@ -15,19 +15,12 @@
                 ></gtx-entity-detail-header>
 
                 <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
-                        <form
-                            *ngIf="fgProperties"
-                            [formGroup]="fgProperties"
-                            class="gtx-entity-details-tab-content-body-form small-12 medium-9 columns"
-                        >
-                            <gtx-node-properties
-                                formControlName="data"
-                                class="properties"
-                                [pubDirSegmentActivated]="currentEntity?.pubDirSegment"
-                            ></gtx-node-properties>
-                        </form>
-                    </div>
+                    <gtx-node-properties
+                        *ngIf="fgProperties"
+                        class="properties"
+                        [formControl]="fgProperties"
+                        [mode]="NodePropertiesMode.UPDATE"
+                    ></gtx-node-properties>
                 </div>
             </div>
         </gtx-tab>
@@ -47,18 +40,11 @@
                 ></gtx-entity-detail-header>
 
                 <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
-                        <form
-                            *ngIf="fgPublishing"
-                            [formGroup]="fgPublishing"
-                            class="gtx-entity-details-tab-content-body-form small-12 medium-9 columns"
-                        >
-                            <gtx-node-publishing-properties
-                                formControlName="data"
-                                class="properties"
-                            ></gtx-node-publishing-properties>
-                        </form>
-                    </div>
+                    <gtx-node-publishing-properties
+                        *ngIf="fgPublishing"
+                        class="properties"
+                        [formControl]="fgPublishing"
+                    ></gtx-node-publishing-properties>
                 </div>
             </div>
         </gtx-tab>

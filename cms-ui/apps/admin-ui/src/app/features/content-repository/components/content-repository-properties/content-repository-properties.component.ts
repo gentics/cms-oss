@@ -28,7 +28,14 @@ import {
     UrlType,
     UsernameType,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
+import {
+    FormProperties,
+    createPropertyPatternValidator,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+    setControlsValidators,
+} from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -230,7 +237,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     protected createForm(): FormGroup<FormProperties<EditableContentRepositoryProperties>> {
         return new FormGroup<FormProperties<EditableContentRepositoryProperties>>({
             basepath: new FormControl(this.value?.basepath || ''),
-            basepathProperty: new FormControl(this.value?.basepathProperty || '', Validators.pattern(/^\$\{(env|sys):CR_ATTRIBUTEPATH_[^}]+\}$/)),
+            basepathProperty: new FormControl(this.value?.basepathProperty || '', createPropertyPatternValidator('CR_ATTRIBUTEPATH')),
             crType: new FormControl(this.value?.crType || null, Validators.required),
             dbType: new FormControl(this.value?.dbType || null, Validators.required),
             defaultPermission: new FormControl(this.value?.defaultPermission || ''),
@@ -241,15 +248,21 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             name: new FormControl(this.value?.name || '', Validators.required),
             passwordType: new FormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
             password: new FormControl('', this.validatorPasswordsDontMatch),
-            passwordProperty: new FormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):CR_PASSWORD_[^}]+\}$/)),
+            passwordProperty: new FormControl(this.value?.passwordProperty || '', createPropertyPatternValidator('CR_PASSWORD')),
             permissionProperty: new FormControl(this.value?.permissionProperty || ''),
             permissionInformation: new FormControl(this.value?.permissionInformation ?? false),
             projectPerNode: new FormControl(this.value?.projectPerNode ?? false),
             version: new FormControl(this.value?.version || ''),
             url: new FormControl(this.value?.url || '', Validators.required),
-            urlProperty: new FormControl(this.value?.urlProperty || '', [ Validators.required, Validators.pattern(/^\$\{(env|sys):CR_URL_[^}]+\}$/) ]),
+            urlProperty: new FormControl(this.value?.urlProperty || '', [
+                Validators.required,
+                createPropertyPatternValidator('CR_URL'),
+            ]),
             username: new FormControl(this.value?.username || '', Validators.required),
-            usernameProperty: new FormControl(this.value?.usernameProperty || '', [ Validators.required, Validators.pattern(/^\$\{(env|sys):CR_USERNAME_[^}]+\}$/)]),
+            usernameProperty: new FormControl(this.value?.usernameProperty || '', [
+                Validators.required,
+                createPropertyPatternValidator('CR_USERNAME'),
+            ]),
             http2: new FormControl(this.value?.http2 ?? false),
             noFoldersIndex: new FormControl(this.value?.noFoldersIndex ?? false),
             noFilesIndex: new FormControl(this.value?.noFilesIndex ?? false),

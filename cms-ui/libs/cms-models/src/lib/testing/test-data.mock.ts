@@ -5,7 +5,7 @@ import {
     File as FileModel,
     Folder,
     Form,
-    GtxNodePageLanguageCode,
+    NodePageLanguageCode,
     Image,
     IndexById,
     Language,
@@ -946,7 +946,7 @@ export function getExampleNodeData(config: MockNodeConfig = { id: 1, userId: 3 }
         insecurePreviewUrl: null,
         masterNodeId: config.masterNodeId,
         omitPageExtension: false,
-        pageLanguageCode: GtxNodePageLanguageCode.FILENAME,
+        pageLanguageCode: NodePageLanguageCode.FILENAME,
         publishImageVariants: false,
     };
 }

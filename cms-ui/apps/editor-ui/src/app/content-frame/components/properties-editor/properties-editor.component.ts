@@ -5,7 +5,6 @@ import {
     CmsFormData,
     EditableFileProps,
     EditableFolderProps,
-    EditableNodeProps,
     EditablePageProps,
     FileOrImage,
     Folder,
@@ -190,27 +189,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
 
             case 'node':
             case 'channel':
-                return {
-                    contentRepository: item.publishContentMap,
-                    contentRepositoryFiles: item.publishContentMapFiles,
-                    contentRepositoryFolders: item.publishContentMapFolders,
-                    contentRepositoryPages: item.publishContentMapPages,
-                    defaultFileFolderId: item.defaultFileFolderId,
-                    defaultImageFolderId: item.defaultImageFolderId,
-                    disablePublish: item.disablePublish,
-                    fileSystem: item.publishFs,
-                    fileSystemBinaryDir: item.binaryPublishDir,
-                    fileSystemFiles: item.publishFsFiles,
-                    fileSystemPageDir: item.publishDir,
-                    fileSystemPages: item.publishFsPages,
-                    host: item.host,
-                    hostnameProperty: item.hostProperty,
-                    https: item.https,
-                    nodeName: item.name,
-                    urlRenderingFiles: item.urlRenderWayFiles,
-                    urlRenderingPages: item.urlRenderWayPages,
-                    utf8: item.utf8,
-                } as EditableNodeProps;
+                return item;
 
             default:
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

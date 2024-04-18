@@ -14,6 +14,7 @@ import {
     DataSourceListResponse,
     DataSourceLoadResponse,
     DevToolsConstructListResponse,
+    NodeResponse,
     NormalizableEntityType,
     ObjectProperty,
     ObjectPropertyBO,
@@ -34,11 +35,11 @@ import {
     Template,
     TemplateBO,
     TemplateFolderListRequest,
-    TemplateResponse
+    TemplateResponse,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable, throwError } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
@@ -349,9 +350,32 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
                 // fake entity's `id` property to enforce internal application entity uniformity
                 return res.items.map(item => Object.assign(item, { id: item.name }) as PackageBO<Raw>);
             }),
+            catchError(error => {
+                // try again for master node if channel is not allowed to access packages
+                if (error?.statusCode !== 405) {
+                    return throwError(error);
+                }
+
+                return this.getMasterNodeId(nodeId).pipe(
+                    switchMap((masterNodeId) => {
+                        return this.getPackagesOfNode(masterNodeId, options);
+                    }),
+                )
+            }),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap((items: PackageBO<Raw>[]) => this.entityManager.addEntities('package', items)),
             this.catchAndRethrowError(),
         );
+    }
+
+
+    getMasterNodeId(channelId: number): Observable<number> {
+        return this.api.node.getNode(channelId).pipe(
+            map((response: NodeResponse) => {
+                const masterNodeId = response?.node?.masterNodeId;
+                return masterNodeId;
+            }),
+        )
     }
 
     /**

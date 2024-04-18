@@ -38,24 +38,30 @@ export class DevToolPackageTableLoaderService extends BaseTableLoaderService<Pac
         additionalOptions?: DevToolPackageTableLoaderOptions,
     ): Observable<EntityPageResponse<DevToolPackageBO>> {
         const loadOptions = this.createDefaultOptions(options);
-        let loader: Observable<PackageListResponse>;
 
         if (additionalOptions?.nodeId) {
-            loader = this.api.devTools.getPackagesOfNode(additionalOptions.nodeId, loadOptions);
+            return this.operations.getPackagesOfNode(additionalOptions.nodeId, loadOptions).pipe(
+                map(response => {
+                    const entities = response.map(pkg => this.mapToBusinessObject(pkg));
+
+                    return {
+                        entities,
+                        totalCount: response.length,
+                    }
+                }),
+            )
         } else {
-            loader = this.api.devTools.getPackages(loadOptions);
+            return this.api.devTools.getPackages(loadOptions).pipe(
+                map(response => {
+                    const entities = response.items.map(pkg => this.mapToBusinessObject(pkg));
+
+                    return {
+                        entities,
+                        totalCount: response.numItems,
+                    };
+                }),
+            );
         }
-
-        return loader.pipe(
-            map(response => {
-                const entities = response.items.map(pkg => this.mapToBusinessObject(pkg));
-
-                return {
-                    entities,
-                    totalCount: response.numItems,
-                };
-            }),
-        );
     }
 
     public mapToBusinessObject(pkg: Package): DevToolPackageBO {

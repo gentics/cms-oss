@@ -34,6 +34,8 @@ export class DevToolPackageTableComponent
 
     private syncCheck$ = new BehaviorSubject<boolean>(null);
     private canEditSub = new BehaviorSubject<boolean>(false);
+    private isMasterNode$ = new BehaviorSubject<number>(null);
+
 
     public syncEnabled = false;
     public syncLoading = true;
@@ -132,6 +134,21 @@ export class DevToolPackageTableComponent
             this.changeDetector.markForCheck();
         }));
 
+
+        const disabled$ = this.isMasterNode$.pipe(
+            tap((nodeId) => {
+                this.operations.getMasterNodeId(nodeId).subscribe((masterNodeId) => {
+                    if(masterNodeId !== this.nodeId) {
+                        this.disabled = true;
+                    }
+                    else {
+                        this.disabled = false;
+                    }
+                });
+            }),
+        )
+        this.subscriptions.push(disabled$.subscribe());
+
         this.subscriptions.push(
             this.permissions.checkPermissions(
                 this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions,
@@ -145,6 +162,7 @@ export class DevToolPackageTableComponent
         super.ngOnChanges(changes);
 
         if (changes.nodeId) {
+            this.isMasterNode$.next(this.nodeId);
             this.loadTrigger.next();
             this.actionRebuildTrigger.next();
         }

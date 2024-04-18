@@ -45,6 +45,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -2261,18 +2262,22 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					};
 
 					// first import all nodes
-					Files.list(packagePath).filter(
-							p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(NODE_EXTENSION))
-							.forEach(importNodeFromPath);
+					try (Stream<Path> fileStream = Files.list(packagePath)) {
+						fileStream.filter(
+								p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(NODE_EXTENSION))
+								.forEach(importNodeFromPath);
+					}
 
 					// second import all channels
 
 					// create map of channel IDs to ChannelPath instances
-					Map<String, ChannelPath> allChannels = Files.list(packagePath)
-							.filter(p -> Files.isRegularFile(p)
-									&& p.getFileName().toString().endsWith(CHANNEL_EXTENSION))
-							.map(ChannelPath::new).collect(Collectors.toMap(cp -> getObjectId(cp.path).get(),
-									java.util.function.Function.identity()));
+					Map<String, ChannelPath> allChannels = null;
+					try (Stream<Path> fileStream = Files.list(packagePath)) {
+						allChannels = fileStream.filter(
+								p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(CHANNEL_EXTENSION))
+								.map(ChannelPath::new).collect(Collectors.toMap(cp -> getObjectId(cp.path).get(),
+										java.util.function.Function.identity()));
+					}
 					Set<ChannelPath> roots = new HashSet<>();
 
 					// every ChannelPath is either a root, or is added as child to its immediate master ChannelPath
@@ -2351,8 +2356,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		protected void importRecursively(Path current, Node node, java.util.function.BiConsumer<Node, ? super Path> consumer) {
 			if (Files.isDirectory(current)) {
 				try {
-					Files.list(current).filter(Files::isRegularFile).forEach(path -> consumer.accept(node, path));
-					Files.list(current).filter(Files::isDirectory).forEach(p -> importRecursively(p, node, consumer));
+					try (Stream<Path> fileStream = Files.list(current)) {
+						fileStream.filter(Files::isRegularFile).forEach(path -> consumer.accept(node, path));
+					}
+					try (Stream<Path> fileStream = Files.list(current)) {
+						fileStream.filter(Files::isDirectory).forEach(p -> importRecursively(p, node, consumer));
+					}
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}

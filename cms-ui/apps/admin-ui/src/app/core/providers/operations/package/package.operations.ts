@@ -358,17 +358,18 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
 
                 return this.getMasterNodeId(nodeId).pipe(
                     switchMap((masterNodeId) => {
-                        return this.getPackagesOfNode(masterNodeId, options); 
+                        return this.getPackagesOfNode(masterNodeId, options);
                     }),
                 )
             }),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap((items: PackageBO<Raw>[]) => this.entityManager.addEntities('package', items)),
             this.catchAndRethrowError(),
         );
     }
 
 
-    private getMasterNodeId(channelId: number): Observable<number> {
+    getMasterNodeId(channelId: number): Observable<number> {
         return this.api.node.getNode(channelId).pipe(
             map((response: NodeResponse) => {
                 const masterNodeId = response?.node?.masterNodeId;

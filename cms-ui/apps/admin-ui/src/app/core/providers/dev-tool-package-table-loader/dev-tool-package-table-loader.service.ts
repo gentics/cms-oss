@@ -51,7 +51,7 @@ export class DevToolPackageTableLoaderService extends BaseTableLoaderService<Pac
                 }),
             )
         } else {
-            this.api.devTools.getPackages(loadOptions).pipe(
+            return this.api.devTools.getPackages(loadOptions).pipe(
                 map(response => {
                     const entities = response.items.map(pkg => this.mapToBusinessObject(pkg));
 

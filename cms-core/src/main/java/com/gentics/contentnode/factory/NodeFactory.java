@@ -44,6 +44,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.publish.PublishQueueStats;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.publish.wrapper.PublishableTemplate;
 import com.gentics.contentnode.render.RenderType;
@@ -1764,6 +1765,7 @@ public class NodeFactory {
 			while (!stopped && !isInterrupted()) {
 				QueueEntry entry = null;
 				boolean doSleep = true;
+				boolean doUpdatePublishQueueStats = false;
 
 				if (DistributionUtil.isTaskExecutionAllowed()) {
 					try (Trx trx = new Trx()) {
@@ -1798,6 +1800,10 @@ public class NodeFactory {
 									// event was triggered, delete the queue entry
 									entry.delete();
 									doSleep = false;
+									// after a maintenance action, update the publish queue stats immediately
+									if (entry.isMaintenanceAction()) {
+										doUpdatePublishQueueStats = true;
+									}
 								}
 							}
 						} else {
@@ -1827,6 +1833,10 @@ public class NodeFactory {
 						} else {
 							logger.error("Error while fetching next entry", e);
 						}
+					}
+
+					if (doUpdatePublishQueueStats) {
+						PublishQueueStats.get().refresh();
 					}
 				}
 

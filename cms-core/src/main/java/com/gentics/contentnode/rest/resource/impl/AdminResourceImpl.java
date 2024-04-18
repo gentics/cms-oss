@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -467,12 +468,12 @@ public class AdminResourceImpl implements AdminResource {
 			filterByPermission(nodes);
 
 			// filter nodes by given node IDs
-			if (request.getNodes() != null) {
+			if (!CollectionUtils.isEmpty(request.getNodes())) {
 				nodes.removeIf(node -> !request.getNodes().contains(node.getId()));
 			}
 
 			// filter nodes by given cr IDs
-			if (request.getContentRepositories() != null) {
+			if (!CollectionUtils.isEmpty(request.getContentRepositories())) {
 				nodes.removeIf(node -> !request.getContentRepositories().contains(node.getContentrepositoryId()));
 			}
 

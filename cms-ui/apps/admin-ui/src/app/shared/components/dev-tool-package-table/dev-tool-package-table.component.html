@@ -27,7 +27,7 @@
         flat
         size="small"
         type="primary"
-        [disabled]="disabled"
+        [disabled]="disabled || !isMasterNode"
         (click)="handleAssignToNode()"
     >
         <icon left>link</icon> {{ 'shared.assign_packages_to_node' | i18n }}

@@ -65,8 +65,8 @@ export class MaintenanceActionModalComponent extends BaseModal<boolean> implemen
             attributes: [{ value: '', disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             clearPublishCache: [{ value: false, disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             limitToDateRange: [false],
-            start: [{ value: null, disabled: true } ],
-            end: [{ value: null, disabled: true }],
+            start: [ ],
+            end: [ ],
         });
 
         // listen to form value changes

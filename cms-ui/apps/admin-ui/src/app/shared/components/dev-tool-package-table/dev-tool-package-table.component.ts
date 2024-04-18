@@ -33,6 +33,9 @@ export class DevToolPackageTableComponent
     @Input()
     public nodeId: number;
 
+    @Input()
+    public isMasterNode: boolean;
+
     /**
      * If it should hide the sync options
      */
@@ -157,6 +160,10 @@ export class DevToolPackageTableComponent
             this.actionRebuildTrigger.next();
         }
 
+        if (changes.isMasterNode) {
+            this.actionRebuildTrigger.next();
+        }
+
         if (changes.hideSync) {
             this.syncCheck$.next(!this.hideSync);
         }
@@ -178,7 +185,7 @@ export class DevToolPackageTableComponent
                         icon: 'link_off',
                         label: this.i18n.instant('shared.remove_packages_from_node'),
                         type: 'alert',
-                        enabled: true,
+                        enabled: this.isMasterNode,
                         multiple: true,
                         single: true,
                     });

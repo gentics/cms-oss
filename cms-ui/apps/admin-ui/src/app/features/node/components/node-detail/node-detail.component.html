@@ -129,13 +129,12 @@
                 ></gtx-entity-detail-header>
 
                 <div *ngIf="!isLoading" class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
-                        <gtx-dev-tool-package-table
-                            [nodeId]="currentEntity.id"
-                            [showSearch]="true"
-                            [hideSync]="true"
-                        ></gtx-dev-tool-package-table>
-                    </div>
+                    <gtx-dev-tool-package-table
+                        [nodeId]="currentEntity.masterNodeId || currentEntity.id"
+                        [isMasterNode]="!currentEntity.masterNodeId || (currentEntity.masterNodeId === currentEntity.id)"
+                        [showSearch]="true"
+                        [hideSync]="true"
+                    ></gtx-dev-tool-package-table>
                 </div>
             </div>
         </gtx-tab>

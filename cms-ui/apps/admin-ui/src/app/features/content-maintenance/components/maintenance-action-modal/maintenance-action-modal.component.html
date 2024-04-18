@@ -71,6 +71,7 @@
                     <ng-container *ngIf="formGroup.value.limitToDateRange">
                         <gtx-date-time-picker
                             [label]="'contentmaintenance.limit_to_date_start' | i18n"
+                            [clearable]="true"
                             [displayTime]="false"
                             [max]="formGroup.value.end"
                             formControlName="start"
@@ -78,6 +79,7 @@
 
                         <gtx-date-time-picker
                             [label]="'contentmaintenance.limit_to_date_end' | i18n"
+                            [clearable]="true"
                             [displayTime]="false"
                             [min]="formGroup.value.start"
                             formControlName="end"

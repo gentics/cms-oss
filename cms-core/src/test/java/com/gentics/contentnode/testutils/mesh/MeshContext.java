@@ -60,7 +60,8 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 * Create an instance, using the Mesh version of the MeshRestClient
 	 */
 	public MeshContext() {
-		super("docker.apa-it.at/gentics/mesh:" + TESTED_MESH_VERSION);
+//		super("docker.apa-it.at/gentics/mesh:" + TESTED_MESH_VERSION);
+		super("gtx-docker-releases-test-system.docker.apa-it.at/gentics/mesh:ci-dev-test1");
 		setWaitStrategy(new LogMessageWaitStrategy().withRegEx(".*" + Pattern.quote(MeshEvent.STARTUP.address) + ".*")
 				.withStartupTimeout(Duration.of(waitTimeout, ChronoUnit.SECONDS)));
 	}

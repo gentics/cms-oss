@@ -36,6 +36,6 @@ public class MeshPortalPreviewPropertySubstitutionTest extends MeshPortalPreview
 		} else {
 			System.clearProperty(SYSTEM_PROPERTY_NAME);
 		}
-		node.setMeshPreviewUrl("${sys:" + SYSTEM_PROPERTY_NAME + "}");
+		node.setMeshPreviewUrlProperty("${sys:" + SYSTEM_PROPERTY_NAME + "}");
 	}
 }

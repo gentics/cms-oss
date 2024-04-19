@@ -156,7 +156,7 @@ public class ContentRepositorySyncTest {
 		// create a CR
 		ContentRepository cr = create(ContentRepository.class, create -> {
 			create.setName("Test CR");
-			create.setUsername("${sys:cr.username}");
+			create.setUsernameProperty("${sys:cr.username}");
 		}).build();
 		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
 
@@ -166,6 +166,7 @@ public class ContentRepositorySyncTest {
 		// change the username
 		cr = update(cr, update -> {
 			update.setUsername("updated_username");
+			update.setUsernameProperty(null);
 		}).build();
 
 		// synchronize from the FS -> CMS
@@ -173,6 +174,7 @@ public class ContentRepositorySyncTest {
 
 		// assert that the username is changed
 		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUsernameProperty, cr)).as("Username Property").isEqualTo("${sys:cr.username}");
 		assertThat(execute(ContentRepository::getUsername, cr)).as("Username").isEqualTo("${sys:cr.username}");
 	}
 
@@ -283,7 +285,7 @@ public class ContentRepositorySyncTest {
 		// create a CR
 		ContentRepository cr = create(ContentRepository.class, create -> {
 			create.setName("Test CR");
-			create.setUrl("${sys:cr.url}");
+			create.setUrlProperty("${sys:cr.url}");
 		}).build();
 		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
 
@@ -293,6 +295,7 @@ public class ContentRepositorySyncTest {
 		// change the url
 		cr = update(cr, update -> {
 			update.setUrl("updated_url");
+			update.setUrlProperty(null);
 		}).build();
 
 		// synchronize from the FS -> CMS
@@ -300,6 +303,7 @@ public class ContentRepositorySyncTest {
 
 		// assert that the url is changed
 		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUrlProperty, cr)).as("Url Property").isEqualTo("${sys:cr.url}");
 		assertThat(execute(ContentRepository::getUrl, cr)).as("Url").isEqualTo("${sys:cr.url}");
 	}
 }

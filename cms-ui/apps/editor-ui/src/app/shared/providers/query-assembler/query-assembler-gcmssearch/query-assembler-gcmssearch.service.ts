@@ -377,6 +377,7 @@ export class QueryAssemblerGCMSSearchService {
                                 paramFilters as GtxChipSearchPropertyObjectId[],
                                 mappedOptions,
                             );
+                            mappedOptions.langfallback = false;
                             break;
                         case ChipPropertyOptionValueGcmssearch.created:
                             // 'date'

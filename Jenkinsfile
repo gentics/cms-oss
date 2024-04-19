@@ -219,11 +219,13 @@ spec:
 
                     // Login to docker.apa-it.at, so that the tests can pull all Mesh images
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
-                        // NX_NON_NATIVE_HASHER temp fix for incompatible installations
-                        // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                            sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
-                                " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
+                        withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
+                            // NX_NON_NATIVE_HASHER temp fix for incompatible installations
+                            // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
+                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
+                                    " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
+                            }
                         }
                     }
 

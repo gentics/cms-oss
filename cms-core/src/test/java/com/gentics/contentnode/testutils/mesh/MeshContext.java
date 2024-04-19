@@ -31,7 +31,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "2.1.0-SNAPSHOT";
+//	public final static String TESTED_MESH_VERSION = "2.1.0-SNAPSHOT";
 
 	protected LogBuffer logBuffer = new LogBuffer();
 
@@ -61,6 +61,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 */
 	public MeshContext() {
 //		super("docker.apa-it.at/gentics/mesh:" + TESTED_MESH_VERSION);
+		// TODO remove use of hardcoded test system image here (also remove credentials for gtx-docker-releases-test-system.docker.apa-it.at in Jenkinsfile)
 		super("gtx-docker-releases-test-system.docker.apa-it.at/gentics/mesh:ci-dev-test1");
 		setWaitStrategy(new LogMessageWaitStrategy().withRegEx(".*" + Pattern.quote(MeshEvent.STARTUP.address) + ".*")
 				.withStartupTimeout(Duration.of(waitTimeout, ChronoUnit.SECONDS)));

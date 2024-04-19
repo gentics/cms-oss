@@ -68,6 +68,7 @@ public class MeshPublisherUrlTest {
 		ContentRepository cr = mock(ContentRepository.class);
 		when(cr.getCrType()).thenReturn(ContentRepositoryModel.Type.mesh);
 		when(cr.getUrl()).thenReturn(url);
+		when(cr.getEffectiveUrl()).thenReturn(url);
 
 		try (MeshPublisher publisher = new MeshPublisher(cr, false)) {
 			assertThat(publisher.getHost()).as("Hostname").isEqualTo(hostname);

@@ -6,8 +6,8 @@ endprologue.
 
 h3. Overview
 
-The GCMSUI Bridge is one of the implementation interfaces one can use, to access data from the UI/CMS, or make it perform certain tasks.
-In the case of the GCMSUI Bridge, it is available in the Aloha IFrame when opened via the UI in either the preview or edit mode.
+The GCMSUI Bridge is one of the implementation interfaces one can use, to access data from the Editor-UI/CMS, or make it perform certain tasks.
+In the case of the GCMSUI Bridge, it is available in the Aloha IFrame when opened via the Editor-UI in either the preview or edit mode.
 Accessing the Bridge is done by the IFrames global @GCMSUI@ object:
 
 <javascript>

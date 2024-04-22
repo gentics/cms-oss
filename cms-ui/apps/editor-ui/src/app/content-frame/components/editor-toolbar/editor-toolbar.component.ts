@@ -180,7 +180,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.checkIfInQueue();
             this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         }
-        if (changes.editorState || changes.currentItem || changes.currentNode) {
+        if (changes.editorState || changes.currentItem || changes.currentNode || changes.itemPermissions) {
             this.buttons = this.determineVisibleButtons();
         }
     }
@@ -381,19 +381,19 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         const isPage = type === 'page';
         const isForm = type === 'form';
         const editMode = this.editorState?.editMode;
-        const previewing = editMode === 'preview';
-        const editing = editMode === 'edit';
-        const propertiesTab = editMode === 'editProperties' && this.editorState.openTab;
+        const previewing = editMode === EditMode.PREVIEW;
+        const editing = editMode === EditMode.EDIT;
+        const propertiesTab = editMode === EditMode.EDIT_PROPERTIES && this.editorState.openTab;
         const isInherited = (this.currentItem as InheritableItem)?.inherited;
         const userCan = this.itemPermissions || { edit: false, view: false };
         const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions)?.publish));
 
         return {
-            compareContents: (isPage || isForm) && editMode === 'compareVersionSources',
-            compareSources: (isPage || isForm) && editMode === 'compareVersionContents',
-            editItem: editMode === 'editProperties' && (isPage || isForm) && userCan.edit && !this.locked,
+            compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
+            compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
+            editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
             edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
-            editProperties: editMode !== 'editProperties' && userCan.view && !this.locked,
+            editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit,
             previewPage: (isPage || isForm) && !previewing && userCan.view,
             publish: (editing || previewing || propertiesTab) && canPublish && userCan.edit && !isInherited,

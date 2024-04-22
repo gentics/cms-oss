@@ -1,6 +1,6 @@
 import { DefaultModelType, ModelType } from './type-util';
 
-/** @see https://gentics.com/Content.Node/guides/restapi/json_DataSourceEntryModel.html */
+/** @see https://gentics.com/Content.Node/cmp8/guides/restapi/json_DataSourceEntryModel.html */
 export interface DataSourceEntryBase<T extends ModelType> {
     /** Global ID */
     globalId: string;

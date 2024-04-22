@@ -125,6 +125,7 @@ export class UIActionsService {
             const version: GtxVersion = {
                 cmpVersion: res.cmpVersion,
                 version: res.version,
+                variant: res.variant,
                 nodeInfo: res.nodeInfo,
             };
             this.appState.dispatch(new SetCMPVersionAction(version));

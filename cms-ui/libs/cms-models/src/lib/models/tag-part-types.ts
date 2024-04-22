@@ -1,7 +1,7 @@
 import { SelectOption } from './tag-property-values';
 
 /** Possible Tagpart types
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_TagpartType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_TagpartType.html
  */
 export enum TagPropertyType {
     STRING = 'STRING',
@@ -30,7 +30,7 @@ export enum TagPropertyType {
 }
 
 /** Markup Language types
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_MarkupLanguage.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_MarkupLanguage.html
  */
 export enum MarkupLanguageType {
     HTML = 1,
@@ -57,7 +57,7 @@ export enum MarkupLanguageType {
 
 /**
  * Defines the concrete type of a TagPart.
- * @see https://www.gentics.com/Content.Node/guides/gcn_part_types.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/gcn_part_types.html
  */
 export enum TagPartType {
     /** Used for normal text (without HTML), which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering. */
@@ -170,7 +170,7 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
 
 /**
  * Selection Settings for type SELECT or MULTISELECT
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_SelectSetting.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_SelectSetting.html
  */
 export interface SelectSetting {
 
@@ -187,7 +187,7 @@ export interface SelectSetting {
 
 /**
  * Enumeration of the type of objects in an overview
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_ListType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ListType.html
  */
 export enum ListType {
     PAGE = 'PAGE',
@@ -199,7 +199,7 @@ export enum ListType {
 
 /**
  * Enumeration of the selection types in an overview
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_SelectType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_SelectType.html
  */
 export enum SelectType {
 
@@ -218,7 +218,7 @@ export enum SelectType {
 
 /**
  * Model for overview settings
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_OverviewSetting.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_OverviewSetting.html
  */
 export interface OverviewSetting {
 

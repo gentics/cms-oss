@@ -61,24 +61,13 @@ public class AutoUpdate {
 	}
 
 	/**
-	 * Get URL of the update site
-	 * @return URL
-	 */
-	public static String getUpdatesiteUrl() {
-		Map<String, Object> updateSiteSettings = NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap("selfupdate.baseUrl");
-		String prefix = ObjectTransformer.getString(updateSiteSettings.get("prefix"), "");
-		String base = ObjectTransformer.getString(updateSiteSettings.get("baseurl"), "");
-
-		return String.format("%s%smaven-metadata.xml?version=%s", prefix, base, getCurrentVersion().toString());
-	}
-
-	/**
 	 * Get Update versions from update site
 	 * @param timeout timeout in seconds
+	 * @param updateUrl URL to the maven-metadata.xml file
 	 * @return list of available update versions
 	 * @throws NodeException
 	 */
-	public static List<CMSVersion> getVersionsFromUpdatesite(int timeout) throws NodeException {
+	public static List<CMSVersion> getVersionsFromUpdatesite(int timeout, String updateUrl) throws NodeException {
 		try {
 			XmlMapper mapper = new XmlMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -87,7 +76,7 @@ public class AutoUpdate {
 			params.setConnectionManagerTimeout(timeout * 1000L);
 			params.setSoTimeout(timeout * 1000);
 			HttpClient httpClient = new HttpClient(params);
-			GetMethod getMethod = new GetMethod(getUpdatesiteUrl());
+			GetMethod getMethod = new GetMethod(updateUrl);
 
 			int responseStatus = httpClient.executeMethod(getMethod);
 			if (responseStatus == 404) {
@@ -130,29 +119,32 @@ public class AutoUpdate {
 	/**
 	 * Get the latest update version from the update site
 	 * @param timeout timeout in seconds
-	 * @return optiona version
+	 * @param updateUrl URL to the maven-metadata.xml file
+	 * @return optional version
 	 * @throws NodeException
 	 */
-	public static Optional<CMSVersion> getLatestUpdateFromUpdatesite(int timeout) throws NodeException {
-		return getVersionsFromUpdatesite(timeout).stream().max(CMSVersion::compareTo);
+	public static Optional<CMSVersion> getLatestUpdateFromUpdatesite(int timeout, String updateUrl) throws NodeException {
+		return getVersionsFromUpdatesite(timeout, updateUrl).stream().max(CMSVersion::compareTo);
 	}
 
 	/**
 	 * Create instance with default timeout (60 seconds)
+	 * @param updateUrl URL to the maven-metadata.xml file
 	 * @throws NodeException
 	 */
-	public AutoUpdate() throws NodeException {
-		this(60);
+	public AutoUpdate(String updateUrl) throws NodeException {
+		this(60, updateUrl);
 	}
 
 	/**
 	 * Create instance with given timeout
 	 * @param timeout timeout in seconds
+	 * @param updateUrl URL to the maven-metadata.xml file
 	 * @throws NodeException
 	 */
-	public AutoUpdate(int timeout) throws NodeException {
+	public AutoUpdate(int timeout, String updateUrl) throws NodeException {
 		this.timeout = timeout;
-		this.availableVersions = getVersionsFromUpdatesite(timeout);
+		this.availableVersions = getVersionsFromUpdatesite(timeout, updateUrl);
 		this.latestVersion = this.availableVersions.stream().max(CMSVersion::compareTo);
 	}
 

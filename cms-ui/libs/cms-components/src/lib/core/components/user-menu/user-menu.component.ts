@@ -41,11 +41,6 @@ import { UILanguage } from '../../providers/i18n/i18n.service';
  *           </gtx-tab>
  *       </gtx-tabs>
  *
- *       <gtx-link-to-manual
- *           *ngIf="!(featureHideManual$ | async)"
- *           bottom
- *       ></gtx-link-to-manual>
- *
  *       <gtx-app-version-label
  *           bottom
  *           [versionData]="cmpVersion$ | async"

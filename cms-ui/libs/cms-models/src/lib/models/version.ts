@@ -4,6 +4,7 @@
 export interface GtxVersion {
     cmpVersion: string;
     version: string;
+    variant: string;
     nodeInfo: { [key: string]: GtxVersionNodeInfo; };
 }
 

@@ -2,8 +2,8 @@ import { ModelType, DefaultModelType } from "./type-util";
 
 /**
  * A language object as returned from the /markupLanguage endpoint:
- * @see https://www.gentics.com/Content.Node/guides/restapi/resource_MarkupLanguageResource.html
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_MarkupLanguage.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_MarkupLanguageResource.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_MarkupLanguage.html
  */
 export interface MarkupLanguageBase<T extends ModelType> {
     /** Name */

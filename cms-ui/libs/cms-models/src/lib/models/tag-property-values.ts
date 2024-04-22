@@ -6,7 +6,7 @@ import { ListType, SelectType } from './tag-part-types';
 
 /**
  * SelectOption object representing a datasource value in GCN
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_SelectOption.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_SelectOption.html
  */
 export interface SelectOption {
 
@@ -23,7 +23,7 @@ export interface SelectOption {
 
 /**
  * Possible order directions in TagProperties that support ordering.
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_OrderDirection.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_OrderDirection.html
  */
 export enum OrderDirection {
 
@@ -40,7 +40,7 @@ export enum OrderDirection {
 
 /**
  * Enumeration for the 'order by' setting of TagProperties that support ordering
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_OrderBy.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_OrderBy.html
  */
 export enum OrderBy {
 
@@ -71,7 +71,7 @@ export enum OrderBy {
 
 /**
  * Object containing nodeId and objectId of an object selected for an overview.
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_NodeIdObjectId.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_NodeIdObjectId.html
  */
 export interface NodeIdObjectId {
     nodeId: number;
@@ -80,7 +80,7 @@ export interface NodeIdObjectId {
 
 /**
  * Represents the values of an OverviewTagProperty.
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Overview.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Overview.html
  */
 export interface Overview {
 

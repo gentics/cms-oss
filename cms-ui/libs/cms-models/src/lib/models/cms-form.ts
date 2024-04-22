@@ -75,7 +75,7 @@ export interface FormQueuedActionRequestClear {
 
 /**
  * Represents a form version in the CMS
- * https://www.gentics.com/Content.Node/guides/restapi/json_FormVersion.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_FormVersion.html
  */
 export interface FormVersion {
 
@@ -134,7 +134,7 @@ export interface FormWithExternalLinks<T extends ModelType = DefaultModelType> {
 /**
  * Base for form representation in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_Form.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Form.html
  */
 interface FormBase<T extends ModelType = DefaultModelType> extends InheritableItem<T> {
 

@@ -55,7 +55,7 @@ export const GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP: Record<GcmsRolePrivil
 /**
  * Privilege map as received from the API in Content.Node >= 5.25.0
  * via `/perm/{type}/{id}?map=true` and `/folder/getFolders/{id}?privilegeMap=true`
- * http://www.gentics.com/Content.Node/guides/restapi/resource_PermResource.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_PermResource.html
  *
  * @deprecated
  */
@@ -124,7 +124,7 @@ export interface FolderPrivileges {
 
 /**
  * Name of privileges as returned by the `folder/getFolders/{id}` endpoint when requested with `privileges: true`.
- * http://www.gentics.com/Content.Node/guides/restapi/resource_FolderResource.html#path__folder_getFolders_-id-.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_FolderResource.html#path__folder_getFolders_-id-.html
  */
 export type PrivilegeFlagName = keyof FolderPrivileges;
 

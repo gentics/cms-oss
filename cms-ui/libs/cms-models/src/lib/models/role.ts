@@ -15,7 +15,7 @@ interface BaseRole<T extends ModelType = DefaultModelType> {
 }
 
 /** Data model as defined by backend. */
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_RoleModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_RoleModel.html */
 export interface Role<T extends ModelType = DefaultModelType> extends BaseRole<T> {
     /** Internal ID of the object property definition */
     id: number;
@@ -31,7 +31,7 @@ export interface RoleBO<T extends ModelType = DefaultModelType> extends BaseRole
 }
 
 /** Data model as defined by backend. */
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_RolePermissionsModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_RolePermissionsModel.html */
 export interface RolePermissions {
     page: PagePrivileges;
     pageLanguages: Record<string, PagePrivileges>;
@@ -40,7 +40,7 @@ export interface RolePermissions {
 
 
 /** Data model as defined by backend. */
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_PagePrivileges.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PagePrivileges.html */
 export interface PagePrivileges {
     viewpage: boolean;
     createpage: boolean;
@@ -52,7 +52,7 @@ export interface PagePrivileges {
 
 
 /** Data model as defined by backend. */
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_FilePrivileges.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_FilePrivileges.html */
 export interface FilePrivileges {
     viewfile: boolean;
     createfile: boolean;

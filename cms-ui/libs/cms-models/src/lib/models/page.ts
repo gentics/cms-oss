@@ -74,7 +74,7 @@ export interface QueuedActionRequestClear {
 
 /**
  * Represents a page version in the CMS
- * https://www.gentics.com/Content.Node/guides/restapi/json_PageVersion.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PageVersion.html
  */
 export interface PageVersion {
 
@@ -158,7 +158,7 @@ export interface PageWithExternalLinks<T extends ModelType = DefaultModelType> {
 /**
  * Represents a page in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_Page.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Page.html
  */
 export interface Page<T extends ModelType = DefaultModelType> extends InheritableItem<T> {
 

@@ -11,7 +11,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to the Elastic Search index resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_SearchIndexResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_SearchIndexResource.html
  *
  */
 export class ElasticSearchIndexApi {

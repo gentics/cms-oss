@@ -1,7 +1,7 @@
 
 /**
  * A language object as returned from the /node/languages endpoint:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_NodeResource.html#resource_NodeResource_languages_GET
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_NodeResource.html#resource_NodeResource_languages_GET
  */
 export interface Language {
     /** The numeric ID of the language */

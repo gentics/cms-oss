@@ -1,4 +1,3 @@
-import { GUIDES_URL } from '@admin-ui/common';
 import { SidebarItemComponent } from '@admin-ui/shared/components/sidebar-item/sidebar-item.component';
 import { Component, Input } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -7,6 +6,7 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { AppStateService } from '../../../state';
 
 import * as semver from 'semver';
+import { GtxVersion, Update } from '@gentics/cms-models';
 
 interface CmsUpdates {
     hotfix?: {
@@ -28,10 +28,8 @@ export class WidgetCmsStatusComponent extends SidebarItemComponent {
     // CMS Status widget title
     @Input() title = this.i18n.get('widget.cms_status_title');
 
-    currentDocsUrl = GUIDES_URL;
-    latestDocsUrl = `https://gentics.com/Content.Node/guides/`;
-    changelogTpl = `https://gentics.com/Content.Node/changelog/{major}.{minor}.0/{major}.{minor}.{patch}.html`;
-    changelogFrTpl = `https://gentics.com/Content.Node/changelog/{major}.{minor}.0/merged_changelog.html`;
+    currentDocsUrl = `https://gentics.com/Content.Node/cmp8/guides-history/`;
+    latestDocsUrl = `https://gentics.com/Content.Node/cmp8/guides/`;
 
     uiState$ = this.appState.select(state => state.ui);
     updates$: Observable<CmsUpdates>;
@@ -44,43 +42,43 @@ export class WidgetCmsStatusComponent extends SidebarItemComponent {
 
         this.updates$ = this.uiState$.pipe(
             filter(state => !!state.cmpVersion && !!state.cmpVersion.version),
-            map(ui => this.getUpdateVersions(ui.cmsUpdates, ui.cmpVersion.version)),
+            map(ui => this.getUpdateVersions(ui.cmsUpdates, ui.cmpVersion)),
         );
+
+        this.uiState$.pipe(
+            filter(state => !!state.cmpVersion && !!state.cmpVersion.version),
+            map(ui => ui.cmpVersion.version),
+        ).subscribe(version => {
+            this.currentDocsUrl = `https://gentics.com/Content.Node/cmp8/guides-history/` + version + '/';
+        });
     }
 
-    getUpdateVersions(updates: string[], currentVersion: string): CmsUpdates {
-        const _updates = semver.sort([...updates]);
-        const cleanCurrent = semver.clean(currentVersion);
+    getUpdateVersions(updates: Update[], currentVersion: GtxVersion): CmsUpdates {
+        const cleanCurrent = semver.clean(currentVersion.version);
         let cmsUpdates: CmsUpdates = {};
 
-        _updates.forEach(version => {
-            if (semver.satisfies(version, '~' + semver.coerce(cleanCurrent))) {
+        updates.forEach(update => {
+            if (semver.satisfies(update.version, '~' + semver.coerce(cleanCurrent))) {
                 cmsUpdates = {
                     ...cmsUpdates,
                     hotfix: {
-                        version,
-                        changelog: this.replaceUrlTemplate(version, this.changelogTpl),
+                        version: update.version,
+                        changelog: update.changelogUrl,
                     },
                 };
             }
 
-            if (semver.satisfies(version, '>' + semver.major(cleanCurrent) + '.' + semver.minor(cleanCurrent))) {
+            if (semver.satisfies(update.version, '>' + semver.major(cleanCurrent) + '.' + semver.minor(cleanCurrent))) {
                 cmsUpdates = {
                     ...cmsUpdates,
                     feature: {
-                        version,
-                        changelog: this.replaceUrlTemplate(version, this.changelogFrTpl),
+                        version: update.version,
+                        changelog: update.changelogUrl,
                     },
                 };
             }
         });
 
         return cmsUpdates;
-    }
-
-    replaceUrlTemplate(version: string, template: string): string {
-        return template.replace(/\{major\}/g, semver.major(version).toString())
-                       .replace(/\{minor\}/g, semver.minor(version).toString())
-                       .replace(/\{patch\}/g, semver.patch(version).toString());
     }
 }

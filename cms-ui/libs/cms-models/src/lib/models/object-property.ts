@@ -12,7 +12,7 @@ export enum ObjectPropertiesObjectType {
 };
 
 /** DevTools Package
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Package.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Package.html
  */
 export interface ObjectPropertyBase<T extends ModelType> {
     /** globald ID */

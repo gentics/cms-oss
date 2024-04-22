@@ -33,7 +33,7 @@ import { UIOverridesService } from '../../providers/ui-overrides/ui-overrides.se
 /**
  * Directive that makes certain UI elements hide or change behavior
  * based on a customer configuration, e.g. to redirect internal behavior to an
- * [embedded tool](https://www.gentics.com/Content.Node/guides/admin_custom_tools.html).
+ * [embedded tool](https://www.gentics.com/Content.Node/cmp8/guides/admin_custom_tools.html).
  */
 @Directive({
     selector: '[overrideSlot]',

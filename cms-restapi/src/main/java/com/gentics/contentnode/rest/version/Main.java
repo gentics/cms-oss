@@ -41,7 +41,7 @@ public class Main {
 			Properties props = new Properties();
 
 			try {
-				props.load(Main.class.getResourceAsStream("/contentnode.build.properties"));
+				props.load(Main.class.getResourceAsStream("/cms.build.properties"));
 			} catch (IOException e) {
 				// We have no NodeLogger here, so just fall back to the old version.
 				String implementationVersion = Main.class.getPackage().getImplementationVersion();
@@ -52,7 +52,7 @@ public class Main {
 			buildInfo.set(props);
 		}
 
-		String version = buildInfo.get().getProperty("cn.version");
+		String version = buildInfo.get().getProperty("cms.version");
 
 		return version != null ? version : "DEBUG";
 	}

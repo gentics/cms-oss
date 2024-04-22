@@ -44,6 +44,7 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.EventQueueQuery;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.QueueEntry;
@@ -94,6 +95,7 @@ import com.gentics.contentnode.rest.model.response.VersionResponse;
 import com.gentics.contentnode.rest.model.response.admin.CustomTool;
 import com.gentics.contentnode.rest.model.response.admin.PublishInfoResponse;
 import com.gentics.contentnode.rest.model.response.admin.ToolsResponse;
+import com.gentics.contentnode.rest.model.response.admin.Update;
 import com.gentics.contentnode.rest.model.response.admin.UpdatesInfoResponse;
 import com.gentics.contentnode.rest.model.response.log.ActionLogEntryList;
 import com.gentics.contentnode.rest.model.response.log.ActionLogType;
@@ -120,6 +122,7 @@ import com.gentics.contentnode.update.CMSVersion;
 import com.gentics.contentnode.version.CmpProductVersion;
 import com.gentics.contentnode.version.CmpVersionRequirement;
 import com.gentics.contentnode.version.CmpVersionRequirements;
+import com.gentics.contentnode.version.ServerVariantService;
 import com.gentics.lib.log.NodeLogger;
 
 import io.reactivex.Flowable;
@@ -135,6 +138,17 @@ public class AdminResourceImpl implements AdminResource {
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(AdminResourceImpl.class);
 
 	/**
+	 * Update URL for the CMS OSS
+	 */
+	private static final String OSS_UPDATE_URL = "https://updates.gentics.com/maven2/com/gentics/cms-oss/maven-metadata.xml";
+
+	/**
+	 * Loader for {@link ServerVariantService} implementations
+	 */
+	private final static ServiceLoaderUtil<ServerVariantService> serverVariantService = ServiceLoaderUtil
+			.load(ServerVariantService.class);
+
+	/**
 	 * CMP version requirements for this CMS version.
 	 *
 	 * @see #getVersionRequirement(CmpProductVersion)
@@ -147,6 +161,8 @@ public class AdminResourceImpl implements AdminResource {
 	public VersionResponse currentVersion() throws NodeException {
 		VersionResponse response = new VersionResponse();
 		String implementationVersion = Main.getImplementationVersion();
+
+		response.setVariant(serverVariantService.execForFirst(ServerVariantService::getVariant).orElse("OSS"));
 
 		try {
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Server version successfully retrieved."));
@@ -272,8 +288,19 @@ public class AdminResourceImpl implements AdminResource {
 			UpdatesInfoResponse response = new UpdatesInfoResponse();
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
 
-			AutoUpdate autoUpdate = new AutoUpdate(5);
-			response.setAvailable(autoUpdate.getAvailableVersions().stream().map(CMSVersion::toString).collect(Collectors.toList()));
+			String implementationVersion = Main.getImplementationVersion();
+			CmpVersionRequirement req = getVersionRequirement(new CmpProductVersion(implementationVersion));
+
+			AutoUpdate autoUpdate = new AutoUpdate(5, serverVariantService.execForFirst(ServerVariantService::getUpdateUrl).orElse(OSS_UPDATE_URL));
+			response.setAvailable(autoUpdate.getAvailableVersions().stream().map(cmsVersion -> {
+				String version = cmsVersion.toString();
+				String changelogUrl = null;
+				try {
+					changelogUrl = serverVariantService.execForFirst(s -> s.getChangelogUrl(cmsVersion, req)).orElse(getChangelogUrl(cmsVersion, req));
+				} catch (NodeException e) {
+				}
+				return new Update().setVersion(version).setChangelogUrl(changelogUrl);
+			}).collect(Collectors.toList()));
 
 			trx.success();
 			return response;
@@ -768,5 +795,15 @@ public class AdminResourceImpl implements AdminResource {
 		}
 
 		return versionRequirement;
+	}
+
+	/**
+	 * Get the changelog URL for the given cms version
+	 * @param version cms version
+	 * @param req cmp version requirement
+	 * @return changelog URL
+	 */
+	private String getChangelogUrl(CMSVersion version, CmpVersionRequirement req) {
+		return String.format("https://gentics.com/Content.Node/cmp8/changelog-oss/%d.%d.0/merged_changelog.html", version.getMajor(), version.getMinor());
 	}
 }

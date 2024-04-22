@@ -56,11 +56,18 @@ export class PostLoadScript {
         }
 
         this.aloha.setWindow(iFrameWindow);
-        this.aloha.reference$.next(iFrameWindow.Aloha);
-        this.aloha.settings$.next(iFrameWindow.Aloha.settings);
-        iFrameWindow.Aloha.ready(() => {
-            this.aloha.ready$.next(true);
-        });
+
+        // In case of an error, the Aloha property may not be present.
+        if (iFrameWindow.Aloha != null) {
+            this.aloha.reference$.next(iFrameWindow.Aloha);
+            this.aloha.settings$.next(iFrameWindow.Aloha.settings);
+            iFrameWindow.Aloha.ready(() => {
+                this.aloha.ready$.next(true);
+                this.aloha.windowLoaded$.next(true);
+            });
+        } else {
+            this.aloha.windowLoaded$.next(true);
+        }
 
         iFrameWindow.addEventListener('unload', () => {
             this.aloha.settings$.next(null);

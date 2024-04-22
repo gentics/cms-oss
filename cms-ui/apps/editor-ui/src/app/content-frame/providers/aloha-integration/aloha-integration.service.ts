@@ -160,6 +160,8 @@ export class AlohaIntegrationService {
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
     public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
     public ready$ = new BehaviorSubject<boolean>(false);
+    /** Similar to {@link ready$}, but will be `true` even if the page fails. */
+    public windowLoaded$ = new BehaviorSubject<boolean>(false);
 
     public gcnPlugin$: Observable<GCNAlohaPlugin>;
     public uiPlugin$: Observable<AlohaUiPlugin>;
@@ -326,6 +328,7 @@ export class AlohaIntegrationService {
 
     public clearReferences(): void {
         this.ready$.next(false);
+        this.windowLoaded$.next(false);
         this.reference$.next(null);
         this.settings$.next(null);
         this.registeredComponents = {};

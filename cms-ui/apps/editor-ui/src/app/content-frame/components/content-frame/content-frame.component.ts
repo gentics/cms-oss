@@ -164,6 +164,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     openPropertiesTab: PropertiesTab;
     requesting: boolean;
     alohaReady = false;
+    alohaWindowLoaded = false;
+    windowLoaded = false;
+
     currentItemPath = '';
     currentItem$: Observable<ItemNormalized | undefined>;
 
@@ -187,6 +190,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private subscriptions: Subscription[] = [];
     private masterFrameLoaded = false;
     private contentModifiedByExternalScript = false;
+    private childFrameInitTimer: any;
 
     // eslint-disable-next-line no-underscore-dangle
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
@@ -222,18 +226,30 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnInit(): void {
         this.customScriptHostService.initialize(this);
-        (window as unknown as CNParentWindow).GCMSUI_childIFrameInit =
-            (iFrameWindow, iFrameDocument) => this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
+        (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = (iFrameWindow, iFrameDocument) => {
+            if (this.childFrameInitTimer != null) {
+                window.clearTimeout(this.childFrameInitTimer);
+            }
+            return this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
+        };
 
         this.subscriptions.push(
-            this.appState.select(state => state.editor.contentModified)
-                .subscribe(modified => this.contentModified = modified),
-            this.appState.select(state => state.editor.objectPropertiesModified)
-                .subscribe(modified => this.objectPropertyModified = modified),
-            this.appState.select(state => state.editor.modifiedObjectPropertiesValid)
-                .subscribe(valid => this.modifiedObjectPropertyValid = valid),
-            this.appState.select(state => state.editor.openPropertiesTab)
-                .subscribe(openPropertiesTab => this.openPropertiesTab = openPropertiesTab),
+            this.appState.select(state => state.editor.contentModified).subscribe(modified => {
+                this.contentModified = modified;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.objectPropertiesModified).subscribe(modified => {
+                this.objectPropertyModified = modified;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.modifiedObjectPropertiesValid).subscribe(valid => {
+                this.modifiedObjectPropertyValid = valid;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.openPropertiesTab).subscribe(openPropertiesTab => {
+                this.openPropertiesTab = openPropertiesTab;
+                this.changeDetector.markForCheck();
+            }),
         );
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
@@ -324,6 +340,10 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.alohaReady = ready;
             this.changeDetector.markForCheck();
         }));
+        this.subscriptions.push(this.aloha.windowLoaded$.subscribe(loaded => {
+            this.alohaWindowLoaded = loaded;
+            this.changeDetector.markForCheck();
+        }))
 
         this.iframeManager.onMasterFrameClosed(() => {
             this.cancelEditingDebounced(this.currentItem);
@@ -463,6 +483,23 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     ngAfterViewInit(): void {
         const masterFrame = this.iframe.nativeElement;
         this.iframeManager.initialize(masterFrame, this);
+        masterFrame.addEventListener('error', error => {
+            console.log('Error while loading Aloha-Page', error);
+            this.windowLoaded = true;
+            // We also have to set this one here manually, because the window is never getting initialized
+            this.alohaWindowLoaded = true;
+            this.changeDetector.markForCheck();
+        });
+        masterFrame.addEventListener('load', () => {
+            this.windowLoaded = true;
+            // Similiar to the error handler above, but with a timeout instead
+            this.childFrameInitTimer = window.setTimeout(() => {
+                console.warn('UI was not properly initialized in the Aloha-Page!');
+                this.alohaWindowLoaded = true;
+                this.changeDetector.markForCheck();
+            }, 10_000);
+            this.changeDetector.markForCheck();
+        });
     }
 
     /**

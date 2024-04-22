@@ -32,7 +32,7 @@
                 class="primary-action"
                 size="small"
                 flat
-                [disabled]="copyDisabled"
+                [disabled]="copyDisabled || !alohaReady"
                 [title]="'editor.content_frame_save_copy_tooltip' | i18n"
                 (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
             >
@@ -46,6 +46,7 @@
                 size="small"
                 flat
                 (click)="editItem()"
+                [disabled]="alohaReady"
                 [title]="'editor.edit_tooltip' | i18n"
             >
                 <icon left>edit</icon>
@@ -58,7 +59,7 @@
                 size="small"
                 type="secondary"
                 flat
-                disabled="true"
+                [disabled]="true"
                 [title]="'editor.content_frame_page_locked_tooltip' | i18n"
             >
                 <icon>lock</icon>
@@ -68,7 +69,7 @@
                 *ngIf="showSave"
                 class="primary-action save-button"
                 size="small"
-                [disabled]="saveDisabled || isSaving"
+                [disabled]="saveDisabled || isSaving || !alohaReady"
                 [title]="'editor.content_frame_save_changes_tooltip' | i18n"
             >
                 <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
@@ -95,9 +96,13 @@
                 </gtx-dropdown-item>
             </gtx-split-button>
 
-            <gtx-dropdown-list *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'" class="content-frame-context-menu">
+            <gtx-dropdown-list
+                *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'"
+                class="content-frame-context-menu"
+                [disabled]="!alohaReady"
+            >
                 <gtx-dropdown-trigger>
-                    <gtx-button icon type="secondary">
+                    <gtx-button icon type="secondary" [disabled]="!alohaReady">
                         <icon>more_vert</icon>
                     </gtx-button>
                 </gtx-dropdown-trigger>

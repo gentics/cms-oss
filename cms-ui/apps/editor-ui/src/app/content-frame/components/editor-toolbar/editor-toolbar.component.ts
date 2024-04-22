@@ -29,6 +29,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
+import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
 interface AvailableButtons {
@@ -96,10 +97,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     @Output()
     public timeManagement = new EventEmitter<ItemNormalized>();
 
-    /*
-    *  Regular GCMS UI Properties
-    */
     public uploadInProgress$: Observable<boolean>;
+    public alohaReady: boolean;
+
     public breadcrumbs: (IBreadcrumbLink | IBreadcrumbRouterLink)[] = [];
     public multilineExpanded: boolean;
     public buttons: AvailableButtons = {};
@@ -124,6 +124,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         protected breadcrumbsService: BreadcrumbsService,
         protected folderActions: FolderActionsService,
         protected permissions: PermissionService,
+        protected aloha: AlohaIntegrationService,
     ) {}
 
     ngOnInit(): void {
@@ -159,6 +160,11 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
         this.subscriptions.push(this.appState.select(areItemsSaving).subscribe(isSaving => {
             this.isSaving = isSaving;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
+            this.alohaReady = ready;
             this.changeDetector.markForCheck();
         }));
 

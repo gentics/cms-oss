@@ -2,7 +2,8 @@ import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { IndexById, MarkupLanguage, Node, Raw, TagEditorChange, TemplateBO } from '@gentics/cms-models';
+import { TagEditorChange } from '@gentics/cms-integration-api-models';
+import { IndexById, MarkupLanguage, Node, Raw, TemplateBO } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum TemplatePropertiesMode {

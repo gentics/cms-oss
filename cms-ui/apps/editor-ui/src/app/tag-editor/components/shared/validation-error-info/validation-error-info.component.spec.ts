@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { ValidationResult } from '@gentics/cms-models';
+import { ValidationResult } from '@gentics/cms-integration-api-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../../testing';
 import { ValidationErrorInfoComponent } from './validation-error-info.component';

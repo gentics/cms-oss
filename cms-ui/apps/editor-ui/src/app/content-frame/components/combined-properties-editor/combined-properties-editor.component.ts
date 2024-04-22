@@ -824,6 +824,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             withDelete: false,
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const isValid = tagEditorContext.validator.validateAllTagProperties(objProp.properties).allPropertiesValid;
         this.markObjectPropertiesAsModifiedInState(false, isValid && !isReadOnly);
 

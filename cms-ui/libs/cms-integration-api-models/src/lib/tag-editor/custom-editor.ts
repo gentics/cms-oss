@@ -1,4 +1,4 @@
-import { EditableTag } from './editable-tag';
+import { EditableTag } from '@gentics/cms-models';
 
 /** Describes the current size of a `CustomEditor`. */
 export interface CustomEditorSize {

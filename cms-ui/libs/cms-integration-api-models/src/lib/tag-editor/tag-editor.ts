@@ -1,6 +1,5 @@
-import { Tag, TagPropertyMap } from '../models';
+import { EditableTag, EntityType, Tag, TagPropertyMap } from '@gentics/cms-models';
 import { CustomEditor, TagEditorResult } from './custom-editor';
-import { EditableTag } from './editable-tag';
 import { TagEditorContext } from './tag-editor-context';
 
 /**
@@ -12,6 +11,9 @@ import { TagEditorContext } from './tag-editor-context';
  * set or some property does not pass validation), `null` may be used instead of the `TagPropertyMap`.
  */
 export type TagChangedFn = (tagProperties: TagPropertyMap | null) => void;
+
+/** An error thrown by the TagEditor. */
+export class TagEditorError extends Error {}
 
 /**
  * Base interface for a `TagEditor`.
@@ -86,10 +88,9 @@ export interface WindowWithCustomTagEditor {
      * The `CustomTagEditor` provided by this window. This must have been set
      * by the time the `load` event fires.
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     GcmsCustomTagEditor: CustomTagEditor;
 }
-
-export type EntityType = 'page' | 'folder' | 'form' | 'image' | 'file' | 'node' | 'template';
 
 export interface TagEditorChange {
     modified: boolean;

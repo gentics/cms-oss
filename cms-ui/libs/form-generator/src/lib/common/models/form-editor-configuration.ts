@@ -1,4 +1,4 @@
-import { RepositoryBrowserOptions } from '@gentics/cms-models';
+import { SerializableRepositoryBrowserOptions } from '@gentics/cms-models';
 
 /**
  * A customer configuration that allows defining the available types of form elements.
@@ -60,7 +60,7 @@ export interface FormElementPropertyConfigurationSelectableOptions extends FormE
 
 export interface FormElementPropertyConfigurationRepositoryBrowser extends FormElementPropertyConfigurationBase {
     type: FormElementPropertyTypeConfiguration.REPOSITORY_BROWSER;
-    options: RepositoryBrowserOptions;
+    options: SerializableRepositoryBrowserOptions;
     default_value?: number | number[] | null;
     required?: boolean;
 }

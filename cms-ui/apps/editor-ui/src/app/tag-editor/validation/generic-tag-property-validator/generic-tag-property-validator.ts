@@ -1,3 +1,4 @@
+import { TagPropertyValidator, ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
     DataSourceTagPartProperty,
@@ -13,9 +14,7 @@ import {
     TagPart,
     TagPartProperty,
     TagPropertyType,
-    TagPropertyValidator,
     TemplateTagTagPartProperty,
-    ValidationResult
 } from '@gentics/cms-models';
 
 /**
@@ -59,12 +58,12 @@ export class GenericTagPropertyValidator implements TagPropertyValidator<TagPart
             const allSet = this.checkIfPropertiesAreSet(propertiesToValidate, editedProperty);
             return {
                 isSet: allSet,
-                success: allSet || !tagPart.mandatory
+                success: allSet || !tagPart.mandatory,
             };
         } else {
             return {
                 isSet: true,
-                success: true
+                success: true,
             };
         }
     }
@@ -75,7 +74,7 @@ export class GenericTagPropertyValidator implements TagPropertyValidator<TagPart
      * if the property is an array, it has length > 0.
      */
     private checkIfPropertiesAreSet(propertiesToValidate: PropertyList<any>, tagProperty: TagPartProperty): boolean {
-        for (let key of propertiesToValidate.properties) {
+        for (const key of propertiesToValidate.properties) {
             const value = tagProperty[key];
             if (!value || (Array.isArray(value) && value.length === 0)) {
                 return false;

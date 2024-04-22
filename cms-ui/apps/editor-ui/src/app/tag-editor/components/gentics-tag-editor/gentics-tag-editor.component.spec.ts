@@ -6,17 +6,19 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import {
-    EditableTag,
     MultiValidationResult,
-    StringTagPartProperty,
     TagChangedFn,
     TagEditorContext,
-    TagPartProperty,
     TagPropertiesChangedFn,
     TagPropertyEditor,
+    ValidationResult,
+} from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    StringTagPartProperty,
+    TagPartProperty,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult,
 } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';

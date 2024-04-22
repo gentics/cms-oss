@@ -1,14 +1,20 @@
-import { ExposableToolAPI } from './exposable-tool-api';
-import { ExposedGCMSUIAPI } from './exposed-gcmsui-api';
-import { RemoteMethodCallMessage, ToolHandshake, ToolProtocolMessage, UIHandshake } from './sendmessage-protocol';
-import { RemoteMethodReturnMessage, RemoteMethodThrowMessage } from './sendmessage-protocol';
+import {
+    ExposableEmbeddedToolAPI,
+    ExposedGCMSUIAPI,
+    RemoteMethodCallMessage,
+    RemoteMethodReturnMessage,
+    RemoteMethodThrowMessage,
+    ToolHandshake,
+    ToolProtocolMessage,
+    UIHandshake,
+} from '@gentics/cms-integration-api-models';
 
 const TIMEOUT = 20000;
 
 export class ToolApi {
 
     /** Connect an embedded tool to the Gentics CMSUI. */
-    static connect(toolApiToExpose: ExposableToolAPI = {}): Promise<ToolApi> {
+    static connect(toolApiToExpose: ExposableEmbeddedToolAPI = {}): Promise<ToolApi> {
         if (typeof Promise !== 'function') {
             throw new Error('GCMSToolAPI: No native Promise support. Add a polyfill for older browsers!');
         }
@@ -26,7 +32,7 @@ export class ToolApi {
     }
 
     private constructor(
-        public tool: ExposableToolAPI,
+        public tool: ExposableEmbeddedToolAPI,
         public ui: ExposedGCMSUIAPI,
         public port: MessagePort,
         public handshake: UIHandshake,
@@ -44,7 +50,7 @@ function createMessageChannelToParentWindow(): MessagePort | undefined {
     return undefined;
 }
 
-function performHandshake(port: MessagePort, toolApi: ExposableToolAPI): Promise<{ handshake: UIHandshake, uiAPI: ExposedGCMSUIAPI }> {
+function performHandshake(port: MessagePort, toolApi: ExposableEmbeddedToolAPI): Promise<{ handshake: UIHandshake, uiAPI: ExposedGCMSUIAPI }> {
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line prefer-const
         let timeout: any;
@@ -75,13 +81,13 @@ function performHandshake(port: MessagePort, toolApi: ExposableToolAPI): Promise
     });
 }
 
-function sendMethodsExposedByToolToUI(port: MessagePort, toolApi: ExposableToolAPI): void {
+function sendMethodsExposedByToolToUI(port: MessagePort, toolApi: ExposableEmbeddedToolAPI): void {
     const handshake: ToolHandshake = {
         type: 'handshake',
         supportedMethods: [],
     };
 
-    for (const key of Object.keys(toolApi).filter(Boolean) as Array<keyof ExposableToolAPI>) {
+    for (const key of Object.keys(toolApi).filter(Boolean) as Array<keyof ExposableEmbeddedToolAPI>) {
         switch (key) {
             case 'hasUnsavedChanges':
             case 'navigate':
@@ -137,11 +143,11 @@ function createAPIObjectFromHandshake(port: MessagePort, handshake: UIHandshake)
     return apiObject;
 }
 
-function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableToolAPI): any {
+function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableEmbeddedToolAPI): any {
     port.addEventListener('message', event => {
         const msg: ToolProtocolMessage = event.data;
         if (typeof msg === 'object' && msg && msg.type === 'methodcall' && msg.name && msg.callid) {
-            const method = methods[msg.name as keyof ExposableToolAPI];
+            const method = methods[msg.name as keyof ExposableEmbeddedToolAPI];
 
             Promise.resolve().then(() => {
                 if (!method) {

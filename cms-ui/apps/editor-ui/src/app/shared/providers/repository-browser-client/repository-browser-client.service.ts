@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '@editor-ui/app/state';
+import { ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
     ItemInNode,
-    RepositoryBrowserOptions,
     TagInContainer,
 } from '@gentics/cms-models';
-import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
+import { ModalService } from '@gentics/ui-core';
 import { RepositoryBrowser } from '../../components';
 
 @Injectable()

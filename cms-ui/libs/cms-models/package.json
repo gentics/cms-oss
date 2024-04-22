@@ -3,8 +3,7 @@
   "version": "6.1.0-SNAPSHOT",
   "peerDependencies": {
     "@gentics/mesh-models": "^6.1.0-SNAPSHOT",
-    "elastic-types": "^0.1.5",
-    "rxjs": "^6.3.3"
+    "elastic-types": "^0.1.5"
   },
   "optionalDependencies": {
     "normalizr": "^3.4.0"

@@ -1,5 +1,4 @@
 import {
-    ComponentFactoryResolver,
     ComponentRef,
     ElementRef,
     Injectable,
@@ -8,7 +7,8 @@ import {
     Type,
     ViewContainerRef,
 } from '@angular/core';
-import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalCloseError, ModalClosingReason } from '../../common/modal';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions } from '../../common/modal';
 import { BlankModal } from '../../components/blank-modal/blank-modal.component';
 import { DynamicModal } from '../../components/dynamic-modal/dynamic-modal.component';
 import { ModalDialogComponent } from '../../components/modal-dialog/modal-dialog.component';

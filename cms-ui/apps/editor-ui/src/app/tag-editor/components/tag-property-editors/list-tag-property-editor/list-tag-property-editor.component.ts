@@ -1,14 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     ListTagPartProperty,
     OrderedUnorderedListTagPartProperty,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';

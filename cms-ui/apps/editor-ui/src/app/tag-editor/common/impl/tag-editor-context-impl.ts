@@ -1,12 +1,12 @@
-import { File, Folder, Image, Node, Page, Raw, TagEditorError, Template } from '@gentics/cms-models';
 import {
-    EditableTag,
     GcmsUiServices,
     TagEditorContext,
-    TagValidator,
+    TagEditorError,
     Translator,
     VariableTagEditorContext,
-} from '@gentics/cms-models';
+    TagValidator,
+} from '@gentics/cms-integration-api-models';
+import { EditableTag, File, Folder, Image, Node, Page, Raw, Template } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -41,7 +41,7 @@ export class TagEditorContextImpl implements TagEditorContext {
      * @param node The node, from which the tagOwner has been opened.
      * @param sid The current GCMS session ID.
      * @param translator The Translator that should be used by custom TagEditors and TagPropertyEditors for resolving i18n keys.
-     * @param initialVariableContext An Observable (ideally a BehaviorSubjet) that provides the VariableTagEditorContext.
+     * @param variableContext An Observable (ideally a BehaviorSubjet) that provides the VariableTagEditorContext.
      * @param gcmsUiServices Services for opening the repository browser and the image editor.
      * @param withDelete If the tag-editor should allow the user to delete the tag entirely.
      */

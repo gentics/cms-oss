@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import {
     CustomTagPropertyEditor,
-    EditableTag,
     TagEditorContext,
-    TagPart,
-    TagPartProperty,
     TagPropertiesChangedFn,
     TagPropertyEditor,
-    TagPropertyMap,
     WindowWithCustomTagPropertyEditor,
+} from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    TagPart,
+    TagPartProperty,
+    TagPropertyMap,
 } from '@gentics/cms-models';
 import { ReplaySubject, Subscription } from 'rxjs';
 import { publish, refCount } from 'rxjs/operators';

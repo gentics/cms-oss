@@ -3,6 +3,7 @@ import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stoppe
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     Folder,
@@ -10,12 +11,8 @@ import {
     Page,
     PageTagPartProperty,
     Raw,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';

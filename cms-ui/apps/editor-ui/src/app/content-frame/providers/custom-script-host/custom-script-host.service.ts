@@ -6,7 +6,8 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers/repository-browser-client/repository-browser-client.service';
-import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
+import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
     EditMode,
@@ -18,11 +19,9 @@ import {
     Language,
     Node,
     Page,
-    RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
-import { take, publishReplay, refCount, map } from 'rxjs/operators';
-import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { map, publishReplay, refCount, take } from 'rxjs/operators';
 import { ContentFrameComponent } from '../../components/content-frame/content-frame.component';
 
 /**

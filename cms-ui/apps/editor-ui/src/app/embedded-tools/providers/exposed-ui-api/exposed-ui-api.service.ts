@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ExposedGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions, ToolBreadcrumb } from '@gentics/cms-integration-api-models';
 import {
     EditMode,
     FileResponse,
@@ -16,7 +17,6 @@ import {
 } from '@gentics/cms-models';
 import { IDialogConfig, INotificationOptions, ModalService, NotificationService } from '@gentics/ui-core';
 import { map } from 'rxjs/operators';
-import { ToolBreadcrumb } from '../../../../../embedded-tools-api/exposed-gcmsui-api';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
 import { WastebinModal } from '../../../core/components/wastebin-modal/wastebin-modal.component';
@@ -27,13 +27,12 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import { ExposableGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions } from '../tool-api-channel/exposable-gcmsui-api';
 
 /**
  * All methods declared on this class are callable from tool iframes / tabs.
  */
 @Injectable()
-export class ExposedUIAPI implements ExposableGCMSUIAPI {
+export class ExposedUIAPI implements ExposedGCMSUIAPI {
 
     /** Create a copy of an instance with all services injected. */
     static clone(instance: ExposedUIAPI): ExposedUIAPI {
@@ -70,18 +69,20 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
         return this.navigation.list(nodeId, folderId).navigate();
     }
 
-    refreshCurrentFolder(itemType?: 'folder' | 'form' | 'page' | 'file' | 'image'): void {
+    refreshCurrentFolder(itemType?: 'folder' | 'form' | 'page' | 'file' | 'image'): Promise<boolean> {
         if (itemType) {
-            this.folderActions.refreshList(itemType);
-        } else {
-            this.folderActions.refreshList('folder');
-            this.folderActions.refreshList('page');
-            this.folderActions.refreshList('file');
-            this.folderActions.refreshList('image');
-            if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-                this.folderActions.refreshList('form');
-            }
+            return this.folderActions.refreshList(itemType).then(() => true);
         }
+
+        this.folderActions.refreshList('folder');
+        this.folderActions.refreshList('page');
+        this.folderActions.refreshList('file');
+        this.folderActions.refreshList('image');
+        if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
+            return this.folderActions.refreshList('form').then(() => true);
+        }
+
+        return Promise.resolve(false);
     }
 
     nodeProperties(nodeId: number): Promise<boolean> {
@@ -251,14 +252,15 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
             .then(() => {});
     }
 
-    openMessageComposer(): void {
-        this.modalService.fromComponent(SendMessageModal)
+    openMessageComposer(): Promise<void> {
+        return this.modalService.fromComponent(SendMessageModal)
             .then(modal => modal.open())
             .then(() => {});
     }
 
-    openMessageInbox(): void {
+    openMessageInbox(): Promise<void> {
         this.messageService.openInbox();
+        return Promise.resolve();
     }
 
     openRepositoryBrowser(options: RepositoryBrowserOptions): Promise<(ItemInNode | TagInContainer)[]> {
@@ -309,13 +311,17 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
     }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    close(): void { }
+    close(): Promise<void> {
+        return Promise.resolve();
+    }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    navigated(path: string): void { }
+    navigated(_path: string): Promise<void> {
+        return Promise.resolve();
+    }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    provideBreadcrumbs(breadcrumbs: ToolBreadcrumb[]): void { }
+    provideBreadcrumbs(_breadcrumbs: ToolBreadcrumb[]): void { }
 
     private nodeFeatureIsActive(nodeFeature: NodeFeature): boolean {
         const activeNodeId = this.state.now.folder.activeNode;

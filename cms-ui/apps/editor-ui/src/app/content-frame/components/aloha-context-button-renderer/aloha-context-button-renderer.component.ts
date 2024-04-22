@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
 import { AlohaContextButtonComponent, OverlayElementControl } from '@gentics/aloha-models';
-import { ModalCloseError, ModalClosingReason, generateFormProvider } from '@gentics/ui-core';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 

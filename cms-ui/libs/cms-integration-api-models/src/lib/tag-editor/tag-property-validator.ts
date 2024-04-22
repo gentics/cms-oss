@@ -1,4 +1,4 @@
-import {TagPartProperty, TagPart} from '../models';
+import { TagPart, TagPartProperty } from '@gentics/cms-models';
 
 /** The result of validating a TagProperty against the constraints defined in the corresponding TagPart. */
 export interface ValidationResult {

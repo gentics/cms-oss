@@ -1,19 +1,21 @@
 import {
+    MultiValidationResult,
+    TagEditorContext,
+    Translator,
+    ValidationResult,
+    VariableTagEditorContext,
+} from '@gentics/cms-integration-api-models';
+import {
     EditableObjectTag,
     EditableTag,
-    MultiValidationResult,
     RegexValidationInfo,
     StringTagPartProperty,
-    TagEditorContext,
     TagPart,
     TagPartProperty,
     TagPartType,
     TagPropertyMap,
     TagPropertyType,
     TagType,
-    Translator,
-    ValidationResult,
-    VariableTagEditorContext,
 } from '@gentics/cms-models';
 import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { BehaviorSubject, Observable, of } from 'rxjs';

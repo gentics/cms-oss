@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import {
     CompleteTagEditor,
     CustomTagEditor,
-    EditableTag,
     TagChangedFn,
     TagEditor,
     TagEditorContext,
     TagEditorError,
     TagEditorResult,
     WindowWithCustomTagEditor,
-} from '@gentics/cms-models';
+} from '@gentics/cms-integration-api-models';
+import { EditableTag } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 
 /**

@@ -2,20 +2,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     Folder,
     Page,
     PageTagTagPartProperty,
     Raw,
-    RepositoryBrowserOptions,
     Tag,
-    TagEditorContext,
-    TagEditorError,
     TagInContainer,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn, TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
     TagType,

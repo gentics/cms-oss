@@ -8,7 +8,8 @@ import {
     QueryList,
     ViewChildren,
 } from '@angular/core';
-import { EditableTag, TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-models';
+import { TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { EditableTag } from '@gentics/cms-models';
 import { delay, filter, take } from 'rxjs/operators';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';

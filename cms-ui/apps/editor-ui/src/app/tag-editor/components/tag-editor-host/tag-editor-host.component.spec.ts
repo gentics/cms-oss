@@ -1,9 +1,11 @@
 import { Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { EditableTag, StringTagPartProperty, TagChangedFn, TagEditorResult, TagPropertyMap } from '@gentics/cms-models';
+import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
@@ -20,7 +22,6 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TagEditorHostComponent } from './tag-editor-host.component';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 
 describe('TagEditorHostComponent', () => {
 

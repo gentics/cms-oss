@@ -9,7 +9,8 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions, ModalClosingReason } from '../../common';
+import { ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions } from '../../common';
 
 /**
  * This is an internal component which is responsible for creating the modal dialog window and overlay.

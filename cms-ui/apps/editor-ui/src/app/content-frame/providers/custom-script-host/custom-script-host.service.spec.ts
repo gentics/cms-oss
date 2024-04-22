@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     EditMode,
     File as FileModel,
@@ -9,7 +10,6 @@ import {
     Image,
     Node,
     Page,
-    RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';

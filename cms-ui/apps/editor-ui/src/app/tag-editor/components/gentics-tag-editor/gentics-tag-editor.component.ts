@@ -1,26 +1,26 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, QueryList, ViewChildren } from '@angular/core';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import {
     CompleteTagEditor,
-    EditableTag,
     MultiValidationResult,
     TagChangedFn,
     TagEditorContext,
     TagEditorError,
     TagEditorResult,
-    TagPart,
     TagPropertyEditor,
-    TagPropertyMap,
     ValidationResult,
+} from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    TagPart,
+    TagPropertyMap,
     findTagPart,
 } from '@gentics/cms-models';
+import { ModalService } from '@gentics/ui-core';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
-import {
-    ModalService,
-} from '@gentics/ui-core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 
 /**
  * The GenticsTagEditor is the default TagEditor and uses the Gentics TagPropertyEditors

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     Feature,
@@ -11,7 +12,6 @@ import {
     FolderResponse,
     ImageResponse,
     ImageTagPartProperty,
-    TagEditorContext,
     TagPart,
     TagPartType,
     TagPropertyType,

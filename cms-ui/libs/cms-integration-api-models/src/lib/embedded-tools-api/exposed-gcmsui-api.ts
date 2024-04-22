@@ -1,3 +1,5 @@
+import { RepositoryBrowserOptions } from '../repository-browser';
+
 /** API methods as provided by the UI frame via MessageChannel */
 export interface ExposedGCMSUIAPI {
 
@@ -103,7 +105,7 @@ export interface DialogConfig {
     body?: string;
     buttons: Array<{
         label: string;
-        type?: 'default' | 'secondary' | 'success' | 'warning' | 'alert';
+        type?: 'default' | 'secondary' | 'success'| 'warning' | 'alert';
         flat?: boolean;
         // If specified, will be returned as the
         // value of the resolved promise (or the reason if rejected).
@@ -124,16 +126,6 @@ export interface NotificationOptions {
         dismiss?: boolean;
         result?: any;
     };
-}
-
-export interface RepositoryBrowserOptions {
-    allowedSelection: Array<'page' | 'folder' | 'image' | 'file' | 'contenttag' | 'template' | 'templatetag'>;
-    onlyInCurrentNode?: boolean;
-    selectMultiple: boolean;
-    startNode?: number;
-    startFolder?: number;
-    submitLabel?: string;
-    title?: string;
 }
 
 export interface ToolBreadcrumb {

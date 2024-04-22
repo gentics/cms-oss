@@ -1,3 +1,5 @@
+import { ModalClosingReason } from '@gentics/cms-integration-api-models';
+
 /**
  * Config options used when invoking ModalService.dialog()
  */
@@ -67,54 +69,3 @@ export const DEFAULT_MODAL_OPTIONS: IModalOptions = {
     closeOnEscape: true,
     closeOnOverlayClick: true,
 };
-
-/**
- * Enum which defines why the modal has been closed.
- */
-export enum ModalClosingReason {
-    /**
-     * When the modal has been closed by the user by pressing the Escape button.
-     * Only available when the modal has been opened with `closeOnEscape=true`.
-     */
-    ESCAPE = 'escape',
-    /**
-     * When the modal has been closed by the user by clicking on the overlay.
-     * Only available when the modal has been opened with `closeOnOverlayClick=true`.
-     */
-    OVERLAY_CLICK = 'overlay-click',
-    /**
-     * Canceled by the Modals `cancelFn` function.
-     */
-    CANCEL = 'cancel',
-    /**
-     * When the modal has been closed by the API.
-     */
-    API = 'api',
-    /**
-     * Closed because of a thrown error in the modal.
-     */
-    ERROR = 'error',
-}
-
-/**
- * Special error which is thrown when a Modal is being closed.
- */
-export class ModalCloseError extends Error {
-
-    public reason: ModalClosingReason;
-    public cause?: Error;
-
-    constructor(
-        reasonOrError: ModalClosingReason | Error,
-        message?: string,
-    ) {
-        if (reasonOrError instanceof Error) {
-            super(message);
-            this.reason = ModalClosingReason.ERROR;
-            this.cause = reasonOrError;
-        } else {
-            super(message);
-            this.reason = reasonOrError;
-        }
-    }
-}

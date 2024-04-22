@@ -9,7 +9,8 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { TagPart, TagPropertyEditor } from '@gentics/cms-models';
+import { TagPropertyEditor } from '@gentics/cms-integration-api-models';
+import { TagPart } from '@gentics/cms-models';
 import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 
 /**

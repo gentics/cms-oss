@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { IModalDialog, ModalClosingReason } from '../../common';
+import { ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { IModalDialog } from '../../common';
 
 @Component({ template: '' })
 export abstract class BaseModal<T> implements IModalDialog {

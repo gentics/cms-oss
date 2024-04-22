@@ -1,5 +1,6 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@editor-ui/app/state';
+import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     Node,
@@ -7,9 +8,7 @@ import {
     Raw,
     StringTagPartProperty,
     Tag,
-    TagEditorContext,
     TagType,
-    VariableTagEditorContext,
 } from '@gentics/cms-models';
 import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';

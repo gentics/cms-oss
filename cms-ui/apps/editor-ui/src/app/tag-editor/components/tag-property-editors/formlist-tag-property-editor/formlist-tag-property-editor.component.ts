@@ -1,18 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor, ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     FormTagPartProperty,
     FormgeneratorListResponse,
     GtxFormWithUuid,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult,
 } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { Observable, Subject, merge } from 'rxjs';

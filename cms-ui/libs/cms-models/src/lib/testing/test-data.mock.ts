@@ -1,5 +1,6 @@
+/* eslint-disable id-blacklist */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { normalize } from 'normalizr';
-
 import {
     CmsFormType,
     File as FileModel,
@@ -19,8 +20,8 @@ import {
     Template,
     User,
 } from '../models';
+import { EditableObjectTag } from '../models/editable-tag';
 import { GcmsNormalizationSchemas } from '../models/gcms-normalizer/schemas';
-import { EditableObjectTag } from '../tag-editor';
 
 const schemas = new GcmsNormalizationSchemas();
 
@@ -81,15 +82,15 @@ export function getExamplePageData(
                 constructId : 65,
                 active : true,
                 properties : {
-                  text : {
-                    type : TagPropertyType.RICHTEXT,
-                    id : 685,
-                    partId : 349,
-                    stringValue : '<br><node blogposts1><br><br><br>',
-                  },
+                    text : {
+                        type : TagPropertyType.RICHTEXT,
+                        id : 685,
+                        partId : 349,
+                        stringValue : '<br><node blogposts1><br><br><br>',
+                    },
                 },
                 type : 'CONTENTTAG',
-              },
+            },
         },
         languageVariants: {
             2: {
@@ -496,9 +497,9 @@ export function getExampleFormDataNormalized(
 
 /** Returns actual folder data from the ContentNode API for "GCN5 Demo" */
 export function getExampleFolderData({ id, userId, publishDir }: { id: number, userId?: number, publishDir?: string }
-        = { id: 115, userId: 3, publishDir: '/' }): Folder<Raw> {
+= { id: 115, userId: 3, publishDir: '/' }): Folder<Raw> {
     userId = userId || 3;
-    publishDir = publishDir || '/';
+    publishDir = publishDir || '/';
     return {
         disinherited: false,
         excluded: false,
@@ -623,20 +624,20 @@ export function getExampleFolderData({ id, userId, publishDir }: { id: number, u
         id: id,
         type: 'folder',
         breadcrumbs: [
-        {
-            id: 1,
-            name: 'GCN5 Demo',
-        },
-        {
-            id: 2,
-            name: 'A new folder',
-        },
+            {
+                id: 1,
+                name: 'GCN5 Demo',
+            },
+            {
+                id: 2,
+                name: 'A new folder',
+            },
         ],
     };
 }
 
 export function getExampleFolderDataNormalized({ id, userId, publishDir }: { id: number, userId?: number, publishDir?: string }
-        = { id: 115, userId: 3, publishDir: '/' }): Folder<Normalized> {
+= { id: 115, userId: 3, publishDir: '/' }): Folder<Normalized> {
     const rawFolder = getExampleFolderData({ id, userId, publishDir });
     const normalized = normalize(rawFolder, schemas.folder);
     return normalized.entities.folder[normalized.result] as Folder<Normalized>;
@@ -712,17 +713,17 @@ export function getExampleFileData({ id, userId }: { id: number, userId?: number
         globalId: 'A547.74274',
         name: 'Gentics_Content_Node_Technologie.pdf',
         creator: {
-          id: userId,
-          firstName: 'Node',
-          lastName: 'Admin',
-          email: 'nowhere@gentics.com',
+            id: userId,
+            firstName: 'Node',
+            lastName: 'Admin',
+            email: 'nowhere@gentics.com',
         },
         cdate: 1303996901,
         editor: {
-          id: userId,
-          firstName: 'Node',
-          lastName: 'Admin',
-          email: 'nowhere@gentics.com',
+            id: userId,
+            firstName: 'Node',
+            lastName: 'Admin',
+            email: 'nowhere@gentics.com',
         },
         edate: 1303996901,
         type: 'file',
@@ -752,7 +753,7 @@ export function getExampleFileData({ id, userId }: { id: number, userId?: number
         cls: 'file',
         iconCls: 'gtx_file',
         text: 'Gentics_Content_Node_Technologie.pdf',
-      };
+    };
 }
 
 export function getExampleFileDataNormalized({ id, userId }: { id: number, userId?: number } = { id: 1, userId: 3 }): FileModel<Normalized> {
@@ -1050,9 +1051,9 @@ export function getExampleTemplateDataNormalized(
         masterId: 1,
         userId: 3,
     }): Template<Normalized> {
-        const rawTemplate = getExampleTemplateData({ id, masterId, userId });
-        const normalized = normalize(rawTemplate, schemas.template);
-        return normalized.entities.template[normalized.result] as Template<Normalized>;
+    const rawTemplate = getExampleTemplateData({ id, masterId, userId });
+    const normalized = normalize(rawTemplate, schemas.template);
+    return normalized.entities.template[normalized.result] as Template<Normalized>;
 }
 
 export function getExampleFileObjectData(): Partial<File> {

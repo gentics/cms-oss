@@ -1,23 +1,25 @@
 import { Injectable } from '@angular/core';
 import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
+    GcmsUiServices,
+    RepositoryBrowserOptions,
+    TagEditorContext,
+    TagEditorOptions,
+    TagEditorResult,
+    VariableTagEditorContext,
+} from '@gentics/cms-integration-api-models';
+import {
     AnyModelType,
     EditableTag,
     File,
     Folder,
-    GcmsUiServices,
     Image,
     ModelType,
     Node,
     Page,
-    RepositoryBrowserOptions,
     Tag,
-    TagEditorContext,
-    TagEditorOptions,
-    TagEditorResult,
     TagType,
     Template,
-    VariableTagEditorContext,
 } from '@gentics/cms-models';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';

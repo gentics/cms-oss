@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ValidationResult } from '@gentics/cms-models';
+import { ValidationResult } from '@gentics/cms-integration-api-models';
 
 /**
  * Displays the appropriate error message if a TagPropery validation fails.

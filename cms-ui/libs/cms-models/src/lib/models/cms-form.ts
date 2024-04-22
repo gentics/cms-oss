@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { RepositoryBrowserOptions } from '../repository-browser';
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
 import { InheritableItem } from './item';
 import { PageVersion } from './page';
+import { SerializableRepositoryBrowserOptions } from './repository-browser';
 import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 import { User } from './user';
 
@@ -419,7 +419,7 @@ export interface CmsFormElementPropertySelectableOptions extends CmsFormElementP
 
 export interface CmsFormElementPropertyRepositoryBrowser extends CmsFormElementPropertyBase {
     type: CmsFormElementPropertyType.REPOSITORY_BROWSER;
-    options: RepositoryBrowserOptions;
+    options: SerializableRepositoryBrowserOptions;
     nodeId?: number;
     value?: number | number[];
 }

@@ -1,8 +1,7 @@
-import {TagPart, TagPartProperty, TagPropertyMap} from '../models';
-import {CustomEditor} from './custom-editor';
-import {EditableTag} from './editable-tag';
-import {TagEditorContext} from './tag-editor-context';
-import {MultiValidationResult} from './tag-property-validator';
+import { EditableTag, TagPart, TagPartProperty, TagPropertyMap } from '@gentics/cms-models';
+import { CustomEditor } from './custom-editor';
+import { TagEditorContext } from './tag-editor-context';
+import { MultiValidationResult } from './tag-property-validator';
 
 /**
  * The `onChange` function that a `TagPropertyEditor` needs to call when the user changes the `TagProperty` assigned to the editor.
@@ -103,5 +102,6 @@ export interface WindowWithCustomTagPropertyEditor {
      * The `CustomTagPropertyEditor` provided by this window. This must have been set
      * by the time the `load` event fires.
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     GcmsCustomTagPropertyEditor: CustomTagPropertyEditor;
 }

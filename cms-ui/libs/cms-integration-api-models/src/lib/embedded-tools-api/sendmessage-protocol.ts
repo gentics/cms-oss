@@ -1,21 +1,25 @@
-import { ExposableToolAPI } from './exposable-tool-api';
+import { ExposableEmbeddedToolAPI } from './exposable-embedded-tool-api';
 import { ExposedGCMSUIAPI } from './exposed-gcmsui-api';
+
+export interface UIHandshakeMethod {
+    name: keyof ExposedGCMSUIAPI;
+    returns: 'Promise';
+}
 
 export interface UIHandshake {
     type: 'handshake';
     path: string;
-    supportedMethods: Array<{
-        name: keyof ExposedGCMSUIAPI;
-        returns: 'Promise';
-    }>;
+    supportedMethods: UIHandshakeMethod[];
+}
+
+export interface ToolHandshakeMethod {
+    name: keyof ExposableEmbeddedToolAPI;
+    returns: 'Promise';
 }
 
 export interface ToolHandshake {
     type: 'handshake';
-    supportedMethods: Array<{
-        name: keyof ExposableToolAPI;
-        returns: 'Promise';
-    }>;
+    supportedMethods: ToolHandshakeMethod[];
 }
 
 export interface RemoteMethodCallMessage {

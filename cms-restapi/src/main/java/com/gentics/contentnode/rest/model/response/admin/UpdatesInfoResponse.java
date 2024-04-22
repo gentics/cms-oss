@@ -13,6 +13,9 @@ public class UpdatesInfoResponse extends GenericResponse {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Available updates
+	 */
 	protected List<Update> available;
 
 	/**

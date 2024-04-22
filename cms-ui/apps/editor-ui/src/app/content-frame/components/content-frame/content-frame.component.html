@@ -17,7 +17,7 @@
     ></gtx-editor-toolbar>
 
     <gtx-tabs
-        *ngIf="editMode === 'editProperties' && (currentItem?.type === 'file' || currentItem?.type === 'image')"
+        *ngIf="editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')"
         pure
         class="properties-tabs"
         [activeId]="propertiesTab$ | async"
@@ -36,7 +36,7 @@
     </gtx-tabs>
 
     <div
-        *ngIf="editMode === 'editProperties' && (currentItem?.type === 'file' || currentItem?.type === 'image')"
+        *ngIf="editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')"
         class="preview-form"
         [hidden]="(propertiesTab$ | async) !== 'preview'"
     >
@@ -47,7 +47,7 @@
     </div>
 
     <div
-        *ngIf="editMode === 'editProperties'"
+        *ngIf="editMode === EditMode.EDIT_PROPERTIES"
         class="properties-form"
         [hidden]="(propertiesTab$ | async) !== 'properties'"
     >
@@ -57,7 +57,7 @@
         ></combined-properties-editor>
     </div>
 
-    <div *ngIf="(editMode === 'preview' || editMode === 'edit') && currentItem?.type === 'form'" class="form-editor">
+    <div *ngIf="(editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form'" class="form-editor">
         <gtx-form-editor
             class="form-editor"
             [form]="currentItem"
@@ -69,15 +69,15 @@
         ></gtx-form-editor>
     </div>
 
-    <div class="frame-wrapper" [hidden]="editMode === 'editProperties' || currentItem?.type === 'form'">
+    <div class="frame-wrapper" [hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
         <gtx-progress-bar
             class="frame-requesting"
-            [active]="requesting || !windowLoaded || (editMode === 'edit' && pageComparisonLanguage == null && !alohaWindowLoaded)"
+            [active]="requesting || !windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
         ></gtx-progress-bar>
 
         <gtx-loading-spinner
-            [visible]="requesting || !windowLoaded || (editMode === 'edit' && pageComparisonLanguage == null && !alohaWindowLoaded)"
-            [message]="(editMode === 'edit' ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| i18n"
+            [visible]="requesting || !windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+            [message]="(editMode === EditMode.EDIT ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| i18n"
             [longerMessage]="'editor.loading_takes_more_time' | i18n"
         ></gtx-loading-spinner>
 

@@ -1,30 +1,42 @@
-<ng-template ngFor let-branch [ngForOf]="branches">
-    <gtx-dropdown-item *ngIf="useLinks"
-                       [ngClass]="'depth-' + depth"
-                       (click)="nodeSelected.emit(branch.node)"
-                       [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId] } }]">
-        <a (click)="nodeSelected.emit(branch.node)"
-           [title]="branch?.folder?.description"
-           [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId] } }]">
+<ng-container *ngFor="let branch of branches">
+    <gtx-dropdown-item
+        *ngIf="useLinks"
+        [ngClass]="'depth-' + depth"
+        [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
+        (click)="nodeSelected.emit(branch.node)"
+    >
+        <a
+            [title]="branch?.folder?.description"
+            [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
+            (click)="nodeSelected.emit(branch.node)"
+        >
             <div *ngIf="0 < depth" class="inherited-icon">
-                <i class="material-icons" [attr.translate]="'no'">input</i>
+                <icon>input</icon>
             </div>
             {{ branch.node.name }}
         </a>
     </gtx-dropdown-item>
-    <gtx-dropdown-item *ngIf="!useLinks"
-                       [ngClass]="'depth-' + depth"
-                       (click)="nodeSelected.emit(branch.node)">
-        <a (click)="nodeSelected.emit(branch.node)"
-           [title]="branch.folder?.description">
+
+    <gtx-dropdown-item
+        *ngIf="!useLinks"
+        [ngClass]="'depth-' + depth"
+        (click)="nodeSelected.emit(branch.node)"
+    >
+        <a
+            [title]="branch.folder?.description"
+            (click)="nodeSelected.emit(branch.node)"
+        >
             <div *ngIf="0 < depth" class="inherited-icon">
-                <i class="material-icons" [attr.translate]="'no'">input</i>
+                <icon>input</icon>
             </div>
             {{ branch.node.name }}
         </a>
     </gtx-dropdown-item>
-    <node-selector-tree [branches]="branch.children"
-                        [depth]="depth + 1"
-                        [useLinks]="useLinks"
-                        (nodeSelected)="nodeSelected.emit($event)"></node-selector-tree>
-</ng-template>
+
+    <node-selector-tree
+        [branches]="branch.children"
+        [depth]="depth + 1"
+        [useLinks]="useLinks"
+        (nodeSelected)="nodeSelected.emit($event)"
+    ></node-selector-tree>
+</ng-container>

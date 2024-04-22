@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    Output,
+    SimpleChanges,
+} from '@angular/core';
 import { EditorState, SaveBehaviour } from '@editor-ui/app/common/models';
 import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
@@ -10,8 +21,8 @@ import { PageVersionsModal } from '@editor-ui/app/shared/components';
 import { BreadcrumbsService } from '@editor-ui/app/shared/providers';
 import { PublishableStateUtil } from '@editor-ui/app/shared/util/entity-states';
 import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '@editor-ui/app/state';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     File,
     Folder,
     Form,
@@ -165,6 +176,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
         this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
             this.alohaReady = ready;
+            this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         }));
 
@@ -392,7 +404,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
             editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
-            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
+            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked && (!isPage || this.alohaReady),
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

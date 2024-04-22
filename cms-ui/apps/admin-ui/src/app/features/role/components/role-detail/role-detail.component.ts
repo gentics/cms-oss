@@ -19,7 +19,6 @@ import {
     RoleBO,
     RolePermissions,
     RoleUpdateRequest,
-    TypePermissions
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
@@ -164,7 +163,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         });
 
         this.permissionRolesRead$ = this.permissionsService.getPermissions(AccessControlledType.ROLE).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();

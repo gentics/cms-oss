@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { TranslateService } from '@ngx-translate/core';
 import { FALLBACK_LANGUAGE, UI_LANGUAGES } from '../../../common/config/config';
 import { applyShortcuts, translateParams } from './i18n-utils';

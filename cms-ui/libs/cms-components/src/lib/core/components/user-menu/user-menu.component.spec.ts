@@ -2,7 +2,8 @@ import { Component, Pipe, PipeTransform, Type } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { GtxUserMenuComponent, GtxUserMenuToggleComponent, UILanguage } from '@gentics/cms-components';
+import { GtxUserMenuComponent, GtxUserMenuToggleComponent } from '@gentics/cms-components';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
 import { ButtonComponent, DropdownItemComponent, GenticsUICoreModule, SideMenuComponent } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../testing';
@@ -37,7 +38,7 @@ class TestComponent {
         { code: 'it', name: 'Français' },
         { code: 'fr', name: 'Italiano' },
     ];
-    currentlanguage: UILanguage = 'en';
+    currentlanguage: GcmsUiLanguage = 'en';
 
     onSetLanguage = jasmine.createSpy('TestComponent.onSetLanguage');
     showPasswordModal = jasmine.createSpy('TestComponent.showPasswordModal');

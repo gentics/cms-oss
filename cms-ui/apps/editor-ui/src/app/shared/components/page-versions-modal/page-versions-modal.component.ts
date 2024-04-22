@@ -9,7 +9,8 @@ import {
     OnDestroy,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { EditMode, Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';

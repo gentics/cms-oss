@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ExposedGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions, ToolBreadcrumb } from '@gentics/cms-integration-api-models';
+import { EditMode, ExposedGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions, ToolBreadcrumb } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     FileResponse,
     Folder,
     FolderItemType,

@@ -1,13 +1,13 @@
-import { cloneDeep } from 'lodash-es';
-import { FolderItemType } from '../../item';
-import { RecursivePartial } from '../../type-util';
 import {
     AccessControlledType,
+    FolderItemType,
     GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP,
     GcmsPermission,
     GcmsRolePrivilege,
     PermissionsMapCollection,
-} from '../cms';
+    RecursivePartial,
+} from '@gentics/cms-models';
+import { cloneDeep } from 'lodash-es';
 import {
     DefaultPermissionsFactory,
     FolderInstancePermissions,

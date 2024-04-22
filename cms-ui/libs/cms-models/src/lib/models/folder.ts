@@ -1,6 +1,6 @@
 import { InheritableItem } from './item';
 import { PermissionsMapCollection } from './permissions';
-import { PrivilegeFlagName, PrivilegeMap } from './permissions/cms/privileges';
+import { PrivilegeFlagName, PrivilegeMap } from './privileges';
 import { Tags } from './tag';
 import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 

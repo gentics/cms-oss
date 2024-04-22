@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IndexByKey } from '@gentics/cms-models';
-import { GcmsUiLanguage } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';

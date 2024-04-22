@@ -4,7 +4,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, Update, UsersnapSettings } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { EntityIdType, NormalizableEntityType, Update, UsersnapSettings, Version } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import { StateOperator, iif, patch } from '@ngxs/store/operators';
 import { FALLBACK_LANGUAGE } from '../../common/config/config';
@@ -33,7 +34,7 @@ export interface UIStateModel {
     backendLanguage: GcmsUiLanguage;
     language: GcmsUiLanguage;
     cmsUpdates: Update[];
-    cmpVersion: GtxVersion;
+    cmpVersion: Version;
     uiVersion: string;
     editorIsFocused?: boolean;
     editorIsOpen?: boolean;

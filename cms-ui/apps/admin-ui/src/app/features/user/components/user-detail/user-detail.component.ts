@@ -26,8 +26,7 @@ import {
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
-    User
+    User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
@@ -141,7 +140,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         });
 
         this.permissionGroupsRead$ = this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
@@ -204,7 +203,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
     /**
      * Set new value of form 'Properties'
      */
-    protected fgPropertiesUpdate(user: User<Normalized | Raw>): void {
+    protected fgPropertiesUpdate(user: User<Normalized | Raw>): void {
         this.fgProperties.setValue({
             firstName: user.firstName,
             lastName: user.lastName,

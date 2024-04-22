@@ -14,7 +14,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { EditMode, FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
     getExampleFormDataNormalized,
     getExampleLanguageData,

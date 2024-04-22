@@ -5,6 +5,7 @@
     "@angular/common": "15.2.5",
     "@angular/core": "15.2.5",
     "@gentics/cms-models": "^6.1.0-SNAPSHOT",
+    "@gentics/cms-integration-api-models": "^6.1.0-SNAPSHOT",
     "@gentics/ui-core": "^6.1.0-SNAPSHOT",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",

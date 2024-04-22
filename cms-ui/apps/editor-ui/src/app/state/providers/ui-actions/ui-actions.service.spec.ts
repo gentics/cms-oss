@@ -1,7 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { Api } from '@editor-ui/app/core/providers/api';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { GtxVersion, GtxVersionCompatibility, ResponseCode, UsersnapSettings, UsersnapSettingsResponse, VersionResponse } from '@gentics/cms-models';
+import {
+    Variant,
+    Version,
+    VersionCompatibility,
+    ResponseCode,
+    UsersnapSettings,
+    UsersnapSettingsResponse,
+    VersionResponse,
+} from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { ApplicationStateService } from '..';
@@ -10,25 +18,26 @@ import { STATE_MODULES } from '../../modules';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { UIActionsService } from './ui-actions.service';
 
-const CMP_VERSION: GtxVersion = {
+const CMP_VERSION: Version = {
     cmpVersion: '7.8',
     version: '5.38.0',
+    variant: Variant.OPEN_SOURCE,
     nodeInfo: {
         'CMPNode Java 2': {
             meshVersion: '1.5.0',
             portalType: 'Gentics Portal | java',
             portalVersion: '1.2.9',
-            compatibility: GtxVersionCompatibility.NOT_SUPPORTED,
+            compatibility: VersionCompatibility.NOT_SUPPORTED,
         },
         'CMPNode PHP': {
             meshVersion: '1.6.0',
             portalType: 'Gentics Portal | php',
             portalVersion: '1.2.0',
-            compatibility: GtxVersionCompatibility.SUPPORTED,
+            compatibility: VersionCompatibility.SUPPORTED,
         },
         'CMPNode Java': {
             meshVersion: '1.6.0',
-            compatibility: GtxVersionCompatibility.UNKNOWN,
+            compatibility: VersionCompatibility.UNKNOWN,
         },
     },
 };

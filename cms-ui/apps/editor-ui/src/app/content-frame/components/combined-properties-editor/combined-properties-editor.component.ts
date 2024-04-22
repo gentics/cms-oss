@@ -13,7 +13,15 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
-import { EditableNodeProps, EditableProperties, ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
+import {
+    EditableNodeProps,
+    EditableProperties,
+    ITEM_PROPERTIES_TAB,
+    ITEM_REPORTS_TAB,
+    ITEM_TAG_LIST_TAB,
+    PropertiesTab,
+    noItemPermissions,
+} from '@editor-ui/app/common/models';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
@@ -37,8 +45,8 @@ import {
     TagEditorHostComponent,
     TagEditorService,
 } from '@editor-ui/app/tag-editor';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     EditableFileProps,
     EditableFolderProps,
     EditableFormProps,
@@ -49,7 +57,8 @@ import {
     Folder,
     FolderItemOrTemplateType,
     FolderSaveRequestOptions,
-    Form, ItemPermissions,
+    Form,
+    ItemPermissions,
     ItemType,
     ItemWithContentTags,
     ItemWithObjectTags,
@@ -62,7 +71,6 @@ import {
     Tags,
     Template,
     TemplateFolderListRequest,
-    noItemPermissions,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
@@ -78,7 +86,7 @@ import {
     combineLatest,
     forkJoin,
     from,
-    of as observableOf,
+    of,
 } from 'rxjs';
 import {
     delay,
@@ -325,7 +333,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const objPropAndTagEditor$ = this.activeTabObjectProperty$.pipe(
             filter(objProp => !!objProp && !!objProp.tag.tagType),
             switchMap(objProp => combineLatest([
-                observableOf(objProp),
+                of(objProp),
                 this.loadItemPermissions(objProp.item),
                 tagEditorHost$,
             ])),
@@ -388,7 +396,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             })
             .navigate();
 
-        observableOf(null).pipe(
+        of(null).pipe(
             delay(0),
         ).subscribe(() => this.scrollToRight());
     }
@@ -606,7 +614,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ...objProp,
             tagType: objProp.construct,
         }));
-        return observableOf(editableTags);
+        return of(editableTags);
     }
 
     public saveItemProperties(
@@ -732,17 +740,17 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             return from(this.folderActions.getFolder(item.id, { construct: true, update: true }));
         }
 
-        return observableOf(item);
+        return of(item);
     }
 
     private loadItemFolder(item: ItemWithObjectTags | Node): Observable<{ item: ItemWithObjectTags | Node, folder: Folder }> {
         if (item.type === 'folder') {
-            return observableOf({ item: item, folder: item });
+            return of({ item: item, folder: item });
         }
 
         const existingFolderEntity = this.entityResolver.getFolder(item.folderId);
         if (existingFolderEntity) {
-            return observableOf({ item: item, folder: existingFolderEntity });
+            return of({ item: item, folder: existingFolderEntity });
         }
 
         // Somehow, a node loads after the folder when the node's folder properties are loaded on refresh
@@ -773,7 +781,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (node.id === folderState.activeNode && !folderState.activeNodeLanguages.fetching && folderState.activeNodeLanguages.total) {
             const languageIds = folderState.activeNodeLanguages.list;
             const languages = languageIds.map(id => this.entityResolver.getLanguage(id));
-            return observableOf(languages);
+            return of(languages);
         }
 
         return this.client.node.listLanguages(node.id).pipe(
@@ -786,7 +794,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (folder.id === folderState.activeFolder && !folderState.templates.fetching && folderState.templates.total) {
             const templateIds = folderState.templates.list;
             const templates = templateIds.map(id => this.entityResolver.getTemplate(id));
-            return observableOf(templates);
+            return of(templates);
         }
 
         const options: TemplateFolderListRequest = {

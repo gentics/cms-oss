@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { StageableItem } from '@editor-ui/app/common/models';
+import { EditorPermissions, StageableItem } from '@editor-ui/app/common/models';
 import { parentFolderOfItem } from '@editor-ui/app/common/utils/parent-folder-of-item';
 import {
     ChannelDependenciesModal,
@@ -23,14 +23,12 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { InitializableServiceBase } from '@gentics/cms-components';
-import { ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { EditMode, ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
     CmsFormData,
     CmsFormElement,
     DependencyItemTypePlural,
-    EditMode,
-    EditorPermissions,
     Favourite,
     File as FileModel,
     Folder,

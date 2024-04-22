@@ -1,21 +1,26 @@
 /**
  * Gentics CMP Version Response data.
  */
-export interface GtxVersion {
+export interface Version {
     cmpVersion: string;
     version: string;
-    variant: string;
-    nodeInfo: { [key: string]: GtxVersionNodeInfo; };
+    variant: Variant;
+    nodeInfo: { [key: string]: NodeVersionInfo; };
 }
 
-export interface GtxVersionNodeInfo {
+export enum Variant {
+    OPEN_SOURCE = 'OSS',
+    ENTERPRISE = 'EE',
+}
+
+export interface NodeVersionInfo {
     meshVersion?: string;
     portalType?: string;
     portalVersion?: string;
-    compatibility?: GtxVersionCompatibility;
+    compatibility?: VersionCompatibility;
 }
 
-export enum GtxVersionCompatibility {
+export enum VersionCompatibility {
     /** The specific node relies on software dependencies not compatible to another part of the Gentics Content Management Platform */
     NOT_SUPPORTED = 'NOT_SUPPORTED',
     /** All dependencies the specific node relies on are fully supported by Gentics Content Management Platform */

@@ -1,7 +1,7 @@
 import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { EditMode } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { GenticsUIImageEditorModule } from '@gentics/image-editor';
 import { GenticsUICoreModule, IModalInstance } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';

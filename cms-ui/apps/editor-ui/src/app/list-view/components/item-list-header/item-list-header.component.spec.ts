@@ -1,6 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { ItemsInfo } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -15,7 +15,7 @@ import { I18nDatePipe } from '@editor-ui/app/shared/pipes/i18n-date/i18n-date.pi
 import { ApplicationStateService, FolderActionsService, UsageActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { EditorPermissions, Folder, Image, Page, getNoPermissions } from '@gentics/cms-models';
+import { Folder, Image, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
@@ -35,8 +35,8 @@ const enum ITEM_LIST_STATES {
 
 function getItemListStatus(fixture: ComponentFixture<TestComponent>): string {
     // get dom element
-    let statusElements: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('item-list-header .item-list-status'));
-    let statusElementClass = statusElements.map(e => ({ id: e.id, class: e.classList.value }));
+    const statusElements: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('item-list-header .item-list-status'));
+    const statusElementClass = statusElements.map(e => ({ id: e.id, class: e.classList.value }));
     if (statusElementClass.length === 1 && statusElementClass[0].class) {
         return statusElementClass[0].id;
     } else {
@@ -68,7 +68,7 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
         [showStatusIcons]="true"
     >
     </item-list-header>`,
-    })
+})
 class TestComponent {
     itemType = 'folder';
     items: Array<Partial<Page> | Partial<Folder> | Partial<Image>> = [

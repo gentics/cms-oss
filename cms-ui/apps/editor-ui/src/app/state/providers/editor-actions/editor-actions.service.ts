@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { EditMode, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { PageVersion } from '@gentics/cms-models';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';

@@ -3,7 +3,7 @@ import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, Sk
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
@@ -14,7 +14,7 @@ import { environment as environmentConfig } from '../../environments/environment
 import { API_BASE_URL } from '../common/utils/base-urls';
 import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
 import { DebugTool } from '../development/components/debug-tool/debug-tool.component';
-import { environment } from '../development/development-tools';
+import { ENVIRONMENT_TOKEN } from '../development/development-tools';
 import { DebugToolService } from '../development/providers/debug-tool.service';
 import { TraceErrorHandler } from '../development/providers/trace-error-handler';
 import { EmbeddedToolsModule } from '../embedded-tools/embedded-tools.module';
@@ -22,11 +22,11 @@ import { EmbeddedToolsService } from '../embedded-tools/providers/embedded-tools
 import { ExposedUIAPI } from '../embedded-tools/providers/exposed-ui-api/exposed-ui-api.service';
 import { ToolApiChannelService } from '../embedded-tools/providers/tool-api-channel/tool-api-channel.service';
 import { ToolMessagingChannelFactory } from '../embedded-tools/providers/tool-messaging-channel/tool-messaging-channel.factory';
+import { KeycloakService } from '../login/providers/keycloak/keycloak.service';
 import { SharedModule } from '../shared/shared.module';
 import { ApplicationStateService } from '../state';
 import { StateModule } from '../state/state.module';
 import { TagEditorModule } from '../tag-editor';
-import { KeycloakService } from '../login/providers/keycloak/keycloak.service';
 import {
     ActionsSelectorComponent,
     AlertCenterComponent,
@@ -164,7 +164,7 @@ const PROVIDERS = [
     UserSettingsService,
     UsersnapService,
     { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormat },
-    { provide: environment, useValue: environmentConfig.production ? 'production' : 'development' },
+    { provide: ENVIRONMENT_TOKEN, useValue: environmentConfig.production ? 'production' : 'development' },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: NgErrorHandler, useClass: TraceErrorHandler },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },

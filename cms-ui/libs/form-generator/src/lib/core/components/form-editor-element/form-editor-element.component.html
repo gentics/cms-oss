@@ -1,11 +1,11 @@
 <div
     class="form-element-container-outer"
-    [class.read-only]="state.readOnly"
-    [class.is-interactive]="state.isInteractive"
-    [class.properties-editor-open]="state.propertiesEditorOpen"
+    [class.read-only]="readonly"
+    [class.is-interactive]="!readonly"
+    [class.properties-editor-open]="propertiesEditorIsOpen"
     [class.is-inactive]="!element.active"
-    [class.is-dragged]="state.isBeingDragged"
-    [draggable]="state.isInteractive"
+    [class.is-dragged]="isBeingDragged"
+    [draggable]="!readonly"
     (dragstart)="onDragStart($event)"
     (dragend)="onDragEnd()"
 >
@@ -14,40 +14,37 @@
         class="form-element-flag has-property-error"
         [attr.title]="'gtxFormGenerator.element_status_property_error' | i18n"
         [@fadeAnim]
-        >
-            error_outline
-    </icon>
+    >error_outline</icon>
+
     <ng-template #isUntranslatedIcon>
         <icon
-            *ngIf="state.isUntranslated"
+            *ngIf="isUntranslated"
             class="form-element-flag is-untranslated"
             [attr.title]="'gtxFormGenerator.element_status_missing_translation' | i18n"
             [@fadeAnim]
-        >
-            translate
-        </icon>
+        >translate</icon>
     </ng-template>
 
     <div
         class="form-element-container-inner"
-        [class.is-interactive-in-editor]="state.isInteractive && state.isInEditor"
-        [class.form-element-untranslated]="state.isUntranslated"
+        [class.is-interactive-in-editor]="!readonly && isInEditor"
+        [class.form-element-untranslated]="isUntranslated"
     >
         <div
             class="form-element-container-header"
             (click)="containerClicked($event)"
         >
             <div
-                *ngIf="element?.properties?.length > 0 || !state.isInEditor"
+                *ngIf="element?.properties?.length > 0 || !isInEditor"
                 class="form-element-type"
-                [ngClass]="{ 'form-element-type--used-as-title': !state.isInEditor }"
+                [ngClass]="{ 'form-element-type--used-as-title': !isInEditor }"
             >
                 {{ element?.type_label_i18n_ui | i18nfg$:'ui' | async }}
             </div>
             <icon
-                *ngIf="!state.readOnly && element.properties && element.properties.length > 0"
+                *ngIf="!readonly && element.properties && element.properties.length > 0"
                 class="form-element-btn-properties-editor-toggle"
-                [class.active]="state.propertiesEditorOpen"
+                [class.active]="propertiesEditorIsOpen"
                 [attr.title]="'gtxFormGenerator.element_button_properties_menu_toggle' | i18n"
                 [@fadeAnim]
             >
@@ -56,7 +53,7 @@
         </div>
 
         <div
-            *ngIf="state.isInEditor"
+            *ngIf="isInEditor"
             class="form-element-preview-container"
         >
             <gtx-form-element-preview
@@ -67,14 +64,14 @@
         </div>
 
         <div
-            *ngIf="state.isInEditor && element.properties && element.properties.length > 0; else placeholderElement"
+            *ngIf="isInEditor && element.properties && element.properties.length > 0; else placeholderElement"
             class="form-element-properties-editor-container"
-            [class.form-element-properties-editor-container--opened]="state.propertiesEditorOpen"
+            [class.form-element-properties-editor-container--opened]="propertiesEditorIsOpen"
             [draggable]="true"
             (dragstart)="disableDragEvent($event)"
         >
             <gtx-form-element-properties-editor
-                [style.display]="state.propertiesEditorOpen ? 'block' : 'none'"
+                [style.display]="propertiesEditorIsOpen ? 'block' : 'none'"
                 [properties]="element.properties"
                 (propertiesChange)="onPropertiesChange($event)"
                 (translationErrorStatus)="onTranslationErrorChange($event)"
@@ -82,7 +79,7 @@
             >
             </gtx-form-element-properties-editor>
             <div class="form-element-name"
-                [style.display]="state.propertiesEditorOpen ? 'block' : 'none'"
+                [style.display]="propertiesEditorIsOpen ? 'block' : 'none'"
             >
                 {{ element?.name }}
             </div>
@@ -96,13 +93,13 @@
         <div
             *ngIf="element.isContainer"
             class="form-element-nested-container"
-            [class.read-only]="state.readOnly"
+            [class.read-only]="readonly"
             [draggable]="true"
             (dragstart)="disableDragEvent($event)"
         >
             <!-- <div
                 class="form-element-nested-container-overlay"
-                [class.properties-editor-open]="state.propertiesEditorOpen"
+                [class.properties-editor-open]="propertiesEditorIsOpen"
             >
             </div> -->
             <div class="form-element-container">
@@ -110,10 +107,10 @@
                         [containerId]="element.globalId"
                         [elements]="element.elements"
                         (elementsChange)="onElementsChange($event)"
-                        [formEditMode]="_formEditMode"
+                        [readonly]="readonly"
                         [activeUiLanguageCode]="activeUiLanguageCode"
                         [activeContentLanguageCode]="activeContentLanguageCode"
-                        [hideDropZones]="hideDropZones || state.isBeingDragged"
+                        [hideDropZones]="hideDropZones || isBeingDragged"
                         [cannotReceive]="element.cannotContain && element.isContainer ? element.cannotContain : []"
                         (beforeFormElementInsert)="onFormElementInsert($event)"
                         (propertiesErrorChange)="onPropertiesErrorChange($event)"
@@ -126,7 +123,7 @@
 
 
     <div
-        *ngIf="!state.readOnly; else readOnlyIcons"
+        *ngIf="!readonly; else readOnlyIcons"
         class="form-element-buttons-container"
         [draggable]="true"
         (dragstart)="disableDragEvent($event)"
@@ -145,7 +142,7 @@
 
     <ng-template #readOnlyIcons>
         <div
-            *ngIf="state.isInEditor"
+            *ngIf="isInEditor"
             class="form-element-buttons-container"
             [draggable]="true"
             (dragstart)="disableDragEvent($event)"

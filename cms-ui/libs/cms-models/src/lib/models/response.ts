@@ -12,6 +12,7 @@ import { Feature, NodeFeature, NodeFeatureModel, NodeFeatures } from './feature'
 import { File } from './file';
 import { Folder } from './folder';
 import { Group } from './group';
+import { PermissionsAndRoles, PermissionsSet } from './group-permissions';
 import { I18nLanguage } from './i18n-language';
 import { Image } from './image';
 import { FolderItemType, InheritableItem, Item, Usage } from './item';
@@ -23,8 +24,8 @@ import { ObjectProperty } from './object-property';
 import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { Page, PageWithExternalLinks } from './page';
-import { GcmsPermission, PermissionsAndRoles, PermissionsMapCollection, PermissionsSet } from './permissions';
-import { PrivilegeMapFromServer } from './permissions/cms/privileges';
+import { GcmsPermission, PermissionsMapCollection } from './permissions';
+import { PrivilegeMapFromServer } from './privileges';
 import { Role, RolePermissions } from './role';
 import { Schedule } from './schedule';
 import { ScheduleExecution } from './schedule-execution';
@@ -35,10 +36,9 @@ import { Construct, Tag, TagStatus, TagType } from './tag';
 import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
-import { GcmsUiLanguage } from './ui-state';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
-import { GtxVersionNodeInfo } from './version';
+import { NodeVersionInfo, Variant } from './version';
 
 // GENERIC RESPONSE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -574,7 +574,7 @@ export type I18nLanguageSetResponse = Response;
  * Response from `GET /i18n/get`
  */
 export interface I18nLanguageResponse extends Response {
-    code: GcmsUiLanguage;
+    code: string;
 }
 
 /**
@@ -745,8 +745,8 @@ export interface LoginResponse extends Response {
 export interface VersionResponse extends Response {
     cmpVersion: string;
     version: string;
-    variant: string;
-    nodeInfo: { [key: string]: GtxVersionNodeInfo; };
+    variant: Variant;
+    nodeInfo: { [key: string]: NodeVersionInfo; };
 }
 
 /**

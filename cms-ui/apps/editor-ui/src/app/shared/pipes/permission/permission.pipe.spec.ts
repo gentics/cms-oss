@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { ChangeDetectorRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { EditorPermissions, Page } from '@gentics/cms-models';
+import { Page } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, Observable, Subject, of } from 'rxjs';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';

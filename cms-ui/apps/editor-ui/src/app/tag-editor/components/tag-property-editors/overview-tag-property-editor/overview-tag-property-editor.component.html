@@ -115,7 +115,7 @@
                 >
                     <ng-template let-item="item" let-index="index">
                         <span *ngIf="item.type" class="item-icon" [ngClass]="item.type || ''">
-                            <icon>{{ iconForItemType(item.type) }}</icon>
+                            <icon>{{ item.type | gtxTypeIcon }}</icon>
                         </span>
 
                         <span class="item-path" [ngSwitch]="item.type">

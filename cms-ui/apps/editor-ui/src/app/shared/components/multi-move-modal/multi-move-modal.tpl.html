@@ -18,7 +18,7 @@
         </p>
         <gtx-contents-list-item *ngFor="let item of canNotBeMoved" [ngClass]="itemType || ''">
             <div class="item-icon">
-                <icon>{{ iconForItemType(itemType) }}</icon>
+                <icon>{{ itemType | gtxTypeIcon }}</icon>
             </div>
             <div class="item-primary">
                 <span class="inherited-icon" *ngIf="item.inherited"
@@ -50,7 +50,7 @@
         </p>
         <gtx-contents-list-item *ngFor="let item of willBeMoved" [ngClass]="itemType || ''">
             <div class="item-icon">
-                <icon>{{ iconForItemType(itemType) }}</icon>
+                <icon>{{ itemType | gtxTypeIcon }}</icon>
             </div>
             <div class="item-primary">
                 <span class="item-name">{{ item.name }}</span>

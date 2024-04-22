@@ -4,18 +4,15 @@ import { AppStateService, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import {
     AccessControlledType,
-    GcmsPermission,
     Group,
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
     User,
     UserGroupNodeRestrictionsResponse,
-    UserListOptions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { combineLatest, forkJoin, Observable, of, OperatorFunction } from 'rxjs';
+import { Observable, OperatorFunction, combineLatest, forkJoin, of } from 'rxjs';
 import { catchError, filter, first, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmRemoveUserFromGroupModalComponent } from '../../components/confirm-remove-user-from-group-modal/confirm-remove-user-from-group-modal.component';
 import { GroupDataService } from '../group-data/group-data.service';
@@ -86,10 +83,10 @@ export class GroupUserDataService extends UserDataService {
     getEntitiesFromApi(): Observable<User<Raw>[]> {
         // check if allowed to read groups
         return this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN).pipe(
-            switchMap((typePermissions: TypePermissions) => {
+            switchMap(() => {
                 // then get users with groups
                 return this.getParentEntityId().pipe(
-                    filter((parentGroupId: number | undefined) => Number.isInteger(parentGroupId)),
+                    filter((parentGroupId: number | undefined) => Number.isInteger(parentGroupId)),
                     switchMap(parentGroupId => this.groupOperations.getGroupUsers(parentGroupId).pipe(
                         this.getLoadingOperator(),
                     )),
@@ -103,7 +100,7 @@ export class GroupUserDataService extends UserDataService {
             this.getParentEntityId(),
             super.getRawEntitiesFromState(),
         ]).pipe(
-            filter(([parentGroupId, users]: [number, User<Raw>[]]) => Number.isInteger(parentGroupId)),
+            filter(([parentGroupId]: [number, User<Raw>[]]) => Number.isInteger(parentGroupId)),
             map(([parentGroupId, users]: [number, User<Raw>[]]) => {
                 return users.filter(user => Array.isArray(user.groups) && user.groups.find(group => group.id === parentGroupId));
             }),
@@ -142,7 +139,7 @@ export class GroupUserDataService extends UserDataService {
                     if (requests.length > 0) {
                         return forkJoin(requests).pipe(
                             // return assigned users
-                            map((responses: Array<Group<Raw> | void>) => responses.filter((response: Group<Raw> | void) => response instanceof Object)),
+                            map((responses: Array<Group<Raw> | void>) => responses.filter((response: Group<Raw> | void) => response instanceof Object)),
                             catchError(() => of(this.displayNotificationError('shared.assign_group_to_users_error', group && group.name))),
                         );
                     } else {

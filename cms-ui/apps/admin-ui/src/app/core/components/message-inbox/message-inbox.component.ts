@@ -41,14 +41,14 @@ export class MessageInboxComponent implements OnInit {
     private messageToKeepInUnread$ = new BehaviorSubject<number | undefined>(undefined);
 
     constructor(private appState: AppStateService,
-                // private navigationService: NavigationService,
-                // private entityResolver: EntityResolver,
-                // private folderActions: FolderActions,
-                private messageService: MessageService,
-                private changeDetector: ChangeDetectorRef,
-                private router: Router,
-                private modalService: ModalService,
-                private i18n: I18nService,
+        // private navigationService: NavigationService,
+        // private entityResolver: EntityResolver,
+        // private folderActions: FolderActions,
+        private messageService: MessageService,
+        private changeDetector: ChangeDetectorRef,
+        private router: Router,
+        private modalService: ModalService,
+        private i18n: I18nService,
     ) { }
 
     @HostListener('document:mouseup', ['$event'])
@@ -113,7 +113,7 @@ export class MessageInboxComponent implements OnInit {
             distinctUntilChanged(isEqual),
         );
 
-        /*this.nodes$ = this.appState.select(state => state.folder.nodes.list)
+        /* this.nodes$ = this.appState.select(state => state.folder.nodes.list)
             .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id)));*/
     }
 
@@ -245,7 +245,7 @@ export class MessageInboxComponent implements OnInit {
     }
 
 
-    /*private openPage(link: MessageLink): void {
+    /* private openPage(link: MessageLink): void {
         let nodeId: number;
 
         this.fetchPage(link.id)
@@ -259,7 +259,7 @@ export class MessageInboxComponent implements OnInit {
             );
     }*/
 
-    /*private nodeIdByName(nodeName: string): number {
+    /* private nodeIdByName(nodeName: string): number {
         const nodes = this.appState.now.entities.node;
         if (!nodes) {
             return undefined;
@@ -274,7 +274,7 @@ export class MessageInboxComponent implements OnInit {
         return undefined;
     }*/
 
-    /*private fetchPage(pageId: number): Promise<Page> {
+    /* private fetchPage(pageId: number): Promise<Page> {
         let page = this.entityResolver.getPage(pageId);
         if (page) {
             return Promise.resolve(page);
@@ -283,7 +283,7 @@ export class MessageInboxComponent implements OnInit {
         }
     }*/
 
-    /*private fetchFolder(folderId: number): Promise<Folder> {
+    /* private fetchFolder(folderId: number): Promise<Folder> {
         let folder = this.entityResolver.getFolder(folderId);
         if (folder) {
             return Promise.resolve(folder);
@@ -292,7 +292,7 @@ export class MessageInboxComponent implements OnInit {
         }
     }*/
 
-    /*private navigateToFolder(folderId: number, nodeId: number): Promise<boolean> {
+    /* private navigateToFolder(folderId: number, nodeId: number): Promise<boolean> {
         let newRoute = ['/editor', { outlets: { list: ['node', nodeId, 'folder', folderId] } }];
         if (this.router.url === newRoute.join('')) {
             return Promise.resolve(true);

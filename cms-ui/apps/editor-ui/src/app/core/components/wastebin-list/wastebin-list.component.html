@@ -2,7 +2,7 @@
     <div class="list-header icon-checkbox-trigger">
         <div class="select-all">
             <icon-checkbox
-                [icon]="icon"
+                [icon]="type | gtxTypeIcon"
                 [selected]="allSelected()"
                 (change)="toggleSelectAll($event)"
             ></icon-checkbox>

@@ -3,19 +3,19 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { dateToFileSystemString } from '@editor-ui/app/common/utils/date-to-string';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { downloadFromBlob } from '@gentics/cms-components';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     Form,
     FormDataListEntry,
     FormDataListResponse,
     FormDownloadInfo,
     FormElementLabelPropertyI18nValues,
-    GcmsUiLanguage,
 } from '@gentics/cms-models';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { PaginationInstance } from 'ngx-pagination';
-import { BehaviorSubject, combineLatest, interval, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
 import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { Api } from '../../../core/providers/api';

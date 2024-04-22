@@ -8,7 +8,7 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
 import { CmsFormElementBO, FORM_ELEMENT_MIME_TYPE_TYPE } from '@gentics/cms-models';
 import { CmsFormType } from '@gentics/cms-models';
@@ -69,7 +69,7 @@ export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit
     }
 
     ngAfterViewInit(): void {
-        if (!!this.inputSearch) {
+        if (this.inputSearch) {
             setTimeout(() => this.inputSearch.nativeElement.focus(), 1000);
         }
     }

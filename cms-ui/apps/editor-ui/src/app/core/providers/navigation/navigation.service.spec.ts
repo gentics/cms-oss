@@ -1,7 +1,7 @@
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { EditMode } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { InstructionActions, NavigationService } from './navigation.service';
 
 describe('NavigationService', () => {

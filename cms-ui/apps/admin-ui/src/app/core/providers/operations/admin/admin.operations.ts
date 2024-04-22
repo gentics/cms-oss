@@ -15,7 +15,6 @@ import {
     DirtQueueItem,
     DirtQueueListOptions,
     DirtQueueSummary,
-    GtxVersion,
     JobListRequestOptions,
     Jobs,
     MaintenanceModeRequestOptions,
@@ -24,6 +23,7 @@ import {
     PublishQueue,
     Response,
     UsersnapSettings,
+    Version,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, of } from 'rxjs';
@@ -53,10 +53,10 @@ export class AdminOperations extends OperationsBase {
         );
     }
 
-    getCmsVersion(silent: boolean = false): Observable<GtxVersion> {
+    getCmsVersion(silent: boolean = false): Observable<Version> {
         return this.api.adminInfo.getVersion().pipe(
             map(response => {
-                const version: GtxVersion = {
+                const version: Version = {
                     cmpVersion: response.cmpVersion,
                     version: response.version,
                     variant: response.variant,

@@ -13,7 +13,6 @@ import {
 } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
@@ -41,7 +40,6 @@ export class ChannelDependenciesModal implements OnInit, IModalDialog {
     allDependencyTypes: DependencyItemType[] = ['page', 'file', 'image'];
 
     activeTab = '';
-    iconForItemType = iconForItemType;
     loading$: Observable<boolean>;
 
     syncableItems: SyncObjectsResponse;

@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ContentFrameComponent } from '../content-frame/content-frame.component';
 
 /**
@@ -15,7 +14,6 @@ export class ConfirmNavigationModal extends BaseModal<boolean> {
 
     allowSaving = true;
     contentFrame: ContentFrameComponent;
-    iconForItemType = iconForItemType;
 
     saveAndClose(): void {
         const promiseOrUndefined = this.contentFrame.saveChanges();

@@ -1,4 +1,5 @@
-import { GcmsUiLanguage, GtxVersion, I18nLanguage, UsersnapSettings } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { I18nLanguage, UsersnapSettings, Version } from '@gentics/cms-models';
 import { UIOverrides } from '../../shared/providers/ui-overrides/ui-overrides.model';
 
 export enum UIMode {
@@ -23,7 +24,7 @@ export interface UIState {
     backendLanguage: GcmsUiLanguage;
     language: GcmsUiLanguage;
     availableUiLanguages: I18nLanguage[];
-    cmpVersion: GtxVersion;
+    cmpVersion: Version;
     overrides: UIOverrides;
     overridesReceived: boolean;
     uiVersion: string;

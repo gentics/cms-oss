@@ -2,8 +2,9 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
-import { EditablePageProps, EditorPermissions, Language, Template } from '@gentics/cms-models';
+import { EditablePageProps, Language, Template } from '@gentics/cms-models';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,

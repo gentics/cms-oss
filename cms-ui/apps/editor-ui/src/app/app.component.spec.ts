@@ -159,7 +159,7 @@ class MockEntityResolver {
 }
 
 class MockFolderActions {
-    getNodes = jasmine.createSpy('getNodes');
+    getNodes = jasmine.createSpy('getNodes').and.returnValue(Promise.resolve());
 }
 
 class MockEditorActions {}

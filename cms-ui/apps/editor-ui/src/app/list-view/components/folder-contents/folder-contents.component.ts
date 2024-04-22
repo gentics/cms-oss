@@ -9,7 +9,15 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AppState, GtxChipSearchPropertyNumber, GtxChipSearchSearchFilterMap, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import {
+    AppState,
+    EditorPermissions,
+    GtxChipSearchPropertyNumber,
+    GtxChipSearchSearchFilterMap,
+    ItemsInfo,
+    UIMode,
+    getNoPermissions,
+} from '@editor-ui/app/common/models';
 import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { UploadProgressReporter } from '@editor-ui/app/core/providers/api';
@@ -32,7 +40,6 @@ import {
     SetUIModeAction,
 } from '@editor-ui/app/state';
 import {
-    EditorPermissions,
     Folder,
     FolderItemType,
     FolderItemTypePlural,
@@ -41,7 +48,6 @@ import {
     Node,
     NodeFeature,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';

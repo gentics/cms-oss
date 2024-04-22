@@ -8,16 +8,16 @@
 >
     <div
         class="form-editor-form"
-        [class.read-only]="formEditorIsReadOnly()"
+        [class.read-only]="readonly"
     >
         <gtx-form-editor-element-list
             #formEditorElementListComponent
-            [elements]="formElements"
-            (elementsChange)="onElementsChange($event)"
-            [formEditMode]="formEditMode"
+            [elements]="mappedForm?.data?.elements"
+            [readonly]="readonly"
             [activeUiLanguageCode]="activeUiLanguageCode"
             [activeContentLanguageCode]="activeContentLanguageCode"
             [hideDropZones]="dragEnterDepth === 0"
+            (elementsChange)="onElementsChange($event)"
             (beforeFormElementInsert)="onFormElementInsert($event)"
             (propertiesErrorChange)="onPropertiesErrorChange($event)"
         ></gtx-form-editor-element-list>
@@ -25,12 +25,12 @@
 
     <div
         class="form-editor-menu-container"
-        [class.read-only]="formEditorIsReadOnly()"
+        [class.read-only]="readonly"
     >
         <gtx-form-editor-menu
-            *ngIf="menuVisible"
+            *ngIf="!readonly && configurationFetched"
             [@fadeAnim]
-            [formType]="formType"
+            [formType]="mappedForm?.data?.type"
             (selected)="onMenuSelect($event)"
         ></gtx-form-editor-menu>
     </div>

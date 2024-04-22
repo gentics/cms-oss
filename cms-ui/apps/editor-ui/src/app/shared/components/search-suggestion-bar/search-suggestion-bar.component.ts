@@ -15,14 +15,16 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { EditorTab, RecentItem } from '@editor-ui/app/common/models';
 import {
     SuggestionItem,
     SuggestionSearchService,
 } from '@editor-ui/app/shared/providers/suggestion-search/suggestion-search.service';
 import { ObservableStopper } from '@gentics/cms-components';
-import { EditMode, Folder, Page } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
-import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Folder, Page } from '@gentics/cms-models';
+import { isEqual } from 'lodash-es';
+import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import {
     debounceTime,
     delay,
@@ -36,12 +38,10 @@ import {
     takeUntil,
     tap,
 } from 'rxjs/operators';
-import { EditorTab, RecentItem } from '@editor-ui/app/common/models';
 import { arraysAreEqual } from '../../../common/utils/arrays-are-equal';
 import { fuzzyMatch } from '../../../common/utils/fuzzy-match';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
-import { ApplicationStateService, FolderActionsService, ChangeTabAction } from '../../../state';
+import { ApplicationStateService, ChangeTabAction, FolderActionsService } from '../../../state';
 import { SearchSuggestionComponent } from '../search-suggestion/search-suggestion.component';
 
 export enum EventKey {
@@ -98,8 +98,6 @@ export class SearchSuggestionBarComponent implements OnInit, OnChanges, OnDestro
     maxRecentItems = 15;
 
     recentFeatureEnabled$: Observable<boolean>;
-
-    iconForItemType = iconForItemType;
 
     @ViewChildren(SearchSuggestionComponent)
     suggestions: QueryList<SearchSuggestionComponent>;

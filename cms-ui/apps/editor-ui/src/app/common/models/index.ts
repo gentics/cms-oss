@@ -8,6 +8,7 @@ export * from './events';
 export * from './list';
 export * from './message';
 export * from './page';
+export * from './permissions';
 export * from './page-controls';
 export * from './repository-browser';
 export * from './staging';

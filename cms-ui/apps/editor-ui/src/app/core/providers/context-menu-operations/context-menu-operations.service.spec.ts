@@ -5,12 +5,11 @@ import { Router } from '@angular/router';
 import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { PostUpdateBehavior, TemplateActionsService } from '@editor-ui/app/state';
-import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
     CmsFormData,
-    EditMode,
     File,
     Folder,
     FolderItemOrNodeSaveOptionsMap,

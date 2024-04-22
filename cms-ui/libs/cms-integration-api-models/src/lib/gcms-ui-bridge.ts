@@ -5,13 +5,12 @@ import {
     DynamicFormModalConfiguration,
     OverlayElementControl,
 } from '@gentics/aloha-models';
+import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     File,
     FileOrImage,
     Folder,
     Form,
-    GcmsUiLanguage,
     Image,
     ItemInNode,
     Language,

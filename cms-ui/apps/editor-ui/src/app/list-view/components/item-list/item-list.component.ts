@@ -10,18 +10,17 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '@editor-ui/app/common/models';
 import {
-    EditorPermissions, FolderItemType,
+    FolderItemType,
     FolderItemTypePlural,
     Item,
     Language,
     Node as NodeModel,
     Normalized,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';

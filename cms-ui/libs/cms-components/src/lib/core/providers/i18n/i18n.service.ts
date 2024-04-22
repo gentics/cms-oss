@@ -1,6 +1,6 @@
 import { Inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
 import { IndexByKey } from '@gentics/cms-models';
-import { GcmsUiLanguage as UILanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subscription } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
@@ -12,9 +12,7 @@ import { LocalTranslateLoader } from './local-translate-loader';
 /**
  * This injection token is used to provide an Observable for the session ID to be used in the GCMS API requests.
  */
-export const GCMS_COMMON_LANGUAGE = new InjectionToken<Observable<UILanguage>>('GCMS_COMMON_LANGUAGE');
-
-export { GcmsUiLanguage as UILanguage } from '@gentics/cms-models';
+export const GCMS_COMMON_LANGUAGE = new InjectionToken<Observable<GcmsUiLanguage>>('GCMS_COMMON_LANGUAGE');
 
 export interface ParametizedI18nKey {
     /** The i18n key that will be passed to the I18nService. */
@@ -36,12 +34,12 @@ export class I18nService extends ServiceBase implements OnDestroy {
 
     private subscriptions = new Subscription();
 
-    readonly language$: Observable<UILanguage>;
+    readonly language$: Observable<GcmsUiLanguage>;
 
     constructor(
         private ngxTranslate: TranslateService,
         private loader: LocalTranslateLoader,
-        @Inject(GCMS_COMMON_LANGUAGE) language$: Observable<UILanguage>,
+        @Inject(GCMS_COMMON_LANGUAGE) language$: Observable<GcmsUiLanguage>,
     ) {
         super();
 
@@ -70,7 +68,7 @@ export class I18nService extends ServiceBase implements OnDestroy {
     /**
      * Set the UI language
      */
-    setLanguage(language: UILanguage): void {
+    setLanguage(language: GcmsUiLanguage): void {
         this.ngxTranslate.use(language);
     }
 
@@ -102,7 +100,7 @@ export class I18nService extends ServiceBase implements OnDestroy {
      * Attempt to infer the user language from the browser's navigator object. If the result is not
      * amongst the valid UI languages, default to the fallback language instead.
      */
-    inferUserLanguage(): UILanguage {
+    inferUserLanguage(): GcmsUiLanguage {
         const browserLanguage = navigator.language.split('-')[0] ;
         if (UI_LANGUAGES.indexOf(browserLanguage) >= 0) {
             return browserLanguage;

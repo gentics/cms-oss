@@ -3,7 +3,6 @@ import { FolderItemType, Language, SortField } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map, publishReplay, refCount, tap } from 'rxjs/operators';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
@@ -26,7 +25,6 @@ export class RepositoryBrowserListHeader implements OnInit {
     @Output() collapsedChange = new EventEmitter<boolean>();
     @Output() selectDisplayFields = new EventEmitter<void>();
 
-    iconForItemType = iconForItemType;
     sort$: Observable<{ field: SortField, order: 'asc' | 'desc' }>;
     sortOptions: { field: SortField, order: 'asc' | 'desc' };
     activeLanguage$: Observable<Language>;

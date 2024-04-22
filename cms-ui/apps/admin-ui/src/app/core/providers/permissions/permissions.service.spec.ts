@@ -4,18 +4,20 @@ import { AddTypePermissionsMap, AppStateService } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
-    AccessControlledType,
-    GcmsPermission,
-    GcmsPermissionsMap,
     InstancePermissions,
     InstancePermissionsImpl,
-    PermissionResponse,
-    PermissionsMapCollection,
-    ResponseCode,
     TypePermissions,
     TypePermissionsImpl,
     UniformInstancePermissions,
     UniformTypePermissions,
+} from '@gentics/cms-components';
+import {
+    AccessControlledType,
+    GcmsPermission,
+    GcmsPermissionsMap,
+    PermissionResponse,
+    PermissionsMapCollection,
+    ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
@@ -120,6 +122,7 @@ describe('PermissionsService', () => {
 
         Object.keys(expectedPermissions.permissions).forEach((perm: GcmsPermission) => {
             const expectedValue = expectedPermissions.permissions[perm];
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             expect(actualPermissions.hasPermission(perm)).toBe(expectedValue, `Expected permission '${perm}' to be ${expectedValue}`);
         });
     }

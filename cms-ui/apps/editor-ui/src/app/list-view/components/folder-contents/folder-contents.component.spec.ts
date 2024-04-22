@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ItemsInfo } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -66,8 +66,8 @@ import {
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import { WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, EditorPermissions, PermissionResponse, TypePermissions, UniformTypePermissions, getNoPermissions } from '@gentics/cms-models';
+import {  TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
+import { AccessControlledType } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
@@ -79,7 +79,6 @@ import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '
 import { NgxsModule } from '@ngxs/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable, Subject, of, throwError } from 'rxjs';
-import { first } from 'rxjs/operators';
 import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
 import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
 import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
@@ -215,6 +214,7 @@ class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         return {
             ...getNoPermissions(),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
         } as any;
     }

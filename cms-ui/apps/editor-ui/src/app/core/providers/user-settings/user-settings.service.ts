@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { RecentItem, plural } from '@editor-ui/app/common/models';
-import { Favourite, GcmsUiLanguage, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { Favourite, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';
 import { Observable, forkJoin } from 'rxjs';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { environment as ENVIRONMENT_TOKEN } from '../../../development/development-tools';
+import { ENVIRONMENT_TOKEN } from '../../../development/development-tools';
 import {
     ApplicationStateService,
     FavouritesLoadedAction,

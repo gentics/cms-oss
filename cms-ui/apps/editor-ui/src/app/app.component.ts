@@ -1,18 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { WindowRef } from '@gentics/cms-components';
+import { GcmsUiLanguage, EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
-    GcmsUiLanguage,
-    GtxVersion,
     I18nLanguage,
     Node,
     NodeFeature,
     Normalized,
     User,
+    Version,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     NEVER,
@@ -30,7 +29,8 @@ import {
     first,
     map,
     mergeMap,
-    shareReplay, switchMap,
+    shareReplay,
+    switchMap,
     take,
     takeWhile,
     tap,
@@ -115,7 +115,7 @@ export class AppComponent implements OnInit {
     userMenuTabIdAlerts = 'alerts';
     userMenuActiveTab: string;
 
-    cmpVersion$: Observable<GtxVersion>;
+    cmpVersion$: Observable<Version>;
     uiVersion$: Observable<string>;
 
     canUseInbox$: Observable<boolean>;

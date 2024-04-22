@@ -1,7 +1,8 @@
 import { Location } from '@angular/common';
 import { Injectable } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
-import { EditMode, FolderItemType } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderItemType } from '@gentics/cms-models';
 import { EditorStateUrlOptions } from '../../../state';
 
 export type ListUrlParams = {

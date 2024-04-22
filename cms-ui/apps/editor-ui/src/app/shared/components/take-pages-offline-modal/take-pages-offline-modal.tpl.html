@@ -20,7 +20,7 @@
             <tbody>
                 <gtx-contents-list-item *ngFor="let item of pagesToTakeOffline" [ngClass]="item.type || ''" [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0">
                     <td class="item-icon">
-                        <icon>{{ iconForItemType(item.type) }}</icon>
+                        <icon>{{ item.type | gtxTypeIcon }}</icon>
                     </td>
                     <td class="item-primary">
                         <div class="item-name">{{ item.name }}</div>

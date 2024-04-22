@@ -11,7 +11,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ItemsInfo } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import {
     ApplicationStateService,
     FolderActionsService,
@@ -21,7 +21,7 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
-import { EditorPermissions, Favourite, File, Folder, Image, Page, getNoPermissions } from '@gentics/cms-models';
+import { Favourite, File, Folder, Image, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import {
@@ -155,6 +155,7 @@ class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         return {
             ...getNoPermissions(),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
         } as any;
     }
@@ -169,14 +170,15 @@ class MockI18nService {}
 
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string { return this.lang; }
     set currentLang(lang: string) {
+        this.lang = lang;
         this.onLangChange.emit({
-            lang: this._lang = lang,
+            lang: lang,
             translations: {},
         });
     }
-    private _lang: string;
+    private lang: string;
 }
 
 class MockWindowRef { }

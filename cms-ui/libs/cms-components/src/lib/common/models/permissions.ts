@@ -1,6 +1,11 @@
-import { FolderItemType } from '../../item';
-import { AccessControlledType, GcmsPermission, PermissionsMapCollection } from '../cms/permissions';
-import { GcmsRolePrivilege, GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP } from '../cms/privileges';
+import {
+    AccessControlledType,
+    FolderItemType,
+    GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP,
+    GcmsPermission,
+    GcmsRolePrivilege,
+    PermissionsMapCollection,
+} from '@gentics/cms-models';
 
 /**
  * Represents the permissions of a user on a specific `AccessControlledType`.
@@ -71,8 +76,9 @@ export interface PermissionsFactory {
     createPermissionsFromMaps(
         type: AccessControlledType,
         permissionsMaps: PermissionsMapCollection,
-        instanceId: number | string,
-        nodeId?: number): InstancePermissions;
+        instanceId: number | string,
+        nodeId?: number,
+    ): InstancePermissions;
 
     /**
      * Creates a `FolderInstancePermissions` object for the specified instance of the folder and corresponding `PermissionsMapCollection`.

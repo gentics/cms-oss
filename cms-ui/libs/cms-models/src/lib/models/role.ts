@@ -1,5 +1,4 @@
 import { DefaultModelType, ModelType } from './type-util';
-import { GcmsUiLanguage } from './ui-state';
 
 interface BaseRole<T extends ModelType = DefaultModelType> {
     /** Name of the role in the current language. Only available when loading a role. */
@@ -8,10 +7,10 @@ interface BaseRole<T extends ModelType = DefaultModelType> {
     description: string;
 
     /** Name of the role in all possible translations */
-    nameI18n: Record<GcmsUiLanguage, string>;
+    nameI18n: Record<string, string>;
 
     /** Description in all possible translations */
-    descriptionI18n: Record<GcmsUiLanguage, string>;
+    descriptionI18n: Record<string, string>;
 }
 
 /** Data model as defined by backend. */
@@ -58,4 +57,26 @@ export interface FilePrivileges {
     createfile: boolean;
     updatefile: boolean;
     deletefile: boolean;
+}
+
+/**
+ * Determines whether a `Role` is assigned to a group.
+ */
+export interface RoleAssignment {
+
+    /** Role ID. */
+    id: number;
+
+    /** Role label (translated by CMS). */
+    label: string;
+
+    /** Role description (translated by CMS). */
+    description: string;
+
+    /** `true` if role is assigned, `false` if not */
+    value: boolean;
+
+    /** `true` if the role assignment can be edited by the current user. */
+    editable: boolean;
+
 }

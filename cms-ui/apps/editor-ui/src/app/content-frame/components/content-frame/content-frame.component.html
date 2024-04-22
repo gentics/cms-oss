@@ -63,8 +63,8 @@
             [form]="currentItem"
             [activeUiLanguageCode]="activeUiLanguageCode$ | async"
             [activeContentLanguageCode]="itemLanguage?.code"
-            [formEditMode]="editMode"
-            (formModified)="currentItem = $event; setContentModified(true, false)"
+            [readonly]="editMode !== EditMode.EDIT"
+            (formModified)="formChange($event)"
             (validityChange)="setItemValidity($event)"
         ></gtx-form-editor>
     </div>

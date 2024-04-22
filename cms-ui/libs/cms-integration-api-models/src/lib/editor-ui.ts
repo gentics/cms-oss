@@ -1,7 +1,4 @@
-
-/**
- * This file contains definitions for part of the UI state, which are exposed over the `window.GCMSUI` object.
- */
+/* Common Editor-UI Models */
 
 /**
  * The user interface languages available in the GCMS UI.

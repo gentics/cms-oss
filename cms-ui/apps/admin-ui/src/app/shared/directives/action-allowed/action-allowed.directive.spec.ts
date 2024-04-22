@@ -1,11 +1,12 @@
-import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF, UserActionPermissions } from '@admin-ui/common';
+import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
 import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
 import { componentTest } from '@admin-ui/testing';
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { AccessControlledType, GcmsPermission, GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ButtonComponent, GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
-import * as _ from'lodash-es'
+import { cloneDeep } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
 import { MockI18nServiceWithSpies } from '../../../core/providers/i18n/i18n.service.mock';
@@ -213,7 +214,7 @@ describe('ActionAllowedDirective', () => {
             providers: [
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: PermissionsService, useClass: MockPermissionsService },
-                { provide: USER_ACTION_PERMISSIONS, useValue: _.cloneDeep(MOCK_USER_ACTIONS as MultiModuleUserActionPermissions) },
+                { provide: USER_ACTION_PERMISSIONS, useValue: cloneDeep(MOCK_USER_ACTIONS as MultiModuleUserActionPermissions) },
             ],
         }).compileComponents();
     });

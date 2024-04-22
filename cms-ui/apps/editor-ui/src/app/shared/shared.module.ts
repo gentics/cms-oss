@@ -103,6 +103,7 @@ import {
     RouterCommandsForItemPipe,
     TruncateNumberPipe,
     TruncatePathPipe,
+    TypeIconPipe,
     UserFullNamePipe,
 } from './pipes';
 import {
@@ -218,6 +219,7 @@ const PIPES = [
     RouterCommandsForItemPipe,
     TruncateNumberPipe,
     TruncatePathPipe,
+    TypeIconPipe,
     UserFullNamePipe,
 ];
 

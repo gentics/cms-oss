@@ -1,4 +1,4 @@
-import { IndexByKey } from '../../type-util';
+import { IndexByKey } from './type-util';
 import { GcmsPermission } from './permissions';
 
 /**

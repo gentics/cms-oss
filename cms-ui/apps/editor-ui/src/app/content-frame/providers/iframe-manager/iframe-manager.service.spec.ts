@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import { EditMode } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { NgxsModule } from '@ngxs/store';
 import { take } from 'rxjs/operators';
 import { getTestPageUrl, MockIFrame, MockManagedIFrame } from '../../../../testing/iframe-helpers';

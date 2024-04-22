@@ -11,10 +11,10 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
     EditablePageProps,
-    EditorPermissions,
     Feature,
     Language,
     Normalized,

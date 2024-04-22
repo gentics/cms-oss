@@ -10,10 +10,18 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { EditorState, EditorTab, ITEM_PROPERTIES_TAB, ITEM_TAG_LIST_TAB, PropertiesTab, SaveBehaviour } from '@editor-ui/app/common/models';
+import {
+    EditorState,
+    EditorTab,
+    ITEM_PROPERTIES_TAB,
+    ITEM_TAG_LIST_TAB,
+    PropertiesTab,
+    SaveBehaviour,
+    noItemPermissions,
+} from '@editor-ui/app/common/models';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
-    EditMode,
     File as FileModel,
     Folder,
     FolderItemOrNodeType,
@@ -29,7 +37,6 @@ import {
     Normalized,
     Page,
     Raw,
-    noItemPermissions,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
@@ -91,13 +98,13 @@ import {
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
 import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-import { AlohaIntegrationService } from '../../providers';
 
 /**
  * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
@@ -530,6 +537,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.cancelEditingDebounced(this.currentItem);
         return;
+    }
+
+    formChange(form: Form): void {
+        this.currentItem = form;
+        this.setContentModified(true, false);
     }
 
     getItemPath(item: Page | FileModel | Folder | Form | Image | Node): string {

@@ -1,5 +1,6 @@
 import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
+import { TypeIconPipe } from '@editor-ui/app/shared/pipes';
 import { STATE_MODULES } from '@editor-ui/app/state';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';

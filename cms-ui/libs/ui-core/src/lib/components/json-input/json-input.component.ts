@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { AbstractControl, ValidationErrors, Validator } from '@angular/forms';
 import { JSON_VALUE_INVALID } from '../../common';
-import { generateFormProvider } from '../../utils';
+import { createJsonValidator, generateFormProvider, generateValidatorProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
+
+const VALIDATOR_FN = createJsonValidator();
 
 /**
  * Simple wrapper component around the `TextareaComponent`, which handles JSON inputs.
  * Only triggers a change on blur (to prevent changes triggering whie editing the content),
  * and emits a special `JSON_VALUE_INVALID` flag on invalid values.
  * Therefore allows proper `null` values to be set as well.
- * Validation should be done via the `createJsonValidator` utility function/validator.
+ * This component will register itself as a validator for itself.
  *
  * The JSON parsing can be done in this component (default) or on the parent component, via
  * the `raw` flag.
@@ -18,9 +21,14 @@ import { BaseFormElementComponent } from '../base-form-element/base-form-element
     templateUrl: './json-input.component.html',
     styleUrls: ['./json-input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(JsonInputComponent)],
+    providers: [
+        generateFormProvider(JsonInputComponent),
+        generateValidatorProvider(JsonInputComponent),
+    ],
 })
-export class JsonInputComponent extends BaseFormElementComponent<typeof JSON_VALUE_INVALID | string | Record<string, any> | any[]> {
+export class JsonInputComponent
+    extends BaseFormElementComponent<typeof JSON_VALUE_INVALID | string | Record<string, any> | any[]>
+    implements Validator {
 
     /** If this input should convert the value to a JSON Object/Array when emitting values. */
     @Input()
@@ -57,6 +65,9 @@ export class JsonInputComponent extends BaseFormElementComponent<typeof JSON_VAL
     public id: string;
 
     public rawValue: string | null = null;
+
+    /** The control to which this component is bound to. */
+    protected boundControl: AbstractControl<any, any>;
 
     protected onValueChange(): void {
         // Nothing to update
@@ -101,5 +112,12 @@ export class JsonInputComponent extends BaseFormElementComponent<typeof JSON_VAL
         } catch (err) {
             this.triggerChange(JSON_VALUE_INVALID);
         }
+    }
+
+    /** Validation implementation to validate itself */
+    public validate(control: AbstractControl<any, any>): ValidationErrors {
+        this.boundControl = control;
+
+        return VALIDATOR_FN(control);
     }
 }

@@ -2,9 +2,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
-    EditMode,
     File,
     Folder,
     FolderItemOrTemplateType,

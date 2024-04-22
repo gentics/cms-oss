@@ -1,6 +1,4 @@
-import { PermissionsSet } from '..';
-
-import { Group, Normalized } from '../..';
+import { Group, Normalized, PermissionsSet } from '@gentics/cms-models';
 
 /**
  * Adds the group that, to which the permissions belong to the PermissionsSet.

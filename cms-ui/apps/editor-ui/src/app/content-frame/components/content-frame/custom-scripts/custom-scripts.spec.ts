@@ -4,12 +4,20 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-underscore-dangle */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
-import { GcmsUiBridge } from '@gentics/cms-integration-api-models';
-import { EditMode, Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
+import { EditMode, GcmsUiBridge } from '@gentics/cms-integration-api-models';
+import { Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { Subscription } from 'rxjs';
 import { SpyEventTarget } from '../../../../../testing/spy-event-target';
-import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../../../models/content-frame';
+import {
+    AlohaGlobal,
+    CNIFrameDocument,
+    CNWindow,
+    DYNAMIC_FRAME,
+    GCNJSLib,
+    GCNJsLibRequestOptions,
+    GCNRestRequestArgs,
+} from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { OBJECT_PROPERTIES_CONTEXT_MENU_CLASS, OBJECT_PROPERTIES_INFO_BUTTON_CLASS, PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';

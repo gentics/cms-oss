@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { EditMode, Normalized, Page, PageVersion, PrivilegeMap, User } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Normalized, Page, PageVersion, PrivilegeMap, User } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';

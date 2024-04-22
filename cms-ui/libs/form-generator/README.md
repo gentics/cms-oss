@@ -28,7 +28,7 @@ export class CoreModule {}
         [item]="formJSON"
         [activeUiLanguageCode]="'en'"
         [activeContentLanguageCode]="'de'"
-        [formEditMode]="'edit'"
+        [readonly]="false"
         (formModified)="yourContentHasBeenModifiedGn($event)"
     ></gtx-form-editor>
 ```

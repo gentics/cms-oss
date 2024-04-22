@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import {
-    EditorPermissions,
     Folder,
     FolderPermissions,
     Normalized,

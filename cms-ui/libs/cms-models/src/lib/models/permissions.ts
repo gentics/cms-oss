@@ -69,7 +69,7 @@ export enum AccessControlledType {
  * (a privilege is basically just an alias for a permission on a certain type/instance).
  *
  * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PermType.html
- * @see https://git.gentics.com/psc/contentnode/blob/dev/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
+ * @see https://github.com/gentics/cms-oss/blob/master/cms-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
  */
 export enum GcmsPermission {
     VIEW = 'view',
@@ -186,4 +186,200 @@ export interface InstancePermissionItem {
 
     /** Instance permissions of the item */
     permissions?: InstancePermissionMap;
+}
+
+
+/**
+ * Permissions for items (of any type)
+ */
+export interface ItemPermissions {
+    /** Permission to create an item of the item type */
+    create: boolean;
+
+    /** Permission to delete an item of the item type */
+    delete: boolean;
+
+    /** Permission to edit an item of the item type */
+    edit: boolean;
+
+    /** Permission to inherit folders/items */
+    inherit: boolean;
+
+    /** Permission to localize an inherited item of the item type */
+    localize: boolean;
+
+    /** Permission to delete the local version of an inherited item of the item type */
+    unlocalize: boolean;
+
+    /** Permission to view an item of the item type */
+    view: boolean;
+}
+
+
+
+/**
+ * Permissions for folder items, abstracted from the server logic
+ */
+export interface FolderPermissions extends ItemPermissions {
+    /** Permission to create a folder */
+    create: boolean;
+
+    /** Permission to delete a folder */
+    delete: boolean;
+
+    /** Permission to edit a folder or its properties */
+    edit: boolean;
+
+    /** Permission to localize an inherited folder */
+    localize: boolean;
+
+    /** Permission to delete the local version of an inherited folder */
+    unlocalize: boolean;
+
+    /** Permission to view a folder and its contents */
+    view: boolean;
+}
+
+/**
+ * Permissions for page items, abstracted from the server logic
+ */
+export interface PagePermissions extends ItemPermissions {
+    /** Permission to create a page */
+    create: boolean;
+
+    /** Permission to delete a page */
+    delete: boolean;
+
+    /** Permission to edit a page */
+    edit: boolean;
+
+    /** Permission to import pages */
+    import: boolean;
+
+    /** Permission to link templates */
+    linkTemplate: boolean;
+
+    /** Permission to localize an inherited page */
+    localize: boolean;
+
+    /** Permission to import pages */
+    publish: boolean;
+
+    /** Permission to delete the local version of an inherited page */
+    unlocalize: boolean;
+
+    /** Permission to translate a page into the currently active language */
+    translate: boolean;
+
+    /** Permission to view a page */
+    view: boolean;
+}
+
+/**
+ * Permissions for files, abstracted from the server logic
+ */
+export interface FilePermissions extends ItemPermissions {
+    /** Permission to upload a file */
+    create: boolean;
+
+    /** Permission to delete a file */
+    delete: boolean;
+
+    /** Permission to edit a file */
+    edit: boolean;
+
+    /** Permission to localize an inherited file */
+    localize: boolean;
+
+    /** Permission to import files */
+    import: boolean;
+
+    /** Permission to delete the local version of an inherited file */
+    unlocalize: boolean;
+
+    /** Permission to upload a file */
+    upload: boolean;
+
+    /** Permission to view a file */
+    view: boolean;
+}
+
+/**
+ * Permissions for images, abstracted from the server logic
+ */
+export interface ImagePermissions extends ItemPermissions {
+    /** Permission to upload an image */
+    create: boolean;
+
+    /** Permission to delete an image */
+    delete: boolean;
+
+    /** Permission to edit an image */
+    edit: boolean;
+
+    /** Permission to localize an inherited image */
+    localize: boolean;
+
+    /** Permission to import images */
+    import: boolean;
+
+    /** Permission to delete the local version of an inherited image */
+    unlocalize: boolean;
+
+    /** Permission to upload an image */
+    upload: boolean;
+
+    /** Permission to view an image */
+    view: boolean;
+}
+
+/**
+ * Permissions for form items, abstracted from the server logic
+ */
+export interface FormPermissions extends ItemPermissions {
+    /** Permission to import forms */
+    publish: boolean;
+}
+
+/**
+ * Permissions for templates, abstracted from the server logic
+ */
+export interface TemplatePermissions extends ItemPermissions {
+    /** Permission to create a template */
+    create: boolean;
+
+    /** Permission to delete a template */
+    delete: boolean;
+
+    /** Permission to edit a template */
+    edit: boolean;
+
+    /** Permission to link a template to a page */
+    link: boolean;
+
+    /** Permission to localize an inherited template */
+    localize: boolean;
+
+    /** Permission to delete the local version of an inherited template */
+    unlocalize: boolean;
+
+    /** Permission to view a template */
+    view: boolean;
+}
+
+/**
+ * Permissions for tag types, abstracted from the server logic
+ */
+export interface TagTypePermissions {
+    /** Permission to create tag types */
+    create: boolean;
+
+    /** Permission to edit tag types */
+    edit: boolean;
+
+    /** Permission to delete tag types */
+    delete: boolean;
+
+    /** Permission to view tag types */
+    view: boolean;
 }

@@ -10,9 +10,15 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
-import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction, FolderActionsService, WastebinActionsService } from '@editor-ui/app/state';
 import {
-    EditMode,
+    ApplicationStateService,
+    ChangeListSelectionAction,
+    FocusEditorAction,
+    FolderActionsService,
+    WastebinActionsService,
+} from '@editor-ui/app/state';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import {
     File,
     Folder,
     FolderItemType,

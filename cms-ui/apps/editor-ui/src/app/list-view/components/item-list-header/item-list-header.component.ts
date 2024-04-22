@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, Type } from '@angular/core';
-import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     EditableFormProps,
     EditablePageProps,
-    EditorPermissions,
     Feature,
     FolderItemType,
     FolderItemTypePlural,
@@ -19,7 +18,6 @@ import {
     Page,
     SortField,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';

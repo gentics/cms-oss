@@ -1,8 +1,9 @@
-import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, Update, UsersnapSettings } from '@gentics/cms-models';
+import { EditableEntity } from '@admin-ui/common';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { EntityIdType, NormalizableEntityType, Update, UsersnapSettings, Version } from '@gentics/cms-models';
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import type { UIStateSettings } from './ui.state';
-import { EditableEntity } from '@admin-ui/common';
 
 const UI: keyof AppState = 'ui';
 
@@ -15,7 +16,7 @@ export class SetUIVersion {
 @ActionDeclaration(UI)
 export class SetCmpVersion {
     static readonly type = 'SetCmpVersion';
-    constructor(public version: GtxVersion) {}
+    constructor(public version: Version) {}
 }
 
 @ActionDeclaration(UI)

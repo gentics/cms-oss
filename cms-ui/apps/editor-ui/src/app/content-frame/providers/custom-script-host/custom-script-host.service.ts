@@ -7,10 +7,9 @@ import { NavigationService } from '@editor-ui/app/core/providers/navigation/navi
 import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
-    EditMode,
     File as FileModel,
     Folder,
     Form,

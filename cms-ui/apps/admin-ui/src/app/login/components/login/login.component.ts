@@ -3,7 +3,6 @@ import { SelectState } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { GtxVersion } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 
 @Component({

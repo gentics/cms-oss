@@ -1,10 +1,9 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import { GtxVersionCompatibility, UsersnapSettings } from '@gentics/cms-models';
+import { VersionCompatibility, UsersnapSettings, Variant, Update } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import * as _ from'lodash-es'
 import { AuthStateModule } from '../auth/auth.state';
 import { AppStateService } from '../providers/app-state/app-state.service';
-import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
+import { TEST_APP_STATE, TestAppState } from '../utils/test-app-state';
 import {
     CloseEditor,
     DisableFocusMode,
@@ -29,28 +28,37 @@ import {
 const CMP_VERSION = {
     cmpVersion: '7.8',
     version: '5.38.0',
+    variant: Variant.OPEN_SOURCE,
     nodeInfo: {
         'CMPNode Java 2': {
             meshVersion: '1.5.0',
             portalType: 'Gentics Portal | java',
             portalVersion: '1.2.9',
-            compatibility: GtxVersionCompatibility.NOT_SUPPORTED,
+            compatibility: VersionCompatibility.NOT_SUPPORTED,
         },
         'CMPNode PHP': {
             meshVersion: '1.6.0',
             portalType: 'Gentics Portal | php',
             portalVersion: '1.2.0',
-            compatibility: GtxVersionCompatibility.SUPPORTED,
+            compatibility: VersionCompatibility.SUPPORTED,
         },
         'CMPNode Java': {
             meshVersion: '1.6.0',
-            compatibility: GtxVersionCompatibility.UNKNOWN,
+            compatibility: VersionCompatibility.UNKNOWN,
         },
     },
 };
 
 const UI_VERSION = '4.7.1.1';
-const UPDATES = ['5.99.9', '5.98.1'];
+const UPDATES: Update[] = [
+    {
+        version: '5.99.9',
+        changelogUrl: null,
+    }, {
+        version: '5.98.1',
+        changelogUrl: '',
+    },
+];
 
 describe('UiStateModule', () => {
 

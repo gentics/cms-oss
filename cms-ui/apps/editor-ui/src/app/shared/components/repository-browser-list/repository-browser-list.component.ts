@@ -28,7 +28,6 @@ import { isEqual as _isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ItemsInfo } from '../../../common/models';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
 import { DisplayFieldSelector } from '../display-field-selector/display-field-selector.component';
@@ -70,7 +69,6 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
 
     currentPage = 1;
     isCollapsed = false;
-    iconForItemType = iconForItemType;
     showImagesGridView$: Observable<boolean>;
 
     filterTerm$: Observable<string>;

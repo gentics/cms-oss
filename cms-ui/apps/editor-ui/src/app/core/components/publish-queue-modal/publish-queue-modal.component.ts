@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
-import { EditMode, Page, PageRequestOptions } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Page, PageRequestOptions } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -70,7 +71,13 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
                 this.navigationService.instruction({
                     modal: null,
                     detail: {
-                        nodeId, itemType: 'page', itemId: pageWithVersion.id, editMode: EditMode.COMPARE_VERSION_CONTENTS, options: { version, oldVersion },
+                        nodeId,
+                        itemType: 'page',
+                        itemId: pageWithVersion.id,
+                        editMode: EditMode.COMPARE_VERSION_CONTENTS,
+                        options: {
+                            version, oldVersion,
+                        },
                     },
                 }).navigate({ replaceUrl: false });
             })

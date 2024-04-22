@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { EditMode, InheritableItem } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { InheritableItem } from '@gentics/cms-models';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '../../../state';
 

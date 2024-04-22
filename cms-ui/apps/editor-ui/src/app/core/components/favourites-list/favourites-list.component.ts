@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
-import { EditMode, Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, skip, take } from 'rxjs/operators';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FavouritesService } from '../../providers/favourites/favourites.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
@@ -24,9 +24,6 @@ export class FavouritesListComponent {
 
     favourites$: Observable<FavouriteWithDisplayDetails[]>;
 
-    private canSeeMultipleNodes$: Observable<boolean>;
-    private iconForItemType = iconForItemType;
-
     constructor(
         private favourites: FavouritesService,
         private folderActions: FolderActionsService,
@@ -35,20 +32,24 @@ export class FavouritesListComponent {
         private route: ActivatedRoute,
         private router: Router,
     ) {
-
         this.favourites$ = this.favourites.list$;
-
-        this.canSeeMultipleNodes$ = this.appState
-            .select(state => state.folder.nodes.list.length > 1);
     }
 
     public favouriteClicked(item: Favourite): void {
         this.navigate.emit(item);
         switch (item.type) {
-            case 'folder': this.openFolder(item); break;
-            case 'page': this.openPage(item); break;
-            case 'image': this.openImage(item); break;
-            case 'file': this.openFile(item); break;
+            case 'folder':
+                this.openFolder(item);
+                break;
+            case 'page':
+                this.openPage(item);
+                break;
+            case 'image':
+                this.openImage(item);
+                break;
+            case 'file':
+                this.openFile(item);
+                break;
             default:
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`Invalid item type ${item.type} in FavouritesList.navigateTo`);

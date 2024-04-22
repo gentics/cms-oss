@@ -1,6 +1,7 @@
 /* eslint-disable id-blacklist */
 import { TestBed } from '@angular/core/testing';
-import { EditMode, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { PageVersion } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

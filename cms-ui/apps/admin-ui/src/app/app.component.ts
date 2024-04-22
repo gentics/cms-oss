@@ -25,7 +25,8 @@ import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission, GcmsUiLanguage, GtxVersion, I18nLanguage, Normalized, User } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Normalized, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, forkJoin, of } from 'rxjs';
@@ -64,7 +65,7 @@ export class AppComponent implements OnDestroy, OnInit {
     userMenuTabIdActivities = 'activities';
     userMenuActiveTab = this.userMenuTabIdMessages;
 
-    cmpVersion$: Observable<GtxVersion>;
+    cmpVersion$: Observable<Version>;
     uiVersion$: Observable<string>;
 
     featureHideManual$: Observable<boolean>;

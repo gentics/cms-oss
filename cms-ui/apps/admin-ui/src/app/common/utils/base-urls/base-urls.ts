@@ -1,5 +1,5 @@
 // The URLs exported here are all absolute so they can be used in an iframe, but relative to the UI folder.
-// A location of server.com/customer-prefix/Content.Node/ui/ will export:
+// A location of server.com/customer-prefix/ui/ will export:
 //     ALOHAPAGE_URL as /customer-prefix/alohapage
 //     API_BASE_URL as /customer-prefix/rest
 //     CONTENTNODE_URL as /customer-prefix/Content.Node
@@ -7,18 +7,19 @@
 
 /** @internal */
 export function urlsRelativeTo(locationPathname: string): {
-        alohaPage: string;
-        editorUi: string;
-        adminUi: string;
-        imageStore: string;
-        restAPI: string;
-    } {
-    const contentNode = locationPathname.replace(/\/+[^\/]+\/+[^/]*$/, '');
-    const base = contentNode.replace(/\/[^\/]*$/, '');
+    alohaPage: string;
+    editorUi: string;
+    adminUi: string;
+    imageStore: string;
+    restAPI: string;
+} {
+    const root = locationPathname.replace(/\/+[^/]+\/+[^/]*$/, '');
+    const base = root.replace(/\/[^/]*$/, '');
+
     return {
         alohaPage: base + '/alohapage',
-        editorUi: contentNode.replace(/\/[^\/]*$/, '') + '/editor/',
-        adminUi: contentNode.replace(/\/[^\/]*$/, '') + '/admin/',
+        editorUi: root.replace(/\/[^\/]*$/, '') + '/editor/',
+        adminUi: root.replace(/\/[^\/]*$/, '') + '/admin/',
         imageStore: base + '/GenticsImageStore',
         restAPI: base + '/rest',
     };

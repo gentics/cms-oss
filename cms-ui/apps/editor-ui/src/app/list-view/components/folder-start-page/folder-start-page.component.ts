@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, OnInit
 import { EditorTab, UIMode } from '@editor-ui/app/common/models';
 import { getNestedObject } from '@editor-ui/app/common/utils/get-nested-object';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
-import { EditMode, Folder, Page, StagedItemsMap } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Folder, Page, StagedItemsMap } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -12,9 +13,9 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 type StartPage = Page | string;
 enum StartPageType {
-    Internal = 'internal',
-    External = 'external',
-    Deleted = 'deleted',
+    INTERNAL = 'internal',
+    EXTERNAL = 'external',
+    DELETED = 'deleted',
 }
 
 /**
@@ -43,12 +44,12 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
     startPage$ = new BehaviorSubject<StartPage>(null);
 
     get getStartPageType(): StartPageType {
-        if (this.startPage$.value === StartPageType.Deleted) {
-            return StartPageType.Deleted;
+        if (this.startPage$.value === StartPageType.DELETED) {
+            return StartPageType.DELETED;
         } else if (!!this.startPage$.value && !!(this.startPage$.value as any).name) {
-            return StartPageType.Internal;
+            return StartPageType.INTERNAL;
         } else {
-            return StartPageType.External;
+            return StartPageType.EXTERNAL;
         }
     }
 
@@ -221,7 +222,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
                 }
             })
             .catch(err => {
-                this.startPage$.next(StartPageType.Deleted);
+                this.startPage$.next(StartPageType.DELETED);
             });
     }
 }

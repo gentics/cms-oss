@@ -1,6 +1,23 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    OnDestroy,
+    OnInit,
+    QueryList,
+    ViewChildren,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { fileSchema, folderSchema, imageSchema, nodeSchema, pageSchema, templateSchema } from '@editor-ui/app/common/models';
+import {
+    fileSchema,
+    folderSchema,
+    imageSchema,
+    noItemPermissions,
+    nodeSchema,
+    pageSchema,
+    templateSchema,
+} from '@editor-ui/app/common/models';
 import { MarkObjectPropertiesAsModifiedAction, SetHideExtrasAction, addNormalizedEntities } from '@editor-ui/app/state';
 import { WindowRef, coerceToBoolean } from '@gentics/cms-components';
 import { TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
@@ -14,7 +31,6 @@ import {
     Raw,
     Tag,
     Template,
-    noItemPermissions,
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Schema, normalize } from 'normalizr';

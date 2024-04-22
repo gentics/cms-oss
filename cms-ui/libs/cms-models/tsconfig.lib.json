@@ -7,5 +7,7 @@
       "types": ["node"]
     },
     "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-    "include": ["src/**/*.ts", "../cms-integration-api-models/src/lib/custom-editor.ts", "../cms-integration-api-models/src/lib/repository-browser.ts"]
+    "include": [
+        "src/**/*.ts"
+    ]
   }

@@ -4,7 +4,7 @@
     >
         <search-suggestion
             *ngFor="let item of matchingSuggestionItems$ | async"
-            [icon]="iconForItemType(item.type)"
+            [icon]="item.type | gtxTypeIcon"
             (use)="goToItem(item)">{{ 'common.search_found_object_with_id' | i18n:{ id: item.id } }}</search-suggestion>
     </ng-container>
     <ng-container
@@ -12,7 +12,7 @@
     >
         <search-suggestion
             *ngFor="let item of matchingRecentItems$ | async"
-            [icon]="iconForItemType(item.type)"
+            [icon]="item.type | gtxTypeIcon"
             iconSecondary="history"
             (use)="goToItem(item)">{{ item.name }}</search-suggestion>
     </ng-container>

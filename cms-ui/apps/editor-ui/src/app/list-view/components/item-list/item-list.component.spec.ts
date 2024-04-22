@@ -13,24 +13,22 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ItemsInfo } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { WindowRef } from '@gentics/cms-components';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
-    EditorPermissions,
     File,
     Folder,
     FolderItemType,
     Image,
     Node as NodeModel,
     Page,
-    getNoPermissions,
 } from '@gentics/cms-models';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
-import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -204,6 +202,7 @@ class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         return {
             ...getNoPermissions(),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
         } as any;
     }

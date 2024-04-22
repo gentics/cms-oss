@@ -1,14 +1,23 @@
 import { Injectable } from '@angular/core';
-import { AppState } from '@editor-ui/app/common/models';
+import {
+    AppState,
+    EditorPermissions,
+    getNoPermissions,
+} from '@editor-ui/app/common/models';
 import { ApplicationStateService, ItemFetchingSuccessAction } from '@editor-ui/app/state';
 import {
-    AccessControlledType,
     DefaultPermissionsFactory,
-    EditorPermissions,
+    FolderInstancePermissions,
+    InstancePermissions,
+    TypePermissions,
+    UniformInstancePermissions,
+    UniformTypePermissions,
+} from '@gentics/cms-components';
+import {
+    AccessControlledType,
     File,
     FilePermissions,
     Folder,
-    FolderInstancePermissions,
     FolderItemOrTemplateType,
     FolderItemType,
     FolderPermissions,
@@ -20,7 +29,6 @@ import {
     Image,
     ImagePermissions,
     InheritableItem,
-    InstancePermissions,
     Item,
     ItemPermissions,
     Language,
@@ -33,12 +41,8 @@ import {
     PrivilegeMapFromServer,
     RolePrivileges,
     Template,
-    TypePermissions,
-    UniformInstancePermissions,
-    UniformTypePermissions,
-    getNoPermissions,
 } from '@gentics/cms-models';
-import { cloneDeep, isEqual } from'lodash-es'
+import { cloneDeep, isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import {
     catchError,

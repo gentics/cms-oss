@@ -1,21 +1,19 @@
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { ItemType, Page } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService, CloseEditorAction, FolderActionsService } from '../../../state';
 
 @Component({
     selector: 'publish-time-managed-pages-modal',
     templateUrl: './publish-time-managed-pages-modal.tpl.html',
-    styleUrls: ['./publish-time-managed-pages-modal.scss']
-    })
+    styleUrls: ['./publish-time-managed-pages-modal.scss'],
+})
 
 export class PublishTimeManagedPagesModal implements IModalDialog {
     @Input() pages: Page[];
     @Input() allPages: number;
     @Input() closeEditor = true;
 
-    iconForItemType = iconForItemType;
     itemType: ItemType = 'page';
 
     publishAtChecked = true;

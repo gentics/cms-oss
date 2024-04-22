@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
-import { EditMode, Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';

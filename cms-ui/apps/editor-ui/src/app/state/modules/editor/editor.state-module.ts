@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { EditMode } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { StateContext } from '@ngxs/store';
 import { append, iif, patch, removeItem } from '@ngxs/store/operators';
 import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';

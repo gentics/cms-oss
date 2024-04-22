@@ -2,10 +2,11 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditMode, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
-    EditableObjectTag, Feature, File,
+    EditableObjectTag,
+    Feature,
+    File,
     Folder,
     FolderSaveRequestOptions,
     Image,

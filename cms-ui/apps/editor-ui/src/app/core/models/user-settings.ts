@@ -1,5 +1,6 @@
 import { DisplayFields } from '@editor-ui/app/common/models';
-import { Favourite, GcmsUiLanguage, SortField } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { Favourite, SortField } from '@gentics/cms-models';
 import { FALLBACK_LANGUAGE } from '../../common/config/config';
 
 export interface UserSettings {

@@ -4,7 +4,8 @@
         "module": "commonjs",
         "types": [
             "jasmine",
-            "node"
+            "node",
+            "jquery"
         ]
     },
     "files": [

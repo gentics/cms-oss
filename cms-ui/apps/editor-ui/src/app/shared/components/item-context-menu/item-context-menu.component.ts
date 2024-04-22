@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
+import { EditorPermissions, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '@editor-ui/app/common/models';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import {
-    EditorPermissions,
     File as FileModel,
     Folder,
     Form,
@@ -13,7 +12,6 @@ import {
     Node as NodeModel,
     Page,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
 import { isEditableImage } from '../../../common/utils/is-editable-image';

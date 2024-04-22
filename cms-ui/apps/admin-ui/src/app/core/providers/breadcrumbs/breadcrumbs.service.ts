@@ -4,14 +4,15 @@ import {
     ROUTE_ENTITY_RESOLVER_KEY,
     ROUTE_ENTITY_TYPE_KEY,
     ROUTE_SKIP_BREADCRUMB,
-    RouteData } from '@admin-ui/common';
+    RouteData,
+} from '@admin-ui/common';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router, UrlSegment } from '@angular/router';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
-import { has as _has, isEqual as _isEqual } from'lodash-es'
+import { has as _has, isEqual as _isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { I18nService } from '../i18n/i18n.service';

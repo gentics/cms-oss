@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
-import { EditorPermissions, Page, Raw, Template } from '@gentics/cms-models';
+import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';

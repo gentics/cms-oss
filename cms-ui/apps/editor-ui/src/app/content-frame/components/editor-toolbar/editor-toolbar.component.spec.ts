@@ -21,7 +21,8 @@ import { ApplicationStateService, EditorActionsService, FolderActionsService } f
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import { EditMode, Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';

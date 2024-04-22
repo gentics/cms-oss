@@ -18,7 +18,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AccessControlledType, DataSource, DataSourceEntryListUpdateRequest, GcmsPermission, TypePermissions } from '@gentics/cms-models';
+import { AccessControlledType, DataSource, DataSourceEntryListUpdateRequest, GcmsPermission } from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -83,7 +83,7 @@ export class DataSourceEditorComponent extends BaseEntityEditorComponent<Editabl
             this.fgProperties.markAsPristine();
         }
         this.permissionDataSourceEntryRead$ = this.permissionsService.getPermissions(AccessControlledType.DATA_SOURCE, this.entity.id).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
     }
 

@@ -1,5 +1,5 @@
 import { AccessControlledType, GcmsPermission } from './permissions';
-import { RoleAssignment } from './roles';
+import { RoleAssignment } from './role';
 
 /**
  * Indicate if a group has a certain `GcmsPermission`.

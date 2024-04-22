@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     File as FileModel,
     Folder,
     Image,

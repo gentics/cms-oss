@@ -12,7 +12,6 @@ import {
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
@@ -95,7 +94,7 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
         });
 
         this.permissionContentRead$ = this.permissionsService.getPermissions(AccessControlledType.CONTENT_ADMIN).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);

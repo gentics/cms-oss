@@ -434,14 +434,14 @@ export function getExampleEntityStore(): NormalizedEntityStore {
         },
         language: {
             1: {
-              code: 'de',
-              name: 'Deutsch (German)',
-              id: 1,
+                code: 'de',
+                name: 'Deutsch (German)',
+                id: 1,
             },
             2: {
-              code: 'en',
-              name: 'English',
-              id: 2,
+                code: 'en',
+                name: 'English',
+                id: 2,
             },
         },
         message: {

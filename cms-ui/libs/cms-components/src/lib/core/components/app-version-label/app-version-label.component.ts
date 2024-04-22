@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Inject, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
-import { GtxVersion, GtxVersionCompatibility, GtxVersionNodeInfo } from '@gentics/cms-models';
+import { Version, VersionCompatibility, NodeVersionInfo } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { environment } from '../../../common/utils';
 import { VersionModalComponent } from '../versions-modal';
@@ -17,14 +17,14 @@ export class GtxAppVersionLabelComponent implements OnChanges {
 
     /** App stack Version information */
     @Input()
-    versionData: GtxVersion;
+    versionData: Version;
 
     /** Displays aggregated state of software components compatibility */
-    compatibilityState: GtxVersionCompatibility;
+    compatibilityState: VersionCompatibility;
 
     cmpVersion: string;
     cmsVersion: string;
-    nodeVersions: { nodeName: string; nodeInfo: GtxVersionNodeInfo; }[] = [];
+    nodeVersions: { nodeName: string; nodeInfo: NodeVersionInfo; }[] = [];
 
     protected modalVisible = false;
 
@@ -56,7 +56,7 @@ export class GtxAppVersionLabelComponent implements OnChanges {
         }).then(dialog => dialog.open());
     }
 
-    private setData(versionData: GtxVersion): void {
+    private setData(versionData: Version): void {
         if (!versionData || !versionData.nodeInfo) {
             return;
         }
@@ -64,17 +64,17 @@ export class GtxAppVersionLabelComponent implements OnChanges {
         this.cmsVersion = versionData.version;
 
         this.nodeVersions = [];
-        const entries: { [key: string]: GtxVersionNodeInfo; } = versionData.nodeInfo;
-        let state: GtxVersionCompatibility = GtxVersionCompatibility.SUPPORTED;
+        const entries: { [key: string]: NodeVersionInfo; } = versionData.nodeInfo;
+        let state: VersionCompatibility = VersionCompatibility.SUPPORTED;
         for (const key in entries) {
             if (Object.prototype.hasOwnProperty.call(entries, key)) {
-                const element: GtxVersionNodeInfo = entries[key];
+                const element: NodeVersionInfo = entries[key];
                 this.nodeVersions.push({ nodeName: key, nodeInfo: element });
 
-                if (element.compatibility === GtxVersionCompatibility.UNKNOWN) {
-                    state = GtxVersionCompatibility.UNKNOWN;
-                } else if (element.compatibility === GtxVersionCompatibility.NOT_SUPPORTED) {
-                    state = GtxVersionCompatibility.NOT_SUPPORTED;
+                if (element.compatibility === VersionCompatibility.UNKNOWN) {
+                    state = VersionCompatibility.UNKNOWN;
+                } else if (element.compatibility === VersionCompatibility.NOT_SUPPORTED) {
+                    state = VersionCompatibility.NOT_SUPPORTED;
                 }
             }
         }

@@ -111,3 +111,10 @@ export class SetTagEditorOpenAction {
         public isOpen: boolean,
     ) {}
 }
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetNodesLoadedAction {
+    constructor(
+        public loaded: boolean,
+    ) {}
+}

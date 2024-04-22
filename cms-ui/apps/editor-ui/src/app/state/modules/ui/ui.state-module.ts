@@ -16,6 +16,7 @@ import {
     SetCMPVersionAction,
     SetConstructFavourites,
     SetHideExtrasAction,
+    SetNodesLoadedAction,
     SetTagEditorOpenAction,
     SetUILanguageAction,
     SetUIModeAction,
@@ -45,6 +46,7 @@ const INITIAL_UI_STATE: UIState = {
     overlayCount: 0,
     constructFavourites: [],
     tagEditorOpen: false,
+    nodesLoaded: false,
 };
 
 @AppStateBranch<UIState>({
@@ -187,6 +189,13 @@ export class UIStateModule {
     handleSetTagEditorOpenAction(ctx: StateContext<UIState>, action: SetTagEditorOpenAction): void {
         ctx.patchState({
             tagEditorOpen: action.isOpen,
+        });
+    }
+
+    @ActionDefinition(SetNodesLoadedAction)
+    handleSetNodesLoadedAction(ctx: StateContext<UIState>, action: SetNodesLoadedAction): void {
+        ctx.patchState({
+            nodesLoaded: action.loaded,
         });
     }
 }

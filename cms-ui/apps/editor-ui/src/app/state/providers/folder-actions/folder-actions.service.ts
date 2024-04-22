@@ -235,29 +235,33 @@ export class FolderActionsService {
     /**
      * Fetches all available nodes.
      */
-    getNodes(): void {
-        forkJoin([
-            this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
-            this.client.folder.folders(0),
-        ]).pipe(
-            switchMap(([, folderRes]) => {
-                return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
-                    map(responses => [folderRes, responses.map(res => res.node)]),
-                );
-            }),
-            switchMap(([folderRes, nodes]: [FolderListResponse, Node[]]) => {
-                return this.appState.dispatch(new NodeFetchingSuccessAction(folderRes.folders, nodes)).pipe(
-                    map(() => [folderRes, nodes]),
-                );
-            }),
-        ).subscribe(([, nodes]) => {
-            if (nodes.length > 0) {
-                this.getActiveNodeLanguages()
-                    .then(languages => this.setActiveLanguageFromAvailable(languages));
-            }
-        }, error => {
-            this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));
-            this.errorHandler.catch(error);
+    getNodes(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            forkJoin([
+                this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
+                this.client.folder.folders(0),
+            ]).pipe(
+                switchMap(([, folderRes]) => {
+                    return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
+                        map(responses => [folderRes, responses.map(res => res.node)]),
+                    );
+                }),
+                switchMap(([folderRes, nodes]: [FolderListResponse, Node[]]) => {
+                    return this.appState.dispatch(new NodeFetchingSuccessAction(folderRes.folders, nodes)).pipe(
+                        map(() => [folderRes, nodes]),
+                    );
+                }),
+            ).subscribe(([, nodes]) => {
+                if (nodes.length > 0) {
+                    this.getActiveNodeLanguages()
+                        .then(languages => this.setActiveLanguageFromAvailable(languages));
+                    resolve();
+                }
+            }, error => {
+                this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));
+                this.errorHandler.catch(error);
+                reject(error);
+            });
         });
     }
 

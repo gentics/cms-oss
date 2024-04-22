@@ -32,4 +32,5 @@ export interface UIState {
     overlayCount: number;
     constructFavourites: string[];
     tagEditorOpen: boolean;
+    nodesLoaded: boolean;
 }

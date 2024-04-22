@@ -64,6 +64,7 @@ import {
     FolderActionsService,
     NodeSettingsActionsService,
     SetHideExtrasAction,
+    SetNodesLoadedAction,
     UIActionsService,
 } from './state';
 
@@ -244,7 +245,9 @@ export class AppComponent implements OnInit {
 
         // Upon login, load all available nodes.
         onLogin$.subscribe(() => {
-            this.folderActions.getNodes();
+            this.folderActions.getNodes().finally(() => {
+                this.appState.dispatch(new SetNodesLoadedAction(true));
+            });
             // CMS version is only available once logged in.
             this.uiActions.getCmsVersion();
             this.authActions.updateAdminState();

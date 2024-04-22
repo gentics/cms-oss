@@ -3,7 +3,7 @@ import { RecentItem, plural } from '@editor-ui/app/common/models';
 import { Favourite, GcmsUiLanguage, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';
 import { Observable, forkJoin } from 'rxjs';
-import { filter, map, take } from 'rxjs/operators';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { environment as ENVIRONMENT_TOKEN } from '../../../development/development-tools';
 import {
@@ -69,6 +69,10 @@ export class UserSettingsService {
     loadUserSettingsWhenLoggedIn(): void {
         this.appState.select(state => state.auth.currentUserId).pipe(
             filter(id => id != null),
+            switchMap(id => this.appState.select(state => state.ui.nodesLoaded).pipe(
+                filter(loaded => loaded),
+                map(() => id),
+            )),
         ).subscribe(userId => {
             this.currentUserId = userId;
             this.loadUserSettings();

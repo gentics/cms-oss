@@ -64,6 +64,7 @@ describe('UIStateModule', () => {
             overlayCount: 0,
             constructFavourites: [],
             tagEditorOpen: false,
+            nodesLoaded: false,
         });
     });
 

@@ -8,9 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +17,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Before;
@@ -31,11 +30,9 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.api.rest.ModelBuilderApiHelper;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.job.AbstractUserActionJob;
-import com.gentics.contentnode.job.BackgroundJob;
+import com.gentics.contentnode.job.AbstractBackgroundJob;
 import com.gentics.contentnode.migration.MigrationHelper;
 import com.gentics.contentnode.migration.jobs.TagTypeMigrationJob;
 import com.gentics.contentnode.object.Construct;
@@ -459,7 +456,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, false, false, false);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -519,7 +516,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, false, false, false);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -576,7 +573,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, false, false, false);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -598,16 +595,12 @@ public class TagTypeMigrationTest {
 	 */
 	private void setJobParameter(TagTypeMigrationJob job, Transaction t, TagTypeMigrationRequest request, ArrayList<Integer> objectList,
 			boolean handlePagesByTemplate, boolean handleAllNodes, boolean preventTriggerEvent) {
-		job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-		job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-		job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, objectList);
-		String sessionId = t.getSessionId();
-		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, handlePagesByTemplate);
-		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, handleAllNodes);
-		assertNotNull(sessionId);
-		job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, sessionId);
-		job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
-		job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, preventTriggerEvent);
+		job.setRequest(request);
+		job.setType(request.getType());
+		job.setObjectIds(objectList);
+		job.setHandlePagesByTemplate(handlePagesByTemplate);
+		job.setHandleAllNodes(handleAllNodes);
+		job.setPreventTriggerEvent(preventTriggerEvent);
 	}
 
 	@Test
@@ -658,7 +651,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, false, false, false);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -713,7 +706,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, handlePagesByTemplate, false, preventTriggerEvent);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -826,7 +819,7 @@ public class TagTypeMigrationTest {
 		// Create and execute job
 		TagTypeMigrationJob job = new TagTypeMigrationJob();
 		setJobParameter(job, t, request, objectList, true, false, true);
-		job.execute(1000);
+		job.execute(1000, TimeUnit.SECONDS);
 		t.commit();
 
 		t = testContext.startTransactionWithPermissions(false);
@@ -1301,21 +1294,9 @@ public class TagTypeMigrationTest {
 	 *            foreground time (in ms)
 	 * @throws NodeException
 	 */
-	private void assertJobSuccess(BackgroundJob job, int foreground) throws NodeException {
-		assertTrue("Job must finish in foreground within " + foreground + " ms", job.execute(foreground));
-		@SuppressWarnings("rawtypes")
-		List exceptions = job.getExceptions();
-		if (!ObjectTransformer.isEmpty(exceptions)) {
-			StringWriter sw = new StringWriter();
-			
-			PrintWriter pw = new PrintWriter(sw);
-			for (Object object : exceptions) {
-				if (object instanceof Throwable) {
-					pw.append("\n");
-					((Throwable) object).printStackTrace(pw);
-				}
-			}
-			fail("The following exceptions occurred during job execution: " + sw.toString());
-		}
+	private void assertJobSuccess(AbstractBackgroundJob job, int foreground) throws NodeException {
+		AtomicBoolean foregroundFlag = new AtomicBoolean(true);
+		job.execute(foreground, TimeUnit.SECONDS, () -> foregroundFlag.set(false));
+		assertTrue("Job must finish in foreground within " + foreground + " ms", foregroundFlag.get());
 	}
 }

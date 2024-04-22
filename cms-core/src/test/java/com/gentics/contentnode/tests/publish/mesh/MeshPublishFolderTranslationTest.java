@@ -138,6 +138,10 @@ public class MeshPublishFolderTranslationTest {
 		operate(() -> clear(node));
 		cleanMesh(mesh.client());
 		operate(() -> assertThat(cr.checkStructure(true)).as("Structure valid").isTrue());
+
+		for (String lang : Arrays.asList("de", "en", "fr", "it", "es")) {
+			mesh.client().assignLanguageToProjectByTag(MESH_PROJECT_NAME, lang).blockingAwait();
+		}
 	}
 
 	/**

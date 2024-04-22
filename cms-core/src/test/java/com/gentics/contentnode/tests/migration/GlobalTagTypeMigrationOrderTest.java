@@ -1,14 +1,12 @@
 package com.gentics.contentnode.tests.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -19,7 +17,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.job.AbstractUserActionJob;
 import com.gentics.contentnode.migration.jobs.TagTypeMigrationJob;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
@@ -172,11 +169,7 @@ public class GlobalTagTypeMigrationOrderTest {
 		try (Trx trx = new Trx(sid, 2)) {
 			TagTypeMigrationJob job = new TagTypeMigrationJob();
 			setJobParameter(job, migrationRequest);
-			assertTrue("TagTypeMigrationJob must finish in foreground", job.execute(1000));
-			List<Exception> exceptions = job.getExceptions();
-			for (Exception e : exceptions) {
-				throw new NodeException(e);
-			}
+			job.execute(1000, TimeUnit.SECONDS);
 		}
 
 		// assert that template was migrated
@@ -205,17 +198,11 @@ public class GlobalTagTypeMigrationOrderTest {
 	 * @param request TTM Request
 	 */
 	private void setJobParameter(TagTypeMigrationJob job, TagTypeMigrationRequest request) throws NodeException {
-		job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-		job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-		job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, (Serializable)request.getObjectIds());
-		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, request.isHandlePagesByTemplate());
-		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, request.isHandleAllNodes());
-		job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, request.isPreventTriggerEvent());
-
-		Transaction t = TransactionManager.getCurrentTransaction();
-		String sessionId = t.getSessionId();
-		assertNotNull("SessionId must be set", sessionId);
-		job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, sessionId);
-		job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
+		job.setRequest(request);
+		job.setType(request.getType());
+		job.setObjectIds(request.getObjectIds());
+		job.setHandlePagesByTemplate(request.isHandlePagesByTemplate());
+		job.setHandleAllNodes(request.isHandleAllNodes());
+		job.setPreventTriggerEvent(request.isPreventTriggerEvent());
 	}
 }

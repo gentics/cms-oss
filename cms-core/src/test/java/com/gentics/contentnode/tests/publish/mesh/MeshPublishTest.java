@@ -1219,10 +1219,10 @@ public class MeshPublishTest {
 	public void testPropertySubstitution() throws Exception {
 		// update username, password and URL to a system property
 		ContentRepositoryModel crModel = new ContentRepositoryModel();
-		crModel.setUsername("${sys:CR_USERNAME_TEST}");
-		crModel.setPassword("${sys:CR_PASSWORD_TEST}");
+		crModel.setUsernameProperty("${sys:CR_USERNAME_TEST}");
+		crModel.setPasswordProperty("${sys:CR_PASSWORD_TEST}");
 		crModel.setPasswordType(PasswordType.property);
-		crModel.setUrl("${sys:CR_URL_TEST}");
+		crModel.setUrlProperty("${sys:CR_URL_TEST}");
 		crResource.update(Integer.toString(crId), crModel);
 
 		// set the system properties

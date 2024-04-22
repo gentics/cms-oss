@@ -1,10 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl.migration;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
-
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -21,9 +17,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.apache.commons.io.FileUtils;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.Scheduler;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +25,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.distributed.TrxCallable;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.migration.MigrationDBLogger;
@@ -70,6 +64,9 @@ import com.gentics.contentnode.rest.model.response.migration.PossiblePartMapping
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource;
 import com.gentics.contentnode.rest.resource.migration.MigrationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.Operator;
+import com.gentics.contentnode.rest.util.RestCallable;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
@@ -487,31 +484,18 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 		@Override
 		protected GenericResponse callWithTrx() throws NodeException {
-			Transaction t = TransactionManager.getCurrentTransaction();
-
 			// check if a migration is currently in progress
-			if (MigrationHelper.isTagTypeMigrationExecuting(t)) {
-				Scheduler scheduler;
-
+			if (MigrationHelper.isTagTypeMigrationExecuting()) {
 				try {
-					// Get all currently executing scheduler jobs
-					scheduler = TransactionManager.getCurrentTransaction().getNodeConfig().getPersistentScheduler();
-					@SuppressWarnings("unchecked")
-					List<JobExecutionContext> currentJobs = scheduler.getCurrentlyExecutingJobs();
+					AbstractMigrationJob job = Operator.getCurrentlyRunningJobs().stream().map(RestCallable::getWrapped).filter(callable -> {
+						return callable instanceof AbstractMigrationJob;
+					}).map(callable -> AbstractMigrationJob.class.cast(callable)).findAny().orElseThrow();
+					job.interrupt();
 
-					for (JobExecutionContext jobContext : currentJobs) {
-						// Check each job if it is a Tag Type Migration Job
-						Job jobInstance = jobContext.getJobInstance();
+					GenericResponse response = new GenericResponse();
 
-						if (jobInstance instanceof AbstractMigrationJob) {
-							// Interrupt the job
-							((TagTypeMigrationJob) jobInstance).interrupt();
-							GenericResponse response = new GenericResponse();
-
-							response.addMessage(new Message(Type.SUCCESS, "Successfully cancelled migration process"));
-							return response;
-						}
-					}
+					response.addMessage(new Message(Type.SUCCESS, "Successfully cancelled migration process"));
+					return response;
 				} catch (Exception e) {
 					NodeLogger.getNodeLogger(MigrationResourceImpl.class).error("Error while cancelling migration process", e);
 					I18nString message = new CNI18nString("rest.general.error");
@@ -539,7 +523,6 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 		@Override
 		protected MigrationStatusResponse callWithTrx() throws NodeException {
-			Scheduler scheduler;
 			ResponseInfo defaultInfo = new ResponseInfo(ResponseCode.OK, "No migration is currently in process.");
 			MigrationStatusResponse response = new MigrationStatusResponse(null, defaultInfo);
 
@@ -557,24 +540,18 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 				}
 				response.setLatestJob(latestJob);
 
-				// Get all currently executing scheduler jobs
-				scheduler = TransactionManager.getCurrentTransaction().getNodeConfig().getPersistentScheduler();
-				@SuppressWarnings("unchecked")
-				List<JobExecutionContext> currentJobs = scheduler.getCurrentlyExecutingJobs();
+				AbstractMigrationJob job = Operator.getCurrentlyRunningJobs().stream().map(RestCallable::getWrapped)
+						.filter(callable -> {
+							return callable instanceof AbstractMigrationJob;
+						}).map(callable -> AbstractMigrationJob.class.cast(callable)).findAny().orElse(null);
 
-				for (JobExecutionContext jobContext : currentJobs) {
+				if (job != null) {
+					response.setStatus(AbstractMigrationJob.STATUS_IN_PROGRESS);
+					response.setPercentComplete(job.getPercentCompleted());
+					int jobId = job.getMigrationJobId();
 
-					// Check each job if it is a Migration Job
-					Job jobInstance = jobContext.getJobInstance();
-
-					if (jobInstance instanceof AbstractMigrationJob) {
-						response.setStatus(AbstractMigrationJob.STATUS_IN_PROGRESS);
-						response.setPercentComplete(((AbstractMigrationJob) jobInstance).getPercentCompleted());
-						int jobId = ((AbstractMigrationJob) jobInstance).getMigrationJobId();
-
-						response.setJobId(jobId);
-						return response;
-					}
+					response.setJobId(jobId);
+					return response;
 				}
 				response.setStatus(AbstractMigrationJob.STATUS_PENDING);
 				return response;
@@ -614,11 +591,9 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 		@Override
 		protected MigrationResponse callWithTrx() throws NodeException {
-			Transaction t = TransactionManager.getCurrentTransaction();
-
 			try {
 				// Check if a migration is already in progress
-				if (!MigrationHelper.isTagTypeMigrationExecuting(t)) {
+				if (!MigrationHelper.isTagTypeMigrationExecuting()) {
 
 					// retrieve the mapping config from the db and check whether there is a db entry for the jobid
 					MigrationDBLogger dbLogger = new MigrationDBLogger(MigrationDBLogger.DEFAULT_LOGGER);
@@ -643,21 +618,19 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 					objects.add(request.getObjectId());
 
 					// Create and execute job
-					TagTypeMigrationJob job = new TagTypeMigrationJob();
+					TagTypeMigrationJob job = new TagTypeMigrationJob()
+							.setRequest(originalMigrationRequest)
+							.setType(request.getType())
+							.setObjectIds(objects);
 
-					job.addParameter(TagTypeMigrationJob.PARAM_SELECTED_ITEM_ID, request.getObjectId());
-					job.addParameter(TagTypeMigrationJob.PARAM_SELECTED_ITEM_TYPE, request.getType());
-					job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, originalMigrationRequest);
-					job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-					job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, objects);
-					GenericResponse executeJobResponse = executeJob(job, 10);
+					GenericResponse executeJobResponse = job.execute(10, TimeUnit.SECONDS);
 
 					// Create and return response
 					MigrationResponse response = new MigrationResponse();
 
 					response.setMessages(executeJobResponse.getMessages());
 					response.setResponseInfo(executeJobResponse.getResponseInfo());
-					response.setJobId(job.getJobId());
+					response.setJobId(job.getMigrationJobId());
 					return response;
 				}
 
@@ -708,7 +681,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 				}
 
 				// Check if a migration is already in progress
-				if (!MigrationHelper.isTagTypeMigrationExecuting(t)) {
+				if (!MigrationHelper.isTagTypeMigrationExecuting()) {
 
 					// validate mappings
 					// if (!TagTypeMigrationPartMapper.isMappingValid(request.getMappings(), t)) {
@@ -716,17 +689,16 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 					// }
 
 					// Create and execute job
-					TemplateMigrationJob job = new TemplateMigrationJob();
+					TemplateMigrationJob job = new TemplateMigrationJob()
+							.setRequest(request);
 
-					job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-					GenericResponse executeJobResponse = executeJob(job, 10);
+					GenericResponse executeJobResponse = job.execute(10, TimeUnit.SECONDS);
 
 					// Create and return response
 					MigrationResponse response = new MigrationResponse();
 
 					response.setMessages(executeJobResponse.getMessages());
 					response.setResponseInfo(executeJobResponse.getResponseInfo());
-					response.setJobId(job.getJobId());
 					return response;
 				}
 
@@ -783,7 +755,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 				}
 
 				// Check if a migration is already in progress
-				if (!MigrationHelper.isTagTypeMigrationExecuting(t)) {
+				if (!MigrationHelper.isTagTypeMigrationExecuting()) {
 
 					// validate mappings
 					if (!MigrationPartMapper.isMappingValid(request.getMappings(), t)) {
@@ -796,24 +768,21 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 					}
 
 					// Create and execute job
-					TagTypeMigrationJob job = new TagTypeMigrationJob();
+					TagTypeMigrationJob job = new TagTypeMigrationJob()
+							.setRequest(request)
+							.setType(request.getType())
+							.setObjectIds(request.getObjectIds())
+							.setHandlePagesByTemplate(request.isHandlePagesByTemplate())
+							.setHandleAllNodes(request.isHandleAllNodes())
+							.setPreventTriggerEvent(request.isPreventTriggerEvent());
 
-					job.addParameter(TagTypeMigrationJob.PARAM_SELECTED_ITEM_ID, null);
-					job.addParameter(TagTypeMigrationJob.PARAM_SELECTED_ITEM_TYPE, null);
-					job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-					job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-					job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, new ArrayList<>(request.getObjectIds()));
-					job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, request.isHandlePagesByTemplate());
-					job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, request.isHandleAllNodes());
-					job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, request.isPreventTriggerEvent());
-					GenericResponse executeJobResponse = executeJob(job, 1);
+					GenericResponse executeJobResponse = job.execute(1, TimeUnit.SECONDS);
 
 					// Create and return response
 					MigrationResponse response = new MigrationResponse();
 
 					response.setMessages(executeJobResponse.getMessages());
 					response.setResponseInfo(executeJobResponse.getResponseInfo());
-					response.setJobId(job.getJobId());
 					return response;
 				}
 

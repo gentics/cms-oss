@@ -1,14 +1,10 @@
 package com.gentics.contentnode.job;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.Level;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionException;
 
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.factory.Transaction;
@@ -28,37 +24,7 @@ import com.gentics.lib.i18n.CNI18nString;
  * Background job that saves a template.
  * Saving a template might need to update lots of pages, which could take a while
  */
-public class TemplateSaveJob extends AbstractUserActionJob {
-	/**
-	 * Name of the job parameter holding the template model
-	 */
-	public final static String PARAM_MODEL = "templateModel";
-
-	/**
-	 * Name of the job parameter holding the list of tags to delete
-	 */
-	public final static String PARAM_TAGS = "tagsToDelete";
-
-	/**
-	 * Name of the job parameter whether to unlock the template after saving
-	 */
-	public final static String PARAM_UNLOCK = "unlock";
-
-	/**
-	 * Name of the job parameter whether pages shall be synchronized
-	 */
-	public final static String PARAM_SYNC_PAGES = "syncPages";
-
-	/**
-	 * Name of the job parameter holding the list of tags to sync
-	 */
-	public final static String PARAM_SYNC = "sync";
-
-	/**
-	 * Name of the job parameter to force sync of incompatible tags
-	 */
-	public final static String PARAM_FORCE_SYNC = "forceSync";
-
+public class TemplateSaveJob extends AbstractBackgroundJob {
 	/**
 	 * List of tags to delete
 	 */
@@ -107,41 +73,25 @@ public class TemplateSaveJob extends AbstractUserActionJob {
 	 */
 	public TemplateSaveJob(Template restModel, List<String> tagNamesToDelete, boolean unlock, boolean syncPages, List<String> sync, boolean force)
 			throws TransactionException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		addParameter(AbstractUserActionJob.PARAM_SESSIONID, t.getSessionId());
-		addParameter(AbstractUserActionJob.PARAM_USERID, new Integer(t.getUserId()));
-		addParameter(PARAM_MODEL, restModel);
-		if (tagNamesToDelete != null) {
-			addParameter(PARAM_TAGS, new ArrayList<String>(tagNamesToDelete));
-		}
-		addParameter(PARAM_UNLOCK, unlock);
-		addParameter(PARAM_SYNC_PAGES, syncPages);
-		if (sync != null) {
-			addParameter(PARAM_SYNC, new ArrayList<String>(sync));
-		}
-		addParameter(PARAM_FORCE_SYNC, force);
+		this.restModel = restModel;
+		this.tagNamesToDelete = tagNamesToDelete;
+		this.unlock = unlock;
+		this.syncPages = syncPages;
+		this.sync = sync;
+		this.forceSync = force;
 	}
 
-	@Override
+	/**
+	 * Get the job description
+	 * @return job description
+	 */
 	public String getJobDescription() {
 		return new CNI18nString("templatesavejob").toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected boolean getJobParameters(JobDataMap map) {
-		restModel = (Template)map.get(PARAM_MODEL);
-		tagNamesToDelete = (List<String>)map.get(PARAM_TAGS);
-		unlock = map.getBoolean(PARAM_UNLOCK);
-		syncPages = map.getBoolean(PARAM_SYNC_PAGES);
-		sync = (List<String>)map.get(PARAM_SYNC);
-		forceSync = map.getBoolean(PARAM_FORCE_SYNC);
-
-		return restModel != null;
-	}
-
-	@Override
-	protected void processAction() throws InsufficientPrivilegesException, NodeException, JobExecutionException {
+	protected void processAction() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		com.gentics.contentnode.object.Template template = ModelBuilder.getTemplate(restModel);
 
 		// Object tag permission checking

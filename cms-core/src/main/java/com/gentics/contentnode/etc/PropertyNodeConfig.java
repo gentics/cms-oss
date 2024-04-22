@@ -29,9 +29,6 @@ import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.impl.StdSchedulerFactory;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -58,15 +55,12 @@ import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.contentnode.scheduler.PersistentSchedulerProperties;
-import com.gentics.contentnode.scheduler.SchedulerUtils;
 import com.gentics.contentnode.scheduler.SimpleScheduler;
 import com.gentics.contentnode.servlets.UdateChecker;
 import com.gentics.lib.datasource.SQLHandle;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DB.DBTrx;
 import com.gentics.lib.db.DBHandle;
-import com.gentics.lib.genericexceptions.UnavailableException;
 import com.gentics.lib.i18n.LanguageProviderFactory;
 import com.gentics.lib.io.FileRemover;
 import com.gentics.lib.log.NodeLogger;
@@ -151,8 +145,6 @@ public class PropertyNodeConfig implements NodeConfig {
 
 	public static final String DB_SETTINGS_POOL_SIZE_MAX = SETTINGS_PREFIX + "pool_size_max";
 
-	private StdSchedulerFactory schedulerFactory = null;
-
 	/**
 	 * Constructor for the PropertyNodeConfig
 	 * When using this constructor the PersistentScheduler will be initialized.
@@ -194,7 +186,6 @@ public class PropertyNodeConfig implements NodeConfig {
 
 		PublishQueueStats.get().init(ObjectTransformer.getLong(defPrefs.getProperty("publish_queue_stats.refresh_delay"), 60_000));
 
-		initializePersistentScheduler();
 		registerLanguageProvider();
 
 		// initialize the RendererFactory here
@@ -354,21 +345,6 @@ public class PropertyNodeConfig implements NodeConfig {
 	}
 
 	/**
-	 * Initializes the Persistent Scheduler
-	 */
-	public void initializePersistentScheduler() throws UnavailableException {
-		schedulerFactory = new StdSchedulerFactory();
-		try {
-			PersistentSchedulerProperties schedulerProps = new PersistentSchedulerProperties(defPrefs);
-
-			schedulerFactory.initialize(schedulerProps);
-			schedulerFactory.getScheduler().start();
-		} catch (SchedulerException e) {
-			throw new UnavailableException("Could not initialize scheduler", e);
-		}
-	}
-
-	/**
 	 * Register the Content.Node specific language provider wrapper that is used the retrieve the current language provider.
 	 * 
 	 * @throws NodeException
@@ -380,22 +356,6 @@ public class PropertyNodeConfig implements NodeConfig {
 		LanguageProviderFactory.reset();
 		LanguageProviderFactory.getInstance().registerProviderWrapper(new ContentNodeLanguageProviderWrapper());
 		logger.debug("Registered Content.Node specific LanguageProviderWrapper");
-	}
-
-	/**
-	 * Get the scheduler which uses a JDBCJobstore to save all the jobstate in the database
-	 * @return The Scheduler or null if non started
-	 * @throws SchedulerException
-	 */
-	public Scheduler getPersistentScheduler() throws NodeException {
-		if (schedulerFactory == null) {
-			return null;
-		}
-		try {
-			return schedulerFactory.getScheduler();
-		} catch (SchedulerException e) {
-			throw new NodeException("Could not get Scheduler from factory", e);
-		}
 	}
 
 	/**
@@ -411,8 +371,6 @@ public class PropertyNodeConfig implements NodeConfig {
 		Operator.shutdown();
 		PublishQueueStats.get().shutdown();
 		SimpleScheduler.shutdown();
-		SchedulerUtils.forceShutdown(getPersistentScheduler());
-		schedulerFactory = null;
 		datasources.clear();
 		for (GenericObjectPool<Object> pool : connectionPools.values()) {
 			try {

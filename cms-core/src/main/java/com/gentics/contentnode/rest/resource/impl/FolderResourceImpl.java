@@ -1,7 +1,6 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.createNodeConflictMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
@@ -22,6 +21,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -2974,9 +2974,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	public GenericResponse move(@PathParam("id") String id, FolderMoveRequest request) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		com.gentics.contentnode.object.Folder folder = getFolder(id, false);
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
 				request.getFolderId(), request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 	/* (non-Javadoc)
@@ -2992,9 +2992,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
 			localIds.add(folder.getId());
 		}
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
 				request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 

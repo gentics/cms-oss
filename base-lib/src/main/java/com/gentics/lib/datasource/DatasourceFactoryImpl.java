@@ -221,10 +221,6 @@ public class DatasourceFactoryImpl implements DatasourceFactory, SchedulingInter
 				datasourceClass = CNWriteableDatasource.class;
 			} else if ("mccr".equalsIgnoreCase(typeId)) {
 				datasourceClass = WritableMCCRDatasource.class;
-			} else if ("ldap".equalsIgnoreCase(typeId)) {
-				logger.warn(
-						"Deprecated typeId definition {" + typeId + "} found for datasource {" + id + "}. Use " + LDAPDatasource.class.getName() + " instead");
-				datasourceClass = LDAPDatasource.class;
 			} else if ("mysql".equalsIgnoreCase(typeId)) {
 				throw new UnsupportedOperationException("Not yet implemented");
 			} else {

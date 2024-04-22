@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -108,16 +108,14 @@ public class MCFileResourceImpl implements MCFileResource {
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
 
-			job.addParameter(PushToMasterJob.PARAM_CLASS, File.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>();
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(File.class)
+					.setId(id)
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
 
-			idList.add(id);
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -131,15 +129,13 @@ public class MCFileResourceImpl implements MCFileResource {
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(File.class)
+					.setIds(request.getIds())
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
 
-			job.addParameter(PushToMasterJob.PARAM_CLASS, File.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>(request.getIds());
-
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -163,13 +159,12 @@ public class MCFileResourceImpl implements MCFileResource {
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
-			UnlocalizeJob job = new UnlocalizeJob();
+			UnlocalizeJob job = new UnlocalizeJob()
+					.setClazz(File.class)
+					.setIds(request.getIds())
+					.setChannelId(channelId);
 
-			job.addParameter(UnlocalizeJob.PARAM_CLASS, File.class);
-			job.addParameter(UnlocalizeJob.PARAM_IDS, idList);
-			job.addParameter(UnlocalizeJob.PARAM_CHANNEL, channelId);
-
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 

@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -110,14 +110,13 @@ public class MCPageResourceImpl implements MCPageResource {
 						message.toString()), new ResponseInfo(
 						ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
-			job.addParameter(PushToMasterJob.PARAM_CLASS, Page.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>();
-			idList.add(id);
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			return executeJob(job, request.getForegroundTime());
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Page.class)
+					.setId(id)
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
+
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -132,13 +131,13 @@ public class MCPageResourceImpl implements MCPageResource {
 						message.toString()), new ResponseInfo(
 						ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
-			job.addParameter(PushToMasterJob.PARAM_CLASS, Page.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>(request.getIds());
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			return executeJob(job, request.getForegroundTime());
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Page.class)
+					.setIds(request.getIds())
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
+
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -163,13 +162,12 @@ public class MCPageResourceImpl implements MCPageResource {
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
 
-			UnlocalizeJob job = new UnlocalizeJob();
+			UnlocalizeJob job = new UnlocalizeJob()
+					.setClazz(Page.class)
+					.setIds(idList)
+					.setChannelId(channelId);
 
-			job.addParameter(UnlocalizeJob.PARAM_CLASS, Page.class);
-			job.addParameter(UnlocalizeJob.PARAM_IDS, idList);
-			job.addParameter(UnlocalizeJob.PARAM_CHANNEL, channelId);
-
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 

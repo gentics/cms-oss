@@ -9,20 +9,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
-import com.gentics.contentnode.rest.model.response.FolderListResponse;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FolderListParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.LegacyFilterParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.LegacyPagingParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.hazelcast.internal.partition.operation.LegacyMigrationOperation;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -33,9 +19,19 @@ import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.model.response.FolderListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FolderListParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.LegacyFilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.LegacyPagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.Creator;
 
 /**

@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -224,26 +224,22 @@ public class MCFolderResourceImpl implements MCFolderResource {
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Folder.class)
+					.setId(id)
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId())
+					.setRecursive(request.getRecursive());
 
-			job.addParameter(PushToMasterJob.PARAM_CLASS, com.gentics.contentnode.object.Folder.class);
-			LinkedList<Integer> idList = new LinkedList<>();
-
-			idList.add(id);
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			job.addParameter(PushToMasterJob.PARAM_RECURSIVE, request.getRecursive());
 			List<PushToMasterRequest.Type> pushedTypes = request.getTypes();
-
 			if (pushedTypes != null) {
-				job.addParameter(PushToMasterJob.PARAM_PAGES, pushedTypes.contains(PushToMasterRequest.Type.page));
-				job.addParameter(PushToMasterJob.PARAM_TEMPLATES, pushedTypes.contains(PushToMasterRequest.Type.template));
-				job.addParameter(PushToMasterJob.PARAM_IMAGES, pushedTypes.contains(PushToMasterRequest.Type.image));
-				job.addParameter(PushToMasterJob.PARAM_FILES, pushedTypes.contains(PushToMasterRequest.Type.file));
-				job.addParameter(PushToMasterJob.PARAM_FOLDERS, pushedTypes.contains(PushToMasterRequest.Type.folder));
+				job.setPages(pushedTypes.contains(PushToMasterRequest.Type.page));
+				job.setTemplates(pushedTypes.contains(PushToMasterRequest.Type.template));
+				job.setImages(pushedTypes.contains(PushToMasterRequest.Type.image));
+				job.setFiles(pushedTypes.contains(PushToMasterRequest.Type.file));
+				job.setFolders(pushedTypes.contains(PushToMasterRequest.Type.folder));
 			}
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -257,25 +253,22 @@ public class MCFolderResourceImpl implements MCFolderResource {
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
-			PushToMasterJob job = new PushToMasterJob();
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Folder.class)
+					.setIds(request.getIds())
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId())
+					.setRecursive(request.getRecursive());
 
-			job.addParameter(PushToMasterJob.PARAM_CLASS, com.gentics.contentnode.object.Folder.class);
-			LinkedList<Integer> idList = new LinkedList<>(request.getIds());
-
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			job.addParameter(PushToMasterJob.PARAM_RECURSIVE, request.getRecursive());
 			List<PushToMasterRequest.Type> pushedTypes = request.getTypes();
-
 			if (pushedTypes != null) {
-				job.addParameter(PushToMasterJob.PARAM_PAGES, pushedTypes.contains(PushToMasterRequest.Type.page));
-				job.addParameter(PushToMasterJob.PARAM_TEMPLATES, pushedTypes.contains(PushToMasterRequest.Type.template));
-				job.addParameter(PushToMasterJob.PARAM_IMAGES, pushedTypes.contains(PushToMasterRequest.Type.image));
-				job.addParameter(PushToMasterJob.PARAM_FILES, pushedTypes.contains(PushToMasterRequest.Type.file));
-				job.addParameter(PushToMasterJob.PARAM_FOLDERS, pushedTypes.contains(PushToMasterRequest.Type.folder));
+				job.setPages(pushedTypes.contains(PushToMasterRequest.Type.page));
+				job.setTemplates(pushedTypes.contains(PushToMasterRequest.Type.template));
+				job.setImages(pushedTypes.contains(PushToMasterRequest.Type.image));
+				job.setFiles(pushedTypes.contains(PushToMasterRequest.Type.file));
+				job.setFolders(pushedTypes.contains(PushToMasterRequest.Type.folder));
 			}
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 
@@ -301,23 +294,22 @@ public class MCFolderResourceImpl implements MCFolderResource {
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
 			}
 
-			UnlocalizeJob job = new UnlocalizeJob();
-
-			job.addParameter(UnlocalizeJob.PARAM_CLASS, com.gentics.contentnode.object.Folder.class);
-			job.addParameter(UnlocalizeJob.PARAM_IDS, idList);
-			job.addParameter(UnlocalizeJob.PARAM_CHANNEL, channelId);
-			job.addParameter(UnlocalizeJob.PARAM_RECURSIVE, request.getRecursive());
+			UnlocalizeJob job = new UnlocalizeJob()
+					.setClazz(Folder.class)
+					.setIds(idList)
+					.setChannelId(channelId)
+					.setRecursive(request.getRecursive());
 
 			List<UnlocalizeRequest.Type> pushedTypes = request.getTypes();
 
 			if (pushedTypes != null) {
-				job.addParameter(UnlocalizeJob.PARAM_PAGES, pushedTypes.contains(UnlocalizeRequest.Type.page));
-				job.addParameter(UnlocalizeJob.PARAM_TEMPLATES, pushedTypes.contains(UnlocalizeRequest.Type.template));
-				job.addParameter(UnlocalizeJob.PARAM_IMAGES, pushedTypes.contains(UnlocalizeRequest.Type.image));
-				job.addParameter(UnlocalizeJob.PARAM_FILES, pushedTypes.contains(UnlocalizeRequest.Type.file));
-				job.addParameter(UnlocalizeJob.PARAM_FOLDERS, pushedTypes.contains(UnlocalizeRequest.Type.folder));
+				job.setPages(pushedTypes.contains(UnlocalizeRequest.Type.page));
+				job.setTemplates(pushedTypes.contains(UnlocalizeRequest.Type.template));
+				job.setImages(pushedTypes.contains(UnlocalizeRequest.Type.image));
+				job.setFiles(pushedTypes.contains(UnlocalizeRequest.Type.file));
+				job.setFolders(pushedTypes.contains(UnlocalizeRequest.Type.folder));
 			}
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 

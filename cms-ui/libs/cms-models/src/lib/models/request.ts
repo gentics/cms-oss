@@ -568,7 +568,8 @@ export type GtxCmsQueryOptions = FolderListOptions & PageListOptions & FolderLis
     skipCount?: number;
     /** Sorting order, defaults to "asc" */
     sortorder?: SortOrder;
-
+    /** Whether to allow language fallback for search results. */
+    langfallback?: boolean;
 }
 
 /**

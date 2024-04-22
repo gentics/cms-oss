@@ -186,3 +186,8 @@ export interface ContentRepositoryBO<T extends ModelType = DefaultModelType> ext
 
 export type EditableContentRepositoryProperties = Omit<ContentRepository,
 'id' | 'globalId' | 'checkDate' | 'checkStatus' | 'checkResult' | 'statusDate' | 'dataStatus' | 'dataCheckResult'>;
+
+export const CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX = 'CR_ATTRIBUTEPATH';
+export const CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX = 'CR_PASSWORD';
+export const CONTENT_REPOSITORY_URL_PROPERTY_PREFIX = 'CR_URL';
+export const CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX = 'CR_USERNAME';

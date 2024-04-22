@@ -20,6 +20,10 @@ import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-componen
 import {
     AnyModelType,
     BasepathType,
+    CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_URL_PROPERTY_PREFIX,
     ContentRepository,
     ContentRepositoryPasswordType,
     ContentRepositoryType,
@@ -46,6 +50,25 @@ type CRDisplayType = {
     id: ContentRepositoryType;
     label: string;
 };
+
+const DB_CONTROLS: (keyof EditableContentRepositoryProperties)[] =  [
+    'dbType',
+    'diffDelete',
+    'languageInformation',
+];
+
+const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
+    'defaultPermission',
+    'elasticsearch',
+    'permissionProperty',
+    'projectPerNode',
+    'http2',
+    'noFoldersIndex',
+    'noFilesIndex',
+    'noPagesIndex',
+    'noFormsIndex',
+    'version',
+];
 
 @Component({
     selector: 'gtx-content-repository-properties',
@@ -237,7 +260,9 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     protected createForm(): FormGroup<FormProperties<EditableContentRepositoryProperties>> {
         return new FormGroup<FormProperties<EditableContentRepositoryProperties>>({
             basepath: new FormControl(this.value?.basepath || ''),
-            basepathProperty: new FormControl(this.value?.basepathProperty || '', createPropertyPatternValidator('CR_ATTRIBUTEPATH')),
+            basepathProperty: new FormControl(this.value?.basepathProperty || '', [
+                createPropertyPatternValidator(CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX),
+            ]),
             crType: new FormControl(this.value?.crType || null, Validators.required),
             dbType: new FormControl(this.value?.dbType || null, Validators.required),
             defaultPermission: new FormControl(this.value?.defaultPermission || ''),
@@ -248,7 +273,9 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             name: new FormControl(this.value?.name || '', Validators.required),
             passwordType: new FormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
             password: new FormControl('', this.validatorPasswordsDontMatch),
-            passwordProperty: new FormControl(this.value?.passwordProperty || '', createPropertyPatternValidator('CR_PASSWORD')),
+            passwordProperty: new FormControl(this.value?.passwordProperty || '', [
+                createPropertyPatternValidator(CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX),
+            ]),
             permissionProperty: new FormControl(this.value?.permissionProperty || ''),
             permissionInformation: new FormControl(this.value?.permissionInformation ?? false),
             projectPerNode: new FormControl(this.value?.projectPerNode ?? false),
@@ -256,12 +283,12 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             url: new FormControl(this.value?.url || '', Validators.required),
             urlProperty: new FormControl(this.value?.urlProperty || '', [
                 Validators.required,
-                createPropertyPatternValidator('CR_URL'),
+                createPropertyPatternValidator(CONTENT_REPOSITORY_URL_PROPERTY_PREFIX),
             ]),
             username: new FormControl(this.value?.username || '', Validators.required),
             usernameProperty: new FormControl(this.value?.usernameProperty || '', [
                 Validators.required,
-                createPropertyPatternValidator('CR_USERNAME'),
+                createPropertyPatternValidator(CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX),
             ]),
             http2: new FormControl(this.value?.http2 ?? false),
             noFoldersIndex: new FormControl(this.value?.noFoldersIndex ?? false),
@@ -293,34 +320,16 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         );
         setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY ?? false, options);
 
-        const dbControls: (keyof EditableContentRepositoryProperties)[] =  [
-            'dbType',
-            'diffDelete',
-            'languageInformation',
-        ];
-        const meshControls: (keyof EditableContentRepositoryProperties)[] = [
-            'defaultPermission',
-            'elasticsearch',
-            'permissionProperty',
-            'projectPerNode',
-            'http2',
-            'noFoldersIndex',
-            'noFilesIndex',
-            'noPagesIndex',
-            'noFormsIndex',
-            'version',
-        ];
-
         const crType = this.mode === ContentRepositoryPropertiesMode.UPDATE
             ? this.crType || value?.crType
             : value?.crType;
 
         // If no type is selected, disable all options
         if (crType == null) {
-            setControlsEnabled(this.form, [...dbControls, ...meshControls] as any, false, options);
+            setControlsEnabled(this.form, [...DB_CONTROLS, ...MESH_CONTROLS] as any, false, options);
         } else {
-            setControlsEnabled(this.form, dbControls, crType !== ContentRepositoryType.MESH, options);
-            setControlsEnabled(this.form, meshControls, crType === ContentRepositoryType.MESH, options);
+            setControlsEnabled(this.form, DB_CONTROLS, crType !== ContentRepositoryType.MESH, options);
+            setControlsEnabled(this.form, MESH_CONTROLS, crType === ContentRepositoryType.MESH, options);
         }
         if (crType === ContentRepositoryType.MESH) {
             setControlsValidators(this.form, ['username'], null);

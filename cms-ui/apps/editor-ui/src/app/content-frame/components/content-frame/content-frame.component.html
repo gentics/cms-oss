@@ -38,7 +38,7 @@
     <div
         *ngIf="editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')"
         class="preview-form"
-        [hidden]="(propertiesTab$ | async) !== 'preview'"
+        [class.hidden]="(propertiesTab$ | async) !== 'preview'"
     >
         <file-preview
             [file]="(currentItem$ | async)"
@@ -49,7 +49,7 @@
     <div
         *ngIf="editMode === EditMode.EDIT_PROPERTIES"
         class="properties-form"
-        [hidden]="(propertiesTab$ | async) !== 'properties'"
+        [class.hidden]="(propertiesTab$ | async) !== 'properties'"
     >
         <combined-properties-editor
             [item]="currentItem"
@@ -69,7 +69,7 @@
         ></gtx-form-editor>
     </div>
 
-    <div class="frame-wrapper" [hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
+    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
         <gtx-progress-bar
             class="frame-requesting"
             [active]="requesting || !windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"

@@ -3,7 +3,7 @@ import { TestBed, tick } from '@angular/core/testing';
 import { EntityState } from '@editor-ui/app/common/models';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Folder, FolderRequestOptions, Normalized, Page, PageRequestOptions, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
-import { GenticsUICoreModule, OverlayHostService } from '@gentics/ui-core';
+import { GenticsUICoreModule, OverlayHostService, SizeTrackerService } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -116,6 +116,7 @@ describe('FolderStartPage', () => {
                 { provide: NavigationService, useValue: navigationService },
                 { provide: ContextMenuOperationsService, useClass: MockContextMenuOperationsService },
                 OverlayHostService,
+                SizeTrackerService,
             ],
             declarations: [
                 TestComponent,

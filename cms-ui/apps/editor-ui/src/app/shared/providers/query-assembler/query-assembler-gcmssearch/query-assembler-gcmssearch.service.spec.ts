@@ -57,6 +57,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             folderId: 2,
             nodeId: 2,
             language: 'en',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 2;
@@ -88,6 +89,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             q: searchTerm,
             searchcontent: true,
             language: 'en',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -116,6 +118,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             folderId: 1,
             planned: true,
             language: 'en',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -145,6 +148,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             folderId: 1,
             niceurl: `.*${searchTerm}.*`,
             language: 'en',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -174,6 +178,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             folderId: 1,
             filename: `%${searchTerm}%`,
             language: 'en',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -287,6 +292,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             filename: `%${searchTerm}%`,
             editedsince: 1643846400,
             language: 'de',
+            langfallback: false,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;

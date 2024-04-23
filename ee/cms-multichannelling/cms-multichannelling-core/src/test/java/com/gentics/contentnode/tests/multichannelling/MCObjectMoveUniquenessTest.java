@@ -92,6 +92,7 @@ public class MCObjectMoveUniquenessTest {
 				}
 			}
 		}
+//		data.add(new Object[] {MCTestedType.folder, Target.master, Target.master, true});
 		return data;
 	}
 

@@ -139,7 +139,7 @@ public class NodeStagingTest implements ContentStagingMethods {
 		testAttribute("fileUrls", node, n -> UrlRenderWay.fromValue(n.getUrlRenderWayFiles()), (n, v) -> n.setUrlRenderWayFiles(v.getValue()), UrlRenderWay.STATIC_WITH_DOMAIN, UrlRenderWay.STATIC_WITHOUT_DOMAIN);
 
 		// test staging of properties, which support property substitution
-		testAttribute("meshPreviewUrl", node, Node::getMeshPreviewUrl, Node::setMeshPreviewUrl, "${sys:mesh.preview.url}", "${sys:mesh.alternative.preview.url}");
+		testAttribute("meshPreviewUrl", node, Node::getMeshPreviewUrlProperty, Node::setMeshPreviewUrlProperty, "${sys:mesh.preview.url}", "${sys:mesh.alternative.preview.url}");
 	}
 
 	/**

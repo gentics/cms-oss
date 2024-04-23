@@ -24,6 +24,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
@@ -118,6 +119,7 @@ public class LocalizationPermissionTest {
 				}
 			}
 		}
+//		data.add(new Object[] {MCTestedType.file, Restricted.channel, true, true, true});
 		return data;
 	}
 
@@ -368,7 +370,7 @@ public class LocalizationPermissionTest {
 					break;
 				case file:
 				case image:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.FAILURE, String.format("You don't have permission to create files in the folder with id 189.", folder.getId()));
+					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, I18NHelper.get("folder.nopermission"));
 					break;
 				}
 			}

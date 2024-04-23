@@ -176,7 +176,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
         this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
             this.alohaReady = ready;
-            this.determineVisibleButtons();
+            this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         }));
 

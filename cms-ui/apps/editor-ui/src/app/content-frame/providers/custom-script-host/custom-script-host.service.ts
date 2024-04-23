@@ -294,6 +294,12 @@ export class CustomScriptHostService {
             .navigate();
     }
 
+    navigateToFileOrImagePreview(nodeId: number, type: 'file' | 'image', itemId: number): void {
+        this.navigationService
+            .detailOrModal(nodeId, type, itemId, EditMode.EDIT_PROPERTIES)
+            .navigate();
+    }
+
     /**
      * Get a complete URL path to the UI app with the given page opened in preview mode
      */

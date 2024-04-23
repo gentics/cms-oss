@@ -1,13 +1,26 @@
 /* eslint-disable no-underscore-dangle */
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers';
 import { Page } from '@gentics/cms-models';
-import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
+import { typeIdsToName } from '@gentics/cms-components';
+import { ALOHAPAGE_URL, API_BASE_URL } from '../../../../common/utils/base-urls';
 import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 
 export const OBJECT_PROPERTIES_CONTEXT_MENU_CLASS = 'custom-object-properties-context-menu-button';
 
 export const OBJECT_PROPERTIES_INFO_BUTTON_CLASS = 'custom-object-properties-info-button';
+
+const ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
+const ATTR_NODE_ID = 'data-gcn-channelid';
+const ATTR_REPO = 'data-gentics-aloha-repository';
+const REPO_CMS_ITEM = 'com.gentics.aloha.GCN.Page';
+const FILE_LINK_PREFIX = `${API_BASE_URL}/file/content/load`;
+
+interface InternalLink {
+    nodeId?: number;
+    type: 'file' | 'image' | 'page' | 'form';
+    itemId: number;
+}
 
 /**
  * This will execute in the context of the IFrame, when the code inside it calls the `GCMSUI.runPostLoadScript()` method.
@@ -63,9 +76,11 @@ export class PostLoadScript {
             this.aloha.settings$.next(iFrameWindow.Aloha.settings);
             iFrameWindow.Aloha.ready(() => {
                 this.aloha.ready$.next(true);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 this.aloha.windowLoaded$.next(true);
             });
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             this.aloha.windowLoaded$.next(true);
         }
 
@@ -134,9 +149,18 @@ export class PostLoadScript {
             const internalLink = parseInternalLink(link);
 
             if (internalLink) {
-                this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.pageId);
+                if (internalLink.type === 'page') {
+                    this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
+                } else if (internalLink.type === 'file' || internalLink.type === 'image') {
+                    this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                }
                 e.preventDefault();
-            } else if (this.scriptHost.editMode === 'preview' && url && !url.startsWith('#') && link.target !== '_blank') {
+            } else if (
+                (this.scriptHost.editMode === 'preview' || e.ctrlKey)
+                && url
+                && !url.startsWith('#')
+                && link.target !== '_blank'
+            ) {
                 this.iFrameWindow.open(url, '_blank');
                 e.preventDefault();
             } else if (url.startsWith('#')) {
@@ -161,16 +185,23 @@ export class PostLoadScript {
             const controlKeyPressed = e.ctrlKey;
             const shiftKeyPressed = e.shiftKey;
 
-            if (isAnchorElement(target) && (middleMouseClick || controlKeyPressed || shiftKeyPressed)) {
-                const internalLink = parseInternalLink(target);
-                if (internalLink) {
-                    // We open the internal link in a new window and cause the entire UI app to load
-                    // in that window, rather than just the linked page.
-                    const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.pageId);
-                    this.iFrameWindow.open(newUrl, '_blank');
-                    e.preventDefault();
-                }
+            if (!isAnchorElement(target) || !(middleMouseClick || controlKeyPressed || shiftKeyPressed)) {
+                return;
             }
+
+            const internalLink = parseInternalLink(target);
+            if (!internalLink) {
+                return;
+            }
+
+            if (internalLink.type === 'page') {
+                // We open the internal link in a new window and cause the entire UI app to load
+                // in that window, rather than just the linked page.
+                const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.itemId);
+                this.iFrameWindow.open(newUrl, '_blank');
+            }
+
+            e.preventDefault();
         });
 
         /**
@@ -182,22 +213,28 @@ export class PostLoadScript {
          * it back once the link loses focus.
          */
         this.iFrameDocument.body.addEventListener('contextmenu', (e: MouseEvent) => {
-            if (e.defaultPrevented) { return; }
+            if (e.defaultPrevented) {
+                return;
+            }
 
             const target = e.target;
-            if (isAnchorElement(target)) {
-                const internalLink = parseInternalLink(target);
-
-                if (internalLink) {
-                    const originalHref = target.getAttribute('href');
-                    target.href = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.pageId);
-                    const resetHref = (): void => {
-                        target.setAttribute('href', originalHref);
-                        target.removeEventListener('blur', resetHref);
-                    };
-                    target.addEventListener('blur', resetHref);
-                }
+            if (!isAnchorElement(target)) {
+                return;
             }
+
+            const internalLink = parseInternalLink(target);
+
+            if (!internalLink || internalLink.type !== 'page') {
+                return;
+            }
+
+            const originalHref = target.getAttribute('href');
+            target.href = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.itemId);
+            const resetHref = (): void => {
+                target.setAttribute('href', originalHref);
+                target.removeEventListener('blur', resetHref);
+            };
+            target.addEventListener('blur', resetHref);
         });
     }
 
@@ -363,7 +400,27 @@ function isAnchorElement(element: any): element is HTMLAnchorElement {
 }
 
 /** Checks for an internal alohapage link and if found, parses that link to extract the pageId and nodeId */
-function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId: number; } | null {
+function parseInternalLink(anchor: HTMLAnchorElement): InternalLink | null {
+
+    // Attempt to load the link-data from the attributes first, if present
+    if (anchor.hasAttribute(ATTR_REPO) && anchor.getAttribute(ATTR_REPO) === REPO_CMS_ITEM) {
+        const objId = anchor.getAttribute(ATTR_OBJECT_ID);
+        const nodeId = parseInt(anchor.getAttribute(ATTR_NODE_ID), 10);
+
+        if (objId && Number.isInteger(nodeId)) {
+            const split = objId.split('.');
+            const type = typeIdsToName(parseInt(split[0], 10));
+
+            if (type) {
+                return {
+                    itemId: parseInt(split[1], 10),
+                    type: type as any,
+                    nodeId: nodeId,
+                }
+            }
+        }
+    }
+
     const href = anchor.getAttribute('href');
     let parsed: URL;
     try {
@@ -372,15 +429,23 @@ function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId:
         return null;
     }
 
-    const isInternalLink = parsed.pathname.startsWith(ALOHAPAGE_URL);
+    if (parsed.pathname.startsWith(ALOHAPAGE_URL)) {
+        return parseInternalPageLink(anchor, parsed);
+    } else if (parsed.pathname.startsWith(FILE_LINK_PREFIX)) {
+        return parseInternalFileLink(anchor, parsed);
+    }
 
+    return null;
+}
+
+function parseInternalPageLink(anchor: HTMLAnchorElement, parsed: URL): InternalLink | null {
     // A link created by the GCN Links plugin has the following data attribute when in edit mode
     const isEditModeLink = !!anchor.dataset['gcnI18nConstructname'];
 
     // UI elements which are only an anchor for keyboard focus purposes should not be handled
     const isPresentationalLink = anchor.getAttribute('role') === 'presentation';
 
-    if (!isInternalLink || isEditModeLink || isPresentationalLink) {
+    if (isEditModeLink || isPresentationalLink) {
         return null;
     }
 
@@ -393,6 +458,30 @@ function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId:
 
     return {
         nodeId: parseInt(nodeId, 10),
-        pageId: parseInt(pageId, 10),
+        type: 'page',
+        itemId: parseInt(pageId, 10),
+    };
+}
+
+function parseInternalFileLink(anchor: HTMLAnchorElement, parsed: URL): InternalLink | null {
+    const id = parseInt(parsed.pathname.substring(FILE_LINK_PREFIX.length + 1), 10);
+
+    if (!Number.isInteger(id)) {
+        return null;
+    }
+
+    let type = 'file';
+    const objId = anchor.getAttribute(ATTR_OBJECT_ID);
+    const nodeId = parseInt(parsed.searchParams.get('nodeId'), 10);
+
+    if (objId) {
+        const typeId = parseInt(objId.split('.')[0], 10);
+        type = typeIdsToName(typeId) || type;
+    }
+
+    return {
+        nodeId,
+        type: type as any,
+        itemId: id,
     };
 }

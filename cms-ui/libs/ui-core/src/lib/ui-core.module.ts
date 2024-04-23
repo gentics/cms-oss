@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ModuleWithProviders, NgModule, Type } from '@angular/core';
+import { APP_INITIALIZER, ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -89,6 +89,7 @@ import {
     NotificationService,
     OverlayHostService,
     PageFileDragHandlerService,
+    SizeTrackerService,
     UserAgentProvider,
 } from './providers';
 
@@ -170,7 +171,7 @@ export const UI_CORE_PIPES: Type<any>[] = [
     ValuePathPipe,
 ];
 
-export const UI_CORE_PROVIDERS: Type<any>[] = [
+export const UI_CORE_PROVIDERS: (Type<any> | Provider)[] = [
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
     ModalService,
@@ -178,9 +179,14 @@ export const UI_CORE_PROVIDERS: Type<any>[] = [
     OverlayHostService,
     PageFileDragHandlerService,
     UserAgentProvider,
+    SizeTrackerService,
 ];
 
-export const UI_CORE_DECLATATIONS = [...UI_CORE_COMPONENTS, ...UI_CORE_DIRECTIVES, ...UI_CORE_PIPES];
+export const UI_CORE_DECLATATIONS = [
+    ...UI_CORE_COMPONENTS,
+    ...UI_CORE_DIRECTIVES,
+    ...UI_CORE_PIPES,
+];
 export const routerModuleForChild: ModuleWithProviders<GenticsUICoreModule> = RouterModule.forChild([]);
 
 @NgModule({

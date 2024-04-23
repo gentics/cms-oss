@@ -130,7 +130,6 @@ export class AppComponent implements OnInit {
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected elementRef: ElementRef<HTMLElement>,
         // State Logger needs to be injected to get initialized
         private appState: ApplicationStateService,
         private authActions: AuthActionsService,
@@ -158,7 +157,6 @@ export class AppComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.onWindowResize();
         this.uiActions.getUiVersion();
         this.userSettings.loadInitialSettings();
 
@@ -468,17 +466,7 @@ export class AppComponent implements OnInit {
         });
     }
 
-    @HostListener('window:resize')
-    onWindowResize(): void {
-        const elem = this.elementRef?.nativeElement;
-        if (!elem) {
-            return;
-        }
-        elem.style.setProperty('--gtx-vvh', `${window.visualViewport?.height || 0}px`);
-        elem.style.setProperty('--gtx-vvw', `${window.visualViewport?.width || 0}px`);
-    }
-
-    resetHideExtras() {
+    resetHideExtras(): void {
         this.appState.dispatch(new SetHideExtrasAction(false));
     }
 

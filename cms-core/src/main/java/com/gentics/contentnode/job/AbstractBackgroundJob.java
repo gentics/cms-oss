@@ -36,6 +36,11 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 	protected boolean interrupted = false;
 
 	/**
+	 * Flag to mark, whether the job finished with success
+	 */
+	protected boolean success = true;
+
+	/**
 	 * Get the messages
 	 * @return messages
 	 */
@@ -99,7 +104,11 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 			response.addMessage(MiscUtils.getMessageFromNodeMessage(nodeMessage));
 		}
 
-		response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Job finished successfully"));
+		if (success) {
+			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Job finished successfully"));
+		} else {
+			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Job finished with error"));
+		}
 		return response;
 	}
 

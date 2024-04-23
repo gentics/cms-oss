@@ -113,6 +113,7 @@ public class MoveJob extends AbstractBackgroundJob {
 					t.commit(false);
 					break;
 				case FAILURE:
+					success = false;
 					for (NodeMessage msg : result.getMessages()) {
 						addMessage(msg);
 					}

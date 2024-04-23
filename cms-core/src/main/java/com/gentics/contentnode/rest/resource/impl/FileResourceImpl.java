@@ -748,18 +748,23 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			FileUploadMetaData metaData = getMetaData(multiPart, null);
 			sentFilename = metaData.getFilename();
 
+			// Since we previously omitted the authentication for multipart requests we have to do it now
+			// This also calls initialize()
+			authenticate(metaData);
+
 			String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
 			boolean isImage = mimeType != null && mimeType.startsWith("image/");
 
-			Folder folder = MiscUtils.load(Folder.class, metaData.getProperty(META_DATA_FOLDERID_KEY));
+			// Load needed information from metaData
+			Integer nodeId = metaData.getNodeId();
+			Folder folder = null;
+			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+				folder = MiscUtils.load(Folder.class, metaData.getProperty(META_DATA_FOLDERID_KEY));
+			}
 			Node owningNode = folder.getOwningNode();
 
 			sentFilename = adjustFilename(isImage, sentFilename, owningNode);
 			metaData.setFilename(sentFilename);
-
-			// Since we previously omitted the authentication for multipart requests we have to do it now
-			// This also calls initialize()
-			authenticate(metaData);
 
 			// Create a transaction lock on the filename
 			// This lock doesn't handle all cases of filename collisions because the FUM

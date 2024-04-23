@@ -87,6 +87,7 @@
 		<spring.version>6.2.3</spring.version>
 		<org.json.version>20240303</org.json.version>
 		<commons-text.version>1.11.0</commons-text.version>
+		<commons-io.version>2.16.1</commons-io.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.8</generic-testutils.version>

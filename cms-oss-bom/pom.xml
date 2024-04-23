@@ -412,6 +412,11 @@
 				<artifactId>commons-text</artifactId>
 				<version>${commons-text.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>

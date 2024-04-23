@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-servlet-filter-adapter</artifactId>
-			<version>19.0.3</version>
+			<version>24.0.2</version>
 		</dependency>
 
 		<!--Test dependencies -->

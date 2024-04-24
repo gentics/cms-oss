@@ -3,7 +3,7 @@ import { I18nNotificationService, I18nService, NodeOperations, NodeTableLoaderSe
 import { WizardService } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, GcmsPermission, Node, NodeCopyRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent } from '@gentics/ui-core';
@@ -17,7 +17,7 @@ const COPY_ACTION = 'copy';
     templateUrl: './node-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> {
+export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> implements OnInit {
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'node';
 
@@ -56,6 +56,10 @@ export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> 
                 single: true,
                 multiple: true,
                 enabled: (item) => {
+                    if (this.tableLoader.isChannel(item)) {
+                        return false;
+                    }
+
                     if (!item) {
                         return true;
                     }

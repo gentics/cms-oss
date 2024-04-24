@@ -3,15 +3,14 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "apps/cms-components/src",
-    "implicitDependencies": ["cms-models", "ui-core"],
-    "tags": ["lib", "angular"],
+    "sourceRoot": "{projectRoot}/src",
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
             "options": {
-                "tsConfig": "libs/cms-components/tsconfig.lib.json",
-                "project": "libs/cms-components/ng-package.json"
+                "tsConfig": "{projectRoot}/tsconfig.lib.json",
+                "project": "{projectRoot}/ng-package.json"
             }
         },
         "lint": {
@@ -19,15 +18,14 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "libs/cms-components/**/*.ts",
-                    "libs/cms-components/**/*.html"
+                    "{projectRoot}/**/*.ts"
                 ]
             }
         },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/cms-components/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "cms-components:build",
@@ -37,6 +35,12 @@
                 "watch": {
                     "watch": true
                 }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/{projectRoot}"
             }
         }
     }

@@ -4,8 +4,7 @@
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "apps/cms-rest-client-angular/src",
-    "implicitDependencies": ["cms-models", "cms-rest-client"],
-    "tags": ["lib", "angular"],
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
@@ -22,6 +21,12 @@
                     "libs/cms-rest-client-angular/**/*.ts",
                     "libs/cms-rest-client-angular/**/*.html"
                 ]
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/{projectRoot}"
             }
         }
     }

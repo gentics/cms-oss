@@ -1,13 +1,14 @@
 {
     "name": "admin-ui-e2e",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "apps/admin-ui-e2e/src",
+    "sourceRoot": "{projectRoot}/src",
     "projectType": "application",
+    "tags": ["e2e"],
     "targets": {
         "e2e": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/admin-ui-e2e/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "devServerTarget": "admin-ui:serve:development",
                 "testingType": "e2e",
                 "watch": false
@@ -25,10 +26,8 @@
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": ["apps/admin-ui-e2e/**/*.{js,ts}"]
+                "lintFilePatterns": ["{projectRoot}/**/*.{js,ts}"]
             }
         }
-    },
-    "tags": [],
-    "implicitDependencies": ["admin-ui"]
+    }
 }

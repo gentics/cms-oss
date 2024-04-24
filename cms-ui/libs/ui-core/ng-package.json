@@ -11,5 +11,9 @@
         "./src/styles",
         "../../node_modules"
       ]
-    }
+    },
+    "allowedNonPeerDependencies": [
+        "@gentics/cms-integration-api-models",
+        "lodash-es"
+    ]
   }

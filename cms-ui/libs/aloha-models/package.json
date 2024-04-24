@@ -1,7 +1,7 @@
 {
-  "name": "@gentics/aloha-components",
+  "name": "@gentics/aloha-models",
   "version": "6.1.0-SNAPSHOT",
-  "private": "true",
+  "private": false,
   "peerDependencies": {},
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

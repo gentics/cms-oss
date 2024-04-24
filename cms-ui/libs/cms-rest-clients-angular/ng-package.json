@@ -3,5 +3,8 @@
   "dest": "../../dist/libs/cms-rest-clients-angular",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@gentics/cms-models"
+  ]
 }

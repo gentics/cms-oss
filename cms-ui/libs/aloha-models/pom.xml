@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.gentics.cms-oss</groupId>
@@ -10,15 +11,15 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-	<artifactId>aloha-models</artifactId>
-	<name>Gentics CMS UI - Aloha Models</name>
-	<packaging>jar</packaging>
-	<description>Aloha Models for the UI.</description>
-	<url>http://www.gentics.com</url>
+    <artifactId>aloha-models</artifactId>
+    <name>Gentics CMS UI - Aloha Models</name>
+    <packaging>jar</packaging>
+    <description>Aloha Models for the UI.</description>
+    <url>http://www.gentics.com</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 
         <ui.application>false</ui.application>
         <ui.library>true</ui.library>
@@ -27,7 +28,23 @@
         <ui.skip.assembly>true</ui.skip.assembly>
         <ui.assembly.phase></ui.assembly.phase>
         <ui.skip.report>true</ui.skip.report>
+        <ui.skip.publish>false</ui.skip.publish>
         <ui.report.assemply.phase></ui.report.assemply.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
-	</properties>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.1</version>
+                <configuration>
+                    <!-- Don't ever actually deploy this artifact. It's using the NPM goals below to
+                    do so -->
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

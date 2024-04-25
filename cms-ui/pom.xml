@@ -89,7 +89,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Use the antrun plugin to create the target directory -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -98,7 +97,7 @@
                     <execution>
                         <phase>initialize</phase>
                         <configuration>
-                            <target>
+                            <target name="Setup target directory">
                                 <mkdir dir="${project.build.directory}" />
                             </target>
                         </configuration>
@@ -117,16 +116,13 @@
                         <phase>initialize</phase>
 
                         <configuration>
-                            <skip>${ui.skip.install}</skip>
-                            <target>
+                            <target name="Install node dependencies" unless="${ui.skip.install}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="ci" />
-                                    <arg value="--no-audit" />
-                                    <arg value="--no-fund" />
+                                    <arg line="ci --no-audit --no-fund" />
                                 </exec>
                             </target>
                         </configuration>
@@ -142,17 +138,13 @@
                         <phase>compile</phase>
 
                         <configuration>
-                            <skip>${ui.skip.build}</skip>
-                            <target>
+                            <target name="Build ui-module ${project.artifactId}" unless="${ui.skip.build}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run" />
-                                    <arg value="build" />
-                                    <arg value="--" />
-                                    <arg value="${project.artifactId}" />
+                                    <arg line="run build -- ${project.artifactId}" />
                                 </exec>
                             </target>
                         </configuration>
@@ -168,20 +160,13 @@
                         <phase>test</phase>
 
                         <configuration>
-                            <skip>${ui.skip.test}</skip>
-                            <target>
+                            <target name="Test ui-module ${project.artifactId}" unless="${ui.skip.test}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run" />
-                                    <arg value="test" />
-                                    <arg value="--" />
-                                    <arg value="${project.artifactId}" />
-                                    <arg value="--configuration=ci" />
-                                    <arg value="--browsers=${ui.test.browsers}" />
-                                    <arg value="--reporters=junit" />
+                                    <arg line="run test -- ${project.artifactId} --configuration=ci --browsers=${ui.test.browsers} --reporters=junit" />
                                 </exec>
                             </target>
                         </configuration>
@@ -197,18 +182,13 @@
                         <phase>integration-test</phase>
 
                         <configuration>
-                            <skip>${ui.skip.e2e}</skip>
-                            <target>
+                            <target name="E2E/Integration Test ui-module ${project.artifactId}" unless="${ui.skip.e2e}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run" />
-                                    <arg value="e2e" />
-                                    <arg value="--" />
-                                    <arg value="${project.artifactId}" />
-                                    <arg value="--browsers=${ui.test.browsers}" />
+                                    <arg line="run e2e -- ${project.artifactId} --browsers=${ui.test.browsers}" />
                                 </exec>
                             </target>
                         </configuration>
@@ -224,15 +204,13 @@
                         <phase>generate-resources</phase>
 
                         <configuration>
-                            <skip>${ui.skip.report}</skip>
-                            <target>
+                            <target name="Report dependencies" unless="${ui.skip.report}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run" />
-                                    <arg value="report:list" />
+                                    <arg line="run report:list" />
                                 </exec>
                             </target>
                         </configuration>
@@ -248,15 +226,13 @@
                         <phase>generate-resources</phase>
 
                         <configuration>
-                            <skip>${ui.skip.report}</skip>
-                            <target>
+                            <target name="Report outdated dependencies" unless="${ui.skip.report}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run" />
-                                    <arg value="report:outdated" />
+                                    <arg line="run report:outdated" />
                                 </exec>
                             </target>
                         </configuration>
@@ -273,13 +249,13 @@
 
                         <configuration>
                             <skip>${ui.skip.publish}</skip>
-                            <target>
+                            <target name="Publish ui-module ${project.artifactId}" unless="${ui.skip.publish}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg value="run publish -- --dryRun --dry-run ${project.artifactId}" />
+                                    <arg line="run publish -- -p ${project.artifactId}" />
                                 </exec>
                             </target>
                         </configuration>

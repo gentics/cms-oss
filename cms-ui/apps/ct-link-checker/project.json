@@ -16,10 +16,11 @@
                 "polyfills": ["{projectRoot}/src/polyfills.ts"],
                 "tsConfig": "{projectRoot}/tsconfig.app.json",
                 "assets": [
-                    "{projectRoot}/src/favicon.ico",
-                    "{projectRoot}/src/assets",
-                    "{projectRoot}/src/formgenerator",
-                    "{projectRoot}/src/customer-config"
+                    {
+                        "glob": "**/*",
+                        "input": "{projectRoot}/src/assets",
+                        "output": "assets"
+                    }
                 ],
                 "styles": ["{projectRoot}/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {

@@ -2,6 +2,7 @@
   "name": "@gentics/root",
   "version": "6.1.0-SNAPSHOT",
   "description": "Monorepo for all UIs and Libraries related to the Gentics CMS",
+  "license": "Apache-2.0",
   "private": true,
   "engines": {
     "npm": "^10.5.0",
@@ -75,7 +76,6 @@
       "email": "d.decker@gentics.com"
     }
   ],
-  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@angular/animations": "16.2.12",
     "@angular/common": "16.2.12",

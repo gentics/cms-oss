@@ -1,6 +1,7 @@
 {
   "name": "@gentics/ui-core",
   "version": "6.1.0-SNAPSHOT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@gentics/cms-integration-api-models": "^6.1.0-SNAPSHOT",
     "lodash-es": "^4.17.15"

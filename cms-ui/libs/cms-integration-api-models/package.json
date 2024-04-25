@@ -1,6 +1,7 @@
 {
   "name": "@gentics/cms-integration-api-models",
   "version": "6.1.0-SNAPSHOT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@gentics/aloha-models": "^6.1.0-SNAPSHOT",
     "@gentics/cms-models": "^6.1.0-SNAPSHOT",

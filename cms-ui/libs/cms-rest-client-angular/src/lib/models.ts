@@ -1,6 +1,6 @@
-import { GCMSRestClientResponse } from '@gentics/cms-rest-client';
+import { GCMSRestClientRequest } from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
 
-export interface NGGCMSRestClientResponse<T> extends GCMSRestClientResponse<T> {
+export interface NGGCMSRestClientRequest<T> extends GCMSRestClientRequest<T> {
     rx(): Observable<T>;
 }

@@ -16,7 +16,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
-import { MeshAPIVersion, MeshClientConnection, RequestFailedError } from '@gentics/mesh-rest-client';
+import { MeshAPIVersion, MeshClientConnection, MeshRestClientRequestError } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -54,7 +54,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         protected changeDetector: ChangeDetectorRef,
         protected appState: AppStateService,
         protected cmsClient: GCMSRestClientService,
-        protected client: MeshRestClientService,
+        protected meshClient: MeshRestClientService,
         protected notification: I18nNotificationService,
     ) { }
 
@@ -96,7 +96,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
         // HOW is this unsafe????
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.client.init({
+        this.meshClient.init({
             connection,
             // We need this interceptor to always append the SID to the request, as it's getting proxied through the CMS.
             interceptors: [(data) => {
@@ -114,7 +114,8 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         this.loggedIn = false;
         this.loading = true;
 
-        this.client.auth.me().then(me => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.meshClient.auth.me().send().then(me => {
             this.loading = false;
             this.loggedIn = me.username !== 'anonymous';
             this.changeDetector.markForCheck();
@@ -132,7 +133,8 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     loginWithFormCredentials(): void {
-        this.performLogin((req) => this.client.auth.login(req));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.performLogin((req) => this.meshClient.auth.login(req).send());
     }
 
     loginWithContentRepository(): void {
@@ -158,7 +160,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             this.loggedIn = false;
             this.form.enable();
 
-            if (err instanceof RequestFailedError && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
+            if (err instanceof MeshRestClientRequestError && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
                 this.form.controls.newPassword.enable();
                 this.notification.show({
                     message: 'mesh.new_password_required_warning',

@@ -44,7 +44,8 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
     }
 
     async loadNames(): Promise<void> {
-        const project = (await this.mesh.projects.list({ perPage: 1 }))?.data?.[0]?.name;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const project = (await this.mesh.projects.list({ perPage: 1 }).send())?.data?.[0]?.name;
         const [schemas, microschemas] = await Promise.all([
             this.handler.getAllNames(project, false),
             this.microHandler.getAllNames(project, false),

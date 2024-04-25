@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -52,7 +53,7 @@ export class ProjectHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(uuid: string, params?: ProjectLoadOptions): Promise<ProjectResponse> {
         try {
-            const res = await this.mesh.projects.get(uuid, params);
+            const res = await this.mesh.projects.get(uuid, params).send();
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -66,7 +67,7 @@ export class ProjectHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(body: ProjectCreateRequest): Promise<ProjectResponse> {
         try {
-            const res = await this.mesh.projects.create(body);
+            const res = await this.mesh.projects.create(body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_project_success',
@@ -87,7 +88,7 @@ export class ProjectHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(uuid: string, body: ProjectUpdateRequest): Promise<ProjectResponse> {
         try {
-            const res = await this.mesh.projects.update(uuid, body);
+            const res = await this.mesh.projects.update(uuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_project_success',
@@ -108,7 +109,7 @@ export class ProjectHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.projects.delete(uuid);
+            await this.mesh.projects.delete(uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -125,7 +126,7 @@ export class ProjectHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(params?: ProjectListOptions): Promise<ProjectListResponse> {
         try {
-            const res = await this.mesh.projects.list(params);
+            const res = await this.mesh.projects.list(params).send();
             for (const project of res.data) {
                 this.nameMap[project.uuid] = project.name;
             }

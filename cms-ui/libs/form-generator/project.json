@@ -3,14 +3,14 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "libs/form-generator/src",
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
             "options": {
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/ng-package.json"
+                "tsConfig": "libs/form-generator/tsconfig.lib.json",
+                "project": "libs/form-generator/ng-package.json"
             }
         },
         "lint": {
@@ -18,15 +18,15 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "{projectRoot}/**/*.ts",
-                    "{projectRoot}/**/*.html"
+                    "libs/form-generator/**/*.ts",
+                    "libs/form-generator/**/*.html"
                 ]
             }
         },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "{projectRoot}/cypress.config.ts",
+                "cypressConfig": "libs/form-generator/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "form-generator:build",
@@ -41,7 +41,7 @@
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {
-                "packageRoot": "{workspaceRoot}/dist/{projectRoot}"
+                "packageRoot": "{workspaceRoot}/dist/libs/form-generator"
             }
         }
     }

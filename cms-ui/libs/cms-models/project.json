@@ -1,7 +1,7 @@
 {
     "name": "cms-models",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "libs/cms-models/src",
     "projectType": "library",
     "tags": ["lib", "models", "publish"],
     "targets": {
@@ -9,10 +9,10 @@
             "executor": "@nx/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "packageJson": "{projectRoot}/package.json",
-                "main": "{projectRoot}/src/public-api.ts",
+                "outputPath": "dist/libs/cms-models",
+                "tsConfig": "libs/cms-models/tsconfig.lib.json",
+                "packageJson": "libs/cms-models/package.json",
+                "main": "libs/cms-models/src/public-api.ts",
                 "assets": []
             }
         },
@@ -21,16 +21,16 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "{projectRoot}/**/*.ts",
-                    "{projectRoot}/package.json"
+                    "libs/cms-models/**/*.ts",
+                    "libs/cms-models/package.json"
                 ]
             }
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/libs/cms-models"],
             "options": {
-                "jestConfig": "{projectRoot}/jest.config.ts",
+                "jestConfig": "libs/cms-models/jest.config.ts",
                 "passWithNoTests": true
             },
             "configurations": {
@@ -43,7 +43,7 @@
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {
-                "packageRoot": "{workspaceRoot}/dist/{projectRoot}"
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-models"
             }
         }
     }

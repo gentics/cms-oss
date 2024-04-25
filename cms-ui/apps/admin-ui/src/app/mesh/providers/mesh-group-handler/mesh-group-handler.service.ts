@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -57,7 +58,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(uuid: string, params?: GroupLoadOptions): Promise<GroupResponse> {
         try {
-            const res = await this.mesh.groups.get(uuid, params);
+            const res = await this.mesh.groups.get(uuid, params).send();
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -71,7 +72,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(body: GroupCreateRequest): Promise<GroupResponse> {
         try {
-            const res = await this.mesh.groups.create(body);
+            const res = await this.mesh.groups.create(body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_group_success',
@@ -91,7 +92,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(uuid: string, body: GroupUpdateRequest): Promise<GroupResponse> {
         try {
-            const res = await this.mesh.groups.update(uuid, body);
+            const res = await this.mesh.groups.update(uuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_group_success',
@@ -111,7 +112,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.groups.delete(uuid);
+            await this.mesh.groups.delete(uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -128,7 +129,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(params?: GroupListOptions): Promise<GroupListResponse> {
         try {
-            const res = await this.mesh.groups.list(params);
+            const res = await this.mesh.groups.list(params).send();
             for (const group of res.data) {
                 this.nameMap[group.uuid] = group.name
             }
@@ -148,13 +149,13 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         });
     }
 
-    async getUsers(uuid: string, _params?: UserListOptions): Promise<UserListResponse> {
-        return this.mesh.groups.getUsers(uuid);
+    getUsers(uuid: string, _params?: UserListOptions): Promise<UserListResponse> {
+        return this.mesh.groups.getUsers(uuid).send();
     }
 
     async assignRole(group: GroupReference, role: RoleReference): Promise<void> {
         try {
-            await this.mesh.groups.assignRole(group.uuid, role.uuid);
+            await this.mesh.groups.assignRole(group.uuid, role.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.assign_role_to_group_success',
@@ -170,7 +171,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     async unassignRole(group: GroupReference, role: RoleReference): Promise<void> {
         try {
-            await this.mesh.groups.unassignRole(group.uuid, role.uuid);
+            await this.mesh.groups.unassignRole(group.uuid, role.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.unassign_role_from_group_success',
@@ -186,7 +187,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     async assignUser(group: GroupReference, user: UserReference): Promise<void> {
         try {
-            await this.mesh.groups.assignUser(group.uuid, user.uuid);
+            await this.mesh.groups.assignUser(group.uuid, user.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.assign_user_to_group_success',
@@ -202,7 +203,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
 
     async unassignUser(group: GroupReference, user: UserReference): Promise<void> {
         try {
-            await this.mesh.groups.unassignUser(group.uuid, user.uuid);
+            await this.mesh.groups.unassignUser(group.uuid, user.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.unassign_user_from_group_success',

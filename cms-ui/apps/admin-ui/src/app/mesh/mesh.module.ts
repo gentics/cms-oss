@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import {
     CopyTokenModal,
     CopyValueComponent,
@@ -15,6 +14,7 @@ import {
     MeshGroupPropertiesComponent,
     MeshGroupTableComponent,
     MeshRoleModal,
+    MeshRolePermissionsEditModal,
     MeshRolePermissionsModal,
     MeshRolePermissionsTrableComponent,
     MeshRolePropertiesComponent,
@@ -25,10 +25,11 @@ import {
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
-    MeshRolePermissionsEditModal,
     ProjectModal,
     ProjectPropertiesComponent,
     ProjectTableComponent,
+    SchemaFieldPropertiesComponent,
+    SchemaFieldsManagerComponent,
     SchemaModal,
     SchemaPickerComponent,
     SchemaPropertiesComponent,
@@ -48,9 +49,8 @@ import {
     TagModal,
     TagPropertiesComponent,
     TagTableComponent,
-    SchemaFieldPropertiesComponent,
-    SchemaFieldsManagerComponent,
 } from './components';
+import { MeshIconPipe } from './pipes';
 import {
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
@@ -72,7 +72,6 @@ import {
     TagHandlerService,
     TagTableLoaderService,
 } from './providers';
-import { MeshIconPipe } from './pipes';
 
 const COMPONENTS: Type<any>[] = [
     CopyTokenModal,

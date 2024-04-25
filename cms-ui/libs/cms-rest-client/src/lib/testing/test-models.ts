@@ -1,6 +1,6 @@
-import { GCMSRestClientRequest } from '../models';
+import { GCMSRestClientRequestData } from '../models';
 
-export interface TestRequest extends GCMSRestClientRequest {
+export interface TestRequest extends GCMSRestClientRequestData {
     body?: any;
 }
 

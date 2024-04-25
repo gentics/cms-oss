@@ -3,7 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "apps/ui-core-docs/src",
     "tags": ["app", "docs", "demo", "angular"],
     "targets": {
         "build": {
@@ -11,21 +11,21 @@
             "outputs": ["{options.outputPath}"],
             "options": {
                 "customWebpackConfig": {
-                    "path": "{projectRoot}/webpack.partial.js"
+                    "path": "apps/ui-core-docs/webpack.partial.js"
                 },
-                "outputPath": "dist/{projectRoot}",
-                "index": "{projectRoot}/src/index.html",
-                "main": "{projectRoot}/src/main.ts",
-                "polyfills": ["{projectRoot}/src/polyfills.ts"],
-                "tsConfig": "{projectRoot}/tsconfig.app.json",
+                "outputPath": "dist/apps/ui-core-docs",
+                "index": "apps/ui-core-docs/src/index.html",
+                "main": "apps/ui-core-docs/src/main.ts",
+                "polyfills": ["apps/ui-core-docs/src/polyfills.ts"],
+                "tsConfig": "apps/ui-core-docs/tsconfig.app.json",
                 "assets": [
-                    "{projectRoot}/src/favicon.ico",
-                    "{projectRoot}/src/assets"
+                    "apps/ui-core-docs/src/favicon.ico",
+                    "apps/ui-core-docs/src/assets"
                 ],
-                "styles": ["{projectRoot}/src/styles.scss"],
+                "styles": ["apps/ui-core-docs/src/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "{projectRoot}/src/styles",
+                        "apps/ui-core-docs/src/styles",
                         "libs",
                         "node_modules"
                     ]
@@ -91,31 +91,31 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "{projectRoot}/**/*.ts",
-                    "{projectRoot}/**/*.html"
+                    "apps/ui-core-docs/**/*.ts",
+                    "apps/ui-core-docs/**/*.html"
                 ]
             }
         },
         "test": {
             "executor": "@angular-builders/custom-webpack:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/apps/ui-core-docs"],
             "options": {
                 "customWebpackConfig": {
-                    "path": "{projectRoot}/webpack.partial.js"
+                    "path": "apps/ui-core-docs/webpack.partial.js"
                 },
-                "main": "{projectRoot}/src/test.ts",
-                "tsConfig": "{projectRoot}/tsconfig.spec.json",
-                "karmaConfig": "{projectRoot}/karma.conf.js",
-                "polyfills": "{projectRoot}/src/polyfills.ts",
-                "styles": ["{projectRoot}/src/styles/styles.scss"],
+                "main": "apps/ui-core-docs/src/test.ts",
+                "tsConfig": "apps/ui-core-docs/tsconfig.spec.json",
+                "karmaConfig": "apps/ui-core-docs/karma.conf.js",
+                "polyfills": "apps/ui-core-docs/src/polyfills.ts",
+                "styles": ["apps/ui-core-docs/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "{projectRoot}/src/styles",
+                        "apps/ui-core-docs/src/styles",
                         "libs",
                         "node_modules"
                     ]
                 },
-                "assets": ["{projectRoot}/src/assets"]
+                "assets": ["apps/ui-core-docs/src/assets"]
             },
             "configurations": {
                 "ci": {

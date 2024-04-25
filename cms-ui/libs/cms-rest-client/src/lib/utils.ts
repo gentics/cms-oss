@@ -1,6 +1,6 @@
 import { EmbedListOptions, PagingSortOption, Response, ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from './errors';
-import { GCMSRestClientRequest } from './models';
+import { GCMSRestClientRequestData } from './models';
 
 export function toRelativePath(path: string): string {
     if (!path.startsWith('/')) {
@@ -85,7 +85,7 @@ function isResponseObject(value: any): value is Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateResponseObject(request: GCMSRestClientRequest, response: any): void {
+export function validateResponseObject(request: GCMSRestClientRequestData, response: any): void {
     if (!isResponseObject(response)) {
         return;
     }

@@ -1,7 +1,7 @@
 {
     "name": "cms-integration-api-models",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "libs/cms-integration-api-models/src",
     "projectType": "library",
     "tags": ["lib", "models", "publish"],
     "targets": {
@@ -9,10 +9,10 @@
             "executor": "@nx/js:tsc",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "packageJson": "{projectRoot}/package.json",
-                "main": "{projectRoot}/src/public-api.ts",
+                "outputPath": "dist/libs/cms-integration-api-models",
+                "tsConfig": "libs/cms-integration-api-models/tsconfig.lib.json",
+                "packageJson": "libs/cms-integration-api-models/package.json",
+                "main": "libs/cms-integration-api-models/src/public-api.ts",
                 "assets": []
             }
         },
@@ -20,14 +20,14 @@
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": ["{projectRoot}/**/*.ts"]
+                "lintFilePatterns": ["libs/cms-integration-api-models/**/*.ts"]
             }
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/libs/cms-integration-api-models"],
             "options": {
-                "jestConfig": "{projectRoot}/jest.config.ts",
+                "jestConfig": "libs/cms-integration-api-models/jest.config.ts",
                 "passWithNoTests": true
             },
             "configurations": {
@@ -40,7 +40,7 @@
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {
-                "packageRoot": "{workspaceRoot}/dist/{projectRoot}"
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-integration-api-models"
             }
         }
     }

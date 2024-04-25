@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -53,7 +54,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(uuid: string, params?: UserLoadOptions): Promise<UserResponse> {
         try {
-            const res = await this.mesh.users.get(uuid, params);
+            const res = await this.mesh.users.get(uuid, params).send();
             this.nameMap[res.uuid] = getUserDisplayName(res);
             return res;
         } catch (err) {
@@ -67,7 +68,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(body: UserCreateRequest): Promise<UserResponse> {
         try {
-            const res = await this.mesh.users.create(body);
+            const res = await this.mesh.users.create(body).send();
             const name = getUserDisplayName(res);
             this.notification.show({
                 type: 'success',
@@ -89,7 +90,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(uuid: string, body: UserUpdateRequest): Promise<UserResponse> {
         try {
-            const res = await this.mesh.users.update(uuid, body);
+            const res = await this.mesh.users.update(uuid, body).send();
             const name = getUserDisplayName(res);
             this.notification.show({
                 type: 'success',
@@ -111,7 +112,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.users.delete(uuid);
+            await this.mesh.users.delete(uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -128,7 +129,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(params?: UserListOptions): Promise<UserListResponse> {
         try {
-            const res = await this.mesh.users.list(params);
+            const res = await this.mesh.users.list(params).send();
             for (const user of res.data) {
                 this.nameMap[user.uuid] = getUserDisplayName(user);
             }
@@ -150,7 +151,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async createAPIToken(uuid: string): Promise<UserAPITokenResponse> {
         try {
-            const res = await this.mesh.users.createAPIToken(uuid);
+            const res = await this.mesh.users.createAPIToken(uuid).send();
             return res;
         } catch (err) {
             this.handleError(err);

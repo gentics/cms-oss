@@ -38,7 +38,8 @@ export class ManagementComponent {
                 this.me = event.user;
                 this.meName = getUserDisplayName(this.me);
             } else {
-                this.mesh.auth.me().then(res => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                this.mesh.auth.me().send().then(res => {
                     this.me = res;
                     this.meName = getUserDisplayName(this.me);
                     this.changeDetector.markForCheck();
@@ -76,7 +77,8 @@ export class ManagementComponent {
     }
 
     public logout(): void {
-        this.mesh.auth.logout().then(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.mesh.auth.logout().send().then(() => {
             this.loggedIn = false;
             this.changeDetector.markForCheck();
         });

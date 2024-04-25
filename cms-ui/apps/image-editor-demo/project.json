@@ -3,7 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "apps/image-editor-demo/src",
     "implicitDependencies": ["image-editor", "ui-core"],
     "tags": ["app", "docs", "demo", "angular"],
     "targets": {
@@ -14,19 +14,19 @@
                 "customWebpackConfig": {
                     "path": "apps/ui-core-docs/webpack.partial.js"
                 },
-                "outputPath": "dist/{projectRoot}",
-                "index": "{projectRoot}/src/index.html",
-                "main": "{projectRoot}/src/main.ts",
-                "polyfills": ["{projectRoot}/src/polyfills.ts"],
-                "tsConfig": "{projectRoot}/tsconfig.app.json",
+                "outputPath": "dist/apps/image-editor-demo",
+                "index": "apps/image-editor-demo/src/index.html",
+                "main": "apps/image-editor-demo/src/main.ts",
+                "polyfills": ["apps/image-editor-demo/src/polyfills.ts"],
+                "tsConfig": "apps/image-editor-demo/tsconfig.app.json",
                 "assets": [
-                    "{projectRoot}/src/favicon.ico",
-                    "{projectRoot}/src/assets"
+                    "apps/image-editor-demo/src/favicon.ico",
+                    "apps/image-editor-demo/src/assets"
                 ],
-                "styles": ["{projectRoot}/src/styles.scss"],
+                "styles": ["apps/image-editor-demo/src/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "{projectRoot}/src/styles",
+                        "apps/image-editor-demo/src/styles",
                         "libs",
                         "node_modules"
                     ]
@@ -92,28 +92,28 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "{projectRoot}/**/*.ts",
-                    "{projectRoot}/**/*.html"
+                    "apps/image-editor-demo/**/*.ts",
+                    "apps/image-editor-demo/**/*.html"
                 ]
             }
         },
         "test": {
             "executor": "@angular-devkit/build-angular:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/apps/image-editor-demo"],
             "options": {
-                "main": "{projectRoot}/src/test.ts",
-                "tsConfig": "{projectRoot}/tsconfig.spec.json",
-                "karmaConfig": "{projectRoot}/karma.conf.js",
-                "polyfills": "{projectRoot}/src/polyfills.ts",
-                "styles": ["{projectRoot}/src/styles/styles.scss"],
+                "main": "apps/image-editor-demo/src/test.ts",
+                "tsConfig": "apps/image-editor-demo/tsconfig.spec.json",
+                "karmaConfig": "apps/image-editor-demo/karma.conf.js",
+                "polyfills": "apps/image-editor-demo/src/polyfills.ts",
+                "styles": ["apps/image-editor-demo/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "{projectRoot}/src/styles",
+                        "apps/image-editor-demo/src/styles",
                         "libs",
                         "node_modules"
                     ]
                 },
-                "assets": ["{projectRoot}/src/assets"]
+                "assets": ["apps/image-editor-demo/src/assets"]
             },
             "configurations": {
                 "ci": {

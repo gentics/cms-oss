@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -54,7 +55,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(uuid: string, params?: SchemaLoadOptions): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.schemas.get(uuid, params);
+            const res = await this.mesh.schemas.get(uuid, params).send();
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -68,7 +69,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(body: SchemaCreateRequest): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.schemas.create(body);
+            const res = await this.mesh.schemas.create(body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_schema_success',
@@ -89,7 +90,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(uuid: string, body: SchemaUpdateRequest): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.schemas.update(uuid, body);
+            const res = await this.mesh.schemas.update(uuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_schema_success',
@@ -110,7 +111,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.schemas.delete(uuid);
+            await this.mesh.schemas.delete(uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -127,7 +128,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(params?: SchemaListOptions): Promise<SchemaListResponse> {
         try {
-            const res = await this.mesh.schemas.list(params);
+            const res = await this.mesh.schemas.list(params).send();
             for (const schema of res.data) {
                 this.nameMap[schema.uuid] = schema.name;
             }
@@ -149,7 +150,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async listFromProject(project: string, params?: SchemaListOptions): Promise<SchemaListResponse> {
         try {
-            const res = await this.mesh.projects.listSchemas(project, params);
+            const res = await this.mesh.projects.listSchemas(project, params).send();
             for (const schema of res.data) {
                 this.nameMap[schema.uuid] = schema.name;
             }
@@ -161,7 +162,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async assignToProject(project: ProjectReference, schema: SchemaReference): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.projects.assignSchema(project.name, schema.uuid);
+            const res = await this.mesh.projects.assignSchema(project.name, schema.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.assign_schema_to_project_success',
@@ -178,7 +179,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async unassignFromProject(project: ProjectReference, schema: SchemaReference): Promise<void> {
         try {
-            await this.mesh.projects.unassignSchema(project.name, schema.uuid);
+            await this.mesh.projects.unassignSchema(project.name, schema.uuid).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.unassign_schema_from_project_success',
@@ -195,7 +196,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     public async getAllNames(project?: string, checkProject: boolean = true): Promise<SchemaReference[]> {
         try {
             if (checkProject) {
-                project = (await this.mesh.projects.list({ perPage: 1 }))?.data?.[0]?.name;
+                project = (await this.mesh.projects.list({ perPage: 1 }).send())?.data?.[0]?.name;
             }
             let schemas: SchemaReference[] = [];
 
@@ -211,10 +212,10 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 }
                     `,
-                });
+                }).send();
                 schemas = res.data?.schemas?.elements || [];
             } else {
-                schemas = (await this.mesh.schemas.list())?.data || [];
+                schemas = (await this.mesh.schemas.list().send())?.data || [];
             }
 
             for (const ref of schemas) {

@@ -17,7 +17,8 @@ export class MeshRolePermissionHandlerService extends BaseMeshEntitiyHandlerServ
 
     public async get(roleUuid: string, entityPath: string): Promise<RolePermissionResponse> {
         try {
-            const res = await this.mesh.permissions.get(roleUuid, entityPath);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const res = await this.mesh.permissions.get(roleUuid, entityPath).send();
             return res;
         } catch (err) {
             this.handleError(err);
@@ -26,7 +27,8 @@ export class MeshRolePermissionHandlerService extends BaseMeshEntitiyHandlerServ
 
     public async set(role: RoleReference, entityPath: string, body: RolePermissionRequest): Promise<GenericMessageResponse> {
         try {
-            const res = await this.mesh.permissions.set(role.uuid, entityPath, body);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const res = await this.mesh.permissions.set(role.uuid, entityPath, body).send();
             this.notification.show({
                 message: 'mesh.role_permission_applied',
                 type: 'success',

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable } from '@angular/core';
 import { BranchReference, GraphQLOptions, Language, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
@@ -7,20 +8,20 @@ import { MeshSchemaListParams, MeshSchemaListResponse, NumberOfSchemaElements, S
 @Injectable()
 export class MeshBrowserLoaderService {
 
-    constructor(protected meshClient: MeshRestClientService) {}
+    constructor(protected meshClient: MeshRestClientService) { }
 
 
     public authMe(): Promise<UserResponse> {
-        return this.meshClient.auth.me();
+        return this.meshClient.auth.me().send();
     }
 
     public async getProjects(): Promise<ProjectResponse[]> {
-        const projectList = await this.meshClient.projects.list();
+        const projectList = await this.meshClient.projects.list().send();
         return projectList.data;
     }
 
     public async getBranches(project: string): Promise<BranchReference[]> {
-        const branchList = await this.meshClient.branches.list(project);
+        const branchList = await this.meshClient.branches.list(project).send();
         return branchList.data;
     }
 
@@ -36,7 +37,7 @@ export class MeshBrowserLoaderService {
                     }
                 }
             `,
-        });
+        }).send();
 
         return {
             rootNodeUuid: response.data.project.rootNode.uuid,
@@ -51,13 +52,13 @@ export class MeshBrowserLoaderService {
                     project{ rootNode {uuid}}
                 }
             `,
-        });
+        }).send();
 
         return response.data.project.rootNode.uuid;
     }
 
     public async listProjectSchemas(project: string): Promise<SchemaContainer[]> {
-        const response = await this.meshClient.projects.listSchemas(project);
+        const response = await this.meshClient.projects.listSchemas(project).send();
 
         return response.data.map(schemaItem => {
             return {
@@ -76,8 +77,8 @@ export class MeshBrowserLoaderService {
         const schemasWithNumElements = await this.getSchemasWithNumberOfElements(project, projectSchemaNames, nodeUuid);
 
         const schemasContainingElements = [];
-        for(const schemaName in schemasWithNumElements) {
-            if(schemasWithNumElements[schemaName]?.totalCount > 0) {
+        for (const schemaName in schemasWithNumElements) {
+            if (schemasWithNumElements[schemaName]?.totalCount > 0) {
                 schemasContainingElements.push(schemaName);
             }
         }
@@ -93,27 +94,27 @@ export class MeshBrowserLoaderService {
         const response = await this.meshClient.graphql(project, {
             query: `
             query ($nodeUuid: String) {
-    	        node(uuid: $nodeUuid) { 
+    	        node(uuid: $nodeUuid) {
                     ${this.constructSchemaFilterQuery(schemas)}
                 }
-            }    
+            }
             `,
             variables: {
                 nodeUuid: nodeUuid,
             },
-        });
+        }).send();
 
         return response.data?.node;
     }
 
     private constructSchemaFilterQuery(schemas: Array<string>): string {
-        const template = `[schemaName]: children(filter: {schema: {is: [schemaName]}}) { 
-			totalCount 
+        const template = `[schemaName]: children(filter: {schema: {is: [schemaName]}}) {
+			totalCount
 		}` as string;
 
         const query = schemas.reduce((query: string, schemaName: string) => {
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-call
-            query += template.replaceAll('[schemaName]', schemaName) +'\n';
+            query += template.replaceAll('[schemaName]', schemaName) + '\n';
             return query;
         }, '')
 
@@ -122,12 +123,12 @@ export class MeshBrowserLoaderService {
 
 
     public async getRootNodeUuid(project: string): Promise<string> {
-        const response = await this.meshClient.projects.list();
+        const response = await this.meshClient.projects.list().send();
 
         return response.data.find(schemaItem => schemaItem.name === project).rootNode.uuid;
     }
 
-    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<SchemaPage>  {
+    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<SchemaPage> {
         const queryPrams: GraphQLOptions = {
             version: 'draft',
         }
@@ -157,9 +158,9 @@ export class MeshBrowserLoaderService {
                                 isDraft
                                 version
                                 versions {
-                                    version, 
+                                    version,
                                     published
-                                    draft 
+                                    draft
                                     created
                                 }
                                 language
@@ -173,19 +174,19 @@ export class MeshBrowserLoaderService {
             `,
             variables: params,
         },
-        queryPrams,
-        );
+            queryPrams,
+        ).send();
 
         return response.data.node?.children
     }
 
 
-    public async getSchemaNameForNode(project: string, nodeUuid: string): Promise<string>  {
+    public async getSchemaNameForNode(project: string, nodeUuid: string): Promise<string> {
         const schemaFieldsFilter: NodeLoadOptions = {
             fields: ['schema'],
         }
 
-        const response = await this.meshClient.nodes.get(project, nodeUuid, schemaFieldsFilter);
+        const response = await this.meshClient.nodes.get(project, nodeUuid, schemaFieldsFilter).send();
         return response.schema.name;
     }
 
@@ -197,15 +198,15 @@ export class MeshBrowserLoaderService {
             params.lang += ',' + projectLanguages
                 .filter(lang => lang.languageTag !== params.lang)
                 .map(lang => lang.languageTag)
-                .reduce((result, lang) => result += ','+lang);
+                .reduce((result, lang) => result += ',' + lang);
         }
 
-        const response = await this.meshClient.nodes.get(project, uuid, params);
+        const response = await this.meshClient.nodes.get(project, uuid, params).send();
         return response;
     }
 
     public async getProjectLanguages(project: string): Promise<Language[]> {
-        const response = await this.meshClient.language.list(project);
+        const response = await this.meshClient.language.list(project).send();
         return response.data;
     }
 

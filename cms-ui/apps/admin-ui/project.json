@@ -3,29 +3,29 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
-    "sourceRoot": "{projectRoot}/src",
+    "sourceRoot": "apps/admin-ui/src",
     "tags": ["app", "ui", "angular"],
     "targets": {
         "build": {
             "executor": "@nx/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/{projectRoot}",
-                "index": "{projectRoot}/src/index.html",
-                "main": "{projectRoot}/src/main.ts",
-                "polyfills": ["{projectRoot}/src/polyfills.ts"],
-                "tsConfig": "{projectRoot}/tsconfig.app.json",
+                "outputPath": "dist/apps/admin-ui",
+                "index": "apps/admin-ui/src/index.html",
+                "main": "apps/admin-ui/src/main.ts",
+                "polyfills": ["apps/admin-ui/src/polyfills.ts"],
+                "tsConfig": "apps/admin-ui/tsconfig.app.json",
                 "assets": [
                     {
                         "glob": "**/*",
-                        "input": "{projectRoot}/src/assets",
+                        "input": "apps/admin-ui/src/assets",
                         "output": "assets"
                     }
                 ],
-                "styles": ["{projectRoot}/src/styles/styles.scss"],
+                "styles": ["apps/admin-ui/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "{projectRoot}/src/styles",
+                        "apps/admin-ui/src/styles",
                         "libs",
                         "node_modules"
                     ]
@@ -60,8 +60,8 @@
                     ],
                     "fileReplacements": [
                         {
-                            "replace": "{projectRoot}/src/environments/environment.ts",
-                            "with": "{projectRoot}/src/environments/environment.prod.ts"
+                            "replace": "apps/admin-ui/src/environments/environment.ts",
+                            "with": "apps/admin-ui/src/environments/environment.prod.ts"
                         }
                     ],
                     "outputHashing": "all",
@@ -97,8 +97,8 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "{projectRoot}/**/*.ts",
-                    "{projectRoot}/**/*.html"
+                    "apps/admin-ui/**/*.ts",
+                    "apps/admin-ui/**/*.html"
                 ]
             }
         },
@@ -120,7 +120,7 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "{projectRoot}/cypress.config.ts",
+                "cypressConfig": "apps/admin-ui/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "admin-ui:build",

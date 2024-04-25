@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -61,7 +62,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
         try {
-            const res = await this.mesh.nodes.get(project, uuid, params);
+            const res = await this.mesh.nodes.get(project, uuid, params).send();
             this.nameMap[res.uuid] = this.getDisplayName(res);
             return res;
         } catch (err) {
@@ -75,7 +76,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(project: string, body: NodeCreateRequest): Promise<NodeResponse> {
         try {
-            const res = await this.mesh.nodes.create(project, body);
+            const res = await this.mesh.nodes.create(project, body).send();
             const name = this.getDisplayName(res);
             this.nameMap[res.uuid] = name;
             this.notification.show({
@@ -97,7 +98,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(project: string, uuid: string, body: NodeUpdateRequest): Promise<NodeResponse> {
         try {
-            const res = await this.mesh.nodes.update(project, uuid, body);
+            const res = await this.mesh.nodes.update(project, uuid, body).send();
             const name = this.getDisplayName(res);
             this.nameMap[res.uuid] = name;
             this.notification.show({
@@ -120,7 +121,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(project: string, uuid: string, params?: NodeDeleteOptions): Promise<GenericMessageResponse> {
         try {
-            const res = await this.mesh.nodes.delete(project, uuid, params);
+            const res = await this.mesh.nodes.delete(project, uuid, params).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -140,9 +141,9 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
         try {
             let res: NodeListResponse;
             if (parent) {
-                res = await this.mesh.nodes.children(project, parent, params);
+                res = await this.mesh.nodes.children(project, parent, params).send();
             } else {
-                res = await this.mesh.nodes.list(project, params);
+                res = await this.mesh.nodes.list(project, params).send();
             }
             for (const node of res.data) {
                 this.nameMap[node.uuid] = this.getDisplayName(node);

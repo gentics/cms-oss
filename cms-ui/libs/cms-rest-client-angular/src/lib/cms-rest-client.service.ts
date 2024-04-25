@@ -1,6 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
+    GCMSClientDriver,
+    GCMSRestClient,
+    GCMSRestClientConfig,
+    GCMSRestClientRequest,
+} from '@gentics/cms-rest-client';
+import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
@@ -16,7 +22,6 @@ import {
     AbstractFileUploadManipulatorAPI,
     AbstractFolderAPI,
     AbstractFormAPI,
-    AbstractRootAPI,
     AbstractGroupAPI,
     AbstractI18nAPI,
     AbstractImageAPI,
@@ -29,9 +34,11 @@ import {
     AbstractObjectPropertyAPI,
     AbstractObjectPropertyCategoryAPI,
     AbstractPageAPI,
+    AbstractPartTypeAPI,
     AbstractPermissionAPI,
     AbstractPolicyMapAPI,
     AbstractRoleAPI,
+    AbstractRootAPI,
     AbstractScheduleTaskAPI,
     AbstractSchedulerAPI,
     AbstractSearchIndexAPI,
@@ -39,17 +46,10 @@ import {
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
-    AbstractPartTypeAPI,
 } from '@gentics/cms-rest-client/abstracts';
-import {
-    GCMSClientDriver,
-    GCMSRestClient,
-    GCMSRestClientConfig,
-    GCMSRestClientResponse,
-} from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
 import { AngularGCMSClientDriver } from './angular-cms-client-driver';
-import { NGGCMSRestClientResponse } from './models';
+import { NGGCMSRestClientRequest } from './models';
 
 type Callable<P extends Array<any>, R> = (...args: P) => R;
 type BasicAPI = { [key: string]: (...args) => any };
@@ -57,7 +57,7 @@ type BasicAPI = { [key: string]: (...args) => any };
 type OriginalAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
 } & {
-    [FN in keyof T]: Callable<Parameters<T[FN]>, GCMSRestClientResponse<ReturnType<T[FN]>>>;
+    [FN in keyof T]: Callable<Parameters<T[FN]>, GCMSRestClientRequest<ReturnType<T[FN]>>>;
 };
 
 type AngularAPI<T extends BasicAPI> = {
@@ -96,7 +96,7 @@ interface APIDefinition extends FullAngularAPI {
  */
 function asAngularAPI<T extends BasicAPI>(api: OriginalAPI<T>): AngularAPI<T> {
     return Object.entries(api).reduce((acc, [name, fn]: [string, Callable<any[], any>]) => {
-        acc[name] = (...args) => (fn(...args) as NGGCMSRestClientResponse<any>).rx();
+        acc[name] = (...args) => (fn(...args) as NGGCMSRestClientRequest<any>).rx();
         return acc;
     }, {}) as any;
 }

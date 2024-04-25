@@ -1,12 +1,18 @@
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Response as GCMSResponse } from '@gentics/cms-models';
-import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse, GCMSRestClientRequestError, validateResponseObject } from '@gentics/cms-rest-client';
+import {
+    GCMSClientDriver,
+    GCMSRestClientRequest,
+    GCMSRestClientRequestError,
+    validateResponseObject,
+    GCMSRestClientRequestData,
+} from '@gentics/cms-rest-client';
 import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { NGGCMSRestClientResponse } from './models';
+import { NGGCMSRestClientRequest } from './models';
 
-function asSafeJSON(request: GCMSRestClientRequest, str: string | null) {
+function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
     const value = typeof str !== 'string' ? str : JSON.parse(str);
     validateResponseObject(request, value);
     return value;
@@ -20,7 +26,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     ) {}
 
     protected createStringRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body: null | string | FormData,
         bodyHandler: (body: string) => T,
     ): Observable<T> {
@@ -59,7 +65,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     }
 
     protected createBlobRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body: null | string | FormData,
     ): Observable<Blob> {
         return this.http.request(request.method, request.url, {
@@ -86,7 +92,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         );
     }
 
-    protected errorHandler<T>(request: GCMSRestClientRequest): OperatorFunction<T, T> {
+    protected errorHandler<T>(request: GCMSRestClientRequestData): OperatorFunction<T, T> {
         return catchError(err => {
             if (!(err instanceof HttpErrorResponse)) {
                 return throwError(err);
@@ -120,7 +126,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         });
     }
 
-    protected createClientResponse<T>(obs: Observable<T>): NGGCMSRestClientResponse<T> {
+    protected createClientResponse<T>(obs: Observable<T>): NGGCMSRestClientRequest<T> {
         let promiseSub: Subscription;
         let canceled = false;
 
@@ -165,33 +171,33 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     }
 
     performMappedRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string,
-    ): NGGCMSRestClientResponse<T> {
+    ): NGGCMSRestClientRequest<T> {
         const req = this.createStringRequest(request, body, (res) => asSafeJSON(request, res));
         return this.createClientResponse(req);
     }
 
     performFormRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         form: FormData,
-    ): GCMSRestClientResponse<T> {
+    ): NGGCMSRestClientRequest<T> {
         const req = this.createStringRequest(request, form, (res) => asSafeJSON(request, res));
         return this.createClientResponse(req);
     }
 
     performRawRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string | FormData,
-    ): GCMSRestClientResponse<string> {
+    ): NGGCMSRestClientRequest<string> {
         const req = this.createStringRequest(request, body, (str) => str);
         return this.createClientResponse(req);
     }
 
     performDownloadRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string | FormData,
-    ): GCMSRestClientResponse<Blob> {
+    ): NGGCMSRestClientRequest<Blob> {
         const req = this.createBlobRequest(request, body);
         return this.createClientResponse(req);
     }

@@ -109,7 +109,7 @@ spec:
 
                 script {
                     def mvnGoal       = "package"
-                    def mvnArguments  = ""
+                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()

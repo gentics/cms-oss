@@ -99,7 +99,7 @@
         },
         "test": {
             "executor": "@angular-devkit/build-angular:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/apps/image-editor-demo"],
             "options": {
                 "main": "apps/image-editor-demo/src/test.ts",
                 "tsConfig": "apps/image-editor-demo/tsconfig.spec.json",

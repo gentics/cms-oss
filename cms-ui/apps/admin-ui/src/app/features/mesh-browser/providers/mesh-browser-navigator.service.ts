@@ -140,14 +140,15 @@ export class MeshBrowserNavigatorService {
         params: MeshSchemaListParams,
         branchUuid: string,
     ): Promise<NavigationEntry[]> {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const response = await this.meshClient.graphql(
             project,
             {
                 query: `
                 query($nodeUuid: String) {
-                    node(uuid: $nodeUuid) { 
+                    node(uuid: $nodeUuid) {
                         breadcrumb {
-                            parent { 
+                            parent {
                                 displayName
                                 node {uuid}
                             }
@@ -158,7 +159,7 @@ export class MeshBrowserNavigatorService {
                             }
                         }
                     }
-                }      
+                }
             `,
                 variables: params,
             },
@@ -166,7 +167,7 @@ export class MeshBrowserNavigatorService {
                 branch: branchUuid,
                 version: 'draft',
             },
-        );
+        ).send();
 
         return response.data.node?.breadcrumb;
     }

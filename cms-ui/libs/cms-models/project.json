@@ -3,8 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-models/src",
     "projectType": "library",
-    "tags": ["lib", "models"],
-    "implicitDependencies": ["mesh-models"],
+    "tags": ["lib", "models", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/js:tsc",
@@ -29,7 +28,7 @@
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/libs/cms-models"],
             "options": {
                 "jestConfig": "libs/cms-models/jest.config.ts",
                 "passWithNoTests": true
@@ -39,6 +38,12 @@
                     "ci": true,
                     "codeCoverage": true
                 }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-models"
             }
         }
     }

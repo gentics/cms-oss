@@ -3,9 +3,8 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "apps/ui-core/src",
-    "implicitDependencies": [],
-    "tags": ["lib", "angular"],
+    "sourceRoot": "libs/ui-core/src",
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
@@ -27,7 +26,7 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/ui-core/cypress.config.ts",
+                "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "ui-core:build",
@@ -37,6 +36,12 @@
                 "watch": {
                     "watch": true
                 }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/ui-core"
             }
         }
     }

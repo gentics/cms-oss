@@ -1,6 +1,7 @@
 # Gentics CMS User Interface Monorepo
 
 This mono repo contains all the user interfaces and libraries interacting with the CMS.
+Management is done via [NX](https://nx.dev) but is also partially integrated with maven.
 
 ## Package repository settings
 
@@ -14,22 +15,15 @@ Setup @gentics scope to the APA IT repository:
 npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
 ```
 
-## Quick start
+## Commands
 
--   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
--   [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
-
-## General information
-
-### Commands
-
-**Install dependencies:**
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-**Start or serve an application:**
+### Start/Serve an application
 
 ```bash
 npm start <app-name>
@@ -37,7 +31,7 @@ npm start <app-name>
 
 The application will run on `localhost:4200` by default.
 
-**Test an application or library:**
+### Unit-Tests
 
 To run the unit tests and then terminate the test process:
 
@@ -45,15 +39,29 @@ To run the unit tests and then terminate the test process:
 npm test <app-name/lib-name>
 ```
 
-The test will run for the selected application or library. It is possible to run tests against all applications and libraries without specifying any name.
-
-To run the unit tests in watch mode (rebuild and rerun on every change):
+The test will run for the selected application or library. To run the unit tests in watch mode (rebuild and rerun on every change):
 
 ```bash
 npm run test:watch <app-name/lib-name>
 ```
 
-**Build an application or library:**
+### E2E/Integration Tests
+
+Starts the Cypress E2E/Integration tests for the specific e2e application (`{application-name}-e2e`).
+
+```bash
+npm run e2e <e2e-app-name>
+```
+
+### Components Tests
+
+Starts the Cypress Components tests for the specific application or library.
+
+```bash
+npm run component-test <app-name/lib-name>
+```
+
+### Build an application or library
 
 ```bash
 npm run build <app-name/lib-name>
@@ -61,13 +69,33 @@ npm run build <app-name/lib-name>
 
 This will build the selected application or library in `production` mode. All the built apps/libs destination is the `./dist` folder.
 
-**Adding flags to the commands:**
+### Adding flags to commands
 
 ```bash
 npm test <app-name/lib-name> -- --flag1 --flag2
 ```
 
 All commands can be extended by passing flags to the underlying scripts. To do so, split the command with `--` then write the desired flags.
+
+## Tags
+
+NX supports [tagging](https://nx.dev/nx-api/devkit/documents/ProjectConfiguration#tags) of all it's projects and being able to [filter the projects](https://nx.dev/nx-api/nx/documents/run-many) when running multiple commands.
+
+Tags that are used in this Repository:
+
+* `lib`: A library
+* `models`: Only contains models/type defintions
+* `angular`: Uses angular
+* `publish`: Project which can be published
+* `app`: An application
+* `ui`: Main User-Interface/Standalone application
+* `ct`: Custom-Tool which only works with/in the `editor-ui`
+* `e2e`: End-to-End/Integration Test project
+
+## Quick start
+
+-   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
+-   [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
 
 ### Structure
 

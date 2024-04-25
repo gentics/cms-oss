@@ -4,13 +4,6 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/ct-link-checker/src",
-    "implicitDependencies": [
-        "cms-components",
-        "cms-models",
-        "cms-rest-clients-angular",
-        "mesh-models",
-        "ui-core"
-    ],
     "tags": ["app", "ct", "angular"],
     "targets": {
         "build": {
@@ -23,10 +16,11 @@
                 "polyfills": ["apps/ct-link-checker/src/polyfills.ts"],
                 "tsConfig": "apps/ct-link-checker/tsconfig.app.json",
                 "assets": [
-                    "apps/ct-link-checker/src/favicon.ico",
-                    "apps/ct-link-checker/src/assets",
-                    "apps/ct-link-checker/src/formgenerator",
-                    "apps/ct-link-checker/src/customer-config"
+                    {
+                        "glob": "**/*",
+                        "input": "apps/ct-link-checker/src/assets",
+                        "output": "assets"
+                    }
                 ],
                 "styles": ["apps/ct-link-checker/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {

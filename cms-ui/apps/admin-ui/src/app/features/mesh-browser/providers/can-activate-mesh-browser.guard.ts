@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 
-
 @Injectable()
 export class MeshBrowserCanActivateGuard {
 
@@ -19,9 +18,11 @@ export class MeshBrowserCanActivateGuard {
 
         try {
             // route can be activated if user has access to the project
-            const projects = (await this.client.projects.list()).data;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const projects = (await this.client.projects.list().send()).data;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const foundProject = projects.find(projectName => projectName);
-            if (foundProject){
+            if (foundProject) {
                 return true;
             }
 

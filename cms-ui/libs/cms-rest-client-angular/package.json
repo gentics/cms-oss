@@ -1,12 +1,16 @@
 {
   "name": "@gentics/cms-rest-client-angular",
   "version": "6.1.0-SNAPSHOT",
-  "peerDependencies": {
-    "@angular/common": "15.2.5",
-    "@angular/core": "15.2.5",
+  "license": "Apache-2.0",
+  "dependencies": {
     "@gentics/cms-models": "^6.1.0-SNAPSHOT",
     "@gentics/cms-rest-client": "^6.1.0-SNAPSHOT",
-    "rxjs": "^6.6.3"
+    "@gentics/mesh-models": "^6.1.0-SNAPSHOT"
+  },
+  "peerDependencies": {
+    "@angular/common": "^16.0.0",
+    "@angular/core": "^16.0.0",
+    "rxjs": "^6.6.0"
   },
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

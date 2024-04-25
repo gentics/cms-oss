@@ -80,39 +80,39 @@ export interface GCMSRestClientInterceptorData {
     headers: Record<string, string>;
 }
 
-export interface GCMSRestClientRequest {
+export interface GCMSRestClientRequestData {
     method: RequestMethod;
     url: string;
     params: Record<string, string>;
     headers: Record<string, string>;
 }
 
-export interface GCMSRestClientResponse<T> {
+export interface GCMSRestClientRequest<T> {
     send: () => Promise<T>;
     cancel: () => void;
 }
 
 export interface GCMSClientDriver {
     performMappedRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: null | string | FormData,
-    ): GCMSRestClientResponse<T>;
+    ): GCMSRestClientRequest<T>;
 
     performRawRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: null | string | FormData,
-    ): GCMSRestClientResponse<string>;
+    ): GCMSRestClientRequest<string>;
 
     performDownloadRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: null | string | FormData,
-    ): GCMSRestClientResponse<Blob>;
+    ): GCMSRestClientRequest<Blob>;
 }
 
 type MappedAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
 } & {
-    [FN in keyof T]: Callable<Parameters<T[FN]>, GCMSRestClientResponse<ReturnType<T[FN]>>>;
+    [FN in keyof T]: Callable<Parameters<T[FN]>, GCMSRestClientRequest<ReturnType<T[FN]>>>;
 };
 
 export type GCMSAdminAPI = MappedAPI<AbstractAdminAPI>;

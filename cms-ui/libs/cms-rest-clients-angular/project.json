@@ -3,9 +3,8 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "apps/cms-rest-clients-angular/src",
-    "implicitDependencies": ["cms-models", "mesh-models"],
-    "tags": ["lib", "angular"],
+    "sourceRoot": "libs/cms-rest-clients-angular/src",
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
@@ -22,6 +21,12 @@
                     "libs/cms-rest-clients-angular/**/*.ts",
                     "libs/cms-rest-clients-angular/**/*.html"
                 ]
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-clients-angular"
             }
         }
     }

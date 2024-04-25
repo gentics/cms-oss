@@ -3,9 +3,8 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "apps/image-editor/src",
-    "implicitDependencies": ["ui-core"],
-    "tags": ["lib", "angular"],
+    "sourceRoot": "libs/image-editor/src",
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
@@ -27,7 +26,7 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/image-editor/cypress.config.ts",
+                "cypressConfig": "libs/image-editor/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "image-editor:build",
@@ -37,6 +36,12 @@
                 "watch": {
                     "watch": true
                 }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/image-editor"
             }
         }
     }

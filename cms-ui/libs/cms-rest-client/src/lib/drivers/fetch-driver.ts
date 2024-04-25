@@ -1,9 +1,9 @@
 import { Response as GCMSResponse } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '../errors';
-import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse } from '../models';
+import { GCMSClientDriver, GCMSRestClientRequestData, GCMSRestClientRequest } from '../models';
 import { validateResponseObject } from '../utils';
 
-async function parseErrorFromAPI<T>(request: GCMSRestClientRequest, res: Response): Promise<T> {
+async function parseErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     let raw: string;
     let parsed: GCMSResponse;
     let bodyError: Error;
@@ -29,7 +29,7 @@ async function parseErrorFromAPI<T>(request: GCMSRestClientRequest, res: Respons
     );
 }
 
-async function jsonResponseHandler<T>(request: GCMSRestClientRequest, res: Response): Promise<T> {
+async function jsonResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     if (res.ok) {
         return res.json().then(json => {
             validateResponseObject(request, json);
@@ -40,7 +40,7 @@ async function jsonResponseHandler<T>(request: GCMSRestClientRequest, res: Respo
     return parseErrorFromAPI(request, res);
 }
 
-async function textResponseHandler(request: GCMSRestClientRequest, res: Response): Promise<string> {
+async function textResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<string> {
     if (res.ok) {
         return res.text();
     }
@@ -48,7 +48,7 @@ async function textResponseHandler(request: GCMSRestClientRequest, res: Response
     return parseErrorFromAPI(request, res);
 }
 
-async function blobResponseHandler(request: GCMSRestClientRequest, res: Response): Promise<Blob> {
+async function blobResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<Blob> {
     if (res.ok) {
         return res.blob();
     }
@@ -59,9 +59,9 @@ async function blobResponseHandler(request: GCMSRestClientRequest, res: Response
 export class GCMSFetchDriver implements GCMSClientDriver {
 
     performMappedRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string | any,
-    ): GCMSRestClientResponse<T> {
+    ): GCMSRestClientRequest<T> {
         if (body != null && typeof body === 'object') {
             body = JSON.stringify(body);
         }
@@ -77,9 +77,9 @@ export class GCMSFetchDriver implements GCMSClientDriver {
     }
 
     performFormRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         form: FormData,
-    ): GCMSRestClientResponse<T> {
+    ): GCMSRestClientRequest<T> {
         return this.prepareRequest(request, (fullUrl) => {
             return {
                 method: request.method,
@@ -91,9 +91,9 @@ export class GCMSFetchDriver implements GCMSClientDriver {
     }
 
     performRawRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string | FormData,
-    ): GCMSRestClientResponse<string> {
+    ): GCMSRestClientRequest<string> {
         return this.prepareRequest(request, (fullUrl) => {
             return {
                 method: request.method,
@@ -105,9 +105,9 @@ export class GCMSFetchDriver implements GCMSClientDriver {
     }
 
     performDownloadRequest(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         body?: string | FormData,
-    ): GCMSRestClientResponse<Blob> {
+    ): GCMSRestClientRequest<Blob> {
         return this.prepareRequest(request, (fullUrl) => {
             return {
                 method: request.method,
@@ -119,10 +119,10 @@ export class GCMSFetchDriver implements GCMSClientDriver {
     }
 
     private prepareRequest<T>(
-        request: GCMSRestClientRequest,
+        request: GCMSRestClientRequestData,
         fn: (fullUrl: string) => RequestInfo,
         handler: (res: Response) => Promise<T>,
-    ): GCMSRestClientResponse<T> {
+    ): GCMSRestClientRequest<T> {
         let fullUrl = request.url;
         if (request.params) {
             const q = new URLSearchParams();

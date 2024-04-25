@@ -47,37 +47,44 @@ export class ServerOverviewComponent implements OnInit {
         this.loading = true;
 
         Promise.all([
-            this.api.server.info().then(info => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.server.info().send().then(info => {
                 this.serverInfo = info;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.server.config().then(config => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.server.config().send().then(config => {
                 this.serverConfig = config;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.server.status().then(status => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.server.status().send().then(status => {
                 this.serverStatus = status;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.coordinator.config().then(config => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.coordinator.config().send().then(config => {
                 this.coordConfig = config;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.coordinator.master().then(master => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.coordinator.master().send().then(master => {
                 this.coordMaster = master;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.cluster.config().then(config => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.cluster.config().send().then(config => {
                 this.clusterConfig = config;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),
 
-            this.api.plugins.list().then(plugins => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.api.plugins.list().send().then(plugins => {
                 this.plugins = plugins.data;
                 this.changeDetector.markForCheck();
             }).catch(() => {}),

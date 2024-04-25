@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -58,7 +59,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(project: string, familyUuid: string, uuid: string, params?: TagLoadOptions): Promise<TagResponse> {
         try {
-            const res = await this.mesh.tags.get(project, familyUuid, uuid, params);
+            const res = await this.mesh.tags.get(project, familyUuid, uuid, params).send();
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -72,7 +73,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(project: string, familyUuid: string, body: TagCreateRequest): Promise<TagResponse> {
         try {
-            const res = await this.mesh.tags.create(project, familyUuid, body);
+            const res = await this.mesh.tags.create(project, familyUuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_tag_success',
@@ -93,7 +94,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(project: string, familyUuid: string, uuid: string, body: TagUpdateRequest): Promise<TagResponse> {
         try {
-            const res = await this.mesh.tags.update(project, familyUuid, uuid, body);
+            const res = await this.mesh.tags.update(project, familyUuid, uuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_tag_success',
@@ -114,7 +115,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(project: string, familyUuid: string, uuid: string): Promise<void> {
         try {
-            await this.mesh.tags.delete(project, familyUuid, uuid);
+            await this.mesh.tags.delete(project, familyUuid, uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -131,7 +132,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(project: string, familyUuid: string, params?: TagListOptions): Promise<TagListResponse> {
         try {
-            const res = await this.mesh.tags.list(project, familyUuid, params);
+            const res = await this.mesh.tags.list(project, familyUuid, params).send();
             for (const tag of res.data) {
                 this.nameMap[tag.uuid] = tag.name;
             }
@@ -152,6 +153,6 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public nodes(project: string, familyUuid: string, uuid: string, params?: TagNodeListOptions): Promise<NodeListResponse> {
-        return this.mesh.tags.nodes(project, familyUuid, uuid, params);
+        return this.mesh.tags.nodes(project, familyUuid, uuid, params).send();
     }
 }

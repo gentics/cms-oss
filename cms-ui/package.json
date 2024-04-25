@@ -2,6 +2,7 @@
   "name": "@gentics/root",
   "version": "6.1.0-SNAPSHOT",
   "description": "Monorepo for all UIs and Libraries related to the Gentics CMS",
+  "license": "Apache-2.0",
   "private": true,
   "engines": {
     "npm": "^10.5.0",
@@ -16,6 +17,7 @@
     "start": "nx serve",
     "serve": "nx serve",
     "build": "nx build",
+    "lint": "nx lint",
     "test": "node tools/ng-test-runner --watch=false",
     "test:watch": "node tools/ng-test-runner --watch=true",
     "e2e": "nx e2e",
@@ -23,7 +25,8 @@
     "compile:ui-core-docs": "tsc ./apps/ui-core-docs/compile-docs.ts",
     "generate:ui-core-docs": "node ./apps/ui-core-docs/compile-docs.js",
     "report:list": "npm list --prod --json > target/dependencies.json",
-    "report:outdated": "npm outdated --json --long > target/outdated.json || true"
+    "report:outdated": "npm outdated --json --long > target/outdated.json || true",
+    "publish": "nx release publish"
   },
   "husky": {
     "hooks": {
@@ -73,7 +76,6 @@
       "email": "d.decker@gentics.com"
     }
   ],
-  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "@angular/animations": "16.2.12",
     "@angular/common": "16.2.12",
@@ -133,18 +135,24 @@
     "@angular-devkit/build-angular": "16.2.14",
     "@angular-devkit/core": "16.2.14",
     "@angular-devkit/schematics": "16.2.14",
-    "@angular-eslint/eslint-plugin": "16.0.3",
+    "@angular-eslint/eslint-plugin": "^16.3.1",
+    "@angular-eslint/eslint-plugin-template": "^16.3.1",
+    "@angular-eslint/template-parser": "^16.3.1",
     "@angular/cli": "16.2.14",
     "@angular/compiler-cli": "16.2.12",
     "@angular/language-service": "16.2.12",
     "@cypress/schematic": "^2.5.0",
     "@cypress/webpack-dev-server": "^2.0.0",
+    "@gentics/mesh-models": "^2.1.0",
+    "@gentics/mesh-rest-client": "^2.1.0",
+    "@gentics/mesh-rest-client-angular": "^2.1.0",
     "@nx/angular": "16.10.0",
     "@nx/cypress": "16.10.0",
     "@nx/devkit": "16.10.0",
     "@nx/eslint-plugin": "16.10.0",
     "@nx/jest": "16.10.0",
     "@nx/js": "16.10.0",
+    "@nx/linter": "^16.10.0",
     "@nx/node": "16.10.0",
     "@nx/web": "16.10.0",
     "@nx/workspace": "16.10.0",
@@ -156,7 +164,7 @@
     "@types/jasmine": "4.0.3",
     "@types/jest": "29.4.4",
     "@types/jquery": "^3.5.19",
-    "@types/lodash-es": "^4.17.3",
+    "@types/lodash-es": "^4.17.0",
     "@types/marked": "^4.0.8",
     "@types/mousetrap": "^1.6.3",
     "@types/node": "^16.18.11",

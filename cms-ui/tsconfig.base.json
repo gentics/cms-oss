@@ -93,15 +93,6 @@
             "@gentics/image-editor": [
                 "libs/image-editor/src/public-api"
             ],
-            "@gentics/mesh-models": [
-                "libs/mesh-models/src/public-api"
-            ],
-            "@gentics/mesh-rest-client": [
-                "libs/mesh-rest-client/src/public-api"
-            ],
-            "@gentics/mesh-rest-client-angular": [
-                "libs/mesh-rest-client-angular/src/public-api"
-            ],
             "@gentics/ui-core": [
                 "libs/ui-core/src/public-api"
             ]

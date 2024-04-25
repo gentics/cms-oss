@@ -3,6 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "apps/ct-link-checker-e2e/src",
     "projectType": "application",
+    "tags": ["e2e"],
     "targets": {
         "e2e": {
             "executor": "@nx/cypress:cypress",
@@ -28,7 +29,5 @@
                 "lintFilePatterns": ["apps/ct-link-checker-e2e/**/*.{js,ts}"]
             }
         }
-    },
-    "tags": [],
-    "implicitDependencies": ["ct-link-checker"]
+    }
 }

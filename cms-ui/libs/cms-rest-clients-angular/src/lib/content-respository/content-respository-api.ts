@@ -18,7 +18,7 @@ import {
     TagmapEntryUpdateRequest,
     TagmapEntryUpdateResponse,
 } from '@gentics/cms-models';
-import { LoginResponse } from '@gentics/mesh-models';
+import type { LoginResponse } from '@gentics/mesh-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiBase } from '../base/api-base.service';

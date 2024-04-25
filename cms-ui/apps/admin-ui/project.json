@@ -4,15 +4,6 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/admin-ui/src",
-    "implicitDependencies": [
-        "cms-components",
-        "cms-models",
-        "cms-rest-clients-angular",
-        "mesh-models",
-        "mesh-rest-client",
-        "mesh-rest-client-angular",
-        "ui-core"
-    ],
     "tags": ["app", "ui", "angular"],
     "targets": {
         "build": {
@@ -25,8 +16,11 @@
                 "polyfills": ["apps/admin-ui/src/polyfills.ts"],
                 "tsConfig": "apps/admin-ui/tsconfig.app.json",
                 "assets": [
-                    "apps/admin-ui/src/favicon.ico",
-                    "apps/admin-ui/src/assets"
+                    {
+                        "glob": "**/*",
+                        "input": "apps/admin-ui/src/assets",
+                        "output": "assets"
+                    }
                 ],
                 "styles": ["apps/admin-ui/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {

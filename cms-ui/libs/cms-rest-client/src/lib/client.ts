@@ -34,8 +34,8 @@ import {
     GCMSPolicyMapAPI,
     GCMSRestClientConfig,
     GCMSRestClientInterceptorData,
+    GCMSRestClientRequestData,
     GCMSRestClientRequest,
-    GCMSRestClientResponse,
     GCMSRoleAPI,
     GCMSScheduleTaskAPI,
     GCMSSchedulerAPI,
@@ -68,7 +68,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         path: string,
         queryParams: Record<string, any>,
         requestHeaders: Record<string, string>,
-    ): GCMSRestClientRequest {
+    ): GCMSRestClientRequestData {
         let buildPath = '';
 
         if (this.config.connection.basePath) {
@@ -144,7 +144,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         path: string,
         body?: null | any,
         queryParams?: Record<string, any>,
-    ): GCMSRestClientResponse<T> {
+    ): GCMSRestClientRequest<T> {
         const headers: Record<string, string> = {
             [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
         };
@@ -163,7 +163,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         path: string,
         body?: null | FormData,
         queryParams?: Record<string, any>,
-    ): GCMSRestClientResponse<T> {
+    ): GCMSRestClientRequest<T> {
         const req = this.prepareRequest(method, path, queryParams, {});
 
         return this.driver.performMappedRequest<T>(req, body);
@@ -175,7 +175,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         headers: Record<string, string> = {},
         body: null | any = null,
         queryParams: Record<string, any> = {},
-    ): GCMSRestClientResponse<string> {
+    ): GCMSRestClientRequest<string> {
         const req = this.prepareRequest(method, path, queryParams, headers);
 
         return this.driver.performRawRequest(req, body);
@@ -187,7 +187,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         headers: Record<string, string> = {},
         body: null | any = null,
         queryParams: Record<string, any> = {},
-    ): GCMSRestClientResponse<Blob> {
+    ): GCMSRestClientRequest<Blob> {
         const req = this.prepareRequest(method, path, queryParams, headers);
 
         return this.driver.performDownloadRequest(req, body);

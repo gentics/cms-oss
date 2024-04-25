@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
@@ -44,7 +45,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async get(uuid: string, params?: RoleLoadOptions): Promise<RoleResponse> {
         try {
-            const res = await this.mesh.roles.get(uuid, params);
+            const res = await this.mesh.roles.get(uuid, params).send();
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -58,7 +59,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async create(body: RoleCreateRequest): Promise<RoleResponse> {
         try {
-            const res = await this.mesh.roles.create(body);
+            const res = await this.mesh.roles.create(body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_role_success',
@@ -79,7 +80,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async update(uuid: string, body: RoleUpdateRequest): Promise<RoleResponse> {
         try {
-            const res = await this.mesh.roles.update(uuid, body);
+            const res = await this.mesh.roles.update(uuid, body).send();
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_role_success',
@@ -100,7 +101,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.roles.delete(uuid);
+            await this.mesh.roles.delete(uuid).send();
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -117,7 +118,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async list(params?: RoleListOptions): Promise<RoleListResponse> {
         try {
-            const res = await this.mesh.roles.list(params);
+            const res = await this.mesh.roles.list(params).send();
             for (const role of res.data) {
                 this.nameMap[role.uuid] = role.name
             }

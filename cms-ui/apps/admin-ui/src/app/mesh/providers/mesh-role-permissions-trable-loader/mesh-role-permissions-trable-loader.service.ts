@@ -274,6 +274,7 @@ export class MeshRolePermissionsTrableLoaderService
     protected loadNodeChildren(parent: MeshNodeBO, options: MeshRolePermissionsTrableLoaderOptions): Observable<MeshNodeBO[]> {
         const project = parent[MBO_PROJECT_CONTEXT];
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         return from(this.mesh.graphql(project, {
             query: `
 query($parent: String, $role: String!) {
@@ -304,7 +305,7 @@ query($parent: String, $role: String!) {
                 parent: parent.uuid,
                 role: options.role,
             },
-        })).pipe(
+        }).send()).pipe(
             map(res => {
                 const children = res.data?.node?.children ?? {};
                 const nodes: NodeResponse[] = children?.elements ?? [];

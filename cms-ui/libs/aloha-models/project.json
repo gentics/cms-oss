@@ -3,8 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/aloha-models/src",
     "projectType": "library",
-    "tags": ["lib", "models"],
-    "implicitDependencies": [],
+    "tags": ["lib", "models", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/js:tsc",
@@ -22,14 +21,13 @@
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [
-                    "libs/aloha-models/**/*.ts",
-                    "libs/aloha-models/package.json"
+                    "libs/aloha-models/**/*.ts"
                 ]
             }
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/libs/aloha-models"],
             "options": {
                 "jestConfig": "libs/aloha-models/jest.config.ts",
                 "passWithNoTests": true
@@ -39,6 +37,12 @@
                     "ci": true,
                     "codeCoverage": true
                 }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/aloha-models"
             }
         }
     }

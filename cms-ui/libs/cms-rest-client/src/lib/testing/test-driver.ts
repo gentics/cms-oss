@@ -1,4 +1,4 @@
-import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse } from '../models';
+import { GCMSClientDriver, GCMSRestClientRequestData, GCMSRestClientRequest } from '../models';
 import { Responder, TestRequest } from './test-models';
 
 export const DEFAULT_RESPONDER: Responder = () => Promise.resolve(null);
@@ -26,7 +26,7 @@ export class TestDriver implements GCMSClientDriver {
         }
     }
 
-    protected handleRequest(request: GCMSRestClientRequest, body?: any): GCMSRestClientResponse<any> {
+    protected handleRequest(request: GCMSRestClientRequestData, body?: any): GCMSRestClientRequest<any> {
         const testReq: TestRequest = {
             ...request,
             body,
@@ -40,15 +40,15 @@ export class TestDriver implements GCMSClientDriver {
         };
     }
 
-    performMappedRequest<T>(request: GCMSRestClientRequest, body?: string | FormData): GCMSRestClientResponse<T> {
+    performMappedRequest<T>(request: GCMSRestClientRequestData, body?: string | FormData): GCMSRestClientRequest<T> {
         return this.handleRequest(request, body);
     }
 
-    performRawRequest(request: GCMSRestClientRequest, body?: string | FormData): GCMSRestClientResponse<string> {
+    performRawRequest(request: GCMSRestClientRequestData, body?: string | FormData): GCMSRestClientRequest<string> {
         return this.handleRequest(request, body);
     }
 
-    performDownloadRequest(request: GCMSRestClientRequest, body?: string | FormData): GCMSRestClientResponse<Blob> {
+    performDownloadRequest(request: GCMSRestClientRequestData, body?: string | FormData): GCMSRestClientRequest<Blob> {
         return this.handleRequest(request, body);
     }
 }

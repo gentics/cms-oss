@@ -4,18 +4,6 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/editor-ui/src",
-    "implicitDependencies": [
-        "aloha-models",
-        "cms-components",
-        "cms-integration-api-models",
-        "cms-models",
-        "cms-rest-clients-angular",
-        "cms-rest-client-angular",
-        "form-generator",
-        "image-editor",
-        "mesh-models",
-        "ui-core"
-    ],
     "tags": ["app", "ui", "angular"],
     "targets": {
         "build": {
@@ -31,8 +19,11 @@
                 "polyfills": ["apps/editor-ui/src/polyfills.ts"],
                 "tsConfig": "apps/editor-ui/tsconfig.app.json",
                 "assets": [
-                    "apps/editor-ui/src/favicon.ico",
-                    "apps/editor-ui/src/assets"
+                    {
+                        "glob": "**/*",
+                        "input": "apps/editor-ui/src/assets",
+                        "output": "assets"
+                    }
                 ],
                 "styles": ["apps/editor-ui/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {

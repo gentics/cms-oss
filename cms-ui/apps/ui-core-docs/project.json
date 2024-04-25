@@ -4,7 +4,6 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/ui-core-docs/src",
-    "implicitDependencies": ["ui-core"],
     "tags": ["app", "docs", "demo", "angular"],
     "targets": {
         "build": {
@@ -99,7 +98,7 @@
         },
         "test": {
             "executor": "@angular-builders/custom-webpack:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": ["{workspaceRoot}/coverage/apps/ui-core-docs"],
             "options": {
                 "customWebpackConfig": {
                     "path": "apps/ui-core-docs/webpack.partial.js"

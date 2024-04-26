@@ -109,7 +109,7 @@ spec:
 
                 script {
                     def mvnGoal       = "package"
-                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
+                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()

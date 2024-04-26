@@ -238,7 +238,7 @@
                         </configuration>
                     </execution>
 
-                    <execution>
+                    <!-- <execution>
                         <?m2e ignore?>
                         <id>npm publish</id>
                         <goals>
@@ -259,7 +259,7 @@
                                 </exec>
                             </target>
                         </configuration>
-                    </execution>
+                    </execution> -->
                 </executions>
             </plugin>
 

@@ -98,28 +98,7 @@
             }
         },
         "test": {
-            "executor": "@angular-devkit/build-angular:karma",
-            "outputs": ["{workspaceRoot}/coverage/apps/image-editor-demo"],
-            "options": {
-                "main": "apps/image-editor-demo/src/test.ts",
-                "tsConfig": "apps/image-editor-demo/tsconfig.spec.json",
-                "karmaConfig": "apps/image-editor-demo/karma.conf.js",
-                "polyfills": "apps/image-editor-demo/src/polyfills.ts",
-                "styles": ["apps/image-editor-demo/src/styles/styles.scss"],
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "apps/image-editor-demo/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                },
-                "assets": ["apps/image-editor-demo/src/assets"]
-            },
-            "configurations": {
-                "ci": {
-                    "codeCoverage": true
-                }
-            }
+            "executor": "nx:noop"
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

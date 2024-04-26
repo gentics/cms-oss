@@ -1,12 +1,12 @@
 
-import { GCMSRestClientRequest } from '@gentics/cms-rest-client';
+import { GCMSRestClientRequestData } from '@gentics/cms-rest-client';
 import { TestDriver, TestRequest } from '@gentics/cms-rest-client/testing';
 import { from } from 'rxjs';
-import { NGGCMSRestClientResponse } from '../models';
+import { NGGCMSRestClientRequest } from '../models';
 
 export class AngularTestDriver extends TestDriver {
 
-    protected override handleRequest(request: GCMSRestClientRequest, body?: any): NGGCMSRestClientResponse<any> {
+    protected override handleRequest(request: GCMSRestClientRequestData, body?: any): NGGCMSRestClientRequest<any> {
         const testReq: TestRequest = {
             ...request,
             body,

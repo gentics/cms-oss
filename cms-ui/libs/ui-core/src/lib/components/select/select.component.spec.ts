@@ -11,6 +11,7 @@ import { SelectOptionGroupDirective } from '../../directives/select-option-group
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { componentTest } from '../../testing';
 import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
@@ -46,6 +47,7 @@ describe('SelectComponent', () => {
             ],
             providers: [
                 OverlayHostService,
+                SizeTrackerService,
                 { provide: ConfigService, useValue: defaultConfig },
             ],
             teardown: { destroyAfterEach: false },

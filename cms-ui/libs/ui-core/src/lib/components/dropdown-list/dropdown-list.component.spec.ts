@@ -6,8 +6,9 @@ import { KeyCode } from '../../common/keycodes';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { componentTest } from '../../testing';
-import { crossBrowserInitKeyboardEvent, KeyboardEventConfig } from '../../testing/keyboard-event';
+import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
@@ -32,6 +33,7 @@ describe('DropdownList Component', () => {
             ],
             providers: [
                 OverlayHostService,
+                SizeTrackerService,
                 { provide: ConfigService, useValue: defaultConfig },
             ],
             teardown: { destroyAfterEach: false },

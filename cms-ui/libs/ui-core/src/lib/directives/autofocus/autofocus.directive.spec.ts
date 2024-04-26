@@ -26,6 +26,7 @@ import { componentTest } from '../../testing';
 import { DropdownTriggerDirective } from '../dropdown-trigger/dropdown-trigger.directive';
 import { IconDirective } from '../icon/icon.directive';
 import { AutofocusDirective } from './autofocus.directive';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 
 describe('Autofocus Directive', () => {
 
@@ -57,6 +58,7 @@ describe('Autofocus Directive', () => {
             providers: [
                 ModalService,
                 OverlayHostService,
+                SizeTrackerService,
                 { provide: UserAgentProvider, useClass: MockUserAgentRef },
             ],
             teardown: { destroyAfterEach: false },

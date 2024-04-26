@@ -1,3 +1,4 @@
+import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import {OverlayHostService} from './overlay-host.service';
 
 let overlayHostService: OverlayHostService;
@@ -6,7 +7,7 @@ const dummyHostView: any = 'dummy_hostview';
 describe('OverlayHostService:', () => {
 
     beforeEach(() => {
-        overlayHostService = new OverlayHostService(undefined as any);
+        overlayHostService = new OverlayHostService(new SizeTrackerService());
     });
 
     describe('getHostView()', () => {
@@ -16,38 +17,38 @@ describe('OverlayHostService:', () => {
 
         it('should resolve immediately if view is already registered', (done) => {
             overlayHostService.registerHostView(dummyHostView);
-            let promise = overlayHostService.getHostView();
+            const promise = overlayHostService.getHostView();
             promise.then(
                 (val: any) => {
                     expect(val).toBe(dummyHostView);
                     done();
                 },
-                error => done.fail(error)
+                error => done.fail(error),
             );
         });
 
         it('should resolve when the view is registered later', (done) => {
-            let promise = overlayHostService.getHostView();
+            const promise = overlayHostService.getHostView();
             promise.then(
                 (val: any) => {
                     expect(val).toBe(dummyHostView);
                     done();
                 },
-                error => done.fail(error)
+                error => done.fail(error),
             );
             overlayHostService.registerHostView(dummyHostView);
         });
 
         it('should resolve multiple consumers', (done) => {
-            let promise1 = overlayHostService.getHostView();
-            let promise2 = overlayHostService.getHostView();
+            const promise1 = overlayHostService.getHostView();
+            const promise2 = overlayHostService.getHostView();
             Promise.all([promise1, promise2]).then(
                 (results: any[]) => {
                     expect(results[0]).toBe(dummyHostView);
                     expect(results[1]).toBe(dummyHostView);
                     done();
                 },
-                error => done.fail(error)
+                error => done.fail(error),
             );
             overlayHostService.registerHostView(dummyHostView);
         });

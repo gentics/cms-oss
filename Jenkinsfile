@@ -154,7 +154,7 @@ spec:
                             }
                         }
                     } else {
-                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
+                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests -Dui.skip.test -Dui.skip.e2e"
                         runJUnitTests = false
                     }
 

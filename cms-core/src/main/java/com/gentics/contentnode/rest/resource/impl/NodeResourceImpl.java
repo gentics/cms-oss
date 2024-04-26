@@ -2160,6 +2160,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				}
 
 				Node node = getNode(nodeId, ObjectPermission.view);
+				if (node.isChannel()) {
+					throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels"))
+							.setStatus(Status.BAD_REQUEST);
+				}
 				String message = NodeCopyQueueEntry.copy(node, request);
 
 				trx.success();

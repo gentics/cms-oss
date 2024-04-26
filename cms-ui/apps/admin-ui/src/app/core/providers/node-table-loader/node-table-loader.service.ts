@@ -21,8 +21,16 @@ export class NodeTableLoaderService extends BaseTableLoaderService<Node, NodeBO>
         super('node', entityManager, appState);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public canDelete(entityId: string | number): Promise<boolean> {
         return Promise.resolve(true);
+    }
+
+    public isChannel(entity: Node<Raw>): boolean {
+        if (entity?.masterNodeId !== entity?.id) {
+            return true;
+        }
+        return false;
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {

@@ -1,0 +1,3 @@
+The usage of the @GCN-JS-API@ inside of Aloha has been deprecated.
+
+Usage of the @GCMSUI@ Object (GCMSUI Bridge) is recommended instead where possible.

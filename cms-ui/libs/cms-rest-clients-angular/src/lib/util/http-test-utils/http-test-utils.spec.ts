@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { FolderResponse } from '@gentics/cms-models';
+import { FolderResponse, ResponseCode } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { API_BASE_URL, expectOneRequest, respondTo } from './http-test-utils';
 
@@ -273,7 +273,7 @@ function assembleFolderResponse(): FolderResponse {
     return {
         folder: getExampleFolderData(),
         responseInfo: {
-            responseCode: 'OK'
+            responseCode: ResponseCode.OK
         }
     };
 }

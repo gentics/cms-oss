@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, PageTagTagPartProperty, TagPart, TagPartType, TagPropertyType, TemplateTagTagPartProperty } from '@gentics/cms-models';
+import { EditableTag, PageTagTagPartProperty, ResponseCode, TagPart, TagPartType, TagPropertyType, TemplateTagTagPartProperty } from '@gentics/cms-models';
 import { getExamplePageData, getExampleTemplateData } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
@@ -154,7 +154,7 @@ describe('TagRefTagPropertyEditor', () => {
                                     type: 'CRITICAL',
                                 } ],
                                 responseInfo: {
-                                    responseCode: 'NOTFOUND',
+                                    responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: 'The specified page was not found.',
                                 },
                             }),
@@ -164,7 +164,7 @@ describe('TagRefTagPropertyEditor', () => {
                                     type: 'CRITICAL',
                                 } ],
                                 responseInfo: {
-                                    responseCode: 'NOTFOUND',
+                                    responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: 'The specified page was not found.',
                                 },
                             }),
@@ -179,7 +179,7 @@ describe('TagRefTagPropertyEditor', () => {
                                 type: 'CRITICAL',
                             } ],
                             responseInfo: {
-                                responseCode: 'NOTFOUND',
+                                responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'The specified page was not found.',
                             },
                         }),
@@ -208,7 +208,7 @@ describe('TagRefTagPropertyEditor', () => {
                                     type: 'WARNING',
                                 } ],
                                 responseInfo: {
-                                    responseCode: 'NOTFOUND',
+                                    responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
                                 },
                             }),
@@ -218,7 +218,7 @@ describe('TagRefTagPropertyEditor', () => {
                                     type: 'WARNING',
                                 } ],
                                 responseInfo: {
-                                    responseCode: 'NOTFOUND',
+                                    responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
                                 },
                             }),
@@ -233,7 +233,7 @@ describe('TagRefTagPropertyEditor', () => {
                                 type: 'WARNING',
                             } ],
                             responseInfo: {
-                                responseCode: 'NOTFOUND',
+                                responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
                             },
                         }),

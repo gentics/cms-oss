@@ -67,7 +67,7 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import {  TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType } from '@gentics/cms-models';
+import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
@@ -300,7 +300,7 @@ class MockClient {
             messages: [],
             numItems: 26,
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
                 responseMessage: 'Successfully loaded subfolders',
             },
             folders: [
@@ -338,7 +338,7 @@ class MockClient {
             messages: [],
             numItems: 0,
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
                 responseMessage: 'Successfully loaded templates',
             },
         }),
@@ -348,7 +348,7 @@ class MockClient {
             messages: [],
             numItems: 0,
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
                 responseMessage: 'Successfully loaded breadcrumb',
             },
         }),

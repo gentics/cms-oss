@@ -1,4 +1,4 @@
-import { ContentRepositoryCreateRequest, ContentRepositoryType, ContentRepositoryUpdateRequest } from '@gentics/cms-models';
+import { ContentRepositoryCreateRequest, ContentRepositoryPasswordType, ContentRepositoryType, ContentRepositoryUpdateRequest } from '@gentics/cms-models';
 import { MockApiBase } from '../base/api-base.mock';
 import { ContentrespositoryApi } from './content-respository-api';
 
@@ -32,6 +32,8 @@ describe('ContentRepositoryApi', () => {
             crType: ContentRepositoryType.MESH,
             dbType: 'mysql',
             username: 'root',
+            passwordType: ContentRepositoryPasswordType.NONE,
+            passwordProperty: '',
             url: 'jdbc:mariadb://db:3306/contentRepository',
             basepath: '',
             instantPublishing: true,

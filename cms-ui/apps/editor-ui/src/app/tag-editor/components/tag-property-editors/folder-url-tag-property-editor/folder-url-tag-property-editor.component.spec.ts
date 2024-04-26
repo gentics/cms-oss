@@ -8,6 +8,7 @@ import {
     EditableTag,
     FolderResponse,
     FolderTagPartProperty,
+    ResponseCode,
     TagPart,
     TagPartType,
     TagPropertyType,
@@ -171,7 +172,7 @@ describe('FolderUrlTagPropertyEditor', () => {
                             type: 'CRITICAL',
                         } ],
                         responseInfo: {
-                            responseCode: 'NOTFOUND',
+                            responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified folder was not found.',
                         },
                     });
@@ -184,7 +185,7 @@ describe('FolderUrlTagPropertyEditor', () => {
                         type: 'CRITICAL',
                     } ],
                     responseInfo: {
-                        responseCode: 'NOTFOUND',
+                        responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'The specified folder was not found.',
                     },
                 });

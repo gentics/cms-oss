@@ -12,6 +12,7 @@ import {
     FolderResponse,
     ImageResponse,
     ImageTagPartProperty,
+    ResponseCode,
     TagPart,
     TagPartType,
     TagPropertyType,
@@ -224,7 +225,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                                 type: 'CRITICAL',
                             } ],
                             responseInfo: {
-                                responseCode: 'NOTFOUND',
+                                responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'File with ID 4712 does not exist.',
                             },
                         });
@@ -246,7 +247,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                                 type: 'CRITICAL',
                             } ],
                             responseInfo: {
-                                responseCode: 'NOTFOUND',
+                                responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'The specified image was not found.',
                             },
                         });

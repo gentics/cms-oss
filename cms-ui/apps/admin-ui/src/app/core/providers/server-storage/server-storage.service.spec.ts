@@ -151,7 +151,7 @@ describe('ServerStorage', () => {
 
         it('saves specific user data to the API if not marked as unsupported', fakeAsync(() => {
             api.userData.setKey = jasmine.createSpy('setKey')
-                .and.returnValue(of({ responseInfo: { responseCode: 'OK' } }));
+                .and.returnValue(of({ responseInfo: { responseCode: ResponseCode.OK } }));
 
             expect(serverStorage.supported).toBe('unknown');
 

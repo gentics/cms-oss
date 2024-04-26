@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, FolderResponse, PageResponse, PageTagPartProperty, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import { EditableTag, FolderResponse, PageResponse, PageTagPartProperty, ResponseCode, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -166,7 +166,7 @@ describe('PageUrlTagPropertyEditor', () => {
                             type: 'CRITICAL',
                         } ],
                         responseInfo: {
-                            responseCode: 'NOTFOUND',
+                            responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified page was not found.',
                         },
                     });
@@ -179,7 +179,7 @@ describe('PageUrlTagPropertyEditor', () => {
                         type: 'CRITICAL',
                     } ],
                     responseInfo: {
-                        responseCode: 'NOTFOUND',
+                        responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'The specified page was not found.',
                     },
                 });

@@ -3,7 +3,7 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { Page, PageResponse } from '@gentics/cms-models';
+import { Page, PageResponse, ResponseCode } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
@@ -491,7 +491,7 @@ class MockApi {
 
     folders = {
         getItem: () => {
-            return of({ responseInfo: { responseCode: 'OK' }, page: this.pageSample } as PageResponse).pipe(delay(0));
+            return of({ responseInfo: { responseCode: ResponseCode.OK }, page: this.pageSample } as PageResponse).pipe(delay(0));
         },
     };
 }

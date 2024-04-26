@@ -255,7 +255,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run publish -- -p ${project.artifactId}" />
+                                    <arg line="run publish &dash;&dash; -p ${project.artifactId}" />
                                 </exec>
                             </target>
                         </configuration>

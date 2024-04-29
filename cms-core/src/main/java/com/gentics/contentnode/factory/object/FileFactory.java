@@ -2144,7 +2144,7 @@ public class FileFactory extends AbstractFactory {
 			ActionLogger.logCmd(ActionLogger.EDIT, File.TYPE_FILE, file.getId(), file.getFolder().getId(), "cmd_file_data-java");
 
 			// If this is an image and if its content has been updated we have to load it and check its attributes
-			if (file.isImage()) {
+			if (file.isImage() && !org.apache.commons.lang3.StringUtils.startsWith(file.getFiletype(), "image/webp")) {
 				// Load image dimentions, if possible
 				Point dim;
 				try (InputStream detect = fileFactory.loadFileContents(file)) {

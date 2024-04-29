@@ -3,7 +3,7 @@
   "version": "6.1.0",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/mesh-models": "^2.1.0-SNAPSHOT",
+    "@gentics/mesh-models": "^2.1.0",
     "elastic-types": "^0.1.5"
   },
   "optionalDependencies": {

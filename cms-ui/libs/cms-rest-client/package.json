@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@gentics/cms-models": "^6.1.0",
-    "@gentics/mesh-models": "^6.1.0"
+    "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

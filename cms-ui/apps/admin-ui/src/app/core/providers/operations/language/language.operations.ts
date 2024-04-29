@@ -1,7 +1,16 @@
 import { UpdateEntities } from '@admin-ui/state/entity/entity.actions';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { Injectable, Injector } from '@angular/core';
-import { GcmsUiLanguage, I18nLanguage, Language, LanguageCreateRequest, LanguageResponse, LanguageUpdateRequest, Response } from '@gentics/cms-models';
+import {
+    GcmsUiLanguage,
+    I18nLanguage,
+    ItemDeleteResponse,
+    Language,
+    LanguageCreateRequest,
+    LanguageResponse,
+    LanguageUpdateRequest,
+    Response,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
@@ -38,20 +47,20 @@ export class LanguageOperations extends ExtendedEntityOperationsBase<'language'>
      * Create the `Language`
      */
     createLanguage(language: LanguageCreateRequest, notification: boolean = true): Observable<Language> {
-       return this.api.language.createLanguage(language).pipe(
-           map((response: LanguageResponse) => response.language),
-           tap((language: Language) => {
-               this.entityManager.addEntity(this.entityIdentifier, language);
-               if (notification) {
-                   this.notification.show({
-                       type: 'success',
-                       message: 'shared.item_created',
-                       translationParams: { name: language.name },
-                   });
-               }
-           }),
-           this.catchAndRethrowError(),
-       );
+        return this.api.language.createLanguage(language).pipe(
+            map((response: LanguageResponse) => response.language),
+            tap((language: Language) => {
+                this.entityManager.addEntity(this.entityIdentifier, language);
+                if (notification) {
+                    this.notification.show({
+                        type: 'success',
+                        message: 'shared.item_created',
+                        translationParams: { name: language.name },
+                    });
+                }
+            }),
+            this.catchAndRethrowError(),
+        );
     }
 
     /**
@@ -104,6 +113,18 @@ export class LanguageOperations extends ExtendedEntityOperationsBase<'language'>
 
     setActiveUiLanguage(language: GcmsUiLanguage): Observable<Response> {
         return this.api.i18n.setActiveUiLanguage({ code: language }).pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+    unassignLanguage(nodeId: number, languageId: number): Observable<ItemDeleteResponse>{
+        return this.api.node.removeNodeLanguage(nodeId, languageId).pipe(
+            tap(response => {
+                this.notification.show({
+                    type: 'success',
+                    message: response.responseInfo.responseMessage,
+                });
+            }),
             this.catchAndRethrowError(),
         );
     }

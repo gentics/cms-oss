@@ -84,8 +84,12 @@
         "de": "Beim Zuweisen der CR-Fragmente zum ContentRepository ist ein Fehler aufgetreten"
     },
     "assign_languages_to_node": {
-        "en": "Assign Languages to Node",
+        "en": "Assign languages to Node",
         "de": "Sprachen zu Node hinzufügen"
+    },
+    "unassign_languages_from_node": {
+        "en": "Unassign language from Node",
+        "de": "Sprache von Node entfernen"
     },
     "assign_languages_to_node_title": {
         "en": "Assign languages to Node \"{{ entityName }}\"",

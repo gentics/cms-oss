@@ -75,6 +75,10 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
         return this.operations.deleteLanguage(Number(entityId)).toPromise();
     }
 
+    public unassignLanguageFromNode(nodeId: number, entityId: string | number): void {
+        this.operations.unassignLanguage(nodeId, Number(entityId)).toPromise();
+    }
+
     public mapToBusinessObject(lang: Language, index: number = -1): LanguageBO {
         return {
             ...lang,

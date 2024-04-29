@@ -13,8 +13,7 @@
     "@gentics/ui-core": "^6.1.0",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
-    "ngx-pagination": "^6.0.3",
-    "rxjs": "^6.6.0"
+    "ngx-pagination": "^6.0.3"
   },
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

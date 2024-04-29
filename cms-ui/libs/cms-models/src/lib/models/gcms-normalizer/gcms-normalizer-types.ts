@@ -159,4 +159,4 @@ export interface SingleNormalizationResult<T> extends NormalizationResult {
 /**
  * Normalizable entity's property `id` types.
  */
-export type EntityIdType = NormalizableEntityTypesMapBO<Normalized>[NormalizableEntityType]['id'];
+export type EntityIdType = string | number;

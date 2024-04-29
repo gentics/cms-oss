@@ -6,8 +6,18 @@
     "sourceRoot": "apps/ui-core-docs/src",
     "tags": ["app", "docs", "demo", "angular"],
     "targets": {
+        "compile": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/ui-core-docs",
+                "commands": [
+                    "ts-node --skipProject -O \"{\\\"strict\\\":false}\" ./compile-docs.ts"
+                ]
+            }
+        },
         "build": {
             "executor": "@nx/angular:webpack-browser",
+            "dependsOn": ["compile"],
             "outputs": ["{options.outputPath}"],
             "options": {
                 "customWebpackConfig": {

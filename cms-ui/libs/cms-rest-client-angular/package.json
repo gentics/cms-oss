@@ -9,8 +9,7 @@
   },
   "peerDependencies": {
     "@angular/common": "^16.0.0",
-    "@angular/core": "^16.0.0",
-    "rxjs": "^6.6.0"
+    "@angular/core": "^16.0.0"
   },
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

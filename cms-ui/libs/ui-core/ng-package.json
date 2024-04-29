@@ -13,7 +13,17 @@
       ]
     },
     "allowedNonPeerDependencies": [
+        "@bevacqua/rome",
         "@gentics/cms-integration-api-models",
-        "lodash-es"
+        "@types/sortablejs",
+        "foundation-sites",
+        "hammerjs",
+        "lodash-es",
+        "materialize-css",
+        "moment",
+        "moment-timezone",
+        "roboto-fontface-woff",
+        "sortablejs",
+        "tslib"
     ]
   }

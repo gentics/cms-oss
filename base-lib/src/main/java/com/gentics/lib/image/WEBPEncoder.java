@@ -2,7 +2,6 @@ package com.gentics.lib.image;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.lib.log.NodeLogger;
-import com.luciad.imageio.webp.WebPWriteParam;
 import org.jmage.ApplicationContext;
 import org.jmage.ImageRequest;
 import org.jmage.encoder.CodecException;
@@ -10,6 +9,7 @@ import org.jmage.encoder.ImageEncoder;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,7 +25,7 @@ public class WEBPEncoder implements ImageEncoder {
 	public final static String WEBP_QUALITY = "WEBP_QUALITY";
 	public final static String WEBP_LOSSLESS = "WEBP_LOSSLESS";
 
-	protected WebPWriteParam writeParams;
+	protected ImageWriteParam writeParams;
 
 	@Override
 	public boolean canHandle(ImageRequest imageRequest) {
@@ -39,7 +39,7 @@ public class WEBPEncoder implements ImageEncoder {
 		Double quality = ObjectTransformer.getDouble(request.getFilterChainProperties().getProperty(WEBP_QUALITY), null);
 		Boolean lossless = ObjectTransformer.getBoolean(request.getFilterChainProperties().getProperty(WEBP_LOSSLESS), null);
 
-		writeParams = (WebPWriteParam) ImageIO.getImageWritersByMIMEType("image/webp").next().getDefaultWriteParam();
+		writeParams = ImageIO.getImageWritersByMIMEType("image/webp").next().getDefaultWriteParam();
 
 		if (quality != null) {
 			writeParams.setCompressionQuality(quality.floatValue());

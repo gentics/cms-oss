@@ -1,30 +1,29 @@
 package com.gentics.contentnode.scheduler;
 
-import static com.gentics.contentnode.object.Folder.FileSearch;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.logger.LogCollector;
 import com.gentics.contentnode.logger.StringListAppender;
+import com.gentics.contentnode.object.Folder.FileSearch;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.layout.PatternLayout;
-
-import javax.imageio.ImageIO;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
+import com.sksamuel.scrimage.ImmutableImage;
+import com.sksamuel.scrimage.webp.WebpWriter;
 
 /**
  * Scheduler job to convert images to WebP format.
@@ -93,17 +92,16 @@ public class ConvertImagesJob {
 	 * @throws NodeException When the image cannot be converted or saved.
 	 */
 	private void convert(ImageFile image) throws NodeException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int oldFilesize = image.getFilesize();
 		String oldFilename = image.getName();
+		byte[] convertedData = null;
 
 		try (InputStream input = image.getFileStream()) {
-			ImageIO.write(ImageIO.read(input), "webp", baos);
+			ImmutableImage orig = ImmutableImage.loader().fromStream(input);
+			convertedData = orig.forWriter(WebpWriter.DEFAULT).bytes();
 		} catch (IOException e) {
 			throw new NodeException(e);
 		}
-
-		byte[] convertedData = baos.toByteArray();
 
 		image.setFileStream(new ByteArrayInputStream(convertedData));
 		image.setFilesize(convertedData.length);

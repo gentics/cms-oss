@@ -28,6 +28,7 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ActionLogEntryBO>> {
         const loadOptions = this.createDefaultOptions(options);
+        console.log('OBJECT FILTER IN SERVICE', options.filters?.object);
 
         return this.api.logs.getLogs(loadOptions).pipe(
             map(response => {

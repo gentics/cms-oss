@@ -65,6 +65,10 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     @Input()
     public renderers: { [columnId: string]: TemplateRef<any> } = {};
 
+    /** Filter columns which can be optionally rendered. */
+    @Input()
+    public filters: { [columnId: string]: TemplateRef<any> } = {};
+
     /** Event which emits when a clickable cell in a row has been clicked. */
     @Output()
     public rowClick = new EventEmitter<R>();

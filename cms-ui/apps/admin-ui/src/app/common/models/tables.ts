@@ -12,6 +12,8 @@ export interface TableLoadOptions {
     sortOrder?: TableSortOrder;
     /** The search query to filter results */
     query?: string;
+    /** The applied filters. */
+    filters?: Record<string, any>;
 }
 
 export interface TableLoadResponse<T> {

@@ -58,6 +58,9 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     @Input()
     public extraActions: TableAction<O>[] = [];
 
+    @Input()
+    public filters: Record<string, any> = {};
+
     @Output()
     public rowClick = new EventEmitter<TableRow<O>>();
 
@@ -182,6 +185,13 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         }
         this.query = newQuery;
         this.reload();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public applyFilterValue(field: string, value: any): void {
+        this.filters[field] = value;
+        // Reload the table with the new filter value
+        this.loadTrigger.next();
     }
 
     public updateSelection(newSelection: string[]): void {
@@ -310,6 +320,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             sortBy: sortValue,
             sortOrder: this.sortOrder,
             query: this.query,
+            filters: this.filters,
         };
     }
 

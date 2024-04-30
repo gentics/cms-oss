@@ -199,6 +199,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private masterFrameLoaded = false;
     private contentModifiedByExternalScript = false;
     private childFrameInitTimer: any;
+    private childFrameInitialized = false;
 
     // eslint-disable-next-line no-underscore-dangle
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
@@ -238,6 +239,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             if (this.childFrameInitTimer != null) {
                 window.clearTimeout(this.childFrameInitTimer);
             }
+            this.childFrameInitialized = true;
             return this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
         };
 
@@ -500,12 +502,16 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         masterFrame.addEventListener('load', () => {
             this.windowLoaded = true;
-            // Similiar to the error handler above, but with a timeout instead
-            this.childFrameInitTimer = window.setTimeout(() => {
-                console.warn('UI was not properly initialized in the Aloha-Page!');
+            if (!this.childFrameInitialized) {
+                // Similiar to the error handler above, but with a timeout instead
+                this.childFrameInitTimer = window.setTimeout(() => {
+                    console.warn('UI was not properly initialized in the Aloha-Page!');
+                    this.alohaWindowLoaded = true;
+                    this.changeDetector.markForCheck();
+                }, 10_000);
+            } else {
                 this.alohaWindowLoaded = true;
-                this.changeDetector.markForCheck();
-            }, 10_000);
+            }
             this.changeDetector.markForCheck();
         });
     }

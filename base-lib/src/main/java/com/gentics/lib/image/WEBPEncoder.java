@@ -37,6 +37,7 @@ public class WEBPEncoder implements ImageEncoder {
 	public void initialize(ImageRequest request) throws CodecException {
 		Double q = ObjectTransformer.getDouble(request.getFilterChainProperties().getProperty(WEBP_QUALITY), -1);
 		if (q >= 0.) {
+			q = q * 100;
 			quality = q.intValue();
 			quality = Math.min(100, quality);
 			quality = Math.max(0, quality);

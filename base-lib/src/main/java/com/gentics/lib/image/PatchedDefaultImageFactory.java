@@ -140,7 +140,7 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 			byte[] urlBytes = this.readFromUrl(url).toByteArray();
 			BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(urlBytes));
 
-			if (bufferedImage != null) {
+			if (bufferedImage == null) {
 				ImmutableImage image2 = ImmutableImage.loader().fromBytes(urlBytes);
 				if (image2 != null) {
 					bufferedImage = image2.awt();

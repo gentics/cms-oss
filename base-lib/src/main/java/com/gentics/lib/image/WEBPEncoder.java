@@ -1,19 +1,16 @@
 package com.gentics.lib.image;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.lib.log.NodeLogger;
+import java.io.IOException;
+
 import org.jmage.ApplicationContext;
 import org.jmage.ImageRequest;
 import org.jmage.encoder.CodecException;
 import org.jmage.encoder.ImageEncoder;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.lib.log.NodeLogger;
+import com.sksamuel.scrimage.ImmutableImage;
+import com.sksamuel.scrimage.webp.WebpWriter;
 
 /**
  * ImageEncoder to write WebP files with configurable quality.
@@ -25,7 +22,9 @@ public class WEBPEncoder implements ImageEncoder {
 	public final static String WEBP_QUALITY = "WEBP_QUALITY";
 	public final static String WEBP_LOSSLESS = "WEBP_LOSSLESS";
 
-	protected ImageWriteParam writeParams;
+	protected int quality = -1;
+
+	protected Boolean lossless;
 
 	@Override
 	public boolean canHandle(ImageRequest imageRequest) {
@@ -36,39 +35,35 @@ public class WEBPEncoder implements ImageEncoder {
 
 	@Override
 	public void initialize(ImageRequest request) throws CodecException {
-		Double quality = ObjectTransformer.getDouble(request.getFilterChainProperties().getProperty(WEBP_QUALITY), null);
-		Boolean lossless = ObjectTransformer.getBoolean(request.getFilterChainProperties().getProperty(WEBP_LOSSLESS), null);
-
-		writeParams = ImageIO.getImageWritersByMIMEType("image/webp").next().getDefaultWriteParam();
-
-		if (quality != null) {
-			writeParams.setCompressionQuality(quality.floatValue());
+		Double q = ObjectTransformer.getDouble(request.getFilterChainProperties().getProperty(WEBP_QUALITY), -1);
+		if (q >= 0.) {
+			quality = q.intValue();
+			quality = Math.min(100, quality);
+			quality = Math.max(0, quality);
 		}
 
-		if (lossless != null) {
-			writeParams.setCompressionType(lossless.booleanValue() ? "Lossless" : "Lossy");
-		}
+		lossless = ObjectTransformer.getBoolean(request.getFilterChainProperties().getProperty(WEBP_LOSSLESS), null);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Initialized %s WebP encoder with quality %f", writeParams.getCompressionType(), writeParams.getCompressionQuality()));
+			logger.debug(String.format("Initialized %s WebP encoder with quality %d", ObjectTransformer.getBoolean(lossless, false) ? "lossless" : "lossy", quality));
 		}
 	}
 
 	@Override
 	public byte[] createFrom(ImageRequest imageRequest) throws CodecException {
-		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-			ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(byteArrayOutputStream);
-			ImageWriter writer = ImageIO.getImageWritersByMIMEType("image/webp").next();
+		try {
+			WebpWriter writer = WebpWriter.DEFAULT.withZ(9);
+			if (lossless == Boolean.TRUE) {
+				writer = writer.withLossless();
+			}
+			if (quality >= 0) {
+				writer = writer.withQ(quality);
+			}
 
-			writer.setOutput(imageOutputStream);
-			writer.write(null, new IIOImage(imageRequest.getImage().getAsBufferedImage(), null, null), writeParams);
-
-			// Auto-closing broke the tests for some reason, so the imageOutputStream is closed manually.
-			imageOutputStream.close();
-
-			return byteArrayOutputStream.toByteArray();
+			ImmutableImage image = ImmutableImage.fromAwt(imageRequest.getImage().getAsBufferedImage());
+			return image.forWriter(writer).bytes();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new CodecException(e.getLocalizedMessage());
 		}
 	}
 

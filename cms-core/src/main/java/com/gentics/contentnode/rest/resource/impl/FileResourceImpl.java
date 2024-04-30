@@ -147,6 +147,8 @@ import com.gentics.contentnode.validation.validator.ValidationResult;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
+import com.sksamuel.scrimage.ImmutableImage;
+import com.sksamuel.scrimage.webp.WebpWriter;
 
 /**
  * Resource for loading and manipulating Files in GCN
@@ -871,14 +873,9 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			return inputStream;
 		}
 
-		BufferedImage source = ImageIO.read(inputStream);
-		ByteArrayOutputStream convertedData = new ByteArrayOutputStream();
-
-		ImageIO.write(source, "webp", convertedData);
-
+		ImmutableImage orig = ImmutableImage.loader().fromStream(inputStream);
 		mediaType.set("image/webp");
-
-		return new ByteArrayInputStream(convertedData.toByteArray());
+		return orig.forWriter(WebpWriter.DEFAULT).stream();
 	}
 
 	/**

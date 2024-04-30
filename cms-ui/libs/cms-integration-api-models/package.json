@@ -5,7 +5,8 @@
   "dependencies": {
     "@gentics/aloha-models": "^6.1.0",
     "@gentics/cms-models": "^6.1.0",
-    "@gentics/cms-rest-client": "^6.1.0"
+    "@gentics/cms-rest-client": "^6.1.0",
+    "@types/jquery": "^3.5.19"
   },
   "peerDependencies": {
     "rxjs": "^6.6.0"

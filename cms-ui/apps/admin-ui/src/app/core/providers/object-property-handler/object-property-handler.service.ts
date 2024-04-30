@@ -152,7 +152,7 @@ export class ObjectPropertyHandlerService
     }
 
     delete(id: string | number, params?: EntityDeleteRequestParams<EditableEntity.OBJECT_PROPERTY>): Observable<void> {
-        return this.api.objectPropertycategories.deleteObjectPropertyCategory(id).pipe(
+        return this.api.objectproperties.deleteObjectProperty(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
 

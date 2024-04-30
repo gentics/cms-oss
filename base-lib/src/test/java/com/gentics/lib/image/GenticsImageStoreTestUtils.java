@@ -17,6 +17,7 @@ import com.gentics.lib.image.GenticsImageStoreVariationTest.ResizeMode;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.fs.FileUtils;
+import com.sksamuel.scrimage.ImmutableImage;
 
 public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
@@ -42,9 +43,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 	 * @throws IOException
 	 */
 	public int[] getDimensions(InputStream imageFileStream) throws IOException {
-		BufferedImage img1 = ImageIO.read(imageFileStream);
-
-		return getDimensions(img1);
+		return getDimensions(getBufferedImage(imageFileStream));
 	}
 
 	/**
@@ -55,9 +54,41 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 	 * @throws IOException
 	 */
 	public int[] getDimensions(File imageFile) throws IOException {
-		BufferedImage img1 = ImageIO.read(imageFile);
+		return getDimensions(getBufferedImage(imageFile));
+	}
 
-		return getDimensions(img1);
+	/**
+	 * Get a {@link BufferedImage} instance from the given input stream
+	 * @param imageFileStream input stream
+	 * @return BufferedImage
+	 * @throws IOException
+	 */
+	public BufferedImage getBufferedImage(InputStream imageFileStream) throws IOException {
+		BufferedImage buffered = ImageIO.read(imageFileStream);
+		if (buffered == null) {
+			ImmutableImage immutable = ImmutableImage.loader().fromStream(imageFileStream);
+			if (immutable != null) {
+				buffered = immutable.awt();
+			}
+		}
+		return buffered;
+	}
+
+	/**
+	 * Get a {@link BufferedImage} instance from the given file
+	 * @param imageFile file
+	 * @return BufferedImage
+	 * @throws IOException
+	 */
+	public BufferedImage getBufferedImage(File imageFile) throws IOException {
+		BufferedImage buffered = ImageIO.read(imageFile);
+		if (buffered == null) {
+			ImmutableImage immutable = ImmutableImage.loader().fromFile(imageFile);
+			if (immutable != null) {
+				buffered = immutable.awt();
+			}
+		}
+		return buffered;
 	}
 
 	/**

@@ -3,7 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
-    "sourceRoot": "apps/cms-rest-client-angular/src",
+    "sourceRoot": "libs/cms-rest-client-angular/src",
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
@@ -26,7 +26,7 @@
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {
-                "packageRoot": "{workspaceRoot}/dist/apps/cms-rest-client-angular"
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-client-angular"
             }
         }
     }

@@ -445,8 +445,8 @@
 			<artifactId>imageio-psd</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.sejda.imageio</groupId>
-			<artifactId>webp-imageio</artifactId>
+			<groupId>com.sksamuel.scrimage</groupId>
+			<artifactId>scrimage-webp</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>

@@ -342,9 +342,9 @@
 				<version>${imageio.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.sejda.imageio</groupId>
-				<artifactId>webp-imageio</artifactId>
-				<version>${imageio.webp.version}</version>
+				<groupId>com.sksamuel.scrimage</groupId>
+				<artifactId>scrimage-webp</artifactId>
+				<version>${scrimage.webp.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.tika</groupId>

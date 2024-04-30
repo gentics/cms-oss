@@ -16,7 +16,7 @@
             "path": "./cypress/tsconfig.json"
         }
     ],
-    "extends": "../../tsconfig.base.json",
+    "extends": "../../tsconfig.json",
     "angularCompilerOptions": {
         "annotateForClosureCompiler": true,
         "skipTemplateCodegen": false,

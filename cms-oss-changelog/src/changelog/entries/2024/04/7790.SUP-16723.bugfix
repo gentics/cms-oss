@@ -1,0 +1,1 @@
+Editor User Interface: Resolved an issue with a race-condition which could lock up the edit-mode in a perpetual loading state.

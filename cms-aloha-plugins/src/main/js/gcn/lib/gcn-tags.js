@@ -505,25 +505,24 @@ define('gcn/gcn-tags', [
 		 * This function is sometimes called before aloha is ready.
 		 * Attempting to create blocks/editables at this point would just break aloha with really strange errors.
 		 */
-		Aloha.ready(function() {
-			var page = tag.parent();
-			var pageId = page.id();
-			var contained = GCN.PageAPI.trackRenderedTags(page, data);
-			var blocks = contained.blocks;
-			var editables = contained.editables;
-			var editable;
-			var i;
-	
-			for (i = 0; i < editables.length; i++) {
-				$('#' + editables[i].element).aloha();
-				editable = getEditableById(editables[i].element);
-				if (editable && editables[i].readonly) {
-					editable.disable();
-				}
+		var page = tag.parent();
+		var pageId = page.id();
+		var contained = GCN.PageAPI.trackRenderedTags(page, data);
+		var blocks = contained.blocks;
+		var editables = contained.editables;
+		var editable;
+		var i;
+
+		for (i = 0; i < editables.length; i++) {
+			$('#' + editables[i].element).aloha();
+			editable = getEditableById(editables[i].element);
+			if (editable && editables[i].readonly) {
+				editable.disable();
 			}
 	
-			initializeBlocks(blocks, pageId, callback);
-		});
+		}
+
+		initializeBlocks(blocks, pageId, callback);
 	}
 
 	/**

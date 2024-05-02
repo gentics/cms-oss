@@ -520,8 +520,9 @@ define('gcn/gcn-tags', [
 				editable.disable();
 			}
 	
-			initializeBlocks(blocks, pageId, callback);
 		}
+
+		initializeBlocks(blocks, pageId, callback);
 	}
 
 	/**

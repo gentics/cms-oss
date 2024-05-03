@@ -65,8 +65,6 @@ public class NodeLogCollector implements AutoCloseable {
 		if (this.loggers.length > 0) {
 			appender = WriterAppender.createAppender(PatternLayout.createDefaultLayout(), null, logWriter, appenderName,
 					false, true);
-			NodeLogger.addAppenderToConfig(appender);
-
 			for (NodeLogger logger : this.loggers) {
 				logger.addAppender(appender, this.logLevel);
 
@@ -89,8 +87,8 @@ public class NodeLogCollector implements AutoCloseable {
 	@Override
 	public void close() {
 		if (appender != null && this.loggers.length > 0) {
-			NodeLogger.removeAppenderFromConfig(appenderName);
 			for (NodeLogger logger : loggers) {
+				NodeLogger.removeAppenderFromConfig(appenderName, logger);
 				if (logLevel != null) {
 					logger.setLevel(oldLevels.getOrDefault(logger.getName(), logger.getLevel()));
 				}

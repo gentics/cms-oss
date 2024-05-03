@@ -20,6 +20,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 
+		<ui.skip.install>true</ui.skip.install>
         <ui.e2e>true</ui.e2e>
         <ui.skip.e2e>false</ui.skip.e2e>
         <ui.skip.assembly>true</ui.skip.assembly>

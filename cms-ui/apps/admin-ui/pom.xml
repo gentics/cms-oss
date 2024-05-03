@@ -21,6 +21,7 @@
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 
         <ui.application>true</ui.application>
+		<ui.skip.install>true</ui.skip.install>
         <ui.skip.build>false</ui.skip.build>
         <ui.skip.test>false</ui.skip.test>
         <ui.skip.assembly>false</ui.skip.assembly>

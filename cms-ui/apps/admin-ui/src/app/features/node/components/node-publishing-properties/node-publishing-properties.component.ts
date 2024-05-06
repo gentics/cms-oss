@@ -9,7 +9,7 @@ import { FormProperties, generateFormProvider, generateValidatorProvider, setCon
  * Defines the data editable by the `NodePublishingPropertiesComponent`.
  */
 export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'publishFs' | 'publishFsPages' | 'publishDir' |
-'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMapPages' | 'publishContentMapFiles' |
+'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
 'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
 
 const FILE_SYSTEM_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
@@ -17,12 +17,14 @@ const FILE_SYSTEM_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishFsFiles',
 ];
 
-const PUBLISH_DIR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
-    'publishDir',
-    'binaryPublishDir',
+const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishContentMap',
+    'publishContentMapFiles',
+    'publishContentMapFolders',
+    'publishContentMapPages',
 ];
 
-const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+const PUBLISH_MAP_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishContentMapFiles',
     'publishContentMapFolders',
     'publishContentMapPages',
@@ -54,6 +56,8 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
     public publishDirsLinked: boolean;
 
+    private previousPublishCr = false;
+
     constructor(
         changeDetector: ChangeDetectorRef,
         private client: GCMSRestClientService,
@@ -74,6 +78,8 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     }
 
     protected createForm(): FormGroup<FormProperties<NodePublishingPropertiesFormData>> {
+        this.previousPublishCr = this.value?.publishContentMap ?? false;
+
         return new FormGroup<FormProperties<NodePublishingPropertiesFormData>>({
             disablePublish: new FormControl(this.value?.disablePublish),
 
@@ -83,6 +89,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
             publishFsFiles: new FormControl(this.value?.publishFsFiles),
             binaryPublishDir: new FormControl(this.value?.binaryPublishDir),
 
+            publishContentMap: new FormControl(this.value?.publishContentMap),
             publishContentMapPages: new FormControl(this.value?.publishContentMapPages),
             publishContentMapFiles: new FormControl(this.value?.publishContentMapFiles),
             publishContentMapFolders: new FormControl(this.value?.publishContentMapFolders),
@@ -98,13 +105,34 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
     protected configureForm(value: NodePublishingPropertiesFormData, loud?: boolean): void {
         loud = !!loud;
+        const options = { emitEvent: loud, onlySelf: true };
 
-        setControlsEnabled(this.form, FILE_SYSTEM_CONTROLS, value?.publishFs, { emitEvent: loud, onlySelf: true });
-        setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, { emitEvent: loud, onlySelf: true });
+        setControlsEnabled(this.form, FILE_SYSTEM_CONTROLS, value?.publishFs, options);
+        setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
         const crAllowsDirs = this.checkContentRepository();
 
-        setControlsEnabled(this.form, ['publishDir'], !!value?.publishFs && value?.publishFsPages && crAllowsDirs, { emitEvent: loud, onlySelf: true });
-        setControlsEnabled(this.form, ['binaryPublishDir'], !!value?.publishFs && value?.publishFsFiles && crAllowsDirs, { emitEvent: loud, onlySelf: true });
+        setControlsEnabled(this.form, ['publishDir'], !!value?.publishFs && value?.publishFsPages && crAllowsDirs, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], !!value?.publishFs && value?.publishFsFiles && crAllowsDirs, options);
+
+        // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
+        this.form.updateValueAndValidity();
+        const tmpValue = this.form.value;
+        // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
+        // If so, then set these to `true`, to enable them by default.
+        if (tmpValue?.publishContentMap
+            && !this.previousPublishCr
+            && !tmpValue?.publishContentMapFiles
+            && !tmpValue?.publishContentMapFolders
+            && !tmpValue?.publishContentMapPages
+        ) {
+            this.form.patchValue({
+                publishContentMapFiles: true,
+                publishContentMapFolders: true,
+                publishContentMapPages: true,
+            }, options);
+        }
+        this.previousPublishCr = tmpValue?.publishContentMap ?? false;
 
         this.checkPublishDirectories(loud);
     }

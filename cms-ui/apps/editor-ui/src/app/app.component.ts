@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { WindowRef } from '@gentics/cms-components';
-import { GcmsUiLanguage, EditMode } from '@gentics/cms-integration-api-models';
+import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     I18nLanguage,
     Node,
@@ -77,7 +77,6 @@ import {
 export class AppComponent implements OnInit {
 
     hideExtras$: Observable<boolean> = of(false);
-    alertCenterCounter$ = new BehaviorSubject<number>(null);
     loggingIn$: Observable<boolean>;
     loggedIn$: Observable<boolean>;
     showToolsSub = new BehaviorSubject<boolean>(false);
@@ -87,11 +86,12 @@ export class AppComponent implements OnInit {
     );
     uiState$: Observable<UIState>;
     currentUser$: Observable<User<Normalized>>;
-    unreadMessageCount$: Observable<number>;
     nodeRootLink$: Observable<any>;
     keycloakSignOut$: Observable<boolean>;
     toolLinkcheckerAvailable$: Observable<boolean>;
 
+    unreadMessageCount = 0;
+    alertCenterCounter = 0;
     userSid: number;
     activeNode: Node;
     userMenuOpened = false;
@@ -154,7 +154,7 @@ export class AppComponent implements OnInit {
         private keycloakService: KeycloakService,
         private chipSearchBarConfigService: ChipSearchBarConfigService,
         private messageService: MessageService,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.uiActions.getUiVersion();
@@ -224,7 +224,10 @@ export class AppComponent implements OnInit {
 
         this.keycloakSignOut$ = this.appState.select(state => state.features.keycloak_signout);
 
-        this.unreadMessageCount$ = this.appState.select(state => state.messages.unread.length);
+        this.appState.select(state => state.messages.unread.length).subscribe(count => {
+            this.unreadMessageCount = count;
+            this.changeDetector.markForCheck();
+        });
         this.loggingIn$ = this.appState.select(state => state.auth.loggingIn);
         this.loggedIn$ = this.appState.select(state => state.auth.isLoggedIn);
 
@@ -267,7 +270,7 @@ export class AppComponent implements OnInit {
                     this.navigationService.list(node.id, node.folderId).navigate();
                 }
             },
-            error => this.errorHandler.catch(error));
+                error => this.errorHandler.catch(error));
 
         // Whenever the active node or editor node changes, load that node's features if necessary.
         merge(
@@ -301,7 +304,8 @@ export class AppComponent implements OnInit {
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 .reduce((acc, val) => acc + val);
 
-            this.alertCenterCounter$.next(alertCount);
+            this.alertCenterCounter = alertCount;
+            this.changeDetector.markForCheck();
         });
 
         this.messageService.whenInboxOpens(() => this.userMenuOpened = true);

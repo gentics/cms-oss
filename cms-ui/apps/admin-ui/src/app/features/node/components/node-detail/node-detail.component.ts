@@ -36,7 +36,6 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import {
     Feature,
     Folder,
@@ -309,21 +308,23 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
      * Requests changes of node by id to CMS
      */
     updatePublishing(): Promise<Node<Raw>> {
-
+        const value = this.fgPublishing.value;
         const nodeSave: NodeSaveRequest = {
             node: {
                 id: this.currentEntity.id,
-                ...this.fgPublishing.value,
+                ...value,
                 // Default some properties which may be `null` because they are disabled
-                publishFs: this.fgPublishing.value?.publishFs ?? false,
-                publishFsPages: this.fgPublishing.value?.publishFsPages ?? false,
-                publishFsFiles: this.fgPublishing.value?.publishFsFiles ?? false,
-                publishContentMapFiles: this.fgPublishing.value?.publishContentMapFiles ?? false,
-                publishContentMapFolders: this.fgPublishing.value?.publishContentMapFolders ?? false,
-                publishContentMapPages: this.fgPublishing.value?.publishContentMapPages ?? false,
+                publishFs: value?.publishFs ?? false,
+                publishFsPages: value?.publishFsPages ?? false,
+                publishFsFiles: value?.publishFsFiles ?? false,
+                publishContentMap: value?.publishContentMap ?? false,
+                publishContentMapFiles: value?.publishContentMapFiles ?? false,
+                publishContentMapFolders: value?.publishContentMapFolders ?? false,
+                publishContentMapPages: value?.publishContentMapPages ?? false,
 
-                publishDir: this.fgPublishing.value?.publishDir || '',
-                binaryPublishDir: this.fgPublishing.value?.binaryPublishDir || '',
+                contentRepositoryId: value?.contentRepositoryId ?? 0,
+                publishDir: value?.publishDir || '',
+                binaryPublishDir: value?.binaryPublishDir || '',
             },
         };
 
@@ -486,9 +487,10 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     }
 
     private onRootFolderChange(rootFolder: Folder): void {
-        // this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
-        //     description: rootFolder ? rootFolder.description : '',
-        // });
+        this.fgProperties.patchValue({
+            ...this.fgProperties.value,
+            description: rootFolder ? rootFolder.description : '',
+        });
     }
 
     private patchFormGroup<T>(formGroup: UntypedFormGroup, changes: Partial<T>): void {

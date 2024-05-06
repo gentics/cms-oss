@@ -265,12 +265,7 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
             customCdate: this.getCustomCdateDisplayValue(properties, this.page),
             customEdate: this.getCustomEdateDisplayValue(properties, this.page),
         };
-        this.form.reset({ ...properties, suggestedOrRequestedFileName: properties.fileName }, { onlySelf: true, emitEvent: false });
-        if (this.properties.fileName) {
-            this.form.get('suggestedOrRequestedFileName').markAsDirty();
-        } else {
-            this.form.get('suggestedOrRequestedFileName').markAsPristine();
-        }
+        this.form.patchValue({ ...properties }, { onlySelf: true, emitEvent: false });
     }
 
     onCustomDateEnabledChange(enabledStateVar: 'customCdateEnabled' | 'customEdateEnabled', newValue: boolean): void {

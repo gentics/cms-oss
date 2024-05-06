@@ -134,6 +134,7 @@ function getClassDocumentation(
         type,
         name: classNode.name.text,
         sourceFile: filePath,
+        generics: [],
         inheritance: [],
         main: marked(getCommentFromNode(sourceFile, classNode)),
         inputs: [],
@@ -141,6 +142,12 @@ function getClassDocumentation(
         outputs: [],
         properties: [],
     };
+
+    if (classNode.typeParameters != null) {
+        for (const generic of classNode.typeParameters) {
+            docs.generics.push(generic.getText());
+        }
+    }
 
     for (const member of classNode.members) {
         if (!ts.isPropertyDeclaration(member)
@@ -150,7 +157,7 @@ function getClassDocumentation(
         }
 
         const propType = getPropertyGroup(member);
-        const propDocs = getPropertyDocumentation(sourceFile, member as any);
+        const propDocs = getPropertyDocumentation(sourceFile, member as any, propType);
 
         switch (propType) {
             case 'property':
@@ -231,7 +238,11 @@ function getDecoratorNames(decorator: ts.Node): string[] {
     return names;
 }
 
-function getPropertyDocumentation(sourceFile: ts.SourceFile, node: ts.PropertyDeclaration | ts.FunctionLikeDeclaration): DocBlock {
+function getPropertyDocumentation(
+    sourceFile: ts.SourceFile,
+    node: ts.PropertyDeclaration | ts.FunctionLikeDeclaration,
+    propType: PropertyGroup,
+): DocBlock {
     // Ignore anonymous functions/properties
     if (node.name == null) {
         return null;
@@ -248,7 +259,7 @@ function getPropertyDocumentation(sourceFile: ts.SourceFile, node: ts.PropertyDe
     if (ts.isPropertyDeclaration(node)) {
         docs = {
             ...base,
-            type: determinePropertyType(node),
+            type: determinePropertyType(node, propType),
         } as DocBlock;
 
         if (node.initializer) {
@@ -269,26 +280,33 @@ function determineFunctionReturnType(node: ts.FunctionLikeDeclaration): string {
     return node.type != null ? node.type.getText() : 'any';
 }
 
-function determinePropertyType(node: ts.PropertyDeclaration): string {
+function determinePropertyType(node: ts.PropertyDeclaration, propType: PropertyGroup): string {
     if (node.type) {
         return node.type.getText();
     }
 
-    if (node.initializer) {
-        const type = getPrimitiveTypeName(node.initializer);
-        if (type) {
-            return type;
+    if (!node.initializer) {
+        return null;
+    }
+
+    const type = getPrimitiveTypeName(node.initializer);
+    if (type) {
+        return type;
+    }
+
+    // Return the "generics" portion of `new EventEmitter<FooBar123>()` -> `FooBar123`
+    if (propType === 'output' && node.initializer.getChildCount() >= 4) {
+        return node.initializer.getChildAt(3).getText();
+    }
+
+    if (ts.isArrayLiteralExpression(node.initializer)) {
+        if (node.initializer.getChildCount() === 0) {
+            return '[]';
         }
 
-        if (ts.isArrayLiteralExpression(node.initializer)) {
-            if (node.initializer.getChildCount() === 0) {
-                return '[]';
-            }
-
-            const arrType = getPrimitiveTypeName(node.initializer.getChildAt(0));
-            if (arrType) {
-                return arrType + '[]';
-            }
+        const arrType = getPrimitiveTypeName(node.initializer.getChildAt(0));
+        if (arrType) {
+            return arrType + '[]';
         }
     }
 

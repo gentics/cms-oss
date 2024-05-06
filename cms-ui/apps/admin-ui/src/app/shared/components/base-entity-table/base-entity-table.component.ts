@@ -189,7 +189,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public applyFilterValue(field: string, value: any): void {
+        this.filters = {};
         this.filters[field] = value;
+        this.query = value;
+
         // Reload the table with the new filter value
         this.loadTrigger.next();
     }
@@ -408,9 +411,9 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
                 entityNames,
             },
         );
-        const confimed = await dialog.open();
+        const confirmed = await dialog.open();
 
-        if (!confimed) {
+        if (!confirmed) {
             return false;
         }
 

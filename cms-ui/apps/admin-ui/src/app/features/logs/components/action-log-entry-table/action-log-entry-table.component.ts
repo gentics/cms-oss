@@ -3,7 +3,8 @@ import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { AnyModelType, ActionLogEntry, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { FormControl } from '@angular/forms';
+import { ActionLogEntry, AnyModelType, LogsListRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { ActionLogEntryLoaderService } from '../../providers';
 
@@ -13,7 +14,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO> {
+export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> {
 
     protected rawColumns: TableColumn<ActionLogEntryBO>[] = [
         {
@@ -49,6 +50,12 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'logs';
 
+    private logTypes = [];
+
+    private logActions = [];
+
+    private filterFormControl = new FormControl();
+
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -63,5 +70,20 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             loader,
             modalService,
         );
+        this.init();
     }
+
+    async init(): Promise<void> {
+        this.logTypes = await (this.loader as ActionLogEntryLoaderService).getActionLogTypes();
+        this.logActions = await (this.loader as ActionLogEntryLoaderService).getActions();
+        this.changeDetector.markForCheck();
+    }
+
+    public clearControl(): void {
+        this.actions = [];
+        this.filters = [];
+        this.filterFormControl.reset();
+        this.reload();
+    }
+
 }

@@ -319,6 +319,10 @@
         "en": "Send",
         "de": "Senden"
     },
+    "reset_filter": {
+        "en": "Reset",
+        "de": "Zurücksetzen"
+    },
     "reload_table_button": {
         "en": "Reload",
         "de": "Neu laden"

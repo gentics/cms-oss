@@ -2,7 +2,7 @@
     <div class="title">
         <h1>{{ docs.name }}</h1>
 
-        <div *ngIf="docs.inheritance.length > 0" class="inheritance-info">
+        <div *ngIf="docs.inheritance?.length > 0" class="inheritance-info">
             <div
                 *ngFor="let inherit of docs.inheritance"
                 class="inherited-class"
@@ -19,7 +19,34 @@
 
     <div *ngIf="docs.outputs?.length > 0" class="autodoc-section">
         <h6>Outputs</h6>
-        <gtx-autodoc-table [docBlocks]="docs.outputs"></gtx-autodoc-table>
+        <table class="bordered autodoc-table highlight">
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Type</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let block of docs.outputs">
+                    <tr class="regular-row" [class.has-inheritance]="block.inheritance">
+                        <td>
+                            <strong class="identifier">{{ block.identifier }}</strong>
+                        </td>
+                        <td>
+                            <code class="type" title="Type">{{ block.type }}</code>
+                        </td>
+                        <td>
+                            <div class="block-body" [innerHTML]="block.body | trustedHTML"></div>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="block.inheritance" class="inheritance-row">
+                        <td colspan="4">Inherited by: <code>{{ block.inheritance.name }}</code></td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </table>
     </div>
 
     <div *ngIf="docs.properties?.length > 0" class="autodoc-section">

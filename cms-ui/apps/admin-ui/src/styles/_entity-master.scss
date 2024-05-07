@@ -69,11 +69,27 @@
 }
 
 .gtx-modal-datagrid {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 1px;
+
+    .modal-title,
+    .modal-footer {
+        flex: 0 0;
+    }
+
     .modal-content {
-        flex: 0 1 auto;
+        flex: 1 1 auto;
         min-height: 1px;
         display: flex;
         overflow: hidden;
         flex-direction: column;
+
+        .modal-table,
+        .modal-trable {
+            min-height: 1px;
+            display: flex;
+        }
     }
 }

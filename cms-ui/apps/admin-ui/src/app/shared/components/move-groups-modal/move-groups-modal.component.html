@@ -2,8 +2,10 @@
     <div class="modal-title">
         <h5>{{ getModalTitle() | async }}</h5>
     </div>
+
     <div class="modal-content">
         <gtx-group-table
+            class="modal-table"
             [showSearch]="true"
             [selectable]="false"
             [hideActions]="true"
@@ -11,6 +13,7 @@
             (rowClick)="handleRowClick($event)"
         ></gtx-group-table>
     </div>
+
     <div class="modal-footer">
         <!-- NOTE: `gtxActionAllowed` will override any `disabled` directive, thus the code below is a workaround -->
         <gtx-button

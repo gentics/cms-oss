@@ -1,0 +1,23 @@
+{
+  "globalId" : "AE20.bd768720-704b-11e7-98b3-005056bb53cc",
+  "type" : "image",
+  "keyword" : "object.alt",
+  "name" : {
+    "de" : "Alternativtext",
+    "en" : "Alternative text"
+  },
+  "description" : {
+    "de" : "Alternativtext für's Bild",
+    "en" : "Alternative text for an image"
+  },
+  "constructId" : "A547.69478",
+  "required" : false,
+  "category" : {
+    "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

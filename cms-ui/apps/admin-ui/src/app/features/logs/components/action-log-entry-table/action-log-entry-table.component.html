@@ -97,6 +97,7 @@
         class="object-filter"
         (valueChange)="applyFilterValue('object', $event)"
         [formControl]="filterFormControl"
+        [multiple]="true"
     >
         <gtx-option *ngFor="let item of logTypes"
             [value]="item.name"
@@ -111,6 +112,7 @@
         class="object-filter"
         (valueChange)="applyFilterValue('action', $event)"
         [formControl]="filterFormControl"
+        [multiple]="true"
     >
         <gtx-option *ngFor="let item of logActions"
             [value]="item.name"

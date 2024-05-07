@@ -89,11 +89,18 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
             return options;
         }
 
-        const mappedKey = this.getMappedKey(filterKeys[0])
+        const filterParameterMap = filterKeys.map(key => ({
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            [this.getMappedKey(key)]: (typeof filters[key] === 'string')  ? filters[key].toLowerCase(): filters[key],
+        }),
+        ).reduce((obj, item) => ({
+            ...obj,
+            ...item,
+        }), {});
 
         const optionsWithFilter = {
             ...options,
-            [mappedKey]: (typeof options?.q === 'string')  ? options?.q?.toLowerCase(): options?.q,
+            ...filterParameterMap,
         }
         delete optionsWithFilter.q;
 

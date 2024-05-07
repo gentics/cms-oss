@@ -189,7 +189,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public applyFilterValue(field: string, value: any): void {
-        this.filters = {};
         this.filters[field] = value;
         this.query = value;
 

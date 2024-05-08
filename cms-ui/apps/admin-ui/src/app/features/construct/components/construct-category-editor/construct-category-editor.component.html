@@ -5,24 +5,26 @@
             gtxDetailTabLink
             [title]="'shared.title_properties' | i18n"
         >
-            <gtx-entity-detail-header
-                [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
-                saveActionAllowedId="objectProperty.updateObjectpropertyInstance"
-                [saveActionAllowedInstanceId]="entity?.id"
-                [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
-                (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
+                    saveActionAllowedId="objectProperty.updateObjectpropertyInstance"
+                    [saveActionAllowedInstanceId]="entity?.id"
+                    [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
+                    (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
 
-            <div class="gtx-entity-details-tab-content-body">
-                <gtx-construct-category-properties
-                    *ngIf="entity"
-                    class="properties"
-                    [formControl]="fgProperties"
-                    [supportedLanguages]="supportedLanguages$ | async"
-                    [mode]="ConstructCategoryPropertiesMode.UPDATE"
-                    [(initialValue)]="entityIsClean"
-                ></gtx-construct-category-properties>
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-construct-category-properties
+                        *ngIf="entity"
+                        class="properties"
+                        [formControl]="fgProperties"
+                        [supportedLanguages]="supportedLanguages$ | async"
+                        [mode]="ConstructCategoryPropertiesMode.UPDATE"
+                        [(initialValue)]="entityIsClean"
+                    ></gtx-construct-category-properties>
+                </div>
             </div>
         </gtx-tab>
     </gtx-tabs>

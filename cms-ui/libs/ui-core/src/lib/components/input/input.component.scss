@@ -27,3 +27,17 @@
         }
     }
 }
+
+
+:host.inline {
+    @include generic-icon-inline;
+    @include clear-button-inline;
+
+    &.icon-left .icon {
+        top: 5px;
+    }
+
+    & > input {
+        @include input-inline;
+    }
+}

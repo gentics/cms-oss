@@ -57,7 +57,7 @@
 
     [filters]="{
         object: objectFilter,
-        objId: numFilter,
+        objId: textFilter,
         action: actionFilter,
         user: textFilter,
         timestamp: dateFilter,
@@ -96,8 +96,12 @@
     <gtx-select
         class="object-filter"
         (valueChange)="applyFilterValue('object', $event)"
-        [formControl]="filterFormControl"
+        [formControl]="filterFormControl"    
+        [placeholder]="'Object Filter'"
         [multiple]="true"
+        [icon]="'search'"
+        [class]="'inline'"
+        [clearable]="true"
     >
         <gtx-option *ngFor="let item of logTypes"
             [value]="item.name"
@@ -112,7 +116,11 @@
         class="object-filter"
         (valueChange)="applyFilterValue('action', $event)"
         [formControl]="filterFormControl"
+        [placeholder]="'Action Filter'"
         [multiple]="true"
+        [icon]="'search'"
+        [class]="'inline'"
+        [clearable]="true"
     >
         <gtx-option *ngFor="let item of logActions"
             [value]="item.name"
@@ -123,19 +131,14 @@
     </gtx-select>
 </ng-template>
 
-
-<ng-template #numFilter let-column="column">
-    <gtx-input 
-        [type]="'number'"
-        [formControl]="filterFormControl"
-        (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
-    />
-</ng-template>
-
 <ng-template #textFilter let-column="column">
     <gtx-input 
         [type]="'text'"
+        [class]="'inline'"
+        [icon]="'search'"
+        [clearable]="true"
         [formControl]="filterFormControl"
+        [placeholder]="'Filter '+ column.label"
         (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
     />
 </ng-template>
@@ -144,7 +147,10 @@
     <gtx-date-time-picker 
         [displayTime]="false"
         [formControl]="filterFormControl"
+        [placeholder]="'Start Date Filter'"
         [clearable]="true"
+        [class]="'inline icon-left'"
+        [icon]="'search'"
         (valueChange)="applyFilterValue('timestamp', $event)"
     />
 </ng-template>

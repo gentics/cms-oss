@@ -166,3 +166,20 @@ label {
     }
 }
 
+
+:host.inline {
+    @include generic-icon-inline;
+    @include clear-button-inline;
+
+    & gtx-dropdown-trigger {
+        icon {
+            left: -6px;
+            position: relative;
+        }
+    }
+
+    & .select-input {
+        @include input-inline;  
+        padding-top: 5px;
+    }
+}

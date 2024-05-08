@@ -130,6 +130,18 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     placeholder: string;
 
     /**
+     * Icon to display within the input field
+     */
+    @Input()
+    public icon: string;
+
+    /**
+     * Wether the element should be clearable or not
+     */
+    @Input()
+    public clearable = false;
+
+    /**
      * Sets the readonly state of the input
      */
     @Input()
@@ -208,6 +220,10 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
                 default:
             }
         }
+
+        if (this.icon) {
+            this.renderer.addClass(this.inputElement.nativeElement.parentElement, 'icon-left');
+        }
     }
 
     /**
@@ -270,13 +286,31 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
         const value = this.currentValue = this.normalizeValue(target.value);
         this.onChange(value);
         this.change.emit(value);
+
+        if (this.currentValue) {
+            this.renderer.addClass(target.parentElement, 'value-clearable');
+        }
+        else {
+            this.renderer.removeClass(target.parentElement, 'value-clearable');
+        }
     }
+
+
 
     writeValue(valueToWrite: any): void {
         const value = this.normalizeValue(valueToWrite);
         if (value !== this.currentValue) {
             this.renderer.setProperty(this.inputElement.nativeElement, 'value', this.currentValue = value);
         }
+
+        const inputField = this.inputElement.nativeElement;
+        if(!inputField.value) {
+            this.renderer.removeClass(inputField.parentElement , 'value-clearable');
+        }
+    }
+
+    clear(): void {
+        this.writeValue('');
     }
 
     // ValueAccessor members

@@ -28,20 +28,11 @@
     padding: 5px 0;
 }
 
-::ng-deep gtx-input input {
-    margin: 0px !important;
-}
 
 ::ng-deep .header-row {
      .grid-cell {
         padding-top:0  !important;
         padding-bottom:0  !important;
         padding-left:0  !important;
-    }
-}
-
-::ng-deep gtx-date-time-picker{
-    & > gtx-input, gtx-button {
-        margin-top: 0px !important;
     }
 }

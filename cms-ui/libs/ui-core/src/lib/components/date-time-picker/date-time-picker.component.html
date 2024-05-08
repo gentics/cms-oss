@@ -1,6 +1,7 @@
 <gtx-input
     readonly="true"
     [class.clearable]="clearable"
+    [placeholder]="placeholder"
     [value]="displayValue"
     [label]="label"
     [disabled]="disabled"
@@ -8,6 +9,10 @@
     (keydown)="handleEnterKey($event)"
     (blur)="triggerTouch()"
 ></gtx-input>
+
+<ng-container *ngIf="icon">
+    <icon class="icon">{{ icon }}</icon>
+</ng-container>
 
 <gtx-button
     *ngIf="clearable"
@@ -17,6 +22,6 @@
     [disabled]="disabled"
     (click)="clearDateTime()"
 >
-    <icon>clear</icon>
+    <icon class="clear-icon">clear</icon>
 </gtx-button>
 

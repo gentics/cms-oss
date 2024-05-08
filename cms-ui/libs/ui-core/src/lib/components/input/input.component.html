@@ -21,4 +21,12 @@
     (focus)="onFocus($event)"
     (input)="onInput($event)"
 />
+<ng-container *ngIf="icon">
+    <icon class="icon">{{ icon }}</icon>
+</ng-container>
+
+<ng-container *ngIf="clearable">
+    <icon class="clear-icon" (click)="clear()">close</icon>
+</ng-container>
+
 <label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>

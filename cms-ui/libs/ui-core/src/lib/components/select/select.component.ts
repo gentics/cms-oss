@@ -12,6 +12,9 @@ import {
     ViewChild,
     OnChanges,
     SimpleChanges,
+    ElementRef,
+    Renderer2,
+    OnInit,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
@@ -57,7 +60,7 @@ type SingleOrArray<T> = T | T[];
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
-    implements OnChanges, AfterViewInit, AfterContentInit {
+    implements OnInit, OnChanges, AfterViewInit, AfterContentInit {
 
     /**
      * Path to the id of the object (if objects are used as options).
@@ -95,6 +98,12 @@ export class SelectComponent
      */
     @Input()
     public placeholder = '';
+
+    /**
+     * Icon to display within the input field
+     */
+    @Input()
+    public icon: string;
 
     /**
      * If the `value` of the select or the options change, should this select check if the
@@ -159,6 +168,8 @@ export class SelectComponent
     private preventDeselect = false;
 
     constructor(
+        private elementRef: ElementRef,
+        private renderer: Renderer2,
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
@@ -170,6 +181,12 @@ export class SelectComponent
 
         if (changes.disableUnknownValues) {
             this.updateViewValue();
+        }
+    }
+
+    ngOnInit(): void {
+        if (this.icon) {
+            this.renderer.addClass(this.elementRef.nativeElement, 'icon-left');
         }
     }
 
@@ -263,6 +280,16 @@ export class SelectComponent
         }
 
         this.updateViewValue();
+        this.toggleValueClearableClass();
+    }
+
+    private toggleValueClearableClass(): void {
+        if(this.selectedOptions.length) {
+            this.renderer.addClass(this.elementRef.nativeElement, 'value-clearable');
+        }
+        else {
+            this.renderer.removeClass(this.elementRef.nativeElement, 'value-clearable');
+        }
     }
 
     private isSame(value1: any, value2: any): boolean {

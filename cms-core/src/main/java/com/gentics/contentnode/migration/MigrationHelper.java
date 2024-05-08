@@ -85,7 +85,7 @@ public class MigrationHelper {
 	 */
 	public static NodeLogger configureLog(NodeLogger logger) throws NodeException {
 		// Remove any previously configured tag type migration appenders
-		NodeLogger.removeAppenderFromConfig(MIGRATION_APPENDER_NAME);
+		NodeLogger.removeAppenderFromConfig(MIGRATION_APPENDER_NAME, logger);
 
 		File logDir = getLogDir();
 

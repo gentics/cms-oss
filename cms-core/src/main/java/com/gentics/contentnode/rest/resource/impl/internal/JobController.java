@@ -226,14 +226,14 @@ public class JobController {
 		public LogCollector() {
 			logger = NodeLogger.getNodeLogger(loggerName);
 			appender = new MessageAppender(PatternLayout.newBuilder().withPattern("%d %-5p - %m%n").build());
-			NodeLogger.addAppenderToConfig(appender);
+			NodeLogger.addAppenderToConfig(appender, logger);
 			logger.addAppender(appender);
 		}
 
 		@Override
 		public void close() throws Exception {
 			// remove the appender
-			NodeLogger.removeAppenderFromConfig(appender.getName());
+			NodeLogger.removeAppenderFromConfig(appender.getName(), logger);
 		}
 	}
 

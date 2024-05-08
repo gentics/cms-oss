@@ -80,7 +80,7 @@ public class NodeLogger {
 		if (loggerFactory != null) {
 			return loggerFactory.getNodeLogger(clazz);
 		}
-		return getNodeLogger(getLogger(clazz));
+		return getNodeLogger(getLogger(clazz), clazz);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class NodeLogger {
 		if (loggerFactory != null) {
 			return loggerFactory.getNodeLogger(name);
 		}
-		return getNodeLogger(getLogger(name));
+		return getNodeLogger(getLogger(name), null);
 	}
 
 	/**
@@ -100,15 +100,16 @@ public class NodeLogger {
 	 * @return root logger
 	 */
 	public static NodeLogger getRootLogger() {
-		return getNodeLogger(LogManager.getRootLogger());
+		return getNodeLogger(LogManager.getRootLogger(), null);
 	}
 
 	/**
-	 * Add the appender to the configuration
+	 * Add the appender to the configuration of the given node logger
 	 * @param appender appender
+	 * @param nodeLogger node logger
 	 */
-	public static void addAppenderToConfig(Appender appender) {
-		Configuration configuration = getConfiguration();
+	public static void addAppenderToConfig(Appender appender, NodeLogger nodeLogger) {
+		Configuration configuration = getConfiguration(nodeLogger.getLoader());
 		configuration.addAppender(appender);
 		if (!appender.isStarted()) {
 			appender.start();
@@ -118,9 +119,10 @@ public class NodeLogger {
 	/**
 	 * Remove the appender with the given name
 	 * @param appenderName appender name
+	 * @param nodeLogger node logger
  	 */
-	public static void removeAppenderFromConfig(String appenderName) {
-		Configuration configuration = getConfiguration();
+	public static void removeAppenderFromConfig(String appenderName, NodeLogger nodeLogger) {
+		Configuration configuration = getConfiguration(nodeLogger.getLoader());
 		// remove the appender from all logger configs
 		for (LoggerConfig loggerConfig : configuration.getLoggers().values()) {
 			loggerConfig.removeAppender(appenderName);
@@ -139,38 +141,47 @@ public class NodeLogger {
 	 * Internal helper method to fetch the nodelogger from the map or create a
 	 * new one (if not yet existent)
 	 * @param logger Logger to wrap
+	 * @param clazz class
 	 * @return NodeLogger instance
 	 */
-	protected static NodeLogger getNodeLogger(Logger logger) {
+	protected static NodeLogger getNodeLogger(Logger logger, Class<?> clazz) {
 		NodeLogger nodeLogger = loggers.get(logger);
 
 		if (nodeLogger == null) {
-			nodeLogger = new NodeLogger(logger);
+			nodeLogger = new NodeLogger(logger, clazz);
 		}
 		return nodeLogger;
 	}
 
 	/**
 	 * Get the current configuration
+	 * @param loader class loader
 	 * @return configuration
 	 */
-	protected static Configuration getConfiguration() {
-		LoggerContext context = LoggerContext.getContext(false);
+	protected static Configuration getConfiguration(ClassLoader loader) {
+		LoggerContext context = LoggerContext.getContext(loader, false, null);
 		return context.getConfiguration();
 	}
 
 	/**
 	 * Create an instance wrapping the given logger
 	 * @param logger wrapped logger
+	 * @param clazz class
 	 */
-	protected NodeLogger(Logger logger) {
+	protected NodeLogger(Logger logger, Class<?> clazz) {
 		this.logger = logger;
+		this.clazz = clazz;
 	}
 
 	/**
 	 * Wrapped log4j logger
 	 */
 	private Logger logger;
+
+	/**
+	 * Class for which the NodeLogger was created (may be null)
+	 */
+	private Class<?> clazz;
 
 	/**
 	 * Log an error
@@ -349,7 +360,7 @@ public class NodeLogger {
 	 * @param level level
 	 */
 	public void addAppender(Appender appender, Level level) {
-		addAppenderToConfig(appender);
+		addAppenderToConfig(appender, this);
 		getLoggerConfig().addAppender(appender, level, null);
 		LoggerContext context = LoggerContext.getContext(false);
 		context.updateLoggers();
@@ -382,11 +393,24 @@ public class NodeLogger {
 	}
 
 	/**
+	 * Get the class loader of the class for which the logger was created
+	 * @return class loader
+	 */
+	protected ClassLoader getLoader() {
+		if (clazz != null) {
+			return clazz.getClassLoader();
+		} else {
+			return getClass().getClassLoader();
+		}
+	}
+
+	/**
 	 * Get the logger config
 	 * @return logger config
 	 */
 	protected LoggerConfig getLoggerConfig() {
-		Configuration config = getConfiguration();
+		LoggerContext context = LoggerContext.getContext(getLoader(), false, null);
+		Configuration config = context.getConfiguration();
 		LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
 
 		if (StringUtils.equals(loggerConfig.getName(), logger.getName())) {
@@ -396,6 +420,7 @@ public class NodeLogger {
 		loggerConfig = new LoggerConfig(logger.getName(), loggerConfig.getLevel(), loggerConfig.isAdditive());
 		config.addLogger(logger.getName(), loggerConfig);
 
+		context.updateLoggers();
 		return loggerConfig;
 	}
 }

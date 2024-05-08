@@ -35,13 +35,13 @@ public class LogCollector implements AutoCloseable {
 	public LogCollector(String loggerName, Appender appender) {
 		logger = NodeLogger.getNodeLogger(loggerName);
 		this.appender = appender;
-		NodeLogger.addAppenderToConfig(appender);
+		NodeLogger.addAppenderToConfig(appender, logger);
 		logger.addAppender(appender);
 	}
 
 	@Override
 	public void close() {
 		// remove the appender
-		NodeLogger.removeAppenderFromConfig(appender.getName());
+		NodeLogger.removeAppenderFromConfig(appender.getName(), logger);
 	}
 }

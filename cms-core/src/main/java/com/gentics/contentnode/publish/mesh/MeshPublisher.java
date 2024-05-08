@@ -3915,7 +3915,24 @@ public class MeshPublisher implements AutoCloseable {
 					.flatMap(node -> publish(task, node))
 					.doOnError(t -> {
 						if (!task.postponable || !isRecoverable(t)) {
-							errorHandler.accept(new NodeException(String.format("Error while performing task '%s' for '%s'", task, cr.getName()), t));
+							String message = String.format("Error while performing task '%s' for '%s'", task, cr.getName());
+
+							Optional<Pair<String,String>> conflictingNode = MeshPublishUtils.getConflictingNode(t);
+							if (conflictingNode.isPresent()) {
+								String conflictingUuid = conflictingNode.get().getLeft();
+								String conflictingLanguage = conflictingNode.get().getRight();
+
+								Optional<Pair<Integer, NodeObject>> optNodeObject = getNodeObject(task.project, task.nodeId, conflictingUuid, conflictingLanguage);
+								if (optNodeObject.isPresent()) {
+									try (Trx trx = new Trx(); ChannelTrx cTrx = new ChannelTrx(optNodeObject.get().getLeft())) {
+										message = String.format(
+												"%s. There is a conflict with object %s/%s in Mesh, which seems to be published from %s",
+												message, conflictingUuid, conflictingLanguage,
+												optNodeObject.get().getRight());
+									}
+								}
+							}
+							errorHandler.accept(new NodeException(message, t));
 						}
 					})
 					.doOnSuccess(node -> {

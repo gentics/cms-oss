@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.lib.log.NodeLogger;
 
@@ -60,7 +61,7 @@ public abstract class AbstractRecalcSortOrderTransactional extends AbstractTrans
 		AtomicInteger sortOrderCounter = new AtomicInteger(1);
 		for (int id : currentIds) {
 			int sortOrder = sortOrderCounter.getAndIncrement();
-			int currentSortOrder = sortOrderMap.get(id);
+			int currentSortOrder = ObjectTransformer.getInt(sortOrderMap.getOrDefault(id, mapOfModifiedEntities.get(id)), 0);
 
 			if (sortOrder != currentSortOrder) {
 				updateSortOrder(t, id, sortOrder);

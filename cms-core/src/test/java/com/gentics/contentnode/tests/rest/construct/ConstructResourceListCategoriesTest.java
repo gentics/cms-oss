@@ -44,12 +44,18 @@ public class ConstructResourceListCategoriesTest extends AbstractListSortAndFilt
 
 	@Parameters(name = "{index}: sortBy {0}, ascending {2}, filter {3}")
 	public static Collection<Object[]> data() {
-		List<Pair<String, Function<ConstructCategory, String>>> attributes = Arrays.asList(
+		List<Pair<String, Function<ConstructCategory, String>>> sortAttributes = Arrays.asList(
+				Pair.of("id", category -> AbstractListSortAndFilterTest.addLeadingZeros(category.getId())),
+				Pair.of("globalId", ConstructCategory::getGlobalId),
+				Pair.of("name", ConstructCategory::getName),
+				Pair.of("sortOrder", category -> AbstractListSortAndFilterTest.addLeadingZeros(category.getSortOrder()))
+		);
+		List<Pair<String, Function<ConstructCategory, String>>> filterAttributes = Arrays.asList(
 				Pair.of("id", category -> AbstractListSortAndFilterTest.addLeadingZeros(category.getId())),
 				Pair.of("globalId", ConstructCategory::getGlobalId),
 				Pair.of("name", ConstructCategory::getName)
 		);
-		return data(attributes, attributes);
+		return data(sortAttributes, filterAttributes);
 	}
 
 	@Override

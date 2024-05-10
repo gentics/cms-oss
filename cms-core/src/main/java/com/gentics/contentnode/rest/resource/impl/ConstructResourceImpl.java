@@ -859,7 +859,7 @@ public class ConstructResourceImpl implements ConstructResource {
 		List<ConstructCategory> categories = new ArrayList<>();
 
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			int order = 0;
+			int order = 1;
 
 			for (String categoryId : categoryIds) {
 				ConstructCategory category = MiscUtils.load(ConstructCategory.class, categoryId, ObjectPermission.edit);

@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.devtools;
 
 import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.devtools.DevToolTestUtils.getStructureFile;
 import static com.gentics.contentnode.tests.devtools.DevToolTestUtils.jsonToFile;
@@ -15,7 +17,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -24,12 +28,14 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.MainPackageSynchronizer;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Feature;
@@ -37,8 +43,12 @@ import com.gentics.contentnode.factory.object.OverviewPartSetting;
 import com.gentics.contentnode.factory.object.OverviewPartSetting.ObjectType;
 import com.gentics.contentnode.factory.object.OverviewPartSetting.SelectionType;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ConstructCategory;
 import com.gentics.contentnode.object.ContentRepository;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.ObjectTagDefinitionCategory;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.TagmapEntry;
@@ -50,6 +60,10 @@ import com.gentics.contentnode.object.cr.CrFragmentEntry;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
+import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -80,6 +94,13 @@ public class SortingTest {
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
+
+		// delete all existing object property categories
+		operate(t -> {
+			for (ObjectTagDefinitionCategory category : t.getObjects(ObjectTagDefinitionCategory.class, DBUtils.select("SELECT id FROM objprop_category", DBUtils.IDS))) {
+				category.delete(true);
+			}
+		});
 
 		node = supply(() -> createNode());
 		constructId = supply(() -> createConstruct(node, HTMLPartType.class, "html", "html"));
@@ -279,6 +300,307 @@ public class SortingTest {
 
 		// check that sorting in FS was not changed
 		assertThat(FileUtils.readFileToString(crStructureFile, "UTF-8")).as("Structure file after sync").isEqualTo(jsonFileContents);
+	}
+
+	/**
+	 * Test the sort orders of construct categories when importing from a devtool package
+	 * @throws NodeException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testConstructCategory() throws NodeException {
+		// create some constructs with categories
+		Construct firstInPackage = createConstructAndCategory("first_in_package", "First in Package", 1);
+		Construct secondInPackage = createConstructAndCategory("second_in_package", "Second in Package", 2);
+		Construct thirdInPackage = createConstructAndCategory("third_in_package", "Third in Package", 3);
+		Construct fourthInPackage = createConstructAndCategory("fourth_in_package", "Fourth in Package", 4);
+
+		// put constructs (with categories) into the package
+		consume(c -> pack.synchronize(c, true), firstInPackage);
+		consume(c -> pack.synchronize(c, true), secondInPackage);
+		consume(c -> pack.synchronize(c, true), thirdInPackage);
+		consume(c -> pack.synchronize(c, true), fourthInPackage);
+
+		String thirdCatInPackageGlobalId = execute(cons -> cons.getConstructCategory().getGlobalId().toString(), thirdInPackage);
+
+		// delete the constructs and categories
+		Synchronizer.disable();
+		deleteCategoryAndConstruct(firstInPackage);
+		deleteCategoryAndConstruct(secondInPackage);
+		deleteCategoryAndConstruct(thirdInPackage);
+		deleteCategoryAndConstruct(fourthInPackage);
+
+		// create new constructs with categories, with same sort orders as the first set
+		createConstructAndCategory("first_other", "First other", 1);
+		createConstructAndCategory("second_other", "Second other", 2);
+		createConstructAndCategory("third_other", "Third other", 3);
+		createConstructAndCategory("fourth_other", "Fourth other", 4);
+
+		// synchronize from the package
+		operate(() -> pack.syncAllFromFilesystem(Construct.class));
+
+		// all sort orders should be unique and continuous. imported categories sorted after the existing ones
+		assertThat(getNamesAndSortOrdersOfConstructCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Fourth in Package", 4),
+				Pair.of("First other", 5),
+				Pair.of("Second other", 6),
+				Pair.of("Third other", 7),
+				Pair.of("Fourth other", 8));
+
+		// delete one imported category
+		operate(t -> t.getObject(ConstructCategory.class, thirdCatInPackageGlobalId).delete(true));
+
+		// sort orders of remaining categories did not change
+		assertThat(getNamesAndSortOrdersOfConstructCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Fourth in Package", 3),
+				Pair.of("First other", 4),
+				Pair.of("Second other", 5),
+				Pair.of("Third other", 6),
+				Pair.of("Fourth other", 7));
+
+		// import from the package
+		operate(() -> pack.syncAllFromFilesystem(Construct.class));
+
+		// the re-imported category should be sorted to the same position
+		assertThat(getNamesAndSortOrdersOfConstructCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Fourth in Package", 4),
+				Pair.of("First other", 5),
+				Pair.of("Second other", 6),
+				Pair.of("Third other", 7),
+				Pair.of("Fourth other", 8));
+
+		// change sorting in CMS
+		List<String> ids = supply(() -> {
+			return new ConstructResourceImpl()
+					.listCategories(new SortParameterBean().setSort("sortorder"), null, null, null).getItems().stream()
+					.map(com.gentics.contentnode.rest.model.ConstructCategory::getId).map(id -> Integer.toString(id)).collect(Collectors.toList());
+		});
+
+		// Initial order is
+		// 0 First in Package
+		// 1 Second in Package
+		// 2 Third in Package
+		// 3 Fourth in Package
+		// 4 First other
+		// 5 Second other
+		// 6 Third other
+		// 7 Fourth other
+
+		// Put "Second other" into 2nd place
+		String id = ids.remove(5);
+		ids.add(1, id);
+
+		// Order is now
+		// 0 First in Package
+		// 1 Second other
+		// 2 Second in Package
+		// 3 Third in Package
+		// 4 Fourth in Package
+		// 5 First other
+		// 6 Third other
+		// 7 Fourth other
+
+		// Put "Third other" into 1st place
+		id = ids.remove(6);
+		ids.add(0, id);
+
+		// Order is now
+		// 0 Third other
+		// 1 First in Package
+		// 2 Second other
+		// 3 Second in Package
+		// 4 Third in Package
+		// 5 Fourth in Package
+		// 6 First other
+		// 7 Fourth other
+
+		// Put "Third in Package" into 3rd place
+		id = ids.remove(4);
+		ids.add(2, id);
+
+		// Order is now
+		// 0 Third other
+		// 1 First in Package
+		// 2 Third in Package
+		// 3 Second other
+		// 4 Second in Package
+		// 5 Fourth in Package
+		// 6 First other
+		// 7 Fourth other
+
+		consume(newlist -> {
+			IdSetRequest request = new IdSetRequest();
+			request.setIds(newlist);
+			new ConstructResourceImpl().sortCategories(request);
+		}, ids);
+
+		assertThat(getNamesAndSortOrdersOfConstructCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("Third other", 1),
+				Pair.of("First in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Second other", 4),
+				Pair.of("Second in Package", 5),
+				Pair.of("Fourth in Package", 6),
+				Pair.of("First other", 7),
+				Pair.of("Fourth other", 8));
+
+		// re-import
+		operate(() -> pack.syncAllFromFilesystem(Construct.class));
+
+		// the re-imported category should be sorted to the same position
+		assertThat(getNamesAndSortOrdersOfConstructCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Fourth in Package", 4),
+				Pair.of("Third other", 5),
+				Pair.of("Second other", 6),
+				Pair.of("First other", 7),
+				Pair.of("Fourth other", 8));
+	}
+
+	/**
+	 * Test the sort orders of object property categories when importing from a devtool package
+	 * @throws NodeException
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testObjectPropertyCategory() throws NodeException {
+		// create some object properties with categories
+		ObjectTagDefinition firstInPackage = createObjectPropertyAndCategory("first_in_package", "First in Package", 1);
+		ObjectTagDefinition secondInPackage = createObjectPropertyAndCategory("second_in_package", "Second in Package", 2);
+		ObjectTagDefinition thirdInPackage = createObjectPropertyAndCategory("third_in_package", "Third in Package", 3);
+		ObjectTagDefinition fourthInPackage = createObjectPropertyAndCategory("fourth_in_package", "Fourth in Package", 4);
+
+		// put object properties (with categories) into the package
+		consume(c -> pack.synchronize(c, true), firstInPackage);
+		consume(c -> pack.synchronize(c, true), secondInPackage);
+		consume(c -> pack.synchronize(c, true), thirdInPackage);
+		consume(c -> pack.synchronize(c, true), fourthInPackage);
+
+		String thirdCatInPackageGlobalId = execute(cons -> cons.getCategory().getGlobalId().toString(), thirdInPackage);
+
+		// delete the object properties and categories
+		Synchronizer.disable();
+		deleteCategoryAndObjectProperty(firstInPackage);
+		deleteCategoryAndObjectProperty(secondInPackage);
+		deleteCategoryAndObjectProperty(thirdInPackage);
+		deleteCategoryAndObjectProperty(fourthInPackage);
+
+		// create new object properties with categories, with same sort orders as the first set
+		createObjectPropertyAndCategory("first_other", "First other", 1);
+		createObjectPropertyAndCategory("second_other", "Second other", 2);
+		createObjectPropertyAndCategory("third_other", "Third other", 3);
+		createObjectPropertyAndCategory("fourth_other", "Fourth other", 4);
+
+		// synchronize from the package
+		operate(() -> pack.syncAllFromFilesystem(ObjectTagDefinition.class));
+
+		// all sort orders should be unique and continuous. imported categories sorted after the existing ones
+		assertThat(getNamesAndSortOrdersOfObjectPropertyCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Fourth in Package", 4),
+				Pair.of("First other", 5),
+				Pair.of("Second other", 6),
+				Pair.of("Third other", 7),
+				Pair.of("Fourth other", 8));
+
+		// delete one imported category
+		operate(t -> t.getObject(ObjectTagDefinitionCategory.class, thirdCatInPackageGlobalId).delete(true));
+
+		// sort orders of remaining categories did not change
+		assertThat(getNamesAndSortOrdersOfObjectPropertyCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Fourth in Package", 3),
+				Pair.of("First other", 4),
+				Pair.of("Second other", 5),
+				Pair.of("Third other", 6),
+				Pair.of("Fourth other", 7));
+
+		// import from the package
+		operate(() -> pack.syncAllFromFilesystem(ObjectTagDefinition.class));
+
+		// the re-imported category should be sorted to the same position
+		assertThat(getNamesAndSortOrdersOfObjectPropertyCategories()).as("Names and Sort Orders").containsExactly(
+				Pair.of("First in Package", 1),
+				Pair.of("Second in Package", 2),
+				Pair.of("Third in Package", 3),
+				Pair.of("Fourth in Package", 4),
+				Pair.of("First other", 5),
+				Pair.of("Second other", 6),
+				Pair.of("Third other", 7),
+				Pair.of("Fourth other", 8));
+	}
+
+	protected List<Pair<String, Integer>> getNamesAndSortOrdersOfConstructCategories() throws NodeException {
+		List<ConstructCategory> categories = supply(t -> t.getObjects(ConstructCategory.class,
+				DBUtils.select("SELECT id FROM construct_category", DBUtils.IDS)));
+
+		operate(() -> Collections.sort(categories, (c1, c2) -> Integer.compare(c1.getSortorder(), c2.getSortorder())));
+
+		return execute(cats -> cats.stream()
+				.map(cat -> Pair.of(cat.getName().toString(), cat.getSortorder())).collect(Collectors.toList()),
+				categories);
+	}
+
+	protected Construct createConstructAndCategory(String keyword, String name, int sortOrder) throws NodeException {
+		ConstructCategory category = Builder.create(ConstructCategory.class, cat -> {
+			cat.setName(name, 1);
+			cat.setSortorder(sortOrder);
+		}).build();
+
+		return Builder.create(Construct.class, constr -> {
+			constr.setKeyword(keyword);
+			constr.setName(name, 1);
+			constr.setConstructCategoryId(category.getId());
+		}).build();
+	}
+
+	protected void deleteCategoryAndConstruct(Construct construct) throws NodeException {
+		consume(c -> {
+			c.getConstructCategory().delete(true);
+			c.delete(true);
+		}, construct);
+	}
+
+	protected List<Pair<String, Integer>> getNamesAndSortOrdersOfObjectPropertyCategories() throws NodeException {
+		List<ObjectTagDefinitionCategory> categories = supply(t -> t.getObjects(ObjectTagDefinitionCategory.class,
+				DBUtils.select("SELECT id FROM objprop_category", DBUtils.IDS)));
+
+		operate(() -> Collections.sort(categories, (c1, c2) -> Integer.compare(c1.getSortorder(), c2.getSortorder())));
+
+		return execute(cats -> cats.stream()
+				.map(cat -> Pair.of(cat.getName().toString(), cat.getSortorder())).collect(Collectors.toList()),
+				categories);
+	}
+
+	protected ObjectTagDefinition createObjectPropertyAndCategory(String keyword, String name, int sortOrder) throws NodeException {
+		ObjectTagDefinitionCategory category = Builder.create(ObjectTagDefinitionCategory.class, cat -> {
+			cat.setName(name, 1);
+			cat.setSortorder(sortOrder);
+		}).build();
+
+		return Builder.update(supply(() -> createObjectTagDefinition(keyword, Folder.TYPE_FOLDER, constructId)), upd -> {
+			upd.setCategoryId(category.getId());
+		}).build();
+	}
+
+	protected void deleteCategoryAndObjectProperty(ObjectTagDefinition def) throws NodeException {
+		consume(d -> {
+			d.getCategory().delete(true);
+			d.delete(true);
+		}, def);
 	}
 
 	/**

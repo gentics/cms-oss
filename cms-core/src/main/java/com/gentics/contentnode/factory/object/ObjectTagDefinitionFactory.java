@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
 import com.gentics.contentnode.factory.ObjectFactory;
+import com.gentics.contentnode.factory.RecalcObjectTagDefinitionCategorySortOrderTransactional;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -1105,6 +1107,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 					t.addTransactional(new TransactionalTriggerEvent(ObjectTagDefinitionCategory.class, getId(), null, Events.UPDATE));
 				}
 			}
+			t.addTransactional(new RecalcObjectTagDefinitionCategorySortOrderTransactional(Optional.of(this)));
 
 			t.dirtObjectCache(ObjectTagDefinitionCategory.class, getId());
 
@@ -1133,6 +1136,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		Collection<ObjectTagDefinitionCategory> toDelete = getDeleteList(t, ObjectTagDefinitionCategory.class);
 
 		toDelete.add(category);
+		t.addTransactional(new RecalcObjectTagDefinitionCategorySortOrderTransactional(Optional.empty()));
 	}
 
 	@Override

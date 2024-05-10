@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.function.Function;
@@ -37,6 +38,7 @@ import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
 import com.gentics.contentnode.factory.ObjectFactory;
+import com.gentics.contentnode.factory.RecalcConstructCategorySortOrderTransactional;
 import com.gentics.contentnode.factory.RefreshPermHandler;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
@@ -1392,6 +1394,7 @@ public class ConstructFactory extends AbstractFactory {
 					t.addTransactional(new TransactionalTriggerEvent(ConstructCategory.class, getId(), getModifiedData(origObject, this), Events.UPDATE));
 				}
 			}
+			t.addTransactional(new RecalcConstructCategorySortOrderTransactional(Optional.of(this)));
 
 			if (isModified) {
 				t.dirtObjectCache(ConstructCategory.class, getId());
@@ -1625,6 +1628,7 @@ public class ConstructFactory extends AbstractFactory {
 		Collection<ConstructCategory> toDelete = getDeleteList(t, ConstructCategory.class);
 
 		toDelete.add(category);
+		t.addTransactional(new RecalcConstructCategorySortOrderTransactional(Optional.empty()));
 	}
 
 	/**

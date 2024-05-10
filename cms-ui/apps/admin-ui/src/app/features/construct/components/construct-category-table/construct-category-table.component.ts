@@ -29,8 +29,6 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
             id: 'sortorder',
             label: 'construct.categorySortorder',
             fieldPath: BO_NEW_SORT_ORDER,
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (index: number) => index + 1,
             sortable: true,
             align: 'right',
         },

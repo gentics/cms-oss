@@ -25,7 +25,14 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { I18nLanguage, Language, NodeLanguageListRequest, NodeLanguagesListResponse, Response } from '@gentics/cms-models';
+import {
+    I18nLanguage,
+    ItemDeleteResponse,
+    Language,
+    NodeLanguageListRequest,
+    NodeLanguagesListResponse,
+    Response
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -230,6 +237,18 @@ export class LanguageHandlerService
         }
 
         return this.api.i18n.setActiveUiLanguage(language as Language).pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+    unassignLanguage(nodeId: number, languageId: number): Observable<ItemDeleteResponse>{
+        return this.api.node.removeNodeLanguage(nodeId, languageId).pipe(
+            tap(response => {
+                this.notification.show({
+                    type: 'success',
+                    message: response.responseInfo.responseMessage,
+                });
+            }),
             this.catchAndRethrowError(),
         );
     }

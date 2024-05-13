@@ -8,7 +8,7 @@ import {
 } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Language, NodeLanguageListRequest } from '@gentics/cms-models';
+import {ItemDeleteResponse, Language, NodeLanguageListRequest} from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -67,6 +67,10 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
 
     public deleteEntity(entityId: string | number): Promise<void> {
         return this.handler.delete(entityId).toPromise();
+    }
+
+    public unassignLanguageFromNode(nodeId: number, entityId: string | number): Promise<ItemDeleteResponse> {
+        return this.handler.unassignLanguage(nodeId, Number(entityId)).toPromise();
     }
 
     public override mapToTableRow(bo: LanguageBO): TableRow<LanguageBO> {

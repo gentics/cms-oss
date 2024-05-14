@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -51,7 +53,6 @@ import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ConstructCategory;
-import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
@@ -830,14 +831,17 @@ public class ConstructResourceImpl implements ConstructResource {
 			Set<Integer> ids = null;
 			ids = DBUtils.select("SELECT id FROM construct_category", DBUtils.IDS);
 
-			ResolvableComparator<ConstructCategory> sorter = ResolvableComparator.get(sorting, "id", "globalId", "name", "sortorder");
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("sortOrder", "sortorder");
+
+			ResolvableComparator<ConstructCategory> sorter = ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "name", "sortOrder", "sortorder");
 			if (sorter != null) {
-				sorter.setNullsAsLast("sortorder");
+				sorter.setNullsAsLast("sortOrder", "sortorder");
 			}
 
 			ConstructCategoryListResponse response = ListBuilder.from(trx.getTransaction().getObjects(ConstructCategory.class, ids), ConstructCategory.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "sortorder"))
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name"))
 					.sort(sorter)
 					.page(paging).to(new ConstructCategoryListResponse());
 
@@ -859,7 +863,7 @@ public class ConstructResourceImpl implements ConstructResource {
 		List<ConstructCategory> categories = new ArrayList<>();
 
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			int order = 0;
+			int order = 1;
 
 			for (String categoryId : categoryIds) {
 				ConstructCategory category = MiscUtils.load(ConstructCategory.class, categoryId, ObjectPermission.edit);

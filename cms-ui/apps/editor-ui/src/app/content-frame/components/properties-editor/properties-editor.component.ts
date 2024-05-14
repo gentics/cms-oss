@@ -130,7 +130,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                 return {
                     name: item.name,
                     description: (item as Folder).description,
-                    directory: (item as Folder).publishDir,
+                    directory: (item as any).directory ?? (item as Folder).publishDir,
                     descriptionI18n: (item as Folder).descriptionI18n,
                     nameI18n: (item as Folder).nameI18n,
                     publishDirI18n: (item as Folder).publishDirI18n,
@@ -165,7 +165,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
 
             case 'page':
                 return {
-                    pageName: item.name,
+                    pageName: (item as any).pageName ?? item.name,
                     fileName: (item as Page).fileName,
                     description: (item as Page).description,
                     niceUrl: (item as Page).niceUrl,

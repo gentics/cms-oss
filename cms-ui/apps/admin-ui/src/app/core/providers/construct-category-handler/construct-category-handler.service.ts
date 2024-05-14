@@ -152,7 +152,7 @@ export class ConstructCategoryHandlerService
     }
 
     delete(id: string | number): Observable<void> {
-        return this.api.tagType.deleteTagType(id).pipe(
+        return this.api.constructCategory.deleteConstructCategoryCategory(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
 

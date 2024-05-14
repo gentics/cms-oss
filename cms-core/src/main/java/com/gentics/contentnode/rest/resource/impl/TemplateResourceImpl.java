@@ -307,7 +307,7 @@ public class TemplateResourceImpl implements TemplateResource {
 					return templateInNode;
 				})
 				.perms(permFunction(perms, pair -> pair.getRight(), ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
+				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description"))
 				.sort(comparator(sortingParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
 				.page(pagingParams)
 				.to(new TemplateInNodeResponse());

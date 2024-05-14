@@ -204,6 +204,8 @@ class MockTranslateService {
     instant = (str: string) => `translated(${str})`;
 }
 
+const CLASS_SHOW_ALERTS = 'show-alerts';
+
 describe('AppComponent', () => {
 
     let state: TestApplicationState;
@@ -469,9 +471,9 @@ describe('AppComponent', () => {
                     fixture.detectChanges();
                     tick(DEBOUNCE_INTERVAL);
                     fixture.detectChanges();
-                    const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                    const cornerAction = fixture.debugElement.query(By.css('.corner-actions'));
 
-                    expect(cornerAction).not.toBeNull();
+                    expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBe(true);
                 }));
 
             it('does not display the alert center corner action item if link checker feature is not enabled', componentTest(() => App, fixture => {
@@ -482,9 +484,9 @@ describe('AppComponent', () => {
                 fixture.detectChanges();
                 tick(DEBOUNCE_INTERVAL);
                 fixture.detectChanges();
-                const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                const cornerAction = fixture.debugElement.query(By.css('.corner-actions'));
 
-                expect(cornerAction).toBeNull();
+                expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
             it('does not display the alert center corner action item if link checker tool is not available', componentTest(() => App, fixture => {
@@ -495,9 +497,9 @@ describe('AppComponent', () => {
                 fixture.detectChanges();
                 tick(DEBOUNCE_INTERVAL);
                 fixture.detectChanges();
-                const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                const cornerAction = fixture.debugElement.query(By.css('.corner-actions'));
 
-                expect(cornerAction).toBeNull();
+                expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
             it('does not display the alert center corner action item if there are no alerts', componentTest(() => App, fixture => {
@@ -508,9 +510,9 @@ describe('AppComponent', () => {
                 fixture.detectChanges();
                 tick(DEBOUNCE_INTERVAL);
                 fixture.detectChanges();
-                const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                const cornerAction = fixture.debugElement.query(By.css('.corner-actions'));
 
-                expect(cornerAction).toBeNull();
+                expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
             it('does not display the alert center corner action item if there are 0 broken links', componentTest(() => App, fixture => {
@@ -521,9 +523,9 @@ describe('AppComponent', () => {
                 fixture.detectChanges();
                 tick(DEBOUNCE_INTERVAL);
                 fixture.detectChanges();
-                const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                const cornerAction = fixture.debugElement.query(By.css('.corner-actions'));
 
-                expect(cornerAction).toBeNull();
+                expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
             it('calls folderActions.getNodes()', componentTest(() => App, fixture => {

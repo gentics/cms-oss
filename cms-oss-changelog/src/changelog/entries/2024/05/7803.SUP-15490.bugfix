@@ -1,0 +1,1 @@
+Administrator User Interface: Deleting a construct category incorrectly tried to delete the construct with same ID instead. This has been fixed.

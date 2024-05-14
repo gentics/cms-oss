@@ -18,6 +18,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -33,7 +34,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -212,6 +212,11 @@ public class ConstructResourceTest {
 				if (!preserve.contains(construct.getKeyword())) {
 					construct.delete();
 				}
+			}
+		});
+		operate(t -> {
+			for (com.gentics.contentnode.object.ConstructCategory cat : t.getObjects(com.gentics.contentnode.object.ConstructCategory.class, DBUtils.select("SELECT id FROM construct_category", DBUtils.IDS))) {
+				cat.delete();
 			}
 		});
 	}

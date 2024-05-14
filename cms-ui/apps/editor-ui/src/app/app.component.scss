@@ -37,7 +37,11 @@
     top: 10px;
     left: 20px;
 
-    @media screen and (max-width: $small-screen) {
+    @media (max-width: $medium-screen) {
+        left: 14px;
+    }
+
+    @media (max-width: $small-screen) {
         left: 10px;
     }
 
@@ -53,22 +57,20 @@ gtx-top-bar {
 
 .search-container {
     flex: 1 1 100% !important;
-    // margin-right: 30px;
+    margin-right: 0px;
 
-    // @media screen and (max-width: $large-screen) and (min-width: $tiny-screen) {
-    //     margin-right: 85px;
-    // }
-    // @media screen and (max-width: $medium-screen) and (min-width: $tiny-screen) {
-    //     margin-right: 205px;
-    // }
-    @media screen and (max-width: $small-screen) and (min-width: $tiny-screen) {
-        margin-left: 32px;
-        margin-right: 54px;
+    @media (max-width: $medium-screen) and (min-width: $small-screen) {
+        margin-right: 120px;
     }
 
-    @media screen and (max-width: $tiny-screen) {
+    @media (max-width: $small-screen) and (min-width: $tiny-screen) {
         margin-left: 32px;
-        margin-right: 84px;
+        margin-right: 120px;
+    }
+
+    @media (max-width: $tiny-screen) {
+        margin-left: 48px;
+        margin-right: 90px;
     }
 }
 
@@ -118,6 +120,42 @@ advanced-search-bar {
 
     gtx-button:not(:first-child) {
         margin-left: 10px;
+    }
+
+    &:not(.show-messages) {
+        .unread-messages {
+            display: none;
+        }
+
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 90px;
+            }
+        }
+    }
+
+    &:not(.show-alerts) {
+        .alert-center {
+            display: none;
+        }
+
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 90px;
+            }
+
+            @media (max-width: $small-screen) and (min-width: $tiny-screen) {
+                margin-right: 80px;
+            }
+        }
+    }
+
+    &:not(.show-alerts):not(.show-messages) {
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 52px;
+            }
+        }
     }
 
     .unread-messages {

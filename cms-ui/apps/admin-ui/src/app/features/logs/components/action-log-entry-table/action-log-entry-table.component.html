@@ -10,18 +10,16 @@
         <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 
-
     <gtx-button
         class="table-action-button reload-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
-        (click)="clearControl()"
+        (click)="clear()"
     >
         <icon right>filter_alt</icon> {{ 'common.reset_filter' | i18n }}
     </gtx-button>
-
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
@@ -76,8 +74,7 @@
 <ng-template #typeRenderer let-row="row">
     <div class="name-wrapper">
         <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
-        <a
-            *ngIf="row.item?.type?.name !== 'template'"
+        <a *ngIf="row.item?.type?.name !== 'template'"
             class="gtx-table-cell-link name"
             [routerLink]="row.item | gtxEntityDetailRouterLink"
         >{{ row.item?.type?.label || row.item?.action?.label }}</a>
@@ -137,6 +134,7 @@
         [class]="'inline'"
         [icon]="'search'"
         [clearable]="true"
+        (valueCleared)="valueClearedHandler($event)"
         [formControl]="filterFormControl"
         [placeholder]="'Filter '+ column.label"
         (keyup.enter)="applyFilterValue(column.id, $event.target.value)"

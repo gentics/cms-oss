@@ -56,6 +56,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
 
     private filterFormControl = new FormControl();
 
+
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -74,12 +75,20 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     }
 
     async init(): Promise<void> {
-        this.logTypes = await (this.loader as ActionLogEntryLoaderService).getActionLogTypes();
-        this.logActions = await (this.loader as ActionLogEntryLoaderService).getActions();
+        const [logTypes, logActions] = await Promise.all([
+            (this.loader as ActionLogEntryLoaderService).getActionLogTypes(),
+            (this.loader as ActionLogEntryLoaderService).getActions(),
+        ])
+        this.logTypes = logTypes;
+        this.logActions = logActions;
         this.changeDetector.markForCheck();
     }
 
-    public clearControl(): void {
+    public valueClearedHandler(): void {
+        this.clear();
+    }
+
+    private clear(): void {
         this.actions = [];
         this.filters = [];
         this.filterFormControl.reset();

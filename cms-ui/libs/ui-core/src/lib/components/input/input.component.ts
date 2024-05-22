@@ -197,6 +197,9 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     @Output()
     change = new EventEmitter<string | number>();
 
+    @Output()
+    valueCleared = new EventEmitter<void>();
+
     @ViewChild('inputElement', { static: true })
     public inputElement: ElementRef<HTMLInputElement>;
 
@@ -303,6 +306,7 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
 
     clear(): void {
         this.writeValue('');
+        this.valueCleared.emit();
     }
 
     // ValueAccessor members

@@ -109,7 +109,7 @@ export class SelectComponent
     @Input()
     public icon: string;
 
-    @HostBinding('class.icon-left') hasIcon = () => !!this.icon;
+    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
 
     /**
      * If the `value` of the select or the options change, should this select check if the

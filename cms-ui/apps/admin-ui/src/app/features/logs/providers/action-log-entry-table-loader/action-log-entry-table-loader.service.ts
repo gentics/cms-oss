@@ -83,7 +83,8 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
     }
 
     private createOptionsWithFilter(options: BaseListOptionsWithPaging<ActionLogEntry>, filters: Record<string, any>): LogsListRequest {
-        const filterKeys = Object.keys(filters);
+        const nonNullFilters = _.omitBy(filters, value => _.isNull(value));
+        const filterKeys = Object.keys((nonNullFilters));
 
         if (!filterKeys || !filterKeys.length) {
             return options;

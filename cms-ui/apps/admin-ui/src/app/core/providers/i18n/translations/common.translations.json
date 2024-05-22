@@ -319,13 +319,29 @@
         "en": "Send",
         "de": "Senden"
     },
+    "reload_table_button": {
+        "en": "Reload",
+        "de": "Neu laden"
+    },
     "reset_filter": {
         "en": "Reset",
         "de": "Zurücksetzen"
     },
-    "reload_table_button": {
-        "en": "Reload",
-        "de": "Neu laden"
+    "object_filter_placeholder": {
+        "en": "Filter object",
+        "de": "Filtern Objekt"
+    },
+    "user_filter_placeholder": {
+        "en": "Filter user",
+        "de": "Filtern Benutzer"
+    },
+    "action_filter_placeholder": {
+        "en": "Filter action",
+        "de": "Filtern Aktion"
+    },
+    "date_filter_placeholder": {
+        "en": "Filter start date",
+        "de": "Filter Startdatum"
     },
     "set_new_password_button": {
         "en": "Set new password",

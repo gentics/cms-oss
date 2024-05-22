@@ -5,16 +5,16 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
+    ElementRef,
     EventEmitter,
+    HostBinding,
     Input,
+    OnChanges,
     Output,
     QueryList,
-    ViewChild,
-    OnChanges,
-    SimpleChanges,
-    ElementRef,
     Renderer2,
-    OnInit,
+    SimpleChanges,
+    ViewChild,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
@@ -60,7 +60,7 @@ type SingleOrArray<T> = T | T[];
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
-    implements OnInit, OnChanges, AfterViewInit, AfterContentInit {
+    implements OnChanges, AfterViewInit, AfterContentInit {
 
     /**
      * Path to the id of the object (if objects are used as options).
@@ -79,6 +79,10 @@ export class SelectComponent
      */
     @Input()
     public clearable = false;
+
+    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
+        return !!this.selectedOptions.length;
+    }
 
     /**
      * If true, the select all button is displayed, which allows the user to select all options at once.
@@ -104,6 +108,8 @@ export class SelectComponent
      */
     @Input()
     public icon: string;
+
+    @HostBinding('class.icon-left') hasIcon = () => !!this.icon;
 
     /**
      * If the `value` of the select or the options change, should this select check if the
@@ -184,11 +190,6 @@ export class SelectComponent
         }
     }
 
-    ngOnInit(): void {
-        if (this.icon) {
-            this.renderer.addClass(this.elementRef.nativeElement, 'icon-left');
-        }
-    }
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
@@ -280,17 +281,8 @@ export class SelectComponent
         }
 
         this.updateViewValue();
-        this.toggleValueClearableClass();
     }
 
-    private toggleValueClearableClass(): void {
-        if(this.selectedOptions.length) {
-            this.renderer.addClass(this.elementRef.nativeElement, 'value-clearable');
-        }
-        else {
-            this.renderer.removeClass(this.elementRef.nativeElement, 'value-clearable');
-        }
-    }
 
     private isSame(value1: any, value2: any): boolean {
         if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {

@@ -4,6 +4,7 @@ import {
     Component,
     ElementRef,
     EventEmitter,
+    HostBinding,
     HostListener,
     Input,
     OnChanges,
@@ -23,7 +24,8 @@ import { generateFormProvider } from '../../utils';
  * @see https://github.com/angular/angular/blob/8.2.9/packages/forms/src/validators.ts#L60
  */
 const EMAIL_REGEXP =
-    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
+    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'+
+    '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
 
 /**
  * Telephone number validator regex
@@ -31,7 +33,7 @@ const EMAIL_REGEXP =
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/26516985
  */
-const TEL_REGEXP = '^([()\\- x+]*\d[()\\- x+]*){4,16}$';
+const TEL_REGEXP = '^([()\\- x+]*d[()\\- x+]*){4,16}$';
 
 /**
  * URL validator regex
@@ -135,11 +137,17 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     @Input()
     public icon: string;
 
+    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
+
     /**
      * Wether the element should be clearable or not
      */
     @Input()
     public clearable = false;
+
+    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
+        return !!this.currentValue;
+    }
 
     /**
      * Sets the readonly state of the input
@@ -220,10 +228,6 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
                 default:
             }
         }
-
-        if (this.icon) {
-            this.renderer.addClass(this.inputElement.nativeElement.parentElement, 'icon-left');
-        }
     }
 
     /**
@@ -286,13 +290,6 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
         const value = this.currentValue = this.normalizeValue(target.value);
         this.onChange(value);
         this.change.emit(value);
-
-        if (this.currentValue) {
-            this.renderer.addClass(target.parentElement, 'value-clearable');
-        }
-        else {
-            this.renderer.removeClass(target.parentElement, 'value-clearable');
-        }
     }
 
 
@@ -301,11 +298,6 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
         const value = this.normalizeValue(valueToWrite);
         if (value !== this.currentValue) {
             this.renderer.setProperty(this.inputElement.nativeElement, 'value', this.currentValue = value);
-        }
-
-        const inputField = this.inputElement.nativeElement;
-        if(!inputField.value) {
-            this.renderer.removeClass(inputField.parentElement , 'value-clearable');
         }
     }
 

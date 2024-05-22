@@ -2,13 +2,12 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     EventEmitter,
+    HostBinding,
     Input,
     OnInit,
     Optional,
     Output,
-    Renderer2,
 } from '@angular/core';
 import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
@@ -99,6 +98,12 @@ export class DateTimePickerComponent
     @Input()
     public icon: string;
 
+    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
+
+    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
+        return !!this.value;
+    }
+
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */
     @Output()
     public clear = new EventEmitter<any>();
@@ -110,8 +115,6 @@ export class DateTimePickerComponent
     private momentValue: Moment | null = null;
 
     constructor(
-        private elementRef: ElementRef,
-        private renderer: Renderer2,
         changeDetector: ChangeDetectorRef,
         @Optional()
         private defaultFormatProvider: DateTimePickerFormatProvider,
@@ -129,10 +132,6 @@ export class DateTimePickerComponent
         this.subscriptions.push(
             (this.formatProvider || this.defaultFormatProvider).changed$.subscribe(() => this.updateDisplayValue()),
         );
-
-        if (this.icon) {
-            this.renderer.addClass(this.elementRef.nativeElement, 'icon-left');
-        }
     }
 
     protected onValueChange(): void {
@@ -152,16 +151,6 @@ export class DateTimePickerComponent
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.momentValue = unix(timestamp);
         this.updateDisplayValue();
-        this.toggleValueClearableClass();
-    }
-
-    private toggleValueClearableClass(): void {
-        if(this.value) {
-            this.renderer.addClass(this.elementRef.nativeElement, 'value-clearable');
-        }
-        else {
-            this.renderer.removeClass(this.elementRef.nativeElement, 'value-clearable');
-        }
     }
 
     handleEnterKey(event: KeyboardEvent): void {
@@ -222,6 +211,5 @@ export class DateTimePickerComponent
         this.triggerTouch();
         this.triggerChange(this.emptyValue);
         this.clear.emit();
-        this.renderer.removeClass(this.elementRef.nativeElement, 'value-clearable');
     }
 }

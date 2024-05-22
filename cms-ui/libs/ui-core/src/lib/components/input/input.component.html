@@ -25,8 +25,6 @@
     <icon class="icon">{{ icon }}</icon>
 </ng-container>
 
-<ng-container *ngIf="clearable">
-    <icon class="clear-icon" (click)="clear()">close</icon>
-</ng-container>
+<icon *ngIf="clearable" class="clear-icon" (click)="clear()">close</icon>
 
 <label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>

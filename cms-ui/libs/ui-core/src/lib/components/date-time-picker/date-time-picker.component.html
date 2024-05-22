@@ -10,9 +10,7 @@
     (blur)="triggerTouch()"
 ></gtx-input>
 
-<ng-container *ngIf="icon">
-    <icon class="icon">{{ icon }}</icon>
-</ng-container>
+<icon *ngIf="icon" class="icon">{{ icon }}</icon>
 
 <gtx-button
     *ngIf="clearable"

@@ -60,7 +60,12 @@
     input {
         @include input-inline;
         margin: 0 !important;
+        padding-top: 0 !important;
         padding-left: 2rem !important;
+    }
+
+    .icon {
+        top: 5px !important;
     }
 }
 

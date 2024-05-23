@@ -1,0 +1,1 @@
+Editor User Interface: Resolved an issue with the favourite item validation, which assumed items were deleted and therefore removed them from the favourite list.

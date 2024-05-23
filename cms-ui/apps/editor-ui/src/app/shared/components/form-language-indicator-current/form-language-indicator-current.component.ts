@@ -14,7 +14,7 @@ import { FormLanguageIndicatorComponent } from '../form-language-indicator/form-
     templateUrl: './form-language-indicator-current.component.html',
     styleUrls: ['./form-language-indicator-current.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class FormLanguageIndicatorCurrentComponent extends FormLanguageIndicatorComponent implements OnInit {
 
     /** Is TRUE if form translation is published */
@@ -46,7 +46,7 @@ export class FormLanguageIndicatorCurrentComponent extends FormLanguageIndicator
         // get form translation of current language
         this.displayLanguage$ = combineLatest([this.item$, this.activeFolderLanguage$]).pipe(
             mergeMap(([form, currentLanguage]) => {
-                if (form.languages.includes(currentLanguage.code)) {
+                if (currentLanguage && form.languages.includes(currentLanguage.code)) {
                     return of(currentLanguage);
                 }
                 const fallbackLanguageCodes = Array.isArray(form.languages) && form.languages.length > 0 && form.languages;

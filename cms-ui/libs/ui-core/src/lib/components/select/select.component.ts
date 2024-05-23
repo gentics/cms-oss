@@ -5,14 +5,12 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    ElementRef,
     EventEmitter,
     HostBinding,
     Input,
     OnChanges,
     Output,
     QueryList,
-    Renderer2,
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
@@ -174,8 +172,6 @@ export class SelectComponent
     private preventDeselect = false;
 
     constructor(
-        private elementRef: ElementRef,
-        private renderer: Renderer2,
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);

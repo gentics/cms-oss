@@ -443,11 +443,38 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 nodeId = undefined;
             }
             const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType).pipe(
-                map(items => items.map(item => ({
-                    item: item,
-                    nodeId: this.isStickyChannelEnabled ? item.inheritedFromId : item.masterNodeId,
-                    origIndex: itemsFromNode.origIndices[item.id],
-                }))),
+                map(loadedItems => {
+                    return itemsFromNode.itemIds
+                        .map((id, index) => {
+                            let loaded = loadedItems.find(item => item.id === id);
+
+                            /*
+                             * Edge Case which needs to be fixed in Backend.
+                             * When loading an inherited item with the original ID and a channel ID, you get the
+                             * inherited item ID, without reference to the original one.
+                             * Therefore, we can't check for the IDs directly here.
+                             * If the same amount of items have been returned as requested, we assume that the backend
+                             * returned them in the correct order as well.
+                             * Therefore fallback to the item in the expected index to get the item.
+                             */
+                            if (!loaded && (loadedItems.length === itemsFromNode.itemIds.length)) {
+                                loaded = loadedItems[index];
+                            }
+
+                            // Ignore/Remove items we couldn't load
+                            if (!loaded) {
+                                return null;
+                            }
+
+                            return {
+                                id: loaded.id,
+                                item: loaded,
+                                nodeId: this.isStickyChannelEnabled ? loaded.inheritedFromId : loaded.masterNodeId,
+                                origIndex: itemsFromNode.origIndices[id],
+                            };
+                        })
+                        .filter(element => element != null);
+                }),
             );
             requests$.push(request$);
         });

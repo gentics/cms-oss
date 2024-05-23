@@ -18,7 +18,7 @@
             [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
             (blur)="inputBlur($event)"
         >
-            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)">{{ viewValue }}</div>
+            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)" class="view-value-item">{{ viewValue }}</div>
             <div *ngIf="placeholder && selectedOptions.length == 0" class="placeholder">{{ placeholder }}</div>
             <div *ngIf="!placeholder && selectedOptions.length == 0"></div>
             <icon>arrow_drop_down</icon>
@@ -68,6 +68,8 @@
     </gtx-dropdown-content>
 </gtx-dropdown-list>
 
+<icon *ngIf="icon" class="icon">{{ icon }}</icon>
+
 <gtx-button
     *ngIf="clearable"
     icon
@@ -77,7 +79,7 @@
     [disabled]="disabled"
     (click)="clearSelection()"
 >
-    <icon>clear</icon>
+    <icon class="clear-icon">clear</icon>
 </gtx-button>
 
 <gtx-button

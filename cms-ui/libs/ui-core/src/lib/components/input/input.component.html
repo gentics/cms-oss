@@ -21,4 +21,17 @@
     (focus)="onFocus($event)"
     (input)="onInput($event)"
 />
+
+<icon *ngIf="icon" class="icon">{{ icon }}</icon>
+
+<gtx-button
+    *ngIf="isValueClearable"
+    icon
+    class="clear-icon"
+    type="secondary"
+    (click)="clear()"
+>
+    <icon class="clear-icon">close</icon>
+</gtx-button>
+
 <label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>

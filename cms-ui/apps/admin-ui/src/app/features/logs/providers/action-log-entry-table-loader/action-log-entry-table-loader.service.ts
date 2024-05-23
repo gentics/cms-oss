@@ -1,11 +1,18 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, ActionLogEntryBO, TableLoadOptions } from '@admin-ui/common';
+import { ActionLogEntryBO, BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ActionLogEntry } from '@gentics/cms-models';
+import { ActionLogEntry, BaseListOptionsWithPaging, LogTypeListItem, LogsListRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+
+
+export const COLUMN_TO_API_PARAM_MAP = new Map(Object.entries({
+    object: 'type',
+    timestamp: 'start',
+}));
 
 @Injectable()
 export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLogEntry, ActionLogEntryBO> {
@@ -28,8 +35,9 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ActionLogEntryBO>> {
         const loadOptions = this.createDefaultOptions(options);
+        const optionsWithFilter = this.createOptionsWithFilter(loadOptions, options.filters);
 
-        return this.api.logs.getLogs(loadOptions).pipe(
+        return this.api.logs.getLogs(optionsWithFilter).pipe(
             map(response => {
                 const entities = response.items.map(log => this.mapToBusinessObject(log));
 
@@ -39,6 +47,72 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
                 };
             }),
         );
+    }
+
+    public async getActionLogTypes(): Promise<LogTypeListItem[]> {
+        const options =  {
+            pageSize: -1,
+        };
+
+        const list = await this.api.logs.getTypes(options).pipe(
+            map(response => {
+                return response.items.sort((a,b) => a.label?.localeCompare(b.label));
+            }),
+        ).toPromise()
+
+        return list;
+    }
+
+    public async getActions(): Promise<LogTypeListItem[]> {
+        const options =  {
+            pageSize: -1,
+        };
+
+        const list = await this.api.logs.getActions(options).pipe(
+            map(response => {
+                return response.items.sort((a,b) => a.label?.localeCompare(b.label)).map(item => {
+                    return {
+                        name: item.name,
+                        label: _.capitalize(item.label),
+                    }
+                })
+            }),
+        ).toPromise()
+
+        return list;
+    }
+
+    private createOptionsWithFilter(options: BaseListOptionsWithPaging<ActionLogEntry>, filters: Record<string, any>): LogsListRequest {
+        const nonNullFilters = _.omitBy(filters, value => _.isNull(value));
+        const filterKeys = Object.keys((nonNullFilters));
+
+        if (!filterKeys || !filterKeys.length) {
+            return options;
+        }
+
+        const filterParameterMap = filterKeys.map(key => ({
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            [this.getMappedKey(key)]: (typeof filters[key] === 'string')  ? filters[key].toLowerCase(): filters[key],
+        }),
+        ).reduce((obj, item) => ({
+            ...obj,
+            ...item,
+        }), {});
+
+        const optionsWithFilter = {
+            ...options,
+            ...filterParameterMap,
+        }
+        delete optionsWithFilter.q;
+
+        return optionsWithFilter;
+    }
+
+
+    private getMappedKey(key: string): string {
+        const mappedKey = COLUMN_TO_API_PARAM_MAP.get(key);
+
+        return mappedKey ?? key;
     }
 
     public mapToBusinessObject(log: ActionLogEntry): ActionLogEntryBO {
@@ -54,7 +128,6 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
             ...log,
             [BO_ID]: String(log.id),
             [BO_PERMISSIONS]: [],
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             [BO_DISPLAY_NAME]: displayName,
         }
     }

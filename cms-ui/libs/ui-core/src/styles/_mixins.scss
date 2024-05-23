@@ -57,6 +57,59 @@
     }
 }
 
+@mixin clear-button-inline {
+    .clear-button {
+        border: unset;
+        background-color: unset;
+        margin: 0;
+    }
+    .clear-icon {
+        position: absolute;
+        right: -4px;
+        top: 10px;
+        color: $gtx-color-alert;
+        font-size: 22px;
+        top: 4px;
+        display: none;
+        color: $gtx-color-alert !important;
+    }
+
+    &.value-clearable {
+        .clear-icon {
+            display: inline-block !important;
+        }
+    }
+}
+
+@mixin generic-icon-inline {
+    &.icon-left {
+        .icon {
+            position: absolute;
+            left: 0;
+            top: 8px;
+        }
+        .select-input, input  {
+            padding-left: 2rem;
+        }
+        .placeholder {
+            font-size: 17px;
+        }
+    }
+}
+
+
+@mixin input-inline {
+    margin: 0;
+    padding-top: 0;
+    border: unset !important;
+    border-radius: unset !important;
+
+    &:focus:not([readonly]) {
+        border-bottom: 1px solid $gtx-color-primary;
+    }
+}
+
+
 @mixin input-label-styles($selector: 'label') {
     & #{$selector} {
         position: absolute;

@@ -6,12 +6,13 @@ import {
     Component,
     ContentChildren,
     EventEmitter,
+    HostBinding,
     Input,
+    OnChanges,
     Output,
     QueryList,
-    ViewChild,
-    OnChanges,
     SimpleChanges,
+    ViewChild,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
@@ -77,6 +78,10 @@ export class SelectComponent
     @Input()
     public clearable = false;
 
+    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
+        return !!this.selectedOptions.length && this.clearable;
+    }
+
     /**
      * If true, the select all button is displayed, which allows the user to select all options at once.
      */
@@ -95,6 +100,14 @@ export class SelectComponent
      */
     @Input()
     public placeholder = '';
+
+    /**
+     * Icon to display within the input field
+     */
+    @Input()
+    public icon: string;
+
+    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
 
     /**
      * If the `value` of the select or the options change, should this select check if the
@@ -172,6 +185,7 @@ export class SelectComponent
             this.updateViewValue();
         }
     }
+
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
@@ -264,6 +278,7 @@ export class SelectComponent
 
         this.updateViewValue();
     }
+
 
     private isSame(value1: any, value2: any): boolean {
         if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {

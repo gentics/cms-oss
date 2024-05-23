@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     EventEmitter,
+    HostBinding,
     Input,
     OnInit,
     Optional,
@@ -86,6 +87,22 @@ export class DateTimePickerComponent
     /** Set to `false` to omit the seconds of the time picker part. Defaults to `true`. */
     @Input()
     public displaySeconds = true;
+
+    /** Placeholder which is shown if nothing is selected. */
+    @Input()
+    public placeholder = '';
+
+    /**
+     * Icon to display within the input field
+     */
+    @Input()
+    public icon: string;
+
+    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
+
+    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
+        return !!this.value && this.clearable;
+    }
 
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */
     @Output()

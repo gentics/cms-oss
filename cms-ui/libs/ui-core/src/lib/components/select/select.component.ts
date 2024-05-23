@@ -79,7 +79,7 @@ export class SelectComponent
     public clearable = false;
 
     @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.selectedOptions.length;
+        return !!this.selectedOptions.length && this.clearable;
     }
 
     /**

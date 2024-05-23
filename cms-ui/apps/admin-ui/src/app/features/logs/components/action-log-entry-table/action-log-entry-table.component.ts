@@ -2,7 +2,7 @@ import { ActionLogEntryBO } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActionLogEntry, AnyModelType, LogsListRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
@@ -14,7 +14,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> {
+export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> implements OnInit {
 
     protected rawColumns: TableColumn<ActionLogEntryBO>[] = [
         {
@@ -50,11 +50,11 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'logs';
 
-    private logTypes = [];
+    public logTypes = [];
 
-    private logActions = [];
+    public logActions = [];
 
-    private filterFormControl = new FormControl();
+    public filterFormControl = new FormControl();
 
 
     constructor(
@@ -71,6 +71,11 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             loader,
             modalService,
         );
+        this.init();
+    }
+
+    ngOnInit(): void {
+        super.ngOnInit();
         this.init();
     }
 

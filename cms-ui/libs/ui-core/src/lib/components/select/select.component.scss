@@ -178,8 +178,17 @@ label {
         }
     }
 
+    & .clear-icon {
+        top: 10px;
+    }
+
     & .select-input {
         @include input-inline;  
         padding-top: 5px;
+
+        &  .view-value-item {
+            margin-top: 2px;
+            font-size: 16px;
+        }
     }
 }

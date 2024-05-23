@@ -1,1 +1,1 @@
-Administrator User Interface: Fix action log search/filtering. 
+Administrator User Interface: Fix action log filtering. I.e.: Replace search bar with respective column filters to allow filtering different log entities.

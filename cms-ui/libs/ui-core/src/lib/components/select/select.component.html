@@ -18,7 +18,7 @@
             [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
             (blur)="inputBlur($event)"
         >
-            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)">{{ viewValue }}</div>
+            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)" class="view-value-item">{{ viewValue }}</div>
             <div *ngIf="placeholder && selectedOptions.length == 0" class="placeholder">{{ placeholder }}</div>
             <div *ngIf="!placeholder && selectedOptions.length == 0"></div>
             <icon>arrow_drop_down</icon>

@@ -62,6 +62,7 @@
         margin: 0 !important;
         padding-top: 0 !important;
         padding-left: 2rem !important;
+        color: black !important;
     }
 
     .icon {
@@ -72,4 +73,8 @@
 :host.inline{
     @include clear-button-inline;
     @include generic-icon-inline;
+
+    & .clear-icon {
+        top: 8px;
+    }
 }

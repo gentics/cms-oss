@@ -146,7 +146,7 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     public clearable = false;
 
     @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.currentValue;
+        return !!this.currentValue && this.clearable;
     }
 
     /**

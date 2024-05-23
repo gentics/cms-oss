@@ -101,7 +101,7 @@ export class DateTimePickerComponent
     @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
 
     @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.value;
+        return !!this.value && this.clearable;
     }
 
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */

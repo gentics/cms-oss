@@ -44,7 +44,7 @@ import com.gentics.testutils.GenericTestUtils;
  * Tests for loading multiple objects via the REST API.
  */
 @RunWith(Parameterized.class)
-public class MultiObjectLoadTestBase {
+public class MultiObjectLoadTest {
 
 	/**
 	 * Permissions to be tested against.
@@ -140,7 +140,7 @@ public class MultiObjectLoadTestBase {
 		t.commit(false);
 	}
 
-	public MultiObjectLoadTestBase(TestPermission permission, boolean forUpdate, boolean fillWithNulls) throws NodeException {
+	public MultiObjectLoadTest(TestPermission permission, boolean forUpdate, boolean fillWithNulls) throws NodeException {
 		this.permission = permission;
 		this.forUpdate = forUpdate;
 		this.fillWithNulls = fillWithNulls;

@@ -115,12 +115,13 @@ public interface ImageResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of image ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found images, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiImageLoadResponse load(MultiObjectLoadRequest request);
+	MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Rotate by 90° (optionally), crop (optionally) and resize an image (in this order).

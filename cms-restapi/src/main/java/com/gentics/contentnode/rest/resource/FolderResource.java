@@ -87,12 +87,13 @@ public interface FolderResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of folder ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found folders, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiFolderLoadResponse load(MultiFolderLoadRequest request);
+	MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Load the breadcrumb to the given folder

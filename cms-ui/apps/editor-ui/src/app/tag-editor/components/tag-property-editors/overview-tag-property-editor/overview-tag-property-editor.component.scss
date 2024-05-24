@@ -21,7 +21,8 @@
         margin: 10px;
     }
 
-    .checkbox-cell, .browse-button-cell {
+    .checkbox-cell,
+    .browse-button-cell {
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -39,7 +40,7 @@
         top: 5px;
     }
 
-    sortable-array-list ::ng-deep {
+    sortable-array-list::ng-deep {
         @include item-icon-color(folder, $gcms-color-folder);
         @include item-icon-color(page, $gcms-color-page);
         @include item-icon-color(file, $gcms-color-file);
@@ -49,11 +50,14 @@
         @include item-icon-color(channel, $gcms-color-channel);
 
         .item-primary {
-            padding-left: 10px;
+            padding-left: 0px;
             flex-grow: 1;
             align-self: baseline;
             align-items: baseline;
             white-space: nowrap;
+            word-break: break-all;
+            text-overflow: ellipsis;
+            overflow: hidden;
         }
     }
 

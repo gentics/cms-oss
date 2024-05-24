@@ -147,12 +147,13 @@ public interface FileResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of file ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found files, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiFileLoadResponse load(MultiObjectLoadRequest request);
+	MultiFileLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Create a new file handling simple post data

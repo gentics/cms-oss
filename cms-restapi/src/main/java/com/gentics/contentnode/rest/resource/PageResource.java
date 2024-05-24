@@ -217,12 +217,13 @@ public interface PageResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of page ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found pages, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiPageLoadResponse load(MultiPageLoadRequest request);
+	MultiPageLoadResponse load(MultiPageLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Render given page in a preview (before actually saving it)

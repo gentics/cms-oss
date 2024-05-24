@@ -6,6 +6,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBody;
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 
@@ -282,14 +283,10 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.ImageResource#load(com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiImageLoadResponse load(MultiObjectLoadRequest request) {
+	public MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		Set<Reference> references = new HashSet<>();
 
@@ -299,22 +296,22 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<ImageFile> allImages = t.getObjects(ImageFile.class, request.getIds());
-			List<com.gentics.contentnode.rest.model.Image> returnedImages = new ArrayList<>(allImages.size());
 
-			for (com.gentics.contentnode.object.ImageFile image: allImages) {
-				if (ObjectPermission.view.checkObject(image)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(image))) {
-					if (forUpdate) {
-						image = t.getObject(image, true);
-					}
-
-					com.gentics.contentnode.rest.model.Image restImage = ModelBuilder.getImage(image, references);
-
-					if (restImage != null) {
-						returnedImages.add(restImage);
-					}
+			List<com.gentics.contentnode.rest.model.Image> returnedImages = getItemList(request.getIds(), allImages, image -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(image.getId());
+				ids.addAll(image.getChannelSet().values());
+				return ids;
+			}, image -> {
+				if (forUpdate) {
+					image = t.getObject(image, true);
 				}
-			}
+				return ModelBuilder.getImage(image, references);
+			}, image -> {
+				return ObjectPermission.view.checkObject(image)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(image));
+			}, fillWithNulls);
+
 			MultiImageLoadResponse response = new MultiImageLoadResponse(returnedImages);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allImages, request.getPackage(), o -> o.getGlobalId().toString()));
 			return response;

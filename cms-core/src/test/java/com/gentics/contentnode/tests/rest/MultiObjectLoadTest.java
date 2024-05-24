@@ -1,14 +1,11 @@
 package com.gentics.contentnode.tests.rest;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -47,7 +44,7 @@ import com.gentics.testutils.GenericTestUtils;
  * Tests for loading multiple objects via the REST API.
  */
 @RunWith(Parameterized.class)
-public class MultiObjectLoadTestBase {
+public class MultiObjectLoadTest {
 
 	/**
 	 * Permissions to be tested against.
@@ -66,21 +63,26 @@ public class MultiObjectLoadTestBase {
 
 	private final static int NON_EXISTENT = 0;
 
-	@ClassRule public static DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	private static Folder unrestrictedFolder;
 	private static Folder restrictedFolder;
 
 	private TestPermission permission;
 	private boolean forUpdate;
+	private boolean fillWithNulls;
 
-	@Parameters(name = "{index}: permission {0}, forUpdate {1}")
+	@Parameters(name = "{index}: permission {0}, forUpdate {1}, fillWithNulls {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 
 		for (TestPermission perm: TestPermission.values()) {
-			data.add(new Object[] { perm, true });
-			data.add(new Object[] { perm, false });
+			for (Boolean forUpdate : Arrays.asList(true, false)) {
+				for (Boolean fillWithNulls : Arrays.asList(true, false)) {
+					data.add(new Object[] { perm, forUpdate, fillWithNulls });
+				}
+			}
 		}
 		return data;
 	}
@@ -105,10 +107,10 @@ public class MultiObjectLoadTestBase {
 			"Read", "Only", "", RO_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(roGroup));
 		ContentNodeTestDataUtils.createSystemUser(
 			"No", "Permissions", "", NO_PERMS_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(noPermsGroup));
-		
+
 		unrestrictedFolder = ContentNodeTestDataUtils.createFolder(rootFolder, "unrestricted");
 		restrictedFolder = ContentNodeTestDataUtils.createFolder(rootFolder, "restricted");
-		
+
 		int unrestrictedFolderId = unrestrictedFolder.getId();
 
 		PermHandler.setPermissions(
@@ -138,10 +140,11 @@ public class MultiObjectLoadTestBase {
 		t.commit(false);
 	}
 
-	public MultiObjectLoadTestBase(TestPermission permission, boolean forUpdate) throws NodeException {
+	public MultiObjectLoadTest(TestPermission permission, boolean forUpdate, boolean fillWithNulls) throws NodeException {
 		this.permission = permission;
 		this.forUpdate = forUpdate;
-		
+		this.fillWithNulls = fillWithNulls;
+
 		String user;
 
 		switch (permission) {
@@ -158,53 +161,48 @@ public class MultiObjectLoadTestBase {
 			user = NO_PERMS_USER_LOGIN;
 			break;
 		}
-		
+
 		testContext.getContext().login(user, DEFAULT_PASSWORD);
 	}
-	
+
 	private void checkResult(List<? extends ContentNodeItem> list, int unrestricted, int restricted) {
-		Set<Integer> ids = list.stream().map(item -> item.getId()).collect(Collectors.toSet());
-		StringJoiner joined = new StringJoiner(", ", "[", "]");
-			
-		for (ContentNodeItem item: list) {
-			joined.add(item.getId().toString());
+		List<Integer> ids = list.stream().map(item -> item != null ? item.getId() : null).collect(Collectors.toList());
+
+		List<Integer> expected = new ArrayList<>(3);
+
+		// unrestricted ID depends on permission
+		switch(permission) {
+		case None:
+			expected.add(0, null);
+			break;
+		case ReadOnly:
+			expected.add(0, forUpdate ? null : unrestricted);
+			break;
+		case ReadWrite:
+			expected.add(0, unrestricted);
+			break;
 		}
 
-		assertFalse(
-			"Result must not contain restricted item with id " + restricted + ", but was " + joined,
-			ids.contains(restricted));
+		expected.add(1, null);
+		expected.add(2, null);
 
-		if (permission == TestPermission.None) {
-			assertTrue(
-				"Result should be empty, but was: " + joined.toString(),
-				ids.isEmpty());
-		} else if (permission == TestPermission.ReadOnly) {
-			if (forUpdate) {
-				assertFalse(
-					"Result must not contain read only item with id " + unrestricted + ", but was " + joined,
-					ids.contains(unrestricted));
-			} else {
-				assertTrue(
-					"Result must contain read only item with id " + unrestricted + ", but was " + joined,
-					ids.contains(unrestricted));
-			}
-		} else {
-			assertTrue(
-				"Result must contain unrestricted item with id " + unrestricted + ", but was " + joined,
-				ids.contains(unrestricted));
+		if (!fillWithNulls) {
+			expected.removeIf(entry -> entry == null);
 		}
+
+		assertThat(ids).as("Returned item IDs").containsExactlyElementsOf(expected);
 	}
 
 	@Test
 	public void testLoadFiles() throws Exception {
-		int unrestrictedFileId = ContentNodeTestDataUtils.createFile(unrestrictedFolder, "unrestrictedFile", new byte[0]).getId();
-		int restrictedFileId = ContentNodeTestDataUtils.createFile(restrictedFolder, "restrictedFile", new byte[0]).getId();
+		int unrestrictedFileId = ContentNodeTestDataUtils.createFile(unrestrictedFolder, "unrestrictedFile", "Unrestricted File Contents".getBytes()).getId();
+		int restrictedFileId = ContentNodeTestDataUtils.createFile(restrictedFolder, "restrictedFile", "Restricted File Contents".getBytes()).getId();
 		MultiObjectLoadRequest request = new MultiObjectLoadRequest();
-		
+
 		request.setIds(Arrays.asList(unrestrictedFileId, restrictedFileId, NON_EXISTENT));
 		request.setForUpdate(forUpdate);
-		
-		MultiFileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(request);
+
+		MultiFileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(request, fillWithNulls);
 		List<File> files = response.getFiles();
 
 		ContentNodeRESTUtils.assertResponseOK(response);
@@ -225,33 +223,33 @@ public class MultiObjectLoadTestBase {
 			image,
 			null).getId();
 		MultiObjectLoadRequest request = new MultiObjectLoadRequest();
-		
+
 		request.setIds(Arrays.asList(unrestrictedImageId, restrictedImageId, NON_EXISTENT));
 		request.setForUpdate(forUpdate);
-		
-		MultiImageLoadResponse response = ContentNodeRESTUtils.getImageResource().load(request);
+
+		MultiImageLoadResponse response = ContentNodeRESTUtils.getImageResource().load(request, fillWithNulls);
 		List<Image> files = response.getImages();
 
 		ContentNodeRESTUtils.assertResponseOK(response);
 		checkResult(files, unrestrictedImageId, restrictedImageId);
 	}
-	
+
 	@Test
 	public void testLoadFolders() throws Exception {
 		MultiFolderLoadRequest request = new MultiFolderLoadRequest();
 		int unrestrictedFolderId = unrestrictedFolder.getId();
 		int restrictedFolderId = restrictedFolder.getId();
-		
+
 		request.setIds(Arrays.asList(unrestrictedFolderId, restrictedFolderId, NON_EXISTENT));
 		request.setForUpdate(forUpdate);
-		
-		MultiFolderLoadResponse response = ContentNodeRESTUtils.getFolderResource().load(request);
+
+		MultiFolderLoadResponse response = ContentNodeRESTUtils.getFolderResource().load(request, fillWithNulls);
 		List<com.gentics.contentnode.rest.model.Folder> files = response.getFolders();
 
 		ContentNodeRESTUtils.assertResponseOK(response);
 		checkResult(files, unrestrictedFolderId, restrictedFolderId);
 	}
-	
+
 	@Test
 	public void testLoadPages() throws Exception {
 		MultiPageLoadRequest request = new MultiPageLoadRequest();
@@ -264,8 +262,8 @@ public class MultiObjectLoadTestBase {
 
 		request.setIds(Arrays.asList(unrestrictedPageId, restrictedPageId, 0));
 		request.setForUpdate(forUpdate);
-			
-		MultiPageLoadResponse response = ContentNodeRESTUtils.getPageResource().load(request);
+
+		MultiPageLoadResponse response = ContentNodeRESTUtils.getPageResource().load(request, fillWithNulls);
 		List<com.gentics.contentnode.rest.model.Page> files = response.getPages();
 
 		ContentNodeRESTUtils.assertResponseOK(response);

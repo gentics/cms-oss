@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -2384,5 +2385,53 @@ public class MiscUtils {
 			throw new RestMappedException(I18NHelper.get("contentrepository.invalidtype", cr.getName(), translatedType)).setResponseCode(ResponseCode.INVALIDDATA)
 					.setStatus(Status.CONFLICT);
 		}
+	}
+
+	/**
+	 * Transform the given list of loaded NodeObjects into ContentNodeItems. The order of the elements is given by the list of ids, by which the elements were loaded.
+	 * 
+	 * @param <O> type of output items
+	 * @param <I> type of input items
+	 * @param ids list of originally requested IDs
+	 * @param loaded loaded objects. The items might have different IDs in cases of multichannelling
+	 * @param idFunction function which gets all (possible) original IDs which might have resulted in loaded the specific entity
+	 * @param transformer transformer function to transform the input entity into the output entity
+	 * @param filter optional filter function
+	 * @param fillWithNulls true to fill the output list with nulls, if requested IDs could not be loaded at all (or were filtered by the filter function).
+	 * @return output list
+	 * @throws NodeException
+	 */
+	public static <O extends ContentNodeItem, I extends NodeObject> List<O> getItemList(List<Integer> ids,
+			Collection<I> loaded, Function<I, Set<Integer>> idFunction, Function<I, O> transformer,
+			Function<I, Boolean> filter, boolean fillWithNulls) throws NodeException {
+		if (filter == null) {
+			filter = entity -> true;
+		}
+
+		Map<Integer, I> lookupMap = new HashMap<>();
+		for (I entity : loaded) {
+			Set<Integer> entityIds = idFunction.apply(entity);
+			for (Integer id : entityIds) {
+				lookupMap.put(id, entity);
+			}
+		}
+
+		List<O> output = new ArrayList<>();
+
+		for (Integer id : ids) {
+			I entity = lookupMap.get(id);
+
+			if (entity != null && !filter.apply(entity)) {
+				entity = null;
+			}
+
+			if (entity != null) {
+				output.add(transformer.apply(entity));
+			} else if (fillWithNulls) {
+				output.add(null);
+			}
+		}
+
+		return output;
 	}
 }

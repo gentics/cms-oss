@@ -1,6 +1,7 @@
 <gtx-input
     readonly="true"
     [class.clearable]="clearable"
+    [class.has-addon]="clearable"
     [placeholder]="placeholder"
     [value]="displayValue"
     [label]="label"
@@ -10,12 +11,10 @@
     (blur)="triggerTouch()"
 ></gtx-input>
 
-<icon *ngIf="icon" class="icon">{{ icon }}</icon>
-
 <gtx-button
     *ngIf="clearable"
     icon
-    class="clear-button"
+    class="addon-button clear-button"
     type="secondary"
     [disabled]="disabled"
     (click)="clearDateTime()"

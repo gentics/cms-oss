@@ -3,7 +3,6 @@ import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
 import { ActionLogEntry, AnyModelType, LogsListRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { ActionLogEntryLoaderService } from '../../providers';
@@ -54,9 +53,6 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
 
     public logActions = [];
 
-    public filterFormControl = new FormControl();
-
-
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -94,9 +90,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     }
 
     private clear(): void {
-        this.actions = [];
-        this.filters = [];
-        this.filterFormControl.reset();
+        this.filters = {};
         this.reload();
     }
 

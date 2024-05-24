@@ -21,22 +21,3 @@
         display: inline-block;
     }
 }
-
-.object-filter {
-    width: 100%;
-    margin: 0px;
-    padding: 5px 0;
-
-    &.inline{
-        padding: 2px;
-    }
-}
-
-
-::ng-deep .header-row {
-     .grid-cell {
-        padding-top:0  !important;
-        padding-bottom:0  !important;
-        padding-left:0  !important;
-    }
-}

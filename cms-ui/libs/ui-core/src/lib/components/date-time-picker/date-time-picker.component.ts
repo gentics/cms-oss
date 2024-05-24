@@ -3,11 +3,10 @@ import {
     ChangeDetectorRef,
     Component,
     EventEmitter,
-    HostBinding,
     Input,
     OnInit,
     Optional,
-    Output,
+    Output
 } from '@angular/core';
 import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
@@ -91,18 +90,6 @@ export class DateTimePickerComponent
     /** Placeholder which is shown if nothing is selected. */
     @Input()
     public placeholder = '';
-
-    /**
-     * Icon to display within the input field
-     */
-    @Input()
-    public icon: string;
-
-    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
-
-    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.value && this.clearable;
-    }
 
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */
     @Output()

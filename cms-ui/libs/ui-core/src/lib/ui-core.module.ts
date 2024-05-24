@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { APP_INITIALIZER, ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
+import { ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -46,6 +46,7 @@ import {
     TabGroupComponent,
     TabPaneComponent,
     TableComponent,
+    TableFilterWrapperComponent,
     TabsComponent,
     TextareaComponent,
     ToastComponent,
@@ -133,6 +134,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     TabsComponent,
     TabPaneComponent,
     TableComponent,
+    TableFilterWrapperComponent,
     TabGroupComponent,
     TextareaComponent,
     ToastComponent,

@@ -4,7 +4,6 @@ import {
     Component,
     ElementRef,
     EventEmitter,
-    HostBinding,
     HostListener,
     Input,
     OnChanges,
@@ -132,22 +131,11 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     placeholder: string;
 
     /**
-     * Icon to display within the input field
-     */
-    @Input()
-    public icon: string;
-
-    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
-
-    /**
      * Wether the element should be clearable or not
      */
     @Input()
     public clearable = false;
 
-    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.currentValue && this.clearable;
-    }
 
     /**
      * Sets the readonly state of the input

@@ -3,13 +3,14 @@
     belowTrigger="false"
     [sticky]="multiple"
     [disabled]="disabled"
+    [class.with-label]="label != null"
     [class.clearable]="clearable"
     [class.select-all]="selectAll"
     [class.has-addon]="clearable || selectAll"
     (open)="dropdownOpened()"
     (keydown)="handleKeydown($event)"
 >
-    <gtx-dropdown-trigger [class.with-label]="label != null">
+    <gtx-dropdown-trigger>
         <div
             #viewValueContainer
             class="view-value select-input"
@@ -67,8 +68,6 @@
         </ul>
     </gtx-dropdown-content>
 </gtx-dropdown-list>
-
-<icon *ngIf="icon" class="icon">{{ icon }}</icon>
 
 <gtx-button
     *ngIf="clearable"

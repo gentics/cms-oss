@@ -3,9 +3,9 @@ package com.gentics.contentnode.server;
 import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PLUGINS_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.GCNJSAPI_PATH;
+import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP2;
 import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP_PORT;
 import static com.gentics.contentnode.runtime.ConfigurationValue.STATIC_SERVE_LIST;
-import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP2;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,10 +13,12 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.servlet.DispatcherType;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
@@ -27,6 +29,7 @@ import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
@@ -62,6 +65,11 @@ public class OSSRunner {
 	static NodeLogger log;
 
 	/**
+	 * Server instance
+	 */
+	protected static Server server;
+
+	/**
 	 * Loader for implementations of {@link ServletContextHandlerService}
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
@@ -74,6 +82,59 @@ public class OSSRunner {
 	 */
 	public static void main(String[] args) {
 		start();
+	}
+
+	/**
+	 * Check whether the server has been started
+	 * @return true iff the server has been started
+	 */
+	public static boolean isServerStarted() {
+		return server != null && server.isStarted();
+	}
+
+	/**
+	 * Check whether the server has not been started or has been stopped
+	 * @return true iff the server has been stopped
+	 */
+	public static boolean isServerStopped() {
+		return server == null || server.isStopped();
+	}
+
+	/**
+	 * Check whether the server start has failed
+	 * @return true iff the server start has failed
+	 */
+	public static boolean isServerFailed() {
+		return server != null && server.isFailed();
+	}
+
+	/**
+	 * Stop the server
+	 * @throws Exception
+	 */
+	public static void stop() throws Exception {
+		if (server != null) {
+			server.stop();
+		}
+	}
+
+	/**
+	 * Get the port, the server is listening to. If the server has not been started, this return something < 0
+	 * @return port (negative, if the server is not started)
+	 */
+	public static int getPort() {
+		if (server == null) {
+			return -1;
+		} else {
+			Connector[] connectors = server.getConnectors();
+			if (ArrayUtils.isEmpty(connectors)) {
+				return -1;
+			} else {
+				return Stream.of(connectors).filter(conn -> conn instanceof NetworkConnector)
+						.map(conn -> NetworkConnector.class.cast(conn)).map(conn -> conn.getLocalPort()).findFirst()
+						.orElse(-1);
+			}
+		}
 	}
 
 	/**
@@ -153,7 +214,7 @@ public class OSSRunner {
 						Set.of("(.*)\\/packages\\/([^\\/]*)\\/files\\/(.*)", "(.*)\\/packages\\/([^\\/]*)\\/files-internal\\/(.*)")));
 
 		// create server
-		Server server = new Server();
+		server = new Server();
 		server.setStopAtShutdown(true);
 		server.setHandler(rewriteHandler);
 
@@ -237,6 +298,8 @@ public class OSSRunner {
 		// only apply path info to resourceBase
 		holderServlet.setInitParameter("pathInfoOnly", "true");
 		holderServlet.setInitParameter("dirAllowed", "false");
+		holderServlet.setInitParameter("etags", "true");
+		holderServlet.setInitParameter("cacheControl", "no-cache");
 
 		return holderServlet;
 	}

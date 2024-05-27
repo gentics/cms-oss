@@ -1,0 +1,1 @@
+Static files will now be served by the CMS with an "etag" response header and will also have the "cache-control" response header set to "no-cache".

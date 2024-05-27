@@ -5,8 +5,8 @@ import { Injectable } from '@angular/core';
 import { ActionLogEntry, BaseListOptionsWithPaging, LogTypeListItem, LogsListRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 
 export const COLUMN_TO_API_PARAM_MAP = new Map(Object.entries({
@@ -46,6 +46,10 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
                     totalCount: response.numItems,
                 };
             }),
+            catchError(() => of({
+                entities: [],
+                totalCount: 0,
+            })),
         );
     }
 

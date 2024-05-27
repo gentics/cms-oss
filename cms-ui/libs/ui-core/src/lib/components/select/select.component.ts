@@ -78,10 +78,6 @@ export class SelectComponent
     @Input()
     public clearable = false;
 
-    @HostBinding('class.value-clearable') get isValueClearable(): boolean {
-        return !!this.selectedOptions.length && this.clearable;
-    }
-
     /**
      * If true, the select all button is displayed, which allows the user to select all options at once.
      */
@@ -100,14 +96,6 @@ export class SelectComponent
      */
     @Input()
     public placeholder = '';
-
-    /**
-     * Icon to display within the input field
-     */
-    @Input()
-    public icon: string;
-
-    @HostBinding('class.icon-left') hasIcon = (): boolean => !!this.icon;
 
     /**
      * If the `value` of the select or the options change, should this select check if the

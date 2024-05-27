@@ -23,10 +23,6 @@ label {
         gtx-dropdown-trigger {
             width: 100%;
         }
-
-        .with-label {
-            margin-top: 19px;
-        }
     }
 
     .placeholder {
@@ -45,6 +41,10 @@ label {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        > icon {
+            margin-top: -1px;
         }
     }
 
@@ -69,12 +69,17 @@ label {
         flex-direction: column;
         height: 2.5rem;
         justify-content: center;
-        margin-top: 20px;
+        margin-top: 1px;
         transition: 300ms;
 
         icon {
             color: inherit;
         }
+    }
+
+    .with-label .view-value,
+    .with-label ~ .addon-button  {
+        margin-top: 20px;
     }
 }
 
@@ -162,33 +167,6 @@ label {
         > icon {
             height: inherit;
             line-height: inherit;
-        }
-    }
-}
-
-
-:host.inline {
-    @include generic-icon-inline;
-    @include clear-button-inline;
-
-    & gtx-dropdown-trigger {
-        icon {
-            left: -6px;
-            position: relative;
-        }
-    }
-
-    & .clear-icon {
-        top: 10px;
-    }
-
-    & .select-input {
-        @include input-inline;  
-        padding-top: 5px;
-
-        &  .view-value-item {
-            margin-top: 2px;
-            font-size: 16px;
         }
     }
 }

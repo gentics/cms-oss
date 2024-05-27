@@ -88,67 +88,59 @@
     </span>
 </ng-template>
 
-
-<ng-template #objectFilter let-row="row">
-    <gtx-select
-        class="object-filter"
-        (valueChange)="applyFilterValue('object', $event)"
-        [formControl]="filterFormControl"    
-        [placeholder]="'common.object_filter_placeholder' | i18n"
-        [multiple]="true"
-        [icon]="'search'"
-        [class]="'inline'"
-        [clearable]="true"
-    >
-        <gtx-option *ngFor="let item of logTypes"
-            [value]="item.name"
+<ng-template #objectFilter>
+    <gtx-table-filter-wrapper [hasValue]="filters?.object?.length > 0" (clear)="applyFilterValue('object', null)">
+        <gtx-select
+            class="object-filter"
+            [placeholder]="'common.object_filter_placeholder' | i18n"
+            [multiple]="true"
+            [value]="filters.object"
+            (valueChange)="applyFilterValue('object', $event)"
         >
-            {{ item.label }}
-        </gtx-option>
-    </gtx-select>
+            <gtx-option
+                *ngFor="let item of logTypes"
+                [value]="item.name"
+            >{{ item.label }}</gtx-option>
+        </gtx-select>
+    </gtx-table-filter-wrapper>
 </ng-template>
 
-<ng-template #actionFilter let-row="row">
-    <gtx-select
-        class="object-filter"
-        (valueChange)="applyFilterValue('action', $event)"
-        [formControl]="filterFormControl"
-        [placeholder]="'common.action_filter_placeholder' | i18n"
-        [multiple]="true"
-        [icon]="'search'"
-        [class]="'inline'"
-        [clearable]="true"
-    >
-        <gtx-option *ngFor="let item of logActions"
-            [value]="item.name"
+<ng-template #actionFilter>
+    <gtx-table-filter-wrapper [hasValue]="filters?.action?.length > 0" (clear)="applyFilterValue('action', null)">
+        <gtx-select
+            class="object-filter"
+            [placeholder]="'common.action_filter_placeholder' | i18n"
+            [multiple]="true"
+            [value]="filters.action"
+            (valueChange)="applyFilterValue('action', $event)"
         >
-            {{ item.label }}
-        </gtx-option>
+            <gtx-option
+                *ngFor="let item of logActions"
+                [value]="item.name"
+            >{{ item.label }}</gtx-option>
 
-    </gtx-select>
+        </gtx-select>
+    </gtx-table-filter-wrapper>
 </ng-template>
 
 <ng-template #textFilter let-column="column">
-    <gtx-input 
-        [type]="'text'"
-        [class]="'inline'"
-        [icon]="'search'"
-        [clearable]="true"
-        (valueCleared)="valueClearedHandler($event)"
-        [formControl]="filterFormControl"
-        [placeholder]="'Filter '+ column.label"
-        (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
-    />
+    <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
+        <gtx-input
+            [type]="'text'"
+            [placeholder]="'Filter '+ column.label"
+            [value]="filters[column.id]"
+            (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
+        />
+    </gtx-table-filter-wrapper>
 </ng-template>
 
 <ng-template #dateFilter let-column="column">
-    <gtx-date-time-picker 
-        [displayTime]="false"
-        [formControl]="filterFormControl"
-        [placeholder]="'common.date_filter_placeholder' | i18n"
-        [clearable]="true"
-        [class]="'inline'"
-        [icon]="'search'"
-        (valueChange)="applyFilterValue('timestamp', $event)"
-    />
+    <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
+        <gtx-date-time-picker
+            [displayTime]="false"
+            [placeholder]="'common.date_filter_placeholder' | i18n"
+            [value]="filters[column.id]"
+            (valueChange)="applyFilterValue(column.id, $event)"
+        />
+    </gtx-table-filter-wrapper>
 </ng-template>

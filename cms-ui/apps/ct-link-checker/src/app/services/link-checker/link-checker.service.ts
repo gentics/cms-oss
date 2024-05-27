@@ -26,8 +26,8 @@ export interface NodeStats {
 }
 
 @Injectable({
-    providedIn: 'root'
-    })
+    providedIn: 'root',
+})
 export class LinkCheckerService {
 
     protected pages$ = new Subject<LinkCheckerPageList>();
@@ -99,10 +99,10 @@ export class LinkCheckerService {
             this.nodeStats$.next(nodeStats);
 
             const nodeId = this.filterService.options.nodeId;
-            const firstNode = (nodes.slice().shift() || {}).node;
+            const firstNode = nodes[0]?.node;
 
             // Select default node if null
-            if (nodeId === null && !!firstNode && !!firstNode.id) {
+            if (nodeId === null && firstNode?.id != null) {
                 this.filterService.options.nodeId = firstNode.id;
             }
 

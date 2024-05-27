@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import {
     ContentRepositoryType,
     Feature,
@@ -22,31 +22,13 @@ import { MockAppState, TestApplicationState } from '../../../state/test-applicat
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
 import { FolderPropertiesForm } from './folder-properties-form.component';
 
-function getInput<T>(fixture: ComponentFixture<T>, formcontrolname: string): any {
-    const input = fixture.nativeElement.querySelector(`[formcontrolname=${formcontrolname}] input`);
-    const throwNotDetectableError = (formcontrolname: string) => {
-        throw new Error(`Element valid state not detectable identfied via formcontrolname "${formcontrolname}"`);
-    };
-    const getValidState = (input: HTMLInputElement): boolean => {
-        if (!input.parentElement.classList) {
-            throwNotDetectableError(formcontrolname);
-        }
-        switch (input.parentElement.classList.contains('ng-invalid')) {
-            case true:
-                return false;
-            case false:
-                return true;
-            default:
-                throwNotDetectableError(formcontrolname);
-        }
-    };
-    if (!input || !input.attributes) {
-        throw new Error(`Element not found identified via formcontrolname "${formcontrolname}"`);
+function getInput<T>(fixture: ComponentFixture<TestComponent>, controlName: string): AbstractControl {
+    const comp = fixture.componentInstance.form;
+    if (comp?.form == null) {
+        return null;
     }
-    return {
-        value: input.value,
-        valid: getValidState(input),
-    };
+
+    return comp.form.get(controlName);
 }
 
 function triggerInputEvent(element: HTMLElement): void {
@@ -140,6 +122,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
 @Component({
     template: `
         <folder-properties-form
+            #form
             [nodeId]="nodeId"
             [folderId]="folderId"
             [properties]="properties"
@@ -151,6 +134,9 @@ const SANITIZATION_RESULT = 'sanitizationResult';
     `,
 })
 class TestComponent {
+    @ViewChild('form')
+    form: FolderPropertiesForm;
+
     nodeId: number;
     folderId: number;
     properties: EditableProperties;
@@ -564,10 +550,16 @@ describe('FolderPropertiesForm', () => {
                 contentRepositoryType,
             );
 
+            tick(1_000);
             fixture.detectChanges();
+            tick(1_000);
 
             setInputValue(fixture, 'name', '');
             setInputValue(fixture, 'directory', '');
+
+            tick(1_000);
+            fixture.detectChanges();
+            tick(1_000);
 
             // check if form input values are equal to data provided via parent component input
             expect(getInput(fixture, 'name').value).toBe('');

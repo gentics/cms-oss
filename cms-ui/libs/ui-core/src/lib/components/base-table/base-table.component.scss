@@ -66,6 +66,13 @@
             }
         }
 
+        &.filter-row {
+            .grid-cell {
+                border-bottom: 2px solid $gtx-color-warning;
+                padding: 0.5rem 1rem;
+            }
+        }
+
         &.data-row {
             .grid-cell {
                 transition: 150ms;

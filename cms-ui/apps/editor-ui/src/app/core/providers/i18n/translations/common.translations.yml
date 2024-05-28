@@ -91,6 +91,12 @@ inheritance_label_excluded:
 inheritance_label_excluded_by_parent:
     en: Not inherited in higher channel
     de: In einem übergeordnetem Channel nicht vererbt
+inheritance_label_localized:
+    en: Localized
+    de: Lokalisiert
+inheritance_label_master:
+    en: Master
+    de: Master
 next_button:
     en: Next
     de: Weiter

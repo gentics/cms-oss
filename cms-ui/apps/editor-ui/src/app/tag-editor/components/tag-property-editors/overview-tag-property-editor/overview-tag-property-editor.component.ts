@@ -437,17 +437,45 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private loadItems(itemsToLoad: Map<number, ItemsForNode>, itemType: FolderItemType): Observable<OverviewItem[]> {
         // Create API requests to load the items from each node.
-        const requests$: Observable<{ item: Item<Raw>, nodeId: number, origIndex: number }[]>[] = [];
+        const requests$: Observable<{ id:number, origId: number, item: Item<Raw>, nodeId: number, origIndex: number }[]>[] = [];
         itemsToLoad.forEach((itemsFromNode, nodeId) => {
             if (nodeId === -1) {
                 nodeId = undefined;
             }
-            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType).pipe(
-                map(items => items.map(item => ({
-                    item: item,
-                    nodeId: this.isStickyChannelEnabled ? item.inheritedFromId : item.masterNodeId,
-                    origIndex: itemsFromNode.origIndices[item.id],
-                }))),
+            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType, {fillWithNulls: true}).pipe(
+                map(loadedItems => {
+                    return itemsFromNode.itemIds
+                        .map((id, index) => {
+                            let loaded = loadedItems.find(item => item !== null && item.id === id);
+
+                            /*
+                             * Edge Case which needs to be fixed in Backend.
+                             * When loading an inherited item with the original ID and a channel ID, you get the
+                             * inherited item ID, without reference to the original one.
+                             * Therefore, we can't check for the IDs directly here.
+                             * If the same amount of items have been returned as requested, we assume that the backend
+                             * returned them in the correct order as well.
+                             * Therefore fallback to the item in the expected index to get the item.
+                             */
+                            if (!loaded && (loadedItems.length === itemsFromNode.itemIds.length)) {
+                                loaded = loadedItems[index];
+                            }
+
+                            // Ignore/Remove items we couldn't load
+                            if (!loaded) {
+                                return null;
+                            }
+
+                            return {
+                                id: loaded.id,
+                                origId: id,
+                                item: loaded,
+                                nodeId: this.isStickyChannelEnabled ? loaded.inheritedFromId : loaded.masterNodeId,
+                                origIndex: itemsFromNode.origIndices[id],
+                            };
+                        })
+                        .filter(element => element != null);
+                }),
             );
             requests$.push(request$);
         });
@@ -463,12 +491,12 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
                 Array.from(itemsToLoad).forEach(([nodeId, itemsForNode]: [number, ItemsForNode]) => {
                     itemsForNode.itemIds.forEach(itemId => {
-                        const itemsForNodeItems: { item: Item, nodeId: number, origIndex: number }[] = results.find(resultNodes => {
-                            return resultNodes.some(resultNode => resultNode.item.id === itemId);
+                        const itemsForNodeItems: { id:number, origId: number, item: Item, nodeId: number, origIndex: number }[] = results.find(resultNodes => {
+                            return resultNodes.some(resultNode => resultNode.id === itemId || resultNode.origId === itemId);
                         });
                         // if item is not existing, insert error object to be displayed instead
                         const itemLoaded: OverviewItem = Array.isArray(itemsForNodeItems) && itemsForNodeItems.find(item => {
-                            return item.item.id === itemId || item.item.masterId === itemId;
+                            return item.id === itemId || item.origId === itemId || (item.item != null && item.item.masterId === itemId);
                         }).item as OverviewItem
                         || {
                             id: itemId,

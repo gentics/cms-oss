@@ -6,12 +6,13 @@ import {
     Component,
     ContentChildren,
     EventEmitter,
+    HostBinding,
     Input,
+    OnChanges,
     Output,
     QueryList,
-    ViewChild,
-    OnChanges,
     SimpleChanges,
+    ViewChild,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
@@ -173,6 +174,7 @@ export class SelectComponent
         }
     }
 
+
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
         this.subscriptions.push(this.selectOptions.changes.subscribe(() => {
@@ -264,6 +266,7 @@ export class SelectComponent
 
         this.updateViewValue();
     }
+
 
     private isSame(value1: any, value2: any): boolean {
         if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {

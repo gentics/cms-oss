@@ -1,6 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.createNodeConflictMessage;
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
@@ -650,14 +651,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#load(com.gentics.contentnode.rest.model.request.MultiFolderLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiFolderLoadResponse load(MultiFolderLoadRequest request) {
+	public MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		Set<Reference> references = new HashSet<>();
 
@@ -672,22 +669,22 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<com.gentics.contentnode.object.Folder> allFolders =
 				t.getObjects(com.gentics.contentnode.object.Folder.class, request.getIds());
-			List<Folder> returnedFolders = new ArrayList<>(allFolders.size());
 
-			for (com.gentics.contentnode.object.Folder folder: allFolders) {
-				if (ObjectPermission.view.checkObject(folder)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(folder))) {
-					if (forUpdate) {
-						folder = t.getObject(folder, true);
-					}
-
-					Folder restFolder = ModelBuilder.getFolder(folder, null, references);
-
-					if (restFolder != null) {
-						returnedFolders.add(restFolder);
-					}
+			List<Folder> returnedFolders = getItemList(request.getIds(), allFolders, folder -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(folder.getId());
+				ids.addAll(folder.getChannelSet().values());
+				return ids;
+			}, folder -> {
+				if (forUpdate) {
+					folder = t.getObject(folder, true);
 				}
-			}
+				return ModelBuilder.getFolder(folder, null, references);
+			}, folder -> {
+				return ObjectPermission.view.checkObject(folder)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(folder));
+			}, fillWithNulls);
+
 			MultiFolderLoadResponse response = new MultiFolderLoadResponse(returnedFolders);
 
 			// TODO make for filtered folders

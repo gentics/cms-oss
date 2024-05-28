@@ -3,33 +3,46 @@ import { InheritableItem } from '@gentics/cms-models';
 
 export enum InheritanceType {
     /** the object is inherited without restrictions */
-    Inherited = 'inherited',
+    INHERITED = 'inherited',
 
     /** the object is inherited with some restrictions */
-    Disinherited = 'disinherited',
+    DISINHERITED = 'disinherited',
 
     /** the object is excluded from multichannelling */
-    Excluded = 'excluded',
+    EXCLUDED = 'excluded',
 
     /** the object is not inherited into a higher channel */
-    ExcludedByParent = 'excluded_by_parent',
+    EXCLUDED_BY_PARENT = 'excluded_by_parent',
+
+    /** The object is localized in the channel */
+    LOCALIZED = 'localized',
+
+    MASTER = 'master',
 }
 
 @Pipe({
-  name: 'getInheritance'
+    name: 'getInheritance',
 })
 export class GetInheritancePipe implements PipeTransform {
 
-  transform(value: InheritableItem, args?: any): InheritanceType {
-    if (value && value.excluded === true) {
-        return InheritanceType.Excluded;
-    }
+    transform(value: InheritableItem, args?: any): InheritanceType {
+        if (value && value.excluded === true) {
+            return InheritanceType.EXCLUDED;
+        }
 
-    if (value && value.disinherited === true) {
-        return InheritanceType.Disinherited;
-    }
+        if (value && value.disinherited === true) {
+            return InheritanceType.DISINHERITED;
+        }
 
-    return InheritanceType.Inherited;
-  }
+        if (value && value.inherited) {
+            return InheritanceType.INHERITED;
+        }
+
+        if (value && value.inheritedFromId !== value.masterNodeId) {
+            return InheritanceType.LOCALIZED;
+        }
+
+        return InheritanceType.MASTER;
+    }
 
 }

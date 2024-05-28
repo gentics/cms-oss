@@ -23,10 +23,6 @@ label {
         gtx-dropdown-trigger {
             width: 100%;
         }
-
-        .with-label {
-            margin-top: 19px;
-        }
     }
 
     .placeholder {
@@ -45,6 +41,10 @@ label {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        > icon {
+            margin-top: -1px;
         }
     }
 
@@ -69,12 +69,17 @@ label {
         flex-direction: column;
         height: 2.5rem;
         justify-content: center;
-        margin-top: 20px;
+        margin-top: 1px;
         transition: 300ms;
 
         icon {
             color: inherit;
         }
+    }
+
+    .with-label .view-value,
+    .with-label ~ .addon-button  {
+        margin-top: 20px;
     }
 }
 
@@ -165,4 +170,3 @@ label {
         }
     }
 }
-

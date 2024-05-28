@@ -82,9 +82,17 @@
             <detail-chip *ngSwitchCase="'globalId'">
                 {{ 'editor.item_global_id_label' | i18n }}:<br>{{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'inheritance'">
-                <i class="material-icons inheritance-icon-{{ item | getInheritance }}" [attr.translate]="'no'"></i> {{ 'common.inheritance_label_' + (item | getInheritance) | i18n }}
-            </detail-chip>
+            <ng-container *ngSwitchCase="'inheritance'">
+                <ng-container
+                    [ngTemplateOutlet]="inheritanceTpl"
+                    [ngTemplateOutletContext]="{ inheritance: (item | getInheritance) }"
+                ></ng-container>
+                <ng-template #inheritanceTpl let-inheritance="inheritance">
+                    <detail-chip *ngIf="inheritance != null">
+                        <icon class="inheritance-icon-{{ inheritance }}"></icon> {{ ('common.inheritance_label_' + inheritance) | i18n }}
+                    </detail-chip>
+                </ng-template>
+            </ng-container>
         </div>
     </div>
 </div>

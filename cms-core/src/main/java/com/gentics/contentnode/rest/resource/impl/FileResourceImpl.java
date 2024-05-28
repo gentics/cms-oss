@@ -5,6 +5,7 @@
  */
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 
@@ -368,14 +369,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FileResource#load(com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiFileLoadResponse load(MultiObjectLoadRequest request) {
+	public MultiFileLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		Set<Reference> references = new HashSet<>();
 
@@ -385,23 +382,22 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<File> allFiles = t.getObjects(File.class, request.getIds());
-			List<com.gentics.contentnode.rest.model.File> returnedFiles = new ArrayList<>(allFiles.size());
 
-			for (com.gentics.contentnode.object.File file: allFiles) {
-				if (!file.isImage()
-						&& ObjectPermission.view.checkObject(file)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(file))) {
-					if (forUpdate) {
-						file = t.getObject(file, true);
-					}
-
-					com.gentics.contentnode.rest.model.File restFile = ModelBuilder.getFile(file, references);
-
-					if (restFile != null) {
-						returnedFiles.add(restFile);
-					}
+			List<com.gentics.contentnode.rest.model.File> returnedFiles = getItemList(request.getIds(), allFiles, file -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(file.getId());
+				ids.addAll(file.getChannelSet().values());
+				return ids;
+			}, file -> {
+				if (forUpdate) {
+					file = t.getObject(file, true);
 				}
-			}
+				return ModelBuilder.getFile(file, references);
+			}, file -> {
+				return ObjectPermission.view.checkObject(file)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(file));
+			}, fillWithNulls);
+
 			MultiFileLoadResponse response = new MultiFileLoadResponse(returnedFiles);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allFiles, request.getPackage(), o -> o.getGlobalId().toString()));
 			return response;

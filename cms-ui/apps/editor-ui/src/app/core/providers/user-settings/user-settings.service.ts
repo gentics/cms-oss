@@ -615,12 +615,9 @@ export class UserSettingsService {
                     return item.id === fav.id && (
                         item.type === fav.type
                         || (item.type === 'node' && fav.type === 'folder')
-                    ) && item.nodeId === fav.nodeId;
+                        // Forms do not have a node-id
+                    ) && (item.type === 'form' || item.nodeId === fav.nodeId);
                 });
-
-                if (existingItem) {
-                    fav.nodeId = existingItem.nodeId;
-                }
 
                 return existingItem;
             });

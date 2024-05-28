@@ -65,6 +65,10 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     @Input()
     public renderers: { [columnId: string]: TemplateRef<any> } = {};
 
+    /** Filter columns which can be optionally rendered. */
+    @Input()
+    public filters: { [columnId: string]: TemplateRef<any> } = {};
+
     /** Event which emits when a clickable cell in a row has been clicked. */
     @Output()
     public rowClick = new EventEmitter<R>();
@@ -96,6 +100,9 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     /** Flag if any actions are actually present. */
     public hasActions = false;
 
+    /** Flag if any filters are visible. */
+    public hasFilters = false;
+
     /** All actions which are for single rows */
     public singleActions: TableAction<T>[] = [];
 
@@ -115,6 +122,10 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         if (changes.actions) {
             this.hasActions = Array.isArray(this.actions) && this.actions.length > 0;
             this.rebuildActions();
+        }
+
+        if (changes.columns || changes.filters) {
+            this.determineFilterState();
         }
     }
 
@@ -213,6 +224,12 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
             actionId: action.id,
             selection: true,
         });
+    }
+
+    protected determineFilterState(): void {
+        const filterKeys = Object.keys(this.filters || {});
+        this.hasFilters = (this.columns || []).some(col => filterKeys.includes(col.id));
+        this.changeDetector.markForCheck();
     }
 
     protected rebuildActions(): void {

@@ -2,8 +2,8 @@ import { ActionLogEntryBO } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { AnyModelType, ActionLogEntry, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ActionLogEntry, AnyModelType, LogsListRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { ActionLogEntryLoaderService } from '../../providers';
 
@@ -13,7 +13,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO> {
+export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> implements OnInit {
 
     protected rawColumns: TableColumn<ActionLogEntryBO>[] = [
         {
@@ -49,6 +49,10 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'logs';
 
+    public logTypes = [];
+
+    public logActions = [];
+
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -63,5 +67,31 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             loader,
             modalService,
         );
+        this.init();
     }
+
+    ngOnInit(): void {
+        super.ngOnInit();
+        this.init();
+    }
+
+    async init(): Promise<void> {
+        const [logTypes, logActions] = await Promise.all([
+            (this.loader as ActionLogEntryLoaderService).getActionLogTypes(),
+            (this.loader as ActionLogEntryLoaderService).getActions(),
+        ])
+        this.logTypes = logTypes;
+        this.logActions = logActions;
+        this.changeDetector.markForCheck();
+    }
+
+    public valueClearedHandler(): void {
+        this.clear();
+    }
+
+    private clear(): void {
+        this.filters = {};
+        this.reload();
+    }
+
 }

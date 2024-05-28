@@ -40,6 +40,7 @@ export * from './tab-group/tab-group.component';
 export * from './tab-pane/tab-pane.component';
 export * from './tab/tab.component';
 export * from './table/table.component';
+export * from './table-filter-wrapper/table-filter-wrapper.component';
 export * from './tabs/tabs.component';
 export * from './textarea/textarea.component';
 export * from './toast/toast.component';

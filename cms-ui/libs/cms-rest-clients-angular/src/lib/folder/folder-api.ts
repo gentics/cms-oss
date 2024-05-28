@@ -326,7 +326,9 @@ export class FolderApi {
 
                     return (<any> Object).values(
                         (<any> res)[itemKey].map((item: any) => {
-                            item._checkedNodeId = nodeId; // Add previous nodeId for reference
+                            if (item !== null) {
+                                item._checkedNodeId = nodeId; // Add previous nodeId for reference
+                            }
                             return item;
                         }),
                     );

@@ -5,6 +5,7 @@
  */
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
@@ -1020,14 +1021,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.PageResource#load(com.gentics.contentnode.rest.model.request.MultiPageLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiPageLoadResponse load(MultiPageLoadRequest request) {
+	public MultiPageLoadResponse load(MultiPageLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 		Set<Reference> references = new HashSet<>();
@@ -1062,22 +1059,21 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
 			List<Page> allPages = t.getObjects(Page.class, request.getIds());
-			List<com.gentics.contentnode.rest.model.Page> returnedPages  = new ArrayList<>(allPages.size());
 
-			for (Page page: allPages) {
-				if (ObjectPermission.view.checkObject(page)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(page))) {
-					if (forUpdate) {
-						page = t.getObject(page, true);
-					}
-
-					com.gentics.contentnode.rest.model.Page restPage = getPage(page, references, !forUpdate);
-
-					if (restPage != null) {
-						returnedPages.add(restPage);
-					}
+			List<com.gentics.contentnode.rest.model.Page> returnedPages = getItemList(request.getIds(), allPages, page -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(page.getId());
+				ids.addAll(page.getChannelSet().values());
+				return ids;
+			}, page -> {
+				if (forUpdate) {
+					page = t.getObject(page, true);
 				}
-			}
+				return getPage(page, references, !forUpdate);
+			}, page -> {
+				return ObjectPermission.view.checkObject(page)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(page));
+			}, fillWithNulls);
 
 			return new MultiPageLoadResponse(returnedPages);
 		} catch (NodeException e) {

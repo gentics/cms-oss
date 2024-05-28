@@ -6,7 +6,7 @@ import {
     Input,
     OnInit,
     Optional,
-    Output,
+    Output
 } from '@angular/core';
 import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
@@ -86,6 +86,10 @@ export class DateTimePickerComponent
     /** Set to `false` to omit the seconds of the time picker part. Defaults to `true`. */
     @Input()
     public displaySeconds = true;
+
+    /** Placeholder which is shown if nothing is selected. */
+    @Input()
+    public placeholder = '';
 
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */
     @Output()

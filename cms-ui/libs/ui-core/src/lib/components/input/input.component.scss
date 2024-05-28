@@ -4,14 +4,20 @@
     position: relative;
     display: block;
 
+    .wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+    }
+
     @include input-label-styles('> label');
 
-    > input[type=text],
-    > input[type=number],
-    > input[type=password],
-    > input[type=email],
-    > input[type=tel],
-    > input[type=url] {
+    .input-element[type=text],
+    .input-element[type=number],
+    .input-element[type=password],
+    .input-element[type=email],
+    .input-element[type=tel],
+    .input-element[type=url] {
         @include input-base;
 
         &::-ms-clear {
@@ -19,11 +25,41 @@
             width: 0;
             height: 0;
         }
+
+        &.has-addon {
+            border-top-right-radius: 0px;
+            border-bottom-right-radius: 0px;
+            border-right-width: 1px;
+        }
     }
 
     &.ng-touched.ng-invalid {
         > input {
             border-color: $gtx-color-alert;
         }
+    }
+
+    .addon-button {
+        align-self: flex-start;
+        background: $gtx-color-very-light-gray;
+        border-top: 2px solid $gtx-color-light-gray;
+        border-right: 2px solid $gtx-color-light-gray;
+        border-bottom: 2px solid $gtx-color-light-gray;
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+        display: flex;
+        flex-direction: column;
+        height: 2.5rem;
+        justify-content: center;
+        transition: 300ms;
+        margin-top: 20px;
+
+        icon {
+            color: inherit;
+        }
+    }
+
+    .clear-button:hover::ng-deep .btn {
+        color: $gtx-color-alert !important;
     }
 }

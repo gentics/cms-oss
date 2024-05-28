@@ -3,13 +3,14 @@
     belowTrigger="false"
     [sticky]="multiple"
     [disabled]="disabled"
+    [class.with-label]="label != null"
     [class.clearable]="clearable"
     [class.select-all]="selectAll"
     [class.has-addon]="clearable || selectAll"
     (open)="dropdownOpened()"
     (keydown)="handleKeydown($event)"
 >
-    <gtx-dropdown-trigger [class.with-label]="label != null">
+    <gtx-dropdown-trigger>
         <div
             #viewValueContainer
             class="view-value select-input"
@@ -18,7 +19,7 @@
             [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
             (blur)="inputBlur($event)"
         >
-            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)">{{ viewValue }}</div>
+            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)" class="view-value-item">{{ viewValue }}</div>
             <div *ngIf="placeholder && selectedOptions.length == 0" class="placeholder">{{ placeholder }}</div>
             <div *ngIf="!placeholder && selectedOptions.length == 0"></div>
             <icon>arrow_drop_down</icon>
@@ -77,7 +78,7 @@
     [disabled]="disabled"
     (click)="clearSelection()"
 >
-    <icon>clear</icon>
+    <icon class="clear-icon">clear</icon>
 </gtx-button>
 
 <gtx-button

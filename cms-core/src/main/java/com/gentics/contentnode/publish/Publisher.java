@@ -394,10 +394,27 @@ public class Publisher implements Runnable {
 			boolean workPhaseStarted = false;
 			int lastOlderQueueEntries = 0;
 
+			// total number of retries to restart the dirtqueue worker thread
+			int maxRestartTries = 5;
+			int restartTries = 0;
+
 			publisherInfo.setPhase(PublisherPhase.DIRTQUEUE);
 			while (!beginPublish) {
 				// check whether the publish process has been interrupted
 				PublishRenderResult.checkInterrupted();
+
+				if (!factory.isDirtQueueWorkerRunning()) {
+					if (restartTries >= maxRestartTries) {
+						throw new NodeException(String
+								.format("DirtQueue worker could not be restarted after %d attempts. The CMS probably needs to be restarted to resolve this situation.", restartTries));
+					} else {
+						restartTries++;
+						renderResult.warn(Publisher.class, String.format(
+								"DirtQueue worker is currently not running (probably died). Trying to restart it (attempt #%d)",
+								restartTries));
+						factory.startDirtQueueWorker();
+					}
+				}
 
 				t = factory.startTransaction(true);
 

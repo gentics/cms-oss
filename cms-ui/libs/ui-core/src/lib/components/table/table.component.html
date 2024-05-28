@@ -56,6 +56,38 @@
         </div>
     </div>
 
+    <div *ngIf="hasFilters" class="grid-row filter-row">
+        <div *ngIf="selectable" class="grid-cell select-column" (click)="preventClick($event)">
+            <!-- Leave empty -->
+        </div>
+
+        <div
+            *ngFor="let column of columns; trackBy: trackElement"
+            class="grid-cell data-column"
+            [class.sortable]="sortable && column.sortable"
+            [class.sort-active]="sortBy === column.id"
+            [attr.column-id]="column.id"
+            (click)="preventClick($event)"
+        >
+            <ng-container
+                *ngIf="filters[column.id]"
+                [ngTemplateOutlet]="filters[column.id]"
+                [ngTemplateOutletContext]="{
+                    row: row,
+                    column: column
+                }"
+            ></ng-container>
+        </div>
+
+        <div
+            *ngIf="!hideActions && hasActions"
+            class="grid-cell action-column"
+            (click)="preventClick($event)"
+        >
+            <!-- Leave empty -->
+        </div>
+    </div>
+
     <div
         *ngFor="let row of rows | paginate:{
             id: UNIQUE_ID,

@@ -361,6 +361,14 @@ public class ContentNodeFactory {
 	}
 
 	/**
+	 * Check whether the dirtqueue worker thread is up and running
+	 * @return true, iff thread is alive
+	 */
+	public boolean isDirtQueueWorkerRunning() {
+		return factory.isDirtQueueWorkerRunning();
+	}
+
+	/**
 	 * A callback interface used by the {@link #withTransaction(Transaction)} method.
 	 */
 	public interface WithTransaction {

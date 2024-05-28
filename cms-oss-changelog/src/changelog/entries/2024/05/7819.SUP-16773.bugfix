@@ -1,0 +1,3 @@
+The publish process will now check whether the dirtqueue worker thread is alive before waiting for dirtqueue events to be handled.
+If the dirtqueue worker is found to not be alive, a restart will be attempted. After 5 failed attempts, the publish process will fail.
+This resolves endlessly hanging publish processes, when the dirtqueue worker thread died before.

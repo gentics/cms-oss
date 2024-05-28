@@ -2936,8 +2936,11 @@ export class FolderActionsService {
 
     /**
      * Publish a page or pages.
+     *
+     * @param pages The pages to publish
+     * @param forceInstantPublish If each page publish should have a dedicated publish request to enforce instant publishing for all of them.
      */
-    publishPages(pages: Page[]): Promise<{ queued: Page<Normalized>[], published: Page<Normalized>[] }> {
+    publishPages(pages: Page[], forceInstantPublish: boolean = false): Promise<{ queued: Page<Normalized>[], published: Page<Normalized>[] }> {
         const pagesToPublish = pages.filter(page => !page.inherited);
         const inheritedPages = pages.filter(page => page.inherited);
 
@@ -2972,18 +2975,38 @@ export class FolderActionsService {
             ),
         );
 
+        let publishReq: Observable<void>;
+
+        /*
+         * The feature "instant publishing" only works/is enabled when a single page is published
+         * via the correct endpoint (`publish` vs `publishMultiple`).
+         * Therefore additional check here to make that possible.
+         */
+        if (pageIds.length === 1 || forceInstantPublish) {
+            publishReq = forkJoin(pageIds.map(pageId => this.client.page.publish(pageId, {
+                alllang: false,
+            }, {
+                nodeId,
+            }))).pipe(
+                map(() => undefined),
+            );
+        } else {
+            publishReq = this.client.page.publishMultiple({
+                ids: pageIds,
+                alllang: false,
+            }, { nodeId }).pipe(
+                map(() => undefined),
+            );
+        }
+
         // Combine the publishing and permission fetching
-        return forkJoin([this.client.page.publishMultiple({
-            ids: pageIds,
-            alllang: false,
-        }, { nodeId }), ...permissionRequests]).pipe(
+        return forkJoin([
+            publishReq,
+            forkJoin([...permissionRequests]),
+        ]).pipe(
             // After publish reqeuest(s) display notifications depending on permissions:
             // those pages a user is not permitted to publish will have been queued as publish requests.
-            map(allResults => {
-
-                // remove response message from forkjoined array
-                const publishedOrQueuedPages = allResults.slice(1) as Array<{ id: number, permissions: PagePermissions }>;
-
+            map(([_, publishedOrQueuedPages]) => {
                 // notify state
                 this.appState.dispatch(new ListSavingSuccessAction('page'));
 

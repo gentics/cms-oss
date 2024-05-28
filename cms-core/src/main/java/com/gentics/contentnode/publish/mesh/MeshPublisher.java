@@ -3186,7 +3186,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		RestModel dataAsModel = new RestModel() {
 			@Override
-			public String toJson() {
+			public String toJson(boolean minify) {
 				return data;
 			}
 		};

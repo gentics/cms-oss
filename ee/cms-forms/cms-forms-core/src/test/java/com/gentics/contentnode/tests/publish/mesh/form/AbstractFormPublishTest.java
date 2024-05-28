@@ -71,7 +71,7 @@ public abstract class AbstractFormPublishTest {
 	/**
 	 * Name of the mesh project
 	 */
-	public final static String MESH_PROJECT_NAME = "form";
+	public final static String MESH_PROJECT_NAME = "form_project";
 
 	public final static String pluginFileName = "mesh-forms-plugin.jar";
 
@@ -81,6 +81,8 @@ public abstract class AbstractFormPublishTest {
 
 	public static File pluginConfigDir;
 
+	public static File licenseKeyFile;
+
 	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	static {
@@ -88,6 +90,7 @@ public abstract class AbstractFormPublishTest {
 			pluginJarFile = new File(pluginFilePath);
 			assertThat(pluginJarFile).as("Plugin File").exists().canRead().isFile();
 			pluginConfigDir = new File(FormPublishTest.class.getResource("config").toURI());
+			licenseKeyFile = new File(FormPublishTest.class.getResource("license.key").toURI());
 		} catch (URISyntaxException e) {
 			fail("Error while preparing plugin", e);
 		}
@@ -108,7 +111,8 @@ public abstract class AbstractFormPublishTest {
 	@ClassRule
 	public static MeshContext mesh = new MeshContext()
 			.withFileSystemBind(pluginJarFile.getAbsolutePath(), "/plugins/" + pluginFileName, BindMode.READ_ONLY)
-			.withFileSystemBind(pluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY);
+			.withFileSystemBind(pluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
+			.withFileSystemBind(licenseKeyFile.getAbsolutePath(), "/mesh/license.key", BindMode.READ_ONLY);
 
 	protected static final Logger log = LoggerFactory.getLogger(AbstractFormPublishTest.class);
 

@@ -10,7 +10,6 @@ import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
 import { TagEditorOverlayHostComponent } from './tag-editor-overlay-host.component';
 
@@ -23,7 +22,6 @@ describe('TagEditorOverlayHostComponent', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
-                IFrameStylesService,
                 UserAgentRef,
             ],
             declarations: [

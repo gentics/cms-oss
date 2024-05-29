@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -57,6 +58,7 @@ import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentMap;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
@@ -82,6 +84,8 @@ import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.job.DeleteJob;
+import com.gentics.contentnode.job.DeleteJob.DeletionOperand;
 import com.gentics.contentnode.job.MultiPagePublishJob;
 import com.gentics.contentnode.messaging.MessageSender;
 import com.gentics.contentnode.msg.NodeMessage;
@@ -133,6 +137,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.DiffRequest;
 import com.gentics.contentnode.rest.model.request.LinksType;
+import com.gentics.contentnode.rest.model.request.MultiDeletionRequest;
 import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
 import com.gentics.contentnode.rest.model.request.MultiPageAssignRequest;
 import com.gentics.contentnode.rest.model.request.MultiPageLoadRequest;
@@ -259,7 +264,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			folderResource.setTransaction(t);
 
 			try {
-				channelIdSet = setChannelToTransaction(pageListParams.nodeId);
+				channelIdSet = MiscUtils.setChannelToTransaction(pageListParams.nodeId);
 
 				try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin, inFolder.folderId)) {
 					// load the folder
@@ -936,7 +941,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			Page page;
 
 			// set the nodeId, if provided
-			channelIdset = setChannelToTransaction(nodeId);
+			channelIdset = MiscUtils.setChannelToTransaction(nodeId);
 
 			boolean readOnly = !update;
 			PageLoadResponse response = new PageLoadResponse();
@@ -1102,7 +1107,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				"No page data was provided in the preview request."));
 				return response;
 			}
-			channelIdset = setChannelToTransaction(request.getNodeId());
+			channelIdset = MiscUtils.setChannelToTransaction(request.getNodeId());
 			Page page = ModelBuilder.getPage(request.getPage(), true);
 			ContentNodeFactory factory = ContentNodeFactory.getInstance();
 
@@ -1288,7 +1293,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		try {
 			t = TransactionManager.getCurrentTransaction();
-			channelIdSet = setChannelToTransaction(nodeId);
+			channelIdSet = MiscUtils.setChannelToTransaction(nodeId);
 			List<String> feedback = new ArrayList<String>(1);
 
 			MultiPagePublishJob.PublishSuccessState state =
@@ -1408,12 +1413,25 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @see com.gentics.contentnode.rest.api.PageResource#delete(java.lang.String)
 	 */
 	@POST
+	@Path("/delete")
+	public GenericResponse delete(@QueryParam("nodeId") Integer nodeId, MultiDeletionRequest request) throws NodeException {
+		Set<DeletionOperand<?>> ops = request.getIds().stream().map(id -> new DeleteJob.DeletionOperand<Page>(Page.class, nodeId, Integer.parseInt(id), Optional.of(this::deletePage))).collect(Collectors.toSet());
+		DeleteJob deleteJob = new DeleteJob(ops);
+
+		return deleteJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.PageResource#delete(java.lang.String)
+	 */
+	@POST
 	@Path("/delete/{id}")
 	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
 
 		try {
 			// set the channel ID if given
-			boolean isChannelIdset = setChannelToTransaction(nodeId);
+			boolean isChannelIdset = MiscUtils.setChannelToTransaction(nodeId);
 
 			// get the page (this will check for existence and delete permission)
 			Page page = getLockedPage(id, PermHandler.ObjectPermission.delete);
@@ -1451,25 +1469,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						public GenericResponse call() throws Exception {
 							Page page = getLockedPage(String.valueOf(pageId));
 
-							// get all (other) language variants, which are visible in the node
-							ArrayList<Page> nodeVariants = new ArrayList<>(page.getLanguageVariants(true));
-							nodeVariants.remove(page);
-							// get all (other) language variants, not considering the node languages
-							ArrayList<Page> allVariants = new ArrayList<>(page.getLanguageVariants(false));
-							allVariants.remove(page);
-
-							// if we would delete the last node specific page variant, but there would be
-							// other language variants (not visible in the node)
-							// we delete them all
-							if (nodeVariants.isEmpty() && !allVariants.isEmpty()) {
-								for (Page p : allVariants) {
-									p.delete();
-								}
-							}
-
-							// now delete the page
-							page.unlock();
-							page.delete();
+							deletePage(page);
 
 							I18nString message = new CNI18nString("page.delete.success");
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
@@ -1666,7 +1666,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		try {
 			// set the channel ID if given
-			isChannelIdset = setChannelToTransaction(nodeId);
+			isChannelIdset = MiscUtils.setChannelToTransaction(nodeId);
 
 			page = getPage(id, ObjectPermission.view);
 
@@ -3705,40 +3705,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 *		 on the page
 	 */
 	public static Page getPage(String id, PermHandler.ObjectPermission... perms) throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		Page page = t.getObject(Page.class, id);
-		if (page == null) {
-			I18nString message = new CNI18nString("page.notfound");
-			message.setParameter("0", id.toString());
-			throw new EntityNotFoundException(message.toString());
-		}
-
-		// check permission bits
-		for (PermHandler.ObjectPermission p : perms) {
-			if (!p.checkObject(page)) {
-				I18nString message = new CNI18nString("page.nopermission");
-				message.setParameter("0", id.toString());
-				throw new InsufficientPrivilegesException(message.toString(), page, p.getPermType());
-			}
-
-			// delete permissions for master pages must be checked for all channels containing localized copies
-			if (page.isMaster() && p == ObjectPermission.delete) {
-				for (int channelSetNodeId : page.getChannelSet().keySet()) {
-					if (channelSetNodeId == 0) {
-						continue;
-					}
-					Node channel = t.getObject(Node.class, channelSetNodeId);
-					if (!ObjectPermission.delete.checkObject(page, channel)) {
-						I18nString message = new CNI18nString("page.nopermission");
-						message.setParameter("0", id.toString());
-						throw new InsufficientPrivilegesException(message.toString(), page, PermType.delete);
-					}
-				}
-			}
-		}
-
-		return page;
+		return MiscUtils.load(Page.class, id, true, perms);
 	}
 
 	/**
@@ -4163,7 +4130,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			public PageCopyResponse call() throws Exception {
 				Transaction t = TransactionManager.getCurrentTransaction();
 
-				boolean channelSet = setChannelToTransaction(request.getNodeId());
+				boolean channelSet = MiscUtils.setChannelToTransaction(request.getNodeId());
 				try {
 					PageCopyResponse response = new PageCopyResponse(null, new ResponseInfo(ResponseCode.OK, "Copied pages"));
 
@@ -4622,7 +4589,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			String responseMessage = null;
 
 			// set the nodeId, if provided
-			channelIdSet = setChannelToTransaction(nodeId);
+			channelIdSet = MiscUtils.setChannelToTransaction(nodeId);
 
 			boolean readOnly = !editMode;
 			PageRenderResponse response = new PageRenderResponse();
@@ -4745,6 +4712,33 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				t.resetChannel();
 			}
 		}
+	}
+
+	/**
+	 * Internal page deletion.
+	 * 
+	 * @param page
+	 */
+	protected void deletePage(Page page) throws NodeException {
+		// get all (other) language variants, which are visible in the node
+		ArrayList<Page> nodeVariants = new ArrayList<>(page.getLanguageVariants(true));
+		nodeVariants.remove(page);
+		// get all (other) language variants, not considering the node languages
+		ArrayList<Page> allVariants = new ArrayList<>(page.getLanguageVariants(false));
+		allVariants.remove(page);
+
+		// if we would delete the last node specific page variant, but there would be
+		// other language variants (not visible in the node)
+		// we delete them all
+		if (nodeVariants.isEmpty() && !allVariants.isEmpty()) {
+			for (Page p : allVariants) {
+				p.delete();
+			}
+		}
+
+		// now delete the page
+		page.unlock();
+		page.delete();
 	}
 
 	/**

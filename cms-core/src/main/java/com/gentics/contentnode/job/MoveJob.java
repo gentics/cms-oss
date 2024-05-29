@@ -19,12 +19,12 @@ import com.gentics.lib.i18n.CNI18nString;
  */
 public class MoveJob extends AbstractBackgroundJob {
 	/**
-	 * class of objects to be deleted
+	 * class of objects to be moved
 	 */
 	protected Class<? extends NodeObject> clazz;
 
 	/**
-	 * collection of object id's to be deleted
+	 * collection of object id's to be moved
 	 */
 	protected Collection<Integer> ids;
 

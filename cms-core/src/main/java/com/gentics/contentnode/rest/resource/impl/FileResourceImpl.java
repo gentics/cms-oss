@@ -9,9 +9,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,12 +26,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -77,6 +75,8 @@ import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.DisinheritUtils;
 import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.job.DeleteJob;
+import com.gentics.contentnode.job.DeleteJob.DeletionOperand;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.File;
@@ -101,6 +101,7 @@ import com.gentics.contentnode.rest.model.request.FileCopyRequest;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.IdSetRequest;
+import com.gentics.contentnode.rest.model.request.MultiDeletionRequest;
 import com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest;
 import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
 import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
@@ -203,7 +204,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 		try {
-			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
+			channelIdSet = MiscUtils.setChannelToTransaction(fileListParams.nodeId);
 
 			try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin, inFolder.folderId)) {
 				com.gentics.contentnode.object.Folder folder = folderResource.getFolder(inFolder.folderId, false);
@@ -331,7 +332,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		try {
 			// Set the channel context from which to retrieve the image,
 			// if `nodeId' is provided.
-			isChannelIdSet = setChannelToTransaction(nodeId);
+			isChannelIdSet = MiscUtils.setChannelToTransaction(nodeId);
 			// Load the File from GCN
 			File file = getFile(id, update, ObjectPermission.view);
 
@@ -1613,6 +1614,18 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#delete(java.lang.String)
+	 */
+	@POST
+	@Path("/delete")
+	public GenericResponse delete(@QueryParam("nodeId") Integer nodeId, MultiDeletionRequest request) throws Exception {
+		Set<DeletionOperand<?>> ops = request.getIds().stream().map(id -> new DeleteJob.DeletionOperand<>(File.class, nodeId, Integer.parseInt(id))).collect(Collectors.toSet());
+		DeleteJob deleteJob = new DeleteJob(ops);
+		return deleteJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+	}
+
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.resource.FileResource#delete(java.lang.String, java.lang.Integer)
 	 */
@@ -2072,51 +2085,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 */
 	protected File getFile(String id, boolean forUpdate, PermHandler.ObjectPermission... perms) throws EntityNotFoundException,
 				InsufficientPrivilegesException, NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		File file = t.getObject(File.class, id, forUpdate);
-
-		if (file == null) {
-			I18nString message = new CNI18nString("file.notfound");
-
-			message.setParameter("0", id.toString());
-			throw new EntityNotFoundException(message.toString());
-		}
-
-		// if the file is an image the correct class has to be applied. this is important as
-		// saving will decide the ttype depending on the class by using the .getTType() method
-		// of the current transaction, which will result in 10008 for images without this fix.
-		if (file.isImage()) {
-			// This does nothing since ContentFile implements ImageFile anyways.
-			file = t.getObject(ImageFile.class, id, forUpdate);
-		}
-
-		// check additional permissions
-		for (PermHandler.ObjectPermission p : perms) {
-			if (!p.checkObject(file)) {
-				I18nString message = new CNI18nString("file.nopermission");
-
-				message.setParameter("0", id.toString());
-				throw new InsufficientPrivilegesException(message.toString(), file, p.getPermType());
-			}
-
-			// delete permissions for master files must be checked for all channels containing localized copies
-			if (file.isMaster() && p == ObjectPermission.delete) {
-				for (int channelSetNodeId : file.getChannelSet().keySet()) {
-					if (channelSetNodeId == 0) {
-						continue;
-					}
-					Node channel = t.getObject(Node.class, channelSetNodeId);
-					if (!ObjectPermission.delete.checkObject(file, channel)) {
-						I18nString message = new CNI18nString("file.nopermission");
-						message.setParameter("0", id.toString());
-						throw new InsufficientPrivilegesException(message.toString(), file, PermType.delete);
-					}
-				}
-			}
-		}
-
-		return file;
+		return MiscUtils.load(File.class, id, true, forUpdate, perms);
 	}
 
 	/**

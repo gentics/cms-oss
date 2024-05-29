@@ -25,7 +25,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.job.DeleteJob;
+import com.gentics.contentnode.helper.DeleteHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
@@ -46,8 +46,8 @@ import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.db.SQLExecutor;
@@ -813,7 +813,7 @@ public class DirtingSandboxTest {
 		// now delete the construct and check whether the page is dirted
 		int dirtedPages = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		DeleteJob.process(Construct.class, new ArrayList<Integer>(Arrays.asList(constructId)), false, 0);
+		DeleteHelper.process(Construct.class, new ArrayList<Integer>(Arrays.asList(constructId)), false, 0);
 		t.commit(false);
 
 		t = testContext.startTransaction((int)(System.currentTimeMillis() / 1000));

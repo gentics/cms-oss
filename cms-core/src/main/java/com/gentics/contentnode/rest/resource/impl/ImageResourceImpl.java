@@ -160,7 +160,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 		try {
-			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
+			channelIdSet = MiscUtils.setChannelToTransaction(fileListParams.nodeId);
 
 			try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin, inFolder.folderId)) {
 				com.gentics.contentnode.object.Folder folder = folderResource.getFolder(inFolder.folderId, false);
@@ -245,7 +245,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 
 		try {
 			// Set the nodeId, if provided
-			isChannelIdSet = setChannelToTransaction(nodeId);
+			isChannelIdSet = MiscUtils.setChannelToTransaction(nodeId);
 			// Load the image from GCN
 			ImageFile image = getImage(id, update, ObjectPermission.view);
 

@@ -689,32 +689,6 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 	}
 
 	/**
-	 * Set the channel with given id to the transaction (so that everything is done in the scope of this channel).
-	 * If null or 0 is passed here, nothing is changed. If a nodeId of a non-existing node is passed here, an exception
-	 * is thrown
-	 * @param nodeId id of the channel
-	 * @return true if a channel id has been set, false if not
-	 * @throws NodeException
-	 */
-	protected boolean setChannelToTransaction(Integer nodeId) throws NodeException {
-		if (nodeId == null) {
-			return false;
-		} else if (nodeId.intValue() == 0) {
-			return false;
-		} else {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			Node channel = t.getObject(Node.class, nodeId);
-
-			if (channel == null) {
-				throw new NodeException("Node with id {" + nodeId + "} does not exist");
-			}
-
-			t.setChannelId(nodeId);
-			return true;
-		}
-	}
-
-	/**
 	 * Check whether the user has all necessary permissions to implicitly restore the master object and folder(s)
 	 * of the given object (if master object and/or folder(s) are in the wastebin).
 	 * @param obj object to check

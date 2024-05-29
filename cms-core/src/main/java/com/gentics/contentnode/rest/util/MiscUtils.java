@@ -61,6 +61,7 @@ import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.ImageFile;
+import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
@@ -289,29 +290,94 @@ public class MiscUtils {
 	 * @throws NodeException
 	 */
 	public static <T extends NodeObject> T load(Class<T> clazz, String id, boolean expectExistence, ObjectPermission...perms) throws NodeException {
+		return load(clazz, id, expectExistence, false, perms);
+	}
+
+	/**
+	 * Load an object with internal or external id and check the view permission (and other optional permissions)
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param clazz object class
+	 * @param id object id (internal or external)
+	 * @param expectExistence flag to influence behaviour, when the object is not found: true will throw an EntityNotFoundException, false will return null
+	 * @param forUpdate load for update
+	 * @param perms optional permissions to check
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends NodeObject> T load(Class<T> clazz, String id, boolean expectExistence, boolean forUpdate, ObjectPermission...perms) throws NodeException {
+		return (T) loadUnsafe(clazz, id, expectExistence, forUpdate, perms);
+	}
+	/**
+	 * Load an object with internal or external id and check the view permission (and other optional permissions)
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * The input and output types are not checked against each other, so it is unsafe and will throw in runtime! Please use safe wrappers where possible.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param clazz object class
+	 * @param id object id (internal or external)
+	 * @param expectExistence flag to influence behaviour, when the object is not found: true will throw an EntityNotFoundException, false will return null
+	 * @param forUpdate load for update
+	 * @param perms optional permissions to check
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	public static NodeObject loadUnsafe(Class<? extends NodeObject> clazz, String id, boolean expectExistence, boolean forUpdate, ObjectPermission...perms) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		T obj = t.getObject(clazz, id);
-		if (obj == null) {
+		String name = t.getTable(clazz);
+
+		NodeObject object = t.getObject(clazz, id, forUpdate);
+		if (object == null) {
 			if (expectExistence) {
 				throw new EntityNotFoundException(I18NHelper.get(String.format("%s.notfound", t.getTable(clazz)), id));
 			} else {
 				return null;
 			}
 		}
-		if (!t.getPermHandler().canView(obj)) {
-			throw new InsufficientPrivilegesException(I18NHelper.get(String.format("%s.nopermission", t.getTable(clazz)), id), obj, PermType.read);
+
+		// if the file is an image the correct class has to be applied. this is important as
+		// saving will decide the ttype depending on the class by using the .getTType() method
+		// of the current transaction, which will result in 10008 for images without this fix.
+		if (File.class == clazz && File.class.cast(object).isImage()) {
+			// This does nothing since ContentFile implements ImageFile anyways.
+			object = t.getObject(ImageFile.class, id, forUpdate);
 		}
 
-		for (ObjectPermission perm : perms) {
-			if (!perm.checkObject(obj)) {
-				throw new InsufficientPrivilegesException(
-						I18NHelper.get(String.format("%s.nopermission", t.getTable(clazz)),
-								String.format("%s (%d)", I18NHelper.getName(obj), obj.getId())),
-						obj, perm.getPermType());
+		// check permission bits
+		for (PermHandler.ObjectPermission p : perms) {
+			if (!p.checkObject(object)) {
+				I18nString message = new CNI18nString(name + ".nopermission");
+				message.setParameter("0", id.toString());
+				throw new InsufficientPrivilegesException(message.toString(), object, p.getPermType());
+			}
+
+			// delete permissions for master objects must be checked for all channels containing localized copies
+			if (LocalizableNodeObject.class.isInstance(object)) {
+				LocalizableNodeObject<?> lObject = LocalizableNodeObject.class.cast(object);
+				if (lObject.isMaster() && p == ObjectPermission.delete) {
+					for (int channelSetNodeId : lObject.getChannelSet().keySet()) {
+						if (channelSetNodeId == 0) {
+							continue;
+						}
+						Node channel = t.getObject(Node.class, channelSetNodeId);
+						if (!ObjectPermission.delete.checkObject(object, channel)) {
+							I18nString message = new CNI18nString(name + ".nopermission");
+							message.setParameter("0", id.toString());
+							throw new InsufficientPrivilegesException(message.toString(), object, PermType.delete);
+						}
+					}
+				}				
 			}
 		}
-
-		return obj;
+		return object;
 	}
 
 	/**
@@ -2433,5 +2499,31 @@ public class MiscUtils {
 		}
 
 		return output;
+	}
+
+	/**
+	 * Set the channel with given id to the transaction (so that everything is done in the scope of this channel).
+	 * If null or 0 is passed here, nothing is changed. If a nodeId of a non-existing node is passed here, an exception
+	 * is thrown
+	 * @param nodeId id of the channel
+	 * @return true if a channel id has been set, false if not
+	 * @throws NodeException
+	 */
+	public static boolean setChannelToTransaction(Integer nodeId) throws NodeException {
+		if (nodeId == null) {
+			return false;
+		} else if (nodeId.intValue() == 0) {
+			return false;
+		} else {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			Node channel = t.getObject(Node.class, nodeId);
+	
+			if (channel == null) {
+				throw new NodeException("Node with id {" + nodeId + "} does not exist");
+			}
+	
+			t.setChannelId(nodeId);
+			return true;
+		}
 	}
 }

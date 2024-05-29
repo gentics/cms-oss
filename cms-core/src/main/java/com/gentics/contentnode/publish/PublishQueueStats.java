@@ -8,10 +8,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.jmx.PublisherInfo;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -36,6 +38,11 @@ public class PublishQueueStats {
 	private static PublishQueueStats singleton = new PublishQueueStats();
 
 	/**
+	 * Thread factory
+	 */
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("publishqueue-stats");
+
+	/**
 	 * Service, once the instance has been initialized
 	 */
 	private ScheduledExecutorService service = null;
@@ -56,6 +63,11 @@ public class PublishQueueStats {
 	private Map<Integer, Map<Integer, Integer>> notDelayedCounts = Collections.emptyMap();
 
 	/**
+	 * Delay of the scheduled job in ms
+	 */
+	private long delayMs;
+
+	/**
 	 * Get the singleton instance
 	 * @return instance
 	 */
@@ -74,11 +86,16 @@ public class PublishQueueStats {
 	 * @param delayMs delay in ms
 	 */
 	public void init(long delayMs) {
+		if (service != null && !service.isShutdown() && scheduled != null && !scheduled.isDone()
+				&& this.delayMs == delayMs) {
+			return;
+		}
+		this.delayMs = delayMs;
 		shutdown();
 		if (logger.isInfoEnabled()) {
 			logger.info(String.format("Schedule refreshing of publish queue statistics with delay of %d ms", delayMs));
 		}
-		service = Executors.newSingleThreadScheduledExecutor();
+		service = Executors.newSingleThreadScheduledExecutor(threadFactory);
 		scheduled = service.scheduleWithFixedDelay(() -> {
 			refresh();
 		}, 0, delayMs, TimeUnit.MILLISECONDS);

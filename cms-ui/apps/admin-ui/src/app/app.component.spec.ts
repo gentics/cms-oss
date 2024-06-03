@@ -24,6 +24,7 @@ import {
     LanguageHandlerService,
     MarkupLanguageOperations,
     MessageService,
+    NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
@@ -48,6 +49,7 @@ import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-ch
 import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
 import { AppStateService } from './state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from './state/utils/test-app-state';
+import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 
 class MockApiBase {
     get: any = jasmine.createSpy('ApiBase.get').and.returnValue(NEVER);
@@ -107,6 +109,12 @@ class MockUserSettingsService implements Partial<InterfaceOf<UserSettingsService
 class MockUsersnapService extends InitializableService {}
 
 class MockDebugToolService extends InitializableService {}
+
+class MockNodeOperations implements Partial<InterfaceOf<NodeOperations>> {
+    getAll(options?: NodeListRequestOptions): Observable<Node<ModelType.Raw>[]> {
+        return of([]);
+    }
+}
 
 class MockActivityManagerService {
     get activities$(): Observable<GtxActivityManagerActivity[]> {
@@ -210,10 +218,10 @@ describe('AppComponent', () => {
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
                 { provide: MarkupLanguageOperations, useClass: MockMarkupLanguageOperations },
+                { provide: NodeOperations, useClass: MockNodeOperations },
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        })
-        .compileComponents();
+        }).compileComponents();
 
         appState = TestBed.get(AppStateService);
 

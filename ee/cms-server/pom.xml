@@ -222,6 +222,10 @@
 			<type>zip</type>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-translation-core</artifactId>
+		</dependency>
 
 		<!--Test dependencies -->
 		<dependency>

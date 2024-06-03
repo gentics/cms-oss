@@ -26,10 +26,12 @@ const { readFileSync } = require('fs');
 
 const WORKSPACE_PATH = resolve(__dirname, '../ng-workspace');
 const ANGULAR_JSON = resolve(WORKSPACE_PATH, 'angular.json');
+const FORCE_ANGULAR_ARG = '--forceAngular';
 
 (function main() {
     let isArgument = false;
     let projectName = null;
+    let forceAngular = false;
     const relevantArguments = argv.slice(2);
 
     for (const singleArg of relevantArguments) {
@@ -51,11 +53,22 @@ const ANGULAR_JSON = resolve(WORKSPACE_PATH, 'angular.json');
         break;
     }
 
+    if (!projectName) {
+        console.log('No Project-Name provided!');
+        process.exit(1);
+    }
+
+    let idx = relevantArguments.indexOf(FORCE_ANGULAR_ARG);
+    if (idx > -1) {
+        forceAngular = true;
+        relevantArguments.splice(idx, 1);
+    }
+
     const parsed = JSON.parse(readFileSync(ANGULAR_JSON));
 
     // Check if a test configuration is present in the angular file, then we execute the
     // test as a angular test.
-    if (parsed?.projects?.[projectName]?.architect?.test) {
+    if (forceAngular || parsed?.projects?.[projectName]?.architect?.test) {
         executeAngularTest(relevantArguments);
         return;
     }

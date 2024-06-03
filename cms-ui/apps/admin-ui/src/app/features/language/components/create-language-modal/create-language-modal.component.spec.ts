@@ -1,7 +1,7 @@
 import { InterfaceOf } from '@admin-ui/common';
 import { I18nService, LanguageHandlerService } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
-import { Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -40,6 +40,7 @@ describe('CreateLanguageModalComponent', () => {
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: LanguageHandlerService, useClass: MockLanguageOperations },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         handler = TestBed.inject(LanguageHandlerService) as any;

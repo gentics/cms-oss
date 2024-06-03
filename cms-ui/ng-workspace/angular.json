@@ -27,7 +27,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -59,7 +61,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -95,7 +99,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -124,7 +130,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -145,7 +153,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -174,7 +184,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -196,7 +208,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }
@@ -221,7 +235,9 @@
           },
           "configurations": {
             "ci": {
-              "codeCoverage": true
+              "codeCoverage": true,
+              "reporters": ["junit"],
+              "browsers": "ChromeDocker"
             }
           }
         }

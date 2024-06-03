@@ -22,7 +22,7 @@
 
 		<ui.skip.install>true</ui.skip.install>
         <ui.e2e>true</ui.e2e>
-        <ui.skip.e2e>false</ui.skip.e2e>
+        <ui.skip.e2e>true</ui.skip.e2e>
         <ui.skip.assembly>true</ui.skip.assembly>
 		<ui.skip.report>true</ui.skip.report>
         <ui.report.assemply.phase></ui.report.assemply.phase>

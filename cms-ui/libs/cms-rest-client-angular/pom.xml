@@ -28,7 +28,7 @@
         <ui.skip.assembly>true</ui.skip.assembly>
         <ui.assembly.phase></ui.assembly.phase>
         <ui.skip.report>true</ui.skip.report>
-        <ui.skip.publish>false</ui.skip.publish>
+        <ui.skip.publish>true</ui.skip.publish>
         <ui.report.assemply.phase></ui.report.assemply.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>

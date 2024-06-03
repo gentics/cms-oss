@@ -23,7 +23,7 @@
         <ui.skip.install>true</ui.skip.install>
         <ui.application>true</ui.application>
         <ui.skip.build>false</ui.skip.build>
-        <ui.skip.test>false</ui.skip.test>
+        <ui.skip.test>true</ui.skip.test>
         <ui.skip.assembly>false</ui.skip.assembly>
         <ui.skip.report>true</ui.skip.report>
         <ui.report.assemply.phase></ui.report.assemply.phase>

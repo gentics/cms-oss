@@ -23,6 +23,9 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:noop"
+        },
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Injectable, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Injectable, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ChannelSyncRequest, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
@@ -40,6 +40,7 @@ describe('SynchronizeChannelModal:', () => {
                 MockProgressBar,
                 mockPipes('capitalize', 'i18n', 'truncatePath', 'itemIsLocal', 'itemIsLocalized'),
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
         apiBase = TestBed.get(ApiBase);

@@ -23,6 +23,21 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular --configuration=ci"
+                }
+            }
+        },
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",
             "options": {

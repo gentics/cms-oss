@@ -10,6 +10,7 @@ import {
     PageListRequest,
     Raw,
     Response,
+    ResponseCode,
     ResponseMessage,
 } from '@gentics/cms-models';
 import { Observable, Subscription, throwError } from 'rxjs';
@@ -292,11 +293,11 @@ export class ApiBase implements OnDestroy {
 
             // REST API DevTools packages entities response lacks data envelopment. Thus `responseInfo` is not available.
             if (responseBody && responseBody.responseInfo) {
-                const { responseCode } = responseBody.responseInfo || ({} as any);
+                const responseCode = responseBody?.responseInfo?.responseCode;
                 const messages: ResponseMessage[] = responseBody.messages || [];
 
                 switch (responseCode) {
-                    case 'OK': {
+                    case ResponseCode.OK: {
                         // if any error messages, pipe them to the user
                         const criticalMsgs = messages.filter(msg => msg.type !== 'INFO' && msg.type !== 'SUCCESS');
                         if (criticalMsgs.length > 0) {
@@ -307,23 +308,28 @@ export class ApiBase implements OnDestroy {
                         return responseBody;
                     }
 
-                    case 'AUTHREQUIRED':
-                    case 'MAINTENANCEMODE':
-                        reason = 'auth'; break;
+                    case ResponseCode.AUTH_REQUIRED:
+                    case ResponseCode.MAINTENANCE_MODE:
+                        reason = 'auth';
+                        break;
 
-                    case 'PERMISSION':
-                        reason = 'permissions'; break;
+                    case ResponseCode.PERMISSION:
+                        reason = 'permissions';
+                        break;
 
-                    case 'NOTFOUND':
-                    case 'FAILURE':
-                        reason = 'failed'; break;
+                    case ResponseCode.NOT_FOUND:
+                    case ResponseCode.FAILURE:
+                        reason = 'failed';
+                        break;
 
-                    case 'INVALIDDATA':
-                        reason = 'invalid_data'; break;
+                    case ResponseCode.INVALID_DATA:
+                        reason = 'invalid_data';
+                        break;
 
                     default:
                         console.error('Unknown responseCode:', responseCode);
-                        reason = 'failed'; break;
+                        reason = 'failed';
+                        break;
                 }
             } else if (response.status === 200 || response.status === 201 || response.status === 204) {
                 // If any kind of valid object contained, just return it, beacuse some endpoints don't envelope response.

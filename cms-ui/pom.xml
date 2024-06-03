@@ -38,17 +38,15 @@
         <!-- If the UI module should skip the assembly step -->
         <ui.skip.assembly>true</ui.skip.assembly>
         <!-- If the UI module should skip unit/component testing -->
-        <ui.skip.test>true</ui.skip.test>
+        <ui.skip.test>false</ui.skip.test>
         <!-- If the UI module should skip e2e tests -->
-        <ui.skip.e2e>true</ui.skip.e2e>
+        <ui.skip.e2e>false</ui.skip.e2e>
         <!-- If the UI module should skip reporting -->
         <ui.skip.report>false</ui.skip.report>
         <!-- If the UI module should skip the publishing to the registry -->
-        <ui.skip.publish>true</ui.skip.publish>
+        <ui.skip.publish>false</ui.skip.publish>
+        <!-- In which phase the report-assembly should be executed -->
         <ui.report.assemply.phase>package</ui.report.assemply.phase>
-
-        <!-- The browsers to use when executing the tests -->
-        <ui.test.browsers>ChromeDocker</ui.test.browsers>
 
         <!-- Internally stored phase for the assembly, because the plugin has no skip option -->
         <ui.assembly.phase></ui.assembly.phase>
@@ -149,13 +147,13 @@
                         <phase>test</phase>
 
                         <configuration>
-                            <target name="Test ui-module ${project.artifactId}" unless="${ui.skip.test}">
+                            <target name="Test UI modules" unless="${ui.skip.test}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run test -- ${project.artifactId} --configuration=ci --browsers=${ui.test.browsers} --reporters=junit" />
+                                    <arg line="run nx -- run-many --targets=test --configuration=ci" />
                                 </exec>
                             </target>
                         </configuration>
@@ -171,13 +169,13 @@
                         <phase>integration-test</phase>
 
                         <configuration>
-                            <target name="E2E/Integration Test ui-module ${project.artifactId}" unless="${ui.skip.e2e}">
+                            <target name="E2E/Integration Tests for UI" unless="${ui.skip.e2e}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run e2e -- ${project.artifactId} --browsers=${ui.test.browsers}" />
+                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e" />
                                 </exec>
                             </target>
                         </configuration>
@@ -227,7 +225,7 @@
                         </configuration>
                     </execution>
 
-                    <!-- <execution>
+                    <execution>
                         <?m2e ignore?>
                         <id>npm publish</id>
                         <goals>
@@ -237,18 +235,34 @@
                         <phase>deploy</phase>
 
                         <configuration>
-                            <skip>${ui.skip.publish}</skip>
-                            <target name="Publish ui-module ${project.artifactId}" unless="${ui.skip.publish}">
+                            <target name="Publish UI Modules" unless="${ui.skip.publish}">
+                                <!-- Apply release-version to all publishable projects -->
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run publish &dash;&dash; -p ${project.artifactId}" />
+                                    <arg line="run nx -- release version --projects=tag:publish ${project.version}" />
+                                </exec>
+                                <!-- Rebuild all publishable projects -->
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- run-many --target=build --projects=tag:publish" />
+                                </exec>
+                                <!-- Finally publish all publishable and built projects -->
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- release publish --projects=tag:publish --dryRun" />
                                 </exec>
                             </target>
                         </configuration>
-                    </execution> -->
+                    </execution>
                 </executions>
             </plugin>
 

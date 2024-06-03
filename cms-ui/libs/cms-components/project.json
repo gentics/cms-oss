@@ -22,6 +22,21 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner cms-components --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular --configuration=ci"
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {

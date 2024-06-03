@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
@@ -17,7 +17,7 @@ import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
 import { DropdownListComponent } from './dropdown-list.component';
 
-describe('DropdownList Component', () => {
+describe('DropdownListComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [
@@ -37,6 +37,7 @@ describe('DropdownList Component', () => {
                 { provide: ConfigService, useValue: defaultConfig },
             ],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
         TestBed.overrideModule(BrowserDynamicTestingModule, {
             set: {

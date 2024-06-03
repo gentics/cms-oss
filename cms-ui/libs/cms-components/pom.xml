@@ -24,10 +24,10 @@
         <ui.application>false</ui.application>
         <ui.library>true</ui.library>
         <ui.skip.build>false</ui.skip.build>
-        <ui.skip.test>false</ui.skip.test>
+        <ui.skip.test>true</ui.skip.test>
         <ui.skip.assembly>true</ui.skip.assembly>
         <ui.skip.report>true</ui.skip.report>
-        <ui.skip.publish>false</ui.skip.publish>
+        <ui.skip.publish>true</ui.skip.publish>
         <ui.report.assemply.phase></ui.report.assemply.phase>
         <ui.assembly.phase></ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>

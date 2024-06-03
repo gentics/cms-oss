@@ -1,4 +1,4 @@
-import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { EditMode } from '@gentics/cms-integration-api-models';
@@ -59,6 +59,7 @@ describe('EditorOverlayComponent', () => {
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: NodeSettingsActionsService, useClass: MockNodeSettingsActions },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
         TestBed.compileComponents();

@@ -238,7 +238,7 @@ export class FolderActionsService {
     /**
      * Fetches all available nodes.
      */
-    getNodes(): Promise<void> {
+    getNodes(): Promise<Node[]> {
         return new Promise((resolve, reject) => {
             forkJoin([
                 this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
@@ -258,7 +258,7 @@ export class FolderActionsService {
                 if (nodes.length > 0) {
                     this.getActiveNodeLanguages()
                         .then(languages => this.setActiveLanguageFromAvailable(languages));
-                    resolve();
+                    resolve(nodes as any);
                 }
             }, error => {
                 this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));

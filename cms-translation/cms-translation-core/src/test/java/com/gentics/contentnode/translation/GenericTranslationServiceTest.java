@@ -48,7 +48,6 @@ class GenericTranslationServiceTest {
 
 	@Test
 	public void givenMissingTranslationProvider_shouldThrowException() {
-		assertThatThrownBy(() -> new GenericTranslationService.Builder().build());
 		Throwable exception = catchThrowable(() -> new GenericTranslationService.Builder().build());
 
 		assertThat(exception).isInstanceOf(NodeException.class);

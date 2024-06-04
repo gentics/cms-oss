@@ -1,7 +1,7 @@
 package com.gentics.contentnode.translation;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
+import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 
 import com.gentics.api.lib.exception.NodeException;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,11 @@ class SupportedProviderTest {
 	}
 
 	@Test
-	public void givenUnSupportedProvider_shouldThrowException() {
-		assertThatThrownBy(
-				() -> SupportedProvider.valueOf("non-existing-provider")
-		);
+	public void givenUnsupportedProvider_shouldThrowException() {
+		Throwable exception = catchThrowable(
+				() -> SupportedProvider.fromString("non-existing-provider"));
+		assertThat(exception).isInstanceOf(NodeException.class);
+		assertThat(exception).hasMessageContaining("Invalid provider value");
 	}
 
 }

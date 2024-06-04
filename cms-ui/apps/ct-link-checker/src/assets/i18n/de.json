@@ -66,7 +66,8 @@
         "page_status_label": "Seitenstatus filtern",
         "all": "alle",
         "online": "veröffentlicht",
-        "offline": "unveröffentlicht"
+        "offline": "unveröffentlicht",
+        "not_checked_yet": "Noch nicht ausgeführt"
     },
     "editor": {
         "copy_label": "Kopieren",

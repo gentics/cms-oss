@@ -18,7 +18,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { EntityState, EntityTypesMap } from '../../../common/models';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
 /**
  * The EntityResolver is used to get an entity from the app state "entities" branch

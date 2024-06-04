@@ -17,9 +17,7 @@
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": [
-                    "libs/cms-components/**/*.ts"
-                ]
+                "lintFilePatterns": ["libs/cms-components/**/*.ts"]
             }
         },
         "test": {
@@ -43,7 +41,7 @@
                 "cypressConfig": "libs/cms-components/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "cms-components:build",
+                "devServerTarget": "editor-ui:build",
                 "watch": false
             },
             "configurations": {

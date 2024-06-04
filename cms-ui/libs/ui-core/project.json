@@ -44,7 +44,7 @@
                 "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "ui-core:build",
+                "devServerTarget": "ui-core-docs:build",
                 "watch": false
             },
             "configurations": {

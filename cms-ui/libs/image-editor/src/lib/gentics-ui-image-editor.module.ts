@@ -3,13 +3,15 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import * as Cropper from 'cropperjs';
-import { ControlPanelComponent } from './components';
-import { FocalPointSelectorComponent } from './components';
+import {
+    ControlPanelComponent,
+    FocalPointSelectorComponent,
+    GenticsImageEditorComponent,
+    GenticsImagePreviewComponent,
+    ImageCropperComponent,
+    ImagePreviewWithScalesComponent,
+} from './components';
 import { FocalPointTargetDirective } from './directives';
-import { GenticsImageEditorComponent } from './components';
-import { ImageCropperComponent } from './components';
-import { ImagePreviewWithScalesComponent } from './components';
-import { GenticsImagePreviewComponent } from './components';
 import { CropperConstructor } from './models';
 import { TranslatePipe } from './pipes';
 import { LanguageService } from './providers';
@@ -19,15 +21,15 @@ import { LanguageService } from './providers';
  * in AoT mode. This factory is designed to ensure that the correct value is
  * defined for the CropperConstuctor token.
  */
-export function getCropperConstructor() {
-    return Cropper && Cropper.default || Cropper;
+export function getCropperConstructor(): Cropper {
+    return (Cropper && Cropper.default) || Cropper as any;
 }
 
 @NgModule({
     imports: [
         CommonModule,
         FormsModule,
-        GenticsUICoreModule
+        GenticsUICoreModule,
     ],
     declarations: [
         ControlPanelComponent,
@@ -37,16 +39,16 @@ export function getCropperConstructor() {
         GenticsImagePreviewComponent,
         ImagePreviewWithScalesComponent,
         ImageCropperComponent,
-        TranslatePipe
+        TranslatePipe,
     ],
     providers: [
         LanguageService,
         TranslatePipe,
-        { provide: CropperConstructor, useFactory: getCropperConstructor }
+        { provide: CropperConstructor, useFactory: getCropperConstructor },
     ],
     exports: [
         GenticsImageEditorComponent,
-        GenticsImagePreviewComponent
-    ]
+        GenticsImagePreviewComponent,
+    ],
 })
 export class GenticsUIImageEditorModule {}

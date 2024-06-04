@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { StateContext } from '@ngxs/store';
 import { iif, patch } from '@ngxs/store/operators';
 import { AuthState } from '../../../common/models';
-import { ApplicationStateService } from '../../providers';
+import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {
     AUTH_STATE_KEY,

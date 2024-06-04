@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
 /**
  * Service which returns URLs to non-REST resources such as Alohapages or Images.

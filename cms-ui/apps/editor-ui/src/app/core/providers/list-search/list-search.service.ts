@@ -1,6 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
-import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Node, Page, Raw } from '@gentics/cms-models';
 import { Observable, defer, iif, of } from 'rxjs';

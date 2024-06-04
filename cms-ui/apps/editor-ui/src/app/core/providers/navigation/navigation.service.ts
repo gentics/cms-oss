@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderItemType } from '@gentics/cms-models';
-import { EditorStateUrlOptions } from '../../../state';
+import { EditorStateUrlOptions } from '../../../state/modules/editor/editor.actions';
 
 export type ListUrlParams = {
     nodeId: number;

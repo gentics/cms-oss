@@ -17,6 +17,12 @@ public class GenericTranslationService implements TranslationService {
 	}
 
 	@Override
+	public String translate(String textToTranslate, String sourceLanguage, String targetLanguage)
+			throws NodeException {
+		return this.translationService.translate(textToTranslate, sourceLanguage, targetLanguage);
+	}
+
+	@Override
 	public String translate(String textToTranslate, String targetLanguage) throws NodeException {
 		return this.translationService.translate(textToTranslate, targetLanguage);
 	}
@@ -64,22 +70,23 @@ public class GenericTranslationService implements TranslationService {
 				throw new NodeException("Provider could not be read from configuration");
 			}
 
-			var provider = SupportedProvider.fromString(configuredProvider);
+			final var provider = SupportedProvider.fromString(configuredProvider);
 
 			return withProvider(provider);
 		}
 
 		/**
-		 * Specifies the translation provider
+		 * Instantiate the translation service corresponding to the given provider.
 		 *
 		 * @param provider the translation provider
 		 * @return Fluent API
-		 * @throws NodeException
+		 * @throws NodeException Throws when no interface implementation for the given provider is found.
 		 */
 		public Builder withProvider(SupportedProvider provider)
 				throws NodeException {
 			switch (provider) {
 				case DEEPL -> this.translationService = new DeepLTranslationService();
+				default -> throw new NodeException("Unknown translation provider " + provider);
 			}
 			return this;
 		}

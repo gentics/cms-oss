@@ -1,0 +1,38 @@
+package com.gentics.contentnode.translation;
+
+import com.gentics.contentnode.etc.MapPreferences;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TranslationTestUtils {
+
+	public static MapPreferences mockTranslationConfig(String provider, String apiToken) {
+		Map<String, Object> nodeRuntimeConfig = new HashMap<>();
+		Map<String, Object> translationConfig = new HashMap<>();
+
+		translationConfig.put("provider", provider);
+		translationConfig.put("auth", mockAuthConfig(apiToken));
+		translationConfig.put("language", mockLanguageConfig());
+
+		nodeRuntimeConfig.put("translation", translationConfig);
+
+		return new MapPreferences(nodeRuntimeConfig);
+	}
+
+	private static Map<String, Object> mockAuthConfig(String apiToken) {
+		Map<String, Object> authConfig = new HashMap<>();
+		authConfig.put("token", apiToken);
+
+		return authConfig;
+	}
+
+	private static Map<String, Object> mockLanguageConfig() {
+		Map<String, Object> languageConfig = new HashMap<>();
+		Map<String, Object> regionConfig = new HashMap<>();
+
+		regionConfig.put("en", "US");
+		languageConfig.put("language", regionConfig);
+
+		return languageConfig;
+	}
+}

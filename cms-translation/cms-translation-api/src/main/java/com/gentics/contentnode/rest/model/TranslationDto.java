@@ -19,9 +19,4 @@ public class TranslationDto implements Serializable {
 		this.text = text;
 	}
 
-/*	public TranslationDto withText(String text) {
-		this.text = text;
-		return this;
-	}*/
-
 }

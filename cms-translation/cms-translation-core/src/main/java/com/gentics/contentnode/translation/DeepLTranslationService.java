@@ -6,6 +6,6 @@ public class DeepLTranslationService implements TranslationService {
 
 	@Override
 	public String translate(String textToTranslate, String targetLanguage) throws NodeException {
-		return "";
+		return "translated with deepl";
 	}
 }

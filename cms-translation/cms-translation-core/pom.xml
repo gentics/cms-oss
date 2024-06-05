@@ -28,7 +28,15 @@
     <!-- Internal dependencies -->
     <dependency>
       <groupId>com.gentics.cms</groupId>
+      <artifactId>cms-translation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.gentics.cms</groupId>
       <artifactId>cms-license</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.gentics.cms-oss</groupId>
+      <artifactId>cms-core</artifactId>
     </dependency>
 
     <!--Test dependencies -->

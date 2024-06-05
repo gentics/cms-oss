@@ -17,6 +17,9 @@ npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-
 
 ## Commands
 
+Since this repo is managed via `nx`, all commands will end up be run via `nx` (See `scripts` inside of `package.json`).
+Therefore, all commands can also be executed via [`nx run-many`](https://nx.dev/nx-api/nx/documents/run-many), to run them for multiple projects instead of one specific one.
+
 ### Install dependencies
 
 ```bash
@@ -57,6 +60,10 @@ npm run e2e <e2e-app-name>
 
 Starts the Cypress Components tests for the specific application or library.
 
+*Note*: When running multiple tests, disable `parallel` with `--parallel=false`, as it spawns a server for the tests which binds to a port.
+When multiple try to run, it will fail due to the already bound port.
+
+
 ```bash
 npm run component-test <app-name/lib-name>
 ```
@@ -91,11 +98,8 @@ Tags that are used in this Repository:
 * `ui`: Main User-Interface/Standalone application
 * `ct`: Custom-Tool which only works with/in the `editor-ui`
 * `e2e`: End-to-End/Integration Test project
-
-## Quick start
-
--   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
--   [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
+* `docs`: Documentation project to document one or more libraries/projects
+* `demo`: Demo application to showcase the functionality of a library/project
 
 ### Structure
 
@@ -118,7 +122,7 @@ These commands can be used to create new applications in the monorepo. It will g
 **Adds a new Angular application with Karma tests and Protractor e2e, using SCSS and Angular routing:**
 
 ```bash
-nx g @nx/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
+npm run nx -- g @nx/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
 ```
 
 ### Add new library
@@ -128,7 +132,7 @@ These commands can be used to create new libraries in the monorepo. It will gene
 **Adds a new Angular library with Karma tests, using SCSS:**
 
 ```bash
-nx g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
+npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 ```
 
 ## Packages

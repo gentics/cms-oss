@@ -24,19 +24,12 @@
         <nodejs.npm.bin>ASSIGN_ME</nodejs.npm.bin>
         <npm.workingDirectory></npm.workingDirectory>
 
-        <!-- If the UI module is an application -->
-        <ui.application>false</ui.application>
-        <!-- If the UI module is a library -->
-        <ui.library>false</ui.library>
-        <!-- If the UI module are e2e tests -->
-        <ui.e2e>false</ui.e2e>
-
         <!-- If the UI should skip npm install -->
         <ui.skip.install>false</ui.skip.install>
         <!-- If the UI module should skip the build process -->
-        <ui.skip.build>true</ui.skip.build>
+        <ui.skip.build>false</ui.skip.build>
         <!-- If the UI module should skip the assembly step -->
-        <ui.skip.assembly>true</ui.skip.assembly>
+        <ui.skip.assembly>false</ui.skip.assembly>
         <!-- If the UI module should skip unit/component testing -->
         <ui.skip.test>false</ui.skip.test>
         <!-- If the UI module should skip e2e tests -->
@@ -52,30 +45,58 @@
         <ui.assembly.phase></ui.assembly.phase>
     </properties>
 
-    <modules>
-        <!-- Libraries -->
-        <module>libs/aloha-models</module>
-        <module>libs/cms-models</module>
-        <module>libs/cms-integration-api-models</module>
-        <module>libs/cms-rest-client</module>
-        <module>libs/cms-rest-client-angular</module>
-        <module>libs/cms-rest-clients-angular</module>
-        <module>libs/ui-core</module>
-        <module>libs/image-editor</module>
-        <module>libs/cms-components</module>
-        <module>libs/form-generator</module>
-        <!-- Applications -->
-        <module>apps/admin-ui</module>
-        <module>apps/editor-ui</module>
-        <module>apps/ct-link-checker</module>
-        <!-- E2E Tests -->
-        <module>apps/admin-ui-e2e</module>
-        <module>apps/ct-link-checker-e2e</module>
-        <module>apps/editor-ui-e2e</module>
-    </modules>
-
     <build>
         <plugins>
+            <plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+                    <execution>
+						<id>apps</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/apps.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>docs</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/docs.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+
+                    <execution>
+						<id>custom-tools</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/custom-tools.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -125,13 +146,22 @@
                         <phase>compile</phase>
 
                         <configuration>
-                            <target name="Build ui-module ${project.artifactId}" unless="${ui.skip.build}">
+                            <target name="Build UI modules" unless="${ui.skip.build}">
+                                <!-- Apply the correct build/release version to the UI package.json files before build -->
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run build -- ${project.artifactId}" />
+                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib" />
+                                </exec>
+
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- run-many --target=build" />
                                 </exec>
                             </target>
                         </configuration>
@@ -183,7 +213,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e" />
+                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci" />
                                 </exec>
                             </target>
                         </configuration>
@@ -244,29 +274,13 @@
 
                         <configuration>
                             <target name="Publish UI Modules" unless="${ui.skip.publish}">
-                                <!-- Apply release-version to all publishable projects -->
+                                <!-- Ppublish all publishable projects -->
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- release version --projects=tag:publish ${project.version}" />
-                                </exec>
-                                <!-- Rebuild all publishable projects -->
-                                <exec
-                                    dir="${npm.workingDirectory}"
-                                    executable="${nodejs.npm.bin}"
-                                    failonerror="true"
-                                >
-                                    <arg line="run nx -- run-many --target=build --projects=tag:publish" />
-                                </exec>
-                                <!-- Finally publish all publishable and built projects -->
-                                <exec
-                                    dir="${npm.workingDirectory}"
-                                    executable="${nodejs.npm.bin}"
-                                    failonerror="true"
-                                >
-                                    <arg line="run nx -- release publish --projects=tag:publish --dryRun" />
+                                    <arg line="run nx -- release publish --projects=tag:publish" />
                                 </exec>
                             </target>
                         </configuration>

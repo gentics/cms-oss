@@ -40,15 +40,6 @@
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
 		<module>cms-integration-tests</module>
-
-		<!--
-		<module>static</module>
-		-->
-
-		<!--module>contentnode-manual</module>
-		<module>contentnode-doc</module>
-		<module>contentnode-changelog</module -->
-
 	</modules>
 
 	<properties>

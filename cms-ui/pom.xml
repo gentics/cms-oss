@@ -33,7 +33,7 @@
         <!-- If the UI module should skip unit/component testing -->
         <ui.skip.test>false</ui.skip.test>
         <!-- If the UI module should skip e2e tests -->
-        <ui.skip.e2e>false</ui.skip.e2e>
+        <ui.skip.integrationTest>false</ui.skip.integrationTest>
         <!-- If the UI module should skip reporting -->
         <ui.skip.report>false</ui.skip.report>
         <!-- If the UI module should skip the publishing to the registry -->
@@ -161,7 +161,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --target=build" />
+                                    <arg line="run nx -- run-many --target=build --configuration=ci --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>
@@ -183,7 +183,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --targets=test --configuration=ci" />
+                                    <arg line="run nx -- run-many --targets=test --configuration=ci --output-style=static" />
                                 </exec>
                                 <exec
                                     dir="${npm.workingDirectory}"
@@ -191,7 +191,7 @@
                                     failonerror="true"
                                 >
                                     <!-- Parallel has to be disabled, otherwise it'll break, as the port is already used -->
-                                    <arg line="run nx -- run-many --targets=component-test --parallel=false" />
+                                    <arg line="run nx -- run-many --targets=component-test --configuration=ci --parallel=false --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>
@@ -207,13 +207,13 @@
                         <phase>integration-test</phase>
 
                         <configuration>
-                            <target name="E2E/Integration Tests for UI" unless="${ui.skip.e2e}">
+                            <target name="E2E/Integration Tests for UI" unless="${ui.skip.integrationTest}">
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci" />
+                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>
@@ -280,7 +280,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- release publish --projects=tag:publish" />
+                                    <arg line="run nx -- release publish --projects=tag:publish --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>

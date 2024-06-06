@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/image-editor/tsconfig.lib.json",
                 "project": "libs/image-editor/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -34,7 +39,8 @@
                     "command": "node tools/ng-test-runner image-editor --watch=true --forceAngular"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner image-editor --watch=false --forceAngular --configuration=ci"
+                    "command": "node tools/ng-test-runner image-editor --watch=false --forceAngular --configuration=ci",
+                    "color": false
                 }
             }
         },
@@ -50,6 +56,14 @@
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "image-editor-demo:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

@@ -14,6 +14,11 @@
                 "packageJson": "libs/aloha-models/package.json",
                 "main": "libs/aloha-models/src/public-api.ts",
                 "assets": []
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -33,9 +38,13 @@
                 "passWithNoTests": true
             },
             "configurations": {
+                "watch": {
+                    "watch": true
+                },
                 "ci": {
                     "ci": true,
-                    "codeCoverage": true
+                    "codeCoverage": true,
+                    "color": false
                 }
             }
         },

@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/cms-components/tsconfig.lib.json",
                 "project": "libs/cms-components/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -31,7 +36,8 @@
                     "command": "node tools/ng-test-runner cms-components --watch=true --forceAngular"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular --configuration=ci"
+                    "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular --configuration=ci",
+                    "color": false
                 }
             }
         },
@@ -47,6 +53,14 @@
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "editor-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

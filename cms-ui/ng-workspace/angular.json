@@ -29,7 +29,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -63,7 +64,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -101,7 +103,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -132,7 +135,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -155,7 +159,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -186,7 +191,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -210,7 +216,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }
@@ -237,7 +244,8 @@
             "ci": {
               "codeCoverage": true,
               "reporters": ["junit"],
-              "browsers": "ChromeDocker"
+              "browsers": "ChromeDocker",
+              "progress": false
             }
           }
         }

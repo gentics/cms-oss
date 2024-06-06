@@ -229,7 +229,7 @@ spec:
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
                         withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
                             withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.e2e=true " +
+                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
                                     " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                             }
                         }
@@ -313,7 +313,7 @@ spec:
             }
 		}
 
-        stage("E2E Tests") {
+        stage("UI Integration Tests") {
 			when {
 				expression {
                     // Requires Docker image; Forcefully disabled until fully tested
@@ -335,7 +335,7 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
 
-                            // run the e2e tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
+                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
                             sh "mvn integration-test -B -am -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report"
                         } finally {
                             // finally stop the docker containers

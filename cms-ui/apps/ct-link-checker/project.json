@@ -36,42 +36,34 @@
                     "@gentics/ui-core"
                 ],
                 "aot": true,
-                "buildOptimizer": false,
-                "optimization": false,
-                "vendorChunk": true,
-                "extractLicenses": false,
-                "sourceMap": true,
-                "namedChunks": true
+                "fileReplacements": [
+                    {
+                        "replace": "apps/ct-link-checker/src/environments/environment.ts",
+                        "with": "apps/ct-link-checker/src/environments/environment.prod.ts"
+                    }
+                ],
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true,
+                "vendorChunk": false,
+                "buildOptimizer": true
             },
             "configurations": {
-                "production": {
-                    "budgets": [
-                        {
-                            "type": "initial",
-                            "maximumWarning": "3mb",
-                            "maximumError": "5mb"
-                        },
-                        {
-                            "type": "anyComponentStyle",
-                            "maximumWarning": "20kb",
-                            "maximumError": "30kb"
-                        }
-                    ],
-                    "fileReplacements": [
-                        {
-                            "replace": "apps/ct-link-checker/src/environments/environment.ts",
-                            "with": "apps/ct-link-checker/src/environments/environment.prod.ts"
-                        }
-                    ],
-                    "outputHashing": "all",
-                    "optimization": true,
-                    "sourceMap": false,
-                    "namedChunks": false,
-                    "extractLicenses": true,
-                    "vendorChunk": false,
-                    "buildOptimizer": true
+                "production": {},
+                "development": {
+                    "fileReplacements": [],
+                    "buildOptimizer": false,
+                    "optimization": false,
+                    "vendorChunk": true,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true
                 },
-                "development": {}
+                "ci": {
+                    "progress": false
+                }
             },
             "defaultConfiguration": "production"
         },
@@ -127,7 +119,8 @@
                     "command": "node tools/ng-test-runner ct-link-checker --watch=true --forceAngular"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner ct-link-checker --watch=false --forceAngular --configuration=ci"
+                    "command": "node tools/ng-test-runner ct-link-checker --watch=false --forceAngular --configuration=ci",
+                    "color": false
                 }
             }
         },
@@ -143,6 +136,14 @@
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "ct-link-checker:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         }

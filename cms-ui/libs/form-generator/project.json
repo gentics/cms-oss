@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/form-generator/tsconfig.lib.json",
                 "project": "libs/form-generator/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -23,18 +28,42 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner form-generator --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
                 "cypressConfig": "libs/form-generator/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "form-generator:build",
+                "devServerTarget": "editor-ui:build",
                 "watch": false
             },
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "editor-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

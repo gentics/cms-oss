@@ -46,37 +46,28 @@
                     "@gentics/ui-core",
                     "cropperjs"
                 ],
-                "aot": true,
-                "buildOptimizer": false,
-                "optimization": false,
-                "vendorChunk": true,
-                "extractLicenses": false,
-                "sourceMap": true,
-                "namedChunks": true
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true,
+                "vendorChunk": false,
+                "buildOptimizer": true,
+                "aot": true
             },
             "configurations": {
-                "production": {
-                    "budgets": [
-                        {
-                            "type": "initial",
-                            "maximumWarning": "3mb",
-                            "maximumError": "5mb"
-                        },
-                        {
-                            "type": "anyComponentStyle",
-                            "maximumWarning": "20kb",
-                            "maximumError": "30kb"
-                        }
-                    ],
-                    "outputHashing": "all",
-                    "optimization": true,
-                    "sourceMap": false,
-                    "namedChunks": false,
-                    "extractLicenses": true,
-                    "vendorChunk": false,
-                    "buildOptimizer": true
+                "production": {},
+                "development": {
+                    "buildOptimizer": false,
+                    "optimization": false,
+                    "vendorChunk": true,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true
                 },
-                "development": {}
+                "ci": {
+                    "progress": false
+                }
             },
             "defaultConfiguration": "production"
         },

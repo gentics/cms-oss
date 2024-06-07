@@ -103,7 +103,3 @@ export type Page<T extends ModelType = AnyModelType> = Page<T>;
 ```
 
 To normalize or denormalize entities, the [GcmsNormalizer](./src/lib/models/gcms-normalizer/gcms-normalizer.ts) should be used.
-
-## Build
-
-Run `npm run build:models` to build the project. The build artifacts will be stored in the `dist/` directory.

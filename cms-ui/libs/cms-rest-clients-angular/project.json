@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json",
                 "project": "libs/cms-rest-clients-angular/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -21,6 +26,22 @@
                     "libs/cms-rest-clients-angular/**/*.ts",
                     "libs/cms-rest-clients-angular/**/*.html"
                 ]
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
             }
         },
         "nx-release-publish": {

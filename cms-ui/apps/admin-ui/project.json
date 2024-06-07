@@ -42,37 +42,34 @@
                     "stacktrace-js"
                 ],
                 "aot": true,
-                "buildOptimizer": false,
-                "optimization": false,
-                "vendorChunk": true,
-                "extractLicenses": false,
-                "sourceMap": true,
-                "namedChunks": true
+                "fileReplacements": [
+                    {
+                        "replace": "apps/admin-ui/src/environments/environment.ts",
+                        "with": "apps/admin-ui/src/environments/environment.prod.ts"
+                    }
+                ],
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true,
+                "vendorChunk": false,
+                "buildOptimizer": true
             },
             "configurations": {
-                "production": {
-                    "budgets": [
-                        {
-                            "type": "initial",
-                            "maximumWarning": "6mb",
-                            "maximumError": "20mb"
-                        }
-                    ],
-                    "fileReplacements": [
-                        {
-                            "replace": "apps/admin-ui/src/environments/environment.ts",
-                            "with": "apps/admin-ui/src/environments/environment.prod.ts"
-                        }
-                    ],
-                    "outputHashing": "all",
-                    "optimization": true,
-                    "sourceMap": false,
-                    "namedChunks": false,
-                    "extractLicenses": true,
-                    "vendorChunk": false,
-                    "buildOptimizer": true
+                "production": {},
+                "development": {
+                    "fileReplacements": [],
+                    "buildOptimizer": false,
+                    "optimization": false,
+                    "vendorChunk": true,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true
                 },
-                "development": {}
+                "ci": {
+                    "progress": false
+                }
             },
             "defaultConfiguration": "production"
         },
@@ -117,6 +114,22 @@
                 }
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner admin-ui --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner admin-ui --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner admin-ui --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
@@ -129,6 +142,14 @@
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "admin-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         }

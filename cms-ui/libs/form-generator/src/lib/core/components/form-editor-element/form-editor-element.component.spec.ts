@@ -1,42 +1,41 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { FormBuilder } from '@angular/forms';
 import { FormEditorService } from '../../providers';
 import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
-
 import { FormEditorElementComponent } from './form-editor-element.component';
 
 describe('FormEditorElementComponent', () => {
-  let component: FormEditorElementComponent;
-  let fixture: ComponentFixture<FormEditorElementComponent>;
+    let component: FormEditorElementComponent;
+    let fixture: ComponentFixture<FormEditorElementComponent>;
 
-  beforeEach(waitForAsync(() => {
+    beforeEach(waitForAsync(() => {
 
-    // create mock, no function spies
-    /**
-     * createSpyObj not usable without function spies and does not support property spies declarations in our version
-     * replace with https://jasmine.github.io/api/3.6/jasmine.html#.createSpyObj after updating
-     */
-    const formEditorServiceMock = {} as any; // SpyObj<T> seems not to be exported
+        // create mock, no function spies
+        /**
+         * createSpyObj not usable without function spies and does not support property spies declarations in our version
+         * replace with https://jasmine.github.io/api/3.6/jasmine.html#.createSpyObj after updating
+         */
+        const formEditorServiceMock = {} as any; // SpyObj<T> seems not to be exported
 
-    TestBed.configureTestingModule({
-      declarations: [
-          FormEditorElementComponent,
-          FormEditorElementListComponent,
-      ],
-      providers: [
-          { provide: FormEditorService, useValue: formEditorServiceMock },
-      ],
-    })
-    .compileComponents();
-  }));
+        TestBed.configureTestingModule({
+            declarations: [
+                FormEditorElementComponent,
+                FormEditorElementListComponent,
+            ],
+            providers: [
+                { provide: FormEditorService, useValue: formEditorServiceMock },
+            ],
+            schemas: [NO_ERRORS_SCHEMA],
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(FormEditorElementComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(FormEditorElementComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  xit('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    xit('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

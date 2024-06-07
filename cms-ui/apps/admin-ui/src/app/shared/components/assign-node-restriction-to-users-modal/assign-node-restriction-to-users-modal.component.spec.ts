@@ -10,7 +10,7 @@ import {
     UserOperations,
 } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
-import { Component, Pipe, PipeTransform } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -137,6 +137,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
                 { provide: UserOperations, useClass: MockUserOperations },
                 { provide: WizardService, useClass: MockWizardService },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TestComponent);

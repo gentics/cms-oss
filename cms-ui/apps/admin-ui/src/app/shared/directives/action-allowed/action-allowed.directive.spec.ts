@@ -1,7 +1,7 @@
 import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
 import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
 import { componentTest } from '@admin-ui/testing';
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
@@ -18,7 +18,7 @@ function assembleTestTemplate(additionalAttributes: string): string {
 
 @Component({
     template: assembleTestTemplate(''),
-    })
+})
 class TestComponent {
     userAction = 'typeTests.testAction';
 
@@ -36,8 +36,8 @@ class TestComponent {
 }
 
 @Component({
-    template: `<gtx-input #inputField [gtxActionAllowed]="userAction"></gtx-input>`,
-    })
+    template: '<gtx-input #inputField [gtxActionAllowed]="userAction"></gtx-input>',
+})
 class InputTestComponent implements AfterViewInit {
 
     userAction = 'typeTests.testAction';
@@ -216,6 +216,7 @@ describe('ActionAllowedDirective', () => {
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: cloneDeep(MOCK_USER_ACTIONS as MultiModuleUserActionPermissions) },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
     });
 

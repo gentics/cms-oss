@@ -15,7 +15,7 @@ import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
 export interface ItemsSelectedIds {
     pages: number[];

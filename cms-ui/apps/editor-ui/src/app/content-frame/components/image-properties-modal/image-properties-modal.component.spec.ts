@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Api, ApiBase } from '@editor-ui/app/core/providers/api';
@@ -36,9 +37,9 @@ import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/test
 import { MockApiBase } from '@gentics/cms-rest-clients-angular/base/api-base.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
+import { of } from 'rxjs';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ImagePropertiesModalComponent } from './image-properties-modal.component';
-import { of } from 'rxjs';
 
 class MockApi extends MockApiBase {}
 class MockEntityResolver implements Partial<EntityResolver> {
@@ -109,6 +110,7 @@ describe('ImagePropertiesModal', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 Api,
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
         actions = TestBed.inject(FolderActionsService) as any;

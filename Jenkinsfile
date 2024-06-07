@@ -88,7 +88,7 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
-        booleanParam(name: 'e2eTests',                  defaultValue: false,  description: "Whether to run end-to-end tests.")
+        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
     }
@@ -109,7 +109,7 @@ spec:
 
                 script {
                     def mvnGoal       = "package"
-                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish "
+                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()
@@ -142,19 +142,27 @@ spec:
                             mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
                         }
 
-                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
+                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
 
                         // Check if triggered by a Gitlab merge request
                         if (env.gitlabTargetBranch) {
-                            runJUnitTests = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch,
-                                (String[])["base-api/", "base-lib/", "cms-api/", "cms-cache/", "cms-cache/", "cms-core/", "cms-oss-server/", "cms-restapi/"])
+                            runJUnitTests = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch,(String[])[
+                                "base-api/",
+                                "base-lib/",
+                                "cms-api/",
+                                "cms-cache/",
+                                "cms-cache/",
+                                "cms-core/",
+                                "cms-oss-server/",
+                                "cms-restapi/"
+                            ])
 
                             if (!runJUnitTests) {
                                 mvnArguments += " -Dskip.unit.tests"
                             }
                         }
                     } else {
-                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests -Dui.skip.test -Dui.skip.e2e"
+                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests=true -Dui.skip.test=true"
                         runJUnitTests = false
                     }
 
@@ -201,7 +209,7 @@ spec:
                         } else if (params.install) {
                             // Install
                             mvnGoal = "install"
-                            mvnArguments = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server' -DskipTests=true -Dskip.unit.tests -Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish"
+                            mvnArguments = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui' -DskipTests=true -Dskip.unit.tests -Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish"
                         }
                     }
 
@@ -220,10 +228,8 @@ spec:
                     // Login to docker.apa-it.at, so that the tests can pull all Mesh images
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
                         withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
-                            // NX_NON_NATIVE_HASHER temp fix for incompatible installations
-                            // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
+                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
                                     " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                             }
                         }
@@ -307,11 +313,11 @@ spec:
             }
 		}
 
-        stage("E2E Tests") {
+        stage("UI Integration Tests") {
 			when {
 				expression {
-                    // Requires Docker image
-					return params.runDockerBuild && params.e2eTests
+                    // Requires Docker image; Forcefully disabled until fully tested
+					return false && params.runDockerBuild && params.integrationTests
 				}
 			}
 
@@ -326,11 +332,11 @@ spec:
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
                             // prior to starting the tests, start the docker containers with CMS
-                            sh 'docker login -u $repoUsername -p $repoPassword docker.apa-it.at'
+                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            
-                            // run the e2e tests
-                            sh "mvn integration-test -B -am -fae -pl :admin-ui-e2e,:editor-ui-e2e -Dui.skip.install=true"
+
+                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
+                            sh "mvn integration-test -B -am -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report"
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
@@ -420,36 +426,6 @@ spec:
                         }
                     }
                 }
-            }
-        }
-
-        stage("Package Build - cms-models") {
-            when {
-                expression {
-                    def changed = false
-                    if (env.gitlabTargetBranch) {
-                        // Build only when related files are changed or releasing & deploying
-                        changed = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch, (String[]) [
-                            "cms-ui/libs/cms-models/",
-                            "cms-ui/ci/Jenkinsfile.cms-models"
-                        ])
-                    }
-
-                    if ((params.runReleaseBuild && params.deploy) || changed) {
-                        return GenericHelper.triggerMultiBranchPipelineToScanIfJobNotExists('gentics-cms-models', 'gentics-cms-models/' + branchName, 60)
-                    }
-
-                    return false
-                }
-            }
-
-            steps {
-                build job: 'gentics-cms-models/' + branchName,
-                      parameters: [
-                        booleanParam(name: 'release', value: Boolean.valueOf(params.runReleaseBuild)),
-                        string(name: 'forceVersion', value: params.releaseVersion.toString())
-                      ],
-                      wait: false
             }
         }
     }

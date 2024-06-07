@@ -136,9 +136,13 @@ import {
     UIMode,
     plural,
 } from '../../../common/models';
+import { AddContentStagingMapAction } from '../../modules/content-staging/content-staging.actions';
+import { SetUploadStatusAction } from '../../modules/editor/editor.actions';
 import {
-    AddContentStagingMapAction,
     AddEntitiesAction,
+    UpdateEntitiesAction,
+} from '../../modules/entity/entity.actions';
+import {
     ChannelSyncReportFetchingErrorAction,
     ChannelSyncReportFetchingSuccessAction,
     CreateItemSuccessAction,
@@ -173,13 +177,11 @@ import {
     SetSearchFiltersValidAction,
     SetSearchFiltersVisibleAction,
     SetSearchTermAction,
-    SetUploadStatusAction,
     StartChannelSyncReportFetchingAction,
     StartListCreatingAction,
     StartListFetchingAction,
     StartListSavingAction,
-    UpdateEntitiesAction,
-} from '../../modules';
+} from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
 

@@ -6,7 +6,6 @@ import {
     Component,
     ContentChildren,
     EventEmitter,
-    HostBinding,
     Input,
     OnChanges,
     Output,

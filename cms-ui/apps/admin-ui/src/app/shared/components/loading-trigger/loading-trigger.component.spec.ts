@@ -1,10 +1,10 @@
 import { AppStateService } from '@admin-ui/state';
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { takeUntil } from 'rxjs/operators';
 import { componentTest } from '../../../../testing';
 import { ObservableStopper } from '../../../common';
-import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '../../../state/utils/test-app-state';
+import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { LoadingTriggerComponent } from './loading-trigger.component';
 
 @Component({
@@ -38,6 +38,7 @@ describe('LoadingTriggerComponent', () => {
             providers: [
                 TEST_APP_STATE,
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         appState = TestBed.get(AppStateService);

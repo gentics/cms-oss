@@ -66,7 +66,7 @@ module.exports = (type, name, junitPackageName) => {
         port: 9876,
 
         // enable / disable colors in the output (reporters and logs)
-        colors: true,
+        colors: false,
 
         // level of logging
         // possible values: constants.LOG_DISABLE || constants.LOG_ERROR || constants.LOG_WARN || constants.LOG_INFO || constants.LOG_DEBUG

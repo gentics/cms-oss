@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ApplicationStateService, StateModule } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { StateModule } from '@editor-ui/app/state/state.module';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { ItemInNode } from '@gentics/cms-models';

@@ -4,7 +4,8 @@ import {
     EditorPermissions,
     getNoPermissions,
 } from '@editor-ui/app/common/models';
-import { ApplicationStateService, ItemFetchingSuccessAction } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { ItemFetchingSuccessAction } from '@editor-ui/app/state/modules/folder/folder.actions';
 import {
     DefaultPermissionsFactory,
     FolderInstancePermissions,

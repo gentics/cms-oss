@@ -23,7 +23,7 @@ import {
     UserState,
     WastebinState,
 } from '../common/models';
-import { ApplicationStateService } from './providers';
+import { ApplicationStateService } from './providers/application-state/application-state.service';
 
 /** Only available in testing. A partial type that can be used to mock application state. */
 export type MockAppState = Partial<AppState> | {

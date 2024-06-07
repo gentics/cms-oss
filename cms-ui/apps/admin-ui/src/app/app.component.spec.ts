@@ -212,8 +212,7 @@ describe('AppComponent', () => {
                 { provide: MarkupLanguageOperations, useClass: MockMarkupLanguageOperations },
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        })
-        .compileComponents();
+        }).compileComponents();
 
         appState = TestBed.get(AppStateService);
 

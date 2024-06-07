@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -51,6 +51,7 @@ describe('SelectComponent', () => {
                 { provide: ConfigService, useValue: defaultConfig },
             ],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
         TestBed.overrideModule(BrowserDynamicTestingModule, {
             set: {
@@ -139,7 +140,7 @@ describe('SelectComponent', () => {
         <gtx-select label="testLabel"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
+            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-list');
 
             expect(dropdown.classList).toContain('with-label');
         },

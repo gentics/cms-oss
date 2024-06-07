@@ -84,10 +84,10 @@
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "editor-ui:build:production"
+                    "buildTarget": "editor-ui:build:production"
                 },
                 "development": {
-                    "browserTarget": "editor-ui:build:development"
+                    "buildTarget": "editor-ui:build:development"
                 }
             },
             "defaultConfiguration": "development"

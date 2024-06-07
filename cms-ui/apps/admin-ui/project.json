@@ -81,10 +81,10 @@
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "admin-ui:build:production"
+                    "buildTarget": "admin-ui:build:production"
                 },
                 "development": {
-                    "browserTarget": "admin-ui:build:development"
+                    "buildTarget": "admin-ui:build:development"
                 }
             },
             "defaultConfiguration": "development"

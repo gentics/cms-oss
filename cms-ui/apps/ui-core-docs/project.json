@@ -79,10 +79,10 @@
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "ui-core-docs:build:production"
+                    "buildTarget": "ui-core-docs:build:production"
                 },
                 "development": {
-                    "browserTarget": "ui-core-docs:build:development"
+                    "buildTarget": "ui-core-docs:build:development"
                 }
             },
             "defaultConfiguration": "development"

@@ -70,10 +70,10 @@
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "image-editor-demo:build:production"
+                    "buildTarget": "image-editor-demo:build:production"
                 },
                 "development": {
-                    "browserTarget": "image-editor-demo:build:development"
+                    "buildTarget": "image-editor-demo:build:development"
                 }
             },
             "defaultConfiguration": "development"

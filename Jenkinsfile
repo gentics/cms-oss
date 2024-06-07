@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms") + """
+      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms-oss") + """
       resources:
         requests:
           cpu: '0'
@@ -77,6 +77,7 @@ spec:
     }
 
     parameters {
+        booleanParam(name: 'checkGitCommit',            defaultValue: false, description: 'If set to true, the current git revision is compared with the git revision of the last successful build. If they are equal, the build is skipped and env.BUILD_SKIPPED is set to true')
         booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
@@ -103,7 +104,31 @@ spec:
     }
 
     stages {
+        stage('Check git commit') {
+			when {
+				expression {
+					return Boolean.valueOf(params.checkGitCommit)
+				}
+			}
+
+			steps {
+				script {
+					if ( env.GIT_COMMIT == env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ) {
+						echo "env.GIT_COMMIT (" + env.GIT_COMMIT + ") = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT (" + env.GIT_PREVIOUS_SUCCESSFUL_COMMIT + "). Skip building."
+						env.BUILD_SKIPPED = "true"
+					} else {
+						echo "env.GIT_COMMIT (" + env.GIT_COMMIT + ") != env.GIT_PREVIOUS_SUCCESSFUL_COMMIT (" + env.GIT_PREVIOUS_SUCCESSFUL_COMMIT + "). Need to rebuild."
+					}
+ 				}
+			}
+		}
+
         stage("Build, Deploy") {
+            when {
+				expression {
+					return env.BUILD_SKIPPED != "true"
+				}
+			}
             steps {
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
@@ -278,7 +303,7 @@ spec:
 			when {
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
-					return params.runDockerBuild &&
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
 						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
 				}
 			}
@@ -311,7 +336,7 @@ spec:
 			when {
 				expression {
                     // Requires Docker image
-					return params.runDockerBuild && params.e2eTests
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.e2eTests
 				}
 			}
 
@@ -354,7 +379,7 @@ spec:
 			when {
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
-					return params.runDockerBuild &&
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
 						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
 				}
 			}
@@ -385,7 +410,7 @@ spec:
 		stage("Deploy QA images to Kubernetes") {
 			when {
 				expression {
-					return qaDeploy
+					return env.BUILD_SKIPPED != "true" && qaDeploy
 				}
 			}
 
@@ -401,7 +426,7 @@ spec:
 		stage("Git push") {
 			when {
 				expression {
-					return params.runReleaseBuild && params.deploy
+					return env.BUILD_SKIPPED != "true" && params.runReleaseBuild && params.deploy
 				}
 			}
 
@@ -426,6 +451,10 @@ spec:
         stage("Package Build - cms-models") {
             when {
                 expression {
+                    if ( env.BUILD_SKIPPED == "true") {
+                        return false
+                    }
+
                     def changed = false
                     if (env.gitlabTargetBranch) {
                         // Build only when related files are changed or releasing & deploying

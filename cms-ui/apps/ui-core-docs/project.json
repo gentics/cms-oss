@@ -72,7 +72,7 @@
             "defaultConfiguration": "production"
         },
         "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false

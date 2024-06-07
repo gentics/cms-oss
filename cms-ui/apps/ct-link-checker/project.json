@@ -75,10 +75,10 @@
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "ct-link-checker:build:production"
+                    "buildTarget": "ct-link-checker:build:production"
                 },
                 "development": {
-                    "browserTarget": "ct-link-checker:build:development"
+                    "buildTarget": "ct-link-checker:build:development"
                 }
             },
             "defaultConfiguration": "development"

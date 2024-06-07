@@ -86,11 +86,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-integration-api-models/**/*.ts"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -182,12 +178,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-rest-clients-angular/**/*.ts",
-                "libs/cms-rest-clients-angular/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -268,12 +259,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-rest-client-angular/**/*.ts",
-                "libs/cms-rest-client-angular/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -328,11 +314,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/ct-link-checker-e2e/**/*.{js,ts}"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -423,7 +405,7 @@
             "defaultConfiguration": "production"
           },
           "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "inputs": [
               "default",
               "^default"
@@ -464,12 +446,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/image-editor-demo/**/*.ts",
-                "apps/image-editor-demo/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "serve-static": {
@@ -585,12 +562,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-rest-client/**/*.ts",
-                "libs/cms-rest-client/package.json"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -687,7 +659,7 @@
             "defaultConfiguration": "production"
           },
           "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "inputs": [
               "default",
               "^default"
@@ -740,12 +712,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/ct-link-checker/**/*.ts",
-                "apps/ct-link-checker/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -882,11 +849,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-components/**/*.ts"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -1007,12 +970,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/form-generator/**/*.ts",
-                "libs/form-generator/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -1095,11 +1053,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/editor-ui-e2e/**/*.{js,ts}"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -1152,11 +1106,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/admin-ui-e2e/**/*.{js,ts}"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -1256,11 +1206,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/aloha-models/**/*.ts"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -1352,12 +1298,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/image-editor/**/*.ts",
-                "libs/image-editor/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -1478,7 +1419,7 @@
             "defaultConfiguration": "production"
           },
           "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "inputs": [
               "default",
               "^default"
@@ -1519,12 +1460,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/ui-core-docs/**/*.ts",
-                "apps/ui-core-docs/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "compile": {
@@ -1645,12 +1581,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/cms-models/**/*.ts",
-                "libs/cms-models/package.json"
-              ]
-            },
+            "options": {},
             "configurations": {}
           }
         },
@@ -1757,7 +1688,7 @@
             "defaultConfiguration": "production"
           },
           "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "inputs": [
               "default",
               "^default"
@@ -1810,12 +1741,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/editor-ui/**/*.ts",
-                "apps/editor-ui/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -1964,7 +1890,7 @@
             "defaultConfiguration": "production"
           },
           "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "inputs": [
               "default",
               "^default"
@@ -2017,12 +1943,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "apps/admin-ui/**/*.ts",
-                "apps/admin-ui/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {
@@ -2159,12 +2080,7 @@
             "outputs": [
               "{options.outputFile}"
             ],
-            "options": {
-              "lintFilePatterns": [
-                "libs/ui-core/**/*.ts",
-                "libs/ui-core/**/*.html"
-              ]
-            },
+            "options": {},
             "configurations": {}
           },
           "component-test": {

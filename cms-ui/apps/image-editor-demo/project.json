@@ -4,8 +4,8 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/image-editor-demo/src",
-    "implicitDependencies": ["image-editor", "ui-core"],
     "tags": ["app", "docs", "demo", "angular"],
+    "implicitDependencies": ["image-editor", "ui-core"],
     "targets": {
         "build": {
             "executor": "@nx/angular:webpack-browser",
@@ -79,7 +79,7 @@
             "defaultConfiguration": "development"
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": [

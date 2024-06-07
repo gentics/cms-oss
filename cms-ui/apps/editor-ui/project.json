@@ -94,13 +94,7 @@
         },
         "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/editor-ui/**/*.ts",
-                    "apps/editor-ui/**/*.html"
-                ]
-            }
+            "outputs": ["{options.outputFile}"]
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

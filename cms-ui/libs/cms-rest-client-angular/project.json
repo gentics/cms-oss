@@ -20,13 +20,7 @@
         },
         "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "libs/cms-rest-client-angular/**/*.ts",
-                    "libs/cms-rest-client-angular/**/*.html"
-                ]
-            }
+            "outputs": ["{options.outputFile}"]
         },
         "test": {
             "executor": "nx:noop"

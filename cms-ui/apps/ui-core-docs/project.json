@@ -89,13 +89,7 @@
         },
         "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/ui-core-docs/**/*.ts",
-                    "apps/ui-core-docs/**/*.html"
-                ]
-            }
+            "outputs": ["{options.outputFile}"]
         },
         "test": {
             "executor": "nx:noop"

@@ -85,13 +85,7 @@
         },
         "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/ct-link-checker/**/*.ts",
-                    "apps/ct-link-checker/**/*.html"
-                ]
-            }
+            "outputs": ["{options.outputFile}"]
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

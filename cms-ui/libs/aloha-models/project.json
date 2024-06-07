@@ -32,16 +32,13 @@
             "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/libs/aloha-models"],
             "options": {
-                "jestConfig": "libs/aloha-models/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/aloha-models/jest.config.ts"
             },
             "configurations": {
                 "watch": {
                     "watch": true
                 },
                 "ci": {
-                    "ci": true,
-                    "codeCoverage": true,
                     "color": false
                 }
             }

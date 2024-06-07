@@ -35,16 +35,13 @@
             "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/libs/cms-models"],
             "options": {
-                "jestConfig": "libs/cms-models/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/cms-models/jest.config.ts"
             },
             "configurations": {
                 "watch": {
                     "watch": true
                 },
                 "ci": {
-                    "ci": true,
-                    "codeCoverage": true,
                     "color": false
                 }
             }

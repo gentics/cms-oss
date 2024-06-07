@@ -72,3 +72,4 @@ report.*.json
 /projects
 
 .nx/cache
+.nx/workspace-data

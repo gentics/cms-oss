@@ -1,4 +1,4 @@
-import {HttpClientModule} from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import {NgModule} from '@angular/core';
 
 import {GCMS_API_ERROR_HANDLER} from '../lib/base/api-base.service';
@@ -20,17 +20,12 @@ import {FileUploader} from './util/file-uploader/file-uploader.service';
 /**
  * This module provides services for communicating with the GCMS REST API.
  */
-@NgModule({
-    declarations: [],
-    imports: [
-        HttpClientModule
-    ],
-    exports: [ ],
-    providers: [
+@NgModule({ declarations: [],
+    exports: [], imports: [], providers: [
         FileUploader,
         FileUploaderFactory,
         { provide: GCMS_API_ERROR_HANDLER, useClass: AngularErrorHandler },
-        ...API_PROVIDERS
-    ]
-})
+        ...API_PROVIDERS,
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class GcmsRestClientsAngularModule {}

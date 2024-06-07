@@ -1,4 +1,4 @@
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -41,8 +41,7 @@ import { UserSettingsService } from './services/user-settings/user-settings.serv
 
 export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => new TranslateHttpLoader(http, './assets/i18n/', '.json');
 
-@NgModule({
-    declarations: [
+@NgModule({ declarations: [
         AppComponent,
         DetailChipComponent,
         DisplayFieldSelectorComponent,
@@ -67,11 +66,9 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         UserFullNamePipe,
         UpdateLinkModalComponent,
     ],
-    imports: [
-        BrowserModule,
+    bootstrap: [AppComponent], imports: [BrowserModule,
         GenticsUICoreModule.forRoot(),
         CoreModule,
-        HttpClientModule,
         NgxPaginationModule,
         RouterTestingModule,
         FormsModule,
@@ -82,16 +79,13 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
                 deps: [HttpClient],
             },
         }),
-        AppRoutingModule,
-    ],
-    providers: [
+        AppRoutingModule], providers: [
         AppService,
         FilterService,
         LinkCheckerService,
         NodeHierarchyBuilderService,
         ToolApiService,
         UserSettingsService,
-    ],
-    bootstrap: [AppComponent],
-})
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule { }

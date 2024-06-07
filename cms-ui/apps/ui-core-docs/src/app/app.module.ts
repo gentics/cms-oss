@@ -1,4 +1,4 @@
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ModuleWithProviders, NgModule, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -106,21 +106,15 @@ export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = 
     useHash: true
 });
 
-@NgModule({
-    imports: [
-        BrowserModule,
+@NgModule({ declarations: DECLARATIONS,
+    bootstrap: [App], imports: [BrowserModule,
         BrowserAnimationsModule,
         FormsModule,
         ReactiveFormsModule,
         ROUTER_MODULE_FOR_ROOT,
         GenticsUICoreModule.forRoot(),
-        AngularSvgIconModule.forRoot(),
-        HttpClientModule,
-    ],
-    declarations: DECLARATIONS,
-    providers: [
+        AngularSvgIconModule.forRoot()], providers: [
         DemoDateFormatService,
-    ],
-    bootstrap: [App],
-})
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class DocsModule { }

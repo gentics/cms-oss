@@ -180,7 +180,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	private static final String PAGE_EXTENSION = ".page" + METADATA_EXTENSION;
 	private static final String CHANNEL_EXTENSION = ".channel" + METADATA_EXTENSION;
 	private static final String BINARY_EXTENSION = ".bin";
-	private static final Pattern METADATA_FILE_PATTERN = Pattern.compile("(?<id>[a-f0-9]{4}\\.[a-f0-9\\-]+)(\\.(?<version>[0-9\\.]+))?\\.(?<type>folder|node|image|file|page|channel|form)\\.json");
+	private static final Pattern METADATA_FILE_PATTERN = Pattern.compile(
+			"(?<id>[a-f0-9]{4}\\.[a-f0-9\\-]+)(\\.(?<version>[0-9\\.]+))?\\.(?<type>folder|node|image|file|page|channel|form)\\.json",
+			Pattern.CASE_INSENSITIVE
+		);
 	public static final String CONTENT_PACKAGE_METADATA_FILENAME = "metadata" + METADATA_EXTENSION;
 
 	/**

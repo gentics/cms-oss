@@ -34,16 +34,13 @@
                 "{workspaceRoot}/coverage/libs/cms-integration-api-models"
             ],
             "options": {
-                "jestConfig": "libs/cms-integration-api-models/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/cms-integration-api-models/jest.config.ts"
             },
             "configurations": {
                 "watch": {
                     "watch": true
                 },
                 "ci": {
-                    "ci": true,
-                    "codeCoverage": true,
                     "color": false
                 }
             }

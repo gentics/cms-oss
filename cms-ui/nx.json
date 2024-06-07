@@ -57,13 +57,6 @@
             "inputs": ["default", "^default", "{workspaceRoot}/karma.conf.js"],
             "cache": true
         },
-        "jest": {
-            "inputs": [
-                "default",
-                "^production",
-                "{workspaceRoot}/jest.preset.js"
-            ]
-        },
         "e2e": {
             "inputs": ["default", "^production"],
             "cache": true
@@ -79,6 +72,19 @@
         "component-test": {
             "inputs": ["default", "^production"],
             "cache": true
+        },
+        "@nx/jest:jest": {
+            "inputs": ["default", "^default", "{workspaceRoot}/karma.conf.js"],
+            "cache": true,
+            "options": {
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
         }
     },
     "parallel": 3

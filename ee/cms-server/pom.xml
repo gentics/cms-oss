@@ -56,13 +56,14 @@
 						</goals>
 						<configuration>
 							<artifactItems>
-								<!-- Content.Node UI Link Checker CustomTool -->
+								<!-- EE Custom-Tools which were build in the OSS Part -->
 								<artifactItem>
 									<groupId>com.gentics.cms-oss</groupId>
-									<artifactId>ct-link-checker</artifactId>
+									<artifactId>cms-ui</artifactId>
+									<classifier>custom-tools</classifier>
 									<type>zip</type>
 									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/classes/webroot/tools/link-checker/</outputDirectory>
+									<outputDirectory>${project.build.directory}/classes/webroot/tools</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 							<includes>**/*</includes>

@@ -22,7 +22,7 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "outputs": ["{options.outputFile}"],
             "options": {
                 "lintFilePatterns": ["libs/cms-integration-api-models/**/*.ts"]
@@ -30,7 +30,9 @@
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/libs/cms-integration-api-models"],
+            "outputs": [
+                "{workspaceRoot}/coverage/libs/cms-integration-api-models"
+            ],
             "options": {
                 "jestConfig": "libs/cms-integration-api-models/jest.config.ts",
                 "passWithNoTests": true

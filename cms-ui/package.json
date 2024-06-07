@@ -149,7 +149,6 @@
     "@nx/eslint-plugin": "19.2.1",
     "@nx/jest": "19.2.1",
     "@nx/js": "19.2.1",
-    "@nx/linter": "19.2.1",
     "@nx/node": "19.2.1",
     "@nx/web": "19.2.1",
     "@nx/workspace": "19.2.1",
@@ -215,7 +214,8 @@
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "5.4.5",
-    "yaml-loader": "^0.7.0"
+    "yaml-loader": "^0.7.0",
+    "@nx/eslint": "19.2.1"
   },
   "optionalDependencies": {
     "@nx/nx-linux-x64-gnu": "^16.10.0"

@@ -765,7 +765,7 @@ public final class PortalConnectorFactory {
 						}
 						consistencyCheck &= contentRepositoryCheck;
 					} catch (CMSUnavailableException e) {
-						logger.fatal("Error while checking handle {" + handleId + "}", e);
+						logger.error("Error while checking handle {" + handleId + "}", e);
 						return false;
 					}
 				}
@@ -782,7 +782,7 @@ public final class PortalConnectorFactory {
 						check &= checkStructure.checkDataConsistency(autorepair);
 						consistencyCheck &= check;
 					} catch (CMSUnavailableException cmsue) {
-						logger.fatal("Error while checking handle {" + handleId + "}", cmsue);
+						logger.error("Error while checking handle {" + handleId + "}", cmsue);
 						return false;
 					}
 				}

@@ -321,7 +321,6 @@ public class GenticsImageStore {
 						offset += numRead;
 					}
 				} catch (IOException e) {
-					logger.fatal("Error while reading original file contents.");
 					throw new ServletException("Error while reading original file contents.");
 				} finally {
 					if (is != null) {

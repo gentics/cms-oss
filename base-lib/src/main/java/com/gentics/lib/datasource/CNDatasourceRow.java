@@ -3,6 +3,7 @@ package com.gentics.lib.datasource;
 import java.sql.Timestamp;
 
 import com.gentics.api.lib.datasource.DatasourceRow;
+import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.content.GenticsContentHelper;
 import com.gentics.lib.content.GenticsContentObject;
 
@@ -57,7 +58,7 @@ public class CNDatasourceRow implements DatasourceRow {
 		return (Timestamp) GenticsContentHelper.getObject(object, "timestamp");
 	}
 
-	public Object getObject(String column) {
+	public GenticsContentAttribute getObject(String column) {
 		return GenticsContentHelper.getObject(object, column);
 	}
 

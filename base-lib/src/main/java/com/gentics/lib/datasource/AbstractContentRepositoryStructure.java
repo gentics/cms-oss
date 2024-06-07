@@ -130,7 +130,7 @@ public abstract class AbstractContentRepositoryStructure {
 		if (structureDefinition != null) {
 			return structureDefinition.getReferenceTables();
 		} else {
-			logger.fatal("Could not retrieve reference table structure.");
+			logger.error("Could not retrieve reference table structure.");
 			return null;
 		}
 	}
@@ -143,7 +143,7 @@ public abstract class AbstractContentRepositoryStructure {
 		if (structureDefinition != null) {
 			return structureDefinition.getReferenceConstraints();
 		} else {
-			logger.fatal("Could not retrieve reference constraint structure.");
+			logger.error("Could not retrieve reference constraint structure.");
 			return null;
 		}
 	}

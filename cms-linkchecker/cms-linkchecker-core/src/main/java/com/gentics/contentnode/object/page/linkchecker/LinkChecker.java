@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -52,6 +53,7 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -133,6 +135,8 @@ public final class LinkChecker {
 	private static int updateBufferSize = DEFAULT_UPDATE_BUFFER_SIZE;
 
 	private static int retryAfter = DEFAULT_RETRY_AFTER;
+
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("linkchecker");
 
 	private static ExecutorService httpExecutor;
 
@@ -242,7 +246,7 @@ public final class LinkChecker {
 	public synchronized final static void start() throws NodeException {
 		stop();
 
-		httpExecutor = Executors.newFixedThreadPool(checkBufferSize);
+		httpExecutor = Executors.newFixedThreadPool(checkBufferSize, threadFactory);
 	}
 
 	/**

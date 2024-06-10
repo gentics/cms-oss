@@ -2,8 +2,7 @@ import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { FormEditorService } from '../../providers';
-import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
-import { FormEditorElementComponent } from '../form-editor-element/form-editor-element.component';
+import { FormEditorElementComponent, FormEditorElementListComponent } from '../form-editor-element/form-editor-element-and-list.component';
 import { FormEditorMenuComponent } from './form-editor-menu.component';
 
 describe('FormEditorMenuComponent', () => {

@@ -52,6 +52,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 					.build();
 
 			var translatedText = translationService.translate(request.getText(),
+					request.getSourceLanguage(),
 					request.getTargetLanguage());
 
 			var response = new TranslationResponse();
@@ -70,11 +71,11 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 	@Path("/page/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public PageLoadResponse translate(final @PathParam("id") Integer id,
-			final @QueryParam("language") String languageCode,
+			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
 			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) {
 		final var pageResource = new PageResourceImpl();
-		var pageToTranslateResponse = pageResource.translate(id, languageCode, locked,
+		var pageToTranslateResponse = pageResource.translate(id, targetLanguageCode, locked,
 				channelId);
 		var pageToTranslate = pageToTranslateResponse.getPage();
 
@@ -88,7 +89,8 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 
 			for (var contentTag : contentTags) {
 				var contentTagProperties = contentTag.getProperties();
-				this.translateContentTags(contentTagProperties, languageCode);
+				this.translateContentTags(contentTagProperties, pageToTranslate.getLanguage(),
+						targetLanguageCode);
 			}
 
 			PageSaveRequest pageSaveRequest = new PageSaveRequest();
@@ -105,7 +107,8 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		}
 	}
 
-	private void translateContentTags(Map<String, Property> contentTagProperties, String languageCode)
+	private void translateContentTags(Map<String, Property> contentTagProperties,
+			String sourceLanguageCode, String targetLanguageCode)
 			throws NodeException {
 		TranslationService translationService = new GenericTranslationService.Builder()
 				.withProviderFromConfig()
@@ -116,9 +119,10 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 			if (contentTagProperty != null && !StringUtils.isBlank(
 					contentTagProperty.getValue().getStringValue())) {
 				Property propertyToTranslate = contentTagProperty.getValue();
-				//todo: only translate text
+
 				var extractedText = propertyToTranslate.getStringValue();
-				var translatedText = translationService.translate(extractedText, languageCode);
+				var translatedText = translationService.translate(extractedText, sourceLanguageCode,
+						targetLanguageCode);
 
 				propertyToTranslate.setStringValue(translatedText);
 				contentTagProperties.put(contentTagProperty.getKey(), propertyToTranslate);

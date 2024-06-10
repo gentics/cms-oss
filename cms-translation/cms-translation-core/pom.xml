@@ -45,8 +45,31 @@
       <artifactId>deepl-java</artifactId>
       <version>1.5.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.jtidy</groupId>
+      <artifactId>jtidy</artifactId>
+      <version>1.0.5</version>
+    </dependency>
+
 
     <!--Test dependencies -->
+    <dependency>
+      <groupId>com.gentics</groupId>
+      <artifactId>generic-testutils</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.gentics.cms-oss</groupId>
+      <artifactId>cms-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
@@ -66,6 +89,10 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
     </dependency>
   </dependencies>
 </project>

@@ -11,7 +11,7 @@ public class GenericTranslationService implements TranslationService {
 	/**
 	 * The translation service
 	 */
-	TranslationService translationService;
+	private TranslationService translationService;
 
 	private GenericTranslationService() {
 	}

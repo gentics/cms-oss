@@ -27,12 +27,9 @@ public class TranslationTestUtils {
 	}
 
 	private static Map<String, Object> mockLanguageConfig() {
-		Map<String, Object> languageConfig = new HashMap<>();
 		Map<String, Object> regionConfig = new HashMap<>();
-
 		regionConfig.put("en", "US");
-		languageConfig.put("language", regionConfig);
 
-		return languageConfig;
+		return regionConfig;
 	}
 }

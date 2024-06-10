@@ -41,18 +41,18 @@ public interface TranslationResource {
 	 * This method fails, if the requested language is not available for the node of the page or the
 	 * user has no permission to create/edit the given language variant
 	 *
-	 * @param id           id of the page to translate
-	 * @param languageCode code of the language into which the page shall be translated
-	 * @param locked       true if the translation shall be locked, false if not
-	 * @param channelId    for multichannelling, specify channel in which to create page (can be 0 or
-	 *                     equal to node ID to be ignored)
+	 * @param id                 id of the page to translate
+	 * @param targetLanguageCode code of the language into which the page shall be translated
+	 * @param locked             true if the translation shall be locked, false if not
+	 * @param channelId          for multichannelling, specify channel in which to create page (can be
+	 *                           0 or equal to node ID to be ignored)
 	 * @return page load response
 	 */
 	@POST
 	@Path("/page/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	PageLoadResponse translate(@PathParam("id") Integer id,
-			@QueryParam("language") String languageCode,
+			@QueryParam("language") String targetLanguageCode,
 			@QueryParam("locked") @DefaultValue("true") boolean locked,
 			@QueryParam("channelId") Integer channelId);
 }

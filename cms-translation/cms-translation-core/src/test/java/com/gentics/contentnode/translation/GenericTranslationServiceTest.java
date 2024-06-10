@@ -8,45 +8,51 @@ import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+
 class GenericTranslationServiceTest {
 
-	final String TRANSLATION_PROVIDER = "deepl";
-	final String API_TOKEN = "api-key";
-	TranslationService translationService;
+	static final String TRANSLATION_PROVIDER = "deepl";
+	static final String API_TOKEN = "api-key";
+	private TranslationService translationService;
+
+
+	@BeforeEach
+	void mockSetting() {
+		MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
+				NodeConfigRuntimeConfiguration.class);
+		mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
+				.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
+	}
+
+	@AfterEach
+	void tearDown() {
+		Mockito.framework().clearInlineMocks();
+	}
+
 
 	@Test
 	public void givenSpecifiedTranslationService_shouldInstantiateCorrectClass()
 			throws NodeException {
-		try (MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
-				NodeConfigRuntimeConfiguration.class)) {
-			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
-					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
+		translationService = new GenericTranslationService.Builder().withProvider(
+				SupportedProvider.DEEPL).build();
 
-			translationService = new GenericTranslationService.Builder().withProvider(
-					SupportedProvider.DEEPL).build();
-
-			assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
-		}
+		assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
 	}
 
 	@Test
 	public void givenConfiguredTranslationService_shouldInstantiateCorrectClass()
 			throws NodeException {
-		try (MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
-				NodeConfigRuntimeConfiguration.class)) {
-			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
-					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
+		var configuredProvider = ConfigurationValue.TRANSLATION_PROVIDER.get();
+		assertThat(configuredProvider).isEqualTo(TRANSLATION_PROVIDER);
 
-			var configuredProvider = ConfigurationValue.TRANSLATION_PROVIDER.get();
-			assertThat(configuredProvider).isEqualTo(TRANSLATION_PROVIDER);
-
-			translationService = new GenericTranslationService.Builder().withProviderFromConfig().build();
-			assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
-		}
+		translationService = new GenericTranslationService.Builder().withProviderFromConfig().build();
+		assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
 	}
 
 	@Test
@@ -60,17 +66,17 @@ class GenericTranslationServiceTest {
 
 	@Test
 	public void givenInvalidConfiguredTranslationService_shouldThrowException() {
-		try (MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
-				NodeConfigRuntimeConfiguration.class)) {
-			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
-					.thenReturn(mockTranslationConfig("not-existing-provider", API_TOKEN));
+		Mockito.framework().clearInlineMocks();
+		MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
+				NodeConfigRuntimeConfiguration.class);
+		mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
+				.thenReturn(mockTranslationConfig("not-existing-provider", API_TOKEN));
 
-			Throwable exception = catchThrowable(
-					() -> new GenericTranslationService.Builder().withProviderFromConfig());
+		Throwable exception = catchThrowable(
+				() -> new GenericTranslationService.Builder().withProviderFromConfig());
 
-			assertThat(exception).isInstanceOf(NodeException.class);
-			assertThat(exception).hasMessageContaining("Invalid provider value");
-		}
+		assertThat(exception).isInstanceOf(NodeException.class);
+		assertThat(exception).hasMessageContaining("Invalid provider value");
 	}
 
 }

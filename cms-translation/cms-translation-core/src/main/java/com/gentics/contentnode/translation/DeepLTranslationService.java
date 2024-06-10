@@ -4,17 +4,23 @@ import com.deepl.api.DeepLException;
 import com.deepl.api.TextResult;
 import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Validator;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
+import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 
+/**
+ * Translation service for the DeepL translator.
+ */
 public class DeepLTranslationService implements TranslationService {
 
 	static final SupportedProvider PROVIDER = SupportedProvider.DEEPL;
-	final Translator translator;
+	private final Translator translator;
 	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 	Map<String, Object> languagePreferences;
 
@@ -25,26 +31,9 @@ public class DeepLTranslationService implements TranslationService {
 		translator = new Translator(authToken);
 	}
 
-	private String getAuthTokenFromConfig() throws NodeException {
-		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
-
-		if (StringUtils.isBlank(authToken)) {
-			throw new NodeException("Invalid authentication provided for: " + PROVIDER);
-		}
-
-		return authToken;
-	}
-
-	private Map<String, Object> getLanguageSettingFromConfig() {
-		var languagePreferences = ConfigurationValue.TRANSLATION_LANGUAGE_PREFERENCES.getMap();
-
-		if (MapUtils.isEmpty(languagePreferences)) {
-			final var errorMessage = String.format(
-					"No language preferences found for: '%s'. Using default configuration.", PROVIDER);
-			logger.log(Level.INFO, errorMessage);
-		}
-
-		return languagePreferences;
+	public DeepLTranslationService(Translator translator) throws NodeException {
+		languagePreferences = getLanguageSettingFromConfig();
+		this.translator = translator;
 	}
 
 	@Override
@@ -53,9 +42,9 @@ public class DeepLTranslationService implements TranslationService {
 	}
 
 	@Override
-	public String translate(String textToTranslate, String sourceLanguage, String targetLanguage)
+	public String translate(String textToTranslate, @Nullable String sourceLanguage,
+			String targetLanguage)
 			throws NodeException {
-		sourceLanguage = mapLanguageCodeToTranslationLanguage(sourceLanguage);
 		targetLanguage = mapLanguageCodeToTranslationLanguage(targetLanguage);
 
 		TextResult translatedText;
@@ -68,15 +57,71 @@ public class DeepLTranslationService implements TranslationService {
 		return translatedText.getText();
 	}
 
-	private String mapLanguageCodeToTranslationLanguage(String languageCode) {
-		final var mappedLanguage = (Map<String, Object>) this.languagePreferences.get(
-				"language");
+	/**
+	 * Reads the authentication token from the configuration.
+	 *
+	 * @return The token used to authenticate the deepL client.
+	 * @throws NodeException if the token cannot be read or is empty.
+	 */
+	private String getAuthTokenFromConfig() throws NodeException {
+		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
 
-		if (mappedLanguage == null || mappedLanguage.get(languageCode) == null) {
+		if (StringUtils.isBlank(authToken)) {
+			throw new NodeException("Invalid authentication token provided for: " + PROVIDER);
+		}
+
+		return authToken;
+	}
+
+	/**
+	 * Reads the language settings from the configuration.
+	 *
+	 * @return The language settings
+	 * @throws NodeException if the settings cannot be read or are empty.
+	 */
+	private Map<String, Object> getLanguageSettingFromConfig() {
+		var languagePreferences = ConfigurationValue.TRANSLATION_LANGUAGE_PREFERENCES.getMap();
+
+		if (MapUtils.isEmpty(languagePreferences)) {
+			final var errorMessage = String.format(
+					"No language preferences found for: '%s'. Using default configuration.", PROVIDER);
+			logger.log(Level.WARN, errorMessage);
+		}
+
+		languagePreferences = getDefaultLanguageConfig();
+
+		return languagePreferences;
+	}
+
+
+	/**
+	 * This method initializes a map with default language configurations.
+	 * @return A Map containing language-region pairs.
+	 */
+	private static Map<String, Object> getDefaultLanguageConfig() {
+		Map<String, Object> regionConfig = new HashMap<>();
+		regionConfig.put("en", "US");
+		regionConfig.put("pt", "BR");
+
+		return regionConfig;
+	}
+
+	/**
+	 * Map the given language code to a supported translation language. For example for the English
+	 * language there are two flavors: en-US, en-GB
+	 * https://developers.deepl.com/docs/v/de/resources/supported-languages
+	 *
+	 * @param languageCode the international language code
+	 * @return the Api compatible language
+	 */
+	private String mapLanguageCodeToTranslationLanguage(String languageCode) {
+		final var mappedLanguage = (String) this.languagePreferences.get(languageCode);
+
+		if (mappedLanguage == null) {
 			return languageCode;
 		}
 
-		final var postfix = (String) mappedLanguage.get(languageCode);
+		final var postfix = mappedLanguage.toUpperCase();
 
 		return String.format("%s-%s", languageCode, postfix.toUpperCase());
 	}

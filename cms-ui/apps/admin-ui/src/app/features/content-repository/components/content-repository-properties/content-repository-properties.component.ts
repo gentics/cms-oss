@@ -315,10 +315,10 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         setControlsEnabled(
             this.form,
             ['password'],
-            value?.passwordType === ContentRepositoryPasswordType.VALUE ?? false,
+            value?.passwordType === ContentRepositoryPasswordType.VALUE,
             options,
         );
-        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY ?? false, options);
+        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY, options);
 
         const crType = this.mode === ContentRepositoryPropertiesMode.UPDATE
             ? this.crType || value?.crType

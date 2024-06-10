@@ -5,6 +5,7 @@
     },
     "include": [
         "tools/*.js",
+        "**/plugins/*.js",
         "**/karma.conf.js",
         ".eslintrc.js",
         "apps/**/*.ts",

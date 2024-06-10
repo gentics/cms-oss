@@ -76,8 +76,8 @@
                 (propertiesChange)="onPropertiesChange($event)"
                 (translationErrorStatus)="onTranslationErrorChange($event)"
                 (requiredOrValidationErrorStatus)="onRequiredOrValidationErrorStatus($event)"
-            >
-            </gtx-form-element-properties-editor>
+            ></gtx-form-element-properties-editor>
+
             <div class="form-element-name"
                 [style.display]="propertiesEditorIsOpen ? 'block' : 'none'"
             >
@@ -104,23 +104,21 @@
             </div> -->
             <div class="form-element-container">
                 <gtx-form-editor-element-list
-                        [containerId]="element.globalId"
-                        [elements]="element.elements"
-                        (elementsChange)="onElementsChange($event)"
-                        [readonly]="readonly"
-                        [activeUiLanguageCode]="activeUiLanguageCode"
-                        [activeContentLanguageCode]="activeContentLanguageCode"
-                        [hideDropZones]="hideDropZones || isBeingDragged"
-                        [cannotReceive]="element.cannotContain && element.isContainer ? element.cannotContain : []"
-                        (beforeFormElementInsert)="onFormElementInsert($event)"
-                        (propertiesErrorChange)="onPropertiesErrorChange($event)"
-                    >
-                    </gtx-form-editor-element-list>
+                    [containerId]="element.globalId"
+                    [elements]="element.elements"
+                    [readonly]="readonly"
+                    [activeUiLanguageCode]="activeUiLanguageCode"
+                    [activeContentLanguageCode]="activeContentLanguageCode"
+                    [hideDropZones]="hideDropZones || isBeingDragged"
+                    [cannotReceive]="element.cannotContain && element.isContainer ? element.cannotContain : []"
+                    (elementsChange)="onElementsChange($event)"
+                    (beforeFormElementInsert)="onFormElementInsert($event)"
+                    (propertiesErrorChange)="onPropertiesErrorChange($event)"
+                ></gtx-form-editor-element-list>
             </div>
         <!-- </div> -->
         </div>
     </div>
-
 
     <div
         *ngIf="!readonly; else readOnlyIcons"

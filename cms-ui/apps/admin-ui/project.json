@@ -7,12 +7,12 @@
     "tags": ["app", "ui", "angular"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:webpack-browser",
+            "executor": "@nx/angular:application",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/apps/admin-ui",
                 "index": "apps/admin-ui/src/index.html",
-                "main": "apps/admin-ui/src/main.ts",
+                "browser": "apps/admin-ui/src/main.ts",
                 "polyfills": ["apps/admin-ui/src/polyfills.ts"],
                 "tsConfig": "apps/admin-ui/tsconfig.app.json",
                 "assets": [
@@ -52,17 +52,13 @@
                 "optimization": true,
                 "sourceMap": false,
                 "namedChunks": false,
-                "extractLicenses": true,
-                "vendorChunk": false,
-                "buildOptimizer": true
+                "extractLicenses": true
             },
             "configurations": {
                 "production": {},
                 "development": {
                     "fileReplacements": [],
-                    "buildOptimizer": false,
                     "optimization": false,
-                    "vendorChunk": true,
                     "extractLicenses": false,
                     "sourceMap": true,
                     "namedChunks": true

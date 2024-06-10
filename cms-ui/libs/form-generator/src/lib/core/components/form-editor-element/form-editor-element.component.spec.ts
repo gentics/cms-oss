@@ -1,8 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormEditorService } from '../../providers';
-import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
-import { FormEditorElementComponent } from './form-editor-element.component';
+import { FormEditorElementComponent, FormEditorElementListComponent } from './form-editor-element-and-list.component';
 
 describe('FormEditorElementComponent', () => {
     let component: FormEditorElementComponent;

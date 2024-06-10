@@ -1,6 +1,7 @@
 package com.gentics.contentnode.runtime;
 
 import java.io.File;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -188,6 +189,21 @@ public enum ConfigurationValue {
 	 */
 	GCNJSAPI_PATH("GCNJSAPI_PATH", "com.gentics.contentnode.gcnjsapi.path"),
 
+	/**
+		* Provider for automatic text translation
+	 */
+	TRANSLATION_PROVIDER("TRANSLATION_PROVIDER", "com.gentics.contentnode.translation.provider", "translation.provider"),
+
+	/**
+	 * The auth token for the translation provider
+	 */
+	TRANSLATION_AUTH_TOKEN("TRANSLATION_AUTH_TOKEN", "com.gentics.contentnode.translation.auth.token", "translation.auth.token"),
+
+	/**
+	 * The language settings for the configured provider.
+	 */
+	TRANSLATION_LANGUAGE_PREFERENCES("TRANSLATION_LANGUAGE_PREFERENCES", "com.gentics.contentnode.translation.language", "translation.language")
+
 	;
 
 	/**
@@ -305,6 +321,14 @@ public enum ConfigurationValue {
 			value = valueCleaner.apply(value);
 		}
 		return value;
+	}
+
+	/**
+	 * Get a map instead of a single value
+	 * @return the map
+	 */
+	public Map<String, Object> getMap() {
+		return NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap(configurationProperty);
 	}
 
 	/**

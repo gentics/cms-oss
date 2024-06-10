@@ -41,6 +41,23 @@ initialized by specifying the URI pointing to the base-location of the RESTful s
 RestClient client = new RestClient("http:/[host]/rest/");
 </javascript>
 
+h4. Initialization with custom configuration
+
+If the REST API Java Client needs to be created with custom configuration (for instance connect and read timeout),
+this can be done in the following way:
+
+<javascript>
+int connectTimeoutMs = 10_000;
+int readTimeoutMs = 30_000;
+RestClient client = new RestClient(() -> {
+	ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
+		.property(ClientProperties.CONNECT_TIMEOUT, connectTimeoutMs)
+		.property(ClientProperties.READ_TIMEOUT, readTimeoutMs);
+	return JerseyClientBuilder.createClient(clientConfig).register(ObjectMapperProvider.class).register(JacksonFeature.class)
+					.register(MultiPartFeature.class);
+		}, "http:/[host]/CNPortletapp/rest/");
+</javascript>
+
 h4. Login
 
 Once the client is initialized, logging into the system works with the following command:

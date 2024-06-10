@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -33,9 +34,8 @@ import com.gentics.contentnode.distributed.TrxCallable;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.QueueWithDelay;
-import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
@@ -116,6 +116,11 @@ public class Synchronizer {
 	 * Sync Path Queue
 	 */
 	private static QueueWithDelay<PathWithPriority> syncEventQueue = null;
+
+	/**
+	 * Thread Factory
+	 */
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("package-synchronizer");
 
 	/**
 	 * Queue handler
@@ -224,7 +229,7 @@ public class Synchronizer {
 			syncEventQueue = new QueueWithDelay<>(syncQueueDelay, TimeUnit.MILLISECONDS, (o1, o2) -> Integer.compare(o1.priority, o2.priority));
 
 			// start the queue handler
-			queueHandler = Executors.newSingleThreadExecutor();
+			queueHandler = Executors.newSingleThreadExecutor(threadFactory);
 			queueHandler.execute(() -> {
 				boolean run = true;
 				while (run) {

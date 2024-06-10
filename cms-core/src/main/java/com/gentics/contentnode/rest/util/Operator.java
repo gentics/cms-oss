@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,6 +23,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
@@ -47,6 +49,11 @@ public class Operator {
 	protected static int poolSize = 10;
 
 	/**
+	 * Thread factory
+	 */
+	protected static ThreadFactory threadFactory = new PrefixedThreadFactory("operator");
+
+	/**
 	 * Generator for the internal "jobId"
 	 */
 	protected static AtomicLong jobIdGenerator = new AtomicLong();
@@ -59,9 +66,9 @@ public class Operator {
 	/**
 	 * Executor instance TODO make pool size configurable
 	 */
-	protected static ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+	protected static ExecutorService executor = Executors.newFixedThreadPool(poolSize, threadFactory);
 
-	protected static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+	protected static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1, new PrefixedThreadFactory("scheduled-operator"));
 
 	/**
 	 * Logger
@@ -84,7 +91,7 @@ public class Operator {
 		ExecutorService oldExecutor = executor;
 
 		// start a new executorservice (which will be used from now on)
-		executor = Executors.newFixedThreadPool(poolSize);
+		executor = Executors.newFixedThreadPool(poolSize, threadFactory);
 
 		// shut the old executor service down.
 		if (oldExecutor != null && !oldExecutor.isShutdown()) {

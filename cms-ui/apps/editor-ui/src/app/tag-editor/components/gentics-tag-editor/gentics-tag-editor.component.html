@@ -2,7 +2,7 @@
 
     <div *ngIf="showTitle" class="header">
         <h2>
-            <ng-container *ngIf="originalTag?.type !== 'OBJECTTAG'; else objPropName">{{ originalTag.tagType.name }}</ng-container>
+            <ng-container *ngIf="originalTag?.type !== 'OBJECTTAG'; else objPropName">{{ originalTag?.tagType?.name }}</ng-container>
             <ng-template #objPropName>{{ originalTag | objTagName }}</ng-template>
         </h2>
     </div>

@@ -423,7 +423,7 @@ public final class PortalConnectorFactory {
 			scheduler.shutdown();
 			scheduler.awaitTermination(10, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
-			logger.error("Error while stopping scheduler.", e);
+			logger.warn("Error while stopping scheduler.", e);
 		}
 		scheduler = null;
 	}

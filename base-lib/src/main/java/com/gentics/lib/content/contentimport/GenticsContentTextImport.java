@@ -183,7 +183,7 @@ public class GenticsContentTextImport extends AbstractContentImport {
 				try {
 					parseLine(ds, lineNr, line);
 				} catch (ContentImportException e) {
-					NodeLogger.getNodeLogger(getClass()).error("Error while importing data (line " + lineNr + ")", e);
+					NodeLogger.getNodeLogger(getClass()).warn("Error while importing data (line " + lineNr + ")", e);
 					getLogger().addError("", "Skipping line " + lineNr + ".");
 				}
 			}

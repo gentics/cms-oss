@@ -451,7 +451,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 					int modifiedRows = DB.update(getHandle().getDBHandle(), sql, params.toArray(), null);
 
 					if (modifiedRows != 1) {
-						logger.error(
+						logger.warn(
 								"Tried updating a single value attribut, but {" + modifiedRows
 								+ "} rows were affected. deleting all attributes of that name to insert it.");
 						insertSinglevalueAttribute(attribute, newValue);
@@ -1960,7 +1960,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 	private String truncateAttributeValue(String value, String contentId, String attributName, StringLengthManipulator manipulator) {
 		if (value != null) {
 			if (manipulator.getLength(value) > 255) {
-				logger.error(
+				logger.warn(
 						"The value of the attribute {" + attributName + "} in the object {" + contentId
 						+ "} is too long for the specified datatype and will be truncated.");
 				return manipulator.truncate(value, 255);
@@ -2008,7 +2008,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 			}
 
 		} else {
-			logger.error("Caution: This datasource does not use id_counter for generation of obj_id's. " + "It is possible that contentid's are not unique!");
+			logger.warn("Caution: This datasource does not use id_counter for generation of obj_id's. " + "It is possible that contentid's are not unique!");
 			DB.query(getHandle().getDBHandle(), "SELECT max(obj_id) maxid FROM " + getHandle().getDBHandle().getContentMapName() + " WHERE obj_type = ?",
 					new Integer(objType), rs);
 			if (rs == null) {

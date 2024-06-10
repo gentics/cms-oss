@@ -182,7 +182,7 @@ public class ResolvableComparator implements Comparator {
 			number1 = ObjectTransformer.getNumber(value1, null);
 			logger.debug("r1 sortby resolved to {" + value1 + "}");
 		} catch (UnknownPropertyException e) {
-			logger.error("Unable to resolve property {" + sorting.getColumnName() + "} for object {" + r1 + "}", e);
+			logger.warn("Unable to resolve property {" + sorting.getColumnName() + "} for object {" + r1 + "}", e);
 		}
 		Object value2 = "";
 
@@ -200,7 +200,7 @@ public class ResolvableComparator implements Comparator {
 			number2 = ObjectTransformer.getNumber(value2, null);
 			logger.debug("r2 sortby resolved to {" + value2 + "}");
 		} catch (UnknownPropertyException e) {
-			logger.error("Unable to resolve property {" + sorting.getColumnName() + "} for object {" + r2 + "}", e);
+			logger.warn("Unable to resolve property {" + sorting.getColumnName() + "} for object {" + r2 + "}", e);
 		}
         
 		if (number1 != null && number2 != null) {

@@ -963,7 +963,7 @@ public class CRSync {
 			}
 			throw ex;
 		} catch (OutOfMemoryError e) {
-			logger.error("The sync ran out of memory, please consult http://www.gentics.com/infoportal/ (CRSync) for more information on how to avoid this!");
+			logger.fatal("The sync ran out of memory, please consult http://www.gentics.com/infoportal/ (CRSync) for more information on how to avoid this!");
 			throw e;
 		} finally {
 			// restore PrefetchAttributesThreshold

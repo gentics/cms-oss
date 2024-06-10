@@ -1374,6 +1374,9 @@ export interface SendMessageRequest {
     toGroupId: number[];
 
     type: 'INFO';
+
+    /** The number of minutes a message is considered an instant message */
+    instantTimeMinutes: number;
 }
 
 /**

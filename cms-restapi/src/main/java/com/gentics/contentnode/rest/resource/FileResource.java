@@ -22,7 +22,6 @@ import com.gentics.contentnode.rest.model.request.FileCopyRequest;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.IdSetRequest;
-import com.gentics.contentnode.rest.model.request.MultiDeletionRequest;
 import com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest;
 import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
 import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
@@ -295,18 +294,6 @@ public interface FileResource extends AuthenticatedResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	GenericResponse save(@PathParam("id") Integer id, MultiPart multiPart);
 
-	/**
-	 * Delete multiple files asynchronously
-	 * 
-	 * @param nodeId
-	 * @param request
-	 * @return
-	 * @throws Exception 
-	 * @throws NodeException
-	 */
-	@POST
-	@Path("/delete")
-	GenericResponse delete(Integer nodeId, MultiDeletionRequest request) throws Exception;
 	/**
 	 * Delete the file denoted by id
 	 *

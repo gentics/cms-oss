@@ -1,4 +1,4 @@
-package com.gentics.contentnode.helper;
+package com.gentics.contentnode.job;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.List;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.job.AbstractLocalizeCallable;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
@@ -20,7 +19,7 @@ import com.gentics.lib.i18n.CNI18nString;
 /**
  * Static helper class for localization of objects
  */
-public class LocalizeHelper {
+public class LocalizeJob {
 	/**
 	 * Process the job for the given collection of objects. The jobs are
 	 * synchronized with the channelSetId

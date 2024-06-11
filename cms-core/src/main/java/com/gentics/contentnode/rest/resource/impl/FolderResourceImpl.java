@@ -64,8 +64,6 @@ import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
-import com.gentics.contentnode.job.DeleteJob;
-import com.gentics.contentnode.job.DeleteJob.DeletionOperand;
 import com.gentics.contentnode.job.MoveJob;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.ContentFile;
@@ -115,7 +113,6 @@ import com.gentics.contentnode.rest.model.request.FolderPublishDirSanitizeReques
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
 import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.LinksType;
-import com.gentics.contentnode.rest.model.request.MultiDeletionRequest;
 import com.gentics.contentnode.rest.model.request.MultiFolderLoadRequest;
 import com.gentics.contentnode.rest.model.request.MultiFolderMoveRequest;
 import com.gentics.contentnode.rest.model.request.StartpageRequest;
@@ -623,7 +620,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		Transaction t = null;
 		try {
 			t = TransactionManager.getCurrentTransaction();
-			channelIdSet = MiscUtils.setChannelToTransaction(nodeId);
+			channelIdSet = setChannelToTransaction(nodeId);
 
 			nodeFolder = getFolder(folderId, update);
 
@@ -721,7 +718,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 
 		try {
-			channelIdSet = MiscUtils.setChannelToTransaction(nodeId);
+			channelIdSet = setChannelToTransaction(nodeId);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
 				com.gentics.contentnode.object.Folder folder = getFolder(id, false);
@@ -775,7 +772,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			inFolder.setFolderId(id);
 
 			try {
-				channelIdSet = MiscUtils.setChannelToTransaction(pageListParams.nodeId);
+				channelIdSet = setChannelToTransaction(pageListParams.nodeId);
 
 				try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
 					// load the folder
@@ -1140,7 +1137,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 		try {
-			channelIdSet = MiscUtils.setChannelToTransaction(fileListParams.nodeId);
+			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {
 			com.gentics.contentnode.object.Folder f = getFolder(inFolder.folderId, false);
@@ -1246,7 +1243,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		folderListParams.setAddPrivileges(addPrivileges);
 
 		try {
-			channelIdSet = MiscUtils.setChannelToTransaction(folderListParams.nodeId);
+			channelIdSet = setChannelToTransaction(folderListParams.nodeId);
 
 			List<com.gentics.contentnode.object.Folder> folders = null;
 
@@ -1403,7 +1400,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 		try {
-			channelIdSet = MiscUtils.setChannelToTransaction(folderListParams.nodeId);
+			channelIdSet = setChannelToTransaction(folderListParams.nodeId);
 
 			List<com.gentics.contentnode.object.Folder> folders = getFolders(t, inFolder.folderId, includeWastebin);
 
@@ -1804,7 +1801,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		try {
 			// set the channel
-			channelIdSet = MiscUtils.setChannelToTransaction(templateListParams.nodeId);
+			channelIdSet = setChannelToTransaction(templateListParams.nodeId);
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {
@@ -2537,23 +2534,11 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 * @see com.gentics.contentnode.rest.api.FolderResource#delete(java.lang.String)
 	 */
 	@POST
-	@Path("/delete")
-	public GenericResponse delete(@QueryParam("nodeId") Integer nodeId, MultiDeletionRequest request) throws NodeException {
-		Set<DeletionOperand<?>> ops = request.getIds().stream().map(id -> new DeleteJob.DeletionOperand<>(com.gentics.contentnode.object.Folder.class, nodeId, Integer.parseInt(id))).collect(Collectors.toSet());
-		DeleteJob deleteJob = new DeleteJob(ops);
-		return deleteJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#delete(java.lang.String)
-	 */
-	@POST
 	@Path("/delete/{id}")
 	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
 		try {
 			// set the channel ID if given
-			boolean isChannelIdset = MiscUtils.setChannelToTransaction(nodeId);
+			boolean isChannelIdset = setChannelToTransaction(nodeId);
 
 			// get the folder (this will check for existence and delete permission)
 			com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.delete);
@@ -2782,7 +2767,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		try {
 			String folderId = id.toString();
 
-			channelIdSet = MiscUtils.setChannelToTransaction(nodeId);
+			channelIdSet = setChannelToTransaction(nodeId);
 			inFolder.setFolderId(folderId);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, folderId)) {
@@ -3130,7 +3115,40 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 */
 	public static com.gentics.contentnode.object.Folder getFolder(String id, PermHandler.ObjectPermission... perms) throws EntityNotFoundException,
 			InsufficientPrivilegesException, NodeException {
-		return MiscUtils.load(com.gentics.contentnode.object.Folder.class, id, true, perms);
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		com.gentics.contentnode.object.Folder folder = t.getObject(com.gentics.contentnode.object.Folder.class, id);
+		if (folder == null) {
+			I18nString message = new CNI18nString("folder.notfound");
+			message.setParameter("0", id.toString());
+			throw new EntityNotFoundException(message.toString());
+		}
+
+		// check permission bits
+		for (PermHandler.ObjectPermission p : perms) {
+			if (!p.checkObject(folder)) {
+				I18nString message = new CNI18nString("folder.nopermission");
+				message.setParameter("0", id.toString());
+				throw new InsufficientPrivilegesException(message.toString(), folder, p.getPermType());
+			}
+
+			// delete permissions for master folders must be checked for all channels containing localized copies
+			if (folder.isMaster() && p == ObjectPermission.delete) {
+				for (int channelSetNodeId : folder.getChannelSet().keySet()) {
+					if (channelSetNodeId == 0) {
+						continue;
+					}
+					Node channel = t.getObject(Node.class, channelSetNodeId);
+					if (!ObjectPermission.delete.checkObject(folder, channel)) {
+						I18nString message = new CNI18nString("folder.nopermission");
+						message.setParameter("0", id.toString());
+						throw new InsufficientPrivilegesException(message.toString(), folder, PermType.delete);
+					}
+				}
+			}
+		}
+
+		return folder;
 	}
 
 	/**

@@ -9,6 +9,9 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { map } from 'rxjs/operators';
 import { SendMessageFormComponent, SendMessageFormValue } from '../send-message-form/send-message-form.component';
 
+
+const DEFAULT_INSTANT_TIME_MINUTES = 2;
+
 @Component({
     selector: 'gtx-send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
@@ -22,7 +25,7 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
     @ViewChild(SendMessageFormComponent) private sendMessageForm: SendMessageFormComponent;
 
     constructor(private api: GcmsApi,
-                private notification: I18nNotificationService) {
+        private notification: I18nNotificationService) {
     }
 
     ngOnInit(): void {
@@ -37,12 +40,12 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
     okayClicked(): void {
         this.api.messages.sendMessage(this.transformValuesForApi(this.form.value)).subscribe(() => {
             this.notification.show({
-                message: 'message.message_sent',
+                message: 'shared.message_send',
                 type: 'success',
             });
         }, error => {
             this.notification.show({
-                message: 'message.message_sent_error',
+                message: 'shared.message_sent_error',
                 type: 'alert',
                 delay: 5000,
             });
@@ -52,12 +55,15 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
     }
 
     transformValuesForApi(formValues: SendMessageFormValue): SendMessageRequest {
+        const INSTANT_TIME = formValues.isInstant ? DEFAULT_INSTANT_TIME_MINUTES : 0;
+
         return formValues.recipientIds.reduce((acc: any, selectedId: string) => {
             const [key, value] = selectedId.split('_');
             acc[key].push(value);
             return acc;
         }, {
             message:  formValues.message,
+            instantTimeMinutes: INSTANT_TIME,
             toGroupId: [],
             toUserId: [],
         });

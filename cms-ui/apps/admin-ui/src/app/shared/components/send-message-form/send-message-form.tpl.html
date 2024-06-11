@@ -8,6 +8,9 @@
                 <gtx-optgroup [label]="('modal.send_message_users' | i18n)">
                     <gtx-option *ngFor="let user of users" [value]="'toUserId_'+user.id">{{ user?.firstName }} {{ user?.lastName }}</gtx-option>
                 </gtx-optgroup>
-            </gtx-select>
+        </gtx-select>
+
+        <gtx-checkbox [label]="('modal.send_message_instant' | i18n)" formControlName="isInstant"/>
+
         <gtx-textarea [label]="'modal.send_message_message' | i18n" formControlName="message"></gtx-textarea>
     </form>

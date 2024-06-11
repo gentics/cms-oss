@@ -1,5 +1,5 @@
 import { Provider } from '@angular/core';
-import { StateClass } from '@ngxs/store/internals';
+import { ɵStateClass } from '@ngxs/store/internals';
 import { AuthStateModule } from './auth/auth.state-module';
 import { ContentStagingStateModule } from './content-staging/content-staging.state-module';
 import { EditorStateModule } from './editor/editor.state-module';
@@ -17,7 +17,7 @@ import { UsageStateModule } from './usage/usage.state-module';
 import { WastebinStateModule } from './wastebin/wastebin.state-module';
 
 /** Contains all ngxs state modules. */
-export const STATE_MODULES: (StateClass & Provider)[] = [
+export const STATE_MODULES: (ɵStateClass & Provider)[] = [
     AuthStateModule,
     ContentStagingStateModule,
     EditorStateModule,

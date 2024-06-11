@@ -1,7 +1,7 @@
 import { NormalizedResponse, Response as ResponseModel } from '@gentics/cms-models';
 import { Action, State } from '@ngxs/store';
-import { StateClass } from '@ngxs/store/internals';
-import { StateOperator, StoreOptions } from '@ngxs/store/src/symbols';
+import { ɵStateClass, ɵStoreOptions } from '@ngxs/store/internals';
+import { StateOperator } from '@ngxs/store/src/symbols';
 import { Schema, normalize } from 'normalizr';
 import {
     fileSchema,
@@ -40,7 +40,7 @@ interface AppStateActionClass extends ConstructorOf<any>, Function {
  * Extends the `StoreOptions` interface provided by ngxs with a restriction on the
  * `name` property to match one of the properties of the `AppState` interface.
  */
-export interface AppStateStoreOptions<T> extends StoreOptions<T> {
+export interface AppStateStoreOptions<T> extends ɵStoreOptions<T> {
 
     /** Name of the AppState branch. */
     name: keyof AppState;
@@ -51,7 +51,7 @@ export interface AppStateStoreOptions<T> extends StoreOptions<T> {
  * Decorates a class as an AppState branch in the ngxs store.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const AppStateBranch = <T>(options: AppStateStoreOptions<T>): (target: StateClass) => void => (target: StateClass) => {
+export const AppStateBranch = <T>(options: AppStateStoreOptions<T>): (target: ɵStateClass) => void => (target: ɵStateClass) => {
     const origDecorator = State(options);
     origDecorator(target);
 };

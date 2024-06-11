@@ -591,6 +591,16 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         const frame = this.diffFrame.nativeElement;
         frame.contentWindow.location.replace(this.comparePageUrl);
         frame.addEventListener('load', () => {
+            const styleElem = frame.contentDocument.createElement('style');
+            styleElem.textContent = `
+del.gtx-diff {
+  background: rgba(255, 0, 0, 0.2);
+}
+ins.gtx-diff {
+  background: rgba(0, 255, 0, 0.2);
+}`;
+            frame.contentDocument.head.appendChild(styleElem);
+
             frame.contentDocument.addEventListener('scroll', () => {
                 if (this.ignoreNextDiffScroll) {
                     this.ignoreNextDiffScroll = false;

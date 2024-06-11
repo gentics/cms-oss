@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -1395,10 +1397,27 @@ public class PermHandler {
 			} else if (object instanceof UserGroup) {
 				return checkGroupPerm((UserGroup)object, p -> p.canEdit(null, UserGroup.class, null));
 			} else if (object instanceof ObjectTag) {
+				ObjectTag tag = (ObjectTag) object;
+
 				// The permissions of object properties are fetched from their definitions.
 				// However object properties on pages/files are special, because they also inherit
 				// the permissions from their folder and template (pages only).
-				return checkObjectPropertyInheritedPermissions((ObjectTag)object, PERM_OBJPROP_UPDATE);
+				boolean canEdit = checkObjectPropertyInheritedPermissions(tag, PERM_OBJPROP_UPDATE);
+
+				PermHandler permHandler = TransactionManager.getCurrentTransaction().getPermHandler();
+
+				if (NodeConfigRuntimeConfiguration.isFeature(Feature.OBJTAG_SYNC)) {
+					ObjectTagDefinition tagDefinition = tag.getDefinition();
+
+					if (tagDefinition.isSyncContentset() || tagDefinition.isSyncChannelset() || tagDefinition.isSyncVariants()) {
+						for (Pair<NodeObject, ObjectTag> variant : tag.getSyncVariants()) {
+							// Check if the user can edit the object this object tag belongs to.
+							canEdit &= permHandler.canEdit(variant.getLeft());
+						}
+					}
+				}
+
+				return canEdit;
 			} else if (object instanceof ObjectTagDefinition) {
 				return checkPermissionBit(ObjectTagDefinition.TYPE_OBJTAG_DEF, object.getId(), PERM_OBJPROP_UPDATE);
 			} else if (object instanceof ObjectTagDefinitionCategory) {

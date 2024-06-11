@@ -1,7 +1,6 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { NgxsModule, Store } from '@ngxs/store';
-import { Observable, of as observableOf } from 'rxjs';
-
+import { Observable, of } from 'rxjs';
 import { AppState } from '../../app-state';
 import { STATE_MODULES } from '../../state.module';
 import { AppStateService } from './app-state.service';
@@ -25,7 +24,7 @@ describe('AppStateService', () => {
     }));
 
     it('dispatch() works', () => {
-        const expectedResult = observableOf('success');
+        const expectedResult = of<void>();
         const dispatchSpy = spyOn(store, 'dispatch').and.returnValue(expectedResult);
         const action = new MockAction();
 
@@ -36,7 +35,7 @@ describe('AppStateService', () => {
     });
 
     it('select() works', () => {
-        const expectedResult: Observable<any> = observableOf({});
+        const expectedResult: Observable<any> = of({});
         const selectSpy = spyOn(store, 'select').and.returnValue(expectedResult);
         const selector = (state: AppState) => state.auth;
 
@@ -47,7 +46,7 @@ describe('AppStateService', () => {
     });
 
     it('selectOnce() works', () => {
-        const expectedResult: Observable<any> = observableOf({});
+        const expectedResult: Observable<any> = of({});
         const selectOnceSpy = spyOn(store, 'selectOnce').and.returnValue(expectedResult);
         const selector = (state: AppState) => state.auth;
 

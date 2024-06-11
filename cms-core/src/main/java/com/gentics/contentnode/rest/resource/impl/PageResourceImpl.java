@@ -1776,7 +1776,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false, false)) {
-				String content = page.render(new RenderResult());
+				String content = page.render(RenderUtils.getPreviewTemplate(page, RenderType.EM_PREVIEW), new RenderResult(), null, null, null, null);
 				return Response.status(Status.OK).type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8").entity(content).build();
 			}
 		} catch (EntityNotFoundException e) {
@@ -1868,8 +1868,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Page secondPage = secondPageSupplier.supply();
 
 		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false, false)) {
-			String firstContent = firstPage.render(new RenderResult());
-			String secondContent = secondPage.render(new RenderResult());
+			String firstContent = firstPage.render(RenderUtils.getPreviewTemplate(firstPage, RenderType.EM_PREVIEW), new RenderResult(), null, null, null, null);
+			String secondContent = secondPage.render(RenderUtils.getPreviewTemplate(secondPage, RenderType.EM_PREVIEW), new RenderResult(), null, null, null, null);
 
 			DiffResource diffResource = new DiffResourceImpl();
 			DiffRequest request = new DiffRequest();

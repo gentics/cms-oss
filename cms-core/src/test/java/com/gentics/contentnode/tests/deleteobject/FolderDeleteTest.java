@@ -57,7 +57,7 @@ public class FolderDeleteTest {
 		// delete the folder
 		try (Trx trx = new Trx(null, 1)) {
 			FolderResource res = ContentNodeRESTUtils.getFolderResource();
-			GenericResponse response = res.delete(folder.getId().toString(), null);
+			GenericResponse response = res.delete(folder.getId().toString(), null, null);
 			ContentNodeRESTUtils.assertResponseOK(response);
 			trx.success();
 		}
@@ -102,7 +102,7 @@ public class FolderDeleteTest {
 		// delete the folder
 		try (Trx trx = new Trx(null, 1)) {
 			FolderResource res = ContentNodeRESTUtils.getFolderResource();
-			GenericResponse response = res.delete(folder.getId().toString(), null);
+			GenericResponse response = res.delete(folder.getId().toString(), null, null);
 			ContentNodeRESTUtils.assertResponseOK(response);
 			trx.success();
 		}
@@ -153,7 +153,7 @@ public class FolderDeleteTest {
 		// delete the folder
 		try (Trx trx = new Trx(null, 1)) {
 			FolderResource res = ContentNodeRESTUtils.getFolderResource();
-			GenericResponse response = res.delete(folder.getId().toString(), null);
+			GenericResponse response = res.delete(folder.getId().toString(), null, null);
 			ContentNodeRESTUtils.assertResponseOK(response);
 			trx.success();
 		}

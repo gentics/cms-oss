@@ -273,11 +273,12 @@ public interface PageResource extends AuthenticatedResource {
 	 * However you can delete an inherited page in the master and unlocalize a localized page.
 	 * @param id id of the Page to delete. This can either be a local or global id
 	 * @param nodeId channel id
+	 * @param noCrSync don't sync the deletion with the content repo
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
 
 	/**
 	 * Remove the page denoted by the given id from the wastebin.

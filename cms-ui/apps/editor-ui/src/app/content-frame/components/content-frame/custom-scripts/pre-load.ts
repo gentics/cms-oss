@@ -29,21 +29,12 @@ export class PreLoadScript {
     ) { }
 
     run(): void {
-        this.applyGcmsUiStyles();
         this.bindExternalDebugHotkey();
         this.copyDataPropertiesFromIframeElementToBody();
         this.removeAlohaUnloadLogic();
         this.trackWhenObjectPropertyPagesAreLoading();
         this.showLanguageWhenComparingLanguages();
         this.hideSyncScrollTextWhenComparingLanguages();
-    }
-
-    /** Applies the GCMS UI styles to the IFrame. */
-    applyGcmsUiStyles(): void {
-        const link = this.iFrameDocument.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = this.iFrameWindow.GCMSUI.gcmsUiStylesUrl;
-        this.iFrameDocument.body.appendChild(link);
     }
 
     /** Add Debug Tool hotkey access to iframe */
@@ -76,7 +67,7 @@ export class PreLoadScript {
                 console.warn('Error while calling checkFn() from pollUntilAvailable():', ignored);
             }
 
-            if (found != undefined) {
+            if (found != null) {
                 timeout = 0;
                 callback(found);
             } else if (this.iFrameDocument.readyState !== 'complete' || --retriesAfterLoad > 0) {

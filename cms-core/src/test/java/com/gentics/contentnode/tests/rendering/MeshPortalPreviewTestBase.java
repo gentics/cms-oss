@@ -1,16 +1,15 @@
 package com.gentics.contentnode.tests.rendering;
 
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.crResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createContentRepository;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,6 +34,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
@@ -45,6 +45,7 @@ import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
@@ -62,15 +63,18 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUtils;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.renderer.EchoRenderer;
+import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.model.response.TagmapEntryResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
+import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.mesh.core.rest.common.RestModel;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
@@ -84,11 +88,26 @@ import com.gentics.mesh.json.JsonUtil;
  * Test cases for the "portal preview" of a Mesh portal
  */
 public abstract class MeshPortalPreviewTestBase {
-	@ClassRule
+	/**
+	 * Timestamp of the old version of the page
+	 */
+	public final static int OLD_TIMESTAMP = (int)(System.currentTimeMillis() / 1000L) - 3600;
+
+	/**
+	 * Test context
+	 */
 	public static DBTestContext context = new DBTestContext().config(map -> {
 		// set call timeout to 5 seconds
 		map.setProperty("mesh.client.callTimeout", "5");
 	});
+
+	/**
+	 * REST App context
+	 */
+	private static RESTAppContext restContext = new RESTAppContext();
+
+	@ClassRule
+	public static RuleChain chain = RuleChain.outerRule(context).around(restContext);
 
 	/**
 	 * Comparator for Rest Models
@@ -139,6 +158,8 @@ public abstract class MeshPortalPreviewTestBase {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
+		context.getContext().getTransaction().commit();
+
 		RendererFactory.registerRenderer("echo", new EchoRenderer());
 		meshCrId = createMeshCR("localhost", 1234, "test");
 		otherCrId = Trx.supply(() -> createContentRepository("Other", false, false, "bla").getId());
@@ -188,13 +209,25 @@ public abstract class MeshPortalPreviewTestBase {
 				tag.setName("live");
 			}, false));
 		});
-		page = Trx.supply(() -> update(createPage(node.getFolder(), template, "Testpage", null, getLanguage("de")), p -> {
+
+		page = Builder.create(Page.class, p -> {
+			p.setFolderId(node.getFolder().getId());
+			p.setTemplateId(template.getId());
+			p.setName("Testpage");
+			p.setLanguage(getLanguage("de"));
+		}).at(1).build();
+
+		page = Builder.update(page, p -> {
 			ContentTag newTag = p.getContent().addContentTag(constructId);
 			newTag.getValues().getByKeyname("part").setValueText("Embedded content");
-			p.getContentTag("tag").getValues().getByKeyname("part").setValueText("This is the content");
+			p.getContentTag("tag").getValues().getByKeyname("part").setValueText("This is the old content");
 			p.getContentTag("live").getValues().getByKeyname("html")
 					.setValueText("Live <b>editable</b> content, containing also embedded tags: [<node " + newTag.getName() + ">].");
-		}));
+		}).at(OLD_TIMESTAMP).build();
+
+		page = Builder.update(page, p -> {
+			p.getContentTag("tag").getValues().getByKeyname("part").setValueText("This is the content");
+		}).build();
 
 		// create the language variant
 		translation = supply(() -> {
@@ -205,9 +238,16 @@ public abstract class MeshPortalPreviewTestBase {
 			return translation.reload();
 		});
 
-		update(node.getFolder(), upd -> {
+		update(supply(() -> node.getFolder()), upd -> {
 			upd.setNameI18n(new I18nMap().put("de", "Ordner Name auf Deutsch"));
-		});
+		}).build();
+
+		SystemUser user = supply(t -> t.getObject(SystemUser.class, 1));
+		assertThat(user).as("System user").isNotNull();
+
+		update(user, upd -> {
+			upd.setPassword(SystemUserFactory.hashPassword("system", upd.getId()));
+		}).build();
 	}
 
 	/**
@@ -281,12 +321,12 @@ public abstract class MeshPortalPreviewTestBase {
 			n.setContentrepositoryId(meshCrId);
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/echo");
 			n.setPubDirSegment(true);
-		});
+		}).build();
 
 		// make the live editable construct live editable (this might be changed by tests)
 		update(liveEditableConstruct, c -> {
 			c.getParts().get(0).setEditable(2);
-		});
+		}).build();
 	}
 
 	/**
@@ -320,7 +360,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testNoCR() throws NodeException {
 		update(node, n -> {
 			n.setContentrepositoryId(null);
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Preview").isNull();
@@ -334,7 +374,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testWrongCR() throws NodeException {
 		update(node, n -> {
 			n.setContentrepositoryId(otherCrId);
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Preview").isNull();
@@ -348,7 +388,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testNotPublishCR() throws NodeException {
 		update(node, n -> {
 			n.setPublishContentmap(false);
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Preview").isNull();
@@ -374,7 +414,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testNoPreviewUrl() throws NodeException {
 		update(node, n -> {
 			setMeshPreviewUrl(n, null);
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Preview").isNull();
@@ -389,16 +429,16 @@ public abstract class MeshPortalPreviewTestBase {
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Preview").isNotNull();
 		NodeResponse sentNode = JsonUtil.readValue(preview, NodeResponse.class);
-		assertThat(sentNode.getUuid()).as("UUID").isEqualTo(MeshPublisher.getMeshUuid(page));
+		assertThat(sentNode.getUuid()).as("UUID").isEqualTo(supply(() -> MeshPublisher.getMeshUuid(page)));
 		assertThat(sentNode.getFields().getStringField("tag")).as("Field 'tag'").isNotNull();
 		assertThat(sentNode.getFields().getStringField("tag").getString()).as("Field 'tag' value").isEqualTo("This is the content");
 		assertThat(sentNode.getFields().getStringField("tagpart")).as("Field 'tagpart'").isNotNull();
 		assertThat(sentNode.getFields().getStringField("tagpart").getString()).as("Field 'tagpart' value").isEqualTo("This is the content");
 		assertThat(sentNode.getFields().getNodeField("pagelink")).as("Field 'pagelink'").isNotNull();
-		assertThat(sentNode.getFields().getNodeField("pagelink").getUuid()).as("Field 'pagelink'").isEqualTo(MeshPublisher.getMeshUuid(page));
+		assertThat(sentNode.getFields().getNodeField("pagelink").getUuid()).as("Field 'pagelink'").isEqualTo(supply(() -> MeshPublisher.getMeshUuid(page)));
 		assertThat(sentNode.getFields().getNodeFieldList("pagelinks")).as("Field 'pagelinks'").isNotNull();
 		assertThat(sentNode.getFields().getNodeFieldList("pagelinks").getItems()).as("Field 'pagelinks'").usingElementComparatorOnFields("uuid")
-				.containsOnly(new NodeFieldListItemImpl().setUuid(MeshPublisher.getMeshUuid(page)));
+				.containsOnly(new NodeFieldListItemImpl().setUuid(supply(() -> MeshPublisher.getMeshUuid(page))));
 	}
 
 	/**
@@ -412,7 +452,7 @@ public abstract class MeshPortalPreviewTestBase {
 		// make the live editable construct not live editable, because that would spoil the response (so that it is not valid json any more)
 		update(liveEditableConstruct, c -> {
 			c.getParts().get(0).setEditable(1);
-		});
+		}).build();
 
 		String expectedEdit = Trx.supply(user, () -> {
 			try (RenderTypeTrx rt = new RenderTypeTrx(RenderType.EM_ALOHA)) {
@@ -424,7 +464,7 @@ public abstract class MeshPortalPreviewTestBase {
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA));
 		assertThat(preview).as("Preview").isNotNull();
 		NodeResponse sentNode = JsonUtil.readValue(preview, NodeResponse.class);
-		assertThat(sentNode.getUuid()).as("UUID").isEqualTo(MeshPublisher.getMeshUuid(page));
+		assertThat(sentNode.getUuid()).as("UUID").isEqualTo(supply(() -> MeshPublisher.getMeshUuid(page)));
 		assertThat(sentNode.getFields().getStringField("tag")).as("Field 'tag'").isNotNull();
 		assertThat(sentNode.getFields().getStringField("tag").getString()).as("Field 'tag' value").isEqualTo(expectedEdit);
 		assertThat(sentNode.getFields().getStringField("tagpart")).as("Field 'tagpart'").isNotNull();
@@ -439,7 +479,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testPreviewPath() throws NodeException {
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/path");
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Posted path").isEqualTo("Content.node/home/");
@@ -497,7 +537,7 @@ public abstract class MeshPortalPreviewTestBase {
 		// make the live editable construct not live editable, because that would spoil the response (so that it is not valid json any more)
 		update(liveEditableConstruct, c -> {
 			c.getParts().get(0).setEditable(1);
-		});
+		}).build();
 
 		Integer nodeId = Trx.supply(() -> node.getId());
 		Integer pageId = Trx.supply(() -> page.getId());
@@ -526,7 +566,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testRenderModeParam() throws NodeException {
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/query");
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		assertThat(preview).as("Posted query").isEqualTo("{renderMode=[preview]}");
@@ -544,7 +584,7 @@ public abstract class MeshPortalPreviewTestBase {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
-		});
+		}).build();
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 		String expectedPreview = Trx.supply(user, () -> {
@@ -565,7 +605,7 @@ public abstract class MeshPortalPreviewTestBase {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
-		});
+		}).build();
 
 		String edit = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA));
 		String expectedEdit = Trx.supply(user, () -> {
@@ -586,7 +626,7 @@ public abstract class MeshPortalPreviewTestBase {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
-		});
+		}).build();
 
 		Set<String> tagNames = Trx.supply(() -> page.getContent().getContentTags().keySet());
 		for (String tag : tagNames) {
@@ -614,7 +654,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testFreeze() throws NodeException {
 		update(node, n -> {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/freeze");
-		});
+		}).build();
 
 		Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
 	}
@@ -636,6 +676,58 @@ public abstract class MeshPortalPreviewTestBase {
 		sentNode = JsonUtil.readValue(preview, NodeResponse.class);
 		assertThat(sentNode.getFields().getStringField("foldername")).as("Field 'foldername'").isNotNull();
 		assertThat(sentNode.getFields().getStringField("foldername").getString()).as("Field 'foldername' value").isEqualTo("Node");
+	}
+
+	/**
+	 * Test rendering a versioned content
+	 * @throws NodeException
+	 * @throws RestException
+	 */
+	@Test
+	public void testRenderVersion() throws NodeException, RestException {
+		update(node, n -> {
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/renderplain");
+		}).build();
+		int versionTimestamp = supply(() -> page.getVersion().getDate().getIntTimestamp());
+
+		String currentVersionPreview, oldVersionPreview;
+		try (LoggedInClient client = restContext.client("system", "system")) {
+			oldVersionPreview = client.get().base().path("page").path("render").path("content")
+					.path(Integer.toString(page.getId())).queryParam("version", OLD_TIMESTAMP).request()
+					.get(String.class);
+			currentVersionPreview = client.get().base().path("page").path("render").path("content")
+					.path(Integer.toString(page.getId())).queryParam("version", versionTimestamp).request()
+					.get(String.class);
+		}
+
+		assertThat(oldVersionPreview).as("Preview of old version").isEqualTo(
+				"tag: This is the old content, live: Live <b>editable</b> content, containing also embedded tags: [Embedded content].");
+
+		assertThat(currentVersionPreview).as("Preview of current version").isEqualTo(
+				"tag: This is the content, live: Live <b>editable</b> content, containing also embedded tags: [Embedded content].");
+	}
+
+	/**
+	 * Test rendering a version diff
+	 * @throws NodeException
+	 * @throws RestException
+	 */
+	@Test
+	public void testRenderVersionDiff() throws NodeException, RestException {
+		update(node, n -> {
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/renderplain");
+		}).build();
+
+		int versionTimestamp = supply(() -> page.getVersion().getDate().getIntTimestamp());
+
+		String diff;
+		try (LoggedInClient client = restContext.client("system", "system")) {
+			diff = client.get().base().path("page").path("diff").path("versions").path(Integer.toString(page.getId()))
+					.queryParam("old", OLD_TIMESTAMP).queryParam("new", versionTimestamp).request().get(String.class);
+		}
+
+		assertThat(diff).as("Version diff").isEqualTo(
+				"tag: This is the <del class='diff modified gtx-diff'>old </del>content, live: Live <b>editable</b> content, containing also embedded tags: [Embedded content].");
 	}
 
 	protected abstract RESTAppContext getRestAppContext();
@@ -702,6 +794,32 @@ public abstract class MeshPortalPreviewTestBase {
 
 			StringResourceRepository srr = StringResourceLoader.getRepository();
 			srr.putStringResource("portaltemplate", "<div class=\"tag\">$node.fields.tag</div><div class=\"live\">$node.fields.live</div>");
+
+			StringWriter outwriter = new StringWriter();
+
+			Velocity.getTemplate("portaltemplate").merge(context, outwriter);
+
+			return outwriter.toString();
+		}
+
+		/**
+		 * This method will render the object as plain text
+		 * @param path path
+		 * @param body posted body
+		 * @return path
+		 * @throws Exception
+		 */
+		@POST
+		@Path("/renderplain/{path: .*}")
+		public String renderPlain(@PathParam("path") String path, String body) throws Exception {
+			ObjectMapper objectMapper = new ObjectMapper();
+			Map<?, ?> sentNode = objectMapper.readValue(body, Map.class);
+
+			VelocityContext context = new VelocityContext();
+			context.put("node", sentNode);
+
+			StringResourceRepository srr = StringResourceLoader.getRepository();
+			srr.putStringResource("portaltemplate", "tag: $node.fields.tag, live: $node.fields.live");
 
 			StringWriter outwriter = new StringWriter();
 

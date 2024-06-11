@@ -41,18 +41,6 @@ describe('custom scripts', () => {
         fixture.runPostLoadScript();
     });
 
-    it('pre-load adds the GCMS UI styles to the document', () => {
-        fixture = new CustomScriptsTestFixture();
-        const spy = spyOn(fixture.document.body, 'appendChild');
-
-        fixture.runPreLoadScript();
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-        const arg: HTMLLinkElement = spy.calls.argsFor(0)[0] as any;
-        expect(arg instanceof HTMLLinkElement).toBeTruthy();
-        expect(arg.rel).toEqual('stylesheet');
-        expect(arg.href).toEqual(window.location.origin + '/' + fixture.window.GCMSUI.gcmsUiStylesUrl);
-    });
-
     describe('Link handling', () => {
 
         describe('Link handling with special test preparations', () => {
@@ -871,7 +859,6 @@ class FakeScriptHost {
 }
 
 class FakeGCMSUI implements Partial<GcmsUiBridge> {
-    gcmsUiStylesUrl = 'gcmsUiStyles';
 }
 
 class ClickableElementFixture<T extends Element> {

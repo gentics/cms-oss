@@ -203,12 +203,12 @@ public interface ImageResource extends AuthenticatedResource {
 	 * Delete the image denoted by id
 	 * @param id id of the image to delete
 	 * @param nodeId id of the node (channel) of the image
-	 * @param disableInstantDelete don't delete the item from the content repo immediately
+	 * @param noCrSync don't sync the deletion with the content repo
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
 
 	/**
 	 * Remove the image denoted by the given id from the wastebin.

@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, Inject, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
-import { Version, VersionCompatibility, NodeVersionInfo } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { NodeVersionInfo, Version, VersionCompatibility, Node } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { environment } from '../../../common/utils';
 import { VersionModalComponent } from '../versions-modal';
 
 @Component({
@@ -11,6 +10,7 @@ import { VersionModalComponent } from '../versions-modal';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GtxAppVersionLabelComponent implements OnChanges {
+
     /** Name of the application */
     @Input()
     appTitle: string;
@@ -19,65 +19,68 @@ export class GtxAppVersionLabelComponent implements OnChanges {
     @Input()
     versionData: Version;
 
-    /** Displays aggregated state of software components compatibility */
-    compatibilityState: VersionCompatibility;
+    @Input()
+    public nodes: Node[] = [];
 
-    cmpVersion: string;
-    cmsVersion: string;
-    nodeVersions: { nodeName: string; nodeInfo: NodeVersionInfo; }[] = [];
-
-    protected modalVisible = false;
+    public compatibilityState: VersionCompatibility = VersionCompatibility.UNKNOWN;
+    public nodeVersions: { nodeName: string; nodeInfo: NodeVersionInfo; }[] = [];
 
     constructor(
-        @Inject(environment) @Optional() public environment: string,
-        private modals: ModalService,
+        protected modals: ModalService,
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.versionData.currentValue) {
-            this.setData(changes.versionData.currentValue);
-        }
+        this.updateInternalState();
     }
 
-    containerClicked(): void {
-        if (!this.versionData || this.modalVisible) {
-            return;
-        }
-
+    openModal(): void {
         this.modals.fromComponent(VersionModalComponent, {
-            onClose: () => {
-                this.modalVisible = false;
-            },
+            closeOnEscape: true,
+            closeOnOverlayClick: true,
         }, {
-            cmpVersion: this.cmpVersion,
-            cmsVersion: this.cmsVersion,
+            cmpVersion: this.versionData.cmpVersion,
+            cmsVersion: this.versionData.version,
             nodeVersions: this.nodeVersions,
             compatibilityState: this.compatibilityState,
-        }).then(dialog => dialog.open());
+        })
+            .then(instance => instance.open())
+            .catch(() => {
+                // Ignore all errors, we don't care as there's nothing the modal actual does
+                // other than displaying the info.
+            });
     }
 
-    private setData(versionData: Version): void {
-        if (!versionData || !versionData.nodeInfo) {
-            return;
-        }
-        this.cmpVersion = versionData.cmpVersion;
-        this.cmsVersion = versionData.version;
-
-        this.nodeVersions = [];
-        const entries: { [key: string]: NodeVersionInfo; } = versionData.nodeInfo;
+    private updateInternalState(): void {
         let state: VersionCompatibility = VersionCompatibility.SUPPORTED;
-        for (const key in entries) {
-            if (Object.prototype.hasOwnProperty.call(entries, key)) {
-                const element: NodeVersionInfo = entries[key];
-                this.nodeVersions.push({ nodeName: key, nodeInfo: element });
 
-                if (element.compatibility === VersionCompatibility.UNKNOWN) {
+        this.nodeVersions  = (this.nodes || [])
+            .slice()
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+            .map(node => {
+                const info = this.versionData?.nodeInfo[node.name];
+
+                // If it's a Node which is not part of CMP (i.E. has no Mesh CR), then we flag it as unknown and proceed
+                if (!info) {
+                    return {
+                        nodeName: node.name,
+                        nodeInfo: {
+                            compatibility: VersionCompatibility.UNKNOWN,
+                        },
+                    };
+                }
+
+                if (info.compatibility === VersionCompatibility.UNKNOWN) {
                     state = VersionCompatibility.UNKNOWN;
-                } else if (element.compatibility === VersionCompatibility.NOT_SUPPORTED) {
+                } else if (info.compatibility === VersionCompatibility.NOT_SUPPORTED) {
                     state = VersionCompatibility.NOT_SUPPORTED;
                 }
-            }
-        }
+
+                return {
+                    nodeName: node.name,
+                    nodeInfo: info,
+                };
+            });
+
         this.compatibilityState = state;
     }
 }

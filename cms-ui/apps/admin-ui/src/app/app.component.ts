@@ -11,6 +11,7 @@ import {
     LoggingHelperService,
     MarkupLanguageOperations,
     MessageService,
+    NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
@@ -23,10 +24,10 @@ import { MaintenanceModeService } from '@admin-ui/core/providers/maintenance-mod
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
 import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Normalized, User, Version } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, forkJoin, of } from 'rxjs';
@@ -65,6 +66,8 @@ export class AppComponent implements OnDestroy, OnInit {
     userMenuTabIdActivities = 'activities';
     userMenuActiveTab = this.userMenuTabIdMessages;
 
+    loadedNodes: Node[] = [];
+
     cmpVersion$: Observable<Version>;
     uiVersion$: Observable<string>;
 
@@ -75,6 +78,7 @@ export class AppComponent implements OnDestroy, OnInit {
     private stopper = new ObservableStopper();
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private authOps: AuthOperations,
         private breadcrumbs: BreadcrumbsService,
@@ -98,6 +102,7 @@ export class AppComponent implements OnDestroy, OnInit {
         private errorHandler: ErrorHandler,
         private keycloakService: KeycloakService,
         private markupLangOperations: MarkupLanguageOperations,
+        private nodeOperations: NodeOperations,
     ) {
         this.loggingHelper.init();
     }
@@ -171,6 +176,14 @@ export class AppComponent implements OnDestroy, OnInit {
         this.cmpVersion$ = this.appState.select(state => state.ui.cmpVersion);
         this.uiVersion$ = this.appState.select(state => state.ui.uiVersion);
         this.featureHideManual$ = this.appState.select(state => state.features.global[Feature.HIDE_MANUAL] || false);
+
+        this.isLoggedIn$.pipe(
+            filter(loggedIn => loggedIn),
+            switchMap(() => this.nodeOperations.getAll()),
+        ).subscribe(nodes => {
+            this.loadedNodes = nodes;
+            this.changeDetector.markForCheck();
+        });
     }
 
     ngOnDestroy(): void {

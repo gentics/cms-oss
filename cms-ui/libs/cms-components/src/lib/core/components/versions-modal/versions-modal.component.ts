@@ -9,7 +9,7 @@ import { BaseModal } from '@gentics/ui-core';
 })
 export class VersionModalComponent extends BaseModal<void> {
 
-    public readonly GtxVersionCompatibility = VersionCompatibility;
+    public readonly VersionCompatibility = VersionCompatibility;
 
     @Input()
     cmpVersion: string;

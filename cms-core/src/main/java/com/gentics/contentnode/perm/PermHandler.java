@@ -1404,15 +1404,13 @@ public class PermHandler {
 				// the permissions from their folder and template (pages only).
 				boolean canEdit = checkObjectPropertyInheritedPermissions(tag, PERM_OBJPROP_UPDATE);
 
-				PermHandler permHandler = TransactionManager.getCurrentTransaction().getPermHandler();
-
 				if (NodeConfigRuntimeConfiguration.isFeature(Feature.OBJTAG_SYNC)) {
 					ObjectTagDefinition tagDefinition = tag.getDefinition();
 
 					if (tagDefinition.isSyncContentset() || tagDefinition.isSyncChannelset() || tagDefinition.isSyncVariants()) {
 						for (Pair<NodeObject, ObjectTag> variant : tag.getSyncVariants()) {
 							// Check if the user can edit the object this object tag belongs to.
-							canEdit &= permHandler.canEdit(variant.getLeft());
+							canEdit &= canEdit(variant.getLeft());
 						}
 					}
 				}

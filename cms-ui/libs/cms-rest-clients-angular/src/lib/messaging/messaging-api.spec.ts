@@ -1,7 +1,7 @@
 import {MockApiBase} from '../base/api-base.mock';
 import {MessagingApi} from './messaging-api';
 
-describe('MssagingApi', () => {
+describe('MessagingApi', () => {
 
     let messagingApi: MessagingApi;
     let apiBase: MockApiBase;
@@ -30,13 +30,13 @@ describe('MssagingApi', () => {
             message: 'Test message',
             toUserId: [1234, 5678],
             toGroupId: [999],
-            type: 'INFO'
+            type: 'INFO',
         });
         expect(apiBase.post).toHaveBeenCalledWith('msg/send', {
             message: 'Test message',
             toUserId: [1234, 5678],
             toGroupId: [999],
-            type: 'INFO'
+            type: 'INFO',
         });
     });
 

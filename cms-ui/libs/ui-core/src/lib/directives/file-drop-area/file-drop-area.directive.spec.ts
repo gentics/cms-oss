@@ -1,17 +1,17 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, QueryList, ViewChild, ViewChildren } from '@angular/core';
-import { inject, TestBed } from '@angular/core/testing';
+import { Component, NO_ERRORS_SCHEMA, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { TestBed, inject } from '@angular/core/testing';
 import { FILE_DROPAREA_DRAG_EVENT_TARGET } from '../../common';
 import { DragStateTrackerFactoryService } from '../../providers/drag-state-tracker/drag-state-tracker.service';
-import { PageFileDragHandlerService, PAGE_FILE_DRAG_EVENT_TARGET } from '../../providers/page-file-drag-handler/page-file-drag-handler.service';
-import { componentTest, SpyEventTarget, subscribeSpyObserver, triggerFakeDragEvent } from '../../testing';
+import { PAGE_FILE_DRAG_EVENT_TARGET, PageFileDragHandlerService } from '../../providers/page-file-drag-handler/page-file-drag-handler.service';
+import { SpyEventTarget, componentTest, subscribeSpyObserver, triggerFakeDragEvent } from '../../testing';
 import { clientReportsMimeTypesOnDrag } from '../../utils/drag-and-drop';
 import { FileDropAreaDirective } from './file-drop-area.directive';
 
 let fakePageElement: SpyEventTarget;
 let fakeElement: SpyEventTarget;
 
-describe('FileDropArea Directive', () => {
+describe('FileDropAreaDirective', () => {
 
     beforeEach(() => {
         fakePageElement = new SpyEventTarget();
@@ -26,6 +26,7 @@ describe('FileDropArea Directive', () => {
             ],
             declarations: [FileDropAreaDirective, TestComponent],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
     });
 
@@ -59,7 +60,7 @@ describe('FileDropArea Directive', () => {
         (fixture, instance) => {
             fixture.detectChanges();
 
-            let directives = instance.directives.toArray();
+            const directives = instance.directives.toArray();
             directives[0].ngOnDestroy();
             expect(fakePageElement.listeners).not.toEqual([]);
             expect(fakeElement.listeners).not.toEqual([]);
@@ -232,7 +233,7 @@ describe('FileDropArea Directive', () => {
                 componentTest(() => TestComponent, fixture => {
                     fixture.detectChanges();
                     const dropArea = fixture.componentInstance.directive;
-                    let draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
+                    const draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
                     expect(draggedFiles$.next).not.toHaveBeenCalled();
                 }),
             );
@@ -241,7 +242,7 @@ describe('FileDropArea Directive', () => {
                 componentTest(() => TestComponent, fixture => {
                     fixture.detectChanges();
                     const dropArea = fixture.componentInstance.directive;
-                    let draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
+                    const draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
 
                     triggerEventsWithFiles('dragenter dragover', 'text/plain');
                     fixture.detectChanges();
@@ -253,7 +254,7 @@ describe('FileDropArea Directive', () => {
                 componentTest(() => TestComponent, fixture => {
                     fixture.detectChanges();
                     const dropArea = fixture.componentInstance.directive;
-                    let draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
+                    const draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
 
                     triggerEventsWithFiles('dragenter dragover');
                     fixture.detectChanges();
@@ -268,7 +269,7 @@ describe('FileDropArea Directive', () => {
                 componentTest(() => TestComponent, fixture => {
                     fixture.detectChanges();
                     const dropArea = fixture.componentInstance.directive;
-                    let draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
+                    const draggedFiles$ = subscribeSpyObserver(dropArea, dropArea.draggedFiles$);
 
                     triggerEventsWithFiles('dragenter dragover');
                     fixture.detectChanges();
@@ -284,12 +285,12 @@ describe('FileDropArea Directive', () => {
                 componentTest(() => TestComponent, fixture => {
                     let pipe: AsyncPipe;
                     const dropArea = fixture.componentInstance.directive;
-                    let cd = fixture.componentRef.changeDetectorRef;
+                    const cd = fixture.componentRef.changeDetectorRef;
 
                     pipe = new AsyncPipe(cd);
                     try {
                         const callPipeTransform = () => {
-                            let res = pipe.transform(dropArea.draggedFiles$);
+                            const res = pipe.transform(dropArea.draggedFiles$);
                             return res;
                         };
 
@@ -376,8 +377,8 @@ describe('FileDropArea Directive', () => {
                 (fixture, instance) => {
                     fixture.detectChanges();
                     const dropArea = instance.directive;
-                    for (let eventType of ['dragenter', 'dragover']) {
-                        let event = triggerFakeDragEvent(fakeElement, eventType, ['text/plain']);
+                    for (const eventType of ['dragenter', 'dragover']) {
+                        const event = triggerFakeDragEvent(fakeElement, eventType, ['text/plain']);
                         expect(event.dataTransfer?.dropEffect).toBe('none', `dropEffect for ${eventType}`);
                         expect(event.dataTransfer?.effectAllowed).toBe('none', `effectAllowed for ${eventType}`);
                         expect(event.defaultPrevented).toBe(true, `default not prevented for ${eventType}`);
@@ -537,13 +538,13 @@ function triggerEventsWithFiles(events: string, mimeTypes: string | string[] = '
         mimeTypes = [mimeTypes];
     }
 
-    for (let eventType of events.split(' ')) {
+    for (const eventType of events.split(' ')) {
         triggerFakeDragEvent(target, eventType, mimeTypes);
     }
 }
 
 function triggerEventsWithoutFiles(eventsSpaceSeparated: string, target: SpyEventTarget = fakeElement): void {
-    for (let eventType of eventsSpaceSeparated.split(' ')) {
+    for (const eventType of eventsSpaceSeparated.split(' ')) {
         triggerFakeDragEvent(target, eventType, []);
     }
 }

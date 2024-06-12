@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
@@ -21,14 +21,14 @@ import { SelectComponent } from '../../components/select/select.component';
 import { TextareaComponent } from '../../components/textarea/textarea.component';
 import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 import { componentTest } from '../../testing';
 import { DropdownTriggerDirective } from '../dropdown-trigger/dropdown-trigger.directive';
 import { IconDirective } from '../icon/icon.directive';
 import { AutofocusDirective } from './autofocus.directive';
-import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 
-describe('Autofocus Directive', () => {
+describe('AutofocusDirective', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -62,6 +62,7 @@ describe('Autofocus Directive', () => {
                 { provide: UserAgentProvider, useClass: MockUserAgentRef },
             ],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
         TestBed.overrideModule(BrowserDynamicTestingModule, {

@@ -8,6 +8,9 @@ import { map } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 
+
+const DEFAULT_INSTANT_TIME_MINUTES = 2;
+
 @Component({
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
@@ -38,10 +41,13 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
     }
 
     okayClicked(): void {
-        this.api.messages.sendMessage(this.transformValuesForApi(this.form.value)).subscribe(() => {
+        const messageRequest = this.transformValuesForApi(this.form.value);
+
+        this.api.messages.sendMessage(messageRequest).subscribe(() => {
             this.notification.show({
                 message: 'message.message_sent',
                 type: 'success',
+                delay: 5000,
             });
         }, error => {
             this.notification.show({
@@ -49,13 +55,14 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
                 type: 'alert',
                 delay: 5000,
             });
-            console.error('Error while sending message', error);
-        }, () => {
             this.closeFn(true);
-        });
+        }, () => this.closeFn(true),
+        );
     }
 
     transformValuesForApi(formValues: SendMessageForm): SendMessageRequest {
+        const INSTANT_TIME = formValues.isInstant ? DEFAULT_INSTANT_TIME_MINUTES : 0;
+
         return formValues.recipientIds.reduce((acc: any, selectedId: string) => {
             const [key, value] = selectedId.split('_');
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -65,6 +72,7 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
             message: formValues.message,
             toGroupId: [],
             toUserId: [],
+            instantTimeMinutes: INSTANT_TIME,
         });
     }
 }

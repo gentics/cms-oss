@@ -1,5 +1,5 @@
-import { mockPipes } from '@admin-ui/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { mockPipes } from '@gentics/ui-core/testing/mock-pipe';
 import { MountResponse } from 'cypress/angular';
 import { CopyValueComponent } from './copy-value.component';
 

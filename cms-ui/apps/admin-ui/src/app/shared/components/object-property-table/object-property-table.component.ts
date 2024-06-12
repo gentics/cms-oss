@@ -6,7 +6,6 @@ import {
     ObjectPropertyTableLoaderService,
     PermissionsService,
 } from '@admin-ui/core';
-import { ContextMenuService, DELETE_ACTION, UNASSIGN_FROM_PACKAGE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { typeIdsToName } from '@gentics/cms-components';
@@ -14,10 +13,12 @@ import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, O
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import {
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
 } from '../assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';
-import { BasePackageEntityTableComponent } from '../base-package-entity-table/base-package-entity-table.component';
+import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
+import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 
 const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
 

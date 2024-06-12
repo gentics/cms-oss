@@ -1,12 +1,12 @@
 import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
 import { GroupOperations, I18nService, PermissionsService, UserOperations, UserTableLoaderOptions, UserTableLoaderService } from '@admin-ui/core';
-import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { NormalizableEntityType, Raw, User } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { ConfirmRemoveUserFromGroupModalComponent } from '../confirm-remove-user-from-group-modal/confirm-remove-user-from-group-modal.component';
 import { CreateUserModalComponent } from '../create-user-modal/create-user-modal.component';

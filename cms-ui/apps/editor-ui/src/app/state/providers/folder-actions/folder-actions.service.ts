@@ -136,9 +136,13 @@ import {
     UIMode,
     plural,
 } from '../../../common/models';
+import { AddContentStagingMapAction } from '../../modules/content-staging/content-staging.actions';
+import { SetUploadStatusAction } from '../../modules/editor/editor.actions';
 import {
-    AddContentStagingMapAction,
     AddEntitiesAction,
+    UpdateEntitiesAction,
+} from '../../modules/entity/entity.actions';
+import {
     ChannelSyncReportFetchingErrorAction,
     ChannelSyncReportFetchingSuccessAction,
     CreateItemSuccessAction,
@@ -173,13 +177,11 @@ import {
     SetSearchFiltersValidAction,
     SetSearchFiltersVisibleAction,
     SetSearchTermAction,
-    SetUploadStatusAction,
     StartChannelSyncReportFetchingAction,
     StartListCreatingAction,
     StartListFetchingAction,
     StartListSavingAction,
-    UpdateEntitiesAction,
-} from '../../modules';
+} from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
 
@@ -238,7 +240,7 @@ export class FolderActionsService {
     /**
      * Fetches all available nodes.
      */
-    getNodes(): Promise<void> {
+    getNodes(): Promise<Node[]> {
         return new Promise((resolve, reject) => {
             forkJoin([
                 this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
@@ -258,7 +260,7 @@ export class FolderActionsService {
                 if (nodes.length > 0) {
                     this.getActiveNodeLanguages()
                         .then(languages => this.setActiveLanguageFromAvailable(languages));
-                    resolve();
+                    resolve(nodes as any);
                 }
             }, error => {
                 this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));

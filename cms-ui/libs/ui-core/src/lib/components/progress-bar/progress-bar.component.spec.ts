@@ -1,15 +1,16 @@
-import { Component, DebugElement, ViewChild } from '@angular/core';
+import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, getTestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Observable, Subject } from 'rxjs';
 import { componentTest } from '../../testing';
 import { ProgressBarComponent } from './progress-bar.component';
 
-describe('ProgressBar', () => {
+describe('ProgressBarComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         declarations: [ProgressBarComponent, TestComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('starts out as "not active"',

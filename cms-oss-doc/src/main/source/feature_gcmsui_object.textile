@@ -31,11 +31,6 @@ runPostLoadScript: () => void;
  */
 openRepositoryBrowser: (options: RepositoryBrowserOptions) => Promise<(ItemInNode | TagInContainer) | (ItemInNode | TagInContainer)[]>;
 
-/**
- * The URL of the styles of the GCMS UI.
- */
-gcmsUiStylesUrl: string;
-
 /** An object containing useful information about the current state of the UI */
 appState: ExposedPartialState;
 

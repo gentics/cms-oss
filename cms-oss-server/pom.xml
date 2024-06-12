@@ -90,24 +90,13 @@
 									</outputDirectory>
 								</artifactItem>
 
-								<!-- Editor UI -->
+								<!-- UIs -->
 								<artifactItem>
 									<groupId>com.gentics.cms-oss</groupId>
-									<artifactId>editor-ui</artifactId>
+									<artifactId>cms-ui</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/classes/webroot/editor/
-									</outputDirectory>
-								</artifactItem>
-
-								<!-- Admin UI -->
-								<artifactItem>
-									<groupId>com.gentics.cms-oss</groupId>
-									<artifactId>admin-ui</artifactId>
-									<type>zip</type>
-									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/classes/webroot/admin/
-									</outputDirectory>
+									<outputDirectory>${project.build.directory}/classes/webroot</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 							<includes>**/*</includes>
@@ -275,13 +264,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>admin-ui</artifactId>
-			<type>zip</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>editor-ui</artifactId>
+			<artifactId>cms-ui</artifactId>
 			<type>zip</type>
 			<scope>provided</scope>
 		</dependency>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { File as FileModel, Folder, Image, Node, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
@@ -36,6 +36,7 @@ describe('EditorOverlayModal', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ModalService, useClass: MockModalService },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         appState = TestBed.get(ApplicationStateService);

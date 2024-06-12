@@ -7,11 +7,15 @@
         "inlineSources": true,
         "types": ["node", "jquery"]
     },
-    "include": [
-        "src/**/*.ts"
-    ],
+    "include": ["src/**/*.ts"],
     "exclude": [
         "src/test.ts",
-        "src/**/*.spec.ts"
+        "src/**/*.spec.ts",
+        "cypress/**/*",
+        "cypress.config.ts",
+        "**/*.cy.ts",
+        "**/*.cy.js",
+        "**/*.cy.tsx",
+        "**/*.cy.jsx"
     ]
 }

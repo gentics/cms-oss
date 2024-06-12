@@ -888,6 +888,21 @@ version_info_modal_compatibility_supported:
 version_info_modal_compatibility_unknown:
     en: unknown
     de: unbekannt
+version_info_label_system:
+    en: System
+    de: System
+version_info_label_nodes:
+    en: Nodes
+    de: Nodes
+version_info_label_mesh:
+    en: Mesh Version
+    de: Mesh Version
+version_info_label_portal_type:
+    en: Portal Type
+    de: Portal Typ
+version_info_label_portal_version:
+    en: Portal Version
+    de: Portal Version
 validation_password_too_short:
     en: Passwords must contain at least 4 characters
     de: Mindestens 4 Zeichen

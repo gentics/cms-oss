@@ -5,7 +5,7 @@ import { iif, patch } from '@ngxs/store/operators';
 import { NormalizedSchema } from 'normalizr';
 import { EntityState } from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { ApplicationStateService } from '../../providers';
+import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {
     AddEntitiesAction,

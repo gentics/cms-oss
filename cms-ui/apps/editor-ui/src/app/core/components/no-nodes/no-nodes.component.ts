@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ADMIN_UI_LINK } from '@editor-ui/app/common/config/config';
-import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
 import { I18nService } from '@gentics/cms-components';
 import { cancelEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';

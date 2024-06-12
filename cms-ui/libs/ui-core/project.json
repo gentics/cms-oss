@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/ui-core/tsconfig.lib.json",
                 "project": "libs/ui-core/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -23,18 +28,42 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner ui-core --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner ui-core --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner ui-core --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
                 "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "ui-core:build",
+                "devServerTarget": "ui-core-docs:build",
                 "watch": false
             },
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "ui-core-docs:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

@@ -4,6 +4,7 @@ import {
     EventEmitter,
     Injectable,
     Input,
+    NO_ERRORS_SCHEMA,
     Output,
     Type,
     ViewChild,
@@ -33,7 +34,7 @@ const TEST_TIMESTAMP = 1457971763;
 let modalService: SpyModalService;
 let formatProviderToUse: DateTimePickerFormatProvider | null = null;
 
-describe('DateTimePicker:', () => {
+describe('DateTimePickerComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -57,6 +58,7 @@ describe('DateTimePicker:', () => {
                 OverlayHostService,
                 SizeTrackerService,
             ],
+            schemas: [NO_ERRORS_SCHEMA],
             teardown: { destroyAfterEach: false },
         });
     });

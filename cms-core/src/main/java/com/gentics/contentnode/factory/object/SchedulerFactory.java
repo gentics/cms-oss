@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -46,6 +47,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
@@ -105,6 +107,8 @@ public class SchedulerFactory extends AbstractFactory {
 	private static final int TASK_STATUS_FAILED = 255;
 	private static final int TASK_STATUS_ABORTED = 254;
 
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("scheduler-executor");
+
 	/**
 	 * Loader for the implementations of {@link InternalSchedulerTaskService}
 	 */
@@ -124,7 +128,7 @@ public class SchedulerFactory extends AbstractFactory {
 	/**
 	 * Executor service for scheduler executions.
 	 */
-	private ExecutorService executor = Executors.newCachedThreadPool();
+	private ExecutorService executor = Executors.newCachedThreadPool(threadFactory);
 
 	/**
 	 * Currently running executor future.

@@ -44,38 +44,35 @@
                     "serialize-to-js",
                     "immutablets"
                 ],
-                "aot": true,
-                "buildOptimizer": false,
-                "optimization": false,
-                "vendorChunk": true,
-                "extractLicenses": false,
-                "sourceMap": true,
-                "namedChunks": true
+                "fileReplacements": [
+                    {
+                        "replace": "apps/editor-ui/src/environments/environment.ts",
+                        "with": "apps/editor-ui/src/environments/environment.prod.ts"
+                    }
+                ],
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true,
+                "vendorChunk": false,
+                "buildOptimizer": true,
+                "aot": true
             },
             "configurations": {
-                "production": {
-                    "budgets": [
-                        {
-                            "type": "initial",
-                            "maximumWarning": "5mb",
-                            "maximumError": "7mb"
-                        }
-                    ],
-                    "fileReplacements": [
-                        {
-                            "replace": "apps/editor-ui/src/environments/environment.ts",
-                            "with": "apps/editor-ui/src/environments/environment.prod.ts"
-                        }
-                    ],
-                    "outputHashing": "all",
-                    "optimization": true,
-                    "sourceMap": false,
-                    "namedChunks": false,
-                    "extractLicenses": true,
-                    "vendorChunk": false,
-                    "buildOptimizer": true
+                "production": {},
+                "development": {
+                    "fileReplacements": [],
+                    "buildOptimizer": false,
+                    "optimization": false,
+                    "vendorChunk": true,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true
                 },
-                "development": {}
+                "ci": {
+                    "progress": false
+                }
             },
             "defaultConfiguration": "production"
         },
@@ -120,6 +117,22 @@
                 }
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner editor-ui --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner editor-ui --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner editor-ui --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
@@ -132,6 +145,14 @@
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "editor-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         }

@@ -68,7 +68,7 @@ export class LinkCheckerApi {
      * Check an external link for validity.
      */
     checkLink(linkUrl: string): Observable<LinkCheckerCheckResponse> {
-        return this.apiBase.post('linkChecker1eck', {
+        return this.apiBase.post('linkChecker/check', {
             url: linkUrl,
         });
     }

@@ -65,6 +65,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
+import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -107,16 +108,6 @@ import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subite
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
 
 /**
- * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
- * CSS (see the /custom-styles folder). However, this may have the unwanted effect of overwriting user implementations
- * (e.g. custom-styled tag fill dialogs). Therefore we will use the value of this constant to control whether or not
- * our custom styles are being applied or not.
- *
- * TODO: actual implementation of styles toggle still needs to be done. This flag is just there in case it is needed.
- */
-const APPLY_CUSTOM_STYLES = true;
-
-/**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
  * the content of the frame.
  */
@@ -136,12 +127,14 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     static _debounce = _debounce;
 
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly APPLY_CUSTOM_STYLES = APPLY_CUSTOM_STYLES;
     public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;
 
     @ViewChild('iframe', { static: true })
     private iframe: ElementRef<HTMLIFrameElement>;
+
+    @ViewChild('diffFrame', { static: true })
+    private diffFrame: ElementRef<HTMLIFrameElement>;
 
     @ViewChild(CombinedPropertiesEditorComponent)
     private combinedPropertiesEditor: CombinedPropertiesEditorComponent;
@@ -164,6 +157,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
+
+    comparePageId = -1;
+    comparePageUrl: string;
+    // Flags if it should ignore scroll events
+    ignoreNextDiffScroll = false;
+    ignoreNextMasterScroll = false;
 
     activeNode$: Observable<Node>;
     isInherited$: Observable<boolean>;
@@ -231,6 +230,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private client: GCMSRestClientService,
         private tagEditorService: TagEditorService,
         private aloha: AlohaIntegrationService,
+        private urlBuilder: ResourceUrlBuilder,
     ) { }
 
     ngOnInit(): void {
@@ -415,6 +415,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     return of(state);
                 }
 
+                this.comparePageId = state.compareWithId;
+                if (this.comparePageId) {
+                    this.comparePageUrl = this.urlBuilder.pagePreview(this.comparePageId, state.nodeId);
+                    this.updateDiffFrame();
+                }
+
                 // If the entity is not yet in the app store, we need to fetch it first.
                 const entity = this.entityResolver.getEntity(state.itemType, state.itemId);
                 const node = this.entityResolver.getEntity('node', state.nodeId);
@@ -493,6 +499,8 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     ngAfterViewInit(): void {
         const masterFrame = this.iframe.nativeElement;
         this.iframeManager.initialize(masterFrame, this);
+        this.updateDiffFrame();
+
         masterFrame.addEventListener('error', error => {
             console.log('Error while loading Aloha-Page', error);
             this.windowLoaded = true;
@@ -500,6 +508,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.alohaWindowLoaded = true;
             this.changeDetector.markForCheck();
         });
+
         masterFrame.addEventListener('load', () => {
             this.windowLoaded = true;
             if (!this.childFrameInitialized) {
@@ -512,7 +521,30 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             } else {
                 this.alohaWindowLoaded = true;
             }
+
+            const styleElem = masterFrame.contentDocument.createElement('style');
+            styleElem.textContent = `
+del.gtx-diff {
+  background: rgba(255, 0, 0, 0.2);
+}
+ins.gtx-diff {
+  background: rgba(0, 255, 0, 0.2);
+}`;
+            masterFrame.contentDocument.head.appendChild(styleElem);
+
             this.changeDetector.markForCheck();
+
+            masterFrame.contentDocument.addEventListener('scroll', () => {
+                if (!this.comparePageId) {
+                    return;
+                }
+                if (this.ignoreNextMasterScroll) {
+                    this.ignoreNextMasterScroll = false;
+                    return;
+                }
+                this.ignoreNextDiffScroll = true;
+                this.diffFrame.nativeElement.contentWindow.scroll({ top: masterFrame.contentWindow.scrollY });
+            });
         });
     }
 
@@ -560,6 +592,24 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         }
         return '';
+    }
+
+    updateDiffFrame(): void {
+        if (!this.diffFrame || !this.comparePageUrl) {
+            return;
+        }
+        const frame = this.diffFrame.nativeElement;
+        frame.contentWindow.location.replace(this.comparePageUrl);
+        frame.addEventListener('load', () => {
+            frame.contentDocument.addEventListener('scroll', () => {
+                if (this.ignoreNextDiffScroll) {
+                    this.ignoreNextDiffScroll = false;
+                    return;
+                }
+                this.ignoreNextMasterScroll = true;
+                this.iframe.nativeElement.contentWindow.scroll({ top: frame?.contentWindow?.scrollY });
+            });
+        });
     }
 
     /**

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -6,12 +6,13 @@ import { AutosizeModule } from 'ngx-autosize';
 import { componentTest } from '../../testing';
 import { TextareaComponent } from './textarea.component';
 
-describe('Textarea', () => {
+describe('TextareaComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule, AutosizeModule],
         declarations: [TextareaComponent, TestComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('binds the label',

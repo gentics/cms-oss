@@ -16,7 +16,6 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, fromEvent, of } from 'rxjs';
 import { filter, map, switchMap, tap } from 'rxjs/operators';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 
 /**
  * Wraps an IFrame, provides easy access to its `load` event,
@@ -77,10 +76,7 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
     constructor(
         private changeDetector: ChangeDetectorRef,
         private domSanitizer: DomSanitizer,
-        iFrameStyles: IFrameStylesService,
-    ) {
-        this.iFrameStylesUrl = iFrameStyles.stylesUrl;
-    }
+    ) {}
 
     ngAfterViewInit(): void {
         // This observable emits the IFrame when it has completed loading.

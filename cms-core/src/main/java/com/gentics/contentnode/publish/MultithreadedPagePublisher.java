@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Level2CacheTrx;
 import com.gentics.contentnode.factory.MulticonnectionTransaction;
@@ -35,6 +37,11 @@ import com.gentics.lib.render.exception.RecoverableException;
  */
 public class MultithreadedPagePublisher extends PagePublisher {
 	private static final int DEFAULT_THREAD_LIMIT = 8;
+
+	/**
+	 * Thread Factory
+	 */
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("page-publisher");
 
 	/**
 	 * Create an instance
@@ -167,7 +174,7 @@ public class MultithreadedPagePublisher extends PagePublisher {
 				t.setPublishCacheEnabled(true);
 				if (!disableVersionedPublishing && publishCache) {
 					renderResult.info(Publisher.class, "Initializing PublishablePage cache using " + threadLimit + " threads");
-					ExecutorService threadPool = Executors.newFixedThreadPool(threadLimit);
+					ExecutorService threadPool = Executors.newFixedThreadPool(threadLimit, threadFactory);
 					final List<Integer> prepareList = new ArrayList<>(pagesToDistribute.stream().map(e -> e.id).collect(Collectors.toList()));
 					Collection<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>(threadLimit);
 					final Transaction threadTransaction = t;

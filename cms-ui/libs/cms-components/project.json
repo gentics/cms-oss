@@ -11,15 +11,34 @@
             "options": {
                 "tsConfig": "libs/cms-components/tsconfig.lib.json",
                 "project": "libs/cms-components/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],
             "options": {
-                "lintFilePatterns": [
-                    "libs/cms-components/**/*.ts"
-                ]
+                "lintFilePatterns": ["libs/cms-components/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner cms-components --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
             }
         },
         "component-test": {
@@ -28,12 +47,20 @@
                 "cypressConfig": "libs/cms-components/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "cms-components:build",
+                "devServerTarget": "editor-ui:build",
                 "watch": false
             },
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "editor-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

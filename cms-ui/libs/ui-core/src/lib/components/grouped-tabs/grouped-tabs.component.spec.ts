@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { IconDirective } from '../../directives/icon/icon.directive';
@@ -13,7 +13,7 @@ export class MockElementRef extends ElementRef {
     constructor() { super(null); }
 }
 
-describe('Grouped Tabs:', () => {
+describe('GroupedTabsComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         providers: [
@@ -29,6 +29,7 @@ describe('Grouped Tabs:', () => {
             TestComponent,
         ],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('is created ok',

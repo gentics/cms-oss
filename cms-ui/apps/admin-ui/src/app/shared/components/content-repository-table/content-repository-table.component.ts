@@ -7,14 +7,14 @@ import {
     I18nService,
     PermissionsService,
 } from '@admin-ui/core';
-import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, Output, OnChanges, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, ContentRepositoryType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import {
     AssignContentrepositoriesToNodesModalComponent,
 } from '../assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';

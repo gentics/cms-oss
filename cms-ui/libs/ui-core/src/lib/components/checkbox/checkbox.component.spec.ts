@@ -1,29 +1,28 @@
-import {Component, ViewChild} from '@angular/core';
-import {TestBed, tick} from '@angular/core/testing';
-import {FormsModule, ReactiveFormsModule, UntypedFormGroup, UntypedFormControl} from '@angular/forms';
-import {By} from '@angular/platform-browser';
+import { Component, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
+import { TestBed, tick } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { componentTest } from '../../testing';
+import { CheckboxComponent } from './checkbox.component';
 
-import {componentTest} from '../../testing';
-import {CheckboxComponent} from './checkbox.component';
-
-
-describe('Checkbox', () => {
+describe('CheckboxComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
-    imports: [FormsModule, ReactiveFormsModule],
-    declarations: [TestComponent, CheckboxComponent],
-    teardown: { destroyAfterEach: false }
-}));
+        imports: [FormsModule, ReactiveFormsModule],
+        declarations: [TestComponent, CheckboxComponent],
+        teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
+    }));
 
     it('should bind the label',
         componentTest(() => TestComponent, `
             <gtx-checkbox label="testLabel"></gtx-checkbox>`,
-            fixture => {
-                const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
-                fixture.detectChanges();
-                expect(label.innerText).toBe('testLabel');
-            }
-        )
+        fixture => {
+            const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
+            fixture.detectChanges();
+            expect(label.innerText).toBe('testLabel');
+        },
+        ),
     );
 
     it('should bind the id to the label and input',
@@ -32,17 +31,17 @@ describe('Checkbox', () => {
                 label="testLabel"
                 id="testId"
             ></gtx-checkbox>`,
-            fixture => {
-                const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
-                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+        fixture => {
+            const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
+            const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
-                fixture.detectChanges();
+            fixture.detectChanges();
 
-                expect(label.htmlFor).toBe('testId');
-                expect(label.getAttribute('for')).toBe('testId');
-                expect(nativeInput.id).toBe('testId');
-            }
-        )
+            expect(label.htmlFor).toBe('testId');
+            expect(label.getAttribute('for')).toBe('testId');
+            expect(nativeInput.id).toBe('testId');
+        },
+        ),
     );
 
     it('should use defaults for undefined attributes which have a default',
@@ -54,7 +53,7 @@ describe('Checkbox', () => {
             expect(nativeInput.disabled).toBe(false);
             expect(nativeInput.required).toBe(false);
             expect(nativeInput.value).toBe('');
-        })
+        }),
     );
 
     it('should not display undefined attributes',
@@ -70,7 +69,7 @@ describe('Checkbox', () => {
             expect(getAttr('pattern')).toBe(null);
             expect(getAttr('placeholder')).toBe(null);
             expect(getAttr('step')).toBe(null);
-        })
+        }),
     );
 
 
@@ -83,7 +82,7 @@ describe('Checkbox', () => {
             const id: Attr = nativeInput.attributes.getNamedItem('id');
             expect(id).not.toBe(null);
             expect(id.value.length).toBeGreaterThan(0);
-        })
+        }),
     );
 
     it('should pass through the native attributes',
@@ -95,37 +94,37 @@ describe('Checkbox', () => {
                 required="true"
                 value="testValue"
             ></gtx-checkbox>`,
-            fixture => {
-                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                fixture.detectChanges();
+        fixture => {
+            const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+            fixture.detectChanges();
 
-                expect(nativeInput.disabled).toBe(true);
-                expect(nativeInput.checked).toBe(true);
-                expect(nativeInput.name).toBe('testName');
-                expect(nativeInput.required).toBe(true);
-                expect(nativeInput.value).toBe('testValue');
-            }
-        )
+            expect(nativeInput.disabled).toBe(true);
+            expect(nativeInput.checked).toBe(true);
+            expect(nativeInput.name).toBe('testName');
+            expect(nativeInput.required).toBe(true);
+            expect(nativeInput.value).toBe('testValue');
+        },
+        ),
     );
 
     it('should emit a single "change" with current check state when the native input changes',
         componentTest(() => TestComponent, `
             <gtx-checkbox (change)="onChange($event)">
             </gtx-checkbox>`,
-            fixture => {
-                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                const instance: TestComponent = fixture.componentInstance;
-                fixture.detectChanges();
-                const spy = instance.onChange = jasmine.createSpy('onChange');
+        fixture => {
+            const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+            const instance: TestComponent = fixture.componentInstance;
+            fixture.detectChanges();
+            const spy = instance.onChange = jasmine.createSpy('onChange');
 
-                nativeInput.click();
-                tick();
-                fixture.detectChanges();
+            nativeInput.click();
+            tick();
+            fixture.detectChanges();
 
-                expect(instance.onChange).toHaveBeenCalledWith(true);
-                expect(spy.calls.count()).toBe(1);
-            }
-        )
+            expect(instance.onChange).toHaveBeenCalledWith(true);
+            expect(spy.calls.count()).toBe(1);
+        },
+        ),
     );
 
     it('should emit "blur" with current check state when the native input blurs',
@@ -135,18 +134,18 @@ describe('Checkbox', () => {
                 value="foo"
                 [checked]="true"
             ></gtx-checkbox>`,
-            (fixture, instance) => {
-                const debugInput = fixture.debugElement.query(By.css('input'));
-                fixture.detectChanges();
-                instance.onBlur = jasmine.createSpy('onBlur');
+        (fixture, instance) => {
+            const debugInput = fixture.debugElement.query(By.css('input'));
+            fixture.detectChanges();
+            instance.onBlur = jasmine.createSpy('onBlur');
 
-                debugInput.triggerEventHandler('blur', null);
-                fixture.detectChanges();
-                tick();
+            debugInput.triggerEventHandler('blur', null);
+            fixture.detectChanges();
+            tick();
 
-                expect(instance.onBlur).toHaveBeenCalledWith(true);
-            }
-        )
+            expect(instance.onBlur).toHaveBeenCalledWith(true);
+        },
+        ),
     );
 
     it('should emit "blur" with "indeterminate" when indeterminate and native input is blurred',
@@ -156,19 +155,19 @@ describe('Checkbox', () => {
                 value="foo"
                 [indeterminate]="true"
             ></gtx-checkbox>`,
-            fixture => {
-                const debugInput = fixture.debugElement.query(By.css('input'));
-                const instance: TestComponent = fixture.componentInstance;
-                fixture.detectChanges();
-                instance.onBlur = jasmine.createSpy('onBlur');
+        fixture => {
+            const debugInput = fixture.debugElement.query(By.css('input'));
+            const instance: TestComponent = fixture.componentInstance;
+            fixture.detectChanges();
+            instance.onBlur = jasmine.createSpy('onBlur');
 
-                debugInput.triggerEventHandler('blur', null);
-                fixture.detectChanges();
-                tick();
+            debugInput.triggerEventHandler('blur', null);
+            fixture.detectChanges();
+            tick();
 
-                expect(instance.onBlur).toHaveBeenCalledWith('indeterminate');
-            }
-        )
+            expect(instance.onBlur).toHaveBeenCalledWith('indeterminate');
+        },
+        ),
     );
 
     it('should emit "focus" with current check state when the native input is focused',
@@ -178,18 +177,18 @@ describe('Checkbox', () => {
                 value="foo"
                 [checked]="true"
             ></gtx-checkbox>`,
-            (fixture, instance) => {
-                const debugInput = fixture.debugElement.query(By.css('input'));
-                fixture.detectChanges();
-                instance.onFocus = jasmine.createSpy('onFocus');
+        (fixture, instance) => {
+            const debugInput = fixture.debugElement.query(By.css('input'));
+            fixture.detectChanges();
+            instance.onFocus = jasmine.createSpy('onFocus');
 
-                debugInput.triggerEventHandler('focus', null);
-                fixture.detectChanges();
-                tick();
+            debugInput.triggerEventHandler('focus', null);
+            fixture.detectChanges();
+            tick();
 
-                expect(instance.onFocus).toHaveBeenCalledWith(true);
-            }
-        )
+            expect(instance.onFocus).toHaveBeenCalledWith(true);
+        },
+        ),
     );
 
     describe('ValueAccessor:', () => {
@@ -200,29 +199,29 @@ describe('Checkbox', () => {
                     [(ngModel)]="boundProperty"
                     value="otherValue">
                 </gtx-checkbox>`,
-                (fixture, instance) => {
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+            (fixture, instance) => {
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
-                    instance.boundProperty = false;
-                    fixture.detectChanges();
+                instance.boundProperty = false;
+                fixture.detectChanges();
 
-                    expect(nativeInput.checked).toBe(false);
-                    expect(nativeInput.indeterminate).toBe(false);
+                expect(nativeInput.checked).toBe(false);
+                expect(nativeInput.indeterminate).toBe(false);
 
-                    instance.boundProperty = 'indeterminate';
-                    fixture.detectChanges();
-                    tick();
-                    fixture.detectChanges();
-                    expect(nativeInput.indeterminate).toBe(true);
+                instance.boundProperty = 'indeterminate';
+                fixture.detectChanges();
+                tick();
+                fixture.detectChanges();
+                expect(nativeInput.indeterminate).toBe(true);
 
-                    instance.boundProperty = true;
-                    fixture.detectChanges();
-                    tick();
-                    fixture.detectChanges();
-                    expect(nativeInput.checked).toBe(true);
-                    expect(nativeInput.indeterminate).toBe(false);
-                }
-            )
+                instance.boundProperty = true;
+                fixture.detectChanges();
+                tick();
+                fixture.detectChanges();
+                expect(nativeInput.checked).toBe(true);
+                expect(nativeInput.indeterminate).toBe(false);
+            },
+            ),
         );
 
         it('should update a bound property with ngModel (outbound)',
@@ -231,32 +230,32 @@ describe('Checkbox', () => {
                     [(ngModel)]="boundProperty"
                     value="someValue"
                 ></gtx-checkbox>`,
-                (fixture, instance) => {
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    const debugInput = fixture.debugElement.query(By.css('input'));
-                    instance.boundProperty = false;
-                    fixture.detectChanges();
+            (fixture, instance) => {
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const debugInput = fixture.debugElement.query(By.css('input'));
+                instance.boundProperty = false;
+                fixture.detectChanges();
 
-                    expect(instance.boundProperty).toBe(false);
-                    expect(nativeInput.checked).toBe(false);
-                    expect(nativeInput.indeterminate).toBe(false);
+                expect(instance.boundProperty).toBe(false);
+                expect(nativeInput.checked).toBe(false);
+                expect(nativeInput.indeterminate).toBe(false);
 
-                    nativeInput.checked = true;
-                    debugInput.triggerEventHandler('change', null);
-                    fixture.detectChanges();
-                    tick();
-                    expect(instance.boundProperty).toBe(true);
-                    expect(nativeInput.checked).toBe(true);
-                    expect(nativeInput.indeterminate).toBe(false);
+                nativeInput.checked = true;
+                debugInput.triggerEventHandler('change', null);
+                fixture.detectChanges();
+                tick();
+                expect(instance.boundProperty).toBe(true);
+                expect(nativeInput.checked).toBe(true);
+                expect(nativeInput.indeterminate).toBe(false);
 
-                    nativeInput.indeterminate = true;
-                    debugInput.triggerEventHandler('change', null);
-                    fixture.detectChanges();
-                    tick();
-                    expect(instance.boundProperty).toBe('indeterminate');
-                    expect(nativeInput.indeterminate).toBe(true);
-                }
-            )
+                nativeInput.indeterminate = true;
+                debugInput.triggerEventHandler('change', null);
+                fixture.detectChanges();
+                tick();
+                expect(instance.boundProperty).toBe('indeterminate');
+                expect(nativeInput.indeterminate).toBe(true);
+            },
+            ),
         );
 
         it('should bind the value with formControlName (inbound)',
@@ -265,35 +264,35 @@ describe('Checkbox', () => {
                     <gtx-checkbox formControlName="testControl">
                     </gtx-checkbox>
                 </form>`,
-                (fixture, instance) => {
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    const control = <UntypedFormControl> instance.testForm.get('testControl');
+            (fixture, instance) => {
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const control = <UntypedFormControl> instance.testForm.get('testControl');
 
-                    control.setValue(false);
-                    fixture.detectChanges();
-                    tick();
+                control.setValue(false);
+                fixture.detectChanges();
+                tick();
 
-                    expect(nativeInput.checked).toBe(false);
-                    expect(nativeInput.indeterminate).toBe(false);
+                expect(nativeInput.checked).toBe(false);
+                expect(nativeInput.indeterminate).toBe(false);
 
-                    control.setValue(true);
-                    fixture.detectChanges();
-                    tick();
-                    expect(nativeInput.checked).toBe(true);
-                    expect(nativeInput.indeterminate).toBe(false);
+                control.setValue(true);
+                fixture.detectChanges();
+                tick();
+                expect(nativeInput.checked).toBe(true);
+                expect(nativeInput.indeterminate).toBe(false);
 
-                    control.setValue('indeterminate');
-                    fixture.detectChanges();
-                    tick();
-                    expect(nativeInput.indeterminate).toBe(true);
+                control.setValue('indeterminate');
+                fixture.detectChanges();
+                tick();
+                expect(nativeInput.indeterminate).toBe(true);
 
-                    control.setValue(false);
-                    fixture.detectChanges();
-                    tick();
-                    expect(nativeInput.checked).toBe(false);
-                    expect(nativeInput.indeterminate).toBe(false);
-                }
-            )
+                control.setValue(false);
+                fixture.detectChanges();
+                tick();
+                expect(nativeInput.checked).toBe(false);
+                expect(nativeInput.indeterminate).toBe(false);
+            },
+            ),
         );
 
         it('should bind the value with formControlName (outbound)',
@@ -304,32 +303,32 @@ describe('Checkbox', () => {
                         value="targetValue">
                     </gtx-checkbox>
                 </form>`,
-                (fixture, instance) => {
-                    fixture.detectChanges();
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    const debugInput = fixture.debugElement.query(By.css('input'));
-                    const control = <UntypedFormControl> instance.testForm.get('testControl');
+            (fixture, instance) => {
+                fixture.detectChanges();
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const debugInput = fixture.debugElement.query(By.css('input'));
+                const control = <UntypedFormControl> instance.testForm.get('testControl');
 
-                    nativeInput.checked = true;
-                    debugInput.triggerEventHandler('change', null);
-                    fixture.detectChanges();
-                    tick();
-                    expect(control.value).toBe(true);
+                nativeInput.checked = true;
+                debugInput.triggerEventHandler('change', null);
+                fixture.detectChanges();
+                tick();
+                expect(control.value).toBe(true);
 
-                    nativeInput.indeterminate = true;
-                    debugInput.triggerEventHandler('change', null);
-                    fixture.detectChanges();
-                    tick();
-                    expect(control.value).toBe('indeterminate');
+                nativeInput.indeterminate = true;
+                debugInput.triggerEventHandler('change', null);
+                fixture.detectChanges();
+                tick();
+                expect(control.value).toBe('indeterminate');
 
-                    nativeInput.checked = false;
-                    nativeInput.indeterminate = false;
-                    debugInput.triggerEventHandler('change', null);
-                    fixture.detectChanges();
-                    tick();
-                    expect(control.value).toBe(false);
-                }
-            )
+                nativeInput.checked = false;
+                nativeInput.indeterminate = false;
+                debugInput.triggerEventHandler('change', null);
+                fixture.detectChanges();
+                tick();
+                expect(control.value).toBe(false);
+            },
+            ),
         );
 
     });
@@ -342,61 +341,61 @@ describe('Checkbox', () => {
                 fixture.detectChanges();
                 // TODO: Testing private properties is really bad - is there a better way?
                 expect(checkboxComponent.statelessMode).toBe(false);
-            })
+            }),
         );
 
         it('stateless mode should be enabled when using "checked" attribute',
             componentTest(() => TestComponent, `
                 <gtx-checkbox checked="true"></gtx-checkbox>`,
-                (fixture, instance) => {
-                    const checkboxComponent: any = instance.checkboxComponent;
-                    fixture.detectChanges();
-                    // TODO: Testing private properties is really bad - is there a better way?
-                    expect(checkboxComponent.statelessMode).toBe(true);
-                }
-            )
+            (fixture, instance) => {
+                const checkboxComponent: any = instance.checkboxComponent;
+                fixture.detectChanges();
+                // TODO: Testing private properties is really bad - is there a better way?
+                expect(checkboxComponent.statelessMode).toBe(true);
+            },
+            ),
         );
 
         it('should not change check state on click when bound to "checked" attribute',
             componentTest(() => TestComponent, `
                 <gtx-checkbox checked="true"></gtx-checkbox>`,
-                (fixture, component) => {
-                    const checkboxComponent = component.checkboxComponent;
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    fixture.detectChanges();
+            (fixture, component) => {
+                const checkboxComponent = component.checkboxComponent;
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                fixture.detectChanges();
 
-                    expect(checkboxComponent.checked).toBe(true);
-                    expect(nativeInput.checked).toBe(true);
+                expect(checkboxComponent.checked).toBe(true);
+                expect(nativeInput.checked).toBe(true);
 
-                    nativeInput.click();
-                    tick();
-                    fixture.detectChanges();
+                nativeInput.click();
+                tick();
+                fixture.detectChanges();
 
-                    expect(checkboxComponent.checked).toBe(true);
-                    expect(nativeInput.checked).toBe(true);
-                }
-            )
+                expect(checkboxComponent.checked).toBe(true);
+                expect(nativeInput.checked).toBe(true);
+            },
+            ),
         );
 
         it('should change check state when "checked" attribute binding changes',
             componentTest(() => TestComponent, `
                 <gtx-checkbox [checked]="checkState"></gtx-checkbox>`,
-                fixture => {
-                    const instance: TestComponent = fixture.componentInstance;
-                    const checkboxComponent = instance.checkboxComponent;
-                    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    fixture.detectChanges();
+            fixture => {
+                const instance: TestComponent = fixture.componentInstance;
+                const checkboxComponent = instance.checkboxComponent;
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                fixture.detectChanges();
 
-                    expect(checkboxComponent.checked).toBe(false);
-                    expect(nativeInput.checked).toBe(false);
+                expect(checkboxComponent.checked).toBe(false);
+                expect(nativeInput.checked).toBe(false);
 
-                    instance.checkState = true;
-                    fixture.detectChanges();
+                instance.checkState = true;
+                fixture.detectChanges();
 
-                    expect(checkboxComponent.checked).toBe(true);
-                    expect(nativeInput.checked).toBe(true);
-                }
-            )
+                expect(checkboxComponent.checked).toBe(true);
+                expect(nativeInput.checked).toBe(true);
+            },
+            ),
         );
 
         it('can be disabled via the form control',
@@ -404,32 +403,32 @@ describe('Checkbox', () => {
                 <form [formGroup]="testForm">
                     <gtx-checkbox formControlName="testControl"></gtx-checkbox>
                 </form>`,
-                (fixture, instance) => {
-                    fixture.detectChanges();
+            (fixture, instance) => {
+                fixture.detectChanges();
 
-                    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                    expect(input.disabled).toBe(false);
+                const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                expect(input.disabled).toBe(false);
 
-                    instance.testForm.get('testControl').disable();
-                    fixture.detectChanges();
-                    expect(input.disabled).toBe(true);
-                }
-            )
+                instance.testForm.get('testControl').disable();
+                fixture.detectChanges();
+                expect(input.disabled).toBe(true);
+            },
+            ),
         );
 
     });
 });
 
 @Component({
-    template: `<gtx-checkbox></gtx-checkbox>`
+    template: '<gtx-checkbox></gtx-checkbox>',
 })
 class TestComponent {
 
     boundProperty: any;
-    checkState: boolean = false;
-    testIndeterminate: boolean = false;
+    checkState = false;
+    testIndeterminate = false;
     testForm: UntypedFormGroup = new UntypedFormGroup({
-        testControl: new UntypedFormControl(true)
+        testControl: new UntypedFormControl(true),
     });
     @ViewChild(CheckboxComponent, { static: true }) checkboxComponent: CheckboxComponent;
 

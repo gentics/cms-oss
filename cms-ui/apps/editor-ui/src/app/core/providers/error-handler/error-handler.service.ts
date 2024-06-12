@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { LogoutSuccessAction, UpdateSearchFilterAction } from '@editor-ui/app/state';
+import { LogoutSuccessAction } from '@editor-ui/app/state/modules/auth/auth.actions';
+import { UpdateSearchFilterAction } from '@editor-ui/app/state/modules/folder/folder.actions';
+import { ResponseCode } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
-import { ResponseCode } from '@gentics/cms-models';
-import { ApplicationStateService } from '../../../state';
-import { ApiError } from '../api';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 
 /**

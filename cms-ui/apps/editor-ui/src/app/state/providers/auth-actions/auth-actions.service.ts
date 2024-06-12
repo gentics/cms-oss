@@ -2,14 +2,13 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { userSchema } from '@editor-ui/app/common/models';
 import { AccessControlledType } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { normalize } from 'normalizr';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import {
-    AddEntitiesAction,
     ChangePasswordAction,
     LoginErrorAction,
     LoginSuccessAction,
@@ -19,10 +18,11 @@ import {
     StartLogoutAction,
     StartValidationAction,
     UpdateIsAdminAction,
-    UpdateSearchFilterAction,
     ValidationErrorAction,
     ValidationSuccessAction,
-} from '../../modules';
+} from '../../modules/auth/auth.actions';
+import { AddEntitiesAction } from '../../modules/entity/entity.actions';
+import { UpdateSearchFilterAction } from '../../modules/folder/folder.actions';
 import { ApplicationStateService } from '../application-state/application-state.service';
 import { FolderActionsService } from '../folder-actions/folder-actions.service';
 

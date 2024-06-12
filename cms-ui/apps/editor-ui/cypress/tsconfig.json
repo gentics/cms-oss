@@ -4,7 +4,7 @@
     "allowJs": true,
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
-    "types": ["cypress", "node"],
+    "types": ["cypress", "node", "jasmine"],
     "sourceMap": false
   },
   "include": [

@@ -17,6 +17,18 @@ npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-
 
 ## Commands
 
+Since this repo is managed via `nx`, all commands will end up be run via `nx` (See `scripts` inside of `package.json`).
+Therefore, all commands can also be executed via [`nx run-many`](https://nx.dev/nx-api/nx/documents/run-many), to run them for multiple projects instead of one specific one.
+
+All commands can be extended by passing flags to the underlying scripts. To do so, split the command with `--` then write the desired flags.
+See [official documentation](https://docs.npmjs.com/cli/v7/commands/npm-run-script).
+
+```bash
+npm {command} -- -f --flag=true
+```
+
+---
+
 ### Install dependencies
 
 ```bash
@@ -25,13 +37,21 @@ npm install
 
 ### Start/Serve an application
 
+**NX Command**: `serve`
+
+Starts a development server for the project and will run on `localhost:4200` by default.
+
+Be sure to configure the `proxy.conf.json` correctly first (See `proxy.conf.json.example`).
+
 ```bash
 npm start <app-name>
 ```
 
-The application will run on `localhost:4200` by default.
-
 ### Unit-Tests
+
+**NX Command**: `test`
+
+Executes the Unit-Tests for the specified project
 
 To run the unit tests and then terminate the test process:
 
@@ -39,15 +59,22 @@ To run the unit tests and then terminate the test process:
 npm test <app-name/lib-name>
 ```
 
-The test will run for the selected application or library. To run the unit tests in watch mode (rebuild and rerun on every change):
+To run the unit tests in watch mode (rebuild and rerun on every change):
 
 ```bash
-npm run test:watch <app-name/lib-name>
+npm run test <app-name/lib-name> -- --configuration=watch
 ```
+
+**Available Configurations**:
+
+* `watch`: To re-run the tests when source- or test-files have been edited/saved.
+* `ci`: When run in a CI Server and includes test coverage reporting
 
 ### E2E/Integration Tests
 
-Starts the Cypress E2E/Integration tests for the specific e2e application (`{application-name}-e2e`).
+**NX Command**: `e2e`
+
+Starts the Cypress E2E/Integration tests with the specific e2e application (`{application-name}-e2e`).
 
 ```bash
 npm run e2e <e2e-app-name>
@@ -55,27 +82,39 @@ npm run e2e <e2e-app-name>
 
 ### Components Tests
 
+**NX Command**: `component-test`
+
 Starts the Cypress Components tests for the specific application or library.
+
+*Note*: When running multiple tests, disable `parallel` with `--parallel=false`, as it spawns a server for the tests which binds to a port.
+When multiple try to run, it will fail due to the already bound port.
+
 
 ```bash
 npm run component-test <app-name/lib-name>
 ```
 
+**Available Configurations**:
+
+* `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
+* `ci`: When run in a CI Server
+
 ### Build an application or library
+
+**NX Command**: `build`
+
+Builds the project and outputs ready to use/serve output files.
 
 ```bash
 npm run build <app-name/lib-name>
 ```
 
-This will build the selected application or library in `production` mode. All the built apps/libs destination is the `./dist` folder.
+**Available Configurations**:
 
-### Adding flags to commands
+* `production`: *Default*, production ready output
+* `development`: Builds it with source-maps and non-optimized content to make debugging easier.
+* `ci`: When run in a CI Server
 
-```bash
-npm test <app-name/lib-name> -- --flag1 --flag2
-```
-
-All commands can be extended by passing flags to the underlying scripts. To do so, split the command with `--` then write the desired flags.
 
 ## Tags
 
@@ -91,11 +130,8 @@ Tags that are used in this Repository:
 * `ui`: Main User-Interface/Standalone application
 * `ct`: Custom-Tool which only works with/in the `editor-ui`
 * `e2e`: End-to-End/Integration Test project
-
-## Quick start
-
--   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
--   [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
+* `docs`: Documentation project to document one or more libraries/projects
+* `demo`: Demo application to showcase the functionality of a library/project
 
 ### Structure
 
@@ -118,7 +154,7 @@ These commands can be used to create new applications in the monorepo. It will g
 **Adds a new Angular application with Karma tests and Protractor e2e, using SCSS and Angular routing:**
 
 ```bash
-nx g @nx/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
+npm run nx -- g @nx/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
 ```
 
 ### Add new library
@@ -128,7 +164,7 @@ These commands can be used to create new libraries in the monorepo. It will gene
 **Adds a new Angular library with Karma tests, using SCSS:**
 
 ```bash
-nx g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
+npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 ```
 
 ## Packages

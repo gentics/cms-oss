@@ -1,15 +1,16 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import * as Sortable from 'sortablejs';
 import { ISortableEvent } from '../../common';
 import { componentTest } from '../../testing';
 import { SortableListComponent, sortFactory } from './sortable-list.component';
 
-describe('SortableList:', () => {
+describe('SortableListComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         declarations: [SortableListComponent, TestComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     describe('sort() method', () => {

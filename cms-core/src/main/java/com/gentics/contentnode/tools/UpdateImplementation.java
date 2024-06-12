@@ -16,10 +16,17 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.rest.client.ObjectMapperProvider;
 import com.gentics.contentnode.rest.client.RestClient;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.ContentMaintenanceAction;
@@ -157,7 +164,13 @@ public class UpdateImplementation implements AutoCloseable {
 		System.out.println(String.format("Updating implementation on CMS with base URL %s as user %s", config.getBase(),
 				config.getUser()));
 
-		client = new RestClient(config.getBase() + "/rest");
+		client = new RestClient(() -> {
+			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
+					.property(ClientProperties.CONNECT_TIMEOUT, config.getTimeout())
+					.property(ClientProperties.READ_TIMEOUT, config.getTimeout());
+			return JerseyClientBuilder.createClient(clientConfig).register(ObjectMapperProvider.class).register(JacksonFeature.class)
+					.register(MultiPartFeature.class);
+		}, config.getBase() + "/rest");
 
 		client.login(config.getUser(), config.getPassword());
 

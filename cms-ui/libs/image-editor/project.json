@@ -11,6 +11,11 @@
             "options": {
                 "tsConfig": "libs/image-editor/tsconfig.lib.json",
                 "project": "libs/image-editor/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
             }
         },
         "lint": {
@@ -23,18 +28,42 @@
                 ]
             }
         },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner image-editor --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner image-editor --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner image-editor --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
                 "cypressConfig": "libs/image-editor/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "image-editor:build",
+                "devServerTarget": "image-editor-demo:build",
                 "watch": false
             },
             "configurations": {
                 "watch": {
                     "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "image-editor-demo:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
                 }
             }
         },

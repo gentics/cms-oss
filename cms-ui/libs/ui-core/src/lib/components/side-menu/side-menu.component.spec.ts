@@ -1,4 +1,4 @@
-import { Component, DebugElement } from '@angular/core';
+import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -7,12 +7,13 @@ import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 import { componentTest } from '../../testing';
 import { SideMenuComponent } from './side-menu.component';
 
-describe('SideMenu', () => {
+describe('SideMenuComponent', () => {
     beforeEach(() => TestBed.configureTestingModule({
         imports: [NoopAnimationsModule],
         declarations: [SideMenuComponent, TestComponent, SideMenuToggleDirective],
         providers: [UserAgentProvider],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('does not have the "opened" class when closed',

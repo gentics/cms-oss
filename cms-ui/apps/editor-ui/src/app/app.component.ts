@@ -95,6 +95,7 @@ export class AppComponent implements OnInit {
     userSid: number;
     activeNode: Node;
     userMenuOpened = false;
+    loadedNodes: Node[] = [];
 
     reloadOnLanguageChange$ = new Subject<boolean>();
 
@@ -246,9 +247,14 @@ export class AppComponent implements OnInit {
 
         // Upon login, load all available nodes.
         onLogin$.subscribe(() => {
-            this.folderActions.getNodes().finally(() => {
-                this.appState.dispatch(new SetNodesLoadedAction(true));
-            });
+            this.folderActions.getNodes()
+                .then(nodes => {
+                    this.loadedNodes = nodes;
+                    this.changeDetector.markForCheck();
+                })
+                .finally(() => {
+                    this.appState.dispatch(new SetNodesLoadedAction(true));
+                });
             // CMS version is only available once logged in.
             this.uiActions.getCmsVersion();
             this.authActions.updateAdminState();

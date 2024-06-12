@@ -1,88 +1,87 @@
-import {Component} from '@angular/core';
-import {TestBed, tick} from '@angular/core/testing';
-import {UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { TestBed, tick } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { componentTest } from '../../testing';
+import { ButtonComponent } from './button.component';
 
-import {componentTest} from '../../testing';
-import {ButtonComponent} from './button.component';
-
-
-describe('Button:', () => {
+describe('ButtonComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
-    imports: [FormsModule, ReactiveFormsModule],
-    declarations: [TestComponent, ButtonComponent],
-    teardown: { destroyAfterEach: false }
-}));
+        imports: [FormsModule, ReactiveFormsModule],
+        declarations: [TestComponent, ButtonComponent],
+        teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
+    }));
 
     it('is enabled by default',
         componentTest(() => TestComponent, fixture => {
-            let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
             fixture.detectChanges();
 
             expect(button.disabled).toBe(false);
-        })
+        }),
     );
 
     it('binds the "disabled" property',
         componentTest(() => TestComponent, `
             <gtx-button [disabled]="true"></gtx-button>`,
-            fixture => {
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
+        fixture => {
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
 
-                expect(button.disabled).toBe(true);
-            }
-        )
+            expect(button.disabled).toBe(true);
+        },
+        ),
     );
 
     it('accepts string values for the "disabled" property',
         componentTest(() => TestComponent, `
             <gtx-button disabled="true"></gtx-button>`,
-            fixture => {
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
+        fixture => {
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
 
-                expect(button.disabled).toBe(true);
-            }
-        )
+            expect(button.disabled).toBe(true);
+        },
+        ),
     );
 
     it('accepts an empty "disabled" property',
         componentTest(() => TestComponent, `
             <gtx-button disabled></gtx-button>`,
-            fixture => {
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
-                expect(button.disabled).toBe(true);
-            }
-        )
+        fixture => {
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
+            expect(button.disabled).toBe(true);
+        },
+        ),
     );
 
     it('sets the button as form submit button when a "submit" property is present',
         componentTest(() => TestComponent, `
             <gtx-button submit></gtx-button>`,
-            fixture => {
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
-                expect(button.type).toBe('submit');
-            }
-        )
+        fixture => {
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
+            expect(button.type).toBe('submit');
+        },
+        ),
     );
 
     it('sets the button as form submit button when "submit" is set to a boolean value',
         componentTest(() => TestComponent, `
             <gtx-button [submit]="isSubmit"></gtx-button>`,
-            (fixture, testComponent) => {
-                testComponent.isSubmit = true;
-                fixture.detectChanges();
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                expect(button.type).toBe('submit');
+        (fixture, testComponent) => {
+            testComponent.isSubmit = true;
+            fixture.detectChanges();
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            expect(button.type).toBe('submit');
 
-                testComponent.isSubmit = false;
-                fixture.detectChanges();
-                expect(button.type).not.toBe('submit');
-            }
-        )
+            testComponent.isSubmit = false;
+            fixture.detectChanges();
+            expect(button.type).not.toBe('submit');
+        },
+        ),
     );
 
     it('submits the parent form when a submit button is clicked',
@@ -90,40 +89,40 @@ describe('Button:', () => {
             <form [formGroup]="form" (ngSubmit)="onSubmit($event)">
                 <gtx-button submit></gtx-button>
             </form>`,
-            (fixture, instance) => {
-                fixture.detectChanges();
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                let form: HTMLFormElement = fixture.nativeElement.querySelector('form');
-                form.onsubmit = jasmine.createSpy('formSubmit').and.returnValue(false);
+        (fixture, instance) => {
+            fixture.detectChanges();
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            const form: HTMLFormElement = fixture.nativeElement.querySelector('form');
+            form.onsubmit = jasmine.createSpy('formSubmit').and.returnValue(false);
 
-                let event = document.createEvent('MouseEvent');
-                event.initEvent('click', true, true);
-                button.dispatchEvent(event);
+            const event = document.createEvent('MouseEvent');
+            event.initEvent('click', true, true);
+            button.dispatchEvent(event);
 
-                fixture.detectChanges();
-                expect(form.onsubmit).toHaveBeenCalled();
-            }
-        )
+            fixture.detectChanges();
+            expect(form.onsubmit).toHaveBeenCalled();
+        },
+        ),
     );
 
     it('forwards its "click" event when enabled',
         componentTest(() => TestComponent, `
             <gtx-button (click)="onClick($event)"></gtx-button>`,
-            fixture => {
-                let onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
+        fixture => {
+            const onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
 
-                let event = document.createEvent('MouseEvent');
-                event.initEvent('click', true, true);
+            const event = document.createEvent('MouseEvent');
+            event.initEvent('click', true, true);
 
-                button.dispatchEvent(event);
-                button.parentElement.dispatchEvent(event);
-                button.click();
+            button.dispatchEvent(event);
+            button.parentElement.dispatchEvent(event);
+            button.click();
 
-                expect(onClick).toHaveBeenCalledTimes(3);
-            }
-        )
+            expect(onClick).toHaveBeenCalledTimes(3);
+        },
+        ),
     );
 
     // Disabled elements don't fire mouse events in some browsers, but not all
@@ -131,21 +130,21 @@ describe('Button:', () => {
     it('does not forward button "click" events when disabled',
         componentTest(() => TestComponent, `
             <gtx-button [disabled]="true" (click)="onClick($event)"></gtx-button>`,
-            fixture => {
-                let onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
-                let button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-                fixture.detectChanges();
-                tick();
+        fixture => {
+            const onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
+            const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
+            fixture.detectChanges();
+            tick();
 
-                let event = document.createEvent('MouseEvent');
-                event.initEvent('click', true, true);
-                button.dispatchEvent(event);
-                button.click();
+            const event = document.createEvent('MouseEvent');
+            event.initEvent('click', true, true);
+            button.dispatchEvent(event);
+            button.click();
 
-                expect(event.defaultPrevented).toBe(true, 'default not prevented');
-                expect(onClick).not.toHaveBeenCalled();
-            }
-        )
+            expect(event.defaultPrevented).toBe(true, 'default not prevented');
+            expect(onClick).not.toHaveBeenCalled();
+        },
+        ),
     );
 
     // Other browsers fire mouse events on the parent of disabled <button> elements
@@ -153,31 +152,31 @@ describe('Button:', () => {
     it('does not forward bubbled "click" events when disabled',
         componentTest(() => TestComponent, `
             <gtx-button [disabled]="true" (click)="onClick($event)"></gtx-button>`,
-            fixture => {
-                let onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
-                let eventParent: HTMLElement = fixture.nativeElement.querySelector('button').parentNode;
-                fixture.detectChanges();
-                tick();
+        fixture => {
+            const onClick = fixture.componentRef.instance.onClick = jasmine.createSpy('onClick');
+            const eventParent: HTMLElement = fixture.nativeElement.querySelector('button').parentNode;
+            fixture.detectChanges();
+            tick();
 
-                let event = document.createEvent('MouseEvent');
-                event.initEvent('click', true, true);
-                eventParent.dispatchEvent(event);
-                eventParent.click();
+            const event = document.createEvent('MouseEvent');
+            event.initEvent('click', true, true);
+            eventParent.dispatchEvent(event);
+            eventParent.click();
 
-                expect(event.defaultPrevented).toBe(true, 'default not prevented');
-                expect(onClick).not.toHaveBeenCalled();
-            }
-        )
+            expect(event.defaultPrevented).toBe(true, 'default not prevented');
+            expect(onClick).not.toHaveBeenCalled();
+        },
+        ),
     );
 
 });
 
 @Component({
-    template: `<gtx-button></gtx-button>`
+    template: '<gtx-button></gtx-button>',
 })
 class TestComponent {
     form = new UntypedFormGroup({
-        test: new UntypedFormControl('initial value')
+        test: new UntypedFormControl('initial value'),
     });
     isSubmit: boolean;
     onClick(): void {}

@@ -818,5 +818,13 @@
     "confirm_selection": {
         "en": "Confirm",
         "de": "Bestätigen"
+    },
+    "message_send": {
+        "en": "Message has been sent",
+        "de": "Nachricht wurde gesendet"
+    },
+    "message_sent_error": {
+        "en": "Error sending message",
+        "de": "Die Nachricht konnte nicht gesendet werden"
     }
 }

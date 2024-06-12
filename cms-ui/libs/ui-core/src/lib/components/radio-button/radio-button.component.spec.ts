@@ -1,4 +1,4 @@
-import { Component, DebugElement, ViewChild } from '@angular/core';
+import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -6,11 +6,12 @@ import { RadioGroupDirective } from '../../directives/radio-group/radio-group.di
 import { componentTest } from '../../testing';
 import { RadioButtonComponent } from './radio-button.component';
 
-describe('RadioButton', () => {
+describe('RadioButtonComponent', () => {
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule],
         declarations: [RadioButtonComponent, RadioGroupDirective, TestComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('binds the label text to the "label" input',
@@ -431,12 +432,13 @@ describe('RadioButton', () => {
     });
 });
 
-describe('RadioGroup', () => {
+describe('RadioGroupDirective', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule],
         declarations: [RadioButtonComponent, RadioGroupDirective, TestComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('binds the check state of RadioButton children with ngModel (inbound)',

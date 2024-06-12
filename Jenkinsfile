@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms") + """
+      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms-oss") + """
       resources:
         requests:
           cpu: '0'

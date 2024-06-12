@@ -408,15 +408,6 @@ spec:
                     return false
                 }
             }
-
-            steps {
-                build job: 'gentics-cms-models/' + branchName,
-                      parameters: [
-                        booleanParam(name: 'release', value: Boolean.valueOf(params.runReleaseBuild)),
-                        string(name: 'forceVersion', value: params.releaseVersion.toString())
-                      ],
-                      wait: false
-            }
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -161,6 +163,11 @@ public class Indexer {
 	protected static Map<IndexType, Map<String, SearchIndex>> indices = new HashMap<>();
 
 	/**
+	 * Thread factory
+	 */
+	protected static ThreadFactory threadFactory = new PrefixedThreadFactory("indexer");
+
+	/**
 	 * Executor Service
 	 */
 	protected static ExecutorService service;
@@ -242,7 +249,7 @@ public class Indexer {
 			}
 
 			int threads = ObjectTransformer.getInt(prefs.getProperty(THREADS_PARAM), THREADS_DEFAULT);
-			service = Executors.newFixedThreadPool(threads);
+			service = Executors.newFixedThreadPool(threads, threadFactory);
 			if (logger.isInfoEnabled()) {
 				logger.info("Started Indexer service");
 			}

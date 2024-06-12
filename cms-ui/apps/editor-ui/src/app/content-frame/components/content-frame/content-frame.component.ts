@@ -65,6 +65,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
+import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -105,7 +106,6 @@ import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.ser
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
@@ -522,6 +522,16 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.alohaWindowLoaded = true;
             }
 
+            const styleElem = masterFrame.contentDocument.createElement('style');
+            styleElem.textContent = `
+del.gtx-diff {
+  background: rgba(255, 0, 0, 0.2);
+}
+ins.gtx-diff {
+  background: rgba(0, 255, 0, 0.2);
+}`;
+            masterFrame.contentDocument.head.appendChild(styleElem);
+
             this.changeDetector.markForCheck();
 
             masterFrame.contentDocument.addEventListener('scroll', () => {
@@ -591,16 +601,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         const frame = this.diffFrame.nativeElement;
         frame.contentWindow.location.replace(this.comparePageUrl);
         frame.addEventListener('load', () => {
-            const styleElem = frame.contentDocument.createElement('style');
-            styleElem.textContent = `
-del.gtx-diff {
-  background: rgba(255, 0, 0, 0.2);
-}
-ins.gtx-diff {
-  background: rgba(0, 255, 0, 0.2);
-}`;
-            frame.contentDocument.head.appendChild(styleElem);
-
             frame.contentDocument.addEventListener('scroll', () => {
                 if (this.ignoreNextDiffScroll) {
                     this.ignoreNextDiffScroll = false;

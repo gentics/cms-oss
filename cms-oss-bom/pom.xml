@@ -125,6 +125,13 @@
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-ui</artifactId>
+				<version>${project.version}</version>
+				<classifier>custom-tools</classifier>
+				<type>zip</type>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>base-lib</artifactId>
 				<version>${project.version}</version>
 			</dependency>

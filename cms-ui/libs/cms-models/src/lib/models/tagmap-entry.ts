@@ -1,5 +1,5 @@
 import { NormalizableEntityTypesMap } from './gcms-normalizer/gcms-normalizer-types';
-import { DefaultModelType, ModelType } from './type-util';
+import { DefaultModelType, ModelType, Raw } from './type-util';
 
 export type TagmapEntryParentType = keyof Pick<NormalizableEntityTypesMap<DefaultModelType>, 'contentRepository' | 'contentRepositoryFragment'> ;
 
@@ -49,6 +49,10 @@ export interface TagmapEntryBase<T extends ModelType> {
     fragmentName: string;
 }
 
+export type EditableTagmapEntry = Pick<TagmapEntryBase<Raw>,
+'tagname' | 'mapname' | 'objType' | 'attributeType' | 'targetType' | 'multivalue' | 'optimized' | 'filesystem' | 'foreignlinkAttribute' |
+'foreignlinkAttributeRule' | 'segmentfield' | 'displayfield' | 'urlfield' | 'noIndex' | 'elasticsearch' | 'micronodeFilter' | 'category'>;
+
 /** Data model as defined by backend. */
 export interface TagmapEntry<T extends ModelType = DefaultModelType> extends TagmapEntryBase<T> {
     /** Internal ID of the object property definition */
@@ -68,7 +72,7 @@ export enum TagmapEntryPropertiesObjectType {
     FOLDER = 10002,
     PAGE = 10007,
     FILE = 10008,
-};
+}
 
 export enum MeshTagmapEntryAttributeTypes {
     TEXT = 1,
@@ -78,7 +82,7 @@ export enum MeshTagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
-};
+}
 
 export enum SQLTagmapEntryAttributeTypes {
     TEXT = 1,
@@ -87,7 +91,7 @@ export enum SQLTagmapEntryAttributeTypes {
     TEXT_LONG = 5,
     BINARY = 6,
     FOREIGN_LINK = 7,
-};
+}
 
 export enum TagmapEntryAttributeTypes {
     TEXT = 1,
@@ -99,4 +103,10 @@ export enum TagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
-};
+}
+
+export interface TagmapEntryError {
+    description: string;
+    entries: string[];
+}
+

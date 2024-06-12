@@ -1,0 +1,27 @@
+@import 'variables';
+
+.tagmap-invalid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    .warn-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+        color: $gtx-color-warning;
+    }
+}
+
+.gtx-entity-details-tab-content-body.tagmap-body {
+    display: flex;
+    flex-direction: column;
+
+    .tagmap-table {
+        height: unset;
+        flex: 1 1 auto;
+        min-height: 1px;
+    }
+}

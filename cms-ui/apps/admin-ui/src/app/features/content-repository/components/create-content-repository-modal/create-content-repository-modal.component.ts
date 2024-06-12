@@ -1,7 +1,8 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryHandlerService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { ContentRepositoryHandlerService, ErrorHandler } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { EditableContentRepositoryProperties } from '@gentics/cms-models';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
 import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
@@ -14,31 +15,39 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
 
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
-    /** form instance */
-    form: UntypedFormControl;
+    public form: FormControl<EditableContentRepositoryProperties>;
+    public loading = false;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private handler: ContentRepositoryHandlerService,
+        private errorHandler: ErrorHandler,
     ) {
         super();
     }
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new UntypedFormControl({});
+        this.form = new FormControl<EditableContentRepositoryProperties>({} as any);
     }
 
     /**
      * If user clicks to create a new contentRepository
      */
-    buttonCreateEntityClicked(): void {
-        this.createEntity()
-            .then(contentRepositoryCreated => this.closeFn(contentRepositoryCreated));
-    }
+    async buttonCreateEntityClicked(): Promise<void> {
+        const normalized = (this.handler).normalizeForREST(this.form.value as any);
+        this.form.disable();
+        this.loading = true;
+        this.changeDetector.markForCheck();
 
-    private createEntity(): Promise<ContentRepositoryBO> {
-        const normalized = (this.handler ).normalizeForREST(this.form.value);
-        return this.handler.createMapped(normalized as any).toPromise();
+        try {
+            const created = await this.handler.createMapped(normalized as any).toPromise();
+            this.closeFn(created);
+        } catch (error) {
+            this.form.enable();
+            this.loading = false;
+            this.changeDetector.markForCheck();
+            this.errorHandler.catch(error, { notification: true });
+        }
     }
-
 }

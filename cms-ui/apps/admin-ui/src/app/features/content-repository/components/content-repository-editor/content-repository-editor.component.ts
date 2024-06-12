@@ -11,7 +11,8 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ContentRepositoryType, Feature } from '@gentics/cms-models';
+import { ContentRepositoryType, Feature, TagmapEntryError } from '@gentics/cms-models';
+import { Subscription } from 'rxjs';
 import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
 @Component({
@@ -28,6 +29,9 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
 
     public fgProperties: UntypedFormControl;
     public meshFeatureEnabled = false;
+    public tagmapErrors: TagmapEntryError[] = [];
+
+    private tagmapCheckSubscription: Subscription = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -54,6 +58,8 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
             this.meshFeatureEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
+
+        this.checkTagmapEntries();
     }
 
     protected initializeTabHandles(): void {
@@ -71,6 +77,7 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
 
     override onEntityUpdate(): void {
         this.tableLoader.reload();
+        this.checkTagmapEntries();
     }
 
     protected override finalizeEntityToUpdate(
@@ -86,5 +93,24 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
                 elasticsearch: this.entity?.elasticsearch ? JSON.stringify(this.entity.elasticsearch, null, 4) : '',
             });
         }
+        this.checkTagmapEntries();
+    }
+
+    private clearTagmapCheck(): void {
+        if (this.tagmapCheckSubscription != null) {
+            this.tagmapCheckSubscription.unsubscribe();
+            this.tagmapCheckSubscription = null;
+            this.tagmapErrors = [];
+        }
+    }
+
+    public checkTagmapEntries(): void {
+        this.clearTagmapCheck();
+        this.tagmapCheckSubscription = (this.handler as ContentRepositoryHandlerService)
+            .checkTagmapEntries(this.entityId)
+            .subscribe(errors => {
+                this.tagmapErrors = errors;
+                this.changeDetector.markForCheck();
+            });
     }
 }

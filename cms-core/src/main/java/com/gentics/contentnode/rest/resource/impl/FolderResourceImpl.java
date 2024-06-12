@@ -2537,8 +2537,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 */
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
-		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) {
+		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
 		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// set the channel ID if given
 			boolean isChannelIdset = setChannelToTransaction(nodeId);

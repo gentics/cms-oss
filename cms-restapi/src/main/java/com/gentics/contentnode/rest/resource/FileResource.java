@@ -300,12 +300,12 @@ public interface FileResource extends AuthenticatedResource {
 	 * @param id
 	 *            id of the File to delete
 	 * @param nodeId id of the node (channel) of the file
-	 * @param noCrSync don't synchronize the deletion with the content repo
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
 
 	/**
 	 * Remove the file denoted by the given id from the wastebin.

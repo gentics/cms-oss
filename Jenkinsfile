@@ -193,7 +193,7 @@ spec:
 
                     // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
-                        mvnArguments += " -pl '!cms-oss-changelog,!cms-oss-doc'"
+                        mvnArguments += " -Dui.skip.publish -Dui.skip.report -pl '!cms-oss-changelog,!cms-oss-doc'"
                     }
 
                     // Update chrome to the latest version

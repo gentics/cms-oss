@@ -138,6 +138,29 @@
 
                     <execution>
                         <?m2e ignore?>
+                        <id>npm set version</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>compile</phase>
+
+                        <configuration>
+                            <target name="Set UI Version" unless="${ui.skip.publish}">
+                                <!-- Apply the correct build/release version to the UI package.json files before build -->
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
                         <id>npm run build</id>
                         <goals>
                             <goal>run</goal>
@@ -147,15 +170,6 @@
 
                         <configuration>
                             <target name="Build UI modules" unless="${ui.skip.build}">
-                                <!-- Apply the correct build/release version to the UI package.json files before build -->
-                                <exec
-                                    dir="${npm.workingDirectory}"
-                                    executable="${nodejs.npm.bin}"
-                                    failonerror="true"
-                                >
-                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib" />
-                                </exec>
-
                                 <exec
                                     dir="${npm.workingDirectory}"
                                     executable="${nodejs.npm.bin}"

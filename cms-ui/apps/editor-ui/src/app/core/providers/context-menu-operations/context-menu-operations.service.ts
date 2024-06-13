@@ -290,7 +290,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 let localizationIds: number[];
 
                 if (deleteIds.length) {
-                    deletePromise = this.wastebinActions.moveItemsToWastebin(type, deleteIds, activeNodeId);
+                    deletePromise = this.wastebinActions.moveItemsToWastebin(type, deleteIds, activeNodeId, deleteIds.length > 1);
 
                     // filter only localizations that has been deleted and put them to array of IDs
                     // forms cannot be localized

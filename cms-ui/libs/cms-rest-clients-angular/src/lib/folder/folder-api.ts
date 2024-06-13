@@ -877,11 +877,12 @@ export class FolderApi {
         type: 'folder' | 'page' | 'file' | 'image'  | 'form',
         id: number,
         nodeId: number,
+        disableInstantDelete?: boolean,
     ): Observable<ItemDeleteResponse> {
         if (type === 'form') {
             return this.apiBase.delete(`${type}/${id}`);
         }
-        return this.apiBase.post(`${type}/delete/${id}`, { id }, { nodeId });
+        return this.apiBase.post(`${type}/delete/${id}`, { id }, { nodeId, disableInstantDelete });
     }
 
     /**

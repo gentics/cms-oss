@@ -28,7 +28,7 @@ RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE} main contrib non
   		doxygen mariadb-client git-core gawk sed parallel build-essential sudo \
   		less vim tar sed psmisc file pwgen locales zip unzip nmap pkg-config libtool libtool-bin bison \
   		debhelper lintian devscripts unp bzip2 rsync docker-ce=5:20* docker-ce-cli=5:20* \
-		python2.7 \
+		python2.7 libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb \
  && apt-get install --assume-yes --allow-unauthenticated google-chrome-beta
 
 # Set locale

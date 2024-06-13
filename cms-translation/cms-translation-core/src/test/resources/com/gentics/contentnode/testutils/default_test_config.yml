@@ -8,6 +8,8 @@ feature:
   multithreaded_publishing: false
   hardlink_files: false
   channelsync: false
+  translation: true
+
 global:
   config:
     contentrepository_driverclass:
@@ -17,3 +19,12 @@ quartz:
     threadCount: 1
 mesh:
   prepareThreshold: 1
+
+translation:
+  provider: deepL
+  auth:
+    token: f2649b34-1b78-4148-9dd2-8a5c931d1ab7:fx
+  language:
+    en: US
+    pt: BR
+

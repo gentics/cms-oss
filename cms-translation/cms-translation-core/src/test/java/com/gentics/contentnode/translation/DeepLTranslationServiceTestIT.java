@@ -13,7 +13,7 @@ import org.mockito.Mockito;
 class DeepLTranslationServiceTestIT {
 
 	final String TRANSLATION_PROVIDER = "deepl";
-	final String API_TOKEN = "<api-token>";
+	final String API_TOKEN = "<api-key>";
 	private TranslationService translationService;
 
 	@Test

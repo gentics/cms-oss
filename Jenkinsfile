@@ -360,27 +360,6 @@ spec:
                 }
             }
         }
-
-        stage("Package Build - cms-models") {
-            when {
-                expression {
-                    def changed = false
-                    if (env.gitlabTargetBranch) {
-                        // Build only when related files are changed or releasing & deploying
-                        changed = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch, (String[]) [
-                            "contentnode-ui/projects/cms-models/",
-                            "contentnode-ui/ci/Jenkinsfile.cms-models"
-                        ])
-                    }
-
-                    if ((params.runReleaseBuild && params.deploy) || changed) {
-                        return GenericHelper.triggerMultiBranchPipelineToScanIfJobNotExists('gentics-cms-models', 'gentics-cms-models/' + branchName, 60)
-                    }
-
-                    return false
-                }
-            }
-        }
     }
 
     /* TODO: Re-enable when HTTPS access to gitlab is restored. Due to infrastructure issues this is disabled temporarily.

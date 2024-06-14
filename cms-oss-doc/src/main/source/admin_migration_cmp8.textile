@@ -55,7 +55,7 @@ $FEATURE["wastebin"] = true;
 
 In the new format, this is done with:
 
-<shell filename="features.yml">
+<shell filename="conf/features.yml">
 feature:
   wastebin: true
 </shell>
@@ -73,7 +73,7 @@ $SETTINGS["pw"] = "<dbpassword>";
 
 New format and configuration parameters:
 
-<shell filename="db.yml">
+<shell filename="conf/db.yml">
 db:
   settings:
     url: jdbc:mariadb://<dbhost>:<dbport>/<dbname>
@@ -93,7 +93,7 @@ $ALOHA_SETTINGS['plugins']['block']['rootTags'] = array('div', 'span', 'a');
 
 New format:
 
-<shell filename="aloha.yml">
+<shell filename="conf/aloha.yml">
 aloha_settings:
   plugins:
     block:
@@ -156,7 +156,7 @@ Keycloak integration is now done in the following steps
 # Optionally configure keycloak.user_created_callback
 # Optionally configure keycloak.init_groups
 
-<shell filename="keycloak.yml">
+<shell filename="conf/keycloak.yml">
 feature:
   keycloak: true
 keycloak:

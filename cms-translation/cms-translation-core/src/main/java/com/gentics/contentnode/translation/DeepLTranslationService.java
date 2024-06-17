@@ -4,7 +4,6 @@ import com.deepl.api.DeepLException;
 import com.deepl.api.TextResult;
 import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.etc.Validator;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
 import java.util.HashMap;
@@ -19,9 +18,21 @@ import org.apache.logging.log4j.Level;
  */
 public class DeepLTranslationService implements TranslationService {
 
+	/**
+	 * The concrete translation provider
+	 */
 	static final SupportedProvider PROVIDER = SupportedProvider.DEEPL;
+	/**
+	 * The logger
+	 */
+	protected final NodeLogger logger = NodeLogger.getNodeLogger(getClass());
+	/**
+	 * The actual translation client
+	 */
 	private final Translator translator;
-	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
+	/**
+	 * The language preferences to map language codes to actual translation languages
+	 */
 	Map<String, Object> languagePreferences;
 
 
@@ -34,6 +45,19 @@ public class DeepLTranslationService implements TranslationService {
 	public DeepLTranslationService(Translator translator) throws NodeException {
 		languagePreferences = getLanguageSettingFromConfig();
 		this.translator = translator;
+	}
+
+	/**
+	 * This method initializes a map with default language configurations.
+	 *
+	 * @return A Map containing language-region pairs.
+	 */
+	private static Map<String, Object> getDefaultLanguageConfig() {
+		Map<String, Object> regionConfig = new HashMap<>();
+		regionConfig.put("en", "US");
+		regionConfig.put("pt", "BR");
+
+		return regionConfig;
 	}
 
 	@Override
@@ -91,19 +115,6 @@ public class DeepLTranslationService implements TranslationService {
 		languagePreferences = getDefaultLanguageConfig();
 
 		return languagePreferences;
-	}
-
-
-	/**
-	 * This method initializes a map with default language configurations.
-	 * @return A Map containing language-region pairs.
-	 */
-	private static Map<String, Object> getDefaultLanguageConfig() {
-		Map<String, Object> regionConfig = new HashMap<>();
-		regionConfig.put("en", "US");
-		regionConfig.put("pt", "BR");
-
-		return regionConfig;
 	}
 
 	/**

@@ -35,6 +35,10 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		TranslationResource {
 
 	private final NodeLogger logger = NodeLogger.getNodeLogger(getClass());
+	/**
+	 * The translation service used to translate tests
+	 */
+	private TranslationService translationService;
 
 	@Override
 	@POST
@@ -50,9 +54,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		}
 
 		try {
-			TranslationService translationService = new GenericTranslationService.Builder()
-					.withProviderFromConfig()
-					.build();
+			TranslationService translationService = getTranslationService();
 
 			var translatedText = translationService.translate(request.getText(),
 					request.getSourceLanguage(),
@@ -83,7 +85,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 				false, false, false, false, null, null).getPage();
 		final var sourceLanguageCode = loadedPage.getLanguage();
 
-		var pageToTranslateResponse = pageResource.translate(id, targetLanguageCode, false,
+		var pageToTranslateResponse = pageResource.translate(id, targetLanguageCode, locked,
 				channelId);
 		var pageToTranslate = pageToTranslateResponse.getPage();
 
@@ -93,9 +95,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		}
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			final TranslationService translationService = new GenericTranslationService.Builder()
-					.withProviderFromConfig()
-					.build();
+			final TranslationService translationService = getTranslationService();
 
 			var contentTags = this.getContentTags(pageToTranslate);
 
@@ -167,6 +167,29 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		});
 
 		return contentTags;
+	}
+
+	/**
+	 * Gets the translation service corresponding to the provided configuration.
+	 * @return the translation service
+	 * @throws NodeException if the translation service cannot be instantiated
+	 */
+	public TranslationService getTranslationService() throws NodeException {
+		if(this.translationService == null) {
+			return new GenericTranslationService.Builder()
+					.withProviderFromConfig()
+					.build();
+		}
+
+		return this.translationService;
+	}
+
+	/**
+	 * Utility class for tests to set the translation service
+	 * @param translationService
+	 */
+	public void setTranslationService(TranslationService translationService) {
+			this.translationService = translationService;
 	}
 
 }

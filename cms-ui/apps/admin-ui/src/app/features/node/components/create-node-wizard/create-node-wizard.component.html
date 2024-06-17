@@ -42,8 +42,11 @@
     >
         <ng-template>
             <div>
-                <form [formGroup]="fgNodeFeatures" class="gtx-entity-details-form">
-                    <gtx-node-features formControlName="data" [availableFeatures]="nodeFeatures$ | async"></gtx-node-features>
+                <form class="gtx-entity-details-form">
+                    <gtx-node-features
+                        [formControl]="fgNodeFeatures"
+                        [availableFeatures]="nodeFeatures$ | async"
+                    ></gtx-node-features>
                 </form>
             </div>
         </ng-template>

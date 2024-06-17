@@ -20,6 +20,8 @@
                         class="properties"
                         [formControl]="fgProperties"
                         [mode]="NodePropertiesMode.UPDATE"
+                        [pureInitialValue]="true"
+                        [(initialValue)]="propertiesClean"
                     ></gtx-node-properties>
                 </div>
             </div>

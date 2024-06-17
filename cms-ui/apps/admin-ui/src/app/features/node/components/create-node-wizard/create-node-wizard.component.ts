@@ -1,9 +1,9 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { FeatureOperations, LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
+import { ErrorHandler, FeatureOperations, LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
 import { Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { FormControl, Validators } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, Node, NodeCreateRequest, NodeFeatureModel, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
@@ -42,7 +42,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     fgPublishing: FormControl<NodePublishingPropertiesFormData>;
 
     /** form of tab 'Node Features' */
-    fgNodeFeatures: UntypedFormGroup;
+    fgNodeFeatures: FormControl<NodeFeaturesFormData>;
 
     nodeFeatures$: Observable<NodeFeatureModel[]>;
 
@@ -61,6 +61,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
         private languageLoader: LanguageTableLoaderService,
+        private errorHandler: ErrorHandler,
     ) { }
 
     ngOnInit(): void {
@@ -79,20 +80,14 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         ]);
         this.fgPropertiesValid$ = createFormValidityTracker(this.fgProperties);
 
-        this.fgPublishing = new FormControl(FG_PUBLISHING_DEFAULT as any, [
+        this.fgPublishing = new FormControl<NodePublishingPropertiesFormData>(FG_PUBLISHING_DEFAULT as any, [
             Validators.required,
             createNestedControlValidator(),
         ]);
         this.fgPublishingValid$ = createFormValidityTracker(this.fgPublishing);
 
-        this.fgNodeFeatures = new UntypedFormGroup({
-            data: new UntypedFormControl(null),
-        });
+        this.fgNodeFeatures = new FormControl<NodeFeaturesFormData>(null);
         this.fgNodeFeaturesValid$ = createFormValidityTracker(this.fgNodeFeatures);
-    }
-
-    private getFormData<T>(formGroup: UntypedFormGroup): T {
-        return formGroup.value.data || {};
     }
 
     private async onFinishClick(): Promise<Node<Raw>> {
@@ -102,6 +97,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             await this.setNodeLanguages(created).toPromise();
             return created;
         } catch (error) {
+            this.errorHandler.catch(error);
             // We need to catch any errors and emit something to make sure that the wizard closes.
             return null;
         }
@@ -133,8 +129,8 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     }
 
     private setNodeFeatures(node: Node<Raw>): Observable<Node<Raw>> {
-        const nodeFeatures: NodeFeaturesFormData = this.getFormData(this.fgNodeFeatures);
-        return this.nodeOps.updateNodeFeatures(node.id, nodeFeatures).pipe(
+        const featureData: NodeFeaturesFormData = this.fgNodeFeatures.value;
+        return this.nodeOps.updateNodeFeatures(node.id, featureData || {}).pipe(
             tap(() => this.featureOps.getNodeFeatures(node.id)),
             map(() => node),
         );

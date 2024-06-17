@@ -22,6 +22,7 @@
                         [formControl]="fgProperties"
                         [supportedLanguages]="supportedLanguages$ | async"
                         [mode]="ConstructPropertiesMode.UPDATE"
+                        [pureInitialValue]="true"
                         [(initialValue)]="entityIsClean"
                     ></gtx-construct-properties>
                 </div>

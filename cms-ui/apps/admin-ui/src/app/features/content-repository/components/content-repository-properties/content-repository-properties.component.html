@@ -35,7 +35,7 @@
             [label]="('contentRepository.urlType' | i18n) + ' *'"
             [value]="urlType"
             [clearable]="false"
-            (valueChange)="updateUrlType($event)"
+            formControlName="urlType"
         >
             <gtx-option *ngFor="let type of URL_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
         </gtx-select>
@@ -74,7 +74,7 @@
             [label]="('contentRepository.usernameType' | i18n) + ' *'"
             [value]="usernameType"
             [clearable]="false"
-            (valueChange)="updateUsernameType($event)"
+            formControlName="usernameType"
         >
             <gtx-option *ngFor="let type of USERNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
         </gtx-select>
@@ -106,8 +106,8 @@
         <gtx-select
             *ngIf="form.get('passwordType').enabled"
             [label]="('contentRepository.passwordType' | i18n) + ' *'"
-            formControlName="passwordType"
             [clearable]="false"
+            formControlName="passwordType"
         >
             <gtx-option *ngFor="let type of PASSWORD_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
         </gtx-select>
@@ -154,25 +154,25 @@
                 {{ 'shared.passwords_dont_match_error' | i18n }}
             </span>
         </div>
-		
+
         <gtx-checkbox
             *ngIf="form.get('noFoldersIndex').enabled"
             formControlName="noFoldersIndex"
             [label]="'contentRepository.noFoldersIndex' | i18n"
         ></gtx-checkbox>
-        
+
         <gtx-checkbox
             *ngIf="form.get('noFilesIndex').enabled"
             formControlName="noFilesIndex"
             [label]="'contentRepository.noFilesIndex' | i18n"
         ></gtx-checkbox>
-        
+
         <gtx-checkbox
             *ngIf="form.get('noPagesIndex').enabled"
             formControlName="noPagesIndex"
             [label]="'contentRepository.noPagesIndex' | i18n"
         ></gtx-checkbox>
-        
+
         <gtx-checkbox
             *ngIf="form.get('noFormsIndex').enabled"
             formControlName="noFormsIndex"
@@ -182,31 +182,31 @@
 
     <div class="input-container small-12 medium-6 columns">
 
-        <gtx-select
-            *ngIf="showBasepath"
-            [label]="('contentRepository.basepathType' | i18n) + ' *'"
-            [value]="basepathType"
-            [clearable]="false"
-            (valueChange)="updateBasepathType($event)"
-        >
-            <gtx-option *ngFor="let type of BASEPATH_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
-        </gtx-select>
+        <ng-container *ngIf="showBasePath">
+            <gtx-select
+                [label]="('contentRepository.basepathType' | i18n) + ' *'"
+                [value]="basepathType"
+                [clearable]="false"
+                formControlName="basepathType"
+            >
+                <gtx-option *ngFor="let type of BASEPATH_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+            </gtx-select>
 
-        <gtx-input
-            *ngIf="showBasepath"
-            type="text"
-            maxlength="255"
-            [label]="'contentRepository.basepath' | i18n"
-            formControlName="basepath"
-        ></gtx-input>
+            <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="'contentRepository.basepath' | i18n"
+                formControlName="basepath"
+            ></gtx-input>
 
-        <gtx-input
-            *ngIf="showBasepath && form.get('basepathProperty').enabled"
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.basepathProperty' | i18n) + ' *'"
-            formControlName="basepathProperty"
-        ></gtx-input>
+            <gtx-input
+                *ngIf="form.get('basepathProperty').enabled"
+                type="text"
+                maxlength="255"
+                [label]="('contentRepository.basepathProperty' | i18n) + ' *'"
+                formControlName="basepathProperty"
+            ></gtx-input>
+        </ng-container>
 
         <span
             *ngIf="form.get('basepathProperty')?.hasError('pattern')"

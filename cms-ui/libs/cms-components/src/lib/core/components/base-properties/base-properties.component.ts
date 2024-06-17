@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, Validator } from '@angular/forms';
 import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
@@ -25,7 +25,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      *
      * Implementation
      * ```ts
-     * public ctl: FormControl = new UntypedFormControl({}, createNestedControlValidator());
+     * public ctl: FormControl = new UntypedFormControl({});
      *
      * loadItem(): void {
      *      loadContentFromSomewhere().then(item => {
@@ -43,6 +43,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     @Input()
     public initialValue = true;
+
+    /**
+     * If the `initialValue` input should be seen as "pure" - This component will not update the value directly,
+     * but will *always* use the dedicated output to request a change to the value.
+     * @see initialValue
+     */
+    @Input()
+    public pureInitialValue = false;
 
     @Output()
     public initialValueChange = new EventEmitter<boolean>();
@@ -65,7 +73,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push(['initialValue', true]);
+        this.booleanInputs.push(['initialValue', false]);
         // Set the value to this flag. Used to ignore changes until intial value has been provided.
         this.value = null;
     }
@@ -82,6 +90,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         if (changes.initialValue && this.initialValue) {
             if (this.form) {
                 this.configureForm(this.form.value as any);
+                this.form.markAsPristine();
                 this.form.updateValueAndValidity();
             }
 
@@ -95,6 +104,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     protected initializeForm(): void {
         this.form = this.createForm();
         this.configureForm(this.value);
+        this.form.markAsPristine();
 
         // For some reason, changes from `configureForm` are only really applied,
         // when this is done a tick later. No idea why.
@@ -130,12 +140,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
-            if (!this.initialValue && !isEqual(value, this.value)) {
+            if (!this.form.pristine && !isEqual(value, this.value)) {
                 this.triggerChange(value);
                 this.onValueTrigger(value);
             }
-            // Set it, in case that the parent-component has no binding for it
-            this.initialValue = false;
+            if (!this.pureInitialValue) {
+                // Set it, in case that the parent-component has no binding for it
+                this.initialValue = false;
+            }
             this.initialValueChange.emit(false);
         }));
 
@@ -221,7 +233,9 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * to properly handle/forward the initialValue flag.
      */
     public updateInitialValueFlag(value: boolean): void {
-        this.initialValue = value;
+        if (!this.pureInitialValue) {
+            this.initialValue = value;
+        }
         this.initialValueChange.emit(value);
     }
 }

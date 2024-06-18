@@ -25,6 +25,8 @@ export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'ht
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
+    previewType: NodePreviewurlType;
+    hostType: NodeHostnameType;
 };
 
 export enum NodePropertiesMode {
@@ -77,9 +79,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public nodes: Node<Raw>[];
     protected nodesLoading = false;
     protected nodesLoaded = false;
-
-    public previewType: NodePreviewurlType = NodePreviewurlType.VALUE;
-    public hostType: NodeHostnameType = NodeHostnameType.VALUE;
 
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
@@ -142,20 +141,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         }));
     }
 
-    public updatePreviewType(type: NodePreviewurlType): void {
-        this.previewType = type;
-        this.configureForm(this.form.value, true);
-    }
-
-    public updateHostType(type: NodeHostnameType): void {
-        this.hostType = type;
-        this.configureForm(this.form.value, true);
-    }
-
     protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
-        this.previewType = this.value?.meshPreviewUrlProperty ? NodePreviewurlType.PROPERTY : NodePreviewurlType.VALUE;
-        this.hostType = this.value?.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE;
-
         return new FormGroup<FormProperties<NodePropertiesFormData>>({
             name: new FormControl(this.value?.name, [
                 Validators.required,
@@ -167,15 +153,24 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 disabled: this.mode !== NodePropertiesMode.CREATE,
             }),
 
+            previewType: new FormControl<NodePreviewurlType>(this.value?.previewType ?? this.value?.meshPreviewUrlProperty
+                ? NodePreviewurlType.PROPERTY
+                : NodePreviewurlType.VALUE,
+            ),
             meshPreviewUrl: new FormControl(this.value?.meshPreviewUrl, Validators.maxLength(255)),
             meshPreviewUrlProperty: new FormControl(this.value?.meshPreviewUrlProperty, [
                 Validators.maxLength(255),
                 createPropertyPatternValidator(NODE_PREVIEW_URL_PROPERTY_PREFIX),
             ]),
+
+            https: new FormControl(this.value?.https),
             insecurePreviewUrl: new FormControl(this.value?.insecurePreviewUrl),
             publishImageVariants: new FormControl(this.value?.publishImageVariants),
 
-            https: new FormControl(this.value?.https),
+            hostType: new FormControl<NodeHostnameType>(this.value?.hostType ?? this.value?.hostProperty
+                ? NodeHostnameType.PROPERTY
+                : NodeHostnameType.VALUE,
+            ),
             host: new FormControl(this.value?.host, Validators.maxLength(255)),
             hostProperty: new FormControl(this.value?.hostProperty, [
                 Validators.required,
@@ -192,20 +187,28 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         });
     }
 
-    protected configureForm(_value: Partial<NodePropertiesFormData>, loud?: boolean): void {
-        setControlsEnabled(this.form, ['meshPreviewUrl'], this.previewType !== NodePreviewurlType.PROPERTY, {
-            emitEvent: loud,
-        });
-        setControlsEnabled(this.form, ['meshPreviewUrlProperty'], this.previewType === NodePreviewurlType.PROPERTY, {
-            emitEvent: loud,
-        });
+    protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
+        if (!value) {
+            return;
+        }
 
-        setControlsEnabled(this.form, ['host'], this.hostType !== NodeHostnameType.PROPERTY, {
-            emitEvent: loud,
-        });
-        setControlsEnabled(this.form, ['hostProperty'], this.hostType === NodeHostnameType.PROPERTY, {
-            emitEvent: loud,
-        });
+        if (value.previewType) {
+            setControlsEnabled(this.form, ['meshPreviewUrl'], value.previewType !== NodePreviewurlType.PROPERTY, {
+                emitEvent: loud,
+            });
+            setControlsEnabled(this.form, ['meshPreviewUrlProperty'], value.previewType === NodePreviewurlType.PROPERTY, {
+                emitEvent: loud,
+            });
+        }
+
+        if (value.hostType) {
+            setControlsEnabled(this.form, ['host'], value.hostType !== NodeHostnameType.PROPERTY, {
+                emitEvent: loud,
+            });
+            setControlsEnabled(this.form, ['hostProperty'], value.hostType === NodeHostnameType.PROPERTY, {
+                emitEvent: loud,
+            });
+        }
     }
 
     protected assembleValue(value: NodePropertiesFormData): NodePropertiesFormData {

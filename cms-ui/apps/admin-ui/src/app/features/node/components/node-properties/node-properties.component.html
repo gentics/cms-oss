@@ -49,7 +49,7 @@
                     [label]="('node.mesh_preview_url_type' | i18n) + ' *'"
                     [value]="previewType"
                     [clearable]="false"
-                    (valueChange)="updatePreviewType($event)"
+                    formControlName="previewType"
                 >
                     <gtx-option
                         *ngFor="let type of MESH_PREVIEWURL_TYPES"
@@ -105,7 +105,7 @@
                 [label]="('node.hostnameType' | i18n) + ' *'"
                 [value]="hostType"
                 [clearable]="false"
-                (valueChange)="updateHostType($event)"
+                formControlName="hostType"
             >
                 <gtx-option
                     *ngFor="let type of HOSTNAME_TYPES"

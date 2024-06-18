@@ -44,6 +44,8 @@ import {
     Node,
     NodeFeature,
     NodeFeatureModel,
+    NodeHostnameType,
+    NodePreviewurlType,
     NodeSaveRequest,
     NormalizableEntityType,
     Normalized,
@@ -66,6 +68,14 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
+
+function nodeToPropertiesFormData(node: Node): NodePropertiesFormData {
+    return {
+        ...node,
+        hostType: node.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE,
+        previewType: node.meshPreviewUrlProperty ? NodePreviewurlType.PROPERTY : NodePreviewurlType.VALUE,
+    };
+}
 
 /**
  * # NodeDetailComponent
@@ -114,6 +124,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
 
     languageRows: TableRow<LanguageBO>[] = [];
     isLanguagesChanged = false;
+    propertiesClean = false;
     currentNodeId: number;
 
     currentRootFolder: Folder<Normalized>;
@@ -294,7 +305,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             tap(updatedNode => {
                 this.setCurrentNode(updatedNode);
                 this.nodeLoader.reload();
-                this.fgProperties.patchValue(updatedNode);
+                this.fgProperties.patchValue(nodeToPropertiesFormData(updatedNode));
                 this.changeDetectorRef.markForCheck();
             }),
             switchMap(() => this.folderOperations.get(this.currentEntity.folderId)),
@@ -466,7 +477,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             return;
         }
 
-        this.fgProperties.patchValue(node);
+        this.fgProperties.patchValue(nodeToPropertiesFormData(node));
         this.fgProperties.markAsPristine();
         this.fgProperties.updateValueAndValidity();
     }

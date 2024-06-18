@@ -2,9 +2,11 @@ import { ContentRepositoryBO } from '@admin-ui/common';
 import { ContentRepositoryHandlerService, ErrorHandler } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { EditableContentRepositoryProperties } from '@gentics/cms-models';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
-import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
+import {
+    ContentRepositoryPropertiesFormData,
+    ContentRepositoryPropertiesMode,
+} from '../content-repository-properties/content-repository-properties.component';
 
 @Component({
     selector: 'gtx-create-content-repository-modal',
@@ -15,7 +17,7 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
 
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
-    public form: FormControl<EditableContentRepositoryProperties>;
+    public form: FormControl<ContentRepositoryPropertiesFormData>;
     public loading = false;
 
     constructor(
@@ -28,14 +30,18 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new FormControl<EditableContentRepositoryProperties>({} as any);
+        this.form = new FormControl<ContentRepositoryPropertiesFormData>(null);
     }
 
     /**
      * If user clicks to create a new contentRepository
      */
     async buttonCreateEntityClicked(): Promise<void> {
-        const normalized = (this.handler).normalizeForREST(this.form.value as any);
+        // Filter out property-type proeprties
+        const { basepathType: _basepathType, urlType: _urlType, usernameType: _usernameType, ...formData } = this.form.value;
+        // Normalize for REST call
+        const normalized = (this.handler).normalizeForREST(formData as any);
+
         this.form.disable();
         this.loading = true;
         this.changeDetector.markForCheck();
@@ -50,4 +56,5 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
             this.errorHandler.catch(error, { notification: true });
         }
     }
+
 }

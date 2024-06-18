@@ -102,13 +102,14 @@ export class WastebinActionsService {
         type: 'folder' | 'page' | 'file' | 'image' | 'form',
         ids: number[],
         nodeId: number,
+        disableInstantDelete?: boolean,
     ): Promise<{ succeeded: number; failed: number; error: ApiError }> {
         if (!ids.length) {
             return;
         }
 
         const requests = ids.map((id) =>
-            this.api.folders.deleteItem(type, id, nodeId).pipe(
+            this.api.folders.deleteItem(type, id, nodeId, disableInstantDelete).pipe(
                 map((res) => Object.assign(res, { id, error: null })),
                 catchError((error) => of({ id, error })),
             ),

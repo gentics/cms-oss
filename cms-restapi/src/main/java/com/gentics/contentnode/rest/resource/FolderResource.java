@@ -418,11 +418,12 @@ public interface FolderResource extends AuthenticatedResource {
 	 * Delete a single folder. Note that inherited or localized folders can't be deleted in a channel.
 	 * However you can delete an inherited folder in the master and unlocalize a localized folder.
 	 * @param id id of the folder to be deleted. This can either be local or global id
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return generic response
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
 
 	/**
 	 * Remove the folder denoted by the given id from the wastebin.

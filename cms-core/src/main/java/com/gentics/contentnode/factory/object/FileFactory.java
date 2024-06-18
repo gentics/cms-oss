@@ -2578,6 +2578,7 @@ public class FileFactory extends AbstractFactory {
 	 * Flushes all the outstanding operations for this FileFactory
 	 * @throws NodeException if an internal error occurs
 	 */
+	@Override
 	public void flush() throws NodeException {
 		final Transaction t = TransactionManager.getCurrentTransaction();
 

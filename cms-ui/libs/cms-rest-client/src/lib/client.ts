@@ -413,7 +413,7 @@ export class GCMSRestClient implements GCMSRootAPI {
             }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
-        delete: (id) => this.executeMappedJsonRequest(POST, `/file/delete/${id}`),
+        delete: (id, options) => this.executeMappedJsonRequest(POST, `/file/delete/${id}`, null, options),
 
         copy: (body) => this.executeMappedJsonRequest(POST, '/file/copy', body),
         move: (id, body) => this.executeMappedJsonRequest(POST, `/file/move/${id}`, body),
@@ -571,7 +571,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id, options) => this.executeMappedJsonRequest(GET, `/image/load/${id}`, null, options),
         getMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/image/save/${id}`, body),
-        delete: (id) => this.executeMappedJsonRequest(DELETE, `/image/delete/${id}`),
+        delete: (id, options) => this.executeMappedJsonRequest(DELETE, `/image/delete/${id}`, null, options),
 
         move: (id, body) => this.executeMappedJsonRequest(POST, `/image/move/${id}`, body),
         moveMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/move', body),
@@ -700,7 +700,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id, options) => this.executeMappedJsonRequest(GET, `/page/load/${id}`, null, options),
         getMultiple: (body) => this.executeMappedJsonRequest(POST, '/page/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/page/save/${id}`, body),
-        delete: (id) => this.executeMappedJsonRequest(DELETE, `/page/delete/${id}`),
+        delete: (id, options) => this.executeMappedJsonRequest(DELETE, `/page/delete/${id}`, null, options),
 
         copy: (body) => this.executeMappedJsonRequest(POST, '/page/copy', body),
         move: (id, body) => this.executeMappedJsonRequest(POST, `/page/move/${id}`, body),

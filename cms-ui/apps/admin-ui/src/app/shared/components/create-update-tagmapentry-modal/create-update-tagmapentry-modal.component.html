@@ -1,32 +1,26 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
 <div class="modal-title">
-    <h5 *ngIf="mode === 'create'">{{ 'modal.create_tagmapEntry_title' | i18n }}</h5>
-    <h5 *ngIf="mode === 'update'">{{ 'modal.update_tagmapEntry_title' | i18n }}</h5>
+    <h5>{{ 'modal.' + mode + '_tagmapEntry_title' | i18n }}</h5>
 </div>
+
 <div class="modal-content">
     <gtx-tag-map-entry-properties
         *ngIf="form"
         [formControl]="form"
         [mode]="mode"
         [displayFields]="displayFields"
+        [reserved]="reserved"
     ></gtx-tag-map-entry-properties>
 </div>
+
 <div class="modal-footer">
     <gtx-button
-        *ngIf="mode === 'create'"
         type="primary"
-        [disabled]="!form.valid"
-        (click)="buttonCreateEntityClicked()"
+        [disabled]="!form.valid || loading"
+        (click)="confirmButtonClicked()"
     >
-        {{ 'modal.create_button' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="mode === 'update'"
-        type="primary"
-        [disabled]="!form.valid"
-        (click)="buttonUpdateEntityClicked()"
-    >
-        {{ 'modal.save_button' | i18n }}
+        {{ (mode === CreateTagmapEntryModalComponentMode.UPDATE ? 'modal.save_button' : 'modal.create_button') | i18n }}
     </gtx-button>
 
     <gtx-button

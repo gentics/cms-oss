@@ -6,6 +6,11 @@ import { map, tap } from 'rxjs/operators';
 import { BO_ID, BusinessObject, EntityPageResponse, TableEntityLoader, TableLoadOptions, TableLoadResponse } from '../../../common/models';
 import { EntityManagerService } from '../entity-manager';
 
+interface PagingationCreationOptions {
+    /** If it should lowercase the `sortBy` field. Defaults to `true` */
+    lowerCase?: boolean;
+}
+
 export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = never> implements TableEntityLoader<O> {
 
     private reloadSubject = new BehaviorSubject<void>(null);
@@ -74,7 +79,7 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
         this.reloadSubject.next(null);
     }
 
-    protected createDefaultOptions(options: TableLoadOptions): BaseListOptionsWithPaging<T> {
+    protected createDefaultOptions(options: TableLoadOptions, config?: PagingationCreationOptions): BaseListOptionsWithPaging<T> {
         const loadOptions: BaseListOptionsWithPaging<T> = {
             page: options.page,
             pageSize: options.perPage,
@@ -82,7 +87,7 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
 
         if (options.sortBy) {
             loadOptions.sort = {
-                attribute: options.sortBy.toLowerCase() as any,
+                attribute: (config?.lowerCase ?? true) ? options.sortBy.toLowerCase() as any : options.sortBy,
                 sortOrder: this.convertSortOrder(options.sortOrder),
             };
         }

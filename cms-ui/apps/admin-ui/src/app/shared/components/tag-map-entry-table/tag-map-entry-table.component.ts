@@ -1,15 +1,23 @@
 import { TAGMAP_ENTRY_ATTRIBUTES_MAP, TagMapEntryBO } from '@admin-ui/common';
 import { I18nService, PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { AnyModelType, NormalizableEntityTypesMap, TagmapEntry, TagmapEntryParentType, TagmapEntryPropertiesObjectType } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import {
+    AnyModelType,
+    NormalizableEntityTypesMap,
+    TagmapEntry,
+    TagmapEntryError,
+    TagmapEntryParentType,
+    TagmapEntryPropertiesObjectType,
+} from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap } from 'rxjs/operators';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { CreateTagmapEntryModalComponentMode, CreateUpdateTagmapEntryModalComponent, TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal';
 
 const EDIT_ACTION = 'edit';
+const FRAGMENT_COLUMN_ID = 'fragmentName';
 
 @Component({
     selector: 'gtx-tag-map-entry-table',
@@ -33,7 +41,18 @@ export class TagMapEntryTableComponent
     @Input()
     public displayFields: TagmapEntryDisplayFields;
 
+    @Input()
+    public errors: TagmapEntryError[] = [];
+
+    @Input()
+    public showFragments = false;
+
+    /** Event whenever one or more entries have been created, updated, or deleted. */
+    @Output()
+    public entriesChange = new EventEmitter<void>();
+
     public canEditCR = false;
+    public errorMap: Record<string, string[]> = {};
 
     protected rawColumns: TableColumn<TagMapEntryBO>[] = [
         {
@@ -43,36 +62,47 @@ export class TagMapEntryTableComponent
             sortable: true,
         },
         {
+            id: FRAGMENT_COLUMN_ID,
+            label: 'tagmapEntry.fragmentname',
+            fieldPath: 'fragmentName',
+            sortable: true,
+        },
+        {
+            id: 'object',
+            label: 'tagmapEntry.object',
+            fieldPath: 'object',
+            sortable: true,
+        },
+        {
+            id: 'tagname',
+            label: 'tagmapEntry.tagname',
+            fieldPath: 'tagname',
+            sortable: true,
+        },
+        {
+            id: 'attributeType',
+            label: 'tagmapEntry.attributeType',
+            fieldPath: 'attributeType',
+            sortable: true,
+        },
+        {
+            id: 'targetType',
+            label: 'tagmapEntry.targetType',
+            fieldPath: 'targetType',
+            sortable: true,
+        },
+        {
             id: 'reserved',
             label: 'tagmapEntry.reserved',
             fieldPath: 'reserved',
             align: 'center',
         },
         {
-            id: 'object',
-            label: 'tagmapEntry.object',
-            fieldPath: 'object',
-        },
-        {
-            id: 'tagname',
-            label: 'tagmapEntry.tagname',
-            fieldPath: 'tagname',
-        },
-        {
-            id: 'attributeType',
-            label: 'tagmapEntry.attributeType',
-            fieldPath: 'attributeType',
-        },
-        {
-            id: 'targetType',
-            label: 'tagmapEntry.targetType',
-            fieldPath: 'targetType',
-        },
-        {
             id: 'optimized',
             label: 'tagmapEntry.optimized',
             fieldPath: 'optimized',
             align: 'center',
+            sortable: true,
         },
         // {
         //     id: 'filesystem',
@@ -116,26 +146,58 @@ export class TagMapEntryTableComponent
         return {
             parentType: this.parentType,
             parentId: this.parentId,
+            withFragments: this.showFragments,
         };
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
-        let didTrigger = false;
+        if (changes.errors) {
+            this.rebuildErrorMap();
+        }
+
+        let shouldTrigger = false;
         if (changes.parentType) {
-            this.loadTrigger.next();
-            didTrigger = true;
+            shouldTrigger = true;
         }
 
         if (changes.parentId) {
             if (this.parentIdSubject) {
                 this.parentIdSubject.next(this.parentId);
             }
-            if (!didTrigger) {
-                this.loadTrigger.next();
-            }
+            shouldTrigger = true;
         }
+
+        if (changes.showFragments) {
+            this.rebuildColumns();
+            shouldTrigger = true;
+        }
+
+        if (shouldTrigger) {
+            this.loadTrigger.next();
+        }
+    }
+
+    protected override rebuildColumns(): void {
+        // Setup columns with the translated labels
+        let cols = this.rawColumns;
+        if (!this.showFragments) {
+            cols = cols.filter(col => col.id !== FRAGMENT_COLUMN_ID);
+        }
+        this.columns = this.translateColumns(cols);
+    }
+
+    protected rebuildErrorMap(): void {
+        this.errorMap = (this.errors || []).reduce((acc, err) => {
+            err.entries.forEach(id => {
+                if (!Array.isArray(acc[id])) {
+                    acc[id] = [];
+                }
+                acc[id].push(err.description);
+            });
+            return acc;
+        }, {} as Record<string, string[]>);
     }
 
     protected override createTableActionLoading(): Observable<TableAction<TagMapEntryBO>[]> {
@@ -174,7 +236,7 @@ export class TagMapEntryTableComponent
                         icon: 'edit',
                         type: 'primary',
                         label: this.i18n.instant('common.edit'),
-                        enabled: canEdit,
+                        enabled: (item) => item && !item.fragmentName && canEdit,
                         single: true,
                     },
                     {
@@ -183,7 +245,7 @@ export class TagMapEntryTableComponent
                         type: 'alert',
                         label: this.i18n.instant('shared.delete'),
                         enabled: (item) => {
-                            return (item == null || !item.reserved) && canEdit;
+                            return (item == null || (!item.reserved && !item.fragmentName)) && canEdit;
                         },
                         single: true,
                         multiple: true,
@@ -212,6 +274,7 @@ export class TagMapEntryTableComponent
             return;
         }
 
+        this.entriesChange.emit();
         this.loadTrigger.next();
     }
 
@@ -236,6 +299,7 @@ export class TagMapEntryTableComponent
                 parentId: String(this.parentId),
                 value: entry as any,
                 tagmapId: entry.id,
+                reserved: entry.reserved ?? false,
             },
         );
         const updated = await dialog.open();
@@ -244,10 +308,13 @@ export class TagMapEntryTableComponent
             return;
         }
 
+        this.entriesChange.emit();
         this.loadTrigger.next();
     }
 
     override callToDeleteEntity(id: string): Promise<void> {
-        return (this.loader as TagMapEntryTableLoaderService).deleteEntity(id, this.createAdditionalLoadOptions());
+        return (this.loader as TagMapEntryTableLoaderService).deleteEntity(id, this.createAdditionalLoadOptions()).then(() => {
+            this.entriesChange.emit();
+        });
     }
 }

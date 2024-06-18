@@ -58,6 +58,7 @@
     [sortOrder]="sortOrder"
 
     [renderers]="{
+        mapname: mapnameRenderer,
         reserved: boolIconRenderer,
         optimized: boolIconRenderer,
         filesystem: boolIconRenderer,
@@ -91,4 +92,11 @@
     <span class="gtx-table-cell-text">
         {{ TAGMAP_ENTRY_ATTRIBUTES_MAP[value] | i18n }}
     </span>
+</ng-template>
+
+<ng-template #mapnameRenderer let-value="value" let-row="row">
+    <div class="name-wrapper" [attr.title]="errorMap[row.item?.globalId] ? errorMap[row.item?.globalId].join('\n') : ''">
+        <icon *ngIf="errorMap[row.item?.globalId]" class="conflict-warning-icon">warning</icon>
+        <span class="name-content">{{ value }}</span>
+    </div>
 </ng-template>

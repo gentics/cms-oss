@@ -2058,7 +2058,10 @@ export type ObjectPropertyCategoryUpdateRequest = ObjectPropertyCategoryCreateRe
 /**
  * Query parameters for `/contentrepositories`
  */
-export type TagmapEntryListOptions = BaseListOptionsWithPaging<TagmapEntry>;
+export interface TagmapEntryListOptions extends BaseListOptionsWithPaging<TagmapEntry> {
+    /** true to include entries from assigned fragments, false (which is the default) to only list entries of the ContentRepository itself */
+    fragments?: boolean;
+}
 
 /**
  * Request used for saving a `TagmapEntry`.

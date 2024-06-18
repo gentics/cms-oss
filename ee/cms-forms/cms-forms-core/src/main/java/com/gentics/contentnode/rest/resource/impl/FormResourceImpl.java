@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -46,6 +47,7 @@ import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.AnyChannelTrx;
+import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -336,8 +338,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}")
-	public GenericResponse delete(@PathParam("id") String formId) throws NodeException {
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+	public GenericResponse delete(@PathParam("id") String formId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws NodeException {
+		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			Transaction t = trx.getTransaction();
 			Form toDelete = load(Form.class, formId, ObjectPermission.delete);
 			require(Feature.FORMS, toDelete.getFolder().getOwningNode());

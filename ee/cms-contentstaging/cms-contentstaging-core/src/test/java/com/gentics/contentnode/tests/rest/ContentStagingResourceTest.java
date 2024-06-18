@@ -1001,8 +1001,8 @@ public class ContentStagingResourceTest {
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
 
-		supply(() -> new PageResourceImpl().delete(page31.getGlobalId().toString(), page31.getNode().getId()));
-		supply(() -> new PageResourceImpl().delete(page32.getGlobalId().toString(), page32.getNode().getId()));
+		supply(() -> new PageResourceImpl().delete(page31.getGlobalId().toString(), page31.getNode().getId(), null));
+		supply(() -> new PageResourceImpl().delete(page32.getGlobalId().toString(), page32.getNode().getId(), null));
 
 		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
 		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);

@@ -403,15 +403,15 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 
 		// Test deleting the local folder in the channel
 		assertEquals("Check response code", ResponseCode.OK,
-				folderResource.delete(localFolder.getId().toString(), channelId).getResponseInfo().getResponseCode());
+				folderResource.delete(localFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Test deleting the inherited folder in the channel from the master (should error out)
 		assertEquals("Check response code", ResponseCode.FAILURE,
-				folderResource.delete(inheritedFolder.getId().toString(), channelId).getResponseInfo().getResponseCode());
+				folderResource.delete(inheritedFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,
-				folderResource.delete(inheritedFolder.getId().toString(), MASTER_ID).getResponseInfo().getResponseCode());
+				folderResource.delete(inheritedFolder.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
 	}
 
 	/**

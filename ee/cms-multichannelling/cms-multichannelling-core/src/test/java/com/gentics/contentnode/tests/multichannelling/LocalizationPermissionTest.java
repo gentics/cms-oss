@@ -476,22 +476,22 @@ public class LocalizationPermissionTest {
 			case folder:
 				FolderResourceImpl folderResource = new FolderResourceImpl();
 				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.delete(Integer.toString(localObject.getId()), testChannel.getId());
+				response = folderResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case file:
 				FileResourceImpl fileResource = new FileResourceImpl();
 				fileResource.setTransaction(trx.getTransaction());
-				response = fileResource.delete(Integer.toString(localObject.getId()), testChannel.getId());
+				response = fileResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case image:
 				ImageResourceImpl imageResource = new ImageResourceImpl();
 				imageResource.setTransaction(trx.getTransaction());
-				response = imageResource.delete(Integer.toString(localObject.getId()), testChannel.getId());
+				response = imageResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case page:
 				PageResourceImpl pageResource = new PageResourceImpl();
 				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.delete(Integer.toString(localObject.getId()), testChannel.getId());
+				response = pageResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			}
 
@@ -519,22 +519,22 @@ public class LocalizationPermissionTest {
 			case folder:
 				FolderResourceImpl folderResource = new FolderResourceImpl();
 				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.delete(Integer.toString(masterObject.getId()), null);
+				response = folderResource.delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case file:
 				FileResourceImpl fileResource = new FileResourceImpl();
 				fileResource.setTransaction(trx.getTransaction());
-				response = fileResource.delete(Integer.toString(masterObject.getId()), null);
+				response = fileResource.delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case image:
 				ImageResourceImpl imageResource = new ImageResourceImpl();
 				imageResource.setTransaction(trx.getTransaction());
-				response = imageResource.delete(Integer.toString(masterObject.getId()), null);
+				response = imageResource.delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case page:
 				PageResourceImpl pageResource = new PageResourceImpl();
 				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.delete(Integer.toString(masterObject.getId()), null);
+				response = pageResource.delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			}
 

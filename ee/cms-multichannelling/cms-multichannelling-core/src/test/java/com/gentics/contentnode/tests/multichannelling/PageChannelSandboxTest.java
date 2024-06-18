@@ -663,15 +663,15 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		pageResource.setTransaction(t);
 
 		// Test deleting the local folder in the channel
-		assertEquals("Check response code", ResponseCode.OK, pageResource.delete(localPage.getId().toString(), channelId).getResponseInfo().getResponseCode());
+		assertEquals("Check response code", ResponseCode.OK, pageResource.delete(localPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Test deleting the inherited folder in the channel from the master (should error out)
 		assertEquals("Check response code", ResponseCode.FAILURE,
-				pageResource.delete(inheritedPage.getId().toString(), channelId).getResponseInfo().getResponseCode());
+				pageResource.delete(inheritedPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,
-				pageResource.delete(inheritedPage.getId().toString(), MASTER_ID).getResponseInfo().getResponseCode());
+				pageResource.delete(inheritedPage.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
 	}
 
 	/**

@@ -363,7 +363,7 @@ public class PageSandboxTest {
 		t = testContext.startTransaction(3);
 
 		PageResourceImpl pri = new PageResourceImpl();
-		pri.delete(page.getId().toString(), null);
+		pri.delete(page.getId().toString(), null, null);
 
 		t = testContext.startTransaction(4);
 

@@ -288,7 +288,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		try {
 			connection.close();
 		} catch (SQLException e2) {
-			logger.fatal("Could not close writable connection of multiconnection transaction.");
+			logger.warn("Could not close writable connection of multiconnection transaction.", e2);
 		}
 		connection = null;
 
@@ -298,7 +298,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		try {
 			connectionPool.close();
 		} catch (Exception e) {
-			logger.fatal("Error while closing connection pool", e);
+			logger.warn("Error while closing connection pool", e);
 		}
 
 		for (Connection c : allConnections.keySet()) {
@@ -307,7 +307,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 				// writing anyway;
 				c.close();
 			} catch (SQLException e) {
-				logger.fatal("Error while closing readable connection for multiconnection transaction.");
+				logger.warn("Error while closing readable connection for multiconnection transaction.", e);
 			}
 		}
 		allConnections.clear();
@@ -364,9 +364,11 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		// the result you want to make another statement. It is perfectly ok
 		// to reuse the same connection. However you cannot return it to the pool
 		// until *all* statements are closed.
-        
+
+		String threadName = Thread.currentThread().getName();
+
 		if (logger.isDebugEnabled()) {
-			logger.debug("Thread {" + Thread.currentThread().getName() + "} wants a connection, current stack is: {" + assignedConnection.get() + "}");
+			logger.debug("Thread {" + threadName + "} wants a connection, current stack is: {" + assignedConnection.get() + "}");
 		}
         
 		// this thread has already a connection so we can reuse it
@@ -382,25 +384,30 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			return c;
 		} else {
 			// the current thread has no assigned connection at the moment
-			try {
-				long waitStart = System.currentTimeMillis();
-				// this will block if the pool is empty
-				Connection c = (Connection) connectionPool.borrowObject();
+			long waitStart = System.currentTimeMillis();
+			Connection c = null;
 
-				getPublishThreadInfo().increaseTimeWaitingDB((System.currentTimeMillis() - waitStart));
-				if (c == null) {
-					logger.fatal("Something ugly just happend!");
-				}
-				if (c.isClosed()) {
-					logger.fatal("Worker thread requested a connection from the pool. However the transaction has been closed already.");
-				}
-				assignedConnection.set(c);
-				assignmentStack.set(new Integer(1));
-				return c;
+			try {
+				// this will block if the pool is empty
+				c = (Connection) connectionPool.borrowObject();
 			} catch (Exception e) {
-				logger.fatal("Could not get connection from multiconnection pool.", e);
-				throw new SQLException("Could not get connection from pool.");
+				String msg = "Worker thread {" + threadName + "} could not get a connection from multiconnection pool.";
+
+				logger.fatal(msg, e);
+				throw new SQLException(msg, e);
 			}
+
+			getPublishThreadInfo().increaseTimeWaitingDB((System.currentTimeMillis() - waitStart));
+
+			if (c == null) {
+				throw new SQLException("Worker thread {" + threadName + "} did not get a connection from multiconnection pool.");
+			} else if (c.isClosed()) {
+				throw new SQLException("Worker thread {" + threadName + "} requested a connection from the pool, but it has been closed already.");
+			}
+
+			assignedConnection.set(c);
+			assignmentStack.set(new Integer(1));
+			return c;
 		}
 	}
 
@@ -496,7 +503,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		try {
 			i = stackcount.intValue();
 		} catch (NullPointerException e1) {
-			logger.error("Trying to pop connection stack that is null.", e1);
+			logger.warn("Trying to pop connection stack that is null.", e1);
 		}
 		i--;
         
@@ -512,7 +519,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			try {
 				connectionPool.returnObject(c);
 			} catch (Exception e) {
-				logger.error("Cannot return connection to pool, got: " + e.getMessage());
+				logger.warn("Could not return connection to pool: " + e.getMessage(), e);
 			}
 			assignedConnection.set(null);
 		}
@@ -536,16 +543,15 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 						return;
 					}
 				}
-
 			} catch (SQLException e1) {
-				logger.error("Error while closing writing statement.", e1);
+				logger.warn("Error while closing writing statement.", e1);
 				return;
 			}
             
 			try {
 				statement.close();
 			} catch (SQLException e) {
-				logger.error("Error while closing the statement", e);
+				logger.warn("Error while closing the statement", e);
 			}
 			popAssignmentStack();
 		}
@@ -601,16 +607,15 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		 */
 		public void passivateObject(Object o) throws Exception {
 			if (o == null) {
-				logger.fatal("Someone is trying to return a null connection into the pool");
-			}
-			if (o instanceof Connection) {
+				logger.warn("A null connection was passed for returning to the pool");
+			} else if (o instanceof Connection) {
 				Connection c = (Connection) o;
 
 				if (c.isClosed()) {
-					logger.error("Someone returned a closed connection into the pool.");
+					logger.warn("A closed connection was passed for returning to the pool.");
 				}
 			} else {
-				logger.fatal("Some garabage was returned to the connection pool: {" + o.toString() + "}.");
+				logger.warn("Unexpected object passed for returning to the pool: " + o);
 			}
 		}
 
@@ -625,14 +630,14 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 				boolean isOk = !((Connection) arg0).isClosed();
 
 				if (!isOk) {
-					logger.fatal("An already closed connction got into the pool.");
+					logger.warn("An already closed connection got into the pool.");
 				} else {
 					// keep the connection alive by issuing a dummy statement
 					keepAliveCheck((Connection) arg0);
 				}
 				return isOk;
 			} catch (SQLException e) {
-				logger.error("Encountered an invalid connection, it will be removed from the pool.");
+				logger.warn("Encountered an invalid connection, it will be removed from the pool.");
 				return false;
 			}
 		}
@@ -689,7 +694,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 				pst = c.prepareStatement("SELECT 1");
 				pst.execute();
 			} catch (SQLException e) {
-				logger.error("Error while keeping connection alive", e);
+				logger.warn("Error while keeping connection alive", e);
 			} finally {
 				if (pst != null) {
 					try {

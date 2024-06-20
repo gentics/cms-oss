@@ -14,7 +14,7 @@ public class TranslationDto implements Serializable {
 	/**
 	 * The text to be translated for requests / The translated text for responses.
 	 */
-	public String text;
+	private String text;
 
 	/**
 	 * This method is used to get the translation text.

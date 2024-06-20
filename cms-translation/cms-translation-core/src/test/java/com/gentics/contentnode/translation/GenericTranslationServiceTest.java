@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-
+/**
+ * Test class to verify that the translation service is instantiated properly.
+ */
 class GenericTranslationServiceTest {
 
 	static final String TRANSLATION_PROVIDER = "deepl";

@@ -42,7 +42,7 @@ public class DeepLTranslationService implements TranslationService {
 		translator = new Translator(authToken);
 	}
 
-	public DeepLTranslationService(Translator translator) throws NodeException {
+	public DeepLTranslationService(Translator translator) {
 		languagePreferences = getLanguageSettingFromConfig();
 		this.translator = translator;
 	}
@@ -69,11 +69,12 @@ public class DeepLTranslationService implements TranslationService {
 	public String translate(String textToTranslate, @Nullable String sourceLanguage,
 			String targetLanguage)
 			throws NodeException {
-		targetLanguage = mapLanguageCodeToTranslationLanguage(targetLanguage);
+		var mappedTargetLanguage = mapLanguageCodeToTranslationLanguage(targetLanguage);
 
 		TextResult translatedText;
 		try {
-			translatedText = translator.translateText(textToTranslate, sourceLanguage, targetLanguage);
+			translatedText = translator.translateText(textToTranslate, sourceLanguage,
+					mappedTargetLanguage);
 		} catch (DeepLException | InterruptedException e) {
 			throw new NodeException("Error occurred while translating text.", e);
 		}
@@ -101,26 +102,23 @@ public class DeepLTranslationService implements TranslationService {
 	 * Reads the language settings from the configuration.
 	 *
 	 * @return The language settings
-	 * @throws NodeException if the settings cannot be read or are empty.
 	 */
 	private Map<String, Object> getLanguageSettingFromConfig() {
-		var languagePreferences = ConfigurationValue.TRANSLATION_LANGUAGE_PREFERENCES.getMap();
+		var languagePreferencesFromConfig = ConfigurationValue.TRANSLATION_LANGUAGE_PREFERENCES.getMap();
 
-		if (MapUtils.isEmpty(languagePreferences)) {
+		if (MapUtils.isEmpty(languagePreferencesFromConfig)) {
 			final var errorMessage = String.format(
 					"No language preferences found for: '%s'. Using default configuration.", PROVIDER);
 			logger.log(Level.WARN, errorMessage);
 		}
 
-		languagePreferences = getDefaultLanguageConfig();
-
-		return languagePreferences;
+		return getDefaultLanguageConfig();
 	}
 
 	/**
 	 * Map the given language code to a supported translation language. For example for the English
 	 * language there are two flavors: en-US, en-GB
-	 * https://developers.deepl.com/docs/v/de/resources/supported-languages
+	 * <a href="https://developers.deepl.com/docs/v/de/resources/supported-languages">...</a>
 	 *
 	 * @param languageCode the international language code
 	 * @return the Api compatible language

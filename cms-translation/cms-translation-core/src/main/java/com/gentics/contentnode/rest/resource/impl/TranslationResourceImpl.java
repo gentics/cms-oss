@@ -1,5 +1,8 @@
 package com.gentics.contentnode.rest.resource.impl;
 
+
+import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Trx;
@@ -54,7 +57,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		}
 
 		try {
-			TranslationService translationService = getTranslationService();
+			translationService = getTranslationService();
 
 			var translatedText = translationService.translate(request.getText(),
 					request.getSourceLanguage(),
@@ -95,7 +98,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 		}
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			final TranslationService translationService = getTranslationService();
+			translationService = getTranslationService();
 
 			var contentTags = this.getContentTags(pageToTranslate);
 
@@ -144,7 +147,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 
 				var extractedText = propertyToTranslate.getStringValue();
 				var translatedText = translationService.translate(extractedText, sourceLanguageCode,
-						targetLanguageCode);
+						targetLanguageCode, VALIDATOR);
 
 				propertyToTranslate.setStringValue(translatedText);
 				contentTagProperties.put(contentTagProperty.getKey(), propertyToTranslate);

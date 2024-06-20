@@ -40,15 +40,14 @@ public class GenericTranslationService implements TranslationService {
 
 		/**
 		 * Returns the instantiated translation service based on the given provider
-		 * {@link #withProvider(SupportedProvider)}  . Asserts that the translation service is properly
+		 * {@link #withProvider(SupportedProvider)} asserts that the translation service is properly
 		 * configured.
 		 *
 		 * @return the translation service.
-		 * @throws NodeException
+		 * @throws NodeException if instantiation was unsuccessfully
 		 */
 		public TranslationService build() throws NodeException {
-			if (this.translationService == null
-					|| !(this.translationService instanceof TranslationService)) {
+			if (!(this.translationService instanceof TranslationService)) {
 				throw new NodeException("Translation service is not an instance of TranslationService");
 			}
 
@@ -61,7 +60,7 @@ public class GenericTranslationService implements TranslationService {
 		 * translation service
 		 *
 		 * @return the translation service
-		 * @throws NodeException
+		 * @throws NodeException if no valid provider is configured
 		 */
 		public Builder withProviderFromConfig() throws NodeException {
 			var configuredProvider = ConfigurationValue.TRANSLATION_PROVIDER.get();
@@ -80,7 +79,7 @@ public class GenericTranslationService implements TranslationService {
 		 *
 		 * @param provider the translation provider
 		 * @return Fluent API
-		 * @throws NodeException Throws when no interface implementation for the given provider is found.
+		 * @throws NodeException throws when no interface implementation for the given provider is found.
 		 */
 		public Builder withProvider(SupportedProvider provider)
 				throws NodeException {

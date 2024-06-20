@@ -5,9 +5,9 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import com.gentics.api.lib.exception.NodeException;
 import org.junit.jupiter.api.Test;
 
-class HtmlValidatorTest {
+class ValidatorTest {
 
-	Validator validator = new HtmlValidator();
+	Validator validator = new JsoupValidator();
 
 	@Test
 	void givenValidHtmlMarkup_isValid() throws NodeException {
@@ -17,6 +17,15 @@ class HtmlValidatorTest {
 				     
 				<h1>My blog is great </h1>
 				<p>Ich habe einen deutschen Text, den ich übersetzen will</p>
+				""";
+
+		assertThat(this.validator.isValid(html)).isTrue();
+	}
+
+	@Test
+	void givenValidPartialMarkup_isValid() throws NodeException {
+		final var html = """
+				<div>Some text</div>
 				""";
 
 		assertThat(this.validator.isValid(html)).isTrue();
@@ -38,6 +47,16 @@ class HtmlValidatorTest {
 	}
 
 	@Test
+	void givenMessedupMarkup_isNotValid() throws NodeException {
+		final var html = """
+					<h1>This is my first page</h1></div><div>Here's the introduction.
+					</div><div>
+				""";
+
+		assertThat(this.validator.isValid(html)).isFalse();
+	}
+
+	@Test
 	void givenCorruptMarkup_isNotValid2() throws NodeException {
 		final var html = """
 				<html>
@@ -48,16 +67,6 @@ class HtmlValidatorTest {
 				""";
 
 		assertThat(this.validator.isValid(html)).isFalse();
-	}
-
-	@Test
-	void givenCorruptMarkup_isNotValid3() throws NodeException {
-		final var html = """
-				<div>lasdfkl</div>
-
-				""";
-
-		assertThat(this.validator.isValid(html)).isTrue();
 	}
 
 	@Test

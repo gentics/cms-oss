@@ -118,6 +118,7 @@ import {
     SuggestionSearchService,
     UIOverridesService,
     UserAgentRef,
+    TranslationActionsService,
 } from './providers';
 
 const COMPONENTS = [
@@ -249,6 +250,7 @@ const PROVIDERS = [
     UIOverridesService,
     UserAgentRef,
     WindowRef,
+    TranslationActionsService,
 ];
 
 @NgModule({

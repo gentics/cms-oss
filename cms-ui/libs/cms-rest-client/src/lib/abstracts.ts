@@ -328,6 +328,8 @@ import {
     TemplateTagStatusResponse,
     TemplateUsageResponse,
     TotalUsageResponse,
+    TranslationTextRequest,
+    TranslationResponse,
     UnlocalizeRequest,
     UpdatesInfo,
     UsageInFilesOptions,
@@ -351,6 +353,7 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
+    TranslationRequestOptions,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -1039,6 +1042,11 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 }
 
+export interface AbstractTranslationAPI extends BasicAPI {
+    translateText: (data: TranslationTextRequest) => TranslationResponse;
+    translatePage: (pageId: number, params: TranslationRequestOptions) => PageResponse;
+}
+
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
     auth: AbstractAuthenticationAPI;
@@ -1075,6 +1083,7 @@ export interface AbstractRootAPI {
     schedulerTask: AbstractScheduleTaskAPI;
     searchIndex: AbstractSearchIndexAPI;
     template: AbstractTemplateAPI;
+    translation: AbstractTranslationAPI;
     user: AbstractUserAPI;
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;

@@ -10,3 +10,4 @@ export * from './repository-browser-data/repository-browser-data.service';
 export * from './suggestion-search/suggestion-search.service';
 export * from './ui-overrides/ui-overrides.service';
 export * from './user-agent-ref';
+export * from './translation-actions/translation-actions.service';

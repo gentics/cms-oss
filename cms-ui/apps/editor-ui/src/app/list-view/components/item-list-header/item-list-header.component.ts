@@ -279,38 +279,17 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         this.userSettings.setActiveLanguage(language.id);
     }
 
-    toggleDisplayAllLanguages(event?: MouseEvent): void {
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayAllLanguages(): void {
         const currentVal = this.appState.now.folder.displayAllLanguages;
         this.userSettings.setDisplayAllLanguages(!currentVal);
     }
 
-    toggleDisplayStatusIcons(event?: MouseEvent): void {
-        /*
-         * Somewhat hacky fix. We have a click listener for the entire dropdown item which is required.
-         * A click on the checkbox will trigger a click as well (bubbles up).
-         * However, since it's not a "real" checkbox, but a click onto the label (as the label is styled like a checkbox),
-         * and it has the "for" attribute set, some (or all?) browsers will issue a second click
-         * event for the input element as well.
-         * This would revert the value again, which isn't what's intended.
-         * On checkbox change, the event is emitted completely.
-         */
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayStatusIcons(): void {
         const currentVal = this.appState.now.folder.displayStatusIcons;
         this.userSettings.setDisplayStatusIcons(!currentVal);
     }
 
-    toggleDisplayDeleted(event?: MouseEvent): void {
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayDeleted(): void {
         const currentVal = this.appState.now.folder.displayDeleted;
         this.userSettings.setDisplayDeleted(!currentVal);
         // refresh list as refetch is required

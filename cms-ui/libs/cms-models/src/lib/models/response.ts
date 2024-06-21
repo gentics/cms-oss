@@ -1476,3 +1476,8 @@ export interface FUMStatusResponse {
     type: string;
     msg: string;
 }
+
+
+export interface TranslationResponse {
+    text: string;
+}

@@ -23,4 +23,7 @@
     <gtx-button type="primary" (click)="createTranslationAndEditTranslatedPage()" [disabled]="(creating$ | async) || !form?.valid">
         {{ 'modal.translate_and_compare_button' | i18n }}
     </gtx-button>
+    <gtx-button type="primary" (click)="createAutomaticallyTranslatedPage()" [disabled]="(creating$ | async) || !form?.valid">
+        {{ 'modal.translate_automatically' | i18n }}
+    </gtx-button>
 </div>

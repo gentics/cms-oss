@@ -82,6 +82,8 @@ import {
     PageListResponse,
     PagePermissions,
     PageRequestOptions,
+    PageResponse,
+    PageTranslateOptions,
     PageVariantCreateRequest,
     PageVersion,
     PagedTemplateListResponse,
@@ -102,6 +104,7 @@ import {
     TemplateRequestOptions,
     TemplateResponse,
     TimeManagement,
+    TranslationRequestOptions,
     TypedItemListResponse,
     folderItemTypePlurals,
 } from '@gentics/cms-models';
@@ -219,6 +222,10 @@ interface UpdateableItemObjectProperty <T extends FolderItemType, R extends Fold
     updatedObjProps: Partial<Tags>;
     requestOptions?: Partial<R>;
 }
+
+
+export type TranslateRequestFunction = (pageId: number, options?: PageTranslateOptions | TranslationRequestOptions) => Promise<PageResponse>| void;
+
 
 @Injectable()
 export class FolderActionsService {
@@ -1619,11 +1626,25 @@ export class FolderActionsService {
     /**
      * Create a new language variant of the given page.
      */
-    async createPageTranslation(nodeId: number, pageId: number, languageCode: string): Promise<Page<Raw> | void> {
+    createPageTranslation = async(pageId: number, params: TranslationRequestOptions): Promise<PageResponse> => {
+        return this.client.page.translate(pageId, { channelId: params.channelId, language: params.language }).toPromise();
+    }
+
+    /**
+     * Create a new language variant of the given page by executing the provided function.
+     * The function issues the actual api request.
+     */
+    async executePageTranslationFunction(
+        nodeId: number,
+        pageId: number,
+        languageCode: string,
+        translationRequestFunction: TranslateRequestFunction,
+    ): Promise<Page<Raw> | void> {
         await this.appState.dispatch(new StartListCreatingAction('page')).toPromise();
 
         try {
-            const res = await this.client.page.translate(pageId, { channelId: nodeId, language: languageCode }).toPromise();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const res = await translationRequestFunction.call(this, pageId, {language: languageCode, channelId: nodeId});
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
             const newPage = res.page;

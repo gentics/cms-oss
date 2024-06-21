@@ -41,7 +41,7 @@
             [activeLanguage]="folderLanguage"
             [disabled]="elasticsearchQueryActive"
             [title]="'editor.language_context_selector_disabled_search' | i18n"
-            (selectLanguage)="languageChanged($event)"
+            (selectLanguage)="languageChanged()"
         ></language-context-selector>
 
         <ng-container *ngIf="uiMode === UIMode.EDIT">
@@ -110,7 +110,7 @@
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
                         *ngIf="(itemType === 'page' || itemType === 'form')"
-                        (click)="toggleDisplayStatusIcons($event)"
+                        (click)="toggleDisplayStatusIcons()"
                         class="page-language-toggle"
                     >
                         <gtx-checkbox
@@ -123,7 +123,7 @@
                     <gtx-dropdown-item
                         *ngIf="wastebinEnabled"
                         class="show-deleted-toggle"
-                        (click)="toggleDisplayDeleted($event)"
+                        (click)="toggleDisplayDeleted()"
                     >
                         <gtx-checkbox
                             [checked]="showDeleted"

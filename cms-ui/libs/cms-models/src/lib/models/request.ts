@@ -113,7 +113,7 @@ export interface FolderRequestOptions extends ItemRequestOptions {
 
 }
 
-export interface FolderDeleteOptions {
+export interface FolderDeleteOptions extends GenericDeleteOptions {
     nodeId?: number;
 }
 
@@ -620,6 +620,21 @@ export interface PageListOptions extends FolderListOptions {
     /** exclude (default) to exclude deleted objects, include to include deleted objects, only to return only deleted objects */
     wastebin?: 'exclude' | 'include' | 'only';
 
+}
+
+export interface GenericDeleteOptions {
+    /** If the `instant_publish` feature should not be applied to the current request. */
+    disableInstantDelete?: boolean;
+}
+
+export interface PageDeleteOptions extends GenericDeleteOptions {}
+
+export interface FileDeleteOptions extends GenericDeleteOptions {
+    nodeId?: number;
+}
+
+export interface ImageDeleteOptions extends GenericDeleteOptions {
+    nodeId?: number;
 }
 
 export interface MarkupLanguageListOptions {
@@ -2058,7 +2073,10 @@ export type ObjectPropertyCategoryUpdateRequest = ObjectPropertyCategoryCreateRe
 /**
  * Query parameters for `/contentrepositories`
  */
-export type TagmapEntryListOptions = BaseListOptionsWithPaging<TagmapEntry>;
+export interface TagmapEntryListOptions extends BaseListOptionsWithPaging<TagmapEntry> {
+    /** true to include entries from assigned fragments, false (which is the default) to only list entries of the ContentRepository itself */
+    fragments?: boolean;
+}
 
 /**
  * Request used for saving a `TagmapEntry`.

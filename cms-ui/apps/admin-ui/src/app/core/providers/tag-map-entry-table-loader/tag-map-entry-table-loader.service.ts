@@ -1,8 +1,8 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TagMapEntryBO } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { TagmapEntry, TagmapEntryListResponse, TagmapEntryParentType } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { TagmapEntry, TagmapEntryListOptions, TagmapEntryListResponse, TagmapEntryParentType } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
@@ -11,6 +11,7 @@ import { EntityManagerService } from '../entity-manager';
 export interface TagMapEntryTableLoaderOptions {
     parentType: TagmapEntryParentType;
     parentId: string | number;
+    withFragments?: boolean;
 }
 
 @Injectable()
@@ -19,7 +20,7 @@ export class TagMapEntryTableLoaderService extends BaseTableLoaderService<Tagmap
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
+        protected api: GCMSRestClientService,
     ) {
         super('tagmapEntry', entityManager, appState);
     }
@@ -36,10 +37,10 @@ export class TagMapEntryTableLoaderService extends BaseTableLoaderService<Tagmap
         }
 
         if (options.parentType === 'contentRepository') {
-            return this.api.contentrepositories.deleteContentRepositoryTagmapEntry(options.parentId, entityId)
+            return this.api.contentRepository.deleteEntry(options.parentId, entityId)
                 .toPromise();
         } else {
-            return this.api.contentRepositoryFragments.deleteContentRepositoryFragmentTagmapEntry(options.parentId, entityId)
+            return this.api.contentRepositoryFragment.deleteEntry(options.parentId, entityId)
                 .toPromise();
         }
     }
@@ -54,13 +55,14 @@ export class TagMapEntryTableLoaderService extends BaseTableLoaderService<Tagmap
             return throwError(err);
         }
 
-        const loadOptions = this.createDefaultOptions(options);
+        const loadOptions = this.createDefaultOptions(options, { lowerCase: false });
         let loader: Observable<TagmapEntryListResponse>;
 
         if (additionalOptions?.parentType === 'contentRepository') {
-            loader = this.api.contentrepositories.getContentRepositoryTagmapEntries(additionalOptions.parentId, loadOptions);
+            (loadOptions as TagmapEntryListOptions).fragments = additionalOptions?.withFragments;
+            loader = this.api.contentRepository.listEntries(additionalOptions.parentId, loadOptions);
         } else {
-            loader = this.api.contentRepositoryFragments.getContentRepositoryFragmentTagmapEntries(additionalOptions.parentId, loadOptions);
+            loader = this.api.contentRepositoryFragment.listEntries(additionalOptions.parentId, loadOptions);
         }
 
         return loader.pipe(

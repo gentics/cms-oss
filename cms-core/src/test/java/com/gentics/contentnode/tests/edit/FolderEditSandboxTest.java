@@ -629,7 +629,7 @@ public class FolderEditSandboxTest {
 		// now delete the folder
 		FolderResource folderResource = getFolderResource();
 
-		folderResource.delete(ObjectTransformer.getString(toDelete.getId(), null), null);
+		folderResource.delete(ObjectTransformer.getString(toDelete.getId(), null), null, null);
 
 		// start a new transaction
 		testContext.getContext().startTransaction();

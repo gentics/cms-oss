@@ -10,6 +10,7 @@ import {
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
     EntityIdType,
+    TagmapEntryCheckResponse,
     TagmapEntryCreateRequest,
     TagmapEntryCreateResponse,
     TagmapEntryListOptions,
@@ -133,7 +134,7 @@ export class ContentrespositoryApi {
      */
     checkContentRepositoryTagmapEntries(
         contentRepositoryId: EntityIdType,
-    ): Observable<TagmapEntryListResponse> {
+    ): Observable<TagmapEntryCheckResponse> {
         return this.apiBase.get(`contentrepositories/${contentRepositoryId}/entries/check`);
     }
 

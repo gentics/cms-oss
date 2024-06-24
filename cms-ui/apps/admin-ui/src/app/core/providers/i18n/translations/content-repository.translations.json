@@ -306,5 +306,9 @@
     "assign_mesh_roles_success": {
         "en": "Mesh Roles have been successfully assign",
         "de": "Mesh Rollen wurden erfolgreich zugewiesen"
+    },
+    "tagmap_invalid_warning": {
+        "en": "The ContentRepository contains inconsistent Tagmap entries. The inconsistencies must be resolved, before the ContentRepository can be used for publishing.",
+        "de": "Das ContentRepository hat inkonsistente Tagmap Einträge. Die Inkonsistenzen müssen behoben werden, damit das ContentRepository für die Publizierung verwendet werden kann."
     }
 }

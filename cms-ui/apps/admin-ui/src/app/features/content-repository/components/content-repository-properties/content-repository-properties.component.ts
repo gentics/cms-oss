@@ -18,13 +18,11 @@ import {
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import {
-    AnyModelType,
     BasepathType,
     CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX,
     CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX,
     CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX,
     CONTENT_REPOSITORY_URL_PROPERTY_PREFIX,
-    ContentRepository,
     ContentRepositoryPasswordType,
     ContentRepositoryType,
     EditableContentRepositoryProperties,
@@ -44,6 +42,12 @@ import {
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
     UPDATE = 'update',
+}
+
+export interface ContentRepositoryPropertiesFormData extends EditableContentRepositoryProperties {
+    urlType: UrlType;
+    basepathType: BasepathType;
+    usernameType: UsernameType;
 }
 
 type CRDisplayType = {
@@ -80,7 +84,7 @@ const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
         generateValidatorProvider(ContentRepositoryPropertiesComponent),
     ],
 })
-export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<EditableContentRepositoryProperties> implements OnInit, OnChanges {
+export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepositoryPropertiesFormData> implements OnInit, OnChanges {
 
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
@@ -97,12 +101,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     public meshCrEnabled = false;
 
     public showBasepath = false;
-
-    public urlType: UrlType;
-
-    public basepathType: BasepathType;
-
-    public usernameType: UsernameType;
 
     /** selectable options for contentRepository input passwordType */
     public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
@@ -215,30 +213,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         }
     }
 
-    public updateUrlType(value: UrlType): void {
-        this.urlType = value;
-        if (this.form) {
-            setControlsEnabled(this.form, ['url'], this.urlType === UrlType.VALUE, { emitEvent: false });
-            setControlsEnabled(this.form, ['urlProperty'], this.urlType === UrlType.PROPERTY, { emitEvent: false });
-        }
-    }
-
-    public updateBasepathType(value: BasepathType): void {
-        this.basepathType = value;
-        if (this.form) {
-            setControlsEnabled(this.form, ['basepath'], this.basepathType === BasepathType.VALUE, { emitEvent: false });
-            setControlsEnabled(this.form, ['basepathProperty'], this.basepathType === BasepathType.PROPERTY, { emitEvent: false });
-        }
-    }
-
-    public updateUsernameType(value: UsernameType): void {
-        this.usernameType = value;
-        if (this.form) {
-            setControlsEnabled(this.form, ['username'], this.usernameType === UsernameType.VALUE, { emitEvent: false });
-            setControlsEnabled(this.form, ['usernameProperty'], this.usernameType === UsernameType.PROPERTY, { emitEvent: false });
-        }
-    }
-
     protected updateCRTypes(): void {
         const types: CRDisplayType[] = [
             {
@@ -257,8 +231,12 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         this.crTypes = types;
     }
 
-    protected createForm(): FormGroup<FormProperties<EditableContentRepositoryProperties>> {
-        return new FormGroup<FormProperties<EditableContentRepositoryProperties>>({
+    protected createForm(): FormGroup<FormProperties<ContentRepositoryPropertiesFormData>> {
+        return new FormGroup<FormProperties<ContentRepositoryPropertiesFormData>>({
+            basepathType: new FormControl(this.value?.basepathType ?? this.value?.basepathProperty
+                ? BasepathType.PROPERTY
+                : BasepathType.VALUE,
+            ),
             basepath: new FormControl(this.value?.basepath || ''),
             basepathProperty: new FormControl(this.value?.basepathProperty || '', [
                 createPropertyPatternValidator(CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX),
@@ -281,10 +259,18 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             projectPerNode: new FormControl(this.value?.projectPerNode ?? false),
             version: new FormControl(this.value?.version || ''),
             url: new FormControl(this.value?.url || '', Validators.required),
+            urlType: new FormControl(this.value?.urlType ?? this.value?.urlProperty
+                ? UrlType.PROPERTY
+                : UrlType.VALUE,
+            ),
             urlProperty: new FormControl(this.value?.urlProperty || '', [
                 Validators.required,
                 createPropertyPatternValidator(CONTENT_REPOSITORY_URL_PROPERTY_PREFIX),
             ]),
+            usernameType: new FormControl(this.value?.usernameType ?? this.value?.usernameProperty
+                ? UsernameType.PROPERTY
+                : UsernameType.VALUE,
+            ),
             username: new FormControl(this.value?.username || '', Validators.required),
             usernameProperty: new FormControl(this.value?.usernameProperty || '', [
                 Validators.required,
@@ -298,18 +284,8 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         });
     }
 
-    protected configureForm(value: ContentRepository<AnyModelType>, loud?: boolean): void {
+    protected configureForm(value: ContentRepositoryPropertiesFormData, loud?: boolean): void {
         const options = { emitEvent: !!loud };
-
-        if (!this.urlType && this.value) {
-            this.urlType = this.value?.urlProperty ? UrlType.PROPERTY : UrlType.VALUE;
-        }
-        if (!this.usernameType && this.value) {
-            this.usernameType = this.value?.usernameProperty ? UsernameType.PROPERTY : UsernameType.VALUE;
-        }
-        if (!this.basepathType && this.value) {
-            this.basepathType = this.value?.basepathProperty ? BasepathType.PROPERTY : BasepathType.VALUE;
-        }
 
         setControlsEnabled(this.form, ['crType'], this.crType == null || this.mode !== ContentRepositoryPropertiesMode.UPDATE, options);
         setControlsEnabled(
@@ -339,17 +315,17 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
 
         this.showBasepath = crType !== ContentRepositoryType.MESH;
 
-        setControlsEnabled(this.form, ['url'], this.urlType === UrlType.VALUE, options);
-        setControlsEnabled(this.form, ['urlProperty'], this.urlType === UrlType.PROPERTY, options);
+        setControlsEnabled(this.form, ['url'], value?.urlType === UrlType.VALUE, options);
+        setControlsEnabled(this.form, ['urlProperty'], value?.urlType === UrlType.PROPERTY, options);
 
-        setControlsEnabled(this.form, ['username'], this.usernameType === UsernameType.VALUE, options);
-        setControlsEnabled(this.form, ['usernameProperty'], this.usernameType === UsernameType.PROPERTY, options);
+        setControlsEnabled(this.form, ['username'], value?.usernameType === UsernameType.VALUE, options);
+        setControlsEnabled(this.form, ['usernameProperty'], value?.usernameType === UsernameType.PROPERTY, options);
 
-        setControlsEnabled(this.form, ['basepath'], this.basepathType === BasepathType.VALUE, options);
-        setControlsEnabled(this.form, ['basepathProperty'], this.basepathType === BasepathType.PROPERTY, options);
+        setControlsEnabled(this.form, ['basepath'], value?.basepathType === BasepathType.VALUE, options);
+        setControlsEnabled(this.form, ['basepathProperty'], value?.basepathType === BasepathType.PROPERTY, options);
     }
 
-    protected assembleValue(value: ContentRepository): ContentRepository {
+    protected assembleValue(value: ContentRepositoryPropertiesFormData): ContentRepositoryPropertiesFormData {
         if (this.mode === ContentRepositoryPropertiesMode.UPDATE) {
             value.crType = this.crType;
         }

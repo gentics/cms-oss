@@ -33,7 +33,7 @@ import { ScheduleTask } from './schedule-task';
 import { SchedulerStatus } from './scheduler';
 import { StagedItemsMap, StagingStatus } from './staging-status';
 import { Construct, Tag, TagStatus, TagType } from './tag';
-import { TagmapEntry } from './tagmap-entry';
+import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
@@ -717,6 +717,12 @@ export type TagmapEntryCreateResponse = TagmapEntryResponse;
  * Response from `PUT contentrepositories`
  */
 export type TagmapEntryUpdateResponse = TagmapEntryResponse;
+
+/**
+ * Response from `GET contentrepositories/:id/entries/check`
+ */
+export interface TagmapEntryCheckResponse extends ListResponse<TagmapEntryError> {}
+
 
 // QUEUE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

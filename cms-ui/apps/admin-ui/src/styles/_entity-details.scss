@@ -9,10 +9,20 @@
     & > gtx-tabs {
         height: 100%;
 
+        > gtx-tab {
+            &.is-active {
+                flex: 1 1;
+                min-height: 1px;
+            }
+            &:not(.is-active) {
+                display: none;
+            }
+        }
+
         .tab-content {
             display: flex;
             width: 100%;
-            height: calc(100% - 28px);
+            height: 100%;
             flex-wrap: nowrap;
             flex-direction: column;
         }

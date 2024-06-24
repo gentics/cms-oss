@@ -39,6 +39,10 @@
         "en": "Target type",
         "de": "Zieltyp"
     },
+    "category": {
+        "en": "Category",
+        "de": "Kategorie"
+    },
     "multivalue": {
         "en": "Multivalue",
         "de": "Multivalue"
@@ -76,15 +80,15 @@
         "de": "Foreign-Link-Attribute-Regel"
     },
     "segmentfield": {
-        "en": "segmentfield",
+        "en": "Segmentfield",
         "de": "Segmentfeld"
     },
     "displayfield": {
-        "en": "displayfield",
+        "en": "Displayfield",
         "de": "Anzeigefeld"
     },
     "urlfield": {
-        "en": "url field",
+        "en": "URL field",
         "de": "URL-Feld"
     },
     "noIndex": {
@@ -100,7 +104,7 @@
         "de": "Tagtyp-Filter"
     },
     "fragmentname": {
-        "en": "fragment name",
+        "en": "Fragment name",
         "de": "Fragmentname"
     },
     "objecttype_folder": {
@@ -154,5 +158,17 @@
     "attributetype_micronode": {
         "en": "Micronode",
         "de": "Micronode"
+    },
+    "title_reference_settings": {
+        "en": "Reference",
+        "de": "Referenz"
+    },
+    "title_elasticsearch_settings": {
+        "en": "Elasticsearch",
+        "de": "Elasticsearch"
+    },
+    "title_misc_settings": {
+        "en": "Miscellaneous",
+        "de": "Sonstige"
     }
 }

@@ -704,7 +704,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     goToBaseFolder(): void {
         const currentNode = this.entityResolver.getNode(this.activeNodeId);
         if (currentNode) {
-            this.navigationService.list(currentNode.id, currentNode.folderId).navigate();
+            this.navigationService.list(currentNode.id, currentNode.folderId || currentNode.id).navigate();
         }
     }
 

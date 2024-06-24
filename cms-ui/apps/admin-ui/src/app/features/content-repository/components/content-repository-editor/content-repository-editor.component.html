@@ -22,6 +22,7 @@
                         [formControl]="fgProperties"
                         [mode]="ContentRepositoryPropertiesMode.UPDATE"
                         [crType]="entity?.crType"
+                        [pureInitialValue]="true"
                         [(initialValue)]="entityIsClean"
                     ></gtx-content-repository-properties>
                 </div>
@@ -39,12 +40,21 @@
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
-                <div class="gtx-entity-details-tab-content-body">
+                <div class="gtx-entity-details-tab-content-body tagmap-body">
+                    <div *ngIf="tagmapErrors?.length > 0" class="tagmap-invalid">
+                        <icon class="warn-icon">warning</icon>
+                        <span>{{ 'contentRepository.tagmap_invalid_warning' | i18n }}</span>
+                    </div>
+
                     <gtx-tag-map-entry-table
+                        class="tagmap-table"
                         [showSearch]="true"
                         [parentType]="'contentRepository'"
                         [parentId]="entity.id"
                         [displayFields]="entity.crType === ContentRepositoryType.MESH ? TagmapEntryDisplayFields.MESH : TagmapEntryDisplayFields.SQL"
+                        [showFragments]="true"
+                        [errors]="tagmapErrors"
+                        (entriesChange)="checkTagmapEntries()"
                     ></gtx-tag-map-entry-table>
                 </div>
             </div>

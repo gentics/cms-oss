@@ -295,7 +295,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 }
 
                 // Make sure that the folder of the tagOwner has been loaded.
-                expect(folderGet).toHaveBeenCalledWith(context.page.folderId);
+                expect(folderGet).toHaveBeenCalledWith(context.page.folderId, { nodeId: context.node.id });
 
             } else if (origTagProperty.type === TagPropertyType.IMAGE) {
                 if (origTagProperty.imageId) {
@@ -321,7 +321,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 }
 
                 // Make sure that the folder of the tagOwner has been loaded.
-                expect(folderGet).toHaveBeenCalledWith(context.page.folderId);
+                expect(folderGet).toHaveBeenCalledWith(context.page.folderId, { nodeId: context.node.id });
             }
         }
 

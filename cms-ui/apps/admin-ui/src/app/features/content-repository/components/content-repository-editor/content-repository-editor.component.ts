@@ -9,10 +9,24 @@ import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import { TagmapEntryDisplayFields } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ContentRepositoryType, Feature } from '@gentics/cms-models';
-import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
+import { BasepathType, ContentRepository, ContentRepositoryType, Feature, TagmapEntryError, UrlType, UsernameType } from '@gentics/cms-models';
+import { Subscription } from 'rxjs';
+import {
+    ContentRepositoryPropertiesFormData,
+    ContentRepositoryPropertiesMode,
+} from '../content-repository-properties/content-repository-properties.component';
+
+function toPropertiesFormData(cr: ContentRepository): ContentRepositoryPropertiesFormData {
+    return {
+        ...cr,
+        elasticsearch: cr?.elasticsearch ? JSON.stringify(cr.elasticsearch, null, 4) : '' as any,
+        basepathType: cr?.basepathProperty ? BasepathType.PROPERTY : BasepathType.VALUE,
+        urlType: cr?.urlProperty ? UrlType.PROPERTY : UrlType.VALUE,
+        usernameType: cr?.usernameProperty ? UsernameType.PROPERTY : UsernameType.VALUE,
+    };
+}
 
 @Component({
     selector: 'gtx-content-repository-editor',
@@ -26,8 +40,11 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
     public readonly ContentRepositoryType = ContentRepositoryType;
     public readonly TagmapEntryDisplayFields = TagmapEntryDisplayFields;
 
-    public fgProperties: UntypedFormControl;
+    public fgProperties: FormControl<ContentRepositoryPropertiesFormData>;
     public meshFeatureEnabled = false;
+    public tagmapErrors: TagmapEntryError[] = [];
+
+    private tagmapCheckSubscription: Subscription = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -54,13 +71,12 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
             this.meshFeatureEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
+
+        this.checkTagmapEntries();
     }
 
     protected initializeTabHandles(): void {
-        this.fgProperties = new UntypedFormControl({
-            ...this.entity,
-            elasticsearch: this.entity?.elasticsearch ? JSON.stringify(this.entity.elasticsearch, null, 4) : '',
-        });
+        this.fgProperties = new FormControl<ContentRepositoryPropertiesFormData>(toPropertiesFormData(this.entity));
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
 
         this.tabHandles[this.Tabs.TAGMAP] = NULL_FORM_TAB_HANDLE;
@@ -71,20 +87,43 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
 
     override onEntityUpdate(): void {
         this.tableLoader.reload();
+        this.checkTagmapEntries();
     }
 
     protected override finalizeEntityToUpdate(
         entity: EditableEntityModels[EditableEntity.CONTENT_REPOSITORY],
     ): EntityUpdateRequestModel<EditableEntity.CONTENT_REPOSITORY> {
-        return (this.handler as ContentRepositoryHandlerService).normalizeForREST(entity);
+        const {
+            basepathType: _basepathType,
+            urlType: _urlType,
+            usernameType: _usernameType,
+            ...formData
+        } = entity as any as ContentRepositoryPropertiesFormData;
+        return (this.handler as ContentRepositoryHandlerService).normalizeForREST(formData as any);
     }
 
     protected onEntityChange(): void {
         if (this.fgProperties) {
-            this.fgProperties.reset({
-                ...this.entity,
-                elasticsearch: this.entity?.elasticsearch ? JSON.stringify(this.entity.elasticsearch, null, 4) : '',
-            });
+            this.fgProperties.reset(toPropertiesFormData(this.entity));
         }
+        this.checkTagmapEntries();
+    }
+
+    private clearTagmapCheck(): void {
+        if (this.tagmapCheckSubscription != null) {
+            this.tagmapCheckSubscription.unsubscribe();
+            this.tagmapCheckSubscription = null;
+            this.tagmapErrors = [];
+        }
+    }
+
+    public checkTagmapEntries(): void {
+        this.clearTagmapCheck();
+        this.tagmapCheckSubscription = (this.handler as ContentRepositoryHandlerService)
+            .checkTagmapEntries(this.entityId)
+            .subscribe(errors => {
+                this.tagmapErrors = errors;
+                this.changeDetector.markForCheck();
+            });
     }
 }

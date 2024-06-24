@@ -199,7 +199,7 @@ export class DataSourceHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.addDataSourceToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'dataSource.dataSource_successfully_added_to_package',
@@ -217,7 +217,7 @@ export class DataSourceHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.removeDataSourceFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'dataSource.dataSource_successfully_removed_from_package',

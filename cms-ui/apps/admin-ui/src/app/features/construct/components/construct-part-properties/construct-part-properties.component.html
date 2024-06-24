@@ -67,6 +67,7 @@
                 class="settings-group"
                 [label]="'construct.overviewSettings' | i18n"
                 [initialValue]="initialValue"
+                [pureInitialValue]="true"
                 (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="overviewSettings"
             ></gtx-overview-part-settings>
@@ -77,6 +78,7 @@
                 [label]="'construct.selectSettings' | i18n"
                 [dataSources]="dataSources"
                 [initialValue]="initialValue"
+                [pureInitialValue]="true"
                 (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="selectSettings"
             ></gtx-select-part-settings>

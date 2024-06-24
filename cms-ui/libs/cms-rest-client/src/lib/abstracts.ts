@@ -78,6 +78,7 @@ import {
     FeatureResponse,
     FileCopyRequest,
     FileCreateRequest,
+    FileDeleteOptions,
     FileListOptions,
     FileListResponse,
     FileReplaceOptions,
@@ -135,6 +136,7 @@ import {
     I18nLanguageSetRequest,
     I18nTranslationOptions,
     IdSetRequest,
+    ImageDeleteOptions,
     ImageListResponse,
     ImageResponse,
     ImageSaveRequest,
@@ -235,6 +237,7 @@ import {
     PageCopyResponse,
     PageCreateRequest,
     PageCreateResponse,
+    PageDeleteOptions,
     PageListOptions,
     PageListResponse,
     PageOfflineOptions,
@@ -563,7 +566,7 @@ export interface AbstractFileAPI extends BasicAPI {
     getMultiple: (body: MultiObjectLoadRequest) => FileListResponse;
     update: (id: number | string, body: FileSaveRequest) => Response;
     uploadTo: (id: number | string, file: File | Blob, fileName?: string, options?: FileReplaceOptions) => Response;
-    delete: (id: number | string) => void;
+    delete: (id: number | string, options?: FileDeleteOptions) => void;
 
     copy: (body: FileCopyRequest) => FileUploadResponse;
     move: (id: number | string, body: ObjectMoveRequest) => Response;
@@ -727,7 +730,7 @@ export interface AbstractImageAPI extends BasicAPI {
     get: (id: number | string, options?: ItemRequestOptions) => ImageResponse;
     getMultiple: (body: MultiObjectLoadRequest) => ImageListResponse;
     update: (id: number | string, body: ImageSaveRequest) => Response;
-    delete: (id: number | string) => void;
+    delete: (id: number | string, options?: ImageDeleteOptions) => void;
 
     move: (id: number | string, body: ObjectMoveRequest) => Response;
     moveMultiple: (body: MultiObjectMoveRequest) => Response;
@@ -860,7 +863,7 @@ export interface AbstractPageAPI extends BasicAPI {
     get: (id: number | string, options?: PageRequestOptions) => PageResponse;
     getMultiple: (body: MultiPageLoadRequest) => PageListResponse;
     update: (id: number | string, body: PageSaveRequest) => Response;
-    delete: (id: number | string) => Response;
+    delete: (id: number | string, options?: PageDeleteOptions) => Response;
 
     copy: (body: PageCopyRequest) => PageCopyResponse;
     move: (id: number | string, body: ObjectMoveRequest) => Response;

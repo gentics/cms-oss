@@ -591,7 +591,7 @@ describe('ContextMenuOperationsService', () => {
                 tick();
 
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3], ACTIVE_NODE_ID);
+                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3], ACTIVE_NODE_ID, true);
 
                 expect(folderActions.updateItem).not.toHaveBeenCalled();
 
@@ -624,7 +624,7 @@ describe('ContextMenuOperationsService', () => {
                 tick();
 
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1], ACTIVE_NODE_ID);
+                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1], ACTIVE_NODE_ID, false);
 
                 expect(folderActions.updateItem).toHaveBeenCalledTimes(1);
                 expect(folderActions.updateItem).toHaveBeenCalledWith(type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] });
@@ -687,6 +687,7 @@ class MockWastebinActions implements Partial<WastebinActionsService> {
         type: 'folder' | 'page' | 'file' | 'image' | 'form',
         ids: number[],
         nodeId: number,
+        disableInstant?: boolean,
     ): Promise<{ succeeded: number; failed: number; error: ApiError }> {
         throw new Error('moveItemsToWastebin called but not mocked');
     }

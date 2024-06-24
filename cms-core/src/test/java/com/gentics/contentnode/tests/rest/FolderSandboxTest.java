@@ -780,7 +780,7 @@ public class FolderSandboxTest {
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});
@@ -856,7 +856,7 @@ public class FolderSandboxTest {
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});

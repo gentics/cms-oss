@@ -29,7 +29,7 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ContentRepositoryFragment, ContentRepositoryFragmentListOptions, EntityIdType, Node, Raw } from '@gentics/cms-models';
+import { ContentRepositoryFragment, ContentRepositoryFragmentListOptions, EntityIdType, Node, Raw, TagmapEntryError } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
@@ -367,15 +367,9 @@ export class ContentRepositoryHandlerService
     /**
      * Check consistency of tagmap entries and return inconsistencies.
      */
-    checkTagmapEntries(repositoryId: string): Observable<void> {
+    checkTagmapEntries(repositoryId: string | number): Observable<TagmapEntryError[]> {
         return this.api.contentrepositories.checkContentRepositoryTagmapEntries(repositoryId).pipe(
-            discard(() => {
-                this.notification.show({
-                    type: 'success',
-                    message: 'contentRepository.result_entries_checked',
-                    translationParams: { name: this.nameMap[repositoryId] },
-                });
-            }),
+            map(res => res.items),
             this.catchAndRethrowError(),
         );
     }

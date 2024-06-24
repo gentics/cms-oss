@@ -1,13 +1,14 @@
+import { BO_ID, DevToolEntityHandler, EditableEntity } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
-import { ContentRepositoryFragmentOperations, TemplateOperations } from '../operations';
-import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
-import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
-import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
 import { Observable, forkJoin, of, throwError } from 'rxjs';
-import { BO_ID, DevToolEntityHandler, EditableEntity, discard } from '@admin-ui/common';
 import { map } from 'rxjs/operators';
+import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
+import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
+import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
 import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
+import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
+import { ContentRepositoryFragmentOperations } from '../operations/cr-fragment/cr-fragment.operations';
+import { TemplateOperations } from '../operations/template/template.operations';
 
 /**
  * Simple Service to manage the selections of dev-tool package elements.

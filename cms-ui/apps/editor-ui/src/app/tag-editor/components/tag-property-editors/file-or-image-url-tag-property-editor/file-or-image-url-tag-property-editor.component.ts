@@ -342,7 +342,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
 
         this.selectedItem.selectedItem$.subscribe(selectedItem => {
             if (selectedItem) {
-                const sub = this.client.folder.get(selectedItem.folderId).subscribe(res => {
+                const sub = this.client.folder.get(selectedItem.folderId, { nodeId: selectedItem.nodeId }).subscribe(res => {
                     this.uploadDestination = res.folder;
                     this.changeDetector.markForCheck();
                 });
@@ -351,7 +351,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 this.uploadDestination = folderObj;
                 this.changeDetector.markForCheck();
             } else {
-                const sub = this.client.folder.get(folderId).subscribe(res => {
+                const sub = this.client.folder.get(folderId, { nodeId: context.node?.id }).subscribe(res => {
                     this.uploadDestination = res.folder;
                     this.changeDetector.markForCheck();
                 });

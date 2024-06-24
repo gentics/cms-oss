@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue with the custom Asset-Management, where the upload for assets while editing a localized page, the upload was directed to the wrong folder/channel.

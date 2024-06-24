@@ -41,7 +41,8 @@ import { UserSettingsService } from './services/user-settings/user-settings.serv
 
 export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => new TranslateHttpLoader(http, './assets/i18n/', '.json');
 
-@NgModule({ declarations: [
+@NgModule({
+    declarations: [
         AppComponent,
         DetailChipComponent,
         DisplayFieldSelectorComponent,
@@ -66,7 +67,9 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         UserFullNamePipe,
         UpdateLinkModalComponent,
     ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+    bootstrap: [AppComponent],
+    imports: [
+        BrowserModule,
         GenticsUICoreModule.forRoot(),
         CoreModule,
         NgxPaginationModule,
@@ -79,7 +82,9 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
                 deps: [HttpClient],
             },
         }),
-        AppRoutingModule], providers: [
+        AppRoutingModule,
+    ],
+    providers: [
         AppService,
         FilterService,
         LinkCheckerService,
@@ -87,5 +92,6 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         ToolApiService,
         UserSettingsService,
         provideHttpClient(withInterceptorsFromDi()),
-    ] })
+    ],
+})
 export class AppModule { }

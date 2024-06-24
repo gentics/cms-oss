@@ -1,11 +1,10 @@
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import {NgModule} from '@angular/core';
-
-import {GCMS_API_ERROR_HANDLER} from '../lib/base/api-base.service';
-import {AngularErrorHandler} from './error/error-handler';
-import {API_PROVIDERS} from './gcms-api.service';
-import {FileUploaderFactory} from './util/file-uploader/file-uploader.factory';
-import {FileUploader} from './util/file-uploader/file-uploader.service';
+import { NgModule } from '@angular/core';
+import { GCMS_API_ERROR_HANDLER } from '../lib/base/api-base.service';
+import { AngularErrorHandler } from './error/error-handler';
+import { API_PROVIDERS } from './gcms-api.service';
+import { FileUploaderFactory } from './util/file-uploader/file-uploader.factory';
+import { FileUploader } from './util/file-uploader/file-uploader.service';
 
 // IMPORTANT: NEVER import an element from the local project through a barrel index.ts file if one of the following conditions applies:
 // - the element is used in the `providers` array of an NgModule declaration or
@@ -20,12 +19,16 @@ import {FileUploader} from './util/file-uploader/file-uploader.service';
 /**
  * This module provides services for communicating with the GCMS REST API.
  */
-@NgModule({ declarations: [],
-    exports: [], imports: [], providers: [
+@NgModule({
+    declarations: [],
+    exports: [],
+    imports: [],
+    providers: [
         FileUploader,
         FileUploaderFactory,
         { provide: GCMS_API_ERROR_HANDLER, useClass: AngularErrorHandler },
         ...API_PROVIDERS,
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+        provideHttpClient(withInterceptorsFromDi()),
+    ],
+})
 export class GcmsRestClientsAngularModule {}

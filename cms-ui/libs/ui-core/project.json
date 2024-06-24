@@ -7,7 +7,7 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
             "options": {
                 "tsConfig": "libs/ui-core/tsconfig.lib.json",
                 "project": "libs/ui-core/ng-package.json"
@@ -19,14 +19,7 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "libs/ui-core/**/*.ts",
-                    "libs/ui-core/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "nx:run-commands",
@@ -50,21 +43,7 @@
                 "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "ui-core-docs:build",
-                "watch": false
-            },
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {
-                    "quiet": true,
-                    "devServerTarget": "ui-core-docs:build:ci",
-                    "reporterOptions": {
-                        "color": false,
-                        "reporter": "min"
-                    }
-                }
+                "devServerTarget": "image-editor-demo:build"
             }
         },
         "nx-release-publish": {

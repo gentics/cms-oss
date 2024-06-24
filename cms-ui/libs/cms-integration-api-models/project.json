@@ -22,26 +22,21 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["libs/cms-integration-api-models/**/*.ts"]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/libs/cms-integration-api-models"],
+            "outputs": [
+                "{workspaceRoot}/coverage/libs/cms-integration-api-models"
+            ],
             "options": {
-                "jestConfig": "libs/cms-integration-api-models/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/cms-integration-api-models/jest.config.ts"
             },
             "configurations": {
                 "watch": {
                     "watch": true
                 },
                 "ci": {
-                    "ci": true,
-                    "codeCoverage": true,
                     "color": false
                 }
             }

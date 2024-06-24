@@ -68,30 +68,23 @@
             "defaultConfiguration": "production"
         },
         "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "ct-link-checker:build:production"
+                    "buildTarget": "ct-link-checker:build:production"
                 },
                 "development": {
-                    "browserTarget": "ct-link-checker:build:development"
+                    "buildTarget": "ct-link-checker:build:development"
                 }
             },
             "defaultConfiguration": "development"
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/ct-link-checker/**/*.ts",
-                    "apps/ct-link-checker/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

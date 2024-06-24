@@ -1,3 +1,4 @@
+import { provideZoneChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, getTestBed, tick } from '@angular/core/testing';
 
 /**

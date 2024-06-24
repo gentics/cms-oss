@@ -1,8 +1,7 @@
 import {
     AfterViewInit,
-    ChangeDetectionStrategy,
     ChangeDetectorRef,
-    Component,
+    Directive,
     EventEmitter,
     Input,
     OnDestroy,
@@ -21,18 +20,11 @@ import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { newUUID } from '../../../common';
-import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorService } from '../../providers';
-import { FormEditorElementComponent } from '../form-editor-element/form-editor-element.component';
+import { BaseFormEditorElementComponent } from '../form-editor-element/form-editor-element.component';
 
-@Component({
-    selector: 'gtx-form-editor-element-list',
-    templateUrl: './form-editor-element-list.component.html',
-    styleUrls: ['./form-editor-element-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: GTX_FORM_EDITOR_ANIMATIONS,
-})
-export class FormEditorElementListComponent
+@Directive()
+export class BaseFormEditorElementListComponent
     implements AfterViewInit, OnDestroy {
 
     /** Unique ID. If not ROOT, it is globaldId of container element. */
@@ -105,8 +97,8 @@ export class FormEditorElementListComponent
 
     private destroyed$ = new Subject<void>();
 
-    @ViewChildren(FormEditorElementComponent)
-    formElementComponents!: QueryList<FormEditorElementComponent>;
+    @ViewChildren(BaseFormEditorElementComponent)
+    formElementComponents!: QueryList<BaseFormEditorElementComponent>;
 
     constructor(
         private formEditorService: FormEditorService,
@@ -261,7 +253,7 @@ export class FormEditorElementListComponent
             containsPropertiesError = this.formElementComponents.reduce(
                 (
                     containsPropertiesError: boolean,
-                    formElementComponent: FormEditorElementComponent,
+                    formElementComponent: BaseFormEditorElementComponent,
                 ) => {
                     return formElementComponent &&
                         formElementComponent &&

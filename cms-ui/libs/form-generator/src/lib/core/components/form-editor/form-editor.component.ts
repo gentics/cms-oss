@@ -24,11 +24,10 @@ import {
 } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
-import { FormEditorConfiguration } from '../../../common/models/form-editor-configuration';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorConfigurationService, FormEditorService } from '../../providers';
 import { FormEditorMappingService } from '../../providers/form-editor-mapping/form-editor-mapping.service';
-import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
+import { FormEditorElementListComponent } from '../form-editor-element/form-editor-element-and-list.component';
 
 @Component({
     selector: 'gtx-form-editor',

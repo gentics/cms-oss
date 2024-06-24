@@ -1,16 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Directive, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CmsFormElementBO, CmsFormElementInsertionInformation, CmsFormElementProperty } from '@gentics/cms-models';
-import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorService } from '../../providers';
 
-@Component({
-    selector: 'gtx-form-editor-element',
-    templateUrl: './form-editor-element.component.html',
-    styleUrls: ['./form-editor-element.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: GTX_FORM_EDITOR_ANIMATIONS,
-})
-export class FormEditorElementComponent implements OnChanges {
+@Directive()
+export class BaseFormEditorElementComponent implements OnChanges {
 
     @Input()
     public readonly: boolean;

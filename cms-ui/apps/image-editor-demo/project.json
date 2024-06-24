@@ -4,8 +4,8 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/image-editor-demo/src",
-    "implicitDependencies": ["image-editor", "ui-core"],
     "tags": ["app", "docs", "demo", "angular"],
+    "implicitDependencies": ["image-editor", "ui-core"],
     "targets": {
         "build": {
             "executor": "@nx/angular:webpack-browser",
@@ -63,30 +63,23 @@
             "defaultConfiguration": "production"
         },
         "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "image-editor-demo:build:production"
+                    "buildTarget": "image-editor-demo:build:production"
                 },
                 "development": {
-                    "browserTarget": "image-editor-demo:build:development"
+                    "buildTarget": "image-editor-demo:build:development"
                 }
             },
             "defaultConfiguration": "development"
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/image-editor-demo/**/*.ts",
-                    "apps/image-editor-demo/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "nx:noop"

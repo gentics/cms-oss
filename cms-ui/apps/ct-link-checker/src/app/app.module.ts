@@ -1,4 +1,4 @@
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -67,11 +67,11 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         UserFullNamePipe,
         UpdateLinkModalComponent,
     ],
+    bootstrap: [AppComponent],
     imports: [
         BrowserModule,
         GenticsUICoreModule.forRoot(),
         CoreModule,
-        HttpClientModule,
         NgxPaginationModule,
         RouterTestingModule,
         FormsModule,
@@ -91,7 +91,7 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         NodeHierarchyBuilderService,
         ToolApiService,
         UserSettingsService,
+        provideHttpClient(withInterceptorsFromDi()),
     ],
-    bootstrap: [AppComponent],
 })
 export class AppModule { }

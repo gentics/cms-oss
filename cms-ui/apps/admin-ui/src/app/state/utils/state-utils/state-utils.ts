@@ -1,8 +1,7 @@
 import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
 import { ConstructorOf } from '@admin-ui/common/utils/util-types/util-types';
 import { Action, Select, State } from '@ngxs/store';
-import { StateClass } from '@ngxs/store/internals';
-import { StoreOptions } from '@ngxs/store/src/symbols';
+import { ɵStateClass, ɵStoreOptions } from '@ngxs/store/internals';
 import { AppState } from '../../app-state';
 
 export const NO_ACTION_CLASS_ERROR_MSG =
@@ -23,7 +22,7 @@ export function SelectState<R>(selector: (state: AppState) => R): (target: any, 
  * Extends the `StoreOptions` interface provided by ngxs with a restriction on the
  * `name` property to match one of the properties of the `AppState` interface.
  */
-export interface AppStateStoreOptions<T> extends StoreOptions<T> {
+export interface AppStateStoreOptions<T> extends ɵStoreOptions<T> {
 
     /** Name of the AppState branch. */
     name: keyof AppState;
@@ -33,8 +32,8 @@ export interface AppStateStoreOptions<T> extends StoreOptions<T> {
 /**
  * Decorates a class as an AppState branch in the ngxs store.
  */
-export function AppStateBranch<T>(options: AppStateStoreOptions<T>): (target: StateClass) => void {
-    return (target: StateClass) => {
+export function AppStateBranch<T>(options: AppStateStoreOptions<T>): (target: ɵStateClass) => void {
+    return (target: ɵStateClass) => {
         const origDecorator = State(options);
         origDecorator(target);
     };

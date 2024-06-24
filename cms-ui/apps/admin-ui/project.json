@@ -7,12 +7,15 @@
     "tags": ["app", "ui", "angular"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:webpack-browser",
+            "executor": "@nx/angular:application",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/apps/admin-ui",
+                "outputPath": {
+                    "base": "dist/apps/admin-ui",
+                    "browser": "."
+                },
                 "index": "apps/admin-ui/src/index.html",
-                "main": "apps/admin-ui/src/main.ts",
+                "browser": "apps/admin-ui/src/main.ts",
                 "polyfills": ["apps/admin-ui/src/polyfills.ts"],
                 "tsConfig": "apps/admin-ui/tsconfig.app.json",
                 "assets": [
@@ -52,17 +55,13 @@
                 "optimization": true,
                 "sourceMap": false,
                 "namedChunks": false,
-                "extractLicenses": true,
-                "vendorChunk": false,
-                "buildOptimizer": true
+                "extractLicenses": true
             },
             "configurations": {
                 "production": {},
                 "development": {
                     "fileReplacements": [],
-                    "buildOptimizer": false,
                     "optimization": false,
-                    "vendorChunk": true,
                     "extractLicenses": false,
                     "sourceMap": true,
                     "namedChunks": true
@@ -74,30 +73,23 @@
             "defaultConfiguration": "production"
         },
         "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "admin-ui:build:production"
+                    "buildTarget": "admin-ui:build:production"
                 },
                 "development": {
-                    "browserTarget": "admin-ui:build:development"
+                    "buildTarget": "admin-ui:build:development"
                 }
             },
             "defaultConfiguration": "development"
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/admin-ui/**/*.ts",
-                    "apps/admin-ui/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

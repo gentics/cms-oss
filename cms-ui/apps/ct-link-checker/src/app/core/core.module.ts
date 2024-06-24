@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
 
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
@@ -18,10 +18,9 @@ export function createSidObservable(gcmsAuthenticationService: GcmsAuthenticatio
     declarations: [],
     imports: [
         CommonModule,
-        HttpClientModule,
         GenticsUICoreModule,
         TranslateModule,
-        GcmsRestClientsAngularModule
+        GcmsRestClientsAngularModule,
     ],
     providers: [
         // @gentics/cms-rest-clients-angular configuration
@@ -30,10 +29,11 @@ export function createSidObservable(gcmsAuthenticationService: GcmsAuthenticatio
         {
             provide: GCMS_API_SID,
             useFactory: createSidObservable,
-            deps: [ GcmsAuthenticationService ],
+            deps: [GcmsAuthenticationService],
         },
-        GcmsAuthenticationService
-    ]
+        GcmsAuthenticationService,
+        provideHttpClient(withInterceptorsFromDi()),
+    ],
 })
 /** Provides core functionality, such as GCMS Authentication service. */
 export class CoreModule {

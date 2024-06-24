@@ -5,9 +5,7 @@
 >
 </gtx-form-element-drop-zone>
 
-<div
-    class="form-editor-elements"
->
+<div class="form-editor-elements">
     <ng-container *ngIf="elements; else errorNoFormData">
         <ng-container *ngFor="let element of elements; let i = index; trackBy:identify">
             <div
@@ -31,14 +29,15 @@
                     ></gtx-form-editor-element>
                 </div>
             </div>
+
             <gtx-form-element-drop-zone
                 [hidden]="hideDropZones"
                 [cannotReceive]="cannotReceive"
                 (elementDropped)="onElementDropped($event, i, false)"
-            >
-            </gtx-form-element-drop-zone>
+            ></gtx-form-element-drop-zone>
         </ng-container>
     </ng-container>
+
     <ng-template #errorNoFormData>
         <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_or_invalid_formdata' | i18n }}</p>
     </ng-template>

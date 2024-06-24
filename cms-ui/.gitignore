@@ -70,3 +70,5 @@ report.*.json
 # old structure
 /src
 /projects
+
+.nx

@@ -1,10 +1,10 @@
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ModuleWithProviders, NgModule, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { GenticsUICoreModule, TableComponent } from '@gentics/ui-core';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { App } from './app.component';
 import { UI_CORE_DOCS_ROUTES } from './app.routes';
@@ -103,10 +103,12 @@ const DEMO_APP_DECLARATIONS: Type<any>[] = [
 
 export const DECLARATIONS = [...DEMO_APP_PAGES, ...DEMO_APP_DECLARATIONS];
 export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = RouterModule.forRoot(UI_CORE_DOCS_ROUTES, {
-    useHash: true
+    useHash: true,
 });
 
 @NgModule({
+    declarations: DECLARATIONS,
+    bootstrap: [App],
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
@@ -115,12 +117,10 @@ export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = 
         ROUTER_MODULE_FOR_ROOT,
         GenticsUICoreModule.forRoot(),
         AngularSvgIconModule.forRoot(),
-        HttpClientModule,
     ],
-    declarations: DECLARATIONS,
     providers: [
         DemoDateFormatService,
+        provideHttpClient(withInterceptorsFromDi()),
     ],
-    bootstrap: [App],
 })
 export class DocsModule { }

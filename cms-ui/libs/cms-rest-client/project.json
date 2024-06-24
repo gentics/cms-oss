@@ -22,29 +22,19 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "libs/cms-rest-client/**/*.ts",
-                    "libs/cms-rest-client/package.json"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/libs/cms-rest-client"],
             "options": {
-                "jestConfig": "libs/cms-rest-client/jest.config.ts",
-                "passWithNoTests": true
+                "jestConfig": "libs/cms-rest-client/jest.config.ts"
             },
             "configurations": {
                 "watch": {
                     "watch": true
                 },
                 "ci": {
-                    "ci": true,
-                    "codeCoverage": true,
                     "color": false
                 }
             }

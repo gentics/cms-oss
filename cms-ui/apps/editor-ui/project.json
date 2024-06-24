@@ -77,30 +77,23 @@
             "defaultConfiguration": "production"
         },
         "serve": {
-            "executor": "@nx/angular:webpack-dev-server",
+            "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false
             },
             "configurations": {
                 "production": {
-                    "browserTarget": "editor-ui:build:production"
+                    "buildTarget": "editor-ui:build:production"
                 },
                 "development": {
-                    "browserTarget": "editor-ui:build:development"
+                    "buildTarget": "editor-ui:build:development"
                 }
             },
             "defaultConfiguration": "development"
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "apps/editor-ui/**/*.ts",
-                    "apps/editor-ui/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "serve-static": {
             "executor": "@nx/web:file-server",

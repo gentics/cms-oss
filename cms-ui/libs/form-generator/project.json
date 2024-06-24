@@ -7,7 +7,7 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
             "options": {
                 "tsConfig": "libs/form-generator/tsconfig.lib.json",
                 "project": "libs/form-generator/ng-package.json"
@@ -19,14 +19,7 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "libs/form-generator/**/*.ts",
-                    "libs/form-generator/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "nx:run-commands",

@@ -2,10 +2,9 @@ import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { IndexByKey } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { Hotkey, HotkeysService } from 'angular2-hotkeys';
 import * as domSerialize from 'dom-serialize';
-import { ModalService } from '@gentics/ui-core';
-import * as punycodeModule from 'punycode';
 import { Observable, of as observableOf, throwError, zip } from 'rxjs';
 import { catchError, map, take, takeUntil, timeout } from 'rxjs/operators';
 import * as serialize from 'serialize-to-js';
@@ -15,18 +14,6 @@ import { DebugToolModalComponent } from '../../components/debug-tool-modal/debug
 import { ErrorHandler as CMSErrorHandler } from '../error-handler';
 import { I18nService } from '../i18n';
 import { TraceErrorHandler } from '../trace-error-handler/trace-error-handler';
-
-/**
- * dom-serialize imports punycode using require, but it expects version 1.x and it can
- * apparently not handle the default export of punycode 2.x properly, so we patch the
- * punycode module temporarily.
- */
-const patchablePunycode: {
-    ucs2: punycodeModule.ucs2;
-    default: {
-        ucs2: punycodeModule.ucs2;
-    }
-} = punycodeModule as any;
 
 /**
  * This service is responsible for listening to the Debug Tool hotkey, which is CTRL+ALT+G then CTRL+ALT+D.
@@ -53,7 +40,7 @@ export class DebugToolService extends InitializableServiceBase {
     private static apiRequestTimeout = 20000;
 
     // Store hotkey as static property to be accessible by other classes
-    static hotkey = ['ctrl+alt+g ctrl+alt+d'];
+    static hotkey = ['ctrl+alt+g'];
 
     private debugDataSnapshot: any = {};
     private collectedErrors: any = [];
@@ -240,36 +227,36 @@ export class DebugToolService extends InitializableServiceBase {
             title: this.i18n.instant('modal.debug_tool_clear_modal_title'),
             body: this.i18n.instant('modal.debug_tool_clear_modal_body'),
             buttons: [
-              { label: this.i18n.instant('common.cancel_button'), type: 'secondary', flat: true, returnValue: false },
-              { label: this.i18n.instant('modal.debug_tool_clear_modal_clear_button'), type: 'alert', returnValue: true },
+                { label: this.i18n.instant('common.cancel_button'), type: 'secondary', flat: true, returnValue: false },
+                { label: this.i18n.instant('modal.debug_tool_clear_modal_clear_button'), type: 'alert', returnValue: true },
             ],
         })
-        .then(modal => modal.open())
-        .then(shouldContinue => {
-            if (shouldContinue) {
+            .then(modal => modal.open())
+            .then(shouldContinue => {
+                if (shouldContinue) {
                 // TODO: Implement full cache clear / cache busting
 
-                // Clear Local Storage
-                if (typeof localStorage.clear === 'function') {
-                    localStorage.clear();
+                    // Clear Local Storage
+                    if (typeof localStorage.clear === 'function') {
+                        localStorage.clear();
+                    }
+
+                    // Clear Session Storage
+                    if (typeof sessionStorage.clear === 'function') {
+                        sessionStorage.clear();
+                    }
+
+                    // Clear All Cookies on all paths and domain variants which accessible
+                    this.clearAllCookies();
+
+                    // Reload Page without caches
+                    window.location.reload();
+
+                    return Promise.resolve('clear');
+                } else {
+                    return Promise.reject(false);
                 }
-
-                // Clear Session Storage
-                if (typeof sessionStorage.clear === 'function') {
-                    sessionStorage.clear();
-                }
-
-                // Clear All Cookies on all paths and domain variants which accessible
-                this.clearAllCookies();
-
-                // Reload Page without caches
-                window.location.reload();
-
-                return Promise.resolve('clear');
-            } else {
-                return Promise.reject(false);
-            }
-        });
+            });
     }
 
     clearAllCookies(): void {
@@ -347,7 +334,7 @@ export class DebugToolService extends InitializableServiceBase {
     }
 
     get debug_dom(): any {
-        return this.runWithPatchedPunycode(() => domSerialize(window.document));
+        return domSerialize(window.document);
     }
 
     get debug_platform(): any {
@@ -410,20 +397,5 @@ export class DebugToolService extends InitializableServiceBase {
         });
 
         return { stylesheets, styles };
-    }
-
-    private runWithPatchedPunycode<R>(action: () => R): R {
-        const origValue = patchablePunycode.ucs2;
-        const needsPatch = typeof origValue !== 'object';
-
-        if (needsPatch) {
-            patchablePunycode.ucs2 = patchablePunycode.default.ucs2;
-        }
-        const ret = action();
-        if (needsPatch) {
-            patchablePunycode.ucs2 = origValue;
-        }
-
-        return ret;
     }
 }

@@ -7,7 +7,7 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
             "options": {
                 "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json",
                 "project": "libs/cms-rest-client-angular/ng-package.json"
@@ -19,14 +19,7 @@
             }
         },
         "lint": {
-            "executor": "@nx/linter:eslint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": [
-                    "libs/cms-rest-client-angular/**/*.ts",
-                    "libs/cms-rest-client-angular/**/*.html"
-                ]
-            }
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "nx:noop"

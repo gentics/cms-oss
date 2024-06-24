@@ -241,7 +241,7 @@ export class TemplateOperations
     ): Observable<void> {
         const entity = this.appState.now.entity.template[entityId];
 
-        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.addTemplateToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'template.template_successfully_added_to_package',
@@ -261,7 +261,7 @@ export class TemplateOperations
     ): Observable<void> {
         const entity = this.appState.now.entity.template[entityId];
 
-        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.removeTemplateFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'template.template_successfully_removed_from_package',

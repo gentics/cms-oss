@@ -14,10 +14,15 @@ export function createSidObservable(gcmsAuthenticationService: GcmsAuthenticatio
     return gcmsAuthenticationService.getSid();
 }
 
-@NgModule({ declarations: [], imports: [CommonModule,
+@NgModule({
+    declarations: [],
+    imports: [
+        CommonModule,
         GenticsUICoreModule,
         TranslateModule,
-        GcmsRestClientsAngularModule], providers: [
+        GcmsRestClientsAngularModule,
+    ],
+    providers: [
         // @gentics/cms-rest-clients-angular configuration
         { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
         { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
@@ -27,8 +32,9 @@ export function createSidObservable(gcmsAuthenticationService: GcmsAuthenticatio
             deps: [GcmsAuthenticationService],
         },
         GcmsAuthenticationService,
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+        provideHttpClient(withInterceptorsFromDi()),
+    ],
+})
 /** Provides core functionality, such as GCMS Authentication service. */
 export class CoreModule {
 

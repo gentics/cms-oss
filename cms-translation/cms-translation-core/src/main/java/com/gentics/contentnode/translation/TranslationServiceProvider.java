@@ -6,25 +6,9 @@ import com.gentics.contentnode.runtime.ConfigurationValue;
 /**
  * Acts as a factory to create a translation service instance based on the specified provider.
  */
-public class GenericTranslationService implements TranslationService {
+public class TranslationServiceProvider {
 
-	/**
-	 * The translation service
-	 */
-	private TranslationService translationService;
-
-	private GenericTranslationService() {
-	}
-
-	@Override
-	public String translate(String textToTranslate, String sourceLanguage, String targetLanguage)
-			throws NodeException {
-		return this.translationService.translate(textToTranslate, sourceLanguage, targetLanguage);
-	}
-
-	@Override
-	public String translate(String textToTranslate, String targetLanguage) throws NodeException {
-		return this.translationService.translate(textToTranslate, targetLanguage);
+	private TranslationServiceProvider() {
 	}
 
 
@@ -36,7 +20,7 @@ public class GenericTranslationService implements TranslationService {
 		/**
 		 * The translation service to be instantiated
 		 */
-		TranslationService translationService;
+		private TranslationService translationService;
 
 		/**
 		 * Returns the instantiated translation service based on the given provider
@@ -85,7 +69,7 @@ public class GenericTranslationService implements TranslationService {
 				throws NodeException {
 			switch (provider) {
 				case DEEPL -> this.translationService = new DeepLTranslationService();
-				default -> throw new NodeException("Unknown translation provider " + provider);
+				default -> throw new NodeException(String.format("Unknown translation provider: '%s'", provider));
 			}
 			return this;
 		}

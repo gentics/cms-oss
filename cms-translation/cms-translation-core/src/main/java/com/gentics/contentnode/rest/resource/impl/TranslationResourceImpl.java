@@ -15,7 +15,7 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import com.gentics.contentnode.rest.resource.TranslationResource;
-import com.gentics.contentnode.translation.GenericTranslationService;
+import com.gentics.contentnode.translation.TranslationServiceProvider;
 import com.gentics.contentnode.translation.TranslationService;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
@@ -179,7 +179,7 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 	 */
 	public TranslationService getTranslationService() throws NodeException {
 		if(this.translationService == null) {
-			return new GenericTranslationService.Builder()
+			return new TranslationServiceProvider.Builder()
 					.withProviderFromConfig()
 					.build();
 		}

@@ -17,7 +17,7 @@ import org.mockito.Mockito;
 /**
  * Test class to verify that the translation service is instantiated properly.
  */
-class GenericTranslationServiceTest {
+class TranslationServiceProviderTest {
 
 	static final String TRANSLATION_PROVIDER = "deepl";
 	static final String API_TOKEN = "api-key";
@@ -41,7 +41,7 @@ class GenericTranslationServiceTest {
 	@Test
 	public void givenSpecifiedTranslationService_shouldInstantiateCorrectClass()
 			throws NodeException {
-		translationService = new GenericTranslationService.Builder().withProvider(
+		translationService = new TranslationServiceProvider.Builder().withProvider(
 				SupportedProvider.DEEPL).build();
 
 		assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
@@ -53,13 +53,13 @@ class GenericTranslationServiceTest {
 		var configuredProvider = ConfigurationValue.TRANSLATION_PROVIDER.get();
 		assertThat(configuredProvider).isEqualTo(TRANSLATION_PROVIDER);
 
-		translationService = new GenericTranslationService.Builder().withProviderFromConfig().build();
+		translationService = new TranslationServiceProvider.Builder().withProviderFromConfig().build();
 		assertThat(translationService).isInstanceOf(DeepLTranslationService.class);
 	}
 
 	@Test
 	public void givenMissingTranslationProvider_shouldThrowException() {
-		Throwable exception = catchThrowable(() -> new GenericTranslationService.Builder().build());
+		Throwable exception = catchThrowable(() -> new TranslationServiceProvider.Builder().build());
 
 		assertThat(exception).isInstanceOf(NodeException.class);
 		assertThat(exception).hasMessage(
@@ -75,7 +75,7 @@ class GenericTranslationServiceTest {
 				.thenReturn(mockTranslationConfig("not-existing-provider", API_TOKEN));
 
 		Throwable exception = catchThrowable(
-				() -> new GenericTranslationService.Builder().withProviderFromConfig());
+				() -> new TranslationServiceProvider.Builder().withProviderFromConfig());
 
 		assertThat(exception).isInstanceOf(NodeException.class);
 		assertThat(exception).hasMessageContaining("Invalid provider value");

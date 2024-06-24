@@ -24,7 +24,7 @@ class DeepLTranslationServiceTestIT {
 			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
 					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
 
-			this.translationService = new GenericTranslationService.Builder()
+			this.translationService = new TranslationServiceProvider.Builder()
 					.withProviderFromConfig()
 					.build();
 

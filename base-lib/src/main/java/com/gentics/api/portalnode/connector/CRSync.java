@@ -245,8 +245,7 @@ public class CRSync {
 		try {
 			line = parser.parse(createOptions(false), args);
 		} catch (ParseException e) {
-			logger.fatal("Invalid arguments found.");
-			logger.fatal(e.getMessage());
+			logger.fatal("Invalid arguments found: " + e.getMessage(), e);
 		}
 
 		// empty line or help message
@@ -277,7 +276,7 @@ public class CRSync {
 			try {
 				sourceDS = parseDSFromArgs(line, "source");
 			} catch (FileNotFoundException e) {
-				logger.debug("Source properties file not found: ", e);
+				logger.debug("Source properties file not found: " + e.getMessage());
 				logFatalMessageAndExit(e.getMessage(), e);
 			}
     
@@ -288,7 +287,7 @@ public class CRSync {
 			try {
 				targetDS = (CNWriteableDatasource) parseDSFromArgs(line, "target");
 			} catch (FileNotFoundException e) {
-				logger.debug("Target properties file not found: ", e);
+				logger.debug("Target properties file not found: " + e.getMessage());
 				logFatalMessageAndExit(e.getMessage(), e);
 			}
     
@@ -327,7 +326,7 @@ public class CRSync {
 				}
 			}
 		} catch (Throwable e) {
-			logger.fatal("Error while initializing cr sync.", e);
+			logger.fatal("Error while initializing cr sync: " + e.getMessage(), e);
 			try {
 				if (sourceDS != null) {
 					sourceDS.getHandlePool().close();
@@ -378,22 +377,10 @@ public class CRSync {
 
 			logger.info(returnMessage);
 		} catch (UnexptectedEmptySourceException e) {
-			logger.fatal("Found empty Source-ContentRepository but -allowempty was not set.");
-			logger.debug("", e);
+			logger.fatal("Found empty Source-ContentRepository but -allowempty was not set.", e);
 			System.exit(1);
 		} catch (UnexpectedAlterTableException e) {
-			logger.fatal("CRSync wanted to change the table-structure but -allowaltertable was not set.");
-			logger.debug("", e);
-			System.exit(1);
-		} catch (NodeException e) {
-			// NodeException (unanticipated errors)
-			logger.fatal("Error while syncing ContentRepositories.");
-			logger.fatal("", e);
-			System.exit(1);
-		} catch (Exception e) {
-			// IllegalArgumentException (?)
-			logger.fatal("Error while syncing ContentRepositories.");
-			logger.fatal("", e);
+			logger.fatal("CRSync wanted to change the table-structure but -allowaltertable was not set.", e);
 			System.exit(1);
 		} catch (Throwable e) {
 			logger.fatal("Error while syncing content repositories.", e);

@@ -5,20 +5,30 @@ import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.LanguageFactory;
+import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.filters.RequiredFeature;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.Tag.Type;
-import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.request.TranslationRequest;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import com.gentics.contentnode.rest.resource.TranslationResource;
-import com.gentics.contentnode.translation.TranslationServiceProvider;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.translation.TranslationService;
+import com.gentics.contentnode.translation.TranslationServiceProvider;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -32,10 +42,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.StringUtils;
 
-
+@Authenticated
+@RequiredFeature(Feature.TRANSLATION)
+@Produces(MediaType.APPLICATION_JSON)
 @Path("/translation")
-public class TranslationResourceImpl extends AuthenticatedContentNodeResource implements
-		TranslationResource {
+public class TranslationResourceImpl implements TranslationResource {
 
 	private final NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 	/**
@@ -47,7 +58,6 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 	@POST
 	@Path("/text")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
 	public TranslationResponse translate(final TranslationRequest request) {
 		if (request == null || StringUtils.isBlank(request.getText()) || StringUtils.isBlank(
 				request.getTargetLanguage())) {
@@ -77,51 +87,45 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 	@Override
 	@POST
 	@Path("/page/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public PageLoadResponse translate(final @PathParam("id") Integer id,
+	public PageLoadResponse translate(final @PathParam("id") Integer pageId,
 			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
 			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) {
-		final var pageResource = new PageResourceImpl();
-
-		final var loadedPage = pageResource.load(id.toString(), false, false, false, false, false, false,
-				false, false, false, false, null, null).getPage();
-		final var sourceLanguageCode = loadedPage.getLanguage();
-
-		var pageToTranslateResponse = pageResource.translate(id, targetLanguageCode, locked,
-				channelId);
-		var pageToTranslate = pageToTranslateResponse.getPage();
-
-		if (pageToTranslate == null) {
-			throw new WebApplicationException(pageToTranslateResponse.getResponseInfo()
-					.getResponseMessage());
-		}
-
 		try (Trx trx = ContentNodeHelper.trx()) {
-			translationService = getTranslationService();
+			final var loadedPage = getPage(pageId);
+			final var translatedNodePage = createLanguageVariant(loadedPage, targetLanguageCode);
+			final var sourceLanguageCode = loadedPage.getLanguage().getCode();
 
+			var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
+					List.of(Reference.CONTENT_TAGS));
 			var contentTags = this.getContentTags(pageToTranslate);
+			translationService = getTranslationService();
 
 			for (var contentTag : contentTags) {
 				var contentTagProperties = contentTag.getProperties();
-				this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode, targetLanguageCode);
+				this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
+						targetLanguageCode);
 			}
 
 			final var sourceTitle = pageToTranslate.getName();
-			final var translatedTitle = translationService.translate(sourceTitle, sourceLanguageCode, targetLanguageCode);
+			final var translatedTitle = translationService.translate(sourceTitle, sourceLanguageCode,
+					targetLanguageCode);
 			pageToTranslate.setName(translatedTitle);
 
-			final var pageSaveRequest = new PageSaveRequest();
-			pageSaveRequest.setPage(pageToTranslate);
+			var updatedTranslatedNodePage = ModelBuilder.getPage(pageToTranslate, false);
 
-			var saveResponse = pageResource.save(pageToTranslate.getId().toString(), pageSaveRequest);
-
-			if (saveResponse.getResponseInfo().getResponseCode() != ResponseCode.OK) {
-				throw new WebApplicationException(saveResponse.getResponseInfo().getResponseMessage());
+			if (updatedTranslatedNodePage == null) {
+				throw new NodeException(
+						String.format("Page language variant for source page '%s' not found.", pageId));
 			}
+			updatedTranslatedNodePage.save();
 
-			PageLoadResponse pageResponse = new PageLoadResponse();
-			pageResponse.setPage(pageToTranslate);
+			final var pageResponse = new PageLoadResponse();
+			pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage));
+
+			pageResponse.setResponseInfo(
+					new ResponseInfo(ResponseCode.OK, String.format("Translated page { %s } successfully", pageId)));
+			trx.getTransaction().commit(false);
 
 			return pageResponse;
 		} catch (Exception e) {
@@ -131,14 +135,55 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 	}
 
 	/**
-	 * Translates the text properties of the given content tags
-	 * @param translationService the service that translates the text
-	 * @param contentTagProperties the tags that should be translated
-	 * @param sourceLanguageCode the language code of the source text
-	 * @param targetLanguageCode the language code of the target text
+	 * Loads the page object with the given pageId
+	 * @param pageId the page id
+	 * @return the node page
 	 * @throws NodeException
 	 */
-	private void translateContentTags(TranslationService translationService,  Map<String, Property> contentTagProperties,
+	private Page getPage(int pageId) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Page page = t.getObject(Page.class, pageId);
+
+		if (page == null) {
+			throw new NodeException(String.format("Error occurred while loading page %s", pageId));
+		}
+
+		return page;
+	}
+
+	/**
+	 * Creates a new language variant of a page for the given target Language
+	 * @param page the that should have a new language variant
+	 * @param targetLanguage the target language
+	 * @return the new page for the specified language
+	 * @throws NodeException
+	 */
+	private Page createLanguageVariant(Page page, String targetLanguage) throws NodeException {
+		var languageVariant = (Page) page.copy();
+		var contentTargetLanguage = LanguageFactory.get(targetLanguage);
+
+		if (contentTargetLanguage == null) {
+			throw new NodeException(
+					String.format("Target language '%s' could not be resolved.", targetLanguage));
+		}
+
+		languageVariant.setLanguage(contentTargetLanguage);
+		languageVariant.save();
+
+		return languageVariant;
+	}
+
+	/**
+	 * Translates the text properties of the given content tags
+	 *
+	 * @param translationService   the service that translates the text
+	 * @param contentTagProperties the tags that should be translated
+	 * @param sourceLanguageCode   the language code of the source text
+	 * @param targetLanguageCode   the language code of the target text
+	 * @throws NodeException
+	 */
+	private void translateContentTags(TranslationService translationService,
+			Map<String, Property> contentTagProperties,
 			String sourceLanguageCode, String targetLanguageCode) throws NodeException {
 		for (var contentTagProperty : contentTagProperties.entrySet()) {
 			if (contentTagProperty != null && !StringUtils.isBlank(
@@ -157,13 +202,19 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 
 	/**
 	 * Helper method to get all the tags of Page with the type #{@link Type} CONTENTTAG
+	 *
 	 * @param page the page to obtain the content tags.
 	 * @return the content tags
 	 */
 	private ArrayList<Tag> getContentTags(com.gentics.contentnode.rest.model.Page page) {
 		var contentTags = new ArrayList<Tag>();
+		var pageTags = page.getTags();
 
-		page.getTags().forEach((s, tag) -> {
+		if (pageTags == null) {
+			return contentTags;
+		}
+
+		pageTags.forEach((s, tag) -> {
 			if (tag.getType() == Type.CONTENTTAG) {
 				contentTags.add(tag);
 			}
@@ -174,11 +225,12 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 
 	/**
 	 * Gets the translation service corresponding to the provided configuration.
+	 *
 	 * @return the translation service
 	 * @throws NodeException if the translation service cannot be instantiated
 	 */
 	public TranslationService getTranslationService() throws NodeException {
-		if(this.translationService == null) {
+		if (this.translationService == null) {
 			return new TranslationServiceProvider.Builder()
 					.withProviderFromConfig()
 					.build();
@@ -189,10 +241,11 @@ public class TranslationResourceImpl extends AuthenticatedContentNodeResource im
 
 	/**
 	 * Utility class for tests to set the translation service
+	 *
 	 * @param translationService
 	 */
 	public void setTranslationService(TranslationService translationService) {
-			this.translationService = translationService;
+		this.translationService = translationService;
 	}
 
 }

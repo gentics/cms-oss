@@ -14,7 +14,6 @@ class DeepLTranslationServiceTestIT {
 
 	final String TRANSLATION_PROVIDER = "deepl";
 	final String API_TOKEN = "<api-key>";
-	private TranslationService translationService;
 
 	@Test
 	@Disabled("Meant for manual execution")
@@ -24,7 +23,7 @@ class DeepLTranslationServiceTestIT {
 			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
 					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
 
-			this.translationService = new TranslationServiceProvider.Builder()
+			TranslationService translationService = new TranslationServiceProvider.Builder()
 					.withProviderFromConfig()
 					.build();
 

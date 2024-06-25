@@ -27,7 +27,6 @@ public interface TranslationResource {
 	 * @param request The translation request to be processed.
 	 * @return The response of the translation.
 	 */
-
 	@POST
 	@Path("/text")
 	@Consumes(MediaType.APPLICATION_JSON)

@@ -110,6 +110,7 @@ public interface FormResource {
 	/**
 	 * Delete a form
 	 * @param formId form ID
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response
 	 * @HTTP 200 The form was deleted
 	 * @HTTP 404 The form with given ID does not exist
@@ -117,7 +118,7 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}")
-	GenericResponse delete(@PathParam("id") String formId) throws Exception;
+	GenericResponse delete(@PathParam("id") String formId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws Exception;
 
 	/**
 	 * Publish a form

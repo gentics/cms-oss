@@ -1154,7 +1154,7 @@ public class FormResourceTest {
 		Form form = execute(id -> TransactionManager.getCurrentTransaction().getObject(Form.class, id), response.getItem().getId());
 		assertThat(form).as("Form").isNotNull().hasFieldOrPropertyWithValue("deleted", false);
 
-		consume(id -> assertResponseOK(getFolderResource().delete(id, null)), subFolderId);
+		consume(id -> assertResponseOK(getFolderResource().delete(id, null, null)), subFolderId);
 		consume(id -> assertResponseOK(getFolderResource().deleteFromWastebin(id, 0)), subFolderId);
 
 		form = execute(id -> {

@@ -224,7 +224,7 @@ interface UpdateableItemObjectProperty <T extends FolderItemType, R extends Fold
 }
 
 
-export type TranslateRequestFunction = (pageId: number, options?: PageTranslateOptions | TranslationRequestOptions) => Promise<PageResponse>| void;
+export type TranslateRequestFunction = (pageId: number, options?: PageTranslateOptions | TranslationRequestOptions) => Promise<PageResponse>;
 
 
 @Injectable()
@@ -1626,7 +1626,7 @@ export class FolderActionsService {
     /**
      * Create a new language variant of the given page.
      */
-    createPageTranslation = async(pageId: number, params: TranslationRequestOptions): Promise<PageResponse> => {
+    async createPageTranslation(pageId: number, params: TranslationRequestOptions): Promise<PageResponse> {
         return this.client.page.translate(pageId, { channelId: params.channelId, language: params.language }).toPromise();
     }
 
@@ -1643,8 +1643,7 @@ export class FolderActionsService {
         await this.appState.dispatch(new StartListCreatingAction('page')).toPromise();
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            const res = await translationRequestFunction.call(this, pageId, {language: languageCode, channelId: nodeId});
+            const res = await translationRequestFunction(pageId, {language: languageCode, channelId: nodeId});
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
             const newPage = res.page;

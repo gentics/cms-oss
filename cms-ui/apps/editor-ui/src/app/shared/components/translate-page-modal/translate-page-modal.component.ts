@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ViewChild } from '@angular/core';
 import { UntypedFormGroup } from '@angular/forms';
-import { EditablePageProps, Language, Page, Raw, Template } from '@gentics/cms-models';
+import { EditablePageProps, Language, Page, PageTranslateOptions, Raw, Template, TranslationRequestOptions } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -79,7 +79,7 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
      * User chooses to translate and do nothing afterwards.
      */
     createTranslation(): void {
-        this.createTranslationWithFunction(this.folderActions.createPageTranslation)
+        this.createTranslationWithFunction((pageId, options)  => this.folderActions.createPageTranslation(pageId, options) )
             .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPage' }));
     }
 
@@ -87,12 +87,12 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
      * User chooses to translate and open translated page afterwards
      */
     createTranslationAndEditTranslatedPage(): void {
-        this.createTranslationWithFunction(this.folderActions.createPageTranslation)
+        this.createTranslationWithFunction((pageId, options) => this.folderActions.createPageTranslation(pageId, options ))
             .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPageCompareWithLanguage' }));
     }
 
     createAutomaticallyTranslatedPage(): void {
-        this.createTranslationWithFunction(this.translationService.translatePage)
+        this.createTranslationWithFunction((pageId, options)  => this.translationService.translatePage(pageId, options) )
             .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPageCompareWithLanguage' }));
     }
 
@@ -100,11 +100,11 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
     /**
      * Create page translation with the provided translation function.
      */
-    private createTranslationWithFunction(translationRequestFunction: TranslateRequestFunction): Promise<Page<Raw> | void> {
+    private createTranslationWithFunction(translationFunction: TranslateRequestFunction): Promise<Page<Raw> | void> {
         const languageCode = this.defaultProps.language;
         const newPageProps = this.getNewPageProperties();
 
-        return this.folderActions.executePageTranslationFunction(this.nodeId, this.pageId, languageCode, translationRequestFunction)
+        return this.folderActions.executePageTranslationFunction(this.nodeId, this.pageId, languageCode, translationFunction)
             .then(page => {
                 if (page) {
                     this.folderActions.updatePageProperties(page.id, newPageProps, { showNotification: true, fetchForUpdate: false });
@@ -120,7 +120,7 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
         const newPageProps: EditablePageProps = {
             pageName: formValue.pageName,
             fileName: formValue.fileName,
-            description: formasyncValue.description,
+            description: formValue.description,
             templateId: formValue.templateId,
             priority: formValue.priority,
         };

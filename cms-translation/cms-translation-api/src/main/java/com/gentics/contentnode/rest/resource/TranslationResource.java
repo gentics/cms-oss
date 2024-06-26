@@ -31,7 +31,7 @@ public interface TranslationResource {
 	@Path("/text")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	TranslationResponse translate(TranslationRequest request);
+	TranslationResponse translate(TranslationRequest request) throws Exception;
 
 
 	/**
@@ -53,5 +53,5 @@ public interface TranslationResource {
 	PageLoadResponse translate(@PathParam("id") Integer id,
 			@QueryParam("language") String targetLanguageCode,
 			@QueryParam("locked") @DefaultValue("true") boolean locked,
-			@QueryParam("channelId") Integer channelId);
+			@QueryParam("channelId") Integer channelId) throws Exception;
 }

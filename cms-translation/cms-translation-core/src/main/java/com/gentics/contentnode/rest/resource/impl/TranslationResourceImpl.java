@@ -25,7 +25,7 @@ import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.translation.TranslationService;
-import com.gentics.contentnode.translation.TranslationServiceProvider;
+import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +58,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	@POST
 	@Path("/text")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public TranslationResponse translate(final TranslationRequest request) {
+	public TranslationResponse translate(final TranslationRequest request) throws NodeException {
 		if (request == null || StringUtils.isBlank(request.getText()) || StringUtils.isBlank(
 				request.getTargetLanguage())) {
 			throw new WebApplicationException(
@@ -66,21 +66,16 @@ public class TranslationResourceImpl implements TranslationResource {
 					Status.BAD_REQUEST);
 		}
 
-		try {
-			translationService = getTranslationService();
+		translationService = getTranslationService();
 
-			var translatedText = translationService.translate(request.getText(),
-					request.getSourceLanguage(),
-					request.getTargetLanguage());
+		var translatedText = translationService.translate(request.getText(),
+				request.getSourceLanguage(),
+				request.getTargetLanguage());
 
-			var response = new TranslationResponse();
-			response.setText(translatedText);
+		var response = new TranslationResponse();
+		response.setText(translatedText);
 
-			return response;
-		} catch (NodeException e) {
-			logger.error("Error while translating text ", e);
-			throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
-		}
+		return response;
 	}
 
 
@@ -90,7 +85,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	public PageLoadResponse translate(final @PathParam("id") Integer pageId,
 			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
-			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) {
+			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			final var loadedPage = getPage(pageId);
 			final var translatedNodePage = createLanguageVariant(loadedPage, targetLanguageCode);
@@ -107,8 +102,8 @@ public class TranslationResourceImpl implements TranslationResource {
 						targetLanguageCode);
 			}
 
-			final var sourceTitle = pageToTranslate.getName();
-			final var translatedTitle = translationService.translate(sourceTitle, sourceLanguageCode,
+			final var sourceName = pageToTranslate.getName();
+			final var translatedTitle = translationService.translate(sourceName, sourceLanguageCode,
 					targetLanguageCode);
 			pageToTranslate.setName(translatedTitle);
 
@@ -125,12 +120,9 @@ public class TranslationResourceImpl implements TranslationResource {
 
 			pageResponse.setResponseInfo(
 					new ResponseInfo(ResponseCode.OK, String.format("Translated page { %s } successfully", pageId)));
-			trx.getTransaction().commit(false);
+			trx.success();
 
 			return pageResponse;
-		} catch (Exception e) {
-			logger.error("Error while translating page", e);
-			throw new WebApplicationException(e.getMessage(), Status.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -231,9 +223,8 @@ public class TranslationResourceImpl implements TranslationResource {
 	 */
 	public TranslationService getTranslationService() throws NodeException {
 		if (this.translationService == null) {
-			return new TranslationServiceProvider.Builder()
-					.withProviderFromConfig()
-					.build();
+			return TranslationUtil.getTranslationService().orElseThrow(()-> new NodeException(
+					"Translation service not available"));
 		}
 
 		return this.translationService;
@@ -242,7 +233,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	/**
 	 * Utility class for tests to set the translation service
 	 *
-	 * @param translationService
+	 * @param translationService the translation service to be used
 	 */
 	public void setTranslationService(TranslationService translationService) {
 		this.translationService = translationService;

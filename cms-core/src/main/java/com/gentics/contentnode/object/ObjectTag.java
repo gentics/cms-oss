@@ -170,8 +170,8 @@ public abstract class ObjectTag extends Tag {
 	public abstract NodeObject getNodeObject() throws NodeException;
 
 	/**
-	 * Get the object tag definition
-	 * @return object tag definition
+	 * Get the object tag definition. This method will return null if the tag does not have a proper object tag definition.
+	 * @return object tag definition (may be null)
 	 * @throws NodeException
 	 */
 	public abstract ObjectTagDefinition getDefinition() throws NodeException;

@@ -1,0 +1,1 @@
+A possible NullPointerException when loading entities with object tags has been fixed.

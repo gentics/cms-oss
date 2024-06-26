@@ -715,7 +715,10 @@ public class FormFactory extends AbstractFactory {
 			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
 			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
 
-			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
+			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
+					PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
+					PublishCacheTrx pcTrx = new PublishCacheTrx(false);
+					RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
 				// for the StaticUrlFactory, forbid auto detection of the linkway
 				RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
 				if (renderUrlFactory instanceof StaticUrlFactory) {
@@ -824,6 +827,17 @@ public class FormFactory extends AbstractFactory {
 
 		/**
 		 * Recursively transform all _pageid fields into the rendered pages
+		 *
+		 * <p>
+		 *     <strong>IMPORTANT:</strong> Make sure that the properties {@code contentnode.linkway} and
+		 *     {@code contentnode.linkway_file} are set to {@code "host"} and that the publish cache is
+		 *     deactivated:
+		 *     <pre>
+		 *			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
+		 *				PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
+		 *				PublishCacheTrx pcTrx = new PublishCacheTrx(false)) { ... }
+		 *     </pre>
+		 * </p>
 		 * @param node current node
 		 * @param language language
 		 * @throws NodeException
@@ -838,24 +852,19 @@ public class FormFactory extends AbstractFactory {
 					String name = i.next();
 					if (name.endsWith(PAGEID_POSTFIX)) {
 						int pageId = objectNode.path(name).asInt();
-						try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
-								PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
-								PublishCacheTrx pcTrx = new PublishCacheTrx(false)) {
-							Page page = t.getObject(Page.class, pageId);
-							if (page != null) {
-								page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),
-										page.getOwningNode());
-							}
-
-							if (page != null) {
-								// render the page and put into replace map
-								String renderedPage = page.render();
-								replace.put(name, renderedPage);
-							} else {
-								replace.put(name, "");
-							}
+						Page page = t.getObject(Page.class, pageId);
+						if (page != null) {
+							page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),
+									page.getOwningNode());
 						}
 
+						if (page != null) {
+							// render the page and put into replace map
+							String renderedPage = page.render();
+							replace.put(name, renderedPage);
+						} else {
+							replace.put(name, "");
+						}
 					} else {
 						// recursion
 						renderReferencedPages(objectNode.get(name), language);

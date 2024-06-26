@@ -26,7 +26,6 @@ import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.translation.TranslationService;
 import com.gentics.contentnode.translation.TranslationUtil;
-import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,6 @@ import org.apache.commons.lang3.StringUtils;
 @Path("/translation")
 public class TranslationResourceImpl implements TranslationResource {
 
-	private final NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 	/**
 	 * The translation service used to translate tests
 	 */
@@ -193,7 +191,11 @@ public class TranslationResourceImpl implements TranslationResource {
 
 				var extractedText = propertyToTranslate.getStringValue();
 				var translatedText = translationService.translate(extractedText, sourceLanguageCode,
-						targetLanguageCode, VALIDATOR);
+						targetLanguageCode);
+
+				if (!VALIDATOR.test(translatedText)) {
+					throw new NodeException("Translated markup is invalid");
+				}
 
 				propertyToTranslate.setStringValue(translatedText);
 				contentTagProperties.put(contentTagProperty.getKey(), propertyToTranslate);

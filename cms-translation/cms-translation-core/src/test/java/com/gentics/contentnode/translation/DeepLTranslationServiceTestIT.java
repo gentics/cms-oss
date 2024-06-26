@@ -1,9 +1,8 @@
 package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.translation.TranslationTestUtils.mockTranslationConfig;
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -23,10 +22,6 @@ class DeepLTranslationServiceTestIT {
 			mockedNodeRuntimeConfig.when(NodeConfigRuntimeConfiguration::getPreferences)
 					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
 
-			TranslationService translationService = new TranslationServiceProvider.Builder()
-					.withProviderFromConfig()
-					.build();
-
 			var textToTranslate = """
 					<!DOCTYPE html>
 					<title>Seiten Titel</title>
@@ -36,7 +31,7 @@ class DeepLTranslationServiceTestIT {
 					     
 					""";
 
-			var translatedText = translationService.translate(textToTranslate, "de", "en");
+			var translatedText = TranslationUtil.translate(textToTranslate, "de", "en");
 			assertThat(translatedText).isEqualTo("Hello world!");
 		}
 	}

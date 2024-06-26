@@ -5,6 +5,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +46,8 @@ public class TranslationResourceImplTest {
 	static int checkBoxConstructId;
 	static SystemUser user;
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
+	TranslationService mockedTranslationService = Mockito.mock(TranslationService.class);
+
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
@@ -59,21 +62,21 @@ public class TranslationResourceImplTest {
 
 		checkBoxConstructId = supply(
 				() -> createConstruct(node, CheckboxPartType.class, checkboxKeyword, "check"));
-
-		TranslationService mockedTranslationService = Mockito.mock(TranslationService.class);
-		when(mockedTranslationService.translate(anyString(),anyString(), anyString())).thenReturn("Translated text");
-		translationResource.setTranslationService(mockedTranslationService);
 	}
 
 
 	@Test
 	public void givenPageInSourceLanguage_shouldBeTranslatedIntoTargetLanguage()
-			throws NodeException {
+			throws Exception {
+		when(mockedTranslationService.translate(anyString(), anyString(), anyString())).thenReturn(
+				"Translated text");
+		translationResource.setTranslationService(mockedTranslationService);
+
 		final var sourceLanguage = "de";
 		final var targetLanguage = "en";
-		var pageToTranslate = createPage(sourceLanguage);
 
 		try (Trx trx = new Trx(user)) {
+			var pageToTranslate = createPage(sourceLanguage);
 			createTags(pageToTranslate);
 
 			var pageTranslateRequest = translationResource.translate(pageToTranslate.getId(),
@@ -87,12 +90,38 @@ public class TranslationResourceImplTest {
 		}
 	}
 
+	@Test
+	public void givenTranslatorReturnsCorruptMarkup_shouldThrowException() throws Exception {
+		when(mockedTranslationService.translate(anyString(), anyString(), anyString())).thenReturn(
+				"<h1>My blog is great <!-- something is missing here -->");
+		translationResource.setTranslationService(mockedTranslationService);
+
+		final var sourceLanguage = "de";
+		final var targetLanguage = "en";
+		var pageToTranslate = createPage(sourceLanguage);
+
+		try (Trx trx = new Trx(user)) {
+			createTags(pageToTranslate);
+
+			Exception exception = assertThrows(NodeException.class, () -> {
+				translationResource.translate(pageToTranslate.getId(),
+						targetLanguage,
+						true, 0);
+			});
+
+			final var expectedMessage = "Translated markup is invalid";
+			final var actualMessage = exception.getMessage();
+
+			assertThat(actualMessage).contains(expectedMessage);
+		}
+	}
+
 	/**
 	 * Helper method to create page tags via REST API
 	 *
 	 * @param page page to add the tags
 	 */
-	private void createTags(Page page) throws NodeException {
+	private void createTags(Page page) {
 		PageResourceImpl pageResource = new PageResourceImpl();
 
 		var createTagsRequest = new MultiTagCreateRequest();

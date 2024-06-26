@@ -18,34 +18,4 @@ public interface TranslationService {
 	String translate(String textToTranslate, String sourceLanguage, String targetLanguage)
 			throws Exception;
 
-
-	/**
-	 * @param htmlToTranslate the text containing markup to translate
-	 * @param sourceLanguage  the language of the source text.
-	 * @param targetLanguage  the language that the text should be translated to.
-	 * @param validator       a validator function that checks if the markup is valid
-	 * @return The translated text
-	 * @throws Exception if the translated markup fails the validation or an error occur during translating.
-	 */
-	default String translate(String htmlToTranslate, String sourceLanguage, String targetLanguage,
-			Predicate<String> validator) throws Exception {
-		var translatedMarkup = this.translate(htmlToTranslate, sourceLanguage, targetLanguage);
-
-		if (!validator.test(translatedMarkup)) {
-			throw new Exception("Translated markup is invalid");
-		}
-
-		return translatedMarkup;
-	}
-
-
-	/**
-	 * Translate a text to the specified language. The source language will be autodetected.
-	 *
-	 * @param textToTranslate the text that should be translated
-	 * @param targetLanguage  the language that the text should be translated to.
-	 * @return the translated text
-	 * @throws Exception if an error occurs during translating
-	 */
-	String translate(String textToTranslate, String targetLanguage) throws Exception;
 }

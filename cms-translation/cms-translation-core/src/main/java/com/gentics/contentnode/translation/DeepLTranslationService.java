@@ -19,10 +19,6 @@ import org.apache.logging.log4j.Level;
 public class DeepLTranslationService implements TranslationService {
 
 	/**
-	 * The concrete translation provider
-	 */
-	static final SupportedProvider PROVIDER = SupportedProvider.DEEPL;
-	/**
 	 * The logger
 	 */
 	protected final NodeLogger logger = NodeLogger.getNodeLogger(getClass());
@@ -61,11 +57,6 @@ public class DeepLTranslationService implements TranslationService {
 	}
 
 	@Override
-	public String translate(String textToTranslate, String targetLanguage) throws NodeException {
-		return this.translate(textToTranslate, null, targetLanguage);
-	}
-
-	@Override
 	public String translate(String textToTranslate, @Nullable String sourceLanguage,
 			String targetLanguage)
 			throws NodeException {
@@ -92,7 +83,7 @@ public class DeepLTranslationService implements TranslationService {
 		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
 
 		if (StringUtils.isBlank(authToken)) {
-			throw new NodeException("Invalid authentication token provided for: " + PROVIDER);
+			throw new NodeException("Invalid authentication token provided for: " + getClass().getSimpleName());
 		}
 
 		return authToken;
@@ -108,7 +99,7 @@ public class DeepLTranslationService implements TranslationService {
 
 		if (MapUtils.isEmpty(languagePreferencesFromConfig)) {
 			final var errorMessage = String.format(
-					"No language preferences found for: '%s'. Using default configuration.", PROVIDER);
+					"No language preferences found for: '%s'. Using default configuration.", getClass().getSimpleName());
 			logger.log(Level.WARN, errorMessage);
 		}
 

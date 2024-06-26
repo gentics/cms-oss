@@ -1,6 +1,5 @@
 package com.gentics.contentnode.translation;
 
-import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -11,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
  * Utility class, which acts as bridge to the optional translation module
  */
 public class TranslationUtil {
+
 	/**
 	 * {@link TranslationService} service
 	 */
@@ -21,13 +21,14 @@ public class TranslationUtil {
 		return Optional.of(loader.iterator().next());
 	}
 
-	static public String translate(String textToTranslate, String language) throws Exception {
+	static public String translate(String textToTranslate, String sourceLanguage,
+			String targetLanguage) throws Exception {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.TRANSLATION)) {
 			return null;
 		}
 		return loader.execForFirst(service -> {
 			try {
-				return service.translate(textToTranslate, language);
+				return service.translate(textToTranslate, sourceLanguage, targetLanguage);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

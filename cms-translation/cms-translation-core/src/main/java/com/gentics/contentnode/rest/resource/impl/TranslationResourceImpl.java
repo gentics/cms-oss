@@ -65,17 +65,18 @@ public class TranslationResourceImpl implements TranslationResource {
 					"Invalid request. Either translation text or target language is not set.",
 					Status.BAD_REQUEST);
 		}
+		try {
+			translationService = getTranslationService();
+			var translatedText = translationService.translate(request.getText(),
+					request.getSourceLanguage(),
+					request.getTargetLanguage());
+			var response = new TranslationResponse();
+			response.setText(translatedText);
 
-		translationService = getTranslationService();
-
-		var translatedText = translationService.translate(request.getText(),
-				request.getSourceLanguage(),
-				request.getTargetLanguage());
-
-		var response = new TranslationResponse();
-		response.setText(translatedText);
-
-		return response;
+			return response;
+		} catch (Exception e) {
+			throw new NodeException(e);
+		}
 	}
 
 
@@ -93,19 +94,24 @@ public class TranslationResourceImpl implements TranslationResource {
 
 			var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
 					List.of(Reference.CONTENT_TAGS));
-			var contentTags = this.getContentTags(pageToTranslate);
-			translationService = getTranslationService();
 
-			for (var contentTag : contentTags) {
-				var contentTagProperties = contentTag.getProperties();
-				this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
+			try {
+				var contentTags = this.getContentTags(pageToTranslate);
+				translationService = getTranslationService();
+
+				for (var contentTag : contentTags) {
+					var contentTagProperties = contentTag.getProperties();
+					this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
+							targetLanguageCode);
+				}
+
+				final var sourceName = pageToTranslate.getName();
+				final var translatedTitle = translationService.translate(sourceName, sourceLanguageCode,
 						targetLanguageCode);
+				pageToTranslate.setName(translatedTitle);
+			} catch (Exception e) {
+				throw new NodeException(e);
 			}
-
-			final var sourceName = pageToTranslate.getName();
-			final var translatedTitle = translationService.translate(sourceName, sourceLanguageCode,
-					targetLanguageCode);
-			pageToTranslate.setName(translatedTitle);
 
 			var updatedTranslatedNodePage = ModelBuilder.getPage(pageToTranslate, false);
 
@@ -119,7 +125,8 @@ public class TranslationResourceImpl implements TranslationResource {
 			pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage));
 
 			pageResponse.setResponseInfo(
-					new ResponseInfo(ResponseCode.OK, String.format("Translated page { %s } successfully", pageId)));
+					new ResponseInfo(ResponseCode.OK,
+							String.format("Translated page { %s } successfully", pageId)));
 			trx.success();
 
 			return pageResponse;
@@ -128,6 +135,7 @@ public class TranslationResourceImpl implements TranslationResource {
 
 	/**
 	 * Loads the page object with the given pageId
+	 *
 	 * @param pageId the page id
 	 * @return the node page
 	 * @throws NodeException
@@ -145,7 +153,8 @@ public class TranslationResourceImpl implements TranslationResource {
 
 	/**
 	 * Creates a new language variant of a page for the given target Language
-	 * @param page the that should have a new language variant
+	 *
+	 * @param page           the that should have a new language variant
 	 * @param targetLanguage the target language
 	 * @return the new page for the specified language
 	 * @throws NodeException
@@ -176,7 +185,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	 */
 	private void translateContentTags(TranslationService translationService,
 			Map<String, Property> contentTagProperties,
-			String sourceLanguageCode, String targetLanguageCode) throws NodeException {
+			String sourceLanguageCode, String targetLanguageCode) throws Exception {
 		for (var contentTagProperty : contentTagProperties.entrySet()) {
 			if (contentTagProperty != null && !StringUtils.isBlank(
 					contentTagProperty.getValue().getStringValue())) {
@@ -223,7 +232,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	 */
 	public TranslationService getTranslationService() throws NodeException {
 		if (this.translationService == null) {
-			return TranslationUtil.getTranslationService().orElseThrow(()-> new NodeException(
+			return TranslationUtil.getTranslationService().orElseThrow(() -> new NodeException(
 					"Translation service not available"));
 		}
 

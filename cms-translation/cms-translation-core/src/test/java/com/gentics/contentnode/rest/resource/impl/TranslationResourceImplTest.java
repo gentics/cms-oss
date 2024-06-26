@@ -47,7 +47,7 @@ public class TranslationResourceImplTest {
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
 
 	@BeforeClass
-	public static void setupOnce() throws NodeException {
+	public static void setupOnce() throws Exception {
 		testContext.getContext().getTransaction().commit();
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));

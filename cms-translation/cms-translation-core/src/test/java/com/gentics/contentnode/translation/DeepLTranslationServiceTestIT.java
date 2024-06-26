@@ -17,10 +17,10 @@ class DeepLTranslationServiceTestIT {
 
 	@Test
 	@Disabled("Meant for manual execution")
-	public void givenTranslationService_shouldTranslateText() throws NodeException {
+	public void givenTranslationService_shouldTranslateText() throws Exception {
 		try (MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
 				NodeConfigRuntimeConfiguration.class)) {
-			mockedNodeRuntimeConfig.when(() -> NodeConfigRuntimeConfiguration.getPreferences())
+			mockedNodeRuntimeConfig.when(NodeConfigRuntimeConfiguration::getPreferences)
 					.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, API_TOKEN));
 
 			TranslationService translationService = new TranslationServiceProvider.Builder()

@@ -12,7 +12,7 @@
     "useInferencePlugins": false,
     "defaultBase": "dev",
     "release": {
-        "projectsRelationship": "fixed",
+        "projectsRelationship": "independent",
         "projects": ["tag:lib"]
     },
     "plugins": [
@@ -79,7 +79,12 @@
         },
         "e2e": {
             "inputs": ["default", "^production"],
-            "cache": true
+            "cache": true,
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
         },
         "component-test": {
             "inputs": ["default", "^production"],

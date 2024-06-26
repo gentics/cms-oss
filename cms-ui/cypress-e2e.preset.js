@@ -4,12 +4,22 @@
 const { resolve } = require('path');
 
 module.exports = {
-    createReporterOptions(type, name) {
+    createReporterOptions(type, name, isCI) {
+        isCI = typeof isCI === 'boolean' ? isCI : false;
+
+        if (isCI) {
+            return {
+                reporter: resolve(__dirname, 'node_modules/mocha-junit-reporter'),
+                reporterOptions: {
+                    testsuitesTitle: `Integration Tests: ${name}`,
+                    mochaFile: resolve(__dirname, `.reports/${type}/${name}/CYPRESS-report.xml`),
+                    jenkinsMode: true,
+                },
+            };
+        }
+
         return {
-            reporter: resolve(__dirname, 'node_modules/mocha-junit-reporter'),
-            reporterOptions: {
-                mochaFile: resolve(__dirname, `.reports/${type}/${name}/CYPRESS-[hash]-report.xml`),
-            },
-        };
+            reporter: 'min',
+        }
     },
 };

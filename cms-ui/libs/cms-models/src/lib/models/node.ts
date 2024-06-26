@@ -108,10 +108,10 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     publishFsPages: boolean;
 
     /** How URLs are rendered for files in this node */
-    urlRenderWayFiles: number;
+    urlRenderWayFiles: NodeUrlMode;
 
     /** How URLs are rendered for pages in this node */
-    urlRenderWayPages: number;
+    urlRenderWayPages: NodeUrlMode;
 
     /**
      * True if the node content should be encoded in UTF8
@@ -150,6 +150,14 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
 
     /** Language code modes */
     pageLanguageCode: NodePageLanguageCode;
+}
+
+export enum NodeUrlMode {
+    AUTOMATIC = 0,
+    PORTAL_LINK = 1,
+    DYNAMIC = 2,
+    WITH_DOMAIN = 3,
+    WITHOUT_DOMAIN = 4,
 }
 
 export enum NodePageLanguageCode {

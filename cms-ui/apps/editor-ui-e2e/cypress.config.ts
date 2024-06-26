@@ -4,6 +4,5 @@ import { createReporterOptions } from '../../cypress-e2e.preset';
 
 export default defineConfig({
     e2e: nxE2EPreset(__dirname),
-    video: false,
     ...createReporterOptions('apps', 'editor-ui'),
 });

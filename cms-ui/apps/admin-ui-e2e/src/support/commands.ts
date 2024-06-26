@@ -12,14 +12,15 @@
 declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
-        login(cmsLogin: boolean): void;
+        login(cmsLogin: boolean): Chainable<void>;
         editEntity(type: string, identifier: string): Chainable<JQuery<HTMLElement>> | Chainable<null>;
     }
 }
+
 //
 // -- This is a parent command --
 Cypress.Commands.add('login', (cmsLogin) => {
-    cy.fixture('auth.json').then(auth => {
+    return cy.fixture('auth.json').then(auth => {
         const cred = cmsLogin ? auth.cms : auth.keycloak;
 
         cy.get('input[type="text"]').type(cred.username);

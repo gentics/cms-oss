@@ -14,10 +14,9 @@
                 "watch": false
             },
             "configurations": {
-                "production": {
-                    "devServerTarget": "admin-ui:serve:production"
-                },
                 "ci": {
+                    "quiet": true,
+                    "cypressConfig": "apps/admin-ui-e2e/cypress.config.ci.ts",
                     "devServerTarget": "admin-ui:serve-static:e2e"
                 }
             }

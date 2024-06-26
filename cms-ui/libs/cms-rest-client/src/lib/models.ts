@@ -48,6 +48,9 @@ export enum RequestMethod {
     DELETE = 'DELETE',
 }
 
+// export const SESSION_REQUEST_HEADER = 'X-Session-Content';
+// export const SESSION_RESPONSE_HEADER = SESSION_REQUEST_HEADER;
+
 export interface AbsoluteGCMSClientConnection {
     absolute: true;
     ssl?: boolean;
@@ -87,22 +90,73 @@ export interface GCMSRestClientRequestData {
     headers: Record<string, string>;
 }
 
+/**
+ * A prepared request that can be send or canceled.
+ * This request has to be *lazy*, i.E.  it should not perform the request
+ * until the `send` method has been called.
+ *
+ * Additionally, the request should only be sent once for this instance.
+ * When the `send` method is called again, the same response should be returned.
+ *
+ * Canceling the request should throw an `GCMSRestClientRequestError`,
+ * to follow the proper handling of the Response data.
+ */
 export interface GCMSRestClientRequest<T> {
+    /**
+     * Sends the request to the API.
+     * Repeated calls of this function may not trigger additional requests,
+     * but may return the same promise/response.
+     * For multiple requests, call the client functions accordingly.
+     *
+     * @returns A promise with the requested/parsed data from the response.
+     */
     send: () => Promise<T>;
+    /**
+     * Cancels the request to the API.
+     * If no request has yet been performed, attempts to do so, must not be performed
+     * and should immediatly throw an `GCMSRestClientRequestError`.
+     */
     cancel: () => void;
 }
 
+/**
+ * Interface for a driver to be used in the GCMS Client.
+ * The driver performs the actual request to the GCMS REST API.
+ * To accomendate different use cases and platforms, this interface is
+ * to be used to define the behaviour of a driver that can be used.
+ */
 export interface GCMSClientDriver {
+    /**
+     * Performs a request to the API and returns a prepared request.
+     * The prepared request must return the body of the response, parsed, as JSON when sent.
+     *
+     * @param request The request that should be sent to the API.
+     * @param body The body that should be sent to the API
+     */
     performMappedRequest<T>(
         request: GCMSRestClientRequestData,
         body?: null | string | FormData,
     ): GCMSRestClientRequest<T>;
 
+    /**
+     * Performs a request to the API and returns a prepared request.
+     * The prepared request must return the body of the response, raw, without any parsing.
+     *
+     * @param request The request that should be sent to the API.
+     * @param body The body that should be sent to the API
+     */
     performRawRequest(
         request: GCMSRestClientRequestData,
         body?: null | string | FormData,
     ): GCMSRestClientRequest<string>;
 
+    /**
+     * Performs a request to the API and returns a prepared request.
+     * The prepared request must return the body of the response, as a Blob, to further process or download.
+     *
+     * @param request The request that should be sent to the API.
+     * @param body The body that should be sent to the API
+     */
     performDownloadRequest(
         request: GCMSRestClientRequestData,
         body?: null | string | FormData,

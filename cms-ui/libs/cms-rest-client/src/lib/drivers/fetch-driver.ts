@@ -1,9 +1,9 @@
 import { Response as GCMSResponse } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '../errors';
-import { GCMSClientDriver, GCMSRestClientRequestData, GCMSRestClientRequest } from '../models';
+import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientRequestData } from '../models';
 import { validateResponseObject } from '../utils';
 
-async function parseErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
+export async function parseFetchErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     let raw: string;
     let parsed: GCMSResponse;
     let bodyError: Error;
@@ -29,7 +29,7 @@ async function parseErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Res
     );
 }
 
-async function jsonResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
+export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     if (res.ok) {
         return res.json().then(json => {
             validateResponseObject(request, json);
@@ -37,26 +37,40 @@ async function jsonResponseHandler<T>(request: GCMSRestClientRequestData, res: R
         });
     }
 
-    return parseErrorFromAPI(request, res);
+    return parseFetchErrorFromAPI(request, res);
 }
 
-async function textResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<string> {
+export async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<string> {
     if (res.ok) {
         return res.text();
     }
 
-    return parseErrorFromAPI(request, res);
+    return parseFetchErrorFromAPI(request, res);
 }
 
-async function blobResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<Blob> {
+export async function blobFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<Blob> {
     if (res.ok) {
         return res.blob();
     }
 
-    return parseErrorFromAPI(request, res);
+    return parseFetchErrorFromAPI(request, res);
 }
 
 export class GCMSFetchDriver implements GCMSClientDriver {
+
+    /**
+     * The session secret which should be sent when this driver is `encapsulated`.
+     */
+    // private sessionSecret: string | null;
+
+    /*
+     * @param encapsulated If this driver should not rely on the browser/fetch cookie handling,
+     * but should handle the session-cookie manually. Useful when having to use multiple instances
+     * of the client or when no regular cookie management exists on the platform.
+     */
+    constructor(
+        // private encapsulated: boolean = false,
+    ) {}
 
     performMappedRequest<T>(
         request: GCMSRestClientRequestData,
@@ -73,7 +87,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
                 headers: request.headers,
                 body: body,
             } as any;
-        }, (res) => jsonResponseHandler<T>(request, res));
+        }, (res) => jsonFetchResponseHandler<T>(request, res));
     }
 
     performFormRequest<T>(
@@ -87,7 +101,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
                 headers: request.headers,
                 body: form,
             } as any;
-        }, (res) => jsonResponseHandler<T>(request, res));
+        }, (res) => jsonFetchResponseHandler<T>(request, res));
     }
 
     performRawRequest(
@@ -101,7 +115,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
                 headers: request.headers,
                 body: body,
             } as any;
-        }, (res) => textResponseHandler(request, res));
+        }, (res) => textFetchResponseHandler(request, res));
     }
 
     performDownloadRequest(
@@ -115,10 +129,33 @@ export class GCMSFetchDriver implements GCMSClientDriver {
                 headers: request.headers,
                 body: body,
             } as any;
-        }, (res) => blobResponseHandler(request, res));
+        }, (res) => blobFetchResponseHandler(request, res));
     }
 
-    private prepareRequest<T>(
+    // protected handleEncapsulatedResponse(response: Response): void {
+    //     if (!this.encapsulated) {
+    //         return;
+    //     }
+    //     if (response.headers.has(SESSION_RESPONSE_HEADER)) {
+    //         this.sessionSecret = response.headers.get(SESSION_RESPONSE_HEADER);
+    //     }
+    // }
+
+    /**
+     * Interceptor function which can be overriden.
+     * Useful for modifications from/to the response data (Headers, Response-Code, etc) which would be
+     * absent from the parsed JSON body.
+     *
+     * @param request The request that has been sent.
+     * @param response The response from the API without any prior handling.
+     * @returns The response that should be processed/forwarded to the client.
+     */
+    protected responseInterceptor(request: GCMSRestClientRequestData, response: Response): Promise<Response> {
+        // this.handleEncapsulatedResponse(response);
+        return Promise.resolve(response);
+    }
+
+    protected prepareRequest<T>(
         request: GCMSRestClientRequestData,
         fn: (fullUrl: string) => RequestInfo,
         handler: (res: Response) => Promise<T>,
@@ -142,14 +179,28 @@ export class GCMSFetchDriver implements GCMSClientDriver {
         }
 
         const abortController = new AbortController();
+        let sentRequest: Promise<T> | null = null;
 
-        function sendRequest() {
+        const sendRequest = () => {
+            if (sentRequest != null) {
+                return sentRequest;
+            }
+
             const options: RequestInfo = {
                 ...fn(fullUrl) as any,
                 signal: abortController.signal,
-            }
-            return fetch(options)
+                // credentials: this.encapsulated ? 'omit' : 'same-origin',
+            };
+
+            // if (this.encapsulated) {
+            //     (options as RequestInit).headers ??= {};
+            //     (options as RequestInit).headers[SESSION_REQUEST_HEADER] = this.sessionSecret;
+            // }
+
+            sentRequest = fetch(options)
                 .then(res => handler(res));
+
+            return sentRequest;
         }
 
         return {

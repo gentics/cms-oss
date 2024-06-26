@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, Raw } from '@gentics/cms-models';
+import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
@@ -44,12 +44,12 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
     public readonly NodePageLanguageCode = NodePageLanguageCode;
 
-    public readonly URL_MODES = {
-        0: 'node.url_mode_automatic',
-        1: 'node.url_mode_plink',
-        2: 'node.url_mode_dynamic',
-        3: 'node.url_mode_w_domain',
-        4: 'node.url_mode_wo_domain',
+    public readonly URL_MODES: Record<NodeUrlMode, string> = {
+        [NodeUrlMode.AUTOMATIC]: 'node.url_mode_automatic',
+        [NodeUrlMode.PORTAL_LINK]: 'node.url_mode_plink',
+        [NodeUrlMode.DYNAMIC]: 'node.url_mode_dynamic',
+        [NodeUrlMode.WITH_DOMAIN]: 'node.url_mode_w_domain',
+        [NodeUrlMode.WITHOUT_DOMAIN]: 'node.url_mode_wo_domain',
     };
 
     public contentRepositories: ContentRepository<Raw>[] = [];

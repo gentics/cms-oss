@@ -1,1 +1,1 @@
-export * from './fetch-driver';
+export { GCMSFetchDriver } from './fetch-driver';

@@ -10,16 +10,29 @@
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Cypress {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface Chainable<Subject> {
-    login(email: string, password: string): void;
-  }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Chainable<Subject> {
+        login(source: 'cms' | 'keycloak'): Chainable<void>;
+    }
 }
+
 //
 // -- This is a parent command --
-Cypress.Commands.add('login', (email, password) => {
-  console.log('Custom command example: Login', email, password);
+Cypress.Commands.add('login', (source) => {
+    return cy.fixture('auth.json').then(auth => {
+        const data = auth[source];
+
+        cy.get('input[type="text"]').type(data.username);
+        cy.get('input[type="password"]').type(data.password);
+
+        if (source === 'cms') {
+            cy.get('button[type="submit"]').click();
+        } else {
+            cy.get('input[type="submit"]').click();
+        }
+    });
 });
+
 //
 // -- This is a child command --
 // Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })

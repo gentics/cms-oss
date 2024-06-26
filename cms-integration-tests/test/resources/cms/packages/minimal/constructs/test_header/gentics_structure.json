@@ -1,0 +1,28 @@
+{
+  "globalId" : "3821.37c733c5-3244-11ef-872a-0242ac110002",
+  "keyword" : "test_header",
+  "name" : {
+    "de" : "[Test] Header",
+    "en" : "[Test] Header"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

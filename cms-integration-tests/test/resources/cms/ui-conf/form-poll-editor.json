@@ -1,0 +1,309 @@
+{
+    "elements": [
+        {
+            "type": "checkbox",
+            "type_label_i18n_ui": {
+                "en": "Checkbox",
+                "de": "Checkbox"
+            },
+            "description_i18n_ui": {
+                "en": "Simple checkbox.",
+                "de": "Einfache checkbox."
+            },
+            "label_property_ui": "label",
+            "is_container": false,
+            "properties": [
+                {
+                    "name": "label",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Label",
+                        "de": "Label"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Label for this selection.",
+                        "de": "Label für diese Auswahl."
+                    }
+                },
+                {
+                    "name": "mandatory",
+                    "type": "BOOLEAN",
+                    "label_i18n_ui": {
+                        "en": "Mandatory",
+                        "de": "Verpflichtend"
+                    },
+                    "description_i18n_ui": {
+                        "en": "This checkbox is mandatory.",
+                        "de": "Dieses Checkbox ist verpflichtend."
+                    }
+                },
+                {
+                    "name": "checked",
+                    "type": "BOOLEAN",
+                    "label_i18n_ui": {
+                        "en": "Checked",
+                        "de": "Ausgewählt"
+                    },
+                    "description_i18n_ui": {
+                        "en": "This checkbox is checked.",
+                        "de": "Dieses Checkbox ist ausgewählt."
+                    }
+                },
+                {
+                    "name": "value",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Value",
+                        "de": "Wert"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Value that is selected by this checkbox.",
+                        "de": "Wert der durch diese Checkbox gewählt wird."
+                    },
+                    "default_value_i18n": {
+                        "en": "X",
+                        "de": "X",
+                        "pl": "X",
+                        "cs": "X",
+                        "hu": "X",
+                        "sl": "X",
+                        "ar": "X",
+                        "bg": "X",
+                        "bs": "X",
+                        "da": "X",
+                        "es": "X",
+                        "et": "X",
+                        "fa": "X",
+                        "fi": "X",
+                        "fr": "X",
+                        "hr": "X",
+                        "it": "X",
+                        "ja": "X",
+                        "ko": "X",
+                        "mk": "X",
+                        "nl": "X",
+                        "pt": "X",
+                        "ro": "X",
+                        "ru": "X",
+                        "sk": "X",
+                        "sq": "X",
+                        "sr": "X",
+                        "tr": "X",
+                        "uk": "X",
+                        "ar_eg": "X",
+                        "en_ca": "X",
+                        "fr_ca": "X"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "selectgroup",
+            "type_label_i18n_ui": {
+                "en": "Select",
+                "de": "Auswahl"
+            },
+            "description_i18n_ui": {
+                "en": "List of values to select from.",
+                "de": "Liste an auswählbaren Werten."
+            },
+            "label_property_ui": "label",
+            "is_container": false,
+            "properties": [
+                {
+                    "name": "label",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Label",
+                        "de": "Label"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Label for this selection.",
+                        "de": "Label für diese Auswahl."
+                    }
+                },
+                {
+                    "name": "mandatory",
+                    "type": "BOOLEAN",
+                    "label_i18n_ui": {
+                        "en": "Mandatory",
+                        "de": "Verpflichtend"
+                    },
+                    "description_i18n_ui": {
+                        "en": "This selection is mandatory.",
+                        "de": "Diese Auswahl ist verpflichtend."
+                    }
+                },
+                {
+                    "name": "select_type",
+                    "type": "SELECT",
+                    "label_i18n_ui": {
+                        "en": "Type",
+                        "de": "Typ"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Type of this selection.",
+                        "de": "Typ dieser Auswahl."
+                    },
+                    "options": [
+                        {
+                            "key": "radiobuttons",
+                            "value_i18n_ui": {
+                                "en": "Radio Buttons",
+                                "de": "Radio Buttons"
+                            }
+                        },
+                        {
+                            "key": "singleselect",
+                            "value_i18n_ui": {
+                                "en": "Dropdown with single selection",
+                                "de": "Dropdown mit einer Auswahl"
+                            }
+                        },
+                        {
+                            "key": "multiselect",
+                            "value_i18n_ui": {
+                                "en": "Dropdown with multiple selections",
+                                "de": "Dropdown mit mehreren Auswahlen"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "options",
+                    "type": "SELECTABLE_OPTIONS",
+                    "label_i18n_ui": {
+                        "en": "Selectable Options",
+                        "de": "Auswahlmöglichkeiten"
+                    },
+                    "description_i18n_ui": {
+                        "en": "List of key value pairs to select from.",
+                        "de": "Liste an auswählbaren Schlüssel-Wert-Paaren."
+                    }
+                },
+                {
+                    "name": "additional_element",
+                    "type": "BOOLEAN",
+                    "label_i18n_ui": {
+                        "en": "Additional Element",
+                        "de": "Zusätzliches Element"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Field to enter additional selection option.",
+                        "de": "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+                    }
+                }
+            ]
+        },
+        {
+            "type": "buttons",
+            "type_label_i18n_ui": {
+                "en": "Button",
+                "de": "Button"
+            },
+            "description_i18n_ui": {
+                "en": "Submit and optional reset button",
+                "de": "Buttons um Formular abzuschicken und zurückzusetzen"
+            },
+            "label_property_ui": "submitlabel",
+            "is_container": false,
+            "properties": [
+                {
+                    "name": "submitlabel",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Label",
+                        "de": "Label"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Label for this button.",
+                        "de": "Label für diesen Button."
+                    }
+                },
+                {
+                    "name": "showreset",
+                    "type": "BOOLEAN",
+                    "label_i18n_ui": {
+                        "en": "Show reset button",
+                        "de": "Reset Button anzeigen"
+                    },
+                    "description_i18n_ui": {
+                        "en": "If checked will show a reset button.",
+                        "de": "Wenn aktiv wird ein Reset Button angezeigt."
+                    }
+                },
+                {
+                    "name": "resetlabel",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Label of reset button",
+                        "de": "Label des Reset Buttons"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Label for the reset button.",
+                        "de": "Label für den Reset Button."
+                    }
+                }
+            ]
+        },
+        {
+            "type": "sectionheadline",
+            "type_label_i18n_ui": {
+                "en": "Headline",
+                "de": "Überschrift"
+            },
+            "description_i18n_ui": {
+                "en": "Headline for a new section of the form.",
+                "de": "Überschrift für einen neuen Abschnitt im Formular."
+            },
+            "label_property_ui": "text",
+            "is_container": false,
+            "properties": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Text",
+                        "de": "Text"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "type_label_i18n_ui": {
+                "en": "Text",
+                "de": "Text"
+            },
+            "description_i18n_ui": {
+                "en": "Text to furher explain the form.",
+                "de": "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
+            },
+            "label_property_ui": "text",
+            "is_container": false,
+            "properties": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Text",
+                        "de": "Text"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "spacer",
+            "type_label_i18n_ui": {
+                "en": "Spacer",
+                "de": "Abstand"
+            },
+            "description_i18n_ui": {
+                "en": "Adds space between form elements.",
+                "de": "Vergrößert den Abstand zwischen Form-Elementen."
+            },
+            "is_container": false,
+            "properties": []
+        }
+    ]
+}

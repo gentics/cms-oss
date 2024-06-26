@@ -41,10 +41,10 @@
 					<images>
 						<image>
 							<alias>mariadb</alias>
-							<name>
-								${integrationTest.mariadb.image}:${integrationTest.mariadb.version}</name>
+							<name>${integrationTest.mariadb.image}:${integrationTest.mariadb.version}</name>
 							<run>
 								<skip>${skip.integration.tests}</skip>
+
 								<cmd>
 									<exec>
 										<arg>--transaction-isolation=READ-COMMITTED</arg>
@@ -52,12 +52,19 @@
 										<arg>--log-bin=mysqld-bin</arg>
 									</exec>
 								</cmd>
+
 								<env>
 									<MYSQL_DATABASE>node_utf8</MYSQL_DATABASE>
 									<MYSQL_USER>node</MYSQL_USER>
 									<MYSQL_PASSWORD>node</MYSQL_PASSWORD>
 									<MYSQL_ROOT_PASSWORD>finger</MYSQL_ROOT_PASSWORD>
 								</env>
+
+								<volumes>
+									<bind>
+										<volume>./test/resources/mariadb/dumps:/docker-entrypoint-initdb.d</volume>
+									</bind>
+								</volumes>
 
 								<ports>
 									<port>mariadb.port:3306</port>
@@ -89,14 +96,17 @@
 
 								<volumes>
 									<bind>
-										<volume>
-											./test/resources/cms/commands:/cms/scheduler-commands</volume>
-											<volume>./test/resources/cms/conf:/cms/conf/cms</volume>
-											<volume>./test/resources/cms/ui-conf:/cms/ui-conf</volume>
-										</bind>
-									</volumes>
-									<dependsOn>
+										<volume>./test/resources/cms/commands:/cms/scheduler-commands</volume>
+										<volume>./test/resources/cms/conf:/cms/conf/cms</volume>
+										<volume>./test/resources/cms/ui-conf:/cms/ui-conf</volume>
+										<volume>./test/resources/cms/packages:/cms/packages</volume>
+									</bind>
+								</volumes>
+
+								<dependsOn>
 									<container>mariadb</container>
+									<container>keycloak</container>
+									<container>mesh</container>
 								</dependsOn>
 								
 								<ports>

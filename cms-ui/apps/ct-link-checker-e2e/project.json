@@ -18,6 +18,7 @@
                     "devServerTarget": "ct-link-checker:serve:production"
                 },
                 "ci": {
+                    "quiet": true,
                     "devServerTarget": "ct-link-checker:serve-static:e2e"
                 }
             }

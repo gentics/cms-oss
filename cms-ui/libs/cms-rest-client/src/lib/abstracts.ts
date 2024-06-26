@@ -823,7 +823,7 @@ export interface AbstractNodeAPI extends BasicAPI {
     orderLanguages: (id: number | string, body: NodeLanguageOrderRequest) => LanguageListResponse;
 
     listTemplates: (id: number | string, options?: TemplateListRequest) => PermissionListResponse<Template>;
-    assignTemplate: (id: number | string, templateId: number | string) => TemplateResponse;
+    assignTemplate: (id: number | string, templateId: number | string) => Response;
     unassignTemplate: (id: number | string, templateId: number | string) => Response;
 
     listConstructs: (id: number | string, options?: PagedConstructListRequestOptions) => PagedConstructListResponse;

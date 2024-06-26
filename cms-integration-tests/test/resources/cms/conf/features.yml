@@ -15,3 +15,9 @@ feature:
   publish_cache: false
   recent_items: true
   resumable_publish_process: true
+  content_staging: false
+  asset_management: true
+  forms: true
+  multichanneling: false
+  webp_conversion: true
+  elasticsearch: false

@@ -1,0 +1,8 @@
+{
+  "realm": "CMP",
+  "auth-server-url": "http://localhost:8180/",
+  "ssl-required": "external",
+  "resource": "cms",
+  "public-client": true,
+  "confidential-port": 0
+}

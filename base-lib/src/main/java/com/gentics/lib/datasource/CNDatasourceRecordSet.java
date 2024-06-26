@@ -125,7 +125,7 @@ public class CNDatasourceRecordSet implements DatasourceRecordSet {
 	//
 	public boolean add(Object o) {
 		if (!(o instanceof DatasourceRow)) {
-			NodeLogger.getLogger(getClass()).error("CNDatasourceRecordSet: Cannot add non-DatasourceRow");
+			NodeLogger.getLogger(getClass()).warn("CNDatasourceRecordSet: Cannot add non-DatasourceRow");
 			return false;
 		}
 		return objects.add(o);

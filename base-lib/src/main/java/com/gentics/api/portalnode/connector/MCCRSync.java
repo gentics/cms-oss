@@ -200,7 +200,7 @@ public class MCCRSync {
 			try {
 				sourceDS = parseDSFromArgs(line, "source");
 			} catch (FileNotFoundException e) {
-				logger.debug("Source properties file not found: ", e);
+				logger.debug("Source properties file not found: " + e.getMessage());
 				logFatalMessageAndExit(e.getMessage(), e);
 			}
 
@@ -211,7 +211,7 @@ public class MCCRSync {
 			try {
 				targetDS = parseDSFromArgs(line, "target");
 			} catch (FileNotFoundException e) {
-				logger.debug("Target properties file not found: ", e);
+				logger.debug("Target properties file not found: " + e.getMessage());
 				logFatalMessageAndExit(e.getMessage(), e);
 			}
 
@@ -281,22 +281,10 @@ public class MCCRSync {
 
 			logger.info(returnMessage);
 		} catch (UnexptectedEmptySourceException e) {
-			logger.fatal("Found empty Source-ContentRepository but -allowempty was not set.");
-			logger.debug("", e);
+			logger.fatal("Found empty Source-ContentRepository but -allowempty was not set.", e);
 			System.exit(1);
 		} catch (UnexpectedAlterTableException e) {
-			logger.fatal("CRSync wanted to change the table-structure but -allowaltertable was not set.");
-			logger.debug("", e);
-			System.exit(1);
-		} catch (NodeException e) {
-			// NodeException (unanticipated errors)
-			logger.fatal("Error while syncing ContentRepositories.");
-			logger.fatal("", e);
-			System.exit(1);
-		} catch (Exception e) {
-			// IllegalArgumentException (?)
-			logger.fatal("Error while syncing ContentRepositories.");
-			logger.fatal("", e);
+			logger.fatal("CRSync wanted to change the table-structure but -allowaltertable was not set.", e);
 			System.exit(1);
 		} catch (Throwable e) {
 			logger.fatal("Error while syncing content repositories.", e);
@@ -625,7 +613,7 @@ public class MCCRSync {
 			}
 			throw ex;
 		} catch (OutOfMemoryError e) {
-			logger.error("The sync ran out of memory, please consult http://www.gentics.com/infoportal/ (CRSync) for more information on how to avoid this!");
+			logger.fatal("The sync ran out of memory, please consult http://www.gentics.com/infoportal/ (CRSync) for more information on how to avoid this!");
 			throw e;
 		} finally {}
 

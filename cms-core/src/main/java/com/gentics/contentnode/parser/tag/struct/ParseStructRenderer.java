@@ -129,26 +129,8 @@ public class ParseStructRenderer implements StructRenderer {
 
 						logger.warn("Could not find tag with the specified name {" + tagPart.getCode(template) + "}: {" + tagPart.toString() + "}");
 
-						// if the tag is open, find end tag
-						if (tagPart.getType() == TagPart.TYPE_OPEN) {
+						pos.increment(1);
 
-							// This is not good for <node tags, as they are all open. a missing tag will result in VERY
-							// bad behaviour.
-							/**
-							 RenderReturnCode rs = parser.getStructRenderer(false).renderStruct(parser, renderType, result, source,
-							 template, struct, pos, null, null);
-							 pos = rs.getPos();
-
-							 if (rs.getReason() == RenderReturnCode.RETURN_LAST) {
-							 result.warn("Invalid tag", "Unexpected end of code.");
-							 return rs;
-							 }
-							 */
-							pos.increment(1);
-
-						} else {
-							pos.increment(1);
-						}
 						continue;
 					}
 

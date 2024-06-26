@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.gentics.api.lib.datasource.DatasourceRow;
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.lib.content.GenticsContentAttribute;
 
 /**
  * created at Oct 17, 2004
@@ -55,7 +56,7 @@ public class DefaultDatasourceRow implements DatasourceRow {
 		return null;
 	}
 
-	public Object getObject(String column) {
+	public GenticsContentAttribute getObject(String column) {
 		return null;
 	}
 

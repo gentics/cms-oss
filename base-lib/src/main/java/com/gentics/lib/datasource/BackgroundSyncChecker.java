@@ -59,7 +59,7 @@ public class BackgroundSyncChecker extends AbstractDatasourceJob {
 				try {
 					GenticsContentFactory.refreshCaches(cnDS, storedLastUpdate);
 				} catch (Exception e) {
-					logger.error("Error while freshing cache ", e);
+					logger.warn("Error while freshing cache ", e);
 				}
 			}
 			storedLastUpdate = currentLastUpdate;
@@ -78,7 +78,7 @@ public class BackgroundSyncChecker extends AbstractDatasourceJob {
 					try {
 						GenticsContentFactory.refreshCaches(cnDS, storedLastUpdate);
 					} catch (Exception e) {
-						logger.error("Error while freshing cache ", e);
+						logger.warn("Error while freshing cache ", e);
 					}
 				} else {
 					GenticsContentFactory.clearDifferentialCaches(cnDS, storedLastUpdate);
@@ -92,7 +92,7 @@ public class BackgroundSyncChecker extends AbstractDatasourceJob {
 					try {
 						GenticsContentFactory.refreshCaches(cnDS, -1L);
 					} catch (Exception e) {
-						logger.error("Error while freshing cache ", e);
+						logger.warn("Error while freshing cache ", e);
 					}
 				} 
 			}

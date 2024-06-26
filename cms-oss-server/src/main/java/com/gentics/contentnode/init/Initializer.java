@@ -206,7 +206,7 @@ public class Initializer {
 		} catch (JAXBException e) {
 			// everything except XNL function seem to work if the helper
 			// isn't successfully initialized.
-			logger.fatal("Error while initializing the JAXBHelper", e);
+			logger.error("Error while initializing the JAXBHelper", e);
 		}
 
 		ContentRenderer.registerRenderer();

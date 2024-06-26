@@ -120,15 +120,15 @@ public class FilePublisher {
 				+ useUtf8 + "}");
 
 		if (config.getDefaultPreferences().getFeature("symlink_files") && !fileUtils.supportsSymlinks()) {
-			renderResult.error(FilePublisher.class,
-					"Feature symlink_files was activated, but loaded fileUtils class does not support symlinks ! {" + fileUtils.getClass().getName() + "}");
+			renderResult.warn(FilePublisher.class,
+					"Feature symlink_files was activated, but loaded fileUtils class does not support symlinks! {" + fileUtils.getClass().getName() + "}");
 		}
 		if (config.getDefaultPreferences().getFeature("hardlink_files") && !fileUtils.supportsSymlinks()) {
-			renderResult.error(FilePublisher.class,
-					"Feature hardlink_files was activated, but loaded fileUtils class does not support symlinks ! {" + fileUtils.getClass().getName() + "}");
+			renderResult.warn(FilePublisher.class,
+					"Feature hardlink_files was activated, but loaded fileUtils class does not support symlinks! {" + fileUtils.getClass().getName() + "}");
 		}
 		if (config.getDefaultPreferences().getFeature("symlink_files") && config.getDefaultPreferences().getFeature("hardlink_files")) {
-			renderResult.warn(FilePublisher.class, "Feature symlink_files and hardlink_files is both activated ! Using symlinks !");
+			renderResult.warn(FilePublisher.class, "Feature symlink_files and hardlink_files is both activated! Using symlinks!");
 		}
 
 		publishResolveDirect = config.getDefaultPreferences().getFeature("publish_node_resolve_direct");
@@ -209,7 +209,7 @@ public class FilePublisher {
 		if (executor.retrievedValue()) {
 			return executor.getIntegerValue();
 		} else {
-			renderResult.fatal(FilePublisher.class, "Error while trying to fetch number of pages to write.");
+			renderResult.error(FilePublisher.class, "Error while trying to fetch number of pages to write.");
 			return 0;
 		}
 	}
@@ -364,7 +364,7 @@ public class FilePublisher {
 		if (executor.retrievedValue()) {
 			return executor.getIntegerValue();
 		} else {
-			renderResult.fatal(FilePublisher.class, "Error while trying to fetch number of files to write.");
+			renderResult.error(FilePublisher.class, "Error while trying to fetch number of files to write.");
 			return 0;
 		}
 	}
@@ -521,7 +521,7 @@ public class FilePublisher {
 		if (publishResolveDirect) {
 			node = t.getObject(Node.class, nodeId);
 			if (node == null) {
-				logger.error("Unable to fetch node {" + nodeId + "} to publish page {" + pageId + "} let's try to fetch it through the folder_id");
+				logger.warn("Unable to fetch node {" + nodeId + "} to publish page {" + pageId + "} trying to fetch it through the folder_id");
 			}
 		}
 
@@ -630,7 +630,7 @@ public class FilePublisher {
 		try {
 			charset = Charset.forName("windows-1252");
 		} catch (IllegalCharsetNameException e) {
-			logger.error("Unable to retrieve charset windows-1252 - trying ISO-8859-1", e);
+			logger.warn("Unable to retrieve charset windows-1252 - trying ISO-8859-1", e);
 			charset = Charset.forName("ISO-8859-1");
 		}
 		return charset;
@@ -802,7 +802,7 @@ public class FilePublisher {
 		try {
 			return fileUtils.deleteDirectory(dir);
 		} catch (IOException e) {
-			logger.error("Error while deleting driectory {" + dir + "}", e);
+			logger.error("Error while deleting directory {" + dir + "}", e);
 			return false;
 		}
 	}

@@ -644,7 +644,7 @@ public class PropertyNodeConfig implements NodeConfig {
 		try {
 			connection.close();
 		} catch (SQLException e) {
-			logger.error("Error while closing connection");
+			logger.warn("Error while closing connection");
 		}
 	}
 

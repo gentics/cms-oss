@@ -1,10 +1,10 @@
 {
   "name": "@gentics/cms-components",
-  "version": "6.1.5",
+  "version": "6.1.6",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.5",
-    "@gentics/cms-integration-api-models": "6.1.5",
+    "@gentics/cms-models": "6.1.6",
+    "@gentics/cms-integration-api-models": "6.1.6",
     "lodash-es": "^4.17.15"
   },
   "peerDependencies": {

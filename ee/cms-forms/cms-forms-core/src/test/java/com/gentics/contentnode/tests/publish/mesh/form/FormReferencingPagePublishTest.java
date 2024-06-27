@@ -138,11 +138,14 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 			}
 		}).publish().build();
 
+		String downloadBaseUrl = String.format("http://cms.domain.test/editor/#proxy/rest/form/%d/data", form.getId());
 		Map<String, ObjectNode> expected = new HashMap<>();
 		expected.put("de", mapper.readValue(getClass().getResource("form_published_de.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
 		expected.put("en", mapper.readValue(getClass().getResource("form_published_en.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
 		expected.get("de").put("cms_id", form.getId());
 		expected.get("en").put("cms_id", form.getId());
+		expected.get("de").put("downloadBaseUrl", downloadBaseUrl);
+		expected.get("en").put("downloadBaseUrl", downloadBaseUrl);
 		expected.get("de").put("mailsource", getExpectedMailsource("de"));
 		expected.get("en").put("mailsource", getExpectedMailsource("en"));
 
@@ -162,7 +165,9 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 						assertThat(response.getAvailableLanguages().get(language).isPublished()).isEqualTo(true);
 						try {
 							JsonNode actual = mapper.readValue(response.getFields().getStringField("json").getString(), ObjectNode.class);
-							assertThat(actual).as("Published JSON").isEqualTo(expected.get(language));
+							assertThat(mapper.convertValue(actual, Map.class))
+								.as("Published JSON")
+								.isEqualTo(mapper.convertValue(expected.get(language), Map.class));
 						} catch (IOException e) {
 							throw new NodeException(e);
 						}

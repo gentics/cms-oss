@@ -93,7 +93,7 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
 
     createAutomaticallyTranslatedPage(): void {
         this.createTranslationWithFunction((pageId, options)  => this.translationService.translatePage(pageId, options) )
-            .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPageCompareWithLanguage' }));
+            .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPage' }));
     }
 
 

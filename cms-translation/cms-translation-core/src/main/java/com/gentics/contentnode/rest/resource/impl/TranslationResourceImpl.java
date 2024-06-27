@@ -9,8 +9,8 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.factory.object.LanguageFactory;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredFeature;
 import com.gentics.contentnode.rest.model.Property;
@@ -24,6 +24,7 @@ import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.translation.PageTranslationService;
 import com.gentics.contentnode.translation.TranslationService;
 import com.gentics.contentnode.translation.TranslationUtil;
 import java.util.ArrayList;
@@ -86,12 +87,14 @@ public class TranslationResourceImpl implements TranslationResource {
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
 			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			final var loadedPage = getPage(pageId);
-			final var translatedNodePage = createLanguageVariant(loadedPage, targetLanguageCode);
+			PageTranslationService pageTranslationService = new PageTranslationService();
+			final var loadedPage = pageTranslationService.getPage(pageId.toString(), true);
 			final var sourceLanguageCode = loadedPage.getLanguage().getCode();
+			final var translatedNodePage = pageTranslationService.translate(pageId, targetLanguageCode, locked, channelId, true);
 
 			var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
-					List.of(Reference.CONTENT_TAGS));
+					List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
+			pageToTranslate.setReadOnly(this.isPageReadOnly(loadedPage));
 
 			try {
 				var contentTags = this.getContentTags(pageToTranslate);
@@ -118,59 +121,36 @@ public class TranslationResourceImpl implements TranslationResource {
 						String.format("Page language variant for source page '%s' not found.", pageId));
 			}
 			updatedTranslatedNodePage.save();
-
-			final var pageResponse = new PageLoadResponse();
-			pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage));
-
-			pageResponse.setResponseInfo(
-					new ResponseInfo(ResponseCode.OK,
-							String.format("Translated page { %s } successfully", pageId)));
 			trx.success();
 
-			return pageResponse;
+			return createPageLoadResponse(updatedTranslatedNodePage, pageId);
 		}
 	}
 
-	/**
-	 * Loads the page object with the given pageId
-	 *
-	 * @param pageId the page id
-	 * @return the node page
-	 * @throws NodeException
-	 */
-	private Page getPage(int pageId) throws NodeException {
+	private boolean isPageReadOnly(Page page) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		Page page = t.getObject(Page.class, pageId);
+		PermHandler permissionHandler = t.getPermHandler();
 
-		if (page == null) {
-			throw new NodeException(String.format("Error occurred while loading page %s", pageId));
-		}
-
-		return page;
+		return !permissionHandler.canEdit(page);
 	}
 
-	/**
-	 * Creates a new language variant of a page for the given target Language
-	 *
-	 * @param page           the that should have a new language variant
-	 * @param targetLanguage the target language
-	 * @return the new page for the specified language
-	 * @throws NodeException
-	 */
-	private Page createLanguageVariant(Page page, String targetLanguage) throws NodeException {
-		var languageVariant = (Page) page.copy();
-		var contentTargetLanguage = LanguageFactory.get(targetLanguage);
+	private PageLoadResponse createPageLoadResponse(Page updatedTranslatedNodePage, Integer pageId)
+			throws NodeException {
+		final var pageResponse = new PageLoadResponse();
 
-		if (contentTargetLanguage == null) {
-			throw new NodeException(
-					String.format("Target language '%s' could not be resolved.", targetLanguage));
+		var responseMessage = String.format("Translated page with id { %s } successfully", pageId);
+
+		if(updatedTranslatedNodePage.getChannel() != null) {
+			responseMessage = String.format("%s in channel { %s }", responseMessage, updatedTranslatedNodePage.getChannel().getId());
 		}
 
-		languageVariant.setLanguage(contentTargetLanguage);
-		languageVariant.save();
+		pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage));
+		pageResponse.setResponseInfo(
+				new ResponseInfo(ResponseCode.OK, responseMessage));
 
-		return languageVariant;
+		return pageResponse;
 	}
+
 
 	/**
 	 * Translates the text properties of the given content tags

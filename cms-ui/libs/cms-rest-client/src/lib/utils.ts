@@ -91,6 +91,9 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
     }
 
     if (response.responseInfo.responseCode !== 'OK') {
+        // some responses contain no messages
+        response.messages = response.messages || [];
+
         throw new GCMSRestClientRequestError(
             response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
             request,

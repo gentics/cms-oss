@@ -14,12 +14,10 @@
                 "watch": false
             },
             "configurations": {
-                "production": {
-                    "devServerTarget": "ct-link-checker:serve:production"
-                },
                 "ci": {
                     "quiet": true,
-                    "devServerTarget": "ct-link-checker:serve-static:e2e"
+                    "cypressConfig": "apps/ct-link-checker-e2e/cypress.config.ci.ts",
+                    "devServerTarget": ""
                 }
             }
         },

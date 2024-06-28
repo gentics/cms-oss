@@ -54,7 +54,7 @@ export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'fold
     templateId: string;
 }
 
-const minimalNode: NodeImportData = {
+export const minimalNode: NodeImportData = {
     [IMPORT_TYPE]: 'node',
     [IMPORT_ID]: 'minimalNode',
 
@@ -88,7 +88,7 @@ const minimalNode: NodeImportData = {
     ],
 };
 
-const folderA: FolderImportData = {
+export const folderA: FolderImportData = {
     [IMPORT_TYPE]: 'folder',
     [IMPORT_ID]: 'folderA',
 
@@ -100,7 +100,7 @@ const folderA: FolderImportData = {
     publishDir: 'folder-a',
 };
 
-const pageOne: PageImportData = {
+export const pageOne: PageImportData = {
     [IMPORT_TYPE]: 'page',
     [IMPORT_ID]: 'pageOne',
 

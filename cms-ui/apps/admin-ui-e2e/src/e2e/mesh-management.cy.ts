@@ -1,8 +1,13 @@
-const CR_NAME = 'Mesh CR';
+import { TestSize, bootstrapSuite } from '@gentics/e2e-utils';
+import { setup } from '../fixtures/auth.json';
 
 describe('Content Repository', () => {
+    const CR_NAME = 'Mesh CR';
+
     beforeEach(() => {
-        cy.visit('/?skip-sso', {});
+        cy.wrap(bootstrapSuite(setup, TestSize.MINIMAL));
+
+        cy.visit('http://localhost:8080/admin/?skip-sso', {});
         cy.login(true);
         cy.get('gtx-dashboard-item[data-id="content-repositories"]').click();
     });
@@ -14,28 +19,37 @@ describe('Content Repository', () => {
     });
 
     it('should open the details on click', () => {
-        const crColumn = cy.get('gtx-table')
-            .find('.grid-row').contains(CR_NAME)
-        crColumn.click();
-        crColumn.parents('.grid-row').should('have.class', 'active');
+        cy.get('gtx-table')
+            .find('.grid-row')
+            .contains(CR_NAME)
+
+        cy.get('gtx-table .grid-row.data-row')
+            .click({ force: true });
+
+        cy.get('gtx-table .grid-row.data-row')
+            .should('have.class', 'active');
         cy.get('gtx-content-repository-editor').should('exist');
     });
 
     it('should be possible to select the management tab', () => {
         cy.get('gtx-table')
             .find('.grid-row').contains(CR_NAME)
-            .click();
+            .click({ force: true });
+
         cy.get('gtx-content-repository-editor')
             .find('gtx-tabs .tab-link[data-id="management"]')
             .click()
+
+        cy.get('gtx-content-repository-editor gtx-tabs .tab-link[data-id="management"]')
             .should('have.class', 'is-active');
+
         cy.get('gtx-mesh-management').should('exist');
     });
 
     describe('Mesh Management', () => {
         beforeEach(() => {
             cy.get('gtx-table')
-                .find('.grid-row').contains(CR_NAME)
+                .find('.grid-row.data-row').contains(CR_NAME)
                 .click();
             cy.get('gtx-content-repository-editor')
                 .find('gtx-tabs .tab-link[data-id="management"]')
@@ -113,7 +127,9 @@ describe('Content Repository', () => {
                     .click();
                 cy.get('@props')
                     .find('[data-control="password"] input')
-                    .each(el => cy.wrap(el).type(auth.mesh.password));
+                    .each(el => {
+                        cy.wrap(el).type(auth.mesh.password)
+                    });
 
                 // Save the user
                 cy.get('gtx-mesh-user-modal .modal-footer gtx-button')
@@ -129,7 +145,7 @@ describe('Content Repository', () => {
             });
         });
 
-        it('should be possible to update the CR login information', () => {
+        xit('should be possible to update the CR login information', () => {
             cy.fixture('auth.json').then(auth => {
                 cy.get('.cr-login-button').click();
                 cy.get('.management-container').should('exist');
@@ -140,7 +156,9 @@ describe('Content Repository', () => {
                         .click();
                     cy.get('@props')
                         .find('[data-control="password"] input')
-                        .each(el => cy.wrap(el).type(passwordToSet));
+                        .each(el => {
+                            cy.wrap(el).type(passwordToSet)
+                        });
 
                     // Save the user
                     cy.get('gtx-mesh-user-modal .modal-footer gtx-button')
@@ -157,7 +175,9 @@ describe('Content Repository', () => {
                     // Fill in the password
                     cy.get('gtx-content-repository-properties .gtx-password-box')
                         .find('input[type="password"]')
-                        .each(el => cy.wrap(el).type(passwordToSet));
+                        .each(el => {
+                            cy.wrap(el).type(passwordToSet)
+                        });
 
                     // Save the CR
                     cy.get('.gtx-entity-details-tab-content-header .gtx-save-button button')

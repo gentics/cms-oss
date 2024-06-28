@@ -101,13 +101,7 @@
                 "buildTarget": "editor-ui:build"
             },
             "configurations": {
-                "e2e": {
-                    "proxyUrl": "http://localhost:8080",
-                    "proxyOptions": {
-                        "secure": false,
-                        "changeOrigin": true
-                    }
-                }
+                "e2e": {}
             }
         },
         "test": {

@@ -1,9 +1,13 @@
-const CR_NAME = 'Mesh CR';
-
+import { TestSize, bootstrapSuite } from '@gentics/e2e-utils';
+import { setup } from '../fixtures/auth.json';
 
 describe('Content Repository', () => {
+    const CR_NAME = 'Mesh CR';
+
     beforeEach(() => {
-        cy.visit('/?skip-sso', {});
+        cy.wrap(bootstrapSuite(setup, TestSize.MINIMAL));
+
+        cy.visit('http://localhost:8080/admin/?skip-sso', {});
         cy.login(true);
         cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
     });
@@ -21,7 +25,6 @@ describe('Content Repository', () => {
 
         cy.get('.login-gate-wrapper').should('exist');
     });
-
 
     describe('Mesh Browser', () => {
         beforeEach(() => {

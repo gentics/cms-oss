@@ -17,7 +17,7 @@ feature:
   resumable_publish_process: true
   content_staging: false
   asset_management: true
-  forms: true
+  forms: false
   multichanneling: false
   webp_conversion: true
   elasticsearch: false

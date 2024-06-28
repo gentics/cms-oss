@@ -79,7 +79,7 @@
         },
         "e2e": {
             "inputs": ["default", "^production"],
-            "cache": true,
+            "cache": false,
             "configurations": {
                 "watch": {
                     "watch": true
@@ -89,6 +89,13 @@
         "component-test": {
             "inputs": ["default", "^production"],
             "cache": true
+        },
+        "serve-static": {
+            "configurations": {
+                "e2e": {
+                    "silent": true
+                }
+            }
         },
         "@nx/jest:jest": {
             "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],

@@ -4,5 +4,5 @@ import { createReporterOptions } from '../../cypress-e2e.preset';
 
 export default defineConfig({
     e2e: nxE2EPreset(__dirname),
-    ...createReporterOptions('apps', 'ct-link-checker'),
+    ...createReporterOptions('apps', 'ct-link-checker', true),
 });

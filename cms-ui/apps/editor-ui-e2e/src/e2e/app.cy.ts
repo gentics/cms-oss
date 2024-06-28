@@ -1,29 +1,35 @@
-import { TestSize } from '../support/common';
-import { ImportBootstrapData, bootstrapSuite, cleanupTest, setupTest } from '../support/importer';
+import { TestSize, EntityMap, minimalNode, ImportBootstrapData, bootstrapSuite, cleanupTest, setupTest } from '@gentics/e2e-utils';
+import { setup } from '../fixtures/auth.json';
 
-describe('Example', () => {
+describe('Login', () => {
 
     let bootstrap: ImportBootstrapData;
+    let entities: EntityMap = {};
 
     before(() => {
-        cy.wrap(bootstrapSuite(TestSize.MINIMAL).then(data => {
-            bootstrap = data;
-        }));
+        cy.wrap(cleanupTest(setup)
+            .then(() => bootstrapSuite(setup, TestSize.MINIMAL))
+            .then(data => {
+                bootstrap = data;
+            }),
+        );
     });
 
     beforeEach(() => {
-        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap));
+        cy.wrap(setupTest(setup, TestSize.MINIMAL, bootstrap).then(data => {
+            entities = data;
+        }));
     });
 
     afterEach(() => {
-        cy.wrap(cleanupTest());
+        cy.wrap(cleanupTest(setup));
     });
 
-    it('should have a node present', () => {
+    it('should have the minimal node present', () => {
         cy.visit('http://localhost:8080/editor?skip-sso');
         cy.login('cms');
-        cy.find('folder-contents > .title .title-name')
+        cy.get('folder-contents > .title .title-name')
             .should('exist')
-            .should('contain.text', 'Minimal');
+            .should('contain.text', minimalNode.node.name);
     });
 });

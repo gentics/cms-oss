@@ -9,11 +9,14 @@ module.exports = {
 
         if (isCI) {
             return {
-                reporter: resolve(__dirname, 'node_modules/mocha-junit-reporter'),
+                reporter: resolve(__dirname, 'node_modules/cypress-multi-reporters'),
                 reporterOptions: {
-                    testsuitesTitle: `Integration Tests: ${name}`,
-                    mochaFile: resolve(__dirname, `.reports/${type}/${name}/CYPRESS-report.xml`),
-                    jenkinsMode: true,
+                    reporterEnabled: 'min, mocha-junit-reporter',
+                    mochaJunitReporterReporterOptions: {
+                        testsuitesTitle: `Integration Tests: ${name}`,
+                        mochaFile: resolve(__dirname, `.reports/${type}/${name}/CYPRESS-report.xml`),
+                        jenkinsMode: true,
+                    },
                 },
             };
         }

@@ -1,7 +1,6 @@
 import { Folder, Node, Page, Template } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
-import { setup } from '../fixtures/auth.json';
-import { TestSize } from './common';
+import { EntityMap, LoginInformation, TestSize } from './common';
 import { CypressDriver } from './cypress-driver';
 import {
     FolderImportData,
@@ -19,9 +18,7 @@ export interface ImportBootstrapData {
     templates: Record<string, Template>;
 }
 
-type EntityMap = Record<string, any>;
-
-function createClient(loginData: { username: string, password: string }): Promise<GCMSRestClient> {
+function createClient(login: LoginInformation): Promise<GCMSRestClient> {
     let sid: number | null = null;
     const client = new GCMSRestClient(
         new CypressDriver(),
@@ -45,8 +42,8 @@ function createClient(loginData: { username: string, password: string }): Promis
     );
 
     return client.auth.login({
-        login: loginData.username,
-        password: loginData.password,
+        login: login.username,
+        password: login.password,
     })
         .send()
         .then(res => {
@@ -213,8 +210,8 @@ async function setupContent(
     return entityMap;
 }
 
-export async function bootstrapSuite(size: TestSize): Promise<ImportBootstrapData> {
-    const client = await createClient(setup);
+export async function bootstrapSuite(login: LoginInformation, size: TestSize): Promise<ImportBootstrapData> {
+    const client = await createClient(login);
 
     // First import all dev-tool packages from the FS
     const devtoolPackages = PACKAGE_IMPORTS[size] || [];
@@ -231,16 +228,16 @@ export async function bootstrapSuite(size: TestSize): Promise<ImportBootstrapDat
     };
 }
 
-export async function setupTest(size: TestSize, data: ImportBootstrapData): Promise<GCMSRestClient> {
-    const client = await createClient(setup);
+export async function setupTest(login: LoginInformation, size: TestSize, data: ImportBootstrapData): Promise<EntityMap> {
+    const client = await createClient(login);
 
-    await setupContent(client, size, data);
+    const map = await setupContent(client, size, data);
 
-    return client;
+    return map;
 }
 
-export async function cleanupTest(): Promise<void> {
-    const client = await createClient(setup);
+export async function cleanupTest(login: LoginInformation): Promise<void> {
+    const client = await createClient(login);
 
     const nodes = (await client.node.list().send()).items || [];
 

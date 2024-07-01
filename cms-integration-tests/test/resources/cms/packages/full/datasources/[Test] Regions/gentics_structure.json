@@ -1,0 +1,51 @@
+{
+  "globalId" : "8fb9.7b7b89b4-37a7-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Regions",
+  "values" : [ {
+    "globalId" : "8fb9.818cf34c-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Wien",
+    "value" : "vienna",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.9029eb0b-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Niederösterreich",
+    "value" : "lower-austria",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.9c7cc646-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Oberösterreich",
+    "value" : "upper-austria",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.a26d5244-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Salzburg",
+    "value" : "salzburg",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.ae054b7a-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Tirol",
+    "value" : "tirol",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.bf7a3bc6-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Vorarlberg",
+    "value" : "vorarlberg",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.cb837ac0-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Burgenland",
+    "value" : "burgenland",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.d9204254-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Steiermark",
+    "value" : "styria",
+    "dsId" : 8
+  }, {
+    "globalId" : "8fb9.e06b45dd-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Kärnten",
+    "value" : "carinthia",
+    "dsId" : 9
+  } ]
+}

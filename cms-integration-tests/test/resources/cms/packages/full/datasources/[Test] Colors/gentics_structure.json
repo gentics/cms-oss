@@ -1,0 +1,21 @@
+{
+  "globalId" : "8fb9.230c52b0-37a1-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Colors",
+  "values" : [ {
+    "globalId" : "8fb9.26d1808c-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Red",
+    "value" : "red",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.29619d11-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Blue",
+    "value" : "blue",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.2c5d5e22-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Green",
+    "value" : "green",
+    "dsId" : 3
+  } ]
+}

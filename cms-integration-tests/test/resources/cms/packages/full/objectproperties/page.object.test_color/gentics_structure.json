@@ -1,0 +1,24 @@
+{
+  "globalId" : "994d.ff379678-37b9-11ef-a38e-0242ac110002",
+  "type" : "page",
+  "keyword" : "object.test_color",
+  "name" : {
+    "de" : "[Test] Seitenfarbe",
+    "en" : "[Test] Page Color"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "constructId" : "994d.d84f0a55-37ad-11ef-a38e-0242ac110002",
+  "required" : false,
+  "category" : {
+    "globalId" : "994d.e54046e7-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 1
+  },
+  "nodeIds" : [ ]
+}

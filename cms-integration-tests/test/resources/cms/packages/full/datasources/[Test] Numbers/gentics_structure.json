@@ -1,0 +1,56 @@
+{
+  "globalId" : "8fb9.bb201e6d-37a2-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Numbers",
+  "values" : [ {
+    "globalId" : "8fb9.eb0601b0-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Zero",
+    "value" : "0",
+    "dsId" : 11
+  }, {
+    "globalId" : "8fb9.cea056af-37a2-11ef-9fa6-0242ac110002",
+    "key" : "One",
+    "value" : "1",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.c739b797-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Two",
+    "value" : "2",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.d3fee6e7-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Three",
+    "value" : "3",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.d86e759a-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Four",
+    "value" : "4",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.daaed96b-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Five",
+    "value" : "5",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.ddafd052-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Six",
+    "value" : "6",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.e0bf2989-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Seven",
+    "value" : "7",
+    "dsId" : 8
+  }, {
+    "globalId" : "8fb9.e3a4847b-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Eight",
+    "value" : "8",
+    "dsId" : 9
+  }, {
+    "globalId" : "8fb9.e5baf92f-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Nine",
+    "value" : "9",
+    "dsId" : 10
+  } ]
+}

@@ -1,0 +1,46 @@
+{
+  "globalId" : "8fb9.1af34b09-37a8-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Browsers",
+  "values" : [ {
+    "globalId" : "8fb9.218af4a8-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Google Chrome",
+    "value" : "chrome",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.25e788d6-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Chromium",
+    "value" : "chromium",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.2927430c-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Firefox",
+    "value" : "firefox",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.2ece9b52-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Microsoft Edge",
+    "value" : "edge",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.377669f0-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Brave",
+    "value" : "brave",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.3c5ab909-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Vivaldi",
+    "value" : "vivaldi",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.3e53106f-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Ark",
+    "value" : "ark",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.40e7ba5f-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Tor",
+    "value" : "tor",
+    "dsId" : 8
+  } ]
+}

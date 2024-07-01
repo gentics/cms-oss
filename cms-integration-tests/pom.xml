@@ -19,13 +19,15 @@
 	<url>http://www.gentics.com</url>
 
 	<properties>
-		<docker.startParallel>true</docker.startParallel>
+		<!-- Default is already false. Don't enable this, as it's quite buggy and will cause issues with starting the containers-->
+		<docker.startParallel>false</docker.startParallel>
 
 		<integrationTest.mariadb.image>mariadb</integrationTest.mariadb.image>
 		<integrationTest.mariadb.version>10.7</integrationTest.mariadb.version>
 
 		<integrationTest.cms.image>docker.apa-it.at/gentics/cms-oss</integrationTest.cms.image>
-		<integrationTest.cms.version>${project.version}</integrationTest.cms.version>
+		<!-- <integrationTest.cms.version>${project.version}</integrationTest.cms.version> -->
+		<integrationTest.cms.version>6.1.6</integrationTest.cms.version>
 
 		<integrationTest.mesh.image>docker.apa-it.at/gentics/mesh</integrationTest.mesh.image>
 		<integrationTest.mesh.version>${mesh.version}</integrationTest.mesh.version>
@@ -126,13 +128,19 @@
 									<NODE_DB_HOST>+${docker.container.mariadb.ip}</NODE_DB_HOST>
 									<NODE_DB_USER>root</NODE_DB_USER>
 									<NODE_DB_PASSWORD>finger</NODE_DB_PASSWORD>
+
 									<NODE_USER_PASSWORD>node</NODE_USER_PASSWORD>
 									<ELASTICSEARCH_ENABLED>false</ELASTICSEARCH_ENABLED>
 									<ELASTICSEARCH_URL></ELASTICSEARCH_URL>
 									<CONF_FILES>cms</CONF_FILES>
+
 									<CR_URL_MESH_CR>http://${docker.container.mesh.ip}:8080/example</CR_URL_MESH_CR>
 									<CR_USERNAME_MESH_CR>admin</CR_USERNAME_MESH_CR>
 									<CR_PASSWORD_MESH_CR>admin</CR_PASSWORD_MESH_CR>
+
+									<CR_URL_MARIADB_CR>jdbc:mariadb://${docker.container.mariadb.ip}:3306/cr</CR_URL_MARIADB_CR>
+									<CR_USERNAME_MARIADB_CR>crtest</CR_USERNAME_MARIADB_CR>
+									<CR_PASSWORD_MARIADB_CR>crtest</CR_PASSWORD_MARIADB_CR>
 								</env>
 
 								<volumes>

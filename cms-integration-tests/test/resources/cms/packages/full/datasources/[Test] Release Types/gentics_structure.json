@@ -1,0 +1,16 @@
+{
+  "globalId" : "8fb9.525df8d8-37a2-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Release Types",
+  "values" : [ {
+    "globalId" : "8fb9.56f0fb77-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Open Source",
+    "value" : "oss",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.59efd34e-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Enterprise Edition",
+    "value" : "ee",
+    "dsId" : 2
+  } ]
+}

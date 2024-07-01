@@ -1,0 +1,46 @@
+{
+  "globalId" : "8fb9.90707b1d-37a8-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Pets",
+  "values" : [ {
+    "globalId" : "8fb9.94ef4f90-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Dog",
+    "value" : "dog",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.9846f720-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Cat",
+    "value" : "cat",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.9c30b604-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Hamster",
+    "value" : "hamster",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.a28e0fbb-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Rabbit",
+    "value" : "rabbit",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.a6740c41-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Snake",
+    "value" : "snake",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.ae514995-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Bird",
+    "value" : "bird",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.c2056a16-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Horse",
+    "value" : "horse",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.cf96fa56-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Mouse",
+    "value" : "mouse",
+    "dsId" : 8
+  } ]
+}

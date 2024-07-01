@@ -1,0 +1,21 @@
+{
+  "globalId" : "8fb9.604447e4-37a2-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] CMP Components",
+  "values" : [ {
+    "globalId" : "8fb9.655c4af1-37a2-11ef-9fa6-0242ac110002",
+    "key" : "CMS",
+    "value" : "cms",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.67e87cfb-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Mesh",
+    "value" : "mesh",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.6aca3e1b-37a2-11ef-9fa6-0242ac110002",
+    "key" : "Portal",
+    "value" : "portal",
+    "dsId" : 3
+  } ]
+}

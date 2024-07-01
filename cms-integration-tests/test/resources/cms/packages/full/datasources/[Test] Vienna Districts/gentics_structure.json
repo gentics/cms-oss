@@ -1,0 +1,121 @@
+{
+  "globalId" : "8fb9.cc779fa2-37a6-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Vienna Districts",
+  "values" : [ {
+    "globalId" : "8fb9.d52937cc-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Inner City",
+    "value" : "01",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.da74e5a0-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Leopoldstadt",
+    "value" : "02",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.def0e1df-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Landstraße",
+    "value" : "03",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.e30e9da4-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Wieden",
+    "value" : "04",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.e71e134e-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Margareten",
+    "value" : "05",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.ebaeb093-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Mariahilf",
+    "value" : "06",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.efa042d9-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Neubau",
+    "value" : "07",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.f3c66ba0-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Josefstadt",
+    "value" : "08",
+    "dsId" : 8
+  }, {
+    "globalId" : "8fb9.f8c25d99-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Alsergrund",
+    "value" : "09",
+    "dsId" : 9
+  }, {
+    "globalId" : "8fb9.fc938d37-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Favoriten",
+    "value" : "10",
+    "dsId" : 10
+  }, {
+    "globalId" : "8fb9.0167e9d8-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Simmering",
+    "value" : "11",
+    "dsId" : 11
+  }, {
+    "globalId" : "8fb9.057ea0a6-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Meidling",
+    "value" : "12",
+    "dsId" : 12
+  }, {
+    "globalId" : "8fb9.0b506cab-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Hietzing",
+    "value" : "13",
+    "dsId" : 13
+  }, {
+    "globalId" : "8fb9.10b214fa-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Penzing",
+    "value" : "14",
+    "dsId" : 14
+  }, {
+    "globalId" : "8fb9.1964e5af-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Rudolfsheim-Fünfhaus",
+    "value" : "15",
+    "dsId" : 15
+  }, {
+    "globalId" : "8fb9.1e0ffaaf-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Ottakring",
+    "value" : "16",
+    "dsId" : 16
+  }, {
+    "globalId" : "8fb9.227824bb-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Hernals",
+    "value" : "17",
+    "dsId" : 17
+  }, {
+    "globalId" : "8fb9.27aa365d-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Währing",
+    "value" : "18",
+    "dsId" : 18
+  }, {
+    "globalId" : "8fb9.2c2f9516-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Döbling",
+    "value" : "19",
+    "dsId" : 19
+  }, {
+    "globalId" : "8fb9.31b8ecda-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Brigittenau",
+    "value" : "20",
+    "dsId" : 20
+  }, {
+    "globalId" : "8fb9.35636f6d-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Floridsdorf",
+    "value" : "21",
+    "dsId" : 21
+  }, {
+    "globalId" : "8fb9.393ee4c7-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Donaustadt",
+    "value" : "22",
+    "dsId" : 22
+  }, {
+    "globalId" : "8fb9.3c726d4b-37a7-11ef-9fa6-0242ac110002",
+    "key" : "Liesing",
+    "value" : "23",
+    "dsId" : 23
+  } ]
+}

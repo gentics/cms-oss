@@ -1,0 +1,96 @@
+{
+  "globalId" : "994d.5be00ab6-37b8-11ef-a38e-0242ac110002",
+  "keyword" : "test_image",
+  "name" : {
+    "de" : "[Test] Bild",
+    "en" : "[Test] Image"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : true,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "994d.9d4262a8-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Bild",
+      "en" : "Image"
+    },
+    "keyword" : "image",
+    "editable" : true,
+    "typeId" : 6,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "994d.9d42bff8-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Größe",
+      "en" : "Size"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "994d.9d432e5a-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "tpl",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "994d.9d45230e-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

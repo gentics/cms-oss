@@ -1,0 +1,21 @@
+{
+  "globalId" : "8fb9.61f70ef6-37a6-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Mobile OS",
+  "values" : [ {
+    "globalId" : "8fb9.66a5a19a-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Android",
+    "value" : "android",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.6930d7e8-37a6-11ef-9fa6-0242ac110002",
+    "key" : "iOS",
+    "value" : "ios",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.6cc75049-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Web",
+    "value" : "web",
+    "dsId" : 3
+  } ]
+}

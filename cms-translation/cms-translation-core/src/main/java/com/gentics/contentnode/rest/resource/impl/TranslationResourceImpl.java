@@ -90,7 +90,8 @@ public class TranslationResourceImpl implements TranslationResource {
 			PageTranslationService pageTranslationService = new PageTranslationService();
 			final var loadedPage = pageTranslationService.getPage(pageId.toString(), true);
 			final var sourceLanguageCode = loadedPage.getLanguage().getCode();
-			final var translatedNodePage = pageTranslationService.translate(pageId, targetLanguageCode, locked, channelId, true);
+			final var translatedNodePage = pageTranslationService.translate(pageId, targetLanguageCode,
+					locked, channelId, true);
 
 			var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
 					List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
@@ -140,11 +141,13 @@ public class TranslationResourceImpl implements TranslationResource {
 
 		var responseMessage = String.format("Translated page with id { %s } successfully", pageId);
 
-		if(updatedTranslatedNodePage.getChannel() != null) {
-			responseMessage = String.format("%s in channel { %s }", responseMessage, updatedTranslatedNodePage.getChannel().getId());
+		if (updatedTranslatedNodePage.getChannel() != null) {
+			responseMessage = String.format("%s in channel { %s }", responseMessage,
+					updatedTranslatedNodePage.getChannel().getId());
 		}
 
-		pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage));
+		pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage,
+				List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE)));
 		pageResponse.setResponseInfo(
 				new ResponseInfo(ResponseCode.OK, responseMessage));
 

@@ -1,0 +1,31 @@
+{
+  "globalId" : "8fb9.33552ff8-37a1-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Sizes",
+  "values" : [ {
+    "globalId" : "8fb9.444737fd-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Extra Small",
+    "value" : "xs",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.36eb4bc6-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Small",
+    "value" : "s",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.3b5a9a32-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Medium",
+    "value" : "m",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.3dd010f9-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Large",
+    "value" : "l",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.411b587e-37a1-11ef-9fa6-0242ac110002",
+    "key" : "Extra Large",
+    "value" : "xl",
+    "dsId" : 4
+  } ]
+}

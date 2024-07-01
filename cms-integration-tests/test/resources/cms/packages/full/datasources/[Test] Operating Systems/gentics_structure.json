@@ -1,0 +1,21 @@
+{
+  "globalId" : "8fb9.45f154f2-37a6-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Operating Systems",
+  "values" : [ {
+    "globalId" : "8fb9.4bb19923-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Windows",
+    "value" : "windows",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.53209df1-37a6-11ef-9fa6-0242ac110002",
+    "key" : "MacOS",
+    "value" : "macos",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.55e3e925-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Linux",
+    "value" : "linux",
+    "dsId" : 3
+  } ]
+}

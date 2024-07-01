@@ -1,0 +1,46 @@
+{
+  "globalId" : "8fb9.74a62332-37a2-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Versions",
+  "values" : [ {
+    "globalId" : "8fb9.97125172-37a2-11ef-9fa6-0242ac110002",
+    "key" : "0.0.1",
+    "value" : "0.0.1",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.9a36bb79-37a2-11ef-9fa6-0242ac110002",
+    "key" : "0.1.0",
+    "value" : "0.1.0",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.9d17194f-37a2-11ef-9fa6-0242ac110002",
+    "key" : "0.1.1",
+    "value" : "0.1.1",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.a1ebbab8-37a2-11ef-9fa6-0242ac110002",
+    "key" : "1.0.0",
+    "value" : "1.0.0",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.a610db27-37a2-11ef-9fa6-0242ac110002",
+    "key" : "1.0.1",
+    "value" : "1.0.1",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.a983614d-37a2-11ef-9fa6-0242ac110002",
+    "key" : "1.1.0",
+    "value" : "1.1.0",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.ac521894-37a2-11ef-9fa6-0242ac110002",
+    "key" : "1.1.1",
+    "value" : "1.1.1",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.af9e8406-37a2-11ef-9fa6-0242ac110002",
+    "key" : "2.0.0",
+    "value" : "2.0.0",
+    "dsId" : 8
+  } ]
+}

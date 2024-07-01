@@ -1,0 +1,46 @@
+{
+  "globalId" : "8fb9.9f7c1275-37a6-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Quantities",
+  "values" : [ {
+    "globalId" : "8fb9.a36fb861-37a6-11ef-9fa6-0242ac110002",
+    "key" : "None",
+    "value" : "none",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.a5e0f225-37a6-11ef-9fa6-0242ac110002",
+    "key" : "One",
+    "value" : "one",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.a835fc9f-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Two",
+    "value" : "two",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.aab7f692-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Few",
+    "value" : "few",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.af6971d6-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Couple",
+    "value" : "couple",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.b31d6162-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Dozen",
+    "value" : "dozen",
+    "dsId" : 6
+  }, {
+    "globalId" : "8fb9.b6df0ead-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Many",
+    "value" : "many",
+    "dsId" : 7
+  }, {
+    "globalId" : "8fb9.b9068ec5-37a6-11ef-9fa6-0242ac110002",
+    "key" : "All",
+    "value" : "all",
+    "dsId" : 8
+  } ]
+}

@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS `cr`;
+GRANT ALL privileges ON cr.* TO 'crtest'@'%' IDENTIFIED BY 'crtest';
+FLUSH PRIVILEGES;

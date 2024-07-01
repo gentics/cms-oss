@@ -1,0 +1,36 @@
+{
+  "globalId" : "8fb9.e4590220-37a8-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Entity Type",
+  "values" : [ {
+    "globalId" : "8fb9.e8891840-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Node",
+    "value" : "node",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.ebdf485d-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Folder",
+    "value" : "folder",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.ee3439ee-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Page",
+    "value" : "page",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.f07f2797-37a8-11ef-9fa6-0242ac110002",
+    "key" : "file",
+    "value" : "file",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.f2e93abf-37a8-11ef-9fa6-0242ac110002",
+    "key" : "image",
+    "value" : "image",
+    "dsId" : 5
+  }, {
+    "globalId" : "8fb9.fa67052b-37a8-11ef-9fa6-0242ac110002",
+    "key" : "Form",
+    "value" : "form",
+    "dsId" : 6
+  } ]
+}

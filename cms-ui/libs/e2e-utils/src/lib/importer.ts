@@ -1,4 +1,4 @@
-import { Folder, Node, Page, Template } from '@gentics/cms-models';
+import { Folder, Node, NodeFeature, Page, Template } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { EntityMap, LoginInformation, TestSize } from './common';
 import { CypressDriver } from './cypress-driver';
@@ -52,8 +52,19 @@ function createClient(login: LoginInformation): Promise<GCMSRestClient> {
         });
 }
 
+export async function setNodeFeatures(
+    client: GCMSRestClient,
+    nodeId: number | string,
+    features: NodeFeature[],
+): Promise<void> {
+    for (const feature of features) {
+        await client.node.activateFeature(nodeId, feature).send();
+    }
+}
+
 async function importNode(
     client: GCMSRestClient,
+    pkgName: TestSize,
     entityMap: EntityMap,
     langMap: Record<string, number>,
     data: NodeImportData,
@@ -65,14 +76,21 @@ async function importNode(
         ...req
     } = data;
     const created = (await client.node.create(req).send()).node;
-    for (const feature of features) {
-        await client.node.activateFeature(created.id, feature).send();
-    }
+
+    await setNodeFeatures(client, created.id, features);
+
     for (const lang of languages) {
         await client.node.assignLanguage(created.id, langMap[lang]).send();
     }
+
+    // Assigns all Dev-Tool package elements to the node
+    const packages = PACKAGE_IMPORTS[pkgName];
+    for (const pkg of packages) {
+        await client.devTools.assignToNode(pkg, created.id).send();
+    }
+
+    // We need the local template-ids for page references, so load all referenced templates via global id
     for (const tplId of templates) {
-        await client.node.assignTemplate(created.id, tplId).send()
         const tpl = (await client.template.get(tplId).send()).template;
         if (tpl) {
             entityMap[tplId] = tpl;
@@ -164,6 +182,7 @@ async function getTemplateMapping(client: GCMSRestClient): Promise<Record<string
 
 function importEntity(
     client: GCMSRestClient,
+    pkgName: TestSize,
     entityMap: EntityMap,
     languages: Record<string, number>,
     type: string,
@@ -171,7 +190,7 @@ function importEntity(
 ): Promise<any> {
     switch (type) {
         case 'node':
-            return importNode(client, entityMap, languages, entity as NodeImportData);
+            return importNode(client, pkgName, entityMap, languages, entity as NodeImportData);
 
         case 'folder':
             return importFolder(client, entityMap, entity as FolderImportData);
@@ -200,7 +219,14 @@ async function setupContent(
 
     // Then attempt to import all
     for (const importData of importList) {
-        const entity = await importEntity(client, entityMap, data.languages, importData[IMPORT_TYPE], importData);
+        const entity = await importEntity(
+            client,
+            pkgName,
+            entityMap,
+            data.languages,
+            importData[IMPORT_TYPE],
+            importData,
+        );
         if (!entity) {
             continue;
         }

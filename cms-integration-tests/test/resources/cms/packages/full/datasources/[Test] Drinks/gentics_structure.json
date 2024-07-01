@@ -1,0 +1,31 @@
+{
+  "globalId" : "8fb9.77616f3a-37a6-11ef-9fa6-0242ac110002",
+  "type" : "statical",
+  "name" : "[Test] Drinks",
+  "values" : [ {
+    "globalId" : "8fb9.7b89f940-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Water",
+    "value" : "water",
+    "dsId" : 1
+  }, {
+    "globalId" : "8fb9.7e9adb16-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Coffee",
+    "value" : "coffee",
+    "dsId" : 2
+  }, {
+    "globalId" : "8fb9.80e17122-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Tea",
+    "value" : "tea",
+    "dsId" : 3
+  }, {
+    "globalId" : "8fb9.84d539ca-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Soda",
+    "value" : "soda",
+    "dsId" : 4
+  }, {
+    "globalId" : "8fb9.8da1b051-37a6-11ef-9fa6-0242ac110002",
+    "key" : "Soft Drink",
+    "value" : "soft-drink",
+    "dsId" : 5
+  } ]
+}

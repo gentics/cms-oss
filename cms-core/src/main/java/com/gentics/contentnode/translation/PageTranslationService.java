@@ -19,15 +19,16 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.lib.log.NodeLogger;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 
+/**
+ * Service to create language page variants
+ */
 public class PageTranslationService {
 
-	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 
 	/**
 	 * Translate the page into the given language. When the language variant of the page exists, it
@@ -47,14 +48,12 @@ public class PageTranslationService {
 			boolean requirePermission)
 			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		Integer channelSetId = null;
 
 		if (channelId == null) {
 			channelId = 0;
 		}
 
-		boolean setChannel = channelId != null && channelId != 0;
-		if (setChannel) {
+		if (channelId != 0) {
 			t.setChannelId(channelId);
 		}
 
@@ -76,6 +75,7 @@ public class PageTranslationService {
 						page.getFolder(),
 						PermType.translatepages);
 			}
+			Integer channelSetId = null;
 
 			// if a channel ID was given as a query parameter, check if it is
 			// part of a valid multichannelling environment
@@ -107,29 +107,7 @@ public class PageTranslationService {
 					masterVariant = master.getLanguageVariant(languageCode);
 				}
 
-				if (masterVariant == null) {
-					t.setDisableMultichannellingFlag(true);
-					Node masterPageChannel;
-					try {
-						masterPageChannel = master.getChannel();
-						if (masterPageChannel == null) {
-							masterPageChannel = master.getFolder().getNode();
-						}
-					} finally {
-						t.resetDisableMultichannellingFlag();
-					}
-
-					try {
-						Page translatedMaster = translate(master.getId(), languageCode, false,
-								masterPageChannel.getId(), false);
-						channelSetId = translatedMaster.getChannelSetId();
-					}
-					catch (NodeException e) {
-						throw new NodeException("Error while translating page: translating the master page failed with: ", e.getMessage());
-					}
-				} else {
-					channelSetId = masterVariant.getChannelSetId();
-				}
+				channelSetId = getChannelSetId(master, masterVariant, languageCode);
 
 				// look for the language variant in the specified channel
 				Page variant = page.getLanguageVariant(languageCode, channelId);
@@ -139,33 +117,7 @@ public class PageTranslationService {
 				}
 			} else {
 				languageVariant = page.getLanguageVariant(languageCode);
-
-				// get the language variant (if one already exists)
-				try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-					List<Page> languageVariants = page.getLanguageVariants(false);
-					for (Page currentLanguageVariant : languageVariants) {
-						ContentLanguage contentLanguage = currentLanguageVariant.getLanguage();
-						if (contentLanguage != null && contentLanguage.getCode().equals(languageCode)
-								&& currentLanguageVariant.isDeleted()) {
-							// do this in its own transaction (as system user) to avoid permission check
-							try (Trx trx = new Trx(); WastebinFilter wb = Wastebin.INCLUDE.set()) {
-								if (NodeConfigRuntimeConfiguration.isFeature(Feature.MULTICHANNELLING)
-										&& currentLanguageVariant.isMaster()) {
-									Collection<Integer> channelVariantIds = currentLanguageVariant.getChannelSet()
-											.values();
-									List<Page> channelVariants = trx.getTransaction()
-											.getObjects(Page.class, channelVariantIds, false, false);
-									for (Page channelVariant : channelVariants) {
-										channelVariant.delete(true);
-									}
-								} else {
-									currentLanguageVariant.delete(true);
-								}
-								trx.success();
-							}
-						}
-					}
-				}
+				this.deleteExistingLanguageVariantsWithWastebin(page, languageCode);
 			}
 
 			if (languageVariant == null) {
@@ -192,6 +144,45 @@ public class PageTranslationService {
 		}
 	}
 
+	/**
+	 *
+	 * @param master the page from the master
+	 * @param masterVariant the language variant of the master
+	 * @param languageCode the language code for the master variant
+	 * @return the channelSetId that connects all objects from channels together
+	 * @throws NodeException
+	 */
+	private Integer getChannelSetId(Page master, Page masterVariant, String languageCode)
+			throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		Integer channelSetId;
+		if (masterVariant == null) {
+			t.setDisableMultichannellingFlag(true);
+			Node masterPageChannel;
+			try {
+				masterPageChannel = master.getChannel();
+				if (masterPageChannel == null) {
+					masterPageChannel = master.getFolder().getNode();
+				}
+			} finally {
+				t.resetDisableMultichannellingFlag();
+			}
+
+			try {
+				Page translatedMaster = translate(master.getId(), languageCode, false,
+						masterPageChannel.getId(), false);
+				channelSetId = translatedMaster.getChannelSetId();
+			}
+			catch (NodeException e) {
+				throw new NodeException("Error while translating page: translating the master page failed with: ", e.getMessage());
+			}
+		} else {
+			channelSetId = masterVariant.getChannelSetId();
+		}
+		return channelSetId;
+	}
+
 
 	/**
 	 * Get the page with given id, check whether the page exists. Check for given permissions for
@@ -213,7 +204,13 @@ public class PageTranslationService {
 		return MiscUtils.load(Page.class, pageId);
 	}
 
-
+	/**
+	 * Gets the suggested filename for a new page language variant
+	 * @param page the source page for which the filename should be suggested
+	 * @param languageVariant the page the filename should be applied
+	 * @return the suggested filename
+	 * @throws NodeException
+	 */
 	public String getSuggestedFilename(Page page, Page languageVariant) throws NodeException {
 		// when the template does not enforce an extension, we will keep the original page's extension by suggesting the filename now
 		if (StringUtils.isNotEmpty(languageVariant.getTemplate().getMarkupLanguage().getExtension())) {
@@ -234,7 +231,14 @@ public class PageTranslationService {
 		return PageFactory.suggestFilename(languageVariant, p -> extension);
 	}
 
-	// check whether the language code exists for the node
+
+	/**
+	 * Check whether the language exists for the given node
+	 * @param masterNode the node for which the language is to be checked
+	 * @param languageCode the language code that is checked
+	 * @return the language if it exists
+	 * @throws NodeException if the language does not exist on the given node
+	 */
 	public ContentLanguage getNodeLanguageOrThrow(Node masterNode, String languageCode)
 			throws NodeException {
 		List<ContentLanguage> languages = masterNode.getLanguages();
@@ -250,8 +254,46 @@ public class PageTranslationService {
 						languageCode));
 	}
 
+	private void deleteExistingLanguageVariantsWithWastebin(Page page, String languageCode) throws NodeException {
+		// get the language variant (if one already exists)
+		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+			List<Page> languageVariants = page.getLanguageVariants(false);
+
+			for (Page currentLanguageVariant : languageVariants) {
+				ContentLanguage contentLanguage = currentLanguageVariant.getLanguage();
+				if (contentLanguage != null && contentLanguage.getCode().equals(languageCode)
+						&& currentLanguageVariant.isDeleted()) {
+					// do this in its own transaction (as system user) to avoid permission check
+					try (Trx trx = new Trx(); WastebinFilter wb = Wastebin.INCLUDE.set()) {
+						if (NodeConfigRuntimeConfiguration.isFeature(Feature.MULTICHANNELLING)
+								&& currentLanguageVariant.isMaster()) {
+							Collection<Integer> channelVariantIds = currentLanguageVariant.getChannelSet()
+									.values();
+							List<Page> channelVariants = trx.getTransaction()
+									.getObjects(Page.class, channelVariantIds, false, false);
+							for (Page channelVariant : channelVariants) {
+								channelVariant.delete(true);
+							}
+						} else {
+							currentLanguageVariant.delete(true);
+						}
+						trx.success();
+					}
+				}
+			}
+		}
+	}
 
 
+	/**
+	 * Creates a new page for the given target language
+	 * @param page the page for which a language variant is to be created
+	 * @param targetLanguage the language of the language variant
+	 * @param channelId the channel id
+	 * @param channelSetId
+	 * @return the page for the given target language
+	 * @throws NodeException
+	 */
 	public Page createLanguageVariant(Page page, ContentLanguage targetLanguage, int channelId, Integer channelSetId)
 			throws NodeException {
 		// create the language variant

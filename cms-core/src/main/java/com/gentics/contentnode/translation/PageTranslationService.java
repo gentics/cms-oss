@@ -42,7 +42,7 @@ public class PageTranslationService {
 	 * @param channelId         for multichannelling, specify channel in which to create page (can
 	 *                          be 0 or equal to node ID to be ignored)
 	 * @param requirePermission if false, the permission check on the page to translate is skipped
-	 * @return page load response
+	 * @return the translated page
 	 */
 	public Page translate(Integer pageId, String languageCode, boolean locked, Integer channelId,
 			boolean requirePermission)
@@ -53,7 +53,8 @@ public class PageTranslationService {
 			channelId = 0;
 		}
 
-		if (channelId != 0) {
+		boolean setChannel = channelId != 0;
+		if (setChannel) {
 			t.setChannelId(channelId);
 		}
 

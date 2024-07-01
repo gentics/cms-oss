@@ -11,6 +11,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLan
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
+import com.gentics.contentnode.translation.PageTranslationService;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -2599,258 +2600,61 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
-	 * Translate the page into the given language.
-	 * When the language variant of the page exists, it is just locked and returned, otherwise the page is copied into the language variant and returned.
-	 * This method fails, if the requested language is not available for the node of the page or the user has no permission to create/edit the given language variant
-	 * @param id id of the page to translate
-	 * @param languageCode code of the language into which the page shall be translated
-	 * @param locked true if the translation shall be locked, false if not
-	 * @param channelId for multichannelling, specify channel in which to create page (can be 0 or equal to node ID to be ignored)
+	 * Translate the page into the given language. When the language variant of the page exists, it is
+	 * just locked and returned, otherwise the page is copied into the language variant and returned.
+	 * This method fails, if the requested language is not available for the node of the page or the
+	 * user has no permission to create/edit the given language variant
+	 *
+	 * @param id                id of the page to translate
+	 * @param languageCode      code of the language into which the page shall be translated
+	 * @param locked            true if the translation shall be locked, false if not
+	 * @param channelId         for multichannelling, specify channel in which to create page (can be
+	 *                          0 or equal to node ID to be ignored)
 	 * @param requirePermission if false, the permission check on the page to translate is skipped
 	 * @return page load response
 	 */
-	private PageLoadResponse translate(Integer id, String languageCode, boolean locked, Integer channelId, boolean requirePermission) {
-
-		Transaction t = getTransaction();
-		Page page = null;
-		String responseMessage = null;
+	private PageLoadResponse translate(Integer id, String languageCode, boolean locked,
+			Integer channelId, boolean requirePermission) throws TransactionException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		boolean readOnly = !locked;
-		Integer channelSetId = null;
 
 		if (channelId == null) {
 			channelId = 0;
 		}
-		boolean setChannel = channelId != null && channelId != 0;
-		if (setChannel) {
-			t.setChannelId(channelId);
-		}
+
 		try {
-			// get the page and check if it exists
-			if (requirePermission) {
-				page = getPage(Integer.toString(id), ObjectPermission.view);
-			} else {
-				// No permission required
-			page = getPage(Integer.toString(id));
-			}
-
-			if (page == null) {
-				logger.error("Error while translating page {" + id + "}; the specified page does not exist");
-				I18nString message = new CNI18nString("rest.general.error");
-				return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-						"Error while translating page {" + id + "}; the specified page does not exist"), null);
-			}
-
-			Node topMasterNode = page.getFolder().getNode();
-			if (topMasterNode.isChannel()) {
-				topMasterNode = topMasterNode.getMaster();
-			}
-
-			// check whether the language code exists for the node
-			List<ContentLanguage> languages = topMasterNode.getLanguages();
-			ContentLanguage language = null;
-			for (ContentLanguage tempLang : languages) {
-				if (StringUtils.isEqual(languageCode, tempLang.getCode())) {
-					language = tempLang;
-					break;
-				}
-			}
-
-			// no language found -> throw exception
-			if (language == null) {
-				I18nString message = new CNI18nString("rest.general.insufficientdata");
-				return new PageLoadResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-						"Error while translating page: invalid language code " + languageCode + " given"), null);
-			}
-
-			if (requirePermission && (!t.getPermHandler().canTranslate(page.getFolder(), Page.class, language) ||
-					!t.getPermHandler().canEdit(page.getFolder(), Page.class, language))) {
-				throw new InsufficientPrivilegesException("You're not authorized to create and edit a translation for this language", page.getFolder(),
-						PermType.translatepages);
-			}
-
-			// if a channel ID was given as a query parameter, check if it is
-			// part of a valid multichannelling environment
-			Page languageVariant = null;
-			if (channelId > 0 && (!page.isMaster() || page.isInherited())) {
-				Node channel = t.getObject(Node.class, channelId);
-				if (channel == null || !channel.isChannel()) {
-					I18nString message = new CNI18nString("rest.general.error");
-					return new PageLoadResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-							"Error while translating page: an invalid channel ID was given"), null);
-				}
-				if (!channel.getMasterNodes().contains(topMasterNode)) {
-					I18nString message = new CNI18nString("rest.general.error");
-					return new PageLoadResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-							"Error while translating page: node {" + channelId + "} is not a channel of node {" + topMasterNode.getId() + "}"), null);
-				}
-
-				// if the page should be translated in a channel, the page is
-				// first translated in the master node
-				Page master = page.getMaster();
-				Page masterVariant = null;
-				if (master.getChannel() != null) {
-					t.setChannelId(master.getChannel().getId());
-					try {
-						masterVariant = master.getLanguageVariant(languageCode);
-					} finally {
-						t.resetChannel();
-					}
-				} else {
-					masterVariant = master.getLanguageVariant(languageCode);
-				}
-				if (masterVariant == null) {
-					t.setDisableMultichannellingFlag(true);
-					Node masterPageChannel;
-					try {
-						masterPageChannel = master.getChannel();
-						if (masterPageChannel == null) {
-							masterPageChannel = master.getFolder().getNode();
-						}
-					} finally {
-						t.resetDisableMultichannellingFlag();
-					}
-					PageLoadResponse response = translate(ObjectTransformer.getInt(master.getId(), -1), languageCode, false, (Integer) masterPageChannel.getId(), false);
-					if (!response.getResponseInfo().getResponseCode().equals(ResponseCode.OK) || response.getPage() == null) {
-						I18nString message = new CNI18nString("rest.general.error");
-						return new PageLoadResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-								"Error while translating page: translating the master page failed with: " +
-								response.getResponseInfo().getResponseMessage()), null);
-					}
-
-					Page translatedMaster = getPage(Integer.toString(response.getPage().getId()));
-					channelSetId = translatedMaster.getChannelSetId();
-				} else {
-					channelSetId = masterVariant.getChannelSetId();
-				}
-
-				// look for the language variant in the specified channel
-				Page variant = page.getLanguageVariant(languageCode, channelId);
-				if (variant.getChannel() != null && channelId == ObjectTransformer.getInt(variant.getChannel().getId(), -1)) {
-					languageVariant = variant;
-				}
-			} else {
-				languageVariant = page.getLanguageVariant(languageCode);
-
-				// get the language variant (if one already exists)
-				try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-					List<Page> languageVariants = page.getLanguageVariants(false);
-					for (Page currentLanguageVariant : languageVariants) {
-						ContentLanguage contentLanguage = currentLanguageVariant.getLanguage();
-						if (contentLanguage != null && contentLanguage.getCode().equals(languageCode)
-								&& currentLanguageVariant.isDeleted()) {
-							// do this in its own transaction (as system user) to avoid permission check
-							try (Trx trx = new Trx(); WastebinFilter wb = Wastebin.INCLUDE.set()) {
-								if (NodeConfigRuntimeConfiguration.isFeature(Feature.MULTICHANNELLING) && currentLanguageVariant.isMaster()) {
-									Collection<Integer> channelVariantIds = currentLanguageVariant.getChannelSet().values();
-									List<Page> channelVariants = trx.getTransaction().getObjects(Page.class, channelVariantIds, false, false);
-									for (Page channelVariant : channelVariants) {
-										channelVariant.delete(true);
-									}
-								} else {
-								currentLanguageVariant.delete(true);
-								}
-								trx.success();
-							}
-						}
-					}
-				}
-			}
-
-			// check whether the language variant exists
-			if (languageVariant == null) {
-
-				// create the language variant
-				languageVariant = (Page) page.copy();
-
-				// set the new language
-				languageVariant.setLanguage(language);
-
-				if (StringUtils.isEmpty(languageVariant.getTemplate().getMarkupLanguage().getExtension())) {
-					// when the template does not enforce an extension, we will keep the original page's extension by suggesting the filename now
-					String originalFilename = page.getFilename();
-					int extensionIndex = originalFilename.lastIndexOf(".");
-
-					if (extensionIndex >= 0) {
-						String extension = originalFilename.substring(extensionIndex + 1);
-
-						// we do not keep the "extension", when it is the language code
-						if (page.getLanguage() != null && page.getLanguage().getCode().equalsIgnoreCase(extension)) {
-							languageVariant.setFilename(null);
-						} else {
-							languageVariant.setFilename(PageFactory.suggestFilename(languageVariant, p -> extension));
-						}
-					} else {
-						languageVariant.setFilename(null);
-					}
-				} else {
-				// reset the filename (will be constructed from scratch)
-				languageVariant.setFilename(null);
-				}
-
-				// if the new page is created inside a channel, set its channel
-				// information to match the translated master page
-				if (channelId != 0 && channelSetId != null) {
-					languageVariant.setChannelInfo(channelId, channelSetId);
-				}
-
-				// set the language variant to be sync'ed with the original page
-				// (but let it point to version 0)
-				languageVariant.synchronizeWithPageVersion(page, 0);
-
-				// save the new language variant
-				languageVariant.save();
-
-				// optionally unlock the page
-				if (!locked) {
-					languageVariant.unlock();
-				}
-			} else {
-				// language variant exists, return the page in edit mode (if not
-				// locked by another user)
-
-				if (requirePermission && !t.getPermHandler().canEdit(page.getFolder(), Page.class, language)) {
-					throw new InsufficientPrivilegesException("You're not authorized to edit the translation for this language", page.getFolder(),
-							PermType.update);
-				}
-
-				try {
-					languageVariant = (Page) t.getObject(Page.class, languageVariant.getId(), locked);
-				} catch (ReadOnlyException e) {
-					responseMessage = e.getMessage();
-					readOnly = true;
-				}
-			}
-
-			t.commit(false);
+			var translationService = new PageTranslationService();
+			var languageVariant = translationService.translate(id, languageCode, locked, channelId,
+					requirePermission);
 
 			// return the language variant
-			com.gentics.contentnode.rest.model.Page restPage = getPage(languageVariant, Arrays.asList(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE), readOnly);
+			com.gentics.contentnode.rest.model.Page restPage = getPage(languageVariant,
+					Arrays.asList(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE), readOnly);
 
 			PageLoadResponse response = new PageLoadResponse();
 			response.setPage(restPage);
-			if (responseMessage == null) {
-				responseMessage = "Translated page with id { " + id + " } successfully";
-				if (languageVariant.getChannel() != null) {
-					responseMessage = responseMessage + " in channel {" + languageVariant.getChannel().getId() + "}";
-				}
+
+			var responseMessage = "Translated page with id { " + id + " } successfully";
+			if (languageVariant.getChannel() != null) {
+				responseMessage += " in channel {" + languageVariant.getChannel().getId() + "}";
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
 
 			return response;
+
 		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
+			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
 		} catch (InsufficientPrivilegesException e) {
 			InsufficientPrivilegesMapper.log(e);
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
+			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
 		} catch (Exception e) {
 			logger.error("Error while translating page " + id, e);
 			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while translating page " + id + ": " + e.getLocalizedMessage()), null);
-		} finally {
-			if (setChannel) {
-				t.resetChannel();
-			}
+			return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE,
+							"Error while translating page " + id + ": " + e.getLocalizedMessage()), null);
 		}
 	}
 

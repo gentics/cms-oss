@@ -21,6 +21,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.i18n.CNI18nString;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -32,16 +33,16 @@ import org.apache.commons.lang3.StringUtils;
 public class LanguageVariantService {
 
 	/**
-	 * Translate the page into the given language. When the language variant of the page exists, it
-	 * is just locked and returned, otherwise the page is copied into the language variant and
-	 * returned. This method fails, if the requested language is not available for the node of the
-	 * page or the user has no permission to create/edit the given language variant
+	 * Translate the page into the given language. When the language variant of the page exists, it is
+	 * just locked and returned, otherwise the page is copied into the language variant and returned.
+	 * This method fails, if the requested language is not available for the node of the page or the
+	 * user has no permission to create/edit the given language variant
 	 *
 	 * @param pageId            id of the page to translate
 	 * @param languageCode      code of the language into which the page shall be translated
 	 * @param locked            true if the translation shall be locked, false if not
-	 * @param channelId         for multichannelling, specify channel in which to create page (can
-	 *                          be 0 or equal to node ID to be ignored)
+	 * @param channelId         for multichannelling, specify channel in which to create page (can be
+	 *                          0 or equal to node ID to be ignored)
 	 * @param requirePermission if false, the permission check on the page to translate is skipped
 	 * @return the translated page
 	 */
@@ -63,8 +64,9 @@ public class LanguageVariantService {
 			if (requirePermission && (
 					!t.getPermHandler().canTranslate(page.getFolder(), Page.class, language) ||
 							!t.getPermHandler().canEdit(page.getFolder(), Page.class, language))) {
+				var errorMessage = new CNI18nString("feature.translation.error.language_not_authorized");
 				throw new InsufficientPrivilegesException(
-						"You're not authorized to create and edit a translation for this language",
+						errorMessage.toString(),
 						page.getFolder(),
 						PermType.translatepages);
 			}
@@ -76,7 +78,8 @@ public class LanguageVariantService {
 			if (channelId != null && (!page.isMaster() || page.isInherited())) {
 				Node channel = t.getObject(Node.class, channelId);
 				if (channel == null || !channel.isChannel()) {
-					throw new InvalidRequestException("Error while translating page: an invalid channel ID was given");
+					throw new InvalidRequestException(
+							new CNI18nString("feature.translation.error.translating_channel").toString());
 				}
 				if (!channel.getMasterNodes().contains(topMasterNode)) {
 					throw new NodeException(
@@ -114,16 +117,18 @@ public class LanguageVariantService {
 			}
 
 			if (languageVariant == null) {
-				languageVariant = this.createLanguageVariant(page, language,  channelId, channelSetId);
+				languageVariant = this.createLanguageVariant(page, language, channelId, channelSetId);
 
 				if (!locked) {
 					languageVariant.unlock();
 				}
 			} else {
 				// language variant exists, return the page in edit mode (if not locked by another user)
-				if (requirePermission && !t.getPermHandler().canEdit(page.getFolder(), Page.class, language)) {
+				if (requirePermission && !t.getPermHandler()
+						.canEdit(page.getFolder(), Page.class, language)) {
 					throw new InsufficientPrivilegesException(
-							"You're not authorized to edit the translation for this language", page.getFolder(),
+							new CNI18nString("feature.translation.error.language_not_authorized_edit").toString(),
+							page.getFolder(),
 							PermType.update);
 				}
 			}
@@ -134,10 +139,9 @@ public class LanguageVariantService {
 	}
 
 	/**
-	 *
-	 * @param master the page from the master
+	 * @param master        the page from the master
 	 * @param masterVariant the language variant of the master
-	 * @param languageCode the language code for the master variant
+	 * @param languageCode  the language code for the master variant
 	 * @return the channelSetId that connects all objects from channels together
 	 * @throws NodeException
 	 */
@@ -162,9 +166,10 @@ public class LanguageVariantService {
 				Page translatedMaster = translate(master.getId(), languageCode, false,
 						masterPageChannel.getId(), false);
 				channelSetId = translatedMaster.getChannelSetId();
-			}
-			catch (NodeException e) {
-				throw new NodeException("Error while translating page: translating the master page failed with: ", e.getMessage());
+			} catch (NodeException e) {
+				var errorMessage = new CNI18nString("feature.translation.error.translating_master");
+				errorMessage.addParameter(e.getMessage());
+				throw new NodeException(errorMessage.toString());
 			}
 		} else {
 			channelSetId = masterVariant.getChannelSetId();
@@ -174,8 +179,8 @@ public class LanguageVariantService {
 
 
 	/**
-	 * Get the page with given id, check whether the page exists. Check for given permissions for
-	 * the current user.
+	 * Get the page with given id, check whether the page exists. Check for given permissions for the
+	 * current user.
 	 *
 	 * @param pageId            id of the page
 	 * @param requirePermission when true a permission check is performed
@@ -195,7 +200,8 @@ public class LanguageVariantService {
 
 	/**
 	 * Gets the suggested filename for a new page language variant
-	 * @param page the source page for which the filename should be suggested
+	 *
+	 * @param page            the source page for which the filename should be suggested
 	 * @param languageVariant the page the filename should be applied
 	 * @return the suggested filename
 	 * @throws NodeException
@@ -223,7 +229,8 @@ public class LanguageVariantService {
 
 	/**
 	 * Check whether the language exists for the given node
-	 * @param masterNode the node for which the language is to be checked
+	 *
+	 * @param masterNode   the node for which the language is to be checked
 	 * @param languageCode the language code that is checked
 	 * @return the language if it exists
 	 * @throws NodeException if the language does not exist on the given node
@@ -238,12 +245,14 @@ public class LanguageVariantService {
 			}
 		}
 
-		throw new InvalidRequestException(String.format(
-				"Error while translating page: invalid language code '%s' given. The provided language code may not exists on this node.",
-				languageCode));
+		var errorMessage = new CNI18nString("feature.translation.error.language_not_existent");
+		errorMessage.addParameter(languageCode);
+
+		throw new InvalidRequestException(errorMessage.toString());
 	}
 
-	private void deleteExistingLanguageVariantsFromWastebin(Page page, String languageCode) throws NodeException {
+	private void deleteExistingLanguageVariantsFromWastebin(Page page, String languageCode)
+			throws NodeException {
 		// get the language variant (if one already exists)
 		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 			List<Page> languageVariants = page.getLanguageVariants(false);
@@ -276,14 +285,16 @@ public class LanguageVariantService {
 
 	/**
 	 * Creates a new page for the given target language
-	 * @param page the page for which a language variant is to be created
+	 *
+	 * @param page           the page for which a language variant is to be created
 	 * @param targetLanguage the language of the language variant
-	 * @param channelId the channel id
+	 * @param channelId      the channel id
 	 * @param channelSetId
 	 * @return the page for the given target language
 	 * @throws NodeException
 	 */
-	public Page createLanguageVariant(Page page, ContentLanguage targetLanguage, int channelId, Integer channelSetId)
+	public Page createLanguageVariant(Page page, ContentLanguage targetLanguage, int channelId,
+			Integer channelSetId)
 			throws NodeException {
 		// create the language variant
 		var languageVariant = (Page) page.copy();
@@ -303,7 +314,7 @@ public class LanguageVariantService {
 		languageVariant.synchronizeWithPageVersion(page, 0);
 		languageVariant.save();
 
-		return  languageVariant;
+		return languageVariant;
 	}
 
 }

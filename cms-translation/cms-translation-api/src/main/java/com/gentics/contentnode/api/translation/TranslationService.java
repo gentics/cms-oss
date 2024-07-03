@@ -1,6 +1,5 @@
-package com.gentics.contentnode.translation;
+package com.gentics.contentnode.api.translation;
 
-import java.util.function.Predicate;
 
 /**
  * Interface for translation services

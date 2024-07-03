@@ -26,7 +26,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.translation.TranslationService;
+import com.gentics.contentnode.api.translation.TranslationService;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.BeforeClass;

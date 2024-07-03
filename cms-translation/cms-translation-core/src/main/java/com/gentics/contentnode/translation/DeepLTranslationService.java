@@ -4,6 +4,7 @@ import com.deepl.api.DeepLException;
 import com.deepl.api.TextResult;
 import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
 import java.util.HashMap;
@@ -70,6 +71,10 @@ public class DeepLTranslationService implements TranslationService {
 			throw new NodeException("Error occurred while translating text.", e);
 		}
 
+		if (translatedText == null || translatedText.getText() == null) {
+			return textToTranslate;
+		}
+
 		return translatedText.getText();
 	}
 
@@ -83,7 +88,8 @@ public class DeepLTranslationService implements TranslationService {
 		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
 
 		if (StringUtils.isBlank(authToken)) {
-			throw new NodeException("Invalid authentication token provided for: " + getClass().getSimpleName());
+			throw new NodeException(
+					"Invalid authentication token provided for: " + getClass().getSimpleName());
 		}
 
 		return authToken;
@@ -99,7 +105,8 @@ public class DeepLTranslationService implements TranslationService {
 
 		if (MapUtils.isEmpty(languagePreferencesFromConfig)) {
 			final var errorMessage = String.format(
-					"No language preferences found for: '%s'. Using default configuration.", getClass().getSimpleName());
+					"No language preferences found for: '%s'. Using default configuration.",
+					getClass().getSimpleName());
 			logger.log(Level.WARN, errorMessage);
 		}
 

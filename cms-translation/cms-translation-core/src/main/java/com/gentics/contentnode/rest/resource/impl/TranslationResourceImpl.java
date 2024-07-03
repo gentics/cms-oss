@@ -4,6 +4,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.InvalidRequestException;
@@ -30,7 +31,6 @@ import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.translation.LanguageVariantService;
-import com.gentics.contentnode.translation.TranslationService;
 import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
@@ -105,13 +105,17 @@ public class TranslationResourceImpl implements TranslationResource {
 			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
 				LanguageVariantService languageVariantService = new LanguageVariantService();
 				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
-				final var sourceLanguageCode = loadedPage.getLanguage().getCode();
+				final var sourceLanguage = loadedPage.getLanguage();
+
+				if (sourceLanguage == null) {
+					throw new InvalidRequestException(new CNI18nString("feature.translation.error.translating_page").toString());
+				}
+				final var sourceLanguageCode = sourceLanguage.getCode();
 				final var translatedNodePage = languageVariantService.translate(pageId, targetLanguageCode,
 						locked, channelId, true);
 
 				var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
 						List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
-				pageToTranslate.setReadOnly(this.isPageReadOnly(loadedPage));
 
 				try {
 					var contentTags = this.getContentTags(pageToTranslate);
@@ -232,7 +236,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	 * @param page the page to obtain the content tags.
 	 * @return the content tags
 	 */
-	private ArrayList<Tag> getContentTags(com.gentics.contentnode.rest.model.Page page) {
+	private List<Tag> getContentTags(com.gentics.contentnode.rest.model.Page page) {
 		var contentTags = new ArrayList<Tag>();
 		var pageTags = page.getTags();
 

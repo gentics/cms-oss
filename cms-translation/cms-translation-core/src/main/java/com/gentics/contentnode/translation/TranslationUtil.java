@@ -1,5 +1,6 @@
 package com.gentics.contentnode.translation;
 
+import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;

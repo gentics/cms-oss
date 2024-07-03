@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.resource;
 
 
 import com.gentics.contentnode.rest.model.request.TranslationRequest;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import javax.ws.rs.Consumes;
@@ -45,13 +46,16 @@ public interface TranslationResource {
 	 * @param locked             true if the translation shall be locked, false if not
 	 * @param channelId          for multichannelling, specify channel in which to create page (can be
 	 *                           0 or equal to node ID to be ignored)
+	 * @param waitMs wait timeout in ms. When set to 0, response will be sent, when the action completes
 	 * @return page load response
 	 */
 	@POST
 	@Path("/page/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	PageLoadResponse translate(@PathParam("id") Integer id,
+	GenericResponse translate(@PathParam("id") Integer id,
 			@QueryParam("language") String targetLanguageCode,
 			@QueryParam("locked") @DefaultValue("true") boolean locked,
-			@QueryParam("channelId") Integer channelId) throws Exception;
+			@QueryParam("channelId") Integer channelId,
+			@QueryParam("wait") @DefaultValue("1000") long waitMs
+	) throws Exception;
 }

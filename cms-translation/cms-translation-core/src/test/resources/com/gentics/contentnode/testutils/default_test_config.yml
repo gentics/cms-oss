@@ -21,7 +21,6 @@ mesh:
   prepareThreshold: 1
 
 translation:
-  provider: deepL
   auth:
     token: <api-token>
   language:

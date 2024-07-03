@@ -6,6 +6,8 @@ import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.InvalidRequestException;
+import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -18,15 +20,19 @@ import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.Tag.Type;
 import com.gentics.contentnode.rest.model.request.TranslationRequest;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
 import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
-import com.gentics.contentnode.translation.PageTranslationService;
+import com.gentics.contentnode.rest.util.Operator;
+import com.gentics.contentnode.translation.LanguageVariantService;
 import com.gentics.contentnode.translation.TranslationService;
 import com.gentics.contentnode.translation.TranslationUtil;
+import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +43,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.StringUtils;
@@ -60,9 +65,10 @@ public class TranslationResourceImpl implements TranslationResource {
 	public TranslationResponse translate(final TranslationRequest request) throws NodeException {
 		if (request == null || StringUtils.isBlank(request.getText()) || StringUtils.isBlank(
 				request.getTargetLanguage())) {
-			throw new WebApplicationException(
-					"Invalid request. Either translation text or target language is not set.",
-					Status.BAD_REQUEST);
+			throw new InvalidRequestException(
+					new CNI18nString("feature.translation.error.invalid_request").toString())
+					.setResponseCode(ResponseCode.INVALIDDATA)
+					.setStatus(Status.BAD_REQUEST);
 		}
 		try {
 			translationService = getTranslationService();
@@ -82,52 +88,76 @@ public class TranslationResourceImpl implements TranslationResource {
 	@Override
 	@POST
 	@Path("/page/{id}")
-	public PageLoadResponse translate(final @PathParam("id") Integer pageId,
+	public GenericResponse translate(final @PathParam("id") Integer pageId,
 			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
-			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) throws NodeException {
+			final @QueryParam("channelId") @DefaultValue("0") Integer channelId,
+			@QueryParam("wait") @DefaultValue("1000") long waitMs
+	) throws NodeException {
+		if (StringUtils.isEmpty(targetLanguageCode)) {
+			throw new MissingFieldException("language");
+		}
+
 		try (Trx trx = ContentNodeHelper.trx()) {
-			PageTranslationService pageTranslationService = new PageTranslationService();
-			final var loadedPage = pageTranslationService.getPage(pageId.toString(), true);
-			final var sourceLanguageCode = loadedPage.getLanguage().getCode();
-			final var translatedNodePage = pageTranslationService.translate(pageId, targetLanguageCode,
-					locked, channelId, true);
+			CNI18nString description = new CNI18nString("job_sent_to_background");
+			description.addParameter(new CNI18nString("feature.translation").toString());
 
-			var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
-					List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
-			pageToTranslate.setReadOnly(this.isPageReadOnly(loadedPage));
+			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
+				LanguageVariantService languageVariantService = new LanguageVariantService();
+				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
+				final var sourceLanguageCode = loadedPage.getLanguage().getCode();
+				final var translatedNodePage = languageVariantService.translate(pageId, targetLanguageCode,
+						locked, channelId, true);
 
-			try {
-				var contentTags = this.getContentTags(pageToTranslate);
-				translationService = getTranslationService();
+				var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
+						List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
+				pageToTranslate.setReadOnly(this.isPageReadOnly(loadedPage));
 
-				for (var contentTag : contentTags) {
-					var contentTagProperties = contentTag.getProperties();
-					this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
+				try {
+					var contentTags = this.getContentTags(pageToTranslate);
+					translationService = getTranslationService();
+
+					for (var contentTag : contentTags) {
+						var contentTagProperties = contentTag.getProperties();
+						this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
+								targetLanguageCode);
+					}
+
+					final var sourceName = pageToTranslate.getName();
+					final var translatedName = translationService.translate(sourceName, sourceLanguageCode,
 							targetLanguageCode);
+					pageToTranslate.setName(translatedName);
+				} catch (Exception e) {
+					throw new NodeException(e);
 				}
 
-				final var sourceName = pageToTranslate.getName();
-				final var translatedTitle = translationService.translate(sourceName, sourceLanguageCode,
-						targetLanguageCode);
-				pageToTranslate.setName(translatedTitle);
-			} catch (Exception e) {
-				throw new NodeException(e);
-			}
+				var updatedTranslatedNodePage = ModelBuilder.getPage(pageToTranslate, false);
 
-			var updatedTranslatedNodePage = ModelBuilder.getPage(pageToTranslate, false);
+				if (updatedTranslatedNodePage == null) {
+					var errorMessage = new CNI18nString("feature.translation.error.page_variant_not_found");
+					errorMessage.addParameter(pageId.toString());
+					throw new NodeException(errorMessage.toString());
+				}
+				updatedTranslatedNodePage.save();
+				trx.success();
 
-			if (updatedTranslatedNodePage == null) {
-				throw new NodeException(
-						String.format("Page language variant for source page '%s' not found.", pageId));
-			}
-			updatedTranslatedNodePage.save();
-			trx.success();
+				var response = createPageLoadResponse(updatedTranslatedNodePage, pageId);
+				CNI18nString resultMessage = new CNI18nString("backgroundjob_finished_successfully");
+				resultMessage.addParameter(new CNI18nString("feature.translation").toString());
+				response.addMessage(new Message(Message.Type.SUCCESS, resultMessage.toString()));
 
-			return createPageLoadResponse(updatedTranslatedNodePage, pageId);
+				return response;
+			});
 		}
 	}
 
+	/**
+	 * This method is used to check if a page is read-only.
+	 *
+	 * @param page The page to check.
+	 * @return boolean Returns true if the page is read-only, false otherwise.
+	 * @throws NodeException If there is an error while checking the page's read-only status.
+	 */
 	private boolean isPageReadOnly(Page page) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PermHandler permissionHandler = t.getPermHandler();
@@ -135,21 +165,31 @@ public class TranslationResourceImpl implements TranslationResource {
 		return !permissionHandler.canEdit(page);
 	}
 
+	/**
+	 * This method is used to create a PageLoadResponse object.
+	 *
+	 * @param updatedTranslatedNodePage The updated page after translation.
+	 * @param pageId The ID of the page.
+	 * @return PageLoadResponse The response object containing the updated page information.
+	 * @throws NodeException If there is an error while creating the PageLoadResponse.
+	 */
 	private PageLoadResponse createPageLoadResponse(Page updatedTranslatedNodePage, Integer pageId)
 			throws NodeException {
 		final var pageResponse = new PageLoadResponse();
 
-		var responseMessage = String.format("Translated page with id { %s } successfully", pageId);
+		var responseMessage = new CNI18nString("feature.translation.success");
+		responseMessage.addParameter(pageId.toString());
 
 		if (updatedTranslatedNodePage.getChannel() != null) {
-			responseMessage = String.format("%s in channel { %s }", responseMessage,
+			var responseMessageWithChannel = String.format(" in channel '%s'",
 					updatedTranslatedNodePage.getChannel().getId());
+			responseMessage.addParameter(responseMessageWithChannel);
 		}
 
 		pageResponse.setPage(ModelBuilder.getPage(updatedTranslatedNodePage,
 				List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE)));
 		pageResponse.setResponseInfo(
-				new ResponseInfo(ResponseCode.OK, responseMessage));
+				new ResponseInfo(ResponseCode.OK, responseMessage.toString()));
 
 		return pageResponse;
 	}
@@ -177,7 +217,7 @@ public class TranslationResourceImpl implements TranslationResource {
 						targetLanguageCode);
 
 				if (!VALIDATOR.test(translatedText)) {
-					throw new NodeException("Translated markup is invalid");
+					throw new NodeException(new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
 
 				propertyToTranslate.setStringValue(translatedText);

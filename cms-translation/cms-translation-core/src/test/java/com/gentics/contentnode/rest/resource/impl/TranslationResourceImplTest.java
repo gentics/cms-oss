@@ -1,15 +1,16 @@
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -62,6 +63,8 @@ public class TranslationResourceImplTest {
 
 		checkBoxConstructId = supply(
 				() -> createConstruct(node, CheckboxPartType.class, checkboxKeyword, "check"));
+
+		changeSessionLanguage();
 	}
 
 
@@ -79,9 +82,9 @@ public class TranslationResourceImplTest {
 			var pageToTranslate = createPage(sourceLanguage);
 			createTags(pageToTranslate);
 
-			var pageTranslateRequest = translationResource.translate(pageToTranslate.getId(),
+			var pageTranslateRequest = (PageLoadResponse) translationResource.translate(pageToTranslate.getId(),
 					targetLanguage,
-					true, 0);
+					true, 0, 0);
 
 			assertThat(pageTranslateRequest.getPage().getLanguage()).isEqualTo(targetLanguage);
 
@@ -103,14 +106,57 @@ public class TranslationResourceImplTest {
 		try (Trx trx = new Trx(user)) {
 			createTags(pageToTranslate);
 
-			Exception exception = assertThrows(NodeException.class, () -> {
-				translationResource.translate(pageToTranslate.getId(),
-						targetLanguage,
-						true, 0);
-			});
+			var response = translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,
+					true, 0, 0);
 
+			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
 			final var expectedMessage = "Translated markup is invalid";
-			final var actualMessage = exception.getMessage();
+			final var actualMessage = response.getResponseInfo().getResponseMessage();
+
+			assertThat(actualMessage).contains(expectedMessage);
+		}
+	}
+
+	@Test
+	public void givenNonExistentTargetLanguage_shouldThrowException() throws Exception {
+		when(mockedTranslationService.translate(anyString(), anyString(), anyString())).thenReturn(
+				"<h1>My blog is great</h1>");
+		translationResource.setTranslationService(mockedTranslationService);
+
+		final var sourceLanguage = "de";
+		final var targetLanguage = "ch";
+		var pageToTranslate = createPage(sourceLanguage);
+
+		try (Trx trx = new Trx(user)) {
+			createTags(pageToTranslate);
+
+			var response = translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,true, 0, 0);
+
+			final var expectedMessage = "Error while translating page: invalid language code";
+			final var actualMessage = response.getResponseInfo().getResponseMessage();
+
+			assertThat(actualMessage).contains(expectedMessage);
+		}
+	}
+
+	@Test
+	public void givenMissingTranslationService_shouldThrowException() throws Exception {
+		translationResource.setTranslationService(null);
+
+		final var sourceLanguage = "de";
+		final var targetLanguage = "en";
+		var pageToTranslate = createPage(sourceLanguage);
+
+		try (Trx trx = new Trx(user)) {
+			createTags(pageToTranslate);
+
+			var response = translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,true, 0, 0);
+
+			final var expectedMessage = "Error occurred while translating text.";
+			final var actualMessage = response.getResponseInfo().getResponseMessage();
 
 			assertThat(actualMessage).contains(expectedMessage);
 		}
@@ -141,7 +187,6 @@ public class TranslationResourceImplTest {
 	private void addTagCreateRequest(Map<String, TagCreateRequest> map, String id,
 			Integer constructId, String keyword, String text) {
 		TagCreateRequest request = new TagCreateRequest();
-
 		request.setConstructId(constructId);
 		request.setKeyword(keyword);
 		request.setMagicValue(text);
@@ -158,7 +203,6 @@ public class TranslationResourceImplTest {
 	private Page createPage(String language) throws NodeException {
 		try (Trx trx = new Trx(user)) {
 			PageResourceImpl pageResource = new PageResourceImpl();
-
 			PageCreateRequest pageCreateRequest = new PageCreateRequest();
 			pageCreateRequest.setFolderId(Integer.toString(FOLDER_ID));
 			pageCreateRequest.setLanguage(language);
@@ -172,6 +216,13 @@ public class TranslationResourceImplTest {
 			assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
 			return loadResponse.getPage();
 		}
+	}
+
+	private static void changeSessionLanguage() throws NodeException {
+		operate(user, t -> {
+			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", getLanguage("en").getId(),
+					t.getSession().getSessionId());
+		});
 	}
 
 }

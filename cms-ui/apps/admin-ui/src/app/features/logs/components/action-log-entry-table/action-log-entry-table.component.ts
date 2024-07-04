@@ -90,6 +90,22 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
         this.clear();
     }
 
+    public getMinFilterDate(): Date {
+        if (this.filters.start) {
+            return new Date(this.filters.start * 1000);
+        } else {
+            return null;
+        }
+    }
+
+    public getMaxFilterDate(): Date {
+        if (this.filters.end) {
+            return new Date(this.filters.end * 1000);
+        } else {
+            return null;
+        }
+    }
+
     private clear(): void {
         this.setDefaultTimeFilter();
         this.reload();

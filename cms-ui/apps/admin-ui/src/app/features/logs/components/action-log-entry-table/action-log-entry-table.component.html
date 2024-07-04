@@ -141,6 +141,7 @@
             [clearable]="false"
             [placeholder]="'common.date_filter_placeholder' | i18n"
             [value]="filters['start']"
+            [max]="getMaxFilterDate()"
             (valueChange)="applyFilterValue('start', $event)"
         />
         <gtx-date-time-picker
@@ -148,6 +149,7 @@
             [clearable]="false"
             [placeholder]="'common.date_filter_placeholder' | i18n"
             [value]="filters['end']"
+            [min]="getMinFilterDate()"
             (valueChange)="applyFilterValue('end', $event)"
         />
     </gtx-table-filter-wrapper>

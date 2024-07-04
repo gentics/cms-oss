@@ -72,6 +72,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
 
     ngOnInit(): void {
         super.ngOnInit();
+        this.setDefaultTimeFilter();
         this.init();
     }
 
@@ -90,8 +91,16 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     }
 
     private clear(): void {
-        this.filters = {};
+        this.setDefaultTimeFilter();
         this.reload();
     }
 
+    private setDefaultTimeFilter(): void {
+        const end = Math.floor(Date.now() / 1000);
+        const start = end - 5 * 60;
+        this.filters = {
+            start,
+            end,
+        };
+    }
 }

@@ -84,7 +84,7 @@
 
 <ng-template #dateRenderer let-value="value">
     <span class="gtx-table-cell-text">
-        {{ value | i18nDate }}
+        {{ value | i18nDate:'dateTimeDetailed' }}
     </span>
 </ng-template>
 
@@ -135,12 +135,20 @@
 </ng-template>
 
 <ng-template #dateFilter let-column="column">
-    <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
+    <gtx-table-filter-wrapper [hasValue]="!!filters?.['start']" [hasClear]="false">
         <gtx-date-time-picker
-            [displayTime]="false"
+            [displayTime]="true"
+            [clearable]="false"
             [placeholder]="'common.date_filter_placeholder' | i18n"
-            [value]="filters[column.id]"
-            (valueChange)="applyFilterValue(column.id, $event)"
+            [value]="filters['start']"
+            (valueChange)="applyFilterValue('start', $event)"
+        />
+        <gtx-date-time-picker
+            [displayTime]="true"
+            [clearable]="false"
+            [placeholder]="'common.date_filter_placeholder' | i18n"
+            [value]="filters['end']"
+            (valueChange)="applyFilterValue('end', $event)"
         />
     </gtx-table-filter-wrapper>
 </ng-template>

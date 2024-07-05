@@ -53,6 +53,7 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -129,6 +130,7 @@ public class MeshPublishChannelTest {
 				update(n, update -> {
 					update.setPublishDir("/prefix");
 					update.setContentrepositoryId(crId);
+					update.setMeshProjectName("");
 				});
 				try (ChannelTrx cTrx = new ChannelTrx(n)) {
 					for (Folder folder : n.getFolder().getChildFolders()) {
@@ -548,5 +550,60 @@ public class MeshPublishChannelTest {
 			context.publish(false);
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test setting/removing alternative mesh project names
+	 * @throws Exception
+	 */
+	@Test
+	public void testAlternativeMeshProjectName() throws Exception {
+		// 1. Check default behaviour
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertMeshProject(mesh.client(), projectName, SCHEMA_PREFIX, MeshPublisher.getMeshUuid(node), true);
+		assertBranch(mesh.client(), projectName, isChannelBranch(channel), true, branchName, "channel.com", "/prefix", false);
+
+		// 2. Change mesh project name for node and channel
+		String alternativeMasterMeshProjectName = "alternative_node";
+		String alternativeChannelMeshProjectName = "alternative_channel";
+
+		node = Builder.update(node, upd -> {
+			upd.setMeshProjectName(alternativeMasterMeshProjectName);
+		}).build();
+
+		channel = Builder.update(channel, upd -> {
+			upd.setMeshProjectName(alternativeChannelMeshProjectName);
+		}).build();
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertMeshProject(mesh.client(), projectName, false);
+		assertMeshProject(mesh.client(), alternativeMasterMeshProjectName, SCHEMA_PREFIX, MeshPublisher.getMeshUuid(node), true);
+		assertBranch(mesh.client(), alternativeMasterMeshProjectName, isChannelBranch(channel), true, alternativeChannelMeshProjectName, "channel.com", "/prefix", false);
+
+		// 3. Reset to default behaviour
+		node = Builder.update(node, upd -> {
+			upd.setMeshProjectName("");
+		}).build();
+
+		channel = Builder.update(channel, upd -> {
+			upd.setMeshProjectName("");
+		}).build();
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertMeshProject(mesh.client(), alternativeMasterMeshProjectName, false);
+		assertMeshProject(mesh.client(), projectName, SCHEMA_PREFIX, MeshPublisher.getMeshUuid(node), true);
+		assertBranch(mesh.client(), projectName, isChannelBranch(channel), true, branchName, "channel.com", "/prefix", false);
 	}
 }

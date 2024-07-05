@@ -8,6 +8,7 @@
             class="node-selector"
             [nodes]="nodes$ | async"
             [activeNodeId]="activeNodeId"
+            [attr.data-active-id]="activeNodeId"
         ></node-selector>
 
         <gtx-breadcrumbs

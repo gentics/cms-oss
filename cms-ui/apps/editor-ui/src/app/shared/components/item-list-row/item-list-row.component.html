@@ -3,6 +3,9 @@
     [class.selected]="selected"
     [class.deleted]="isDeleted(item)"
     [class.item-in-editor]="item === itemInEditor"
+    [attr.data-item-type]="itemType"
+    [attr.data-id]="item.id"
+    [attr.data-global-id]="item.globalId"
 >
     <icon-checkbox
         *ngIf="itemType !== 'image'; else imageCheckbox"
@@ -155,6 +158,7 @@
 
         <item-context-menu
             *ngIf="!isModeSelect()"
+            class="context-menu"
             [item]="item"
             [activeNode]="activeNode"
             [isFolderStartPage]="itemType === 'page' && item.id === startPageId"

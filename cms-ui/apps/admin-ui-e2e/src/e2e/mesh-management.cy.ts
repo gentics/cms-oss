@@ -1,13 +1,12 @@
 import { TestSize, bootstrapSuite } from '@gentics/e2e-utils';
-import { setup } from '../fixtures/auth.json';
 
 describe('Content Repository', () => {
     const CR_NAME = 'Mesh CR';
 
     beforeEach(() => {
-        cy.wrap(bootstrapSuite(setup, TestSize.MINIMAL));
+        cy.wrap(bootstrapSuite(TestSize.MINIMAL));
 
-        cy.visit('http://localhost:8080/admin/?skip-sso', {});
+        cy.navigateToApp();
         cy.login(true);
         cy.get('gtx-dashboard-item[data-id="content-repositories"]').click();
     });

@@ -1,6 +1,6 @@
 import { Folder, Node, NodeFeature, Page, Template } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
-import { EntityMap, LoginInformation, TestSize } from './common';
+import { EntityMap, ENV_CMS_PASSWORD, ENV_CMS_REST_PATH, ENV_CMS_USERNAME, TestSize } from './common';
 import { CypressDriver } from './cypress-driver';
 import {
     FolderImportData,
@@ -11,24 +11,24 @@ import {
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
     PageImportData,
+    emptyNode,
 } from './entities';
 
 export interface ImportBootstrapData {
+    dummyNode: number;
     languages: Record<string, number>;
     templates: Record<string, Template>;
 }
 
-function createClient(login: LoginInformation): Promise<GCMSRestClient> {
+function createClient(): Promise<GCMSRestClient> {
     let sid: number | null = null;
     const client = new GCMSRestClient(
         new CypressDriver(),
         {
+            // Connection is either via DEV Server or direct, but doesn't matter
             connection: {
-                absolute: true,
-                host: 'localhost',
-                port: 8080,
-                ssl: false,
-                basePath: '/rest',
+                absolute: false,
+                basePath: Cypress.env(ENV_CMS_REST_PATH),
             },
             interceptors: [
                 (data) => {
@@ -42,8 +42,8 @@ function createClient(login: LoginInformation): Promise<GCMSRestClient> {
     );
 
     return client.auth.login({
-        login: login.username,
-        password: login.password,
+        login: Cypress.env(ENV_CMS_USERNAME),
+        password: Cypress.env(ENV_CMS_PASSWORD),
     })
         .send()
         .then(res => {
@@ -64,7 +64,7 @@ export async function setNodeFeatures(
 
 async function importNode(
     client: GCMSRestClient,
-    pkgName: TestSize,
+    pkgName: TestSize | null,
     entityMap: EntityMap,
     langMap: Record<string, number>,
     data: NodeImportData,
@@ -84,7 +84,13 @@ async function importNode(
     }
 
     // Assigns all Dev-Tool package elements to the node
-    const packages = PACKAGE_IMPORTS[pkgName];
+    let packages: string[];
+    if (pkgName) {
+        packages = PACKAGE_IMPORTS[pkgName];
+    } else {
+        // If no package is provided, it'll aggregate all of them and assign those
+        packages = Array.from(new Set(Object.values(PACKAGE_IMPORTS).flatMap(v => v)));
+    }
     for (const pkg of packages) {
         await client.devTools.assignToNode(pkg, created.id).send();
     }
@@ -236,8 +242,26 @@ async function setupContent(
     return entityMap;
 }
 
-export async function bootstrapSuite(login: LoginInformation, size: TestSize): Promise<ImportBootstrapData> {
-    const client = await createClient(login);
+async function setupDummyNode(client: GCMSRestClient, languages: Record<string, number>): Promise<number> {
+    let nodeId: number | null = null;
+
+    const nodesRes = await client.node.list().send();
+    for (const node of nodesRes.items) {
+        if (node.name === emptyNode.node.name) {
+            nodeId = node.id;
+        }
+    }
+
+    if (nodeId == null) {
+        const importedNode = await importNode(client, null, {}, languages, emptyNode);
+        nodeId = importedNode.id;
+    }
+
+    return nodeId;
+}
+
+export async function bootstrapSuite(size: TestSize): Promise<ImportBootstrapData> {
+    const client = await createClient();
 
     // First import all dev-tool packages from the FS
     const devtoolPackages = PACKAGE_IMPORTS[size] || [];
@@ -247,27 +271,33 @@ export async function bootstrapSuite(login: LoginInformation, size: TestSize): P
 
     const templates = await getTemplateMapping(client);
     const languages = await getLanguageMapping(client);
+    const dummyNode = await setupDummyNode(client, languages);
 
     return {
         templates,
         languages,
+        dummyNode,
     };
 }
 
-export async function setupTest(login: LoginInformation, size: TestSize, data: ImportBootstrapData): Promise<EntityMap> {
-    const client = await createClient(login);
+export async function setupTest(size: TestSize, data: ImportBootstrapData): Promise<EntityMap> {
+    const client = await createClient();
 
     const map = await setupContent(client, size, data);
 
     return map;
 }
 
-export async function cleanupTest(login: LoginInformation): Promise<void> {
-    const client = await createClient(login);
+export async function cleanupTest(): Promise<void> {
+    const client = await createClient();
 
     const nodes = (await client.node.list().send()).items || [];
 
     for (const node of nodes) {
+        // Skip the node
+        if (node.name === emptyNode.node.name) {
+            continue;
+        }
         await client.node.delete(node.id).send();
     }
 }

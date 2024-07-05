@@ -27,8 +27,13 @@
         [uiMode]="uiMode"
     ></item-list-header>
 
-    <div class="list-body" [class.collapsed]="header.isCollapsed">
-        <div *ngIf="itemType !== 'image' || !(showImagesGridView$ | async)">
+    <div
+        class="list-body"
+        [class.collapsed]="header.isCollapsed"
+        [attr.data-item-type]="itemType"
+        [attr.data-ui-mode]="uiMode"
+    >
+        <div *ngIf="itemType !== 'image' || !(showImagesGridView$ | async); else imageGrid">
             <div *ngFor="let item of items | paginate: paginationConfig; trackBy: identify">
                 <item-list-row
                     [activeNode]="activeNode"
@@ -51,32 +56,35 @@
             </div>
         </div>
 
-        <masonry-grid
-            *ngIf="itemType === 'image' && (showImagesGridView$ | async)"
-            [gutter]="10"
-            [columnWidth]="280"
-        >
-            <masonry-item
-                *ngFor="let item of items | paginate: paginationConfig; trackBy: identify"
-                class="icon-checkbox-trigger"
-                [class.item-in-editor]="item === itemInEditor"
+        <ng-template #imageGrid>
+            <masonry-grid
+                [gutter]="10"
+                [columnWidth]="280"
+                [attr.data-item-type]="itemType"
+                [attr.data-ui-mode]="uiMode"
             >
-                <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
-                <grid-item
-                    [item]="item"
-                    [nodeId]="appState?.now?.folder?.activeNode"
-                    [selected]="isSelected(item)"
-                    [itemsInfo]="itemsInfo"
-                    [linkPaths]="linkPaths"
-                    [itemType]="itemType"
-                    [activeNode]="activeNode"
-                    [icon]="icon"
-                    [filterTerm]="filterTerm"
-                    [uiMode]="uiMode"
-                    [stagingMap]="stagingMap"
-                ></grid-item>
-            </masonry-item>
-        </masonry-grid>
+                <masonry-item
+                    *ngFor="let item of items | paginate: paginationConfig; trackBy: identify"
+                    class="icon-checkbox-trigger"
+                    [class.item-in-editor]="item === itemInEditor"
+                >
+                    <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
+                    <grid-item
+                        [item]="item"
+                        [nodeId]="appState?.now?.folder?.activeNode"
+                        [selected]="isSelected(item)"
+                        [itemsInfo]="itemsInfo"
+                        [linkPaths]="linkPaths"
+                        [itemType]="itemType"
+                        [activeNode]="activeNode"
+                        [icon]="icon"
+                        [filterTerm]="filterTerm"
+                        [uiMode]="uiMode"
+                        [stagingMap]="stagingMap"
+                    ></grid-item>
+                </masonry-item>
+            </masonry-grid>
+        </ng-template>
 
         <div class="paginate-wrapper">
             <paging-controls (pageChange)="pageChange.emit($event)"></paging-controls>

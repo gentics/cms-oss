@@ -132,10 +132,16 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     editClicked(item: InheritableItem): void {
+        if (this.isLocked) {
+            return;
+        }
         this.contextMenuOperations.editItem(item, this.activeNode.id);
     }
 
     propertiesClicked(item: InheritableItem): void {
+        if (this.isLocked) {
+            return;
+        }
         this.contextMenuOperations.editProperties(item, this.activeNode.id);
     }
 
@@ -184,6 +190,10 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     publishClicked(item: Page | Form): void {
+        if (this.isLocked) {
+            return;
+        }
+
         switch (item.type) {
             case 'page': {
                 const page: Page = item ;
@@ -224,6 +234,10 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     deleteClicked(item: InheritableItem): void {
+        if (this.isLocked) {
+            return;
+        }
+
         this.contextMenuOperations.deleteItems(item.type, [item], this.activeNode.id)
             .then(removedItemIds => this.folderActions.refreshList(item.type));
     }

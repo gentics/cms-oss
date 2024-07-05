@@ -12,6 +12,7 @@
 declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
+        navigateToApp(path?: string): Chainable<void>;
         login(cmsLogin: boolean): Chainable<void>;
         editEntity(type: string, identifier: string): Chainable<JQuery<HTMLElement>> | Chainable<null>;
     }
@@ -19,6 +20,16 @@ declare namespace Cypress {
 
 //
 // -- This is a parent command --
+Cypress.Commands.add('navigateToApp', (path) => {
+    /*
+     * The baseUrl is always properly configured via NX.
+     * When using the CI however, we use the served UI from the CMS directly.
+     * Therefore we also have to use the correct path for it.
+     */
+    const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_ADMIN_PATH') : '/';
+    cy.visit(`${appBasePath}${path || ''}`);
+});
+
 Cypress.Commands.add('login', (cmsLogin) => {
     return cy.fixture('auth.json').then(auth => {
         const cred = cmsLogin ? auth.cms : auth.keycloak;

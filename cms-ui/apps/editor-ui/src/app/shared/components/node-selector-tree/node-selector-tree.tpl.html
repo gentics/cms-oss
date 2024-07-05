@@ -2,6 +2,9 @@
     <gtx-dropdown-item
         *ngIf="useLinks"
         [ngClass]="'depth-' + depth"
+        [attr.data-id]="branch.node.id"
+        [attr.data-folder-id]="branch.node.folderId || branch.node.id"
+        [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
         [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
         (click)="nodeSelected.emit(branch.node)"
     >
@@ -20,6 +23,9 @@
     <gtx-dropdown-item
         *ngIf="!useLinks"
         [ngClass]="'depth-' + depth"
+        [attr.data-id]="branch.node.id"
+        [attr.data-folder-id]="branch.node.folderId || branch.node.id"
+        [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
         (click)="nodeSelected.emit(branch.node)"
     >
         <a

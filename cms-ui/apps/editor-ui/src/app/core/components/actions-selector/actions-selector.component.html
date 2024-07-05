@@ -5,7 +5,7 @@
     [belowTrigger]="true"
 >
     <gtx-dropdown-trigger>
-        <gtx-button icon type="secondary">
+        <gtx-button data-action="open-actions-menu" icon type="secondary">
             <icon>apps</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
@@ -26,6 +26,8 @@
                                     [routerLink]="['/tools', btn.toolKey]"
                                     [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
                                     [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                                    [attr.data-action-type]="btn.type"
+                                    [attr.data-tool-id]="btn.id"
                                     (click)="triggerClick(btn, $event)"
                                 >
                                     <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
@@ -40,6 +42,8 @@
                                 [target]="'_blank'"
                                 [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
                                 [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                                [attr.data-action-type]="btn.type"
+                                [attr.data-action-id]="btn.id"
                                 (click)="triggerClick(btn, $event)"
                             >
                                 <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>

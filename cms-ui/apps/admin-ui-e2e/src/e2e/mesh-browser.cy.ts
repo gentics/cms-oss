@@ -1,13 +1,12 @@
-import { TestSize, bootstrapSuite } from '@gentics/e2e-utils';
-import { setup } from '../fixtures/auth.json';
+import { ENV_MESH_CR_ENABLED, TestSize, bootstrapSuite, envAll, skipableSuite } from '@gentics/e2e-utils';
 
 describe('Content Repository', () => {
     const CR_NAME = 'Mesh CR';
 
     beforeEach(() => {
-        cy.wrap(bootstrapSuite(setup, TestSize.MINIMAL));
+        cy.wrap(bootstrapSuite(TestSize.MINIMAL));
 
-        cy.visit('http://localhost:8080/admin/?skip-sso', {});
+        cy.navigateToApp();
         cy.login(true);
         cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
     });
@@ -26,7 +25,9 @@ describe('Content Repository', () => {
         cy.get('.login-gate-wrapper').should('exist');
     });
 
-    describe('Mesh Browser', () => {
+    skipableSuite(envAll(ENV_MESH_CR_ENABLED), 'Mesh Browser', () => {
+
+        // TODO: Needs proper CR repair and content import to work
         beforeEach(() => {
             cy.get('gtx-table')
                 .find('.grid-row').contains(CR_NAME)

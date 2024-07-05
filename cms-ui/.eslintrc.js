@@ -361,7 +361,7 @@ module.exports = {
     },
     overrides: [
         {
-            files: ['**/*.spec.ts'],
+            files: ['**/*.spec.ts', '**/*.cy.ts'],
             rules: {
                 '@typescript-eslint/no-floating-promises': 'off',
                 '@typescript-eslint/no-unsafe-argument': 'off',
@@ -374,6 +374,7 @@ module.exports = {
                 '@typescript-eslint/no-unsafe-assignment': 'off',
                 '@typescript-eslint/no-non-null-assertion': 'off',
                 '@typescript-eslint/member-ordering': 'off',
+                '@typescript-eslint/no-unnecessary-type-assertion': 'off',
                 '@angular-eslint/component-class-suffix': 'off',
             },
         },

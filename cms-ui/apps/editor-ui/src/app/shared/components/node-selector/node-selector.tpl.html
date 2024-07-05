@@ -4,7 +4,9 @@
             *ngIf="!showName; else nameTpl"
             icon
             type="default"
-            [title]="('common.select_node' | i18n) + '…'">
+            data-action="select-node"
+            [title]="('common.select_node' | i18n) + '…'"
+        >
             <icon>arrow_drop_down</icon>
         </gtx-button>
 
@@ -21,6 +23,7 @@
         <list-filter
             selector="gtx-dropdown-item"
             filterThreshhold="10"
+            class="node-selector-list"
             [label]="'editor.filter_nodes' | i18n"
         >
             <node-selector-tree

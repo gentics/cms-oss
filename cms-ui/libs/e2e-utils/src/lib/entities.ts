@@ -5,6 +5,7 @@
  * checks to all entities without having to jump through hoops.
  */
 import {
+    FileUploadOptions,
     FolderCreateRequest,
     NodeCreateRequest,
     NodeFeature,
@@ -54,6 +55,65 @@ export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'fold
     /** The Global-ID of the template from the Dev-Tool Package */
     templateId: string;
 }
+
+export interface FileImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
+    [IMPORT_TYPE]: 'file',
+
+    /** The nodes `IMPROT_ID` value */
+    nodeId: string;
+    /** The folders/nodes `IMPORT_ID` value */
+    folderId: string;
+    /** The file/blob to upload */
+    data: Blob | File;
+}
+
+export interface ImageImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
+    [IMPORT_TYPE]: 'image',
+
+    /** The nodes `IMPROT_ID` value */
+    nodeId: string;
+    /** The folders/nodes `IMPORT_ID` value */
+    folderId: string;
+    /** The file/blob to upload */
+    data: Blob | File;
+}
+
+/*
+ * REQUIRED SETUP
+ * ---------------------------------------------------------------- */
+
+/** This node exists only, so all devtool-packages are linked to this node, to make the cleanup of our actual test nodes possible. */
+export const emptyNode: NodeImportData = {
+    [IMPORT_TYPE]: 'node',
+    [IMPORT_ID]: 'emptyNode',
+
+    node: {
+        name : 'empty node',
+        publishDir : '',
+        binaryPublishDir : '',
+        pubDirSegment : true,
+        https : false,
+        publishImageVariants : false,
+        host : 'empty.localhost',
+        publishFs : false,
+        publishFsPages : false,
+        publishFsFiles : false,
+        publishContentMap : false,
+        publishContentMapPages : false,
+        publishContentMapFiles : false,
+        publishContentMapFolders : false,
+        urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+        urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+        omitPageExtension : false,
+        pageLanguageCode : NodePageLanguageCode.FILENAME,
+        meshPreviewUrlProperty : '',
+    },
+    description: 'empty node',
+
+    languages : [ 'en' ],
+    features: [],
+    templates: [BASIC_TEMPLATE_ID],
+};
 
 /*
  * MINIMAL SETUP

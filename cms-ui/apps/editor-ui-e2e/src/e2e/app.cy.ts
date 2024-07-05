@@ -1,5 +1,16 @@
-import { TestSize, EntityMap, minimalNode, ImportBootstrapData, bootstrapSuite, cleanupTest, setupTest } from '@gentics/e2e-utils';
-import { setup } from '../fixtures/auth.json';
+import {
+    EntityMap,
+    IMPORT_TYPE,
+    ImportBootstrapData,
+    TestSize,
+    bootstrapSuite,
+    cleanupTest,
+    folderA,
+    folderB,
+    getItem,
+    minimalNode,
+    setupTest,
+} from '@gentics/e2e-utils';
 
 describe('Login', () => {
 
@@ -7,8 +18,8 @@ describe('Login', () => {
     let entities: EntityMap = {};
 
     before(() => {
-        cy.wrap(cleanupTest(setup)
-            .then(() => bootstrapSuite(setup, TestSize.MINIMAL))
+        cy.wrap(cleanupTest()
+            .then(() => bootstrapSuite(TestSize.MINIMAL))
             .then(data => {
                 bootstrap = data;
             }),
@@ -16,20 +27,25 @@ describe('Login', () => {
     });
 
     beforeEach(() => {
-        cy.wrap(setupTest(setup, TestSize.MINIMAL, bootstrap).then(data => {
+        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap).then(data => {
             entities = data;
         }));
     });
 
-    afterEach(() => {
-        cy.wrap(cleanupTest(setup));
-    });
-
     it('should have the minimal node present', () => {
-        cy.visit('http://localhost:8080/editor?skip-sso');
+        cy.navigateToApp();
         cy.login('cms');
+        cy.selectNode(getItem(minimalNode, entities)!.id);
         cy.get('folder-contents > .title .title-name')
             .should('exist')
             .should('contain.text', minimalNode.node.name);
+        const folders = [folderA, folderB];
+        for (const folder of folders) {
+            cy.findItem(folder[IMPORT_TYPE], getItem(folder, entities)!.id).should('exist');
+        }
+
+        cy.itemAction(folderA[IMPORT_TYPE], getItem(folderA, entities)!.id, 'properties');
+        cy.get('content-frame')
+            .should('exist');
     });
 });

@@ -1,4 +1,4 @@
-FROM docker.apa-it.at/maven:3.9.2-amazoncorretto-17-debian-bullseye
+FROM docker.apa-it.at/maven:3.8.8-amazoncorretto-17-debian-bookworm
 LABEL maintainer="Peter Nyari <p.nyari@gentics.com>"
 
 ARG GIT_USER_NAME="Maven Release Manager"

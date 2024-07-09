@@ -12,6 +12,10 @@ The list of features which require no Enterprise Edition licensing is available 
 
 The features listed here need to be activated with a license key. Consult the details of the "activation process":activation.html for more information.
 
+h3. Automatic Page Translation
+
+See "Automatic Page Translation":feature_automatic_translation.html
+
 h3. Channel Synchronization
 
 See "Channel Synchronization":feature_channelsync.html
@@ -76,3 +80,5 @@ feature:
 </shell>
 
 See "Multichannelling Content.Repositories":mc_contentrepository.html for more information.
+
+h3.

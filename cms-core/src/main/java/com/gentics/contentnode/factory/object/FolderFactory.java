@@ -6502,6 +6502,9 @@ public class FolderFactory extends AbstractFactory {
 
 		@Override
 		public void setMeshProjectName(String meshProjectName) throws ReadOnlyException {
+			if (meshProjectName == null) {
+				return;
+			}
 			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 				meshProjectName = "";
 			}

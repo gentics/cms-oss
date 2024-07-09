@@ -341,8 +341,7 @@ spec:
         stage("UI Integration Tests") {
 			when {
 				expression {
-                    // Requires Docker image; Forcefully disabled until fully tested
-					return false && env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
 				}
 			}
 

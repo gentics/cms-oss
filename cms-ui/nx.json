@@ -90,13 +90,6 @@
             "inputs": ["default", "^production"],
             "cache": true
         },
-        "serve-static": {
-            "configurations": {
-                "e2e": {
-                    "silent": true
-                }
-            }
-        },
         "@nx/jest:jest": {
             "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
             "cache": true,

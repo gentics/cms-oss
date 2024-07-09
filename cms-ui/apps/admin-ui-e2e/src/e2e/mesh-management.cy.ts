@@ -144,6 +144,7 @@ describe('Content Repository', () => {
             });
         });
 
+        // TODO: Fix this test, as password change has been changed
         xit('should be possible to update the CR login information', () => {
             cy.fixture('auth.json').then(auth => {
                 cy.get('.cr-login-button').click();

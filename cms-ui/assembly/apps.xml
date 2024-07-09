@@ -17,13 +17,20 @@
 		</fileSet>
 
         <fileSet>
-			<directory>${basedir}/dist/apps/admin-ui</directory>
+			<directory>${basedir}/dist/apps/admin-ui/browser</directory>
 			<outputDirectory>/admin</outputDirectory>
 			<includes>
 				<include>**</include>
 			</includes>
 		</fileSet>
 	</fileSets>
+
+    <files>
+        <file>
+            <source>${basedir}/dist/apps/admin-ui/3rdpartylicenses.txt</source>
+            <outputDirectory>/admin</outputDirectory>
+        </file>
+    </files>
 
 	<includeBaseDirectory>false</includeBaseDirectory>
 </assembly>

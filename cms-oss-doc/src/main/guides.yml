@@ -54,9 +54,6 @@ index:
     - title: "Third party licenses"
       text: "List of used licenses"
       url: licenses
-    - title:  "Automatic Page Translation"
-      text: "Learn how automatic page translation works"
-      url: feature_page_translation
 
   Administration:
     - title: "Installing Gentics CMS"

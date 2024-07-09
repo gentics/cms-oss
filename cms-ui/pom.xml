@@ -95,21 +95,6 @@
 					</execution>
 
                     <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <skipAssembly>${ui.skip.report}</skipAssembly>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-
-                    <execution>
                         <id>make-report-assembly</id>
                         <phase>package</phase>
                         <goals>

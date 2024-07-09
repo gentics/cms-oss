@@ -17,7 +17,10 @@
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "apps/ct-link-checker-e2e/cypress.config.ci.ts",
-                    "devServerTarget": ""
+                    "devServerTarget": "",
+                    "env": {
+                        "CI": true
+                    }
                 }
             }
         },

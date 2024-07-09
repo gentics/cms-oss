@@ -359,8 +359,12 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
-                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
-                            sh "mvn integration-test -B -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.publish=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report=true -Dui.skip.assembly=true"
+                            // run the integration tests in the ui-module
+                            sh "mvn integration-test -B -fae -pl :cms-ui " +
+                                // Setup NPM correctly for this run
+                                "-Dnodejs.npm.bin=/opt/node/bin/npm " + 
+                                // And skip all other parts - these had to run before hand or will be executed by the UI repo
+                                "-Dui.skip.install=true -Dui.skip.publish=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report=true -Dui.skip.assembly=true"
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"

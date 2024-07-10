@@ -1,12 +1,12 @@
-import { AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
 import { GroupOperations, I18nService, PermissionsService, UserOperations, UserTableLoaderOptions, UserTableLoaderService } from '@admin-ui/core';
-import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { NormalizableEntityType, Raw, User } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { ConfirmRemoveUserFromGroupModalComponent } from '../confirm-remove-user-from-group-modal/confirm-remove-user-from-group-modal.component';
 import { CreateUserModalComponent } from '../create-user-modal/create-user-modal.component';
@@ -19,10 +19,11 @@ const REMOVE_FROM_GROUP_ACTION = 'removeFromGroup';
     templateUrl: './user-table.component.html',
     styleUrls: ['./user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, UserBO, UserTableLoaderOptions> implements OnChanges {
 
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public groupId: number;
@@ -70,7 +71,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: UserTableLoaderService,
+        protected loader: UserTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
         protected operations: UserOperations,

@@ -1,0 +1,50 @@
+@import 'variables';
+@import 'aloha-utils';
+
+.gtx-editor-button {
+    @include gtxButtonCore;
+
+    .button-label {
+        white-space: nowrap;
+    }
+
+    .button-icon {
+        height: 20px;
+        width: 20px;
+        font-size: 20px;
+        transition: 200ms;
+
+        &.icon-left {
+            margin-right: 0.5rem;
+        }
+
+        &.icon-right {
+            margin-left: 0.5rem;
+        }
+    }
+
+    &.icon-only {
+        padding: 0.25rem;
+        width: 2rem;
+
+        @media (max-width: $aloha-size-mobile-max) {
+            width: 3.25rem;
+        }
+
+        .button-icon {
+            margin: auto;
+            text-align: center;
+        }
+
+        .button-label {
+            display: none;
+        }
+    }
+
+    &:disabled,
+    &[disabled] {
+        opacity: 0.5;
+        color: $gtx-color-dark-gray;
+        cursor: not-allowed;
+    }
+}

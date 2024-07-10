@@ -6,11 +6,11 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.BeforeClass;
@@ -23,7 +23,6 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.PageFactory;
-import com.gentics.contentnode.job.AbstractUserActionJob;
 import com.gentics.contentnode.migration.jobs.TagTypeMigrationJob;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
@@ -197,19 +196,15 @@ public class PageVersionsOrderTest {
 		Version v2 = new Version("2.0");
 		try (Trx trx = new Trx(user)) {
 			Transaction t = trx.getTransaction();
-			TagTypeMigrationJob job = new TagTypeMigrationJob();
-			job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-			job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-			job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, new ArrayList<>(request.getObjectIds()));
-			String sessionId = t.getSessionId();
-			job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, false);
-			job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, false);
-			assertNotNull(sessionId);
-			job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, sessionId);
-			job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
-			job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, false);
+			TagTypeMigrationJob job = new TagTypeMigrationJob()
+					.setRequest(request)
+					.setType(request.getType())
+					.setObjectIds(request.getObjectIds())
+					.setHandlePagesByTemplate(false)
+					.setHandleAllNodes(false)
+					.setPreventTriggerEvent(false);
 
-			job.execute(1000);
+			job.execute(1000, TimeUnit.SECONDS);
 
 			trx.success();
 		}

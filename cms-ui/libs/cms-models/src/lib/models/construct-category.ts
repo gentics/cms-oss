@@ -6,11 +6,11 @@ import { DefaultModelType, ModelType } from './type-util';
 export interface ConstructCategoryBase<T extends ModelType> {
     /** Name of this construct category */
     name: string
-    /** of Construct	Map of constructs for this category */
-    constructs: TagType<T>[];
+    /** Map of constructs for this category */
+    constructs: Record<string, TagType<T>>;
     /** Global ID */
     globalId: string;
-    /** of string */
+    /** Map of names in the different languages */
     nameI18n: CmsI18nValue;
     /** The sort order of the category */
     sortOrder?: number;
@@ -22,7 +22,10 @@ export interface ConstructCategory<T extends ModelType = DefaultModelType> exten
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface ConstructCategoryBO<T extends ModelType = DefaultModelType> extends ConstructCategoryBase<T> {
     /** Internal ID of the object property definition */
     id: string;

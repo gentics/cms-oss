@@ -1,0 +1,45 @@
+<div class="schema-items" *ngIf="schemaElements?.length > 0">
+
+    <div class="schema-header">
+        <div class="schema-title">{{ schemaName }}</div>
+        <icon [ngClass]="{'collapsed': collapsed}" (click)="toggleSection()" right>
+            keyboard_arrow_down
+        </icon>
+    </div>
+
+    <div *ngIf="!!schemaElements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
+        <div *ngFor="let element of schemaElements  | paginate : {
+            id: UNIQUE_ID,
+            itemsPerPage: perPage,
+            currentPage: page,
+            totalItems: totalCount,
+        } index as index">
+            <div *ngIf="!!element" [ngClass]="{'striped': index % 2 === 0}" class="schema-element">
+                <icon (click)="showDetails(element)" left>
+                    {{  element.isContainer ? 'folder' : 'description' }}
+                </icon> 
+
+                <div class="title" (click)="loadContent(element)" [attr.data-is-container]="element.isContainer">
+                   <span> {{ element.displayName ?? element?.uuid }}  </span>
+                
+                    <gtx-mesh-browser-content-version 
+                        [schemaElement]="element"
+                    />
+                </div>
+
+                <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
+                    {{ language.language }}
+                </span>
+            </div>
+        </div>
+
+        <gtx-paging
+            *ngIf="totalCount > perPage"
+            [id]="UNIQUE_ID"
+            (pageChange)="changePage($event)"
+        />
+    </div>
+
+</div>
+
+

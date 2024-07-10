@@ -8,17 +8,16 @@ import {
     OnDestroy,
     Output,
     QueryList,
-    ViewChildren
+    ViewChildren,
 } from '@angular/core';
 import {
     CmsFormElementBO,
     CmsFormElementInsertionInformation,
     CmsFormElementInsertionType,
-    EditMode,
     FORM_ELEMENT_MIME_TYPE_TYPE,
-    FormElementDropInformation
+    FormElementDropInformation,
 } from '@gentics/cms-models';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { newUUID } from '../../../common';
@@ -35,6 +34,7 @@ import { FormEditorElementComponent } from '../form-editor-element/form-editor-e
 })
 export class FormEditorElementListComponent
     implements AfterViewInit, OnDestroy {
+
     /** Unique ID. If not ROOT, it is globaldId of container element. */
     @Input()
     containerId = 'ROOT';
@@ -42,13 +42,12 @@ export class FormEditorElementListComponent
     @Input()
     elements: CmsFormElementBO[];
 
-    @Output()
-    elementsChange: EventEmitter<CmsFormElementBO[]> = new EventEmitter<
-        CmsFormElementBO[]
-    >();
-
     @Input()
-    formEditMode: EditMode;
+    readonly: boolean;
+
+    @Output()
+    elementsChange = new EventEmitter<CmsFormElementBO[]>();
+
 
     /** Current UI language. */
     @Input()
@@ -102,7 +101,7 @@ export class FormEditorElementListComponent
     isPreview = true;
 
     /** Map of open element's properties menu is visible. */
-    propertiesEditorOpenMap: boolean[] = [];
+    propertiesEditorOpenMap: Record<number, boolean> = {};
 
     private destroyed$ = new Subject<void>();
 
@@ -132,14 +131,6 @@ export class FormEditorElementListComponent
         return `${element.globalId}`;
     }
 
-    propertiesEditorOpen(): boolean {
-        return this.propertiesEditorOpenMap.some((e) => e);
-    }
-
-    formEditorIsReadOnly(): boolean {
-        return this.formEditMode !== 'edit';
-    }
-
     onElementRemove(index: number): void {
         this.removeElementAtIndex(index);
         this.onElementsChange();
@@ -151,7 +142,7 @@ export class FormEditorElementListComponent
         index?: number,
     ): void {
         eventData.event.stopPropagation();
-        if (this.formEditorIsReadOnly() || !eventData || !eventData.element) {
+        if (this.readonly || !eventData || !eventData.element) {
             return;
         }
         eventData.event.dataTransfer.setData(
@@ -249,6 +240,10 @@ export class FormEditorElementListComponent
         this.elementsChange.emit(this.elements);
     }
 
+    public openPropertiesEditor(index: number, isOpen: boolean): void {
+        this.propertiesEditorOpenMap[index] = isOpen;
+    }
+
     onFormElementInsert(
         insertionInformation: CmsFormElementInsertionInformation,
     ): void {
@@ -269,8 +264,8 @@ export class FormEditorElementListComponent
                     formElementComponent: FormEditorElementComponent,
                 ) => {
                     return formElementComponent &&
-                        formElementComponent.state &&
-                        formElementComponent.state.containsPropertyError
+                        formElementComponent &&
+                        formElementComponent.containsPropertyError
                         ? true
                         : containsPropertiesError;
                 },

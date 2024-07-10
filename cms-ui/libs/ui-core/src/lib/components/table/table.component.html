@@ -43,6 +43,7 @@
             <gtx-button
                 *ngFor="let action of multiActions; trackBy: trackElement"
                 class="action-button"
+                [attr.data-id]="action.id"
                 [icon]="true"
                 [size]="'small'"
                 [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || selected.length < 1 || !selectable || !(action | gtxTableActionEnabled)"
@@ -52,6 +53,38 @@
             >
                 <icon>{{ action.icon }}</icon>
             </gtx-button>
+        </div>
+    </div>
+
+    <div *ngIf="hasFilters" class="grid-row filter-row">
+        <div *ngIf="selectable" class="grid-cell select-column" (click)="preventClick($event)">
+            <!-- Leave empty -->
+        </div>
+
+        <div
+            *ngFor="let column of columns; trackBy: trackElement"
+            class="grid-cell data-column"
+            [class.sortable]="sortable && column.sortable"
+            [class.sort-active]="sortBy === column.id"
+            [attr.column-id]="column.id"
+            (click)="preventClick($event)"
+        >
+            <ng-container
+                *ngIf="filters[column.id]"
+                [ngTemplateOutlet]="filters[column.id]"
+                [ngTemplateOutletContext]="{
+                    row: row,
+                    column: column
+                }"
+            ></ng-container>
+        </div>
+
+        <div
+            *ngIf="!hideActions && hasActions"
+            class="grid-cell action-column"
+            (click)="preventClick($event)"
+        >
+            <!-- Leave empty -->
         </div>
     </div>
 
@@ -125,6 +158,7 @@
             <gtx-button
                 *ngFor="let action of singleActions; trackBy: trackElement"
                 class="action-button"
+                [attr.data-id]="action.id"
                 [icon]="true"
                 [size]="'small'"
                 [disabled]="disabled || !(action | gtxTableActionEnabled:row.item)"

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ModuleWithProviders, NgModule, Type } from '@angular/core';
+import { ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
@@ -7,6 +7,7 @@ import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
 import { NgxPaginationModule } from 'ngx-pagination';
 import {
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
@@ -23,9 +24,12 @@ import {
     FilePickerComponent,
     GroupedTabsComponent,
     InputComponent,
+    JsonInputComponent,
+    LoadingSpinnerComponent,
     MenuToggleButtonComponent,
     ModalDialogComponent,
     OverlayHostComponent,
+    PaginationComponent,
     ProgressBarComponent,
     RadioButtonComponent,
     RangeComponent,
@@ -42,6 +46,7 @@ import {
     TabGroupComponent,
     TabPaneComponent,
     TableComponent,
+    TableFilterWrapperComponent,
     TabsComponent,
     TextareaComponent,
     ToastComponent,
@@ -67,7 +72,17 @@ import {
     TooltipTriggerDirective,
 } from './directives';
 import { ConfigService, CustomConfig, PredefinedConfig, configFactory, defaultConfig, optionsConfig } from './module.config';
-import { IncludesPipe, MatchesMimeTypePipe, TableActionEnabledPipe, TableCellMapperPipe, ValuePathPipe } from './pipes';
+import {
+    ConcatPipe,
+    IncludesPipe,
+    MatchesMimeTypePipe,
+    RangePipe,
+    SortPipe,
+    TableActionEnabledPipe,
+    TableCellMapperPipe,
+    TransformPipe,
+    ValuePathPipe,
+} from './pipes';
 import {
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
@@ -75,10 +90,12 @@ import {
     NotificationService,
     OverlayHostService,
     PageFileDragHandlerService,
+    SizeTrackerService,
     UserAgentProvider,
 } from './providers';
 
 export const UI_CORE_COMPONENTS: Type<any>[] = [
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
@@ -95,9 +112,12 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     FilePickerComponent,
     GroupedTabsComponent,
     InputComponent,
+    JsonInputComponent,
+    LoadingSpinnerComponent,
     MenuToggleButtonComponent,
     ModalDialogComponent,
     OverlayHostComponent,
+    PaginationComponent,
     ProgressBarComponent,
     RadioButtonComponent,
     RangeComponent,
@@ -114,6 +134,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     TabsComponent,
     TabPaneComponent,
     TableComponent,
+    TableFilterWrapperComponent,
     TabGroupComponent,
     TextareaComponent,
     ToastComponent,
@@ -141,14 +162,18 @@ export const UI_CORE_DIRECTIVES: Type<any>[] = [
 ];
 
 export const UI_CORE_PIPES: Type<any>[] = [
+    ConcatPipe,
     IncludesPipe,
+    MatchesMimeTypePipe,
+    RangePipe,
+    SortPipe,
     TableActionEnabledPipe,
     TableCellMapperPipe,
-    MatchesMimeTypePipe,
+    TransformPipe,
     ValuePathPipe,
 ];
 
-export const UI_CORE_PROVIDERS: Type<any>[] = [
+export const UI_CORE_PROVIDERS: (Type<any> | Provider)[] = [
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
     ModalService,
@@ -156,9 +181,14 @@ export const UI_CORE_PROVIDERS: Type<any>[] = [
     OverlayHostService,
     PageFileDragHandlerService,
     UserAgentProvider,
+    SizeTrackerService,
 ];
 
-export const UI_CORE_DECLATATIONS = [...UI_CORE_COMPONENTS, ...UI_CORE_DIRECTIVES, ...UI_CORE_PIPES];
+export const UI_CORE_DECLATATIONS = [
+    ...UI_CORE_COMPONENTS,
+    ...UI_CORE_DIRECTIVES,
+    ...UI_CORE_PIPES,
+];
 export const routerModuleForChild: ModuleWithProviders<GenticsUICoreModule> = RouterModule.forChild([]);
 
 @NgModule({

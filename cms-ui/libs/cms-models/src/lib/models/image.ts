@@ -25,7 +25,7 @@ export interface FileUpload {
 /**
  * Represents an image in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_Image.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Image.html
  */
 export interface Image<T extends ModelType = DefaultModelType> extends FileOrImage<T> {
     '@class'?: 'com.gentics.contentnode.rest.model.Image';

@@ -1,8 +1,6 @@
-import {
-    Injectable,
-    OnDestroy,
-} from '@angular/core';
-import { RepositoryBrowserDataServiceAPI } from '@editor-ui/app/common/models';
+/* eslint-disable no-underscore-dangle */
+import { Injectable, OnDestroy } from '@angular/core';
+import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -32,7 +30,6 @@ import {
     PageResponse,
     Raw,
     RepoItem,
-    RepositoryBrowserDataServiceOptions,
     RepositoryBrowserSorting,
     SearchPagesOptions,
     SortField,
@@ -42,15 +39,17 @@ import {
     TotalUsageResponse,
     Usage,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
-    combineLatest,
-    forkJoin,
     Observable,
     Subscription,
+    combineLatest,
+    forkJoin,
+    of,
 } from 'rxjs';
 import {
+    catchError,
     distinctUntilChanged,
     filter,
     map,
@@ -58,9 +57,11 @@ import {
     publishReplay,
     refCount,
     skip,
+    skipWhile,
     startWith,
     switchMap,
     take,
+    tap,
 } from 'rxjs/operators';
 
 /**
@@ -341,7 +342,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             }
         });
 
-        if (selectedItems.length != newSelection.length) {
+        if (selectedItems.length !== newSelection.length) {
             this.selected$.next(newSelection);
         }
     }
@@ -460,7 +461,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             && !allowedSelection.page
             && !allowedSelection.templatetag;
 
-        this.requiredPermissions = options.requiredPermissions || (() => Observable.of(true));
+        this.requiredPermissions = options.requiredPermissions || (() => of(true));
 
         if (options.startNode != null) {
             this.currentNodeIdSubjectWrapper.next(options.startNode);
@@ -468,7 +469,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         let contentLanguage: Language;
         if (options.contentLanguage != null) {
             const languages: IndexById<Language> = this.appState.now.entities.language;
-            for (let languageKey of Object.keys(languages)) {
+            for (const languageKey of Object.keys(languages)) {
                 const language: any = languages[languageKey];
                 if (this.isLanguage(language) && language.code === options.contentLanguage) {
                     contentLanguage = language;
@@ -647,7 +648,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         if (node) {
             const parentItem = this.currentParent$.value;
             let parentFolderId: number;
-            let parentType = parentItem && parentItem.type;
+            const parentType = parentItem && parentItem.type;
             if (!parentItem) {
                 parentFolderId = node.folderId;
             } else if (parentType === 'folder') {
@@ -693,8 +694,8 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                 }
             }
 
-            const allItemRequests = Observable.forkJoin<RepoItem[]>(...itemRequests)
-                .do(itemArrays => {
+            const allItemRequests = forkJoin(itemRequests).pipe(
+                tap(itemArrays => {
                     const allItems: RepoItem[] = [].concat(...itemArrays);
                     this.items$.next(allItems);
                 }, error => {
@@ -703,11 +704,12 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                         message: error.message || error,
                         delay: 10000,
                     });
-                });
+                }),
+            );
 
-            const breadcrumbsRequest = this.api.folders.getBreadcrumbs(parentFolderId, { nodeId })
-                .map(res => res.folders)
-                .do((breadcrumbs: Array<Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>>) => {
+            const breadcrumbsRequest = this.api.folders.getBreadcrumbs(parentFolderId, { nodeId }).pipe(
+                map(res => res.folders),
+                tap((breadcrumbs: Array<Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>>) => {
                     if (parentType === 'page' || parentType === 'template') {
                         breadcrumbs = [...breadcrumbs, parentItem];
                     }
@@ -743,13 +745,14 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     }
 
                     this.parentItems$.next(breadcrumbs);
-                });
+                }),
+            );
 
             requests.push(allItemRequests, breadcrumbsRequest);
         }
 
         this.loading$.next(true);
-        this.requestSubscriptions = Observable.forkJoin(...requests)
+        this.requestSubscriptions = forkJoin(requests)
             .subscribe(
                 () => this.loading$.next(false),
                 this.errorHandler.catch,
@@ -784,22 +787,23 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
         switch (itemType) {
             case 'folder': {
-                return this.api.folders
-                    .getFolders(parentId, listOptionsWithSorting)
-                    .map(res => res.folders);
+                return this.api.folders.getFolders(parentId, listOptionsWithSorting).pipe(
+                    map(res => res.folders),
+                );
             }
 
             case 'form': {
                 const formListRequest: FormListOptions = this.search$.value ?
-                {
-                    folderId: parentId,
-                    q: this.search$.value,
-                    recursive: true,
-                }
-                : { folderId: parentId };
-                return this.api.forms
-                    .getForms(formListRequest)
-                    .map(res => res.items);
+                    {
+                        folderId: parentId,
+                        q: this.search$.value,
+                        recursive: true,
+                    } : {
+                        folderId: parentId,
+                    };
+                return this.api.forms.getForms(formListRequest).pipe(
+                    map(res => res.items),
+                );
             }
 
             case 'page': {
@@ -832,40 +836,40 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             }
 
             case 'contenttag': {
-                return this.api.folders
-                    .getItem(parentId, 'page', listOptionsWithoutSorting)
-                    .map((response: PageResponse) => {
+                return this.api.folders.getItem(parentId, 'page', listOptionsWithoutSorting).pipe(
+                    map((response: PageResponse) => {
                         const tagsHash = response.page.tags;
                         const tagsArray = Object.keys(tagsHash).map(key => tagsHash[key]);
                         return sortArrayByName(tagsArray, sorting.order);
-                    });
+                    }),
+                );
             }
 
             case 'template': {
-                return this.api.folders
-                    .getTemplates(parentId, listOptionsWithSorting)
-                    .map(response => response.templates)
-                    .map(templates => {
+                return this.api.folders.getTemplates(parentId, listOptionsWithSorting).pipe(
+                    map(response => response.templates),
+                    map(templates => {
                         // The API does not return a "type" for templates, so we manually add one.
                         for (const template of templates) {
                             template.type = 'template';
                         }
                         return templates;
-                    });
+                    }),
+                );
             }
 
             case 'templatetag': {
-                return this.api.folders
-                    .getItem(parentId, 'template', listOptionsWithoutSorting)
-                    .map((res: TemplateResponse) => {
+                return this.api.folders.getItem(parentId, 'template', listOptionsWithoutSorting).pipe(
+                    map((res: TemplateResponse) => {
                         const tagsHash = res.template.templateTags;
                         const tagsArray = Object.keys(tagsHash).map(key => tagsHash[key]);
                         return sortArrayByName(tagsArray, sorting.order);
-                    });
+                    }),
+                );
             }
 
             default:
-                return Observable.of([]);
+                return of([]);
         }
     }
 
@@ -877,16 +881,16 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     ): Observable<boolean> {
 
         if (this.requiredPermissions == null) {
-            return Observable.of(true);
+            return of(true);
         }
         if (!parent || !nodeId) {
-            return Observable.of(false);
+            return of(false);
         }
 
         if (this.isDisplayingFavouritesFolder$.value) {
             // Inside the "Favourites" folder, folder permissions make no sense.
             if (this.pickingFolder) {
-                return Observable.of(true);
+                return of(true);
             }
 
             // Permission management across multiple nodes and possibly moved folders is not trivial,
@@ -902,8 +906,9 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             );
         }
 
-        return this.requiredPermissions(selected, parent, nodes.filter(n => n.id === nodeId)[0], currentContentLanguage)
-            .map(returnValue => !!returnValue);
+        return this.requiredPermissions(selected, parent, nodes.filter(n => n.id === nodeId)[0], currentContentLanguage).pipe(
+            map(returnValue => !!returnValue),
+        );
     }
 
     private determineFavouritesVisibility(): void {
@@ -947,16 +952,17 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
         this.requestSubscriptions.unsubscribe();
         const requests = favouritesToLoad.map(({ id, type, nodeId }) =>
-            this.api.folders.getItem(id, type, { nodeId })
+            this.api.folders.getItem(id, type, { nodeId }).pipe(
                 // If a favourite has been deleted, there will be an error here which we can ignore,
                 // and just pass on a null value which we can filter out later.
-                .catch(() => Observable.of(null)),
+                catchError(() => of(null)),
+            ),
         );
 
         this.items$.next([]);
         this.loading$.next(true);
 
-        this.requestSubscriptions = Observable.forkJoin(requests)
+        this.requestSubscriptions = forkJoin(requests)
             .subscribe(responses => {
                 const items: RepoItem[] = responses
                     // filter out null values caused by any errors in getting the favourite items
@@ -1041,9 +1047,10 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
         // Because one domain can fit multiple nodes, we need to find the node containing the page
         const nodeRequests: Observable<Result>[] = fittingNodes.map(node =>
-            this.api.folders.searchPages(node.id, options)
-                .map(response => ({ node, page: response.page, found: true }))
-                .catch(() => Observable.of({ node, found: false })),
+            this.api.folders.searchPages(node.id, options).pipe(
+                map(response => ({ node, page: response.page, found: true })),
+                catchError(() => of({ node, found: false })),
+            ),
         );
 
         const searchSub = forkJoin(nodeRequests)
@@ -1052,7 +1059,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
                 if (succeeded.length) {
                     let resultToUse: Result;
-                    let resultForCurrentNode = succeeded.find(result => result.node.id === this.currentNodeIdSubjectWrapper.value());
+                    const resultForCurrentNode = succeeded.find(result => result.node.id === this.currentNodeIdSubjectWrapper.value());
 
                     // If the user pastes a URL that matches in more than one node, show a warning message
                     if (succeeded.length === 1) {
@@ -1071,7 +1078,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     }
 
                     // Change to matching node and parent
-                    let { node, page } = resultToUse;
+                    const { node, page } = resultToUse;
                     if (node.id !== this.currentNodeIdSubjectWrapper.value()) {
                         this.currentNodeIdSubjectWrapper.next(node.id);
                     }
@@ -1082,19 +1089,19 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                         // Small workaround: To compare by reference, we replace the parent item
                         // after fetching the data from the API.
                         this.currentParent$.next({ id: page.folderId, type: 'folder' } as Folder<Raw>);
-                        const sub = this.loading$
-                            .skip(1)
-                            .skipWhile(loading => loading === true)
-                            .take(1)
-                            .subscribe(() => {
-                                const folder = this.parentItems$.value.find(p => p.id === page.folderId);
-                                if (folder) {
-                                    this.currentParent$.next(folder);
-                                }
+                        const sub = this.loading$.pipe(
+                            skip(1),
+                            skipWhile(loading => loading === true),
+                            take(1),
+                        ).subscribe(() => {
+                            const folder = this.parentItems$.value.find(p => p.id === page.folderId);
+                            if (folder) {
+                                this.currentParent$.next(folder);
+                            }
 
-                                const pageByRef = this.items$.value.find(item => item.type === 'page' && item.id === page.id);
-                                this.selectItem(pageByRef);
-                            });
+                            const pageByRef = this.items$.value.find(item => item.type === 'page' && item.id === page.id);
+                            this.selectItem(pageByRef);
+                        });
                         this.subscriptions.add(sub);
                         this.fetchContentsFromAPI();
                     }
@@ -1115,13 +1122,11 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
 }
 
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 function itemArraysAreIdentical<T extends { id: number, inherited?: boolean }>(a: T[], b: T[]): boolean {
     return a.length === b.length && a.every((left, index) =>
         left.id === b[index].id && left.inherited === b[index].inherited && Object.keys(left) === Object.keys(b[index]));
 }
 
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 function arraysAreIdentical<T>(a: T[], b: T[]): boolean {
     return a.length === b.length && a.every((left, index) => b[index] === left);
 }

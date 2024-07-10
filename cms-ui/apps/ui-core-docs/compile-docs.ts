@@ -29,7 +29,7 @@ function main(): void {
     const OUTPUT_FILE = 'docs.output.json';
 
     const data: InputFile = JSON.parse(readFileSync(resolve(__dirname, INPUT_FILE)).toString());
-    const output = {};
+    const output: Record<string, IDocumentation> = {};
 
     Object.entries(data).forEach(([id, value]) => {
         const fileName = basename(value.sourceFile);

@@ -24,6 +24,7 @@ import org.jmage.resource.DefaultImageFactory;
 import org.jmage.resource.ResourceException;
 
 import com.gentics.lib.log.NodeLogger;
+import com.sksamuel.scrimage.ImmutableImage;
 import com.sun.media.jai.codec.FileSeekableStream;
 
 /**
@@ -49,11 +50,22 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 	public PatchedDefaultImageFactory() {
 		super();
 		imageTypes.add("jpe");
+		imageTypes.add("webp");
 	}
 
+	@Override
+	public boolean canHandle(URI var1) {
+		try {
+			String var2 = var1.getPath().substring(var1.getPath().lastIndexOf(46) + 1).toLowerCase();
+			String var3 = var1.getScheme();
+			return this.imageTypes.contains(var2) && this.schemeTypes.contains(var3);
+		} catch (Exception var4) {
+			return false;
+		}
+	}
 	/**
 	 * Create an object resource from a resource URI
-	 * 
+	 *
 	 * @param resource
 	 *            the resource URI
 	 * @return PlanarImage
@@ -69,6 +81,13 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 			try {
 				fileInputStream = new FileInputStream(file);
 				BufferedImage image = ImageIO.read(fileInputStream);
+
+				if (image == null) {
+					ImmutableImage image2 = ImmutableImage.loader().fromFile(file);
+					if (image2 != null) {
+						image = image2.awt();
+					}
+				}
 
 				return PlanarImage.wrapRenderedImage(image);
 			} catch (Exception e) {
@@ -106,7 +125,7 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 
 	/**
 	 * Get the image from an URL
-	 * 
+	 *
 	 * @param url
 	 *            the url
 	 * @return the image
@@ -120,6 +139,13 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 		try {
 			byte[] urlBytes = this.readFromUrl(url).toByteArray();
 			BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(urlBytes));
+
+			if (bufferedImage == null) {
+				ImmutableImage image2 = ImmutableImage.loader().fromBytes(urlBytes);
+				if (image2 != null) {
+					bufferedImage = image2.awt();
+				}
+			}
 
 			image = PlanarImage.wrapRenderedImage(bufferedImage);
 			if (logger.isDebugEnabled()) {
@@ -144,7 +170,7 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.jmage.resource.DefaultImageFactory#getAbsoluteFile(java.io.File)
 	 */
 	protected PlanarImage getAbsoluteFile(File file) {

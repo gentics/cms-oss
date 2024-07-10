@@ -4,7 +4,7 @@
         "types": [
             "jasmine",
             "node",
-            "jasminewd2"
+            "jquery"
         ]
     },
     "files": [
@@ -12,7 +12,6 @@
         "src/polyfills.ts"
     ],
     "include": [
-        "**/*.ts",
         "**/*.spec.ts",
         "**/*.d.ts"
     ]

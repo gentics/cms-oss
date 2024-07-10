@@ -1,17 +1,15 @@
-import { AllowedSelectionType, ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
 import * as Mousetrap from 'mousetrap';
-import { Subscription } from 'rxjs';
 import { DebugToolService } from '../../../../development/providers/debug-tool.service';
+import { CNIFrameDocument, CNWindow } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl, CNIFrameDocument, CNWindow, FileUploadPlugin, LinkBrowser, MiniBrowser } from '../common';
+import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
 
-// Force TypeScript to report errors when using the global window/document object
-let document: never;
-let window: never;
-
-// Set to true to log events on the console
-const DEBUG = false;
-
+/** Callback for the extended version of pollUntilAvailable(). */
+type PollCallback<T> = (
+    window: CNWindow,
+    document: CNIFrameDocument,
+    receiver: (found: T) => unknown
+) => unknown
 
 /**
  * This script will be executed once when the IFrame calls GCMSUI.runPreLoadScript().
@@ -24,69 +22,24 @@ const DEBUG = false;
  */
 export class PreLoadScript {
 
-    private filePickerSubscription: Subscription;
-
     constructor(
-        private window: CNWindow,
-        private document: CNIFrameDocument,
-        private scriptHost: CustomScriptHostService) { }
+        private iFrameWindow: CNWindow,
+        private iFrameDocument: CNIFrameDocument,
+        private scriptHost: CustomScriptHostService,
+    ) { }
 
     run(): void {
-        this.applyGcmsUiStyles();
         this.bindExternalDebugHotkey();
-        this.listenToAlohaReady();
         this.copyDataPropertiesFromIframeElementToBody();
         this.removeAlohaUnloadLogic();
         this.trackWhenObjectPropertyPagesAreLoading();
         this.showLanguageWhenComparingLanguages();
         this.hideSyncScrollTextWhenComparingLanguages();
-        this.overrideUploadsFromGCNFileUploadPlugin();
-        this.patchMiniBrowserToUseNewRepositoryBrowser();
-        this.patchLinkBrowserPluginToUseNewRepositoryBrowser();
-        this.preventEnterSubmission();
-    }
-
-    /** Applies the GCMS UI styles to the IFrame. */
-    applyGcmsUiStyles(): void {
-        const link = this.document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = this.window.GCMSUI.gcmsUiStylesUrl;
-        this.document.body.appendChild(link);
-    }
-
-    /**
-     * Removes onkeydown event from the old ui fields and captures submit event of the form,
-     * to trigger the saveChanges() method of the content frame
-     */
-    preventEnterSubmission(): void {
-        // Use old ui's jQuery to remove onkeydown property
-        if (typeof this.window.jQuery === 'function') {
-            this.window.jQuery('input, textarea, button, select').attr('onkeydown', null);
-        }
-
-        // Find all form elements to capture submit event
-        this.document.querySelectorAll('form').forEach(item => {
-            item.addEventListener('submit', event => {
-                if ((event as any).submitter.name.includes('p_clear')) {
-                    return;
-                }
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                // Trigger save changes if the button is not disabled
-                if (!this.scriptHost.contentFrame.isSaveButtonIsDisabled()) {
-                    this.scriptHost.contentFrame.saveChanges();
-                }
-
-                return false;
-            });
-        });
     }
 
     /** Add Debug Tool hotkey access to iframe */
     bindExternalDebugHotkey(): void {
-        let mousetrapListener = new Mousetrap(this.document as any);
+        const mousetrapListener = new Mousetrap(this.iFrameDocument as any);
         mousetrapListener.bind(DebugToolService.hotkey, (event) => {
             if (event.preventDefault) {
                 event.preventDefault();
@@ -94,57 +47,73 @@ export class PreLoadScript {
                 event.returnValue = false;
             }
 
-            this.window.GCMSUI.callDebugTool();
+            this.iFrameWindow.GCMSUI.callDebugTool();
             return false;
         });
     }
 
     /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
-    pollUntilAvailable<T>(checkFn: (window: CNWindow, document: CNIFrameDocument) => T, callback: (found: T) => any): void {
+    pollUntilAvailable<T>(checkFn: (windowRef: CNWindow, documentRef: CNIFrameDocument) => T, callback: (found: T) => any): void {
         let timeout = 0;
         let retriesAfterLoad = 5;
 
         const poll = () => {
             let found: T;
             try {
-                if (this.window && this.document) {
-                    found = checkFn(this.window, this.document);
+                if (this.iFrameWindow && this.iFrameDocument) {
+                    found = checkFn(this.iFrameWindow, this.iFrameDocument);
                 }
-            } catch (ignored) { }
+            } catch (ignored) {
+                console.warn('Error while calling checkFn() from pollUntilAvailable():', ignored);
+            }
 
-            if (found != undefined) {
+            if (found != null) {
                 timeout = 0;
                 callback(found);
-            } else if (this.document.readyState !== 'complete' || --retriesAfterLoad > 0) {
-                timeout = this.window.setTimeout(poll, 10);
+            } else if (this.iFrameDocument.readyState !== 'complete' || --retriesAfterLoad > 0) {
+                timeout = this.iFrameWindow.setTimeout(poll, 10);
             }
         };
         poll();
     }
 
-    /** Set content modified when aloha ready to ensure save button is immediately active */
-    listenToAlohaReady(): void {
-        this.pollUntilAvailable(window => window.Aloha && window.Aloha.bind, () => {
-            if (DEBUG) {
-                console.log('Aloha.bind found!');
+    /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
+    pollUntilAvailableWithPollCallback<T>(checkFn: PollCallback<T>, callback: (found: T) => any): void {
+        let timeout = 0;
+        let retriesAfterLoad = 5;
+
+        const poll = () => {
+            let found: T;
+            try {
+                if (this.iFrameWindow && this.iFrameDocument) {
+                    checkFn(this.iFrameWindow, this.iFrameDocument, (found) => {
+                        if (found !== undefined) {
+                            timeout = 0;
+                            callback(found);
+                        } else if (this.iFrameDocument.readyState !== 'complete' || --retriesAfterLoad > 0) {
+                            timeout = this.iFrameWindow.setTimeout(poll, 10);
+                        }
+                    });
+                }
+            } catch (ignored) {
+                console.warn('Error while calling checkFn() from pollUntilAvailableWithPollCallback():', ignored);
             }
-            this.window.Aloha.bind('aloha-ready', (event: Event) => {
-                this.scriptHost.setAlohaReady(true);
-            });
-        });
+        };
+        poll();
     }
 
     copyDataPropertiesFromIframeElementToBody(): void {
         this.pollUntilAvailable(
-            (window, document) =>
-                window.frameElement && window.frameElement.dataset &&
-                document.body && document.body.dataset,
+            (windowRef, documentRef) =>
+                windowRef.frameElement && windowRef.frameElement.dataset &&
+                documentRef.body && documentRef.body.dataset,
             () => {
-                const iframeDataset = this.window.frameElement.dataset;
-                for (let key in iframeDataset) {
-                    this.document.body.dataset[key] = iframeDataset[key];
+                const iframeDataset = this.iFrameWindow.frameElement.dataset;
+                // eslint-disable-next-line guard-for-in
+                for (const key in iframeDataset) {
+                    this.iFrameDocument.body.dataset[key] = iframeDataset[key];
                 }
-            }
+            },
         );
     }
 
@@ -153,8 +122,8 @@ export class PreLoadScript {
      * checking whether a confirmation needs to be displayed is superior.
      */
     removeAlohaUnloadLogic(): void {
-        this.pollUntilAvailable(window => window.onbeforeunload, () => {
-            this.window.onbeforeunload = function noop(): void { };
+        this.pollUntilAvailable(windowRef => windowRef.onbeforeunload, () => {
+            this.iFrameWindow.onbeforeunload = function noop(): void { };
         });
     }
 
@@ -167,10 +136,10 @@ export class PreLoadScript {
      * We also need to explicitly add an entity ID to certain urls to avoid backend hidden state errors.
      */
     trackWhenObjectPropertyPagesAreLoading(): void {
-        const oldProgress = this.window.progress;
+        const oldProgress = this.iFrameWindow.progress;
         const scriptHost = this.scriptHost;
 
-        this.window.progress = function patchedProgress(myframe: any, doc: Document, url: string): void {
+        this.iFrameWindow.progress = function patchedProgress(myframe: any, doc: Document, url: string): void {
             scriptHost.setRequesting(true);
             scriptHost.runChangeDetection();
             const urlWithTypeId = appendTypeIdToUrl(scriptHost.currentItem, url);
@@ -179,16 +148,16 @@ export class PreLoadScript {
     }
 
     showLanguageWhenComparingLanguages(): void {
-        if (this.window.name === 'node_diff_frame' || this.window.frameElement.id === 'gcn-aloha-iframe') {
-            const languageOfThisIframe = this.window.name === 'node_diff_frame' ?
+        if (this.iFrameWindow.name === 'node_diff_frame' || this.iFrameWindow.frameElement.id === 'gcn-aloha-iframe') {
+            const languageOfThisIframe = this.iFrameWindow.name === 'node_diff_frame' ?
                 this.scriptHost.getPageComparisonLanguage() :
                 this.scriptHost.getItemLanguage();
 
             if (languageOfThisIframe) {
-                const languageIndicator = this.document.createElement('div');
+                const languageIndicator = this.iFrameDocument.createElement('div');
                 languageIndicator.classList.add('gcms-language-indicator');
                 languageIndicator.innerText = languageOfThisIframe.name;
-                this.document.body.appendChild(languageIndicator);
+                this.iFrameDocument.body.appendChild(languageIndicator);
             }
         }
     }
@@ -200,304 +169,9 @@ export class PreLoadScript {
      * Therefore we need to do a check for its presence, and if it is there, use some JavaScript to help hide it.
      */
     hideSyncScrollTextWhenComparingLanguages(): void {
-        const syncScrollCheckbox = this.document.querySelector('#syncscroll') as HTMLElement;
+        const syncScrollCheckbox = this.iFrameDocument.querySelector('#syncscroll') ;
         if (syncScrollCheckbox) {
-            this.document.body.classList.add('gcms-hide-syncscroll');
+            this.iFrameDocument.body.classList.add('gcms-hide-syncscroll');
         }
-    }
-
-    overrideUploadsFromGCNFileUploadPlugin(): void {
-        this.pollUntilAvailable(
-            window => window.Aloha.require('aloha/pluginmanager').plugins['gcnfileupload'],
-            (fileUploadPlugin: FileUploadPlugin) => {
-                if (DEBUG) {
-                    console.log('GCN fileupload plugin found!');
-                }
-                fileUploadPlugin.openModal = () => this.fileUploadPluginWantsToOpenModal(fileUploadPlugin);
-            });
-    }
-
-    fileUploadPluginWantsToOpenModal(fileUploadPlugin: FileUploadPlugin): void {
-        if (this.filePickerSubscription) {
-            this.filePickerSubscription.unsubscribe();
-            this.filePickerSubscription = null;
-        }
-
-        this.filePickerSubscription = this.scriptHost
-            .openFilePicker('file')
-            .mergeMap(files => {
-                if (files && files[0]) {
-                    const type = files[0].type.startsWith('image/') ? 'image' : 'file';
-                    return this.scriptHost.uploadForCurrentItem(type, files);
-                }
-                return [];
-            })
-            .filter(results => results && results[0])
-            .subscribe(result => {
-                // Make a clone because fileUploadPlugin.getDocument() mutates the object id
-                const fileClone = { ...result[0] };
-
-                // The following code is adapted from
-                // https://git.gentics.com/psc/contentnode/blob/830e84ee937ca2fa4a80760b86081370e43a212c/
-                // contentnode-aloha-plugins/src/main/js/gcnfileupload/lib/gcnfileupload-plugin.js#L316-325
-                const document = fileUploadPlugin.getDocument(fileClone, '10008');
-                const linkplugin = this.window.Aloha.require('link/link-plugin');
-                const targetObject = linkplugin.hrefField.getTargetObject();
-                const rangeObject = this.window.Aloha.Selection.getRangeObject();
-                rangeObject.select();
-                linkplugin.hrefField.setTargetObject(targetObject, 'href');
-                linkplugin.hrefField.setItem(document);
-            });
-    }
-
-    postFormToUrl(url: string, params: any = {}): void {
-        const method = 'post';
-        const form = this.document.createElement('form');
-        form.setAttribute('method', method);
-        form.setAttribute('action', url);
-
-        for (const key in params) {
-            if (params.hasOwnProperty(key)) {
-                const hiddenField = this.document.createElement('input');
-                hiddenField.setAttribute('type', 'hidden');
-                hiddenField.setAttribute('name', key);
-                hiddenField.setAttribute('value', params[key]);
-                form.appendChild(hiddenField);
-            }
-        }
-        this.document.body.appendChild(form);
-        form.submit();
-    }
-
-    patchMiniBrowserToUseNewRepositoryBrowser(): void {
-        // Generated HTML calls the "old new" repository browser via "window.MiniBrowser.show(type, fieldname)
-        this.pollUntilAvailable(window => window.MiniBrowser, miniBrowser => {
-            if (DEBUG) {
-                console.log('iframe MiniBrowser patched!');
-            }
-
-            const showOldRepositoryBrowser = miniBrowser.show.bind(miniBrowser);
-
-            miniBrowser.show = (showType: string, fieldName: string): void => {
-                // The field name "overview" has special semantics
-                const type = typeIdToName(showType);
-
-                if (DEBUG) {
-                    console.log(`MiniBrowser.open(${showType}, ${fieldName})`);
-                }
-
-                const options: RepositoryBrowserOptions = {
-                    allowedSelection: type as any,
-                    selectMultiple: fieldName === 'overview'
-                };
-
-                this.scriptHost.openRepositoryBrowser(options, selected => {
-                    const selectedItems = isArrayCrossIframe(selected) ? selected : [selected];
-                    if (selectedItems[0]) {
-                        this.userPickedItemsFromRepositoryBrowser(selectedItems, fieldName, miniBrowser);
-                    }
-                });
-            };
-
-            this.overwriteOverviewTagfill();
-        });
-    }
-
-    userPickedItemsFromRepositoryBrowser(selectedItems: ItemInNode[], fieldName: string, miniBrowser: MiniBrowser): void {
-        const sid = this.scriptHost.getSid();
-        const $ = this.window.jQuery;
-        const selectionType = $('input[name=f_ds_type]').val();
-
-        if (fieldName === 'overview') {
-            const objects = selectedItems.map(item => ({
-                type: typeNameToId(item.type),
-                id: item.id,
-                nodeId: item.nodeId
-            }));
-            const postData = JSON.stringify({ objects });
-
-            this.scriptHost.setRequesting(true);
-
-            $.ajax({
-                type: 'POST',
-                contentType: 'application/json;charset=utf-8',
-                url: `?do=17004&ds_type=${selectionType}&sid=${sid}`,
-                data: postData,
-                dataType: 'html',
-                timeout: 10000,
-                success: (html: string) => {
-                    this.scriptHost.setRequesting(false);
-
-                    const $newItemList = $(html).find('#itemList3');
-                    this.overwriteOverviewTagfill($newItemList);
-                    $('#itemList3').empty();
-                    $('#itemList3').append($newItemList.contents());
-                },
-                error: (jqhxr: any, textStatus: string, error: string) => {
-                    this.scriptHost.setRequesting(false);
-                    this.scriptHost.showErrorMessage('message.add_items_error');
-                }
-            });
-        } else {
-            // A single item was selected in a tag fill dialog
-            const item = selectedItems[0];
-            const type = item.type.toLowerCase();
-
-            // Hack-fixed way to retrieve the parent information from contenttags/templateTags
-            const parent = (item as any).__parent__ as { id: number, nodeId: number, name: string };
-
-            let idForBackend: string;
-            let nameForBackend: string;
-            if (type === 'contenttag') {
-                idForBackend = `p${item.id}-${parent.id}`;
-                nameForBackend = `${item.name} (${parent.name})`;
-            } else if (type === 'templateTag') {
-                idForBackend = `t${item.id}-${parent.id}`;
-                nameForBackend = `${item.name} (${parent.name})`;
-            } else {
-                idForBackend = item.id.toString();
-                nameForBackend = item.name;
-            }
-
-            $(`input[name=f_${fieldName}]`).val(nameForBackend);
-            $(`input[name=f_${fieldName}_a]`).val(idForBackend);
-
-            // Cross-channel links require the node the item was selected in
-            $(`input[name=f_${fieldName}_node]`).val(parent ? parent.nodeId : item.nodeId);
-
-            miniBrowser.submitForm();
-        }
-    }
-
-    patchLinkBrowserPluginToUseNewRepositoryBrowser(): void {
-        this.pollUntilAvailable(
-            (window) => window.Aloha.require('aloha/pluginmanager').plugins['gcn-linkbrowser'].browser,
-            (linkBrowser: LinkBrowser) => {
-                if (DEBUG) {
-                    console.log('LinkBrowser found!');
-                }
-
-                const linkBrowserOldShow = linkBrowser.show.bind(linkBrowser);
-                linkBrowser.show = () => {
-                    // We receive a list like ["files", "images", "website"]
-                    // Transform it to a list of types the RepositoryBrowser understands
-                    const types = linkBrowser.getObjectTypeFilter()
-                        .map(type => type.replace(/s$/, ''))
-                        .map(type => type === 'website' ? 'page' : type) as AllowedSelectionType[];
-
-                    if (DEBUG) {
-                        console.log(`LinkBrowser.show(types = ${linkBrowser.getObjectTypeFilter().join(', ')})`);
-                    }
-
-                    let options: RepositoryBrowserOptions = {
-                        allowedSelection: types,
-                        selectMultiple: false,
-                        submitLabel: 'modal.repository_browser_submit_link'
-                    };
-
-                    // Set currentItem's language if the item supports
-                    if (this.scriptHost.currentItem && this.scriptHost.currentItem['language']) {
-                        options.contentLanguage = this.scriptHost.currentItem['language'];
-                    }
-
-                    linkBrowser.opened = true;
-                    this.scriptHost.openRepositoryBrowser(options, selected => {
-                        this.document.body.classList.remove('gcn-stop-scrolling');
-                        linkBrowser.opened = false;
-
-                        if (selected) {
-                            const repoItem = mapApiItemToOldRepositoryBrowserItem(selected as ItemInNode);
-                            linkBrowser.onSelect(repoItem);
-                            linkBrowser.close();
-                        }
-                    });
-                    // Due to GUIC-224 the callback is not invoked when the user clicks 'Cancel',
-                    // since it doesn't have any side effects, we remove the class already now
-                    setTimeout(() => {
-                        this.document.body.classList.remove('gcn-stop-scrolling');
-                    });
-                };
-            }
-        );
-    }
-
-    // Remove and add custom elements to overview tagfill forms
-    overwriteOverviewTagfill(itemList$?: JQuery): void {
-        // Disabled for now. TODO: Bring delete and reorder back
-
-        // const $ = this.window.jQuery;
-        // if (!itemList$) {
-        //     itemList$ = $('form[name="ds_sel"] .itemlist3 #itemList3');
-        // }
-        // let tableBody = itemList$.find('tbody');
-        // if (tableBody.length) {
-        //     let checkboxColumns = tableBody.filter('td:first-child > input[type=checkbox]').parents();
-        //     let rows = checkboxColumns.parents();
-        //     checkboxColumns.remove();
-        //     // TODO with rows
-        // }
-    }
-
-}
-
-function isArrayCrossIframe(value: any): value is any[] {
-    return Object.prototype.toString.call(value) === '[object Array]';
-}
-
-function mapApiItemToOldRepositoryBrowserItem(item: ItemInNode): Object {
-    const newId = typeNameToId(item.type) + '.' + item.id;
-
-    const newItem = Object.assign({}, item, {
-        id: newId,
-        baseType: 'document',
-        renditions: [],
-        repositoryId: 'com.gentics.aloha.GCN.Page',
-        loaded: false
-    });
-
-    return newItem;
-}
-
-/** Map type IDs (10007) to their string representation ('page'). */
-function typeIdToName(typeId: string | number): string {
-    switch (typeId.toString()) {
-        case '10001': return 'node';
-        case '10002': return 'folder';
-        case '10006': return 'template';
-        case '10007': return 'page';
-        case '10008': return 'file';
-        case '10011': return 'image';
-        case '10031': return 'contentgroup';
-        case '10111': return 'contenttag';
-        case '10112': return 'templateTag';
-        case '10113': return 'objecttag';
-        case 'folder':
-        case 'page':
-        case 'file':
-        case 'image':
-        case 'contenttag':
-        case 'templateTag':
-            return typeId as string;
-        default:
-            console.error(`Unknown type ID ${typeId}`);
-            return '';
-    }
-}
-
-function typeNameToId(typeName: string): number {
-    switch (String(typeName)) {
-        case 'node': return 10001;
-        case 'folder': return 10002;
-        case 'template': return 10006;
-        case 'page': return 10007;
-        case 'file': return 10008;
-        case 'image': return 10011;
-        case 'contentgroup': return 10031;
-        case 'contenttag': return 10111;
-        case 'templateTag': return 10112;
-        case 'objecttag': return 10113;
-        default:
-            console.error(`Unknown type name ${typeName}`);
-            return 0;
     }
 }

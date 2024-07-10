@@ -1,5 +1,7 @@
 package com.gentics.contentnode.object;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -103,9 +106,24 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		cr.setCrType(nodeCR.getCrType());
 		cr.setDbType(nodeCR.getDbType());
 		cr.setUsername(nodeCR.getUsername());
-		cr.setUsePassword(!ObjectTransformer.isEmpty(nodeCR.getPassword()));
+		cr.setUsernameProperty(nodeCR.getUsernameProperty());
+		if (nodeCR.isPasswordProperty()) {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.property);
+			cr.setPasswordProperty(nodeCR.getPassword());
+		} else if (ObjectTransformer.isEmpty(nodeCR.getPassword())) {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.none);
+		} else {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.value);
+		}
 		cr.setUrl(nodeCR.getUrl());
+		cr.setUrlProperty(nodeCR.getUrlProperty());
+		cr.setHttp2(nodeCR.isHttp2());
+		cr.setNoFoldersIndex(nodeCR.isNoFoldersIndex());
+		cr.setNoFilesIndex(nodeCR.isNoFilesIndex());
+		cr.setNoPagesIndex(nodeCR.isNoPagesIndex());
+		cr.setNoFormsIndex(nodeCR.isNoFormsIndex());
 		cr.setBasepath(nodeCR.getBasepath());
+		cr.setBasepathProperty(nodeCR.getBasepathProperty());
 		cr.setInstantPublishing(nodeCR.isInstantPublishing());
 		cr.setPermissionInformation(nodeCR.isPermissionInformation());
 		cr.setPermissionProperty(nodeCR.getPermissionProperty());
@@ -152,19 +170,55 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		if (cr.getUsername() != null) {
 			nodeCR.setUsername(cr.getUsername());
 		}
-		if (cr.getPassword() != null) {
-			nodeCR.setPassword(cr.getPassword());
+		if (cr.getUsernameProperty() != null) {
+			nodeCR.setUsernameProperty(cr.getUsernameProperty());
 		}
-		if (cr.getUsePassword() != null) {
-			if (!cr.getUsePassword()) {
+		if (cr.getPasswordType() != null) {
+			switch(cr.getPasswordType()) {
+			case none:
 				nodeCR.setPassword(null);
+				nodeCR.setPasswordProperty(false);
+				break;
+			case property:
+				if (cr.getPasswordProperty() != null) {
+					nodeCR.setPassword(cr.getPasswordProperty());
+					nodeCR.setPasswordProperty(true);
+				}
+				break;
+			case value:
+				if (cr.getPassword() != null) {
+					nodeCR.setPassword(cr.getPassword());
+					nodeCR.setPasswordProperty(false);
+				}
+				break;
 			}
+		}
+		if (cr.getHttp2() != null) {
+			nodeCR.setHttp2(cr.getHttp2());
+		}
+		if (cr.getNoFoldersIndex() != null) {
+			nodeCR.setNoFoldersIndex(cr.getNoFoldersIndex());
+		}
+		if (cr.getNoFilesIndex() != null) {
+			nodeCR.setNoFilesIndex(cr.getNoFilesIndex());
+		}
+		if (cr.getNoPagesIndex() != null) {
+			nodeCR.setNoPagesIndex(cr.getNoPagesIndex());
+		}
+		if (cr.getNoFormsIndex() != null) {
+			nodeCR.setNoFormsIndex(cr.getNoFormsIndex());
 		}
 		if (cr.getUrl() != null) {
 			nodeCR.setUrl(cr.getUrl());
 		}
+		if (cr.getUrlProperty() != null) {
+			nodeCR.setUrlProperty(cr.getUrlProperty());
+		}
 		if (cr.getBasepath() != null) {
 			nodeCR.setBasepath(cr.getBasepath());
+		}
+		if (cr.getBasepathProperty() != null) {
+			nodeCR.setBasepathProperty(cr.getBasepathProperty());
 		}
 		if (cr.getInstantPublishing() != null) {
 			nodeCR.setInstantPublishing(cr.getInstantPublishing());
@@ -209,6 +263,26 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	};
 
 	/**
+	 * Predicate for validation of attributepath properties
+	 */
+	public final static Predicate<String> CR_ATTRIBUTEPATH_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_ATTRIBUTEPATH_");
+
+	/**
+	 * Predicate for validation of url properties
+	 */
+	public final static Predicate<String> CR_URL_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_URL_");
+
+	/**
+	 * Predicate for validation of username properties
+	 */
+	public final static Predicate<String> CR_USERNAME_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_USERNAME_");
+
+	/**
+	 * Predicate for validation of password properties
+	 */
+	public final static Predicate<String> CR_PASSWORD_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_PASSWORD_");
+
+	/**
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, NodeObjectProperty<ContentRepository>> resolvableProperties;
@@ -222,6 +296,11 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		resolvableProperties.put("username", new NodeObjectProperty<>((o, key) -> o.getUsername()));
 		resolvableProperties.put("url", new NodeObjectProperty<>((o, key) -> o.getUrl()));
 		resolvableProperties.put("basepath", new NodeObjectProperty<>((o, key) -> o.getBasepath()));
+		resolvableProperties.put("http2", new NodeObjectProperty<>((o, key) -> o.isHttp2()));
+		resolvableProperties.put("noFoldersIndex", new NodeObjectProperty<>((o, key) -> o.isNoFoldersIndex()));
+		resolvableProperties.put("noFilesIndex", new NodeObjectProperty<>((o, key) -> o.isNoFilesIndex()));
+		resolvableProperties.put("noPagesIndex", new NodeObjectProperty<>((o, key) -> o.isNoPagesIndex()));
+		resolvableProperties.put("noFormsIndex", new NodeObjectProperty<>((o, key) -> o.isNoFormsIndex()));
 		resolvableProperties.put("instantPublishing", new NodeObjectProperty<>((o, key) -> o.isInstantPublishing()));
 		resolvableProperties.put("languageInformation", new NodeObjectProperty<>((o, key) -> o.isLanguageInformation()));
 		resolvableProperties.put("permissionInformation", new NodeObjectProperty<>((o, key) -> o.isPermissionInformation()));
@@ -326,6 +405,45 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
+	 * Get the username property
+	 * @return username property
+	 */
+	@FieldGetter("username_property")
+	public abstract String getUsernameProperty();
+
+	/**
+	 * Set the username property
+	 * @param usernameProperty username property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("username_property")
+	public void setUsernameProperty(String usernameProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * If a username property is set, resolve it now and set it as username.
+	 * If the username changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveUsernameProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective username. This will do property substitution.
+	 * @return effective username
+	 */
+	public String getEffectiveUsername() {
+		String usernameProperty = getUsernameProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(usernameProperty)) {
+			return substituteSingleProperty(usernameProperty, CR_USERNAME_FILTER);
+		} else {
+			return getUsername();
+		}
+	}
+
+	/**
 	 * Get the password
 	 * @return password
 	 */
@@ -339,6 +457,107 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("password")
 	public void setPassword(String password) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@FieldGetter("password_is_property")
+	public abstract boolean isPasswordProperty();
+
+	@FieldSetter("password_is_property")
+	public void setPasswordProperty(boolean passwordProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective password. This will do property substitution, if {@link #isPasswordProperty()} returns true.
+	 * @return effective password
+	 */
+	public String getEffectivePassword() {
+		return isPasswordProperty() ? substituteSingleProperty(getPassword(), CR_PASSWORD_FILTER) : getPassword();
+	}
+
+	/**
+	 * Get the HTTP/2 usage flag
+	 * @return flag
+	 */
+	@FieldGetter("http2")
+	public abstract boolean isHttp2();
+
+	/**
+	 * Set the HTTP/2 flag
+	 * @param http2 flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("http2")
+	public void setHttp2(boolean http2) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude folders from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nofoldersindex")
+	public abstract boolean isNoFoldersIndex();
+
+	/**
+	 * Set the 'exclude folders from indexing' flag.
+	 * @param noFoldersIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nofoldersindex")
+	public void setNoFoldersIndex(boolean noFoldersIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude files from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nofilesindex")
+	public abstract boolean isNoFilesIndex();
+
+	/**
+	 * Set the 'exclude files from indexing' flag.
+	 * @param noFilesIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nofilesindex")
+	public void setNoFilesIndex(boolean noFilesIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude pages from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nopagesindex")
+	public abstract boolean isNoPagesIndex();
+
+	/**
+	 * Set the 'exclude pages from indexing' flag.
+	 * @param noIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nopagesindex")
+	public void setNoPagesIndex(boolean noIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude forms from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("noformsindex")
+	public abstract boolean isNoFormsIndex();
+
+	/**
+	 * Set 'exclude forms from indexing' flag.
+	 * @param noIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("noformsindex")
+	public void setNoFormsIndex(boolean noIndex) throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -357,6 +576,45 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	@FieldSetter("url")
 	public void setUrl(String url) throws ReadOnlyException {
 		failReadOnly();
+	}
+
+	/**
+	 * Get the connection URL property
+	 * @return connection URL property
+	 */
+	@FieldGetter("url_property")
+	public abstract String getUrlProperty();
+
+	/**
+	 * Set the connection URL property
+	 * @param urlProperty connection URL property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("url_property")
+	public void setUrlProperty(String urlProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * If a URL property is set, resolve it now and set it as URL.
+	 * If the URL changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveUrlProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective connection URL. This will do property substitution.
+	 * @return effective connection URL
+	 */
+	public String getEffectiveUrl() {
+		String urlProperty = getUrlProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(urlProperty)) {
+			return substituteSingleProperty(urlProperty, CR_URL_FILTER);
+		} else {
+			return getUrl();
+		}
 	}
 
 	/**
@@ -476,6 +734,45 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	@FieldSetter("basepath")
 	public void setBasepath(String basepath) throws ReadOnlyException {
 		failReadOnly();
+	}
+
+	/**
+	 * Get the basepath property for attributes, that are stored in the filesystem
+	 * @return basepath property for filesystem attributes
+	 */
+	@FieldGetter("basepath_property")
+	public abstract String getBasepathProperty();
+
+	/**
+	 * Set the basepath property for attributes, that are stored in the filesystem
+	 * @param basepathProperty basepath property for filesystem attributes
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("basepath_property")
+	public void setBasepathProperty(String basepathProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * If a basepath property is set, resolve it now and set it as basepath.
+	 * If the basepath changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveBasepathProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective basepath. This will do property substitution.
+	 * @return effective basepath
+	 */
+	public String getEffectiveBasepath() {
+		String basepathProperty = getBasepathProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(basepathProperty)) {
+			return substituteSingleProperty(basepathProperty, CR_ATTRIBUTEPATH_FILTER);
+		} else {
+			return getBasepath();
+		}
 	}
 
 	/**
@@ -824,7 +1121,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -836,7 +1133,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem", "targetType" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -882,7 +1179,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
-	 * Add a tagmap entry (for Mesh CRs)
+	 * Add a tagmap entry (for Mesh CRs), defaulting 'noIndex' value to false.
 	 * @param tagName tagname
 	 * @param mapName mapname
 	 * @param object object type
@@ -897,6 +1194,26 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat, boolean segmentfield,
 			boolean displayfield, boolean urlfield) throws NodeException {
+		addEntry(tagName, mapName, object, targetType, type, multivalue, stat, segmentfield, displayfield, urlfield, false);
+	}
+
+	/**
+	 * Add a tagmap entry (for Mesh CRs)
+	 * @param tagName tagname
+	 * @param mapName mapname
+	 * @param object object type
+	 * @param targetType target type (for link attributes)
+	 * @param type attribute type
+	 * @param multivalue true for multivalue
+	 * @param stat true for static
+	 * @param segmentfield true for segmentfield
+	 * @param displayfield true for displayfield
+	 * @param urlfield true for urlfield
+	 * @param noIndex true for noIndex
+	 * @throws NodeException
+	 */
+	public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat, boolean segmentfield,
+			boolean displayfield, boolean urlfield, boolean noIndex) throws NodeException {
 		failReadOnly();
 	}
 

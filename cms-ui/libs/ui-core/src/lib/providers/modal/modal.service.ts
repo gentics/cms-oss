@@ -1,13 +1,13 @@
 import {
-    ComponentFactoryResolver,
     ComponentRef,
     ElementRef,
     Injectable,
     Optional,
     SkipSelf,
     Type,
-    ViewContainerRef
+    ViewContainerRef,
 } from '@angular/core';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions } from '../../common/modal';
 import { BlankModal } from '../../components/blank-modal/blank-modal.component';
 import { DynamicModal } from '../../components/dynamic-modal/dynamic-modal.component';
@@ -133,13 +133,14 @@ export class ModalService {
      * Returns an array of ComponentRefs for each currently-opened modal.
      */
     public get openModals(): ComponentRef<IModalDialog>[] {
-        return this._parentModalService ? this._parentModalService.openModals : this.openModalComponents;
+        return this.parentService ? this.parentService.openModals : this.openModalComponents;
     }
 
     constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
         overlayHostService: OverlayHostService,
-        @Optional() @SkipSelf() private _parentModalService: ModalService = null
+        @Optional()
+        @SkipSelf()
+        private parentService: ModalService = null,
     ) {
         this.getHostViewContainer = () => overlayHostService.getHostView();
     }
@@ -151,9 +152,9 @@ export class ModalService {
     public fromComponent<T extends IModalDialog>(
         component: Type<T>,
         options?: IModalOptions,
-        locals?: { [K in keyof T]?: T[K] }
+        locals?: { [K in keyof T]?: T[K] },
     ): Promise<IModalInstance<T>> {
-        let modal = this.wrapComponentInModal(component, options, locals);
+        const modal = this.wrapComponentInModal(component, options, locals);
         return Promise.resolve(modal);
     }
 
@@ -183,14 +184,15 @@ export class ModalService {
     private wrapComponentInModal<T extends IModalDialog>(
         component: Type<T>,
         options?: IModalOptions,
-        locals?: { [key: string]: any }
+        locals?: { [key: string]: any },
     ): Promise<IModalInstance<T>> {
         return this.createModalWrapper<T>(options)
             .then(modalWrapper => {
                 const componentRef = modalWrapper.injectContent(component);
                 const dialog = componentRef.instance;
                 if (locals !== undefined) {
-                    for (let key in locals) {
+                    // eslint-disable-next-line guard-for-in
+                    for (const key in locals) {
                         (<any>dialog)[key] = locals[key];
                     }
                     componentRef.changeDetectorRef.markForCheck();
@@ -210,7 +212,7 @@ export class ModalService {
                         });
                         modalWrapper.open();
                         return this.createPromiseFromDialog(modalWrapper, dialog);
-                    }
+                    },
                 };
             });
     }
@@ -232,11 +234,10 @@ export class ModalService {
     private createModalWrapper<T extends IModalDialog>(options?: IModalOptions): Promise<DynamicModal> {
         return this.getHostViewContainer()
             .then(hostViewContainer => {
-                let modalFactoryFactory = this.componentFactoryResolver.resolveComponentFactory(DynamicModal);
                 if (!hostViewContainer) {
                     throw new Error('No OverlayHost present, add a <gtx-overlay-host> element!');
                 }
-                const ref = hostViewContainer.createComponent(modalFactoryFactory);
+                const ref = hostViewContainer.createComponent(DynamicModal);
                 return this.getConfiguredModalWrapper(ref, options);
             });
     }
@@ -246,9 +247,9 @@ export class ModalService {
      */
     private getConfiguredModalWrapper<T extends IModalDialog>(wrapperComponentRef: ComponentRef<DynamicModal>,
         options?: IModalOptions): DynamicModal {
-        let modalWrapper = wrapperComponentRef.instance;
-        modalWrapper.dismissFn = () => {
-            this.invokeOnCloseCallback(options);
+        const modalWrapper = wrapperComponentRef.instance;
+        modalWrapper.dismissFn = (reason) => {
+            this.invokeOnCloseCallback(options, reason);
             wrapperComponentRef.destroy();
         };
         modalWrapper.setOptions(options);
@@ -266,14 +267,17 @@ export class ModalService {
                 resolve(value);
             });
 
-            dialog.registerCancelFn((value: any) => {
-                modalWrapper.dismissFn();
+            dialog.registerCancelFn((val, reason) => {
+                modalWrapper.dismissFn(reason ?? ModalClosingReason.CANCEL);
+                if (reason) {
+                    reject(new ModalCloseError(reason));
+                }
             });
 
             if (dialog.registerErrorFn) {
                 dialog.registerErrorFn((err: Error) => {
-                    reject(err);
-                    modalWrapper.dismissFn();
+                    modalWrapper.dismissFn(ModalClosingReason.ERROR);
+                    reject(new ModalCloseError(err));
                 });
             }
         });
@@ -285,9 +289,9 @@ export class ModalService {
         }
     }
 
-    private invokeOnCloseCallback(options: IModalOptions): void {
+    private invokeOnCloseCallback(options: IModalOptions, reason?: ModalClosingReason): void {
         if (options && options.onClose && typeof options.onClose === 'function') {
-            options.onClose();
+            options.onClose(reason);
         }
     }
 }

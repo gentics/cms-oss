@@ -1,0 +1,45 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <div class="row">
+        <gtx-input
+            class="columns small-12"
+            [label]="('common.name' | i18n) + ' *'"
+            formControlName="name"
+        ></gtx-input>
+    </div>
+
+    <ng-container *ngIf="mode === ProjectPropertiesMode.CREATE">
+        <div class="row">
+            <gtx-checkbox
+                class="columns small-12 checkbox-input"
+                [label]="'mesh.branch_ssl' | i18n"
+                formControlName="ssl"
+            ></gtx-checkbox>
+        </div>
+
+        <div class="row">
+            <gtx-input
+                class="columns small-6"
+                [label]="'mesh.branch_hostname' | i18n"
+                formControlName="hostname"
+            ></gtx-input>
+
+            <gtx-input
+                class="columns small-6"
+                [label]="'mesh.branch_pathPrefix' | i18n"
+                formControlName="pathPrefix"
+            ></gtx-input>
+        </div>
+
+        <div class="row">
+            <gtx-mesh-schema-picker
+                class="columns small-12"
+                [label]="('mesh.branch_schema' | i18n) + ' *'"
+                [required]="true"
+                formControlName="schema"
+            ></gtx-mesh-schema-picker>
+        </div>
+    </ng-container>
+</form>

@@ -1,4 +1,4 @@
-import { GcmsAdminUiRoute } from '../../common/routing/gcms-admin-ui-route';
+import { GcmsAdminUiRoute } from '../../common/models/routing';
 import { ElasticSearchIndexMasterComponent } from './components/elastic-search-index-master/elastic-search-index-master.component';
 
 export const elasticSearchStatusRoutes: GcmsAdminUiRoute[] = [

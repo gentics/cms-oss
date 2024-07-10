@@ -1,8 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { iconForItemType } from '@editor-ui/app/common/utils/icon-for-item-type';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { ApplicationStateService } from '@editor-ui/app/state';
+import {
+    RepositoryBrowserOptions,
+    TagEditorContext,
+    TagEditorError,
+    TagPropertiesChangedFn,
+    TagPropertyEditor,
+} from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     File,
@@ -20,20 +27,15 @@ import {
     OverviewTagPartProperty,
     Page,
     Raw,
-    RepositoryBrowserOptions,
     SelectType,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
-import {ApplicationStateService} from "@editor-ui/app/state";
+import { Observable, Subscription, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 /** All item types that can be selected by the overview. */
 export type OverviewItem = ItemInNode<Page<Raw> | Folder<Raw> | File<Raw> | Image<Raw>>;
@@ -71,15 +73,15 @@ function createLabeledOrderByType(orderBy: OrderBy): LabeledObject<OrderBy> {
 const ALLOWED_ORDER_BY_TYPES = new Map<ListType, LabeledObject<OrderBy>[]>();
 ALLOWED_ORDER_BY_TYPES.set(ListType.PAGE, [
     createLabeledOrderByType(OrderBy.ALPHABETICALLY), createLabeledOrderByType(OrderBy.PRIORITY), createLabeledOrderByType(OrderBy.PDATE),
-    createLabeledOrderByType(OrderBy.CDATE), createLabeledOrderByType(OrderBy.EDATE), createLabeledOrderByType(OrderBy.SELF)
+    createLabeledOrderByType(OrderBy.CDATE), createLabeledOrderByType(OrderBy.EDATE), createLabeledOrderByType(OrderBy.SELF),
 ]);
 ALLOWED_ORDER_BY_TYPES.set(ListType.FOLDER, [
     createLabeledOrderByType(OrderBy.ALPHABETICALLY), createLabeledOrderByType(OrderBy.CDATE), createLabeledOrderByType(OrderBy.EDATE),
-    createLabeledOrderByType(OrderBy.SELF)
+    createLabeledOrderByType(OrderBy.SELF),
 ]);
 ALLOWED_ORDER_BY_TYPES.set(ListType.FILE, [
     createLabeledOrderByType(OrderBy.ALPHABETICALLY), createLabeledOrderByType(OrderBy.CDATE), createLabeledOrderByType(OrderBy.EDATE),
-    createLabeledOrderByType(OrderBy.FILESIZE), createLabeledOrderByType(OrderBy.SELF)
+    createLabeledOrderByType(OrderBy.FILESIZE), createLabeledOrderByType(OrderBy.SELF),
 ]);
 ALLOWED_ORDER_BY_TYPES.set(ListType.IMAGE, ALLOWED_ORDER_BY_TYPES.get(ListType.FILE));
 
@@ -91,7 +93,7 @@ ALLOWED_ORDER_BY_TYPES.set(ListType.IMAGE, ALLOWED_ORDER_BY_TYPES.get(ListType.F
     selector: 'overview-tag-property-editor',
     templateUrl: './overview-tag-property-editor.component.html',
     styleUrls: ['./overview-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
@@ -112,8 +114,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
     /** Allowed sort orders. */
     allowedOrderDirections: LabeledObject<OrderDirection>[] = [
-        { label: `tag_editor.order_direction_asc`, value: OrderDirection.ASC },
-        { label: `tag_editor.order_direction_desc`, value: OrderDirection.DESC }
+        { label: 'tag_editor.order_direction_asc', value: OrderDirection.ASC },
+        { label: 'tag_editor.order_direction_desc', value: OrderDirection.DESC },
     ];
 
     /** Used to access the ListType and SelectType enums from the template. */
@@ -122,9 +124,6 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
     /** The currently selected items. */
     selectedItems: OverviewItem[] = [];
-
-    /** Used to map ItemTypes their icons. */
-    iconForItemType = iconForItemType;
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
@@ -203,8 +202,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 // Remove newItems, which already exist in the selectedItems.
                 newItems = newItems.filter(newItem =>
                     !this.selectedItems.find(existingItem =>
-                        existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId || this.isAlreadyAddedItem(existingItem, newItem)
-                    )
+                        existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId || this.isAlreadyAddedItem(existingItem, newItem),
+                    ),
                 );
                 this.updatePath(newItems);
                 this.selectedItems = this.selectedItems.concat(newItems);
@@ -313,7 +312,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
         if (newValue.type !== TagPropertyType.OVERVIEW) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by OverviewTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as OverviewTagPartProperty;
+        this.tagProperty = newValue ;
         const overview = this.tagProperty.overview;
 
         if (overview.orderBy === 'UNDEFINED') {
@@ -383,7 +382,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 this.createLabeledListType(ListType.PAGE),
                 this.createLabeledListType(ListType.FOLDER),
                 this.createLabeledListType(ListType.FILE),
-                this.createLabeledListType(ListType.IMAGE)
+                this.createLabeledListType(ListType.IMAGE),
             ];
         }
     }
@@ -410,7 +409,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
             return [
                 this.createLabeledSelectType(SelectType.FOLDER),
                 this.createLabeledSelectType(SelectType.MANUAL),
-                this.createLabeledSelectType(SelectType.AUTO)
+                this.createLabeledSelectType(SelectType.AUTO),
             ];
         }
     }
@@ -438,23 +437,52 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private loadItems(itemsToLoad: Map<number, ItemsForNode>, itemType: FolderItemType): Observable<OverviewItem[]> {
         // Create API requests to load the items from each node.
-        const requests$: Observable<{ item: Item<Raw>, nodeId: number, origIndex: number }[]>[] = [];
+        const requests$: Observable<{ id:number, origId: number, item: Item<Raw>, nodeId: number, origIndex: number }[]>[] = [];
         itemsToLoad.forEach((itemsFromNode, nodeId) => {
             if (nodeId === -1) {
                 nodeId = undefined;
             }
-            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType)
-                .map(items => items.map(item => ({
-                    item: item,
-                    nodeId: this.isStickyChannelEnabled ? item.inheritedFromId : item.masterNodeId,
-                    origIndex: itemsFromNode.origIndices[item.id]
-                })));
+            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType, {fillWithNulls: true}).pipe(
+                map(loadedItems => {
+                    return itemsFromNode.itemIds
+                        .map((id, index) => {
+                            let loaded = loadedItems.find(item => item !== null && item.id === id);
+
+                            /*
+                             * Edge Case which needs to be fixed in Backend.
+                             * When loading an inherited item with the original ID and a channel ID, you get the
+                             * inherited item ID, without reference to the original one.
+                             * Therefore, we can't check for the IDs directly here.
+                             * If the same amount of items have been returned as requested, we assume that the backend
+                             * returned them in the correct order as well.
+                             * Therefore fallback to the item in the expected index to get the item.
+                             */
+                            if (!loaded && (loadedItems.length === itemsFromNode.itemIds.length)) {
+                                loaded = loadedItems[index];
+                            }
+
+                            // Ignore/Remove items we couldn't load
+                            if (!loaded) {
+                                return null;
+                            }
+
+                            return {
+                                id: loaded.id,
+                                origId: id,
+                                item: loaded,
+                                nodeId: this.isStickyChannelEnabled ? loaded.inheritedFromId : loaded.masterNodeId,
+                                origIndex: itemsFromNode.origIndices[id],
+                            };
+                        })
+                        .filter(element => element != null);
+                }),
+            );
             requests$.push(request$);
         });
 
         // Combine the results to an array of items, which have the same order as in the selection in the overview.
-        return Observable.forkJoin(requests$)
-            .map(results => {
+        return forkJoin(requests$).pipe(
+            map(results => {
                 if (this.isStickyChannelEnabled) {
                     itemsToLoad = this.updateItems(results);
                 }
@@ -463,17 +491,17 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
                 Array.from(itemsToLoad).forEach(([nodeId, itemsForNode]: [number, ItemsForNode]) => {
                     itemsForNode.itemIds.forEach(itemId => {
-                        const itemsForNodeItems: { item: Item, nodeId: number, origIndex: number }[] = results.find(resultNodes => {
-                            return resultNodes.some(resultNode => resultNode.item.id === itemId);
+                        const itemsForNodeItems: { id:number, origId: number, item: Item, nodeId: number, origIndex: number }[] = results.find(resultNodes => {
+                            return resultNodes.some(resultNode => resultNode.id === itemId || resultNode.origId === itemId);
                         });
                         // if item is not existing, insert error object to be displayed instead
                         const itemLoaded: OverviewItem = Array.isArray(itemsForNodeItems) && itemsForNodeItems.find(item => {
-                            return item.item.id === itemId || item.item.masterId === itemId;
+                            return item.id === itemId || item.origId === itemId || (item.item != null && item.item.masterId === itemId);
                         }).item as OverviewItem
                         || {
                             id: itemId,
                             name: this.i18n.translate('editor.item_not_found', { id: itemId }),
-                            nodeId
+                            nodeId,
                         } as OverviewItem;
 
                         if (nodeId === -1) {
@@ -489,7 +517,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                     });
                 });
                 return loadedItemsInOrder;
-            });
+            }),
+        );
     }
 
     /**
@@ -513,7 +542,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
         const ret = new Map<number, ItemsForNode>();
         const itemsForNode: ItemsForNode = {
             itemIds: items,
-            origIndices: {}
+            origIndices: {},
         };
         items.forEach((id, index) => {
             // remove all duplicate entries from items ... only use first occurrence of a value

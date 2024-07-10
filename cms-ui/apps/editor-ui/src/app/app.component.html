@@ -10,32 +10,28 @@
             <img src="assets/images/gentics-logo-60px.png">
         </a>
 
-        <div class="search-container" *ngIf="!(showingTools$ | async)">
-            <chip-search-bar
-                *ngIf="activeNode && chipSearchBarConfig"
-                [chipSearchBarConfig]="chipSearchBarConfig"
-                [loading]="searchInProgress$ | async"
-            ></chip-search-bar>
-        </div>
-
-        <tool-breadcrumb *ngIf="showingTools$ | async"></tool-breadcrumb>
-
-        <div class="corner-actions" *ngIf="!(showingTools$ | async)">
+        <div
+            *ngIf="!(showingTools$ | async)"
+            class="corner-actions"
+            [class.show-messages]="(permissions.viewInbox$ | async) && unreadMessageCount > 0"
+            [class.show-alerts]="!(loggingIn$ | async)
+                && (featureLinkcheckerEnabled$ | async)
+                && (toolLinkcheckerAvailable$ | async)
+                && alertCenterCounter > 0"
+        >
             <gtx-actions-selector (actionClick)="handleActionClick($event)"></gtx-actions-selector>
 
             <gtx-button
-                *ngIf="(permissions.viewInbox$ | async) && (unreadMessageCount$ | async) > 0"
                 icon
                 type="secondary"
                 class="unread-messages"
                 (click)="displayMessages()"
             >
                 <icon>mail_outline</icon>
-                <span class="counter">{{ unreadMessageCount$ | async }}</span>
+                <span class="counter">{{ unreadMessageCount }}</span>
             </gtx-button>
 
             <gtx-button
-                *ngIf="!(loggingIn$ | async) && (featureLinkcheckerEnabled$ | async) && (toolLinkcheckerAvailable$ | async) && (alertCenterCounter$ | async) && (alertCenterCounter$ | async) > 0"
                 icon
                 type="secondary"
                 class="alert-center"
@@ -45,9 +41,20 @@
                 <icon>warning</icon>
             </gtx-button>
         </div>
+
+        <div class="search-container" *ngIf="!(showingTools$ | async)">
+            <chip-search-bar
+                *ngIf="activeNode && chipSearchBarConfig"
+                [chipSearchBarConfig]="chipSearchBarConfig"
+                [loading]="searchInProgress$ | async"
+            ></chip-search-bar>
+        </div>
+
+        <tool-breadcrumb *ngIf="showingTools$ | async"></tool-breadcrumb>
     </gtx-top-bar>
 
     <gtx-user-menu
+        class="user-menu"
         [opened]="userMenuOpened"
         [user]="currentUser$ | async"
         [supportedLanguages]="supportedUiLanguages$ | async"
@@ -90,15 +97,11 @@
             </gtx-tab>
         </gtx-tabs>
 
-        <gtx-link-to-manual
-            *ngIf="!(featureHideManual$ | async)"
-            bottom
-        ></gtx-link-to-manual>
-
         <gtx-app-version-label
             bottom
             appTitle="Gentics CMS"
             [versionData]="cmpVersion$ | async"
+            [nodes]="loadedNodes"
         ></gtx-app-version-label>
     </gtx-user-menu>
 

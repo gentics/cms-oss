@@ -1,0 +1,17 @@
+<div class="modal-title">
+    <h5>{{ 'mesh.manage_role_instance_permissions' | i18n:{ entityName: role.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-role-permissions-trable [role]="role"></gtx-mesh-role-permissions-trable>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn()"
+    >
+        {{ 'common.close_button' | i18n }}
+    </gtx-button>
+</div>

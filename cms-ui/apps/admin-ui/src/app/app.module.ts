@@ -13,6 +13,7 @@ const PROVIDERS: any[] = [
 ];
 
 @NgModule({
+    id: 'admin-ui',
     declarations: [
         AppComponent,
     ],

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, Input, ChangeDetectorRef} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 
 /**
  * Displays a button that toggles the expansion of a content panel.
@@ -7,7 +7,7 @@ import {ChangeDetectionStrategy, Component, Input, ChangeDetectorRef} from '@ang
     selector: 'expansion-button',
     templateUrl: './expansion-button.component.html',
     styleUrls: ['./expansion-button.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExpansionButtonComponent {
 
@@ -21,13 +21,13 @@ export class ExpansionButtonComponent {
      * Optional tooltip for the button.
      */
     @Input()
-    tooltip: string = '';
+    tooltip = '';
 
     /**
      * Controls whether the panel is expanded or not.
      */
     @Input()
-    expanded: boolean = false;
+    expanded = false;
 
     constructor(private changeDetector: ChangeDetectorRef) { }
 

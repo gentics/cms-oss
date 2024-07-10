@@ -24,7 +24,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-inheritance-dialog',
     templateUrl: './inheritance-dialog.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class InheritanceDialog implements OnInit, IModalDialog {
 
     item: InheritableItem;
@@ -49,7 +49,7 @@ export class InheritanceDialog implements OnInit, IModalDialog {
     }
 
     saveSettings(recursive: boolean = false): void {
-        let returnValue: InheritanceRequest = {
+        const returnValue: InheritanceRequest = {
             exclude: !this.generalInheritance,
             disinheritDefault: this.disinheritDefault,
             disinherit: [],

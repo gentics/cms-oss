@@ -79,9 +79,29 @@
         "en": "Node features has been updated successfully",
         "de": "Node Features wurde erfolgreich geändert"
     },
+    "hostnameType": {
+        "en": "Define Hostname",
+        "de": "Hostnamen angeben"
+    },
+    "hostnameType_value": {
+        "en": "Enter Hostname directly",
+        "de": "Hostnamen direkt eingeben"
+    },
+    "hostnameType_property": {
+        "en": "Get Hostname from Property",
+        "de": "Hostnamen aus Eigenschaft holen"
+    },
     "hostname": {
         "en": "Hostname",
         "de": "Hostname"
+    },
+    "hostnameProperty": {
+        "en": "Hostname Property",
+        "de": "Hostname Eigenschaft"
+    },
+    "hostnameProperty_pattern": {
+        "en": "Hostname property must be entered in format ${env:NODE_HOST_...} or ${sys:NODE_HOST...}.",
+        "de": "Hostnamen Eigenschaft muss im Format ${env:NODE_HOST_...} oder ${sys:NODE_HOST_...} angegeben werden."
     },
     "https_only": {
         "en": "Use HTTPS protocol",
@@ -91,9 +111,29 @@
         "en": "Node languages has been updated successfully",
         "de": "Node Sprachen wurde erfolgreich geändert"
     },
+    "mesh_preview_url_type": {
+        "en": "Define Mesh Preview URL",
+        "de": "Mesh Vorschau URL definieren"
+    },
+    "mesh_preview_url_type_value": {
+        "en": "Enter Mesh Preview URL directly",
+        "de": "Mesh Vorschau URL direkt eingeben"
+    },
+    "mesh_preview_url_type_property": {
+        "en": "Get Mesh Preview URL from Property",
+        "de": "Mesh Vorschau URL aus Eigenschaft holen"
+    },
     "mesh_preview_url": {
         "en": "Mesh Preview URL",
         "de": "Mesh Vorschau URL"
+    },
+    "mesh_preview_url_property": {
+        "en": "Mesh Preview URL Property",
+        "de": "Mesh Vorschau URL Eigenschaft"
+    },
+    "mesh_preview_url_property_pattern": {
+        "en": "Mesh Preview URL property must be entered in format ${env:NODE_PREVIEWURL_...} or ${sys:NODE_PREVIEWURL_...}.",
+        "de": "Mesh Vorschau URL Eigenschaft muss im Format ${env:NODE_PREVIEWURL_...} oder ${sys:NODE_PREVIEWURL_...} angegeben werden."
     },
     "node_name": {
         "en": "Node name",
@@ -122,6 +162,10 @@
     "pub_dir_segments": {
         "en": "Publish Directory Segments",
         "de": "Verzeichnissegmente veröffentlichen"
+    },
+    "pub_img_variants": {
+        "en": "Publish GIS image variants to Mesh",
+        "de": "GIS Bildvarianten nach Mesh publizieren"
     },
     "pub_disable_updates": {
         "en": "Disable updates of content repository / filesystem",

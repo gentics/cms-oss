@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { FolderItemType, Language, SortField } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { FolderItemType, Language, SortField } from '@gentics/cms-models';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
+import { map, publishReplay, refCount, tap } from 'rxjs/operators';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
@@ -25,7 +25,6 @@ export class RepositoryBrowserListHeader implements OnInit {
     @Output() collapsedChange = new EventEmitter<boolean>();
     @Output() selectDisplayFields = new EventEmitter<void>();
 
-    iconForItemType = iconForItemType;
     sort$: Observable<{ field: SortField, order: 'asc' | 'desc' }>;
     sortOptions: { field: SortField, order: 'asc' | 'desc' };
     activeLanguage$: Observable<Language>;
@@ -41,12 +40,12 @@ export class RepositoryBrowserListHeader implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.sort$ = this.dataService.sortOrder$
-            .map(sortOrdersByType => sortOrdersByType[this.itemType])
-            .do(sortOrder => {
-                this.sortOptions = sortOrder;
-            })
-            .publishReplay(1).refCount();
+        this.sort$ = this.dataService.sortOrder$.pipe(
+            map(sortOrdersByType => sortOrdersByType[this.itemType]),
+            tap(sortOrder => this.sortOptions = sortOrder),
+            publishReplay(1),
+            refCount(),
+        );
 
         this.nodeLanguages$ = this.dataService.currentAvailableLanguages$;
         this.activeLanguage$ = this.dataService.currentContentLanguage$;

@@ -1,4 +1,3 @@
-import { ContentRepositoryOperations, EntityManagerService, I18nNotificationService } from '@admin-ui/core';
 import { Injectable, Injector } from '@angular/core';
 import {
     EntityIdType,
@@ -16,6 +15,8 @@ import {
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { EntityManagerService } from '../../entity-manager/entity-manager.service';
+import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()

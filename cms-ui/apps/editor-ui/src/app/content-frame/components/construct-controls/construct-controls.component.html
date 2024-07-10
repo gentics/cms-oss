@@ -1,0 +1,66 @@
+<ng-template #groupTpl let-isFavourite="isFavourite" let-label="label" let-constructs="constructs">
+    <gtx-dropdown-list
+        #dropdownRef
+        class="dropdown"
+        [belowTrigger]="true"
+        [sticky]="false"
+        [width]="'content'"
+    >
+        <gtx-dropdown-trigger>
+            <div class="construct-group" (click)="handleDropdownOpen(dropdownRef, isFavourite)">
+                <div class="group-label">{{ label }}</div>
+                <icon class="group-icon">arrow_drop_down</icon>
+            </div>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="construct-list">
+                <div
+                    *ngFor="let construct of constructs"
+                    class="construct-element"
+                    [attr.data-keyword]="construct.keyword"
+                    (click)="insertConstruct(construct, $event)"
+                >
+                    <div class="construct-label">{{ construct.name }}</div>
+                    <button
+                        class="favourite-toggle-button"
+                        [class.active]="favourites.includes(construct.keyword)"
+                        (click)="toggleFavourite(construct, $event)"
+                    >
+                        <icon>star</icon>
+                    </button>
+                </div>
+            </div>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+</ng-template>
+
+<div class="group-overview">
+    <ng-container *ngIf="editable != null && availableConstructs.length > 0; else empty">
+        <div class="groups-container">
+            <ng-container *ngIf="favouriteConstructs.length > 0">
+                <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    label: (FAVOURITES_LABEL | i18n),
+                    constructs: favouriteConstructs,
+                    isFavourite: true
+                }"></ng-container>
+            </ng-container>
+
+            <ng-container *ngFor="let group of displayGroups">
+                <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    label: group.label,
+                    constructs: group.constructs,
+                    isFavourite: false
+                }"></ng-container>
+            </ng-container>
+        </div>
+
+        <div class="search-container">
+
+        </div>
+    </ng-container>
+
+    <ng-template #empty>
+        <div class="no-constructs">{{ 'aloha.constructs_empty' | i18n }}</div>
+    </ng-template>
+</div>

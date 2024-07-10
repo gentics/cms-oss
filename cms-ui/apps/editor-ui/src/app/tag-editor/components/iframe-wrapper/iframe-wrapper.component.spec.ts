@@ -6,8 +6,7 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getTestPagePath, getTestPageUrl } from '../../../content-frame/providers/iframe/testing-helpers';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
+import { getTestPagePath, getTestPageUrl } from '../../../../testing/iframe-helpers';
 import { IFrameWrapperComponent } from './iframe-wrapper.component';
 
 // A longer timeout for Jasmine async tests to allow the IFrame contents to load.
@@ -35,7 +34,6 @@ describe('IFrameWrapperComponent', () => {
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: IFrameStylesService, useClass: MockIFrameStylesService },
             ],
             declarations: [
                 IFrameWrapperComponent,
@@ -137,17 +135,6 @@ describe('IFrameWrapperComponent', () => {
         }),
     );
 
-    it('sets the data-gcms-ui-styles attribute correctly on the IFrame',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            const stylesService = TestBed.get(IFrameStylesService) as IFrameStylesService;
-            instance.srcUrl = SRC_URL1;
-            fixture.detectChanges();
-
-            const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
-            expect(iFrameElem.dataset.gcmsUiStyles).toEqual(stylesService.stylesUrl);
-        }),
-    );
-
     it('changing width works',
         componentTest(() => TestComponent, (fixture, instance) => {
             instance.srcUrl = SRC_URL1;
@@ -213,8 +200,8 @@ const createElmentRef = (element: HTMLElement): ElementRef => ({
             [height]="iFrameHeight"
             (iFrameLoad)="onIFrameLoad($event)">
         </iframe-wrapper>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('iFrameWrapper', { static: true })
     iFrameWrapper: IFrameWrapperComponent;
@@ -224,10 +211,6 @@ class TestComponent {
     iFrameWidth: string;
 
     onIFrameLoad(): void { }
-}
-
-class MockIFrameStylesService {
-    stylesUrl = 'StylesUrlForIFrame';
 }
 
 class MockQueryList<T> {

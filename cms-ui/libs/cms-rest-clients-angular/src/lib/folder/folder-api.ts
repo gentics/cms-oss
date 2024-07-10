@@ -66,6 +66,7 @@ import {
     QueuedActionRequestTakeOfflineAt,
     Raw,
     Response,
+    ResponseCode,
     RotateParameters,
     SearchPagesOptions,
     StagedItemsMap,
@@ -96,7 +97,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to the folder resource.
  *
  * Docs for the endpoints used here can be found at:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_FolderResource.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_FolderResource.html
  */
 export class FolderApi {
     // private elasticFolderCache: ElasticFolderCache;
@@ -277,7 +278,7 @@ export class FolderApi {
                     hasMoreItems,
                     messages: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                     stagingStatus: stagingMap,
                 };
@@ -325,7 +326,9 @@ export class FolderApi {
 
                     return (<any> Object).values(
                         (<any> res)[itemKey].map((item: any) => {
-                            item._checkedNodeId = nodeId; // Add previous nodeId for reference
+                            if (item !== null) {
+                                item._checkedNodeId = nodeId; // Add previous nodeId for reference
+                            }
                             return item;
                         }),
                     );
@@ -874,11 +877,12 @@ export class FolderApi {
         type: 'folder' | 'page' | 'file' | 'image'  | 'form',
         id: number,
         nodeId: number,
+        disableInstantDelete?: boolean,
     ): Observable<ItemDeleteResponse> {
         if (type === 'form') {
             return this.apiBase.delete(`${type}/${id}`);
         }
-        return this.apiBase.post(`${type}/delete/${id}`, { id }, { nodeId });
+        return this.apiBase.post(`${type}/delete/${id}`, { id }, { nodeId, disableInstantDelete });
     }
 
     /**

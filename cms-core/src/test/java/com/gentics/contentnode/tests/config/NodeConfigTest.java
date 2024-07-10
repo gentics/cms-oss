@@ -174,9 +174,9 @@ public class NodeConfigTest {
 		});
 
 		if (specific) {
-			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script><script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,specific/specific\"></script>");
+			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n<script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,specific/specific\"></script>\n");
 		} else {
-			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script><script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,general/general\"></script>");
+			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n<script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,general/general\"></script>\n");
 		}
 	}
 
@@ -188,6 +188,27 @@ public class NodeConfigTest {
 	public void testAlohaSettings() throws NodeException {
 		JsonNode settings = Trx.supply(systemUser, () -> {
 			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, testPage, false, false, false)) {
+				AlohaRenderer alohaRenderer = new AlohaRenderer();
+				RenderResult result = new RenderResult();
+				return alohaRenderer.getAlohaSettings(testPage.getOwningNode(), result, rTTrx.get(), new ObjectMapper());
+			}
+		});
+
+		if (specific) {
+			assertThat(settings.get("test").toString()).as("Aloha settings").isEqualTo("\"specific\"");
+		} else {
+			assertThat(settings.get("test").toString()).as("Aloha settings").isEqualTo("\"general\"");
+		}
+	}
+
+	/**
+	 * Test node specific aloha settings
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAlohaSettingsEditable() throws NodeException {
+		JsonNode settings = Trx.supply(systemUser, () -> {
+			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA, testPage, false, false, false)) {
 				AlohaRenderer alohaRenderer = new AlohaRenderer();
 				RenderResult result = new RenderResult();
 				return alohaRenderer.getAlohaSettings(testPage.getOwningNode(), result, rTTrx.get(), new ObjectMapper());

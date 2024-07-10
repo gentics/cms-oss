@@ -1,0 +1,29 @@
+<div class="gtx-table-size-input">
+    <ng-container [ngTemplateOutlet]="sizeEntry" [ngTemplateOutletContext]="{ 'key': 'rows' }"></ng-container>
+    <ng-container [ngTemplateOutlet]="sizeEntry" [ngTemplateOutletContext]="{ 'key': 'columns' }"></ng-container>
+</div>
+
+<ng-template #sizeEntry let-key="key">
+    <div class="table-size-entry">
+        <div class="table-size-entry-label">
+            {{ ('editor.table_size_input_' + key) | i18n }}
+        </div>
+        <div class="table-size-entry-input number-input-spinner">
+            <button
+                class="input-spinner spinner-increase"
+                [disabled]="disabled || (value?.[key] >= max?.[key])"
+                (click)="modify(key, 1)"
+            >
+                <icon>add</icon>
+            </button>
+            <span class="input-spinner-value">{{ value?.[key] }}</span>
+            <button
+                class="input-spinner spinner-decrease"
+                [disabled]="disabled || ((value?.[key] || 0) < 1)"
+                (click)="modify(key, -1)"
+            >
+                <icon>remove</icon>
+            </button>
+        </div>
+    </div>
+</ng-template>

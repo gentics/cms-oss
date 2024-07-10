@@ -186,7 +186,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 
 	/**
 	 * set folder description
-	 * @param new description
+	 * @param description description
 	 * @return old description
 	 * @throws ReadOnlyException when the folder was not fetched for updating
 	 */
@@ -438,7 +438,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 	/**
 	 * Unlinks a template from this folder.
 	 * If this was the last reference to the Template it is also removed.
-	 * @param template id of the template to unlink
+	 * @param templateId id of the template to unlink
 	 * @throws InsufficientPrivilegesException If the transaction doesn't have the right to unlink templates from this folder
 	 */
 	void unlinkTemplate(Integer templateId) throws InsufficientPrivilegesException, NodeException;
@@ -505,7 +505,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 	 * master object and all its localized copies in channel together. This
 	 * method may only be called for new files.
 	 *
-	 * @param channel
+	 * @param channelId
 	 *            id new channel id. If set to 0, this object will be a master
 	 *            object in a node and the channelSetId must be given as null
 	 *            (which will create a new channelSetId)
@@ -713,7 +713,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 	}
 
 	/**
-	 * Enum for the reduction type used in method {@link Folder#reduceUserGroups(List, com.gentics.contentnode.object.Folder.ReductionType)}
+	 * Enum for the reduction type used in method {@link Folder#reduceFolders(List, ReductionType)}
 	 */
 	public static enum ReductionType {
 		CHILD, PARENT
@@ -999,7 +999,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 
 		/**
 		 * Set whether only pages last published by the user shall be returned
-		 * @param creator true for restricting pages
+		 * @param publisher true for restricting pages
 		 * @return this object (for chaining)
 		 */
 		public PageSearch setPublisher(boolean publisher) {
@@ -1569,6 +1569,17 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 		protected boolean wastebin = false;
 
 		/**
+		 * When set and {@link #excludeMimeType} is true, only files with the specified MIME type are returned.
+		 * When set and {@code excludeMimeType} is false, only files which MIME type is <em>not</em> the specified type are returned.
+		 */
+		protected String mimeType;
+
+		/**
+		 * When set to true and {@link #mimeType} is set, only files which MIME type is <em>not</em> {@code mimeType} are returned.
+		 */
+		protected boolean excludeMimeType;
+
+		/**
 		 * Static method to create an empty file search
 		 * @return empty file search
 		 */
@@ -1715,7 +1726,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 
 		/**
 		 * Set whether used, not used or all files shall be returned
-		 * @param broken true for getting used, false for getting unused, null for all files
+		 * @param used true for getting used, false for getting unused, null for all files
 		 * @return this object (for chaining)
 		 */
 		public FileSearch setUsed(Boolean used) {
@@ -1748,8 +1759,9 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 		 */
 		public boolean isEmpty() {
 			return StringUtils.isEmpty(searchString) && StringUtils.isEmpty(niceUrlSearch) && editors == null && creators == null
-					&& editedBefore == 0 && editedSince == 0 && createdBefore == 0 && createdSince == 0
-					&& !recursive && inherited == null && online == null && broken == null && used == null && ObjectTransformer.isEmpty(usedIn) && !wastebin;
+				&& editedBefore == 0 && editedSince == 0 && createdBefore == 0 && createdSince == 0
+				&& !recursive && inherited == null && online == null && broken == null && used == null && ObjectTransformer.isEmpty(usedIn) && !wastebin
+				&& StringUtils.isEmpty(mimeType);
 		}
 
 		/**
@@ -1870,6 +1882,42 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 		 */
 		public boolean isWastebin() {
 			return wastebin;
+		}
+
+		/**
+		 * Get the MIME type filter.
+		 * @return MIME type filter.
+		 */
+		public String getMimeType() {
+			return mimeType;
+		}
+
+		/**
+		 * Set the MIME type filter.
+		 * @param mimeType The MIME type filter.
+		 * @return Fluent API
+		 */
+		public FileSearch setMimeType(String mimeType) {
+			this.mimeType = mimeType;
+			return this;
+		}
+
+		/**
+		 * Get the exclude MIME type flag.
+		 * @return The exclude MIME type flag.
+		 */
+		public boolean isExcludeMimeType() {
+			return excludeMimeType;
+		}
+
+		/**
+		 * Set the exclude MIME type flag.
+		 * @param excludeMimeType The exclude MIME type flag.
+		 * @return Fluent API.
+		 */
+		public FileSearch setExcludeMimeType(boolean excludeMimeType) {
+			this.excludeMimeType = excludeMimeType;
+			return this;
 		}
 	}
 
@@ -2244,7 +2292,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 
 		/**
 		 * Set whether only forms last published by the user shall be returned
-		 * @param creator true for restricting forms
+		 * @param publisher true for restricting forms
 		 * @return this object (for chaining)
 		 */
 		public FormSearch setPublisher(boolean publisher) {
@@ -2418,7 +2466,7 @@ public interface Folder extends ObjectTagContainer, StackResolvable, Localizable
 
 		/**
 		 * Set wastebin search
-		 * @param wastebin search
+		 * @param wastebinSearch search
 		 * @return this object (for chaining)
 		 */
 		public FormSearch setWastebin(WastebinSearch wastebinSearch) {

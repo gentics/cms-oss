@@ -1,0 +1,4 @@
+feature:
+  elasticsearch: ${env:ELASTICSEARCH_ENABLED}
+elasticsearch:
+  url: ${env:ELASTICSEARCH_URL}

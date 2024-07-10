@@ -220,7 +220,6 @@ public class ParseStructRenderer implements StructRenderer {
 	 */
 	public static void renderEditableTag(StringBuffer source, String code, ParserTag tag, List omitTags, List omitTagsEdit, RenderResult result) throws NodeException {
 		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
-		boolean liveEditor = renderType.getPreferences().getFeature("superedit_page_270211");
 
 		// check whether we have an open tag
 		int lastTagStart = source.lastIndexOf("<");
@@ -229,9 +228,10 @@ public class ParseStructRenderer implements StructRenderer {
 		if (lastTagStart > lastTagEnd) {
 			// if (renderType.getEditMode() != RenderType.EM_ALOHA) {
 			// found the tag in an open ml tag
-			if (liveEditor && tag.isInlineEditable()) {
-				if (!omitTagsEdit.contains(tag)) {
-					// tag in ml tag, inline editable
+			if (!omitTagsEdit.contains(tag)) {
+				// check for aloha mode
+				if (renderType.getEditMode() != RenderType.EM_ALOHA) {
+					// tag in ml tag, but not inline editable
 					StringBuffer replacement = new StringBuffer();
 
 					// prefix
@@ -243,39 +243,17 @@ public class ParseStructRenderer implements StructRenderer {
 					// place the editicon for the tag after the
 					// lastTagEnd
 					source.insert(lastTagEnd + 1, replacement);
-    
-					// all further occurrances of the tag will not be rendered any more
-					omitTags.add(tag);
-				}
-				source.append(code);
-			} else {
-				if (!omitTagsEdit.contains(tag)) {
-					// check for aloha mode
-					if (renderType.getEditMode() != RenderType.EM_ALOHA) {
-						// tag in ml tag, but not inline editable
-						StringBuffer replacement = new StringBuffer();
+				} else {
+					// In Aloha Mode add an empty block before the tag
+					AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
 
-						// prefix
-						replacement.append(tag.getEditPrefix());
-						// editicon
-						replacement.append(tag.getEditLink());
-						// postfix
-						replacement.append(tag.getEditPostfix());
-						// place the editicon for the tag after the
-						// lastTagEnd
-						source.insert(lastTagEnd + 1, replacement);
-					} else {
-						// In Aloha Mode add an empty block before the tag
-						AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
-
-						source.insert(lastTagEnd + 1, alohaRenderer.block("", tag, result));
-					}
-    
-					// all further occurrances of the tag will not be rendered in edit mode
-					omitTagsEdit.add(tag);
+					source.insert(lastTagEnd + 1, alohaRenderer.block("", tag, result));
 				}
-				source.append(code);
+
+				// all further occurrances of the tag will not be rendered in edit mode
+				omitTagsEdit.add(tag);
 			}
+			source.append(code);
 			// }
 		} else {
 			// tag not in ml, not inline editable
@@ -321,7 +299,7 @@ public class ParseStructRenderer implements StructRenderer {
 
 			// when edit mode, we possibly need to reposition the rendered
 			// tag
-			if ((editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+			if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
 				if (debugLog) {
 					logger.debug("rendering {" + tag + "} in editMode {" + editMode + "}");
 				}
@@ -450,14 +428,7 @@ public class ParseStructRenderer implements StructRenderer {
 			}
 
 			// when edit mode, we eventually need to reposition the rendered tag
-			if (editMode == RenderType.EM_EDIT && tag.isEditable()) {
-				if (debugLog) {
-					logger.debug("rendering tag in edit mode");
-				}
-				renderEditableTag(source, code, tag, omitTags, omitTagsEdit, result);
-			} else {
-				source.append(code);
-			}
+			source.append(code);
 		}
 	}
 

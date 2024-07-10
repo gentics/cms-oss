@@ -1,10 +1,11 @@
 import { Component, ViewChild } from '@angular/core';
-import { TestBed, tick } from '@angular/core/testing';
+import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { EditableTag, StringTagPartProperty, TagChangedFn, TagPropertyMap } from '@gentics/cms-models';
+import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
@@ -15,7 +16,6 @@ import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../te
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
 import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-editor.component';
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
@@ -29,9 +29,9 @@ describe('TagEditorHostComponent', () => {
             imports: [GenticsUICoreModule.forRoot()],
             providers: [
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
-                IFrameStylesService,
                 UserAgentRef,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 CustomTagEditorHostComponent,
@@ -42,14 +42,6 @@ describe('TagEditorHostComponent', () => {
                 TestComponent,
                 mockPipes('objTagName'),
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    CustomTagEditorHostComponent,
-                    GenticsTagEditorComponent,
-                ],
-            },
         });
     });
 
@@ -63,7 +55,7 @@ describe('TagEditorHostComponent', () => {
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagSpy: jasmine.Spy = null;
-                let resolve: (tag: EditableTag) => void = null;
+                let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
                         new Promise(resolveFn => resolve = resolveFn),
@@ -87,12 +79,16 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(actualEditedTag => {
+                result.then(editorResult => {
                     expect(origPromiseResolved).toBe(true);
-                    expect(actualEditedTag).toEqual(expectedEditedTag);
+                    expect(editorResult.doDelete).toEqual(false);
+                    expect(editorResult.tag).toEqual(expectedEditedTag);
                     resultResolved = true;
                 }).catch(() => fail('result promise should not be rejected.'));
-                resolve(expectedEditedTag);
+                resolve({
+                    doDelete: false,
+                    tag: expectedEditedTag,
+                });
                 origPromiseResolved = true;
                 tick();
                 expect(resultResolved).toBe(true);
@@ -115,7 +111,7 @@ describe('TagEditorHostComponent', () => {
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagSpy: jasmine.Spy = null;
-                let resolve: (tag: EditableTag) => void = null;
+                let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
                         new Promise(resolveFn => resolve = resolveFn),
@@ -139,12 +135,16 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(actualEditedTag => {
+                result.then(editorResult => {
                     expect(origPromiseResolved).toBe(true);
-                    expect(actualEditedTag).toEqual(expectedEditedTag);
+                    expect(editorResult.doDelete).toEqual(false);
+                    expect(editorResult.tag).toEqual(expectedEditedTag);
                     resultResolved = true;
                 }).catch(() => fail('result promise should not be rejected.'));
-                resolve(expectedEditedTag);
+                resolve({
+                    doDelete: false,
+                    tag: expectedEditedTag,
+                });
                 origPromiseResolved = true;
                 tick();
                 expect(resultResolved).toBe(true);
@@ -308,7 +308,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the TagEditor is actually displayed.
                 fixture.detectChanges();
                 tick();
-                let tagEditor = fixture.debugElement.query(By.directive(GenticsTagEditorComponent));
+                const tagEditor = fixture.debugElement.query(By.directive(GenticsTagEditorComponent));
                 expect(tagEditor).toBeTruthy();
 
                 testOnChangeFnCalls(tag, onChangeFn, reportedChangedStates);
@@ -342,7 +342,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the TagEditor is actually displayed.
                 fixture.detectChanges();
                 tick();
-                let tagEditor = fixture.debugElement.query(By.directive(CustomTagEditorHostComponent));
+                const tagEditor = fixture.debugElement.query(By.directive(CustomTagEditorHostComponent));
                 expect(tagEditor).toBeTruthy();
 
                 testOnChangeFnCalls(tag, onChangeFn, reportedChangedStates);
@@ -355,8 +355,8 @@ describe('TagEditorHostComponent', () => {
 @Component({
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })
     tagEditorHost: TagEditorHostComponent;
@@ -364,4 +364,10 @@ class TestComponent {
 
 class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
+}
+
+class MockI18nService implements Partial<I18nService> {
+    translate(key: string | string[], params?: any): string {
+        return key as string;
+    }
 }

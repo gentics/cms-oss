@@ -7,8 +7,10 @@ import {
     ContentChildren,
     EventEmitter,
     Input,
+    OnChanges,
     Output,
     QueryList,
+    SimpleChanges,
     ViewChild,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
@@ -55,7 +57,7 @@ type SingleOrArray<T> = T | T[];
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
-    implements AfterViewInit, AfterContentInit {
+    implements OnChanges, AfterViewInit, AfterContentInit {
 
     /**
      * Path to the id of the object (if objects are used as options).
@@ -95,6 +97,22 @@ export class SelectComponent
     public placeholder = '';
 
     /**
+     * If the `value` of the select or the options change, should this select check if the
+     * selected values are even possible with the current options.
+     * If a value is set, but no option can be found, remove the value (either `null` on single select,
+     * or remove the value from the array).
+     */
+    @Input()
+    public removeUnknownValues = false;
+
+    /**
+     * If one of the values is unknown, it'll still display it, but as a disabled option, indicating
+     * it isn't allowed anymore and should be switched over to a known option.
+     */
+    @Input()
+    public disableUnknownValues = false
+
+    /**
      * Blur event.
      */
     @Output()
@@ -122,15 +140,21 @@ export class SelectComponent
 
     // An array of abstracted containers for options, which allows us to treat options and groups in a
     // consistent way.
-    optionGroups: NormalizedOptionGroup[] = [];
+    public optionGroups: NormalizedOptionGroup[] = [];
 
-    selectedOptions: SelectOptionDirective[] = [];
-    viewValue = '';
+    /** The selected options */
+    public selectedOptions: SelectOptionDirective[] = [];
+
+    /** The selected options, joined together to display when not active. */
+    public viewValue = '';
+
+    /** Values which aren't present in the provided options. */
+    public unknownValues: (number | string)[] = [];
 
     // Keeps track of the selected option. Two dimensional because options may be nested inside groups. The first
     // value is the index of the group (-1 is the default "no group" group), and the second number is the index
     // of the option within that group.
-    selectedIndex: SelectedSelectOption = [0, -1];
+    public selectedIndex: SelectedSelectOption = [0, -1];
 
     private preventDeselect = false;
 
@@ -138,15 +162,24 @@ export class SelectComponent
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('clearable', 'selectAll', 'multiple');
+        this.booleanInputs.push('clearable', 'selectAll', 'multiple', ['removeUnknownValues', false], ['disableUnknownValues', false]);
     }
+
+    public ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.disableUnknownValues) {
+            this.updateViewValue();
+        }
+    }
+
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
         this.subscriptions.push(this.selectOptions.changes.subscribe(() => {
             setTimeout(() => {
-                this.writeValue(this.value);
                 this.optionGroups = this.buildOptionGroups();
+                this.writeValue(this.value);
                 this.changeDetector.markForCheck();
             });
         }));
@@ -190,6 +223,32 @@ export class SelectComponent
         }
 
         if (selectOptions) {
+            const knownValues = [];
+            this.unknownValues = [];
+            let didFind = false;
+
+            for (const selectedValue of this.valueArray) {
+                didFind = false;
+
+                for (const option of selectOptions) {
+                    if (this.isSame(selectedValue, option.value)) {
+                        didFind = true;
+                        break;
+                    }
+                }
+
+                if (didFind) {
+                    knownValues.push(selectedValue);
+                } else {
+                    this.unknownValues.push(selectedValue);
+                }
+            }
+
+            if (this.removeUnknownValues && knownValues.length !== this.valueArray.length) {
+                this.valueArray = knownValues;
+                this.triggerChange(this.multiple ? this.valueArray : this.valueArray[0]);
+            }
+
             let tmp = selectOptions.filter(option => {
                 for (const selectedValue of this.valueArray) {
                     if (this.isSame(selectedValue, option.value)) {
@@ -206,6 +265,7 @@ export class SelectComponent
 
         this.updateViewValue();
     }
+
 
     private isSame(value1: any, value2: any): boolean {
         if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {
@@ -396,7 +456,11 @@ export class SelectComponent
     }
 
     private updateViewValue(): void {
-        this.viewValue = this.selectedOptions.map(o => o.viewValue).join(', ');
+        const displayValues: (string | number)[] = this.selectedOptions.map(o => o.viewValue);
+        if (this.disableUnknownValues) {
+            displayValues.push(...this.unknownValues);
+        }
+        this.viewValue = displayValues.join(', ');
         this.changeDetector.markForCheck();
     }
 

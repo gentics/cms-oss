@@ -51,6 +51,16 @@
         transform: rotate(45deg);
         display: inline-block;
     }
+
+    &-localized::before {
+        content: 'update';
+        display: inline-block;
+    }
+
+    &-master::before {
+        content: 'emoji_events';
+        display: inline-block;
+    }
 }
 
 $highlighted-item-bg: desaturate(lighten($gtx-color-primary, 52%), 35%);

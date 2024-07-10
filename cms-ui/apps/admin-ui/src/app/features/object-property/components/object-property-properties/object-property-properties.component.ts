@@ -1,5 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructDataService, LanguageDataService, ObjectPropertyCategoryDataService } from '@admin-ui/shared';
+import { ConstructHandlerService, LanguageHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
@@ -11,7 +11,7 @@ import {
     Output,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     Feature,
     Language,
@@ -19,11 +19,12 @@ import {
     Normalized,
     ObjectPropertiesObjectType,
     ObjectPropertyBO,
-    ObjectPropertyCategoryBO,
+    ObjectPropertyCategory,
     Raw,
+    TagType,
     TagTypeBO,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -43,7 +44,10 @@ export enum ObjectpropertyPropertiesMode {
     templateUrl: './object-property-properties.component.html',
     styleUrls: ['./object-property-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ObjectpropertyPropertiesComponent)],
+    providers: [
+        generateFormProvider(ObjectpropertyPropertiesComponent),
+        generateValidatorProvider(ObjectpropertyPropertiesComponent),
+    ],
 })
 export class ObjectpropertyPropertiesComponent
     extends BasePropertiesComponent<ObjectPropertyBO<Normalized>> implements OnInit {
@@ -54,9 +58,9 @@ export class ObjectpropertyPropertiesComponent
     @Output()
     public isValidChange = new EventEmitter<boolean>();
 
-    public constructs$: Observable<TagTypeBO<Raw>[]>;
+    public constructs$: Observable<TagType<Raw>[]>;
     public languages$: Observable<Language[]>;
-    public objectPropertyCategories$: Observable<ObjectPropertyCategoryBO<Raw>[]>;
+    public objectPropertyCategories$: Observable<ObjectPropertyCategory<Raw>[]>;
 
     public multiChannelingEnabled = false;
     public objTagSyncEnabled = false;
@@ -92,9 +96,9 @@ export class ObjectpropertyPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private entityData: ConstructDataService,
-        private categoryData: ObjectPropertyCategoryDataService,
-        private languageData: LanguageDataService,
+        private constructHandler: ConstructHandlerService,
+        private categoryHandler: ObjectPropertyCategoryHandlerService,
+        private languageHandler: LanguageHandlerService,
         private appState: AppStateService,
     ) {
         super(changeDetector);
@@ -103,14 +107,13 @@ export class ObjectpropertyPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.constructs$ = this.entityData.watchAllEntities().pipe(
-            map(constructs => constructs.map(con => ({
-                ...con,
-                id: Number(con.id),
-            }))),
-        ) as any;
-        this.objectPropertyCategories$ = this.categoryData.watchAllEntities();
-        this.languages$ = this.languageData.watchSupportedLanguages();
+        this.constructs$ = this.constructHandler.listMapped().pipe(
+            map(res => res.items),
+        );
+        this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(
+            map(res => res.items),
+        );
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;
@@ -145,7 +148,7 @@ export class ObjectpropertyPropertiesComponent
             this.objTagSyncEnabled = objTagSyncEnabled;
 
             if (this.form) {
-                this.configureForm(this.form.value);
+                this.configureForm(this.form.value as any);
             }
 
             this.changeDetector.markForCheck();
@@ -238,24 +241,6 @@ export class ObjectpropertyPropertiesComponent
                 ...formData,
                 constructId: Number(formData.constructId),
             };
-        }
-    }
-
-    protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                nameI18n: this.value?.nameI18n ?? null,
-                descriptionI18n: this.value?.descriptionI18n ?? null,
-                keyword: this.value?.keyword ?? null,
-                type: this.value?.type ?? null,
-                constructId: this.value?.constructId,
-                categoryId: this.value?.categoryId ?? null,
-                required: this.value?.required ?? false,
-                inheritable: this.value?.inheritable ?? false,
-                syncContentset: this.value?.syncContentset ?? false,
-                syncChannelset: this.value?.syncChannelset ?? false,
-                syncVariants: this.value?.syncVariants ?? false,
-            });
         }
     }
 

@@ -1,103 +1,94 @@
-<span class="modal-title">
-    <h5>
-        <span class="modal-compatibility-state" [ngSwitch]="compatibilityState">
-            <icon class="not-supported" *ngSwitchCase="GtxVersionCompatibility.NOT_SUPPORTED">report_problem</icon>
-            <icon class="supported" *ngSwitchCase="GtxVersionCompatibility.SUPPORTED">check_circle</icon>
-            <icon class="unknown" *ngSwitchCase="GtxVersionCompatibility.UNKNOWN">error</icon>
-        </span>
-        {{ 'modal.version_info_modal' | i18n }}
-    </h5>
-</span>
+<div class="modal-title">
+    <span class="modal-compatibility-state" [ngSwitch]="compatibilityState">
+        <ng-container [ngTemplateOutlet]="iconTemplate" [ngTemplateOutletContext]="{
+            state: compatibilityState
+        }"></ng-container>
+    </span>
+    <h5>{{ 'modal.version_info_modal' | i18n }}</h5>
+</div>
 
 <div class="modal-content">
-    <table>
-        <tr>
-            <td><b>Gentics Content Management Platform</b></td>
-            <td><b>{{ cmpVersion }}</b></td>
-        </tr>
+    <div class="version-group system-information">
+        <div class="version-group-label">{{ 'modal.version_info_label_system' | i18n }}</div>
+        <div class="version-table-wrapper">
+            <table class="version-table">
+                <tr>
+                    <td><b>Gentics Content Management Platform</b></td>
+                    <td><b><code>{{ cmpVersion }}</code></b></td>
+                </tr>
+                <tr>
+                    <td>Gentics Content Management System</td>
+                    <td><code>{{ cmsVersion }}</code></td>
+                </tr>
+            </table>
+        </div>
+    </div>
 
-        <tr>
-            <td>Gentics Content Management System</td>
-            <td>{{ cmsVersion }}</td>
-        </tr>
-    </table>
+    <div class="version-group nodes-information">
+        <div class="version-group-label">{{ 'modal.version_info_label_nodes' | i18n }}</div>
+        <div class="version-table-wrapper">
+            <table class="version-table">
+                <ng-container *ngFor="let node of nodeVersions">
+                    <tr>
+                        <td>{{ node.nodeName }}</td>
+                        <td class="compatibility-state">
+                            <ng-container [ngTemplateOutlet]="iconTemplate" [ngTemplateOutletContext]="{
+                                state: node.nodeInfo.compatibility,
+                                nodeName: node.nodeName
+                            }"></ng-container>
+                        </td>
+                    </tr>
 
-    <div class="list-gmcs-components">
-        <ng-container *ngIf="nodeVersions.length > 0">
-            <div class="node-versions-title">Nodes:</div>
-
-            <ul class="node-versions-list">
-                <li *ngFor="let node of nodeVersions">
-                    <table>
-                        <tr>
-                            <td><strong>{{ node.nodeName }}</strong></td>
-                            <td class="compatibility-state" [ngSwitch]="node.nodeInfo.compatibility">
-                                <icon
-                                    *ngSwitchCase="'NOT_SUPPORTED'"
-                                    class="not-supported"
-                                    [title]="'modal.version_info_modal_node_tooltip' | i18n: {
-                                        nodeName: node.nodeName,
-                                        compatibility: ('modal.version_info_modal_compatibility_not_supported' | i18n)
-                                    }"
-                                >
-                                    report_problem
-                                </icon>
-                                <icon
-                                    *ngSwitchCase="'SUPPORTED'"
-                                    class="supported"
-                                    [title]="'modal.version_info_modal_node_tooltip' | i18n: {
-                                        nodeName: node.nodeName,
-                                        compatibility: ('modal.version_info_modal_compatibility_supported' | i18n)
-                                    }"
-                                >
-                                    check_circle
-                                </icon>
-                                <icon
-                                    *ngSwitchCase="'UNKNOWN'"
-                                    class="unknown"
-                                    [title]="'modal.version_info_modal_node_tooltip' | i18n: {
-                                        nodeName: node.nodeName,
-                                        compatibility: ('modal.version_info_modal_compatibility_unknown' | i18n)
-                                    }"
-                                >
-                                    error
-                                </icon>
-                            </td>
+                    <ng-container *ngIf="node.nodeInfo">
+                        <tr *ngIf="node.nodeInfo.meshVersion" class="component-version">
+                            <td>{{ 'modal.version_info_label_mesh' | i18n }}</td>
+                            <td><code>{{ node.nodeInfo.meshVersion }}</code></td>
                         </tr>
-                    </table>
-
-                    <ul class="node-versions-list-components">
-                        <li *ngIf="node.nodeInfo.meshVersion">
-                            <table>
-                                <tr>
-                                    <td>meshVersion</td>
-                                    <td>{{ node.nodeInfo.meshVersion }}</td>
-                                </tr>
-                            </table>
-                        </li>
-                        <li *ngIf="node.nodeInfo.portalType">
-                            <table>
-                                <tr>
-                                    <td>portalType</td>
-                                    <td>{{ node.nodeInfo.portalType }}</td>
-                                </tr>
-                            </table>
-                        </li>
-                        <li *ngIf="node.nodeInfo.portalVersion">
-                            <table>
-                                <tr>
-                                    <td>portalVersion</td>
-                                    <td>{{ node.nodeInfo.portalVersion }}</td>
-                                </tr>
-                            </table>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </ng-container>
+                        <tr *ngIf="node.nodeInfo.portalType" class="component-version">
+                            <td>{{ 'modal.version_info_label_portal_type' | i18n }}</td>
+                            <td><code>{{ node.nodeInfo.portalType }}</code></td>
+                        </tr>
+                        <tr *ngIf="node.nodeInfo.portalVersion" class="component-version">
+                            <td>{{ 'modal.version_info_label_portal_version' | i18n }}</td>
+                            <td><code>{{ node.nodeInfo.portalVersion }}</code></td>
+                        </tr>
+                    </ng-container>
+                </ng-container>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="modal-footer">
-    <gtx-button flat type="secondary">{{ 'common.close_button' | i18n }}</gtx-button>
-</div>
+<ng-template #iconTemplate let-state="state" let-nodeName="nodeName">
+    <ng-container [ngSwitch]="state">
+        <icon
+            *ngSwitchCase="VersionCompatibility.NOT_SUPPORTED"
+            class="not-supported"
+            [attr.left]="!nodeName"
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+                nodeName: nodeName,
+                compatibility: ('modal.version_info_modal_compatibility_not_supported' | i18n)
+            })"
+        >report_problem</icon>
+
+        <icon
+            *ngSwitchCase="VersionCompatibility.SUPPORTED"
+            class="supported"
+            [attr.left]="!nodeName"
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+                nodeName: nodeName,
+                compatibility: ('modal.version_info_modal_compatibility_supported' | i18n)
+            })"
+        >check_circle</icon>
+
+        <icon
+            *ngSwitchCase="VersionCompatibility.UNKNOWN"
+            class="unknown"
+            [attr.left]="!nodeName"
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+                nodeName: nodeName,
+                compatibility: ('modal.version_info_modal_compatibility_unknown' | i18n)
+            })"
+        >error</icon>
+    </ng-container>
+</ng-template>

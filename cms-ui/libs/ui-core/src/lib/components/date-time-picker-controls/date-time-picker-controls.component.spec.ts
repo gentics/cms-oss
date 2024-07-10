@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -13,7 +13,7 @@ import { DateTimePickerControlsComponent } from './date-time-picker-controls.com
 const TEST_TIMESTAMP = 1457971763;
 let formatProviderToUse: DateTimePickerFormatProvider = null;
 
-describe('DateTimePickerControls', () => {
+describe('DateTimePickerControlsComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -30,6 +30,7 @@ describe('DateTimePickerControls', () => {
                 { provide: DateTimePickerFormatProvider, useFactory: (): any => formatProviderToUse },
             ],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
     });
 

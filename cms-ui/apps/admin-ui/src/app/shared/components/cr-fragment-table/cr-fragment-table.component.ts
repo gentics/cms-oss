@@ -4,16 +4,15 @@ import {
     CRFragmentTableLoaderService,
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
-import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, ContentRepositoryFragment, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 import { CreateContentRepositoryFragmentModalComponent } from '../create-cr-fragment-modal/create-cr-fragment-modal.component';
@@ -44,7 +43,6 @@ export class CRFragmentTableComponent
         loader: CRFragmentTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -52,10 +50,9 @@ export class CRFragmentTableComponent
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         )
     }

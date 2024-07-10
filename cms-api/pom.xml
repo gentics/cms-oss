@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.0.22-SNAPSHOT</version>
+		<version>6.1.8-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -25,17 +25,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<verbose>true</verbose>
-					<fork>true</fork>
-					<compilerVersion>1.8</compilerVersion>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>

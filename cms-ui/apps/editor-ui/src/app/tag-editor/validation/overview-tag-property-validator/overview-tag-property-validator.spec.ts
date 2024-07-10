@@ -1,3 +1,4 @@
+import { ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     ListType,
@@ -8,7 +9,6 @@ import {
     TagPart,
     TagPartType,
     TagPropertyType,
-    ValidationResult
 } from '@gentics/cms-models';
 import { mockEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { OverviewTagPropertyValidator } from './overview-tag-property-validator';
@@ -22,7 +22,7 @@ export function createDefaultOverviewSettings(tagParts: TagPart[]): void {
             hideSortOptions: false,
             listTypes: [],
             selectTypes: [],
-            stickyChannel: false
+            stickyChannel: false,
         };
     });
 }
@@ -46,7 +46,7 @@ describe('OverviewTagPropertyValidator', () => {
         const tag = mockEditableTag<OverviewTagPartProperty>([
             {
                 type: TagPropertyType.OVERVIEW,
-                typeId: TagPartType.Overview
+                typeId: TagPartType.Overview,
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -58,8 +58,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderBy: OrderBy.UNDEFINED,
                     orderDirection: OrderDirection.UNDEFINED,
                     recursive: false,
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -72,8 +72,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -86,8 +86,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 // stickyChannel = true, but no selectedNodeItemIds set
@@ -101,8 +101,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 // stickyChannel = true, but selectedNodeItemIds are empty
@@ -117,8 +117,8 @@ describe('OverviewTagPropertyValidator', () => {
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
                     selectedNodeItemIds: [],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 // stickyChannel = false, but no selectedItemIds set
@@ -132,8 +132,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedNodeItemIds: [ { nodeId: 1, objectId: 1234 }, { nodeId: 1, objectId: 4711 } ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 // stickyChannel = false, but selectedItemIds are empty
@@ -148,8 +148,8 @@ describe('OverviewTagPropertyValidator', () => {
                     recursive: false,
                     selectedItemIds: [],
                     selectedNodeItemIds: [ { nodeId: 1, objectId: 1234 }, { nodeId: 1, objectId: 4711 } ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -162,8 +162,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -177,9 +177,9 @@ describe('OverviewTagPropertyValidator', () => {
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
                     selectedNodeItemIds: [ { nodeId: 1, objectId: 1234 }, { nodeId: 1, objectId: 4711 } ],
-                    source: ''
-                }
-            }
+                    source: '',
+                },
+            },
         ]);
 
         createDefaultOverviewSettings(tag.tagType.parts);
@@ -188,7 +188,7 @@ describe('OverviewTagPropertyValidator', () => {
 
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: true
+            success: true,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });
@@ -206,15 +206,15 @@ describe('OverviewTagPropertyValidator', () => {
                     orderBy: OrderBy.ALPHABETICALLY,
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
-                    source: ''
-                }
-            }
+                    source: '',
+                },
+            },
         ]);
         createDefaultOverviewSettings(tag.tagType.parts);
 
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: false
+            success: false,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });
@@ -233,8 +233,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedItemIds: [ 1234, 4711 ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -248,8 +248,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
                     selectedNodeItemIds: [ { nodeId: 1, objectId: 1234 }, { nodeId: 1, objectId: 4711 } ],
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -262,8 +262,8 @@ describe('OverviewTagPropertyValidator', () => {
                     orderBy: OrderBy.ALPHABETICALLY,
                     orderDirection: OrderDirection.DESC,
                     recursive: false,
-                    source: ''
-                }
+                    source: '',
+                },
             },
             {
                 type: TagPropertyType.OVERVIEW,
@@ -276,9 +276,9 @@ describe('OverviewTagPropertyValidator', () => {
                     orderBy: OrderBy.UNDEFINED,
                     orderDirection: OrderDirection.UNDEFINED,
                     recursive: false,
-                    source: ''
-                }
-            }
+                    source: '',
+                },
+            },
         ]);
         createDefaultOverviewSettings(tag.tagType.parts);
         tag.tagType.parts[1].overviewSettings.stickyChannel = true;
@@ -286,7 +286,7 @@ describe('OverviewTagPropertyValidator', () => {
 
         const expectedResult: ValidationResult = {
             isSet: true,
-            success: true
+            success: true,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });

@@ -5,7 +5,7 @@ export type FilterFn = (value: any) => boolean;
 const DEFAULT_FILTER: FilterFn = (v) => v != null && (typeof v !== 'number' || (!isNaN(v) && isFinite(v)));
 
 @Pipe({
-    name: 'filter',
+    name: 'gtxFilter',
 })
 export class FilterPipe implements PipeTransform {
     transform(value: any, fn: FilterFn = DEFAULT_FILTER): any {

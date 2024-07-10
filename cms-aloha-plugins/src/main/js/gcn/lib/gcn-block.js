@@ -8,72 +8,49 @@
 define([
 	'aloha/core',
 	'jquery',
+	'aloha/ephemera',
 	'block/block',
-	'gcn/gcn-plugin',
 	'gcn/gcn-util',
 	'gcn/gcn-tags',
 	'ui/dialog',
 	'i18n!gcn/nls/i18n',
-	'PubSub',
-	'util/browser'
 ], function (
 	Aloha,
 	$,
-	block,
-	gcn,
+	Ephemera,
+	Block,
 	Util,
 	Tags,
 	Dialog,
 	i18n,
-	PubSub,
-	Browser
 ) {
 	'use strict';
 
-	/**
-	 * Returns an element that represents the tag's corresponding DOM element.
-	 *
-	 * Beware that the returned element may not be the tag's actual DOM
-	 * element.
-	 *
-	 * This function provides a work-around for #51971, where IE 7 would
-	 * sometimes not return the correct values for attributes of a DOM
-	 * element. Cloning the element with jQuery, using the elment's outerHTML
-	 * circumvents this problem.
-	 *
-	 * @param {GCNBlock} block A block instance.
-	 * @return {jQuery.<HTMLElement>} A jQuery object containing a DOM element
-	 *                                that is either the block's DOM element or
-	 *                                a copy of it.
-	 */
-	function getBlockElement(block) {
-		return (
-			(Browser.ie7 && !block.$element.attr('data-gcn-tagid'))
-				? $(block.$element[0].outerHTML)
-				: block.$element
-		);
-	}
+	var STYLE_BLOCK_CONTENT_HEIGHT = '--gtx-block-content-height';
+	var STYLE_BLOCK_CONTENT_WIDTH = '--gtx-block-content-width';
+	var STYLE_BLOCK_HANDLE_HEIGHT = '--gtx-block-handle-height';
+	var STYLE_BLOCK_HANDLE_WIDTH = '--gtx-block-handle-width';
 
-	/**
-	 * Resizes a DOM element.
-	 *
-	 * Sets the element's "width" style property to the element's automatic
-	 * width size.
-	 *
-	 * @param {jQuery.<HTMLElement>} $element jQuery unit set of DOM element.
-	 */
-	function autoResizeElementWidth($element) {
-		var originalDisplay = $element.css('display');
-		$element.css({
-			display: 'inline-block',
-			width: 'auto'
-		});
-		var width = $element.width();
-		$element.css({
-			display: originalDisplay,
-			width: width
-		});
-	}
+	Ephemera.ephemera().pruneFns.push(function(node) {
+		if (node.style) {
+			node.style.removeProperty(STYLE_BLOCK_CONTENT_HEIGHT);
+			node.style.removeProperty(STYLE_BLOCK_CONTENT_WIDTH);
+			node.style.removeProperty(STYLE_BLOCK_HANDLE_HEIGHT);
+			node.style.removeProperty(STYLE_BLOCK_HANDLE_WIDTH);
+
+			// If no inline-styles are applied, remove the entire attribute
+			if (node.style.length === 0) {
+				node.removeAttribute('style');
+			}
+		}
+		// Same goes for now empty class attributes
+		if (node.classList) {
+			if (node.classList.length === 0) {
+				node.removeAttribute('class');
+			}
+		}
+		return node;
+	});
 
 	/**
 	 * Get the page object with given Id stored in the plugin or
@@ -267,7 +244,7 @@ define([
 	 * @class
 	 * @extends AbstractBlock
 	 */
-	var GCNBlock = block.AbstractBlock.extend({
+	var GCNBlock = Block.AbstractBlock.extend({
 
 		/**
 		 * Initializes a GCN block.  If annotations on the block indicate that
@@ -306,53 +283,71 @@ define([
 			});
 		},
 
+		destroy: function(force) {
+			if (this._observer) {
+				this._observer.disconnect();
+				this._observer = null;
+			}
+
+			this._super(force);
+		},
+
 		/*
 		 * @override
 		 */
 		renderBlockHandlesIfNeeded: function () {
 			var block = this;
-			var $block = getBlockElement(block);
+			var $block = block.$element;
 
 			// Check whether the handles have already been added (only
 			// do add them "IfNeeded").
-			if ($block.children('.gcn-tagicons').length) {
+			if ($block.children('.aloha-construct-buttons-container').length) {
 				return;
 			}
 
 			// Do not render block handles for blocks that are currently copied
-			if (!$block.attr('data-gcn-editicon')) {
+			if (!$block.attr('data-gcn-constructid')) {
 				return;
 			}
 
 			var canBeDeleted = block.shouldDestroy();
 
 			var tagname = $block.attr('data-gcn-tagname');
+
 			// Escape possible html elements and quotes in construct name
 			var constructname = $('<div/>').text($block.attr('data-gcn-i18n-constructname')).html().replace(/"/g, '&quot;');
-			var spanTitle = '';
-			var editTitle = ' title="' + i18n.t('edit.msg').replace('$1', '') + '" ';
-			var deleteTitle = ' title="' + i18n.t('delete.msg').replace('$1', '') + '" ';
-			if (tagname) {
-				if (constructname) {
-					tagname += ' (' + constructname + ')';
-				}
-				spanTitle = ' title="' + tagname + '" ';
-				editTitle = ' title="' + i18n.t('edit.msg').replace('$1', tagname) + '" ';
-				deleteTitle = ' title="' + i18n.t('delete.msg').replace('$1', tagname) + '" ';
+			if (tagname && constructname) {
+				tagname += ' (' + constructname + ')';
 			}
-			var $editicons = $('<span class="aloha-block-handle aloha-cleanme ' +
-					(block.isDraggable() ? 'aloha-block-draghandle ' : '') +
-					(!canBeDeleted ? 'aloha-editicons-small ' : '') +
-					'aloha-editicons gcn-tagicons"' + spanTitle + '></span>');
 
-			
-			var $editbutton = $('<button class="gcn-tagicon-edit"' + editTitle + '>' +
-					'<img class="aloha-ui" src="' +
-						$block.attr('data-gcn-editicon') + '"/>' +
-					'</button>');
+			var $blockHandleContainer = $('<span>', {
+				class: 'aloha-block-handle aloha-construct-buttons-container aloha-cleanme', 
+				title: tagname,
+			});
 
-			$editbutton.click(function ($event) {
-				var $block = getBlockElement(block);
+			if (block.isDraggable()) {
+				// Make the block dragable on default
+				$blockHandleContainer.addClass('aloha-block-draghandle');
+
+				var dragHandle$ = $('<div>', {
+					class: 'gcn-construct-drag-handle aloha-block-handle',
+				}).append($('<i>', {
+					class: 'material-symbols-outlined aloha-block-button-icon',
+					text: 'drag_pan'
+				})).appendTo($blockHandleContainer);
+
+				if (!$block.hasClass('ui-draggable-disabled')) {
+					dragHandle$.addClass('aloha-block-draghandle');
+				}
+			}
+
+			var $editButton = $('<button>', {
+				class: 'gcn-block-button gcn-construct-button-edit',
+				title: i18n.t('edit.msg').replace('$1', tagname || ''),
+			}).append($('<i>', {
+				class: 'material-symbols-outlined aloha-block-button-icon',
+				text: 'edit'
+			})).click(function ($event) {
 				Aloha.GCN.openTagFill(
 					$block.attr('data-gcn-tagid'),
 					$block.attr('data-gcn-pageid')
@@ -374,58 +369,80 @@ define([
 				return false;
 			});
 
-			$editicons.append($editbutton);
+			$blockHandleContainer.append($editButton);
 
 			if (canBeDeleted) {
-				var $deletebutton = $('<button class="gcn-tagicon-delete"' + deleteTitle + '>' +
-					'<img class="aloha-ui" src="' +
-						$block.attr('data-gcn-deleteicon') + '"/>' +
-					'</button>');
-				$deletebutton.click(function ($event) {
+				var $deleteButton = $('<button>', {
+					class: 'gcn-block-button gcn-construct-button-delete',
+					title: i18n.t('delete.msg').replace('$1', tagname || ''),
+				}).append($('<i>', {
+					class: 'material-symbols-outlined aloha-block-button-icon',
+					text: 'delete'
+				})).click(function ($event) {
 					block.confirmedDestroy(function () {
 						deleteBlock(block);
-					}, block.$element.attr('data-gcn-tagname'));
+					}, $block.attr('data-gcn-tagname'));
 					$event.preventDefault();
 					return false;
 				});
-				$editicons.append($deletebutton);
+				$blockHandleContainer.append($deleteButton);
 			}
 
 			setTimeout(function () {
-				$editicons.show();
+				$blockHandleContainer.show();
 			}, 0);
 
-			block.$element.prepend($editicons);
-			var editableHost = Aloha.getEditableHost(block.$element);
+			$block.prepend($blockHandleContainer);
+			Ephemera.markElement($blockHandleContainer);
+
+			function setSizeProperties() {
+				$block.css(STYLE_BLOCK_CONTENT_HEIGHT, $block.height() + 'px');
+				$block.css(STYLE_BLOCK_CONTENT_WIDTH, $block.width() + 'px');
+				$block.css(STYLE_BLOCK_HANDLE_HEIGHT, $blockHandleContainer.height() + 'px');
+				$block.css(STYLE_BLOCK_HANDLE_WIDTH, $blockHandleContainer.width() + 'px');
+			}
+			block._observer = new ResizeObserver(setSizeProperties);
+			block._observer.observe($block[0]);
+			block._observer.observe($blockHandleContainer[0]);
+			setSizeProperties();
+
+			// Additional double-click handler for click type construct blocks.
+			$block.on('dblclick', function($event) {
+				var type = $block.attr('data-gcn-construct-ctl-style');
+				if (type !== 'click') {
+					return;
+				}
+
+				Aloha.GCN.openTagFill(
+					$block.attr('data-gcn-tagid'),
+					$block.attr('data-gcn-pageid'),
+					{ withDelete: canBeDeleted }
+				);
+
+				// Aloha Blocks sets the
+				// `Aloha.Selection.preventSelectionChangedFlag' when a click
+				// event is initialized on a block element.  This is done in
+				// order to be able to select nested blocks.  When the click
+				// event is triggered by cause we clicked on the edit button
+				// inside the block, however, we must reset the flag so that
+				// when the TagFill modal is closed, the next
+				// `aloha-selection-changed' event will be processed as needed.
+				//
+				// See rt#51554
+				Aloha.Selection.preventSelectionChangedFlag = false;
+
+				$event.preventDefault();
+				return false;
+			});
+
+			var editableHost = Aloha.getEditableHost($block);
 			if (editableHost) {
 				editableHost.smartContentChange({type: 'block-change'});
 			}
 		},
 
 		/**
-		 * Adds a delete button to this block's edit icons.
-		 */
-		addDeleteButton: function () {
-			var block = this;
-			var $button = $('<button class="gcn-tagicon-delete">' +
-				'<img class="aloha-ui" src="' +
-					block.$element.attr('data-gcn-deleteicon') + '"/>' +
-				'</button>');
-			$button.click(function ($event) {
-				block.confirmedDestroy(function () {
-					deleteBlock(block);
-				}, block.$element.attr('data-gcn-tagname'));
-				$event.preventDefault();
-				return false;
-			});
-			// add the delete button to this block (but not to nested blocks)
-			var $editicons = block.$element.find('>.aloha-editicons');
-			$editicons.show().append($button);
-			autoResizeElementWidth($editicons);
-		},
-
-		/**
-		 * Function which is executed when a user tries to delete a block with the keyboard
+		 * Function to prompt the user if they really wish to delete the current tag.
 		 * 
 		 * @param {Function} destroyFn function, that is executed, if the block shall be destroyed
 		 * @param {String} name Name of the tag

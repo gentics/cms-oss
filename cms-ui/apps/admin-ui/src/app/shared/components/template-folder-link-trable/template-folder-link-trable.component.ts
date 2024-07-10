@@ -23,7 +23,7 @@ export class TemplateFolderLinkTrableComponent implements OnInit {
     public disabled: boolean;
 
     @Input()
-    public selection: string[] = [];
+    public selected: string[] = [];
 
     @Output()
     public link = new EventEmitter<FolderLinkEvent>();
@@ -32,7 +32,7 @@ export class TemplateFolderLinkTrableComponent implements OnInit {
     public unlink = new EventEmitter<FolderLinkEvent>();
 
     @Output()
-    public selectionChange = new EventEmitter<string[]>();
+    public selectedChange = new EventEmitter<string[]>();
 
     public actions: TableAction<FolderBO>[] = [];
 
@@ -66,7 +66,7 @@ export class TemplateFolderLinkTrableComponent implements OnInit {
             return;
         }
 
-        if (this.selection.includes(folder[BO_ID])) {
+        if (this.selected.includes(folder[BO_ID])) {
             this.link.emit({ folder, recursive: true });
         } else {
             this.unlink.emit({ folder, recursive: true });
@@ -82,6 +82,6 @@ export class TemplateFolderLinkTrableComponent implements OnInit {
     }
 
     updateSelection(event: string[]): void {
-        this.selectionChange.emit(event);
+        this.selectedChange.emit(event);
     }
 }

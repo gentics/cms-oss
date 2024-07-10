@@ -7,19 +7,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gentics.contentnode.rest.model.AbstractModel;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConstructModel extends AbstractModel {
 	private String keyword;
 
-	private String icon;
-
 	private Map<String, String> name;
 
 	private Map<String, String> description;
-
-	private String hopeditHook;
 
 	private String liveEditorTagName;
 
@@ -27,9 +24,13 @@ public class ConstructModel extends AbstractModel {
 
 	private boolean mayContainsSubtags;
 
-	private boolean autoEnable;
+	private Boolean editOnInsert;
 
-	private boolean newEditor;
+	private EditorControlStyle editorControlStyle;
+
+	private Boolean editorControlsInside;
+
+	private boolean autoEnable;
 
 	private String externalEditorUrl;
 
@@ -43,14 +44,6 @@ public class ConstructModel extends AbstractModel {
 
 	public void setKeyword(String keyword) {
 		this.keyword = keyword;
-	}
-
-	public String getIcon() {
-		return icon;
-	}
-
-	public void setIcon(String icon) {
-		this.icon = icon;
 	}
 
 	public Map<String, String> getName() {
@@ -67,14 +60,6 @@ public class ConstructModel extends AbstractModel {
 
 	public void setDescription(Map<String, String> description) {
 		this.description = description;
-	}
-
-	public String getHopeditHook() {
-		return hopeditHook;
-	}
-
-	public void setHopeditHook(String hopeditHook) {
-		this.hopeditHook = hopeditHook;
 	}
 
 	public String getLiveEditorTagName() {
@@ -101,20 +86,36 @@ public class ConstructModel extends AbstractModel {
 		this.mayContainsSubtags = mayContainsSubtags;
 	}
 
+	public Boolean getEditOnInsert() {
+		return editOnInsert;
+	}
+
+	public void setEditOnInsert(Boolean editOnInsert) {
+		this.editOnInsert = editOnInsert;
+	}
+
+	public EditorControlStyle getEditorControlStyle() {
+		return editorControlStyle;
+	}
+
+	public void setEditorControlStyle(EditorControlStyle editorControlStyle) {
+		this.editorControlStyle = editorControlStyle;
+	}
+
+	public Boolean getEditorControlsInside() {
+		return editorControlsInside;
+	}
+
+	public void setEditorControlsInside(Boolean editorControlsInside) {
+		this.editorControlsInside = editorControlsInside;
+	}
+
 	public boolean isAutoEnable() {
 		return autoEnable;
 	}
 
 	public void setAutoEnable(boolean autoEnable) {
 		this.autoEnable = autoEnable;
-	}
-
-	public boolean isNewEditor() {
-		return newEditor;
-	}
-
-	public void setNewEditor(boolean newEditor) {
-		this.newEditor = newEditor;
 	}
 
 	public String getExternalEditorUrl() {

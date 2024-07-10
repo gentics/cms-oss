@@ -4,6 +4,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.USERS"
                 icon="user-management"
+                [attr.data-id]="AdminUIModuleRoutes.USERS"
                 [title]="'dashboard.item_users' | i18n"
                 [class.disabled]="!(usersModuleEnabled$ | async)"
                 [disabled]="!(usersModuleEnabled$ | async)"
@@ -12,6 +13,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.GROUPS"
                 icon="group-management"
+                [attr.data-id]="AdminUIModuleRoutes.GROUPS"
                 [title]="'dashboard.item_groups' | i18n"
                 [class.disabled]="!(groupsModuleEnabled$ | async)"
                 [disabled]="!(groupsModuleEnabled$ | async)"
@@ -20,6 +22,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.ROLES"
                 icon="role-management"
+                [attr.data-id]="AdminUIModuleRoutes.ROLES"
                 [title]="'dashboard.item_roles' | i18n"
                 [class.disabled]="!(rolesModuleEnabled$ | async)"
                 [disabled]="!(rolesModuleEnabled$ | async)"
@@ -28,6 +31,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.FOLDERS"
                 icon="folder-management"
+                [attr.data-id]="AdminUIModuleRoutes.FOLDERS"
                 [title]="'dashboard.item_folders' | i18n"
                 [class.disabled]="!(foldersModuleEnabled$ | async)"
                 [disabled]="!(foldersModuleEnabled$ | async)"
@@ -38,6 +42,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.NODES"
                 icon="node-management"
+                [attr.data-id]="AdminUIModuleRoutes.NODES"
                 [title]="'dashboard.item_node_management' | i18n"
                 [class.disabled]="!(nodesModuleEnabled$ | async)"
                 [disabled]="!(nodesModuleEnabled$ | async)"
@@ -46,6 +51,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.LANGUAGES"
                 icon="languages"
+                [attr.data-id]="AdminUIModuleRoutes.LANGUAGES"
                 [title]="'dashboard.item_languages' | i18n"
                 [class.disabled]="!(languagesModuleEnabled$ | async)"
                 [disabled]="!(languagesModuleEnabled$ | async)"
@@ -54,16 +60,27 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_REPOSITORIES"
                 icon="content-repositories"
+                [attr.data-id]="AdminUIModuleRoutes.CONTENT_REPOSITORIES"
                 [title]="'dashboard.item_content_repositories' | i18n"
                 [class.disabled]="!(contentRepositoriesModuleEnabled$ | async)"
                 [disabled]="!(contentRepositoriesModuleEnabled$ | async)"
             ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.MESH_BROWSER"
+                icon="mesh"
+                [attr.data-id]="AdminUIModuleRoutes.MESH_BROWSER"
+                [title]="'dashboard.mesh_browser' | i18n"
+                [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
+                [disabled]="!(meshBrowserModuleEnabled$ | async)"
+        ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
         <gtx-dashboard-item-group [title]="'dashboard.group_operations' | i18n">
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.SEARCH_INDEX_MAINTENANCE"
                 icon="search-index-maintenance"
+                [attr.data-id]="AdminUIModuleRoutes.SEARCH_INDEX_MAINTENANCE"
                 [title]="'dashboard.search_index_maintenance' | i18n"
                 [class.disabled]="!(searchMaintenanceModuleEnabled$ | async)"
                 [disabled]="!(searchMaintenanceModuleEnabled$ | async)"
@@ -72,6 +89,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.LOGS"
                 icon="logs"
+                [attr.data-id]="AdminUIModuleRoutes.LOGS"
                 [title]="'dashboard.item_logs' | i18n"
                 [class.disabled]="!(logsModuleEnabled$ | async)"
                 [disabled]="!(logsModuleEnabled$ | async)"
@@ -80,6 +98,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.SCHEDULER"
                 icon="scheduler"
+                [attr.data-id]="AdminUIModuleRoutes.SCHEDULER"
                 [title]="'dashboard.item_scheduler' | i18n"
                 [class.disabled]="!(schedulerModuleEnabled$ | async)"
                 [disabled]="!(schedulerModuleEnabled$ | async)"
@@ -88,6 +107,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_MAINTENANCE"
                 icon="system-maintenance"
+                [attr.data-id]="AdminUIModuleRoutes.CONTENT_MAINTENANCE"
                 [title]="'dashboard.item_content_maintenance' | i18n"
                 [class.disabled]="!(contentMaintenanceModuleEnabled$ | async)"
                 [disabled]="!(contentMaintenanceModuleEnabled$ | async)"
@@ -96,6 +116,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.MAINTENANCE_MODE"
                 icon="maintenance"
+                [attr.data-id]="AdminUIModuleRoutes.MAINTENANCE_MODE"
                 [title]="'dashboard.item_maintenance_mode' | i18n"
                 [class.disabled]="!(maintenancemodeModuleEnabled$ | async)"
                 [disabled]="!(maintenancemodeModuleEnabled$ | async)"
@@ -104,6 +125,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_STAGING"
                 icon="import-export"
+                [attr.data-id]="AdminUIModuleRoutes.CONTENT_STAGING"
                 [title]="'dashboard.item_content_staging' | i18n"
                 [class.disabled]="!(contentStagingModuleEnabled$ | async)"
                 [disabled]="!(contentStagingModuleEnabled$ | async)"
@@ -114,6 +136,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.OBJECT_PROPERTIES"
                 icon="object-properties"
+                [attr.data-id]="AdminUIModuleRoutes.OBJECT_PROPERTIES"
                 [title]="'dashboard.item_object_properties' | i18n"
                 [class.disabled]="!(objectPropertiesModuleEnabled$ | async)"
                 [disabled]="!(objectPropertiesModuleEnabled$ | async)"
@@ -122,6 +145,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.CONSTRUCTS"
                 icon="tagtypes"
+                [attr.data-id]="AdminUIModuleRoutes.CONSTRUCTS"
                 [title]="'dashboard.item_tagtypes_constructs' | i18n"
                 [class.disabled]="!(constructsModuleEnabled$ | async)"
                 [disabled]="!(constructsModuleEnabled$ | async)"
@@ -130,6 +154,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.DATA_SOURCES"
                 icon="datasources"
+                [attr.data-id]="AdminUIModuleRoutes.DATA_SOURCES"
                 [title]="'dashboard.item_data_sources' | i18n"
                 [class.disabled]="!(dataSourcesModuleEnabled$ | async)"
                 [disabled]="!(dataSourcesModuleEnabled$ | async)"
@@ -138,14 +163,16 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.CR_FRAGMENTS"
                 icon="cr-fragments"
+                [attr.data-id]="AdminUIModuleRoutes.CR_FRAGMENTS"
                 [title]="'dashboard.item_cr_fragments' | i18n"
                 [class.disabled]="!(crFragmentsModuleEnabled$ | async)"
                 [disabled]="!(crFragmentsModuleEnabled$ | async)"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
-                [routerLink]="'/' + AdminUIModuleRoutes.PACKAGES"
+                [routerLink]="'/' + AdminUIModuleRoutes.DEV_TOOL_PACKAGES"
                 icon="packages"
+                [attr.data-id]="AdminUIModuleRoutes.DEV_TOOL_PACKAGES"
                 [title]="'dashboard.item_packages' | i18n"
                 [class.disabled]="!(packagesModuleEnabled$ | async)"
                 [disabled]="!(packagesModuleEnabled$ | async)"
@@ -154,19 +181,14 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.TEMPLATES"
                 icon="template-management"
+                [attr.data-id]="AdminUIModuleRoutes.TEMPLATES"
                 [title]="'dashboard.item_templates' | i18n"
                 [class.disabled]="!(templatesModuleEnabled$ | async)"
                 [disabled]="!(templatesModuleEnabled$ | async)"
             ></gtx-dashboard-item>
-            <!-- <gtx-dashboard-item routerLink="/testing" icon="help_outline" title="Testing" [disabled]="!(testingModuleEnabled$ | async)"></gtx-dashboard-item> -->
-            <!-- <gtx-dashboard-item routerLink="/testing" icon="help_outline" title="Testing (always clickable)"></gtx-dashboard-item> -->
         </gtx-dashboard-item-group>
-
-        <!-- <gtx-dashboard-item-group [title]="'dashboard.group_custom_tools' | i18n">
-            <gtx-dashboard-item disabled icon="widgets" title="Custom Tool A"></gtx-dashboard-item>
-            <gtx-dashboard-item disabled icon="widgets" title="Custom Tool B"></gtx-dashboard-item>
-        </gtx-dashboard-item-group> -->
     </div>
+
     <div class="small-12 medium-6 large-2 columns">
         <!-- Sidebar 1 -->
         <gtx-sidebar-item-group>
@@ -178,6 +200,7 @@
             </div>
         </gtx-sidebar-item-group>
     </div>
+
     <div class="small-12 medium-6 large-2 columns">
         <!-- Sidebar 2 -->
         <gtx-sidebar-item-group></gtx-sidebar-item-group>

@@ -1,7 +1,8 @@
+/* eslint-disable id-blacklist */
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Normalized, Page, RecursivePartial } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 
 import { AppStateService } from '../providers/app-state/app-state.service';
 import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
@@ -50,7 +51,7 @@ describe('EntityStateModule', () => {
             const result = appState.snapshot().entity;
 
             expect(result).not.toBe(initialState);
-            expect(result.page).toEqual(newEntities.page);
+            expect(result.page).toEqual(newEntities.page as any);
         });
 
         it('adds non-existing entities to multiple branches', () => {
@@ -82,8 +83,8 @@ describe('EntityStateModule', () => {
             const result = appState.snapshot().entity;
 
             expect(result).not.toBe(initialState);
-            expect(result.page).toEqual(newEntities.page);
-            expect(result.user).toEqual(newEntities.user);
+            expect(result.page).toEqual(newEntities.page as any);
+            expect(result.user).toEqual(newEntities.user as any);
         });
 
         it('keeps unchanged entity branches', () => {
@@ -209,7 +210,7 @@ describe('EntityStateModule', () => {
             appState.dispatch(new AddEntities(changes));
             const result = appState.snapshot().entity;
 
-            expect(result.page[1]).toEqual(PAGE1, 'the values of entityState.page[1] have been changed');
+            expect(result.page[1]).toEqual(PAGE1 as any, 'the values of entityState.page[1] have been changed');
             expect(result.page[1]).toBe(initialState.page[1], 'entityState.page[1] reference has been changed');
             expect(result.page).toBe(initialState.page, 'entityState.page reference has been changed');
             expect(result).toBe(initialState, 'entityState reference has been changed');
@@ -617,7 +618,7 @@ describe('EntityStateModule', () => {
             appState.dispatch(new UpdateEntities(updates));
             const result = appState.snapshot().entity;
 
-            expect(result.page[1]).toEqual(expectedPage);
+            expect(result.page[1]).toEqual(expectedPage as any);
         });
 
         it('can overwrite a simple property with null', () => {
@@ -651,7 +652,7 @@ describe('EntityStateModule', () => {
             appState.dispatch(new UpdateEntities(updates));
             const result = appState.snapshot().entity;
 
-            expect(result.page[1]).toEqual(expectedPage);
+            expect(result.page[1]).toEqual(expectedPage as any);
         });
 
         it('can overwrite a complex property with null', () => {
@@ -685,7 +686,7 @@ describe('EntityStateModule', () => {
             appState.dispatch(new UpdateEntities(updates));
             const result = appState.snapshot().entity;
 
-            expect(result.page[1]).toEqual(expectedPage);
+            expect(result.page[1]).toEqual(expectedPage as any);
         });
 
         it('can overwrite non-empty arrays with empty arrays', () => {
@@ -758,15 +759,15 @@ describe('EntityStateModule', () => {
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);
-            expect(originalStateEntities.page).toEqual(testEntities.page);
-            expect(originalStateEntities.user).toEqual(testEntities.user);
+            expect(originalStateEntities.page).toEqual(testEntities.page as any);
+            expect(originalStateEntities.user).toEqual(testEntities.user as any);
 
             // delete a page
             appState.dispatch(new DeleteEntities('page', [1]));
             const changedStateEntities = appState.snapshot().entity;
             // check state if correctlydeleted
-            expect(changedStateEntities.page).toEqual(resultEntities.page);
-            expect(originalStateEntities.user).toEqual(resultEntities.user);
+            expect(changedStateEntities.page).toEqual(resultEntities.page as any);
+            expect(originalStateEntities.user).toEqual(resultEntities.user as any);
         });
 
         it('removes multiple entities', () => {
@@ -812,15 +813,15 @@ describe('EntityStateModule', () => {
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);
-            expect(originalStateEntities.page).toEqual(testEntities.page);
-            expect(originalStateEntities.user).toEqual(testEntities.user);
+            expect(originalStateEntities.page).toEqual(testEntities.page as any);
+            expect(originalStateEntities.user).toEqual(testEntities.user as any);
 
             // delete a page
             appState.dispatch(new DeleteEntities('page', [2, 4]));
             const changedStateEntities = appState.snapshot().entity;
             // check state if correctlydeleted
-            expect(changedStateEntities.page).toEqual(resultEntities.page);
-            expect(originalStateEntities.user).toEqual(resultEntities.user);
+            expect(changedStateEntities.page).toEqual(resultEntities.page as any);
+            expect(originalStateEntities.user).toEqual(resultEntities.user as any);
         });
 
         it('does nothing if entity to be removed doesn\'t exist', () => {
@@ -853,8 +854,8 @@ describe('EntityStateModule', () => {
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);
-            expect(originalStateEntities.page).toEqual(testEntities.page);
-            expect(originalStateEntities.user).toEqual(testEntities.user);
+            expect(originalStateEntities.page).toEqual(testEntities.page as any);
+            expect(originalStateEntities.user).toEqual(testEntities.user as any);
 
             // delete a page
             appState.dispatch(new DeleteEntities('page', [3, 4]));

@@ -1,7 +1,6 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { FolderApi } from '@editor-ui/app/core/providers/api';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -15,13 +14,7 @@ import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import {
-    getExampleFolderDataNormalized,
-    getExampleImageDataNormalized,
-    getExampleNodeDataNormalized,
-    getExamplePageDataNormalized,
-    getExampleTemplateDataNormalized
-} from '@editor-ui/testing/test-data.mock';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
     AllowedSelectionType,
@@ -33,12 +26,19 @@ import {
     Normalized,
     Page,
     RepoItem,
-    RepositoryBrowserOptions,
     RepositoryBrowserSorting,
-    Template
+    ResponseCode,
+    Template,
 } from '@gentics/cms-models';
+import {
+    getExampleFolderDataNormalized,
+    getExampleImageDataNormalized,
+    getExampleNodeDataNormalized,
+    getExamplePageDataNormalized,
+    getExampleTemplateDataNormalized,
+} from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { NEVER, Observable } from 'rxjs';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';
 import { RepositoryBrowser } from '../repository-browser/repository-browser.component';
 
@@ -51,9 +51,7 @@ let testTemplates: Template<Normalized>[];
 
 describe('RepositoryBrowserList', () => {
 
-    let mockApi: Api;
     let state: TestApplicationState;
-    let entityResolver: EntityResolver;
     let repositoryBrowserClientService: RepositoryBrowserClient;
 
     let repositoryBrowserOptions: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType, selectMultiple: false };
@@ -79,20 +77,12 @@ describe('RepositoryBrowserList', () => {
             declarations: [
                 RepositoryBrowser,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate')
+                mockPipes('i18n', 'i18nDate'),
             ],
-            schemas: [NO_ERRORS_SCHEMA]
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [RepositoryBrowser]
-            }
-        });
-
-        mockApi = TestBed.get(Api);
         state = TestBed.get(ApplicationStateService);
-        entityResolver = TestBed.get(EntityResolver);
         repositoryBrowserClientService = TestBed.get(RepositoryBrowserClient);
         expect(state instanceof ApplicationStateService).toBeTruthy();
 
@@ -133,7 +123,7 @@ describe('RepositoryBrowserList', () => {
         };
     });
 
-    it('is displayed', componentTest(() => TestComponent, async (fixture, instance) => {
+    it('is displayed', componentTest(() => TestComponent, (fixture, instance) => {
 
         // open repository browser
         repositoryBrowserClientService.openRepositoryBrowser(repositoryBrowserOptions);
@@ -145,21 +135,35 @@ describe('RepositoryBrowserList', () => {
     }));
 
     // Todo
-    xit('displays correct data', componentTest(() => TestComponent, async (fixture, instance) => {
+    // xit('displays correct data', componentTest(() => TestComponent, async (fixture, instance) => {
 
-    }));
+    // }));
 
 });
 
 function generateTestData(): void {
     // prepare test data
-    testNodes = new Array(entityAmount).map(id => ({ ...getExampleNodeDataNormalized({ id }), name: `test-node-${id}` }));
+    testNodes = new Array(entityAmount).map((id: number) => ({
+        ...getExampleNodeDataNormalized({ id }),
+        name: `test-node-${id}`,
+    }));
     entityAmount = 5;
-    testFolders = new Array(entityAmount).map(id => ({ ...getExampleFolderDataNormalized({ id }), name: `test-folder-${id}` }));
-    testPages = new Array(entityAmount).map(id => ({ ...getExamplePageDataNormalized({ id }), name: `test-page-${id}` }));
-    testImages = new Array(entityAmount).map(id => ({ ...getExampleImageDataNormalized({ id }), name: `test-image-${id}` }));
-    testTemplates =
-        new Array(entityAmount).map(id => ({ ...getExampleTemplateDataNormalized({ id, masterId: 1, userId: 1 }), name: `test-template-${id}` }));
+    testFolders = new Array(entityAmount).map((id: number) => ({
+        ...getExampleFolderDataNormalized({ id }),
+        name: `test-folder-${id}`,
+    }));
+    testPages = new Array(entityAmount).map((id: number) => ({
+        ...getExamplePageDataNormalized({ id }),
+        name: `test-page-${id}`,
+    }));
+    testImages = new Array(entityAmount).map((id: number) => ({
+        ...getExampleImageDataNormalized({ id }),
+        name: `test-image-${id}`,
+    }));
+    testTemplates = new Array(entityAmount).map((id: number) => ({
+        ...getExampleTemplateDataNormalized({ id, masterId: 1, userId: 1 }),
+        name: `test-template-${id}`,
+    }));
 }
 
 function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { element: DebugElement, folders: any } {
@@ -173,7 +177,7 @@ function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { eleme
 }
 
 @Component({
-    template: `<gtx-overlay-host></gtx-overlay-host>`
+    template: '<gtx-overlay-host></gtx-overlay-host>',
 })
 class TestComponent { }
 
@@ -181,7 +185,7 @@ class TestComponent { }
 class MockApi {
     defaultResponse: BaseListResponse = {
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: '',
         },
         messages: [],
@@ -223,7 +227,7 @@ class MockUserSettingsService {
 
 class MockI18nService {
     transform(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 
@@ -233,10 +237,10 @@ class MockI18nNotification {
 
 class MockPermissionService {
     forItemInLanguage(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
     forItem(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 

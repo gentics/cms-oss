@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FollowUpScheduleData, ScheduleBO } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -13,7 +13,10 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
     templateUrl: './follow-up-schedule-data-properties.component.html',
     styleUrls: ['./follow-up-schedule-data-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(FollowUpScheduleDataPropertiesComponent)],
+    providers: [
+        generateFormProvider(FollowUpScheduleDataPropertiesComponent),
+        generateValidatorProvider(FollowUpScheduleDataPropertiesComponent),
+    ],
 })
 export class FollowUpScheduleDataPropertiesComponent
     extends BasePropertiesComponent<FollowUpScheduleData>

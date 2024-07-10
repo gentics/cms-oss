@@ -1,17 +1,31 @@
-
 {
-    "name": "@gentics/ui-core",
-    "version": "6.0.0-SNAPSHOT",
-    "dependencies": {},
-    "peerDependencies": {
-        "@angular/animations": "15.2.5",
-        "@angular/common": "15.2.5",
-        "@angular/core": "15.2.5",
-        "@angular/forms": "15.2.5",
-        "lodash-es": "^4.17.15",
-        "rxjs": "^6.6.3"
-    },
-    "publishConfig": {
-        "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
-    }
+  "name": "@gentics/ui-core",
+  "version": "6.1.7",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@bevacqua/rome": "^3.0.4",
+    "@gentics/cms-integration-api-models": "6.1.7",
+    "@types/sortablejs": "^1.15.8",
+    "foundation-sites": "~6.5.3",
+    "hammerjs": "^2.0.8",
+    "lodash-es": "^4.17.15",
+    "materialize-css": "^1.0.0",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "roboto-fontface-woff": "^0.8.0",
+    "sortablejs": "^1.15.2",
+    "tslib": "^2.5.0"
+  },
+  "peerDependencies": {
+    "@angular/animations": "^16.0.0",
+    "@angular/common": "^16.0.0",
+    "@angular/core": "^16.0.0",
+    "@angular/forms": "^16.0.0",
+    "ngx-pagination": "^6.0.3",
+    "ngx-autosize": "^2.0.4",
+    "tslib": "^2.5.0"
+  },
+  "publishConfig": {
+    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+  }
 }

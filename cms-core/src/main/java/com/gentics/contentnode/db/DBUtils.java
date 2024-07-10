@@ -481,19 +481,19 @@ public final class DBUtils {
 	 * @param select The select statment used to select the objects for deletion. Must end with "IN" and select a column named "id".
 	 * @param ids list with ids used for the select statement
 	 */
-	public static void selectAndDelete(String deleteTable, String select, List ids) throws NodeException {
+	public static void selectAndDelete(String deleteTable, String select, Collection<?> ids) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		selectAndDelete(deleteTable, select, ids, t);
 	}
 
-	public static void selectAndDelete(final String deleteTable, String select, List ids, final PreparedStatementHandler stmth) throws NodeException {
+	public static void selectAndDelete(final String deleteTable, String select, Collection<?> ids, final PreparedStatementHandler stmth) throws NodeException {
 		DBUtils.executeMassStatement(select, null, ids, 1, new SQLExecutor() {
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				Vector toDelete = new Vector();
+				Vector<Integer> toDelete = new Vector<>();
 
 				while (rs.next()) {
-					toDelete.add(new Integer(rs.getInt("id")));
+					toDelete.add(rs.getInt("id"));
 				}
 				if (!toDelete.isEmpty()) {
 					DBUtils.executeMassStatement("DELETE FROM " + deleteTable + " WHERE id IN", null, toDelete, 1, null, Transaction.DELETE_STATEMENT, stmth);
@@ -514,7 +514,7 @@ public final class DBUtils {
 	 * @param ex
 	 * @throws NodeException
 	 */
-	public static boolean executeMassStatement(String sql, List list, int startIndex, SQLExecutor ex) throws NodeException {
+	public static boolean executeMassStatement(String sql, Collection<?> list, int startIndex, SQLExecutor ex) throws NodeException {
 		return executeMassStatement(sql, null, list, startIndex, ex, Transaction.SELECT_STATEMENT);
 	}
 
@@ -531,24 +531,24 @@ public final class DBUtils {
 	 * @param ex
 	 * @throws NodeException
 	 */
-	public static boolean executeMassStatement(String sql, String suffixSql, List list, int startIndex, SQLExecutor ex) throws NodeException {
+	public static boolean executeMassStatement(String sql, String suffixSql, Collection<?> list, int startIndex, SQLExecutor ex) throws NodeException {
 		return executeMassStatement(sql, suffixSql, list, startIndex, ex, Transaction.SELECT_STATEMENT);
 	}
 
-	public static boolean executeMassStatement(String sql, String suffixSql, List list, int startIndex, SQLExecutor ex, int type) throws NodeException {
+	public static boolean executeMassStatement(String sql, String suffixSql, Collection<?> list, int startIndex, SQLExecutor ex, int type) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		return executeMassStatement(sql, suffixSql, list, startIndex, ex, type, t);
 	}
 
-	public static boolean executeMassStatement(String sql, String suffixSql, List list, int startIndex, SQLExecutor ex, int type, PreparedStatementHandler stmth) throws NodeException {
+	public static boolean executeMassStatement(String sql, String suffixSql, Collection<?> list, int startIndex, SQLExecutor ex, int type, PreparedStatementHandler stmth) throws NodeException {
 		PreparedStatement stmt = null;
 
 		try {
 			int maxbinds = MASS_STATEMENT_MAX;
 			int totalsize = list.size();
 
-			Iterator listiterator = list.iterator();
+			Iterator<?> listiterator = list.iterator();
 
 			for (int current = 0; current < totalsize && listiterator.hasNext();) {
 				int bindcount;

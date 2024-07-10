@@ -11,6 +11,7 @@
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.BOOLEAN">
             <!-- required flag does not make sense for boolean values in this context -->
             <gtx-i18n-checkbox
+                [attr.data-cy]="'boolean-input'"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async)"
                 [language]="formEditorService.activeContentLanguageCode$ | async"
@@ -21,6 +22,7 @@
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.NUMBER">
             <gtx-i18n-input
+                [attr.data-cy]="'number-input'"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [requiredInCurrentLanguage]="property.required"
@@ -32,6 +34,7 @@
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.STRING">
             <gtx-i18n-input
+                [attr.data-cy]="'string-input'"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [requiredInCurrentLanguage]="property.required"
@@ -44,6 +47,7 @@
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.SELECT">
             <ng-container *ngIf="property.options as options; else errorNoSelectableOptions">
                 <gtx-i18n-select
+                    [attr.data-cy]="'select-input'"
                     [formControlName]="property.name"
                     [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                     [requiredInCurrentLanguage]="property.required"
@@ -69,6 +73,7 @@
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.SELECTABLE_OPTIONS">
             <gtx-key-i18n-value-list-input
+                [attr.data-cy]="'selectable-options-input'"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [keyLabel]="property.key_label_i18n_ui | i18nfg$:'ui' | async"
@@ -81,6 +86,7 @@
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.REPOSITORY_BROWSER">
             <gtx-form-browse-box
+                [attr.data-cy]="'repository-browser-input'"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [required]="property.required"

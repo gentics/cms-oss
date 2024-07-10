@@ -1,10 +1,14 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'values',
+    name: 'gtxValues',
 })
 export class ValuesPipe implements PipeTransform {
-    transform(value: any, ...args: any[]): any {
+    transform(value: any): any {
+        if (Array.isArray(value)) {
+            return value;
+        }
+
         if (value != null && typeof value === 'object') {
 
             // If the value is a set, then we return a new array of the values

@@ -1,13 +1,13 @@
+/* eslint-disable id-blacklist */
 import { ChangeDetectorRef, Component, EventEmitter, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { SetUILanguageAction } from '@editor-ui/app/state';
 import { Form, FormRequestOptions, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
+import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '../../../../testing/test-data.mock';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
@@ -49,12 +49,6 @@ describe('TimeManagementModal', () => {
                 I18nDatePipe,
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        });
-
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [TimeManagementModal],
-            },
         });
 
         modalService = TestBed.get(ModalService);
@@ -435,7 +429,7 @@ describe('TimeManagementModal', () => {
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
-    })
+})
 class TestComponent {
 
 }
@@ -460,7 +454,7 @@ class MockFolderActions {
 
 class MockI18nService {
     transform(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 
     translate(key: string | string[], params?: any): string {
@@ -473,23 +467,25 @@ class MockI18nService {
 }
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string {
+        return this.lang;
+    }
     set currentLang(lang: string) {
         this.onLangChange.emit({
-            lang: this._lang = lang,
+            lang: this.lang = lang,
             translations: {},
         });
     }
     get():  Observable<string | any> { return of(this.currentLang); }
-    private _lang: string;
+    private lang: string;
 }
 
 class MockPermissionService {
     forItemInLanguage(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
     forItem(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 

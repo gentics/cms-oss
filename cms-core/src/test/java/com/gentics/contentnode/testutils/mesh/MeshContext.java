@@ -16,9 +16,13 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
 import com.gentics.mesh.core.rest.MeshEvent;
+import com.gentics.mesh.etc.config.ImageManipulationMode;
+import com.gentics.mesh.etc.config.ImageManipulatorOptions;
 import com.gentics.mesh.etc.config.MeshOptions;
 import com.gentics.mesh.etc.config.search.ElasticSearchOptions;
 import com.gentics.mesh.rest.client.MeshRestClient;
+import com.gentics.mesh.rest.client.MeshRestClientConfig;
+import com.gentics.mesh.rest.client.ProtocolVersion;
 
 /**
  * Mesh Context that starts a Mesh container
@@ -27,7 +31,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "2.0.18";
+	public final static String TESTED_MESH_VERSION = "2.1.0";
 
 	protected LogBuffer logBuffer = new LogBuffer();
 
@@ -49,6 +53,8 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	private String extraOpts;
 
 	private boolean useFilesystem = false;
+
+	private ImageManipulationMode imageManipulationMode = ImageManipulatorOptions.DEFAULT_IMAGE_MANIPULATION_MODE;
 
 	/**
 	 * Create an instance, using the Mesh version of the MeshRestClient
@@ -99,6 +105,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 		addEnv(MeshOptions.MESH_INITIAL_ADMIN_PASSWORD_ENV, "admin");
 		addEnv(MeshOptions.MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET_ENV, "false");
+		addEnv(ImageManipulatorOptions.MESH_IMAGE_MANIPULATION_MODE_ENV, String.valueOf(imageManipulationMode));
 	
 		exposedPorts.add(8080);
 		setExposedPorts(exposedPorts);
@@ -113,7 +120,12 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	@Override
 	public void start() {
 		super.start();
-		client = MeshRestClient.create(getContainerIpAddress(), getMappedPort(8080), false);
+		client = MeshRestClient.create(new MeshRestClientConfig.Builder()
+				.setHost(getContainerIpAddress())
+				.setPort(getMappedPort(8080))
+				.setSsl(false)
+				.setProtocolVersion(ProtocolVersion.HTTP_2)
+				.build());
 		client.setLogin("admin", "admin");
 		client.login().blockingGet();
 	}
@@ -164,6 +176,11 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 */
 	public MeshContext withFilesystem() {
 		this.useFilesystem = true;
+		return this;
+	}
+
+	public MeshContext withImageManipulationMode(ImageManipulationMode mode) {
+		this.imageManipulationMode = mode;
 		return this;
 	}
 

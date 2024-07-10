@@ -40,8 +40,9 @@ export function coerceInstance<T>(instance: T, options: CoerceOption<T>[], chang
         }
 
         const newBool = coerceToBoolean(instance[name], defaultValue);
-        // Nothing to do,same value
-        if ((instance as any)[name] === newBool) {
+
+        // Nothing to do, same value
+        if (newBool === changes[name as any].previousValue) {
             continue;
         }
 

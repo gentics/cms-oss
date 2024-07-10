@@ -7,8 +7,6 @@ package com.gentics.contentnode.msg;
 
 import org.apache.logging.log4j.Level;
 
-import com.gentics.contentnode.object.Icon;
-
 /**
  * NodeMessage is a generic message interface which is used for any message
  * which should be passed to the user.
@@ -23,12 +21,6 @@ public interface NodeMessage {
 	 * @return the short message,
 	 */
 	String getMessage();
-
-	/**
-	 * get an icon for this message.
-	 * @return an icon associated with this message, or null if not set.
-	 */
-	Icon getIcon();
 
 	/**
 	 * get detailed version of this message.

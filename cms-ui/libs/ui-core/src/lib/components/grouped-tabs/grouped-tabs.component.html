@@ -4,6 +4,7 @@
             <ng-template [ngIf]="tabItem.expand != null" [ngIfElse]="standaloneTabItem">
                 <li
                     class="tab-group"
+                    [attr.data-id]="tabItem.id || tabItem.UNIQUE_ID"
                     [id]="tabItem.id || tabItem.UNIQUE_ID"
                     [class.expanded]="tabItem.expand"
                     [class.is-active]="tabItem.hasActiveChild"
@@ -54,6 +55,7 @@
     <li
         class="tab-link"
         role="presentation"
+        [attr.data-id]="tabItem.id || tabItem.UNIQUE_ID"
         [class.disabled]="tabItem.disabled"
         [class.is-active]="tabItem.active"
         [class.readonly]="tabItem.readonly"

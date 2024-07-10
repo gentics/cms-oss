@@ -1,0 +1,283 @@
+@import "variables";
+
+.editor-toolbar {
+    padding: 10px 10px 0;
+    width: 100%;
+    border-bottom: 2px solid #ffb84f;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    .gentics-logo {
+        margin-right: 1rem;
+        flex: 0 0 auto;
+        height: 36px;
+
+        >img {
+            width: 36px;
+            height: 36px;
+            user-select: none;
+        }
+    }
+
+    .element-toolbar {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        align-items: center;
+
+        &.regular {
+            padding: 1rem;
+        }
+    }
+
+    .preview-button {
+        margin-right: 0.5rem;
+        margin-left: 0.25rem;
+    }
+
+    .page-editor-tabs {
+        flex: 1 1 auto;
+        align-self: center;
+        overflow: hidden;
+        padding-right: 1rem;
+    }
+
+    .close-button {
+        margin-left: 0.5rem;
+    }
+
+    .content-frame-context-menu {
+        margin-left: 0.5rem;
+
+        +.close-button {
+            margin-left: 0.25rem;
+        }
+    }
+
+    .page-editor-controls {
+        height: 2.75rem;
+        border-top: 1px solid $gtx-color-very-light-gray;
+        margin: auto 0;
+    }
+
+    .breadcrumb-info {
+        flex: 1 1 auto;
+        display: flex;
+        font-size: 14px;
+        max-height: 2rem;
+        overflow: hidden;
+
+        gtx-breadcrumbs {
+            line-height: 1rem;
+            flex: 0 1 auto;
+            flex-direction: row;
+            flex-wrap: nowrap;
+
+            &::ng-deep {
+                .multiline {
+                    height: auto;
+                    background: none;
+                    color: $gtx-color-dark-gray;
+                    padding-left: 0;
+                    padding-right: 0;
+                    box-shadow: none;
+
+                    .inner-wrapper {
+                        line-height: inherit;
+
+                        .other-content {
+                            margin-right: 0.5rem;
+                        }
+
+                        .lastPart {
+                            margin: auto 0;
+                            word-break: keep-all;
+                        }
+                    }
+
+                    .breadcrumb {
+                        color: inherit !important;
+                        font-size: inherit;
+
+                        &::before {
+                            font-size: 20px;
+                            color: $gtx-color-off-black;
+                        }
+
+                        &.last:not(:first-child) {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }
+
+        .item-info {
+            margin: auto 0;
+        }
+    }
+
+    .toolbar-actions {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        flex: 0 0 auto;
+    }
+
+    node-selector {
+        display: inline-block;
+        vertical-align: top;
+
+        +gtx-breadcrumbs::ng-deep .breadcrumb::before {
+            display: none;
+        }
+    }
+
+    .toolbar-row {
+        flex-wrap: nowrap;
+        align-items: baseline;
+    }
+
+    .left-items {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .item-info {
+        align-items: baseline;
+        display: flex;
+        white-space: nowrap;
+        min-width: 0;
+        max-width: 100%;
+        padding-top: 2px;
+
+        .item-language {
+            text-transform: uppercase;
+            padding: 2px 4px;
+            border: 1px solid rgba(255, 184, 79, 0.3);
+            font-size: 12px;
+        }
+
+        .title-context {
+            color: $gtx-color-dark-gray;
+            display: inline-block;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            &:after {
+                content: ': ';
+                white-space: pre;
+            }
+
+            @media screen and (max-width: $small-screen) {
+                display: none;
+            }
+        }
+
+        .title-name {
+            display: flex;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            align-items: baseline;
+
+            &::before {
+                box-sizing: border-box;
+                color: $gtx-color-off-black;
+                content: "\e5cc";
+                display: inline-block;
+                font-family: "Material Symbols";
+                font-size: 20px;
+                line-height: 16px;
+                margin: auto 0.25rem;
+                transition: 300ms;
+            }
+
+            .node-name,
+            .item-name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .item-name {
+                color: $gtx-color-dark-gray;
+                font-weight: bold;
+            }
+
+            .title-divider {
+                color: $gtx-color-dark-gray;
+                display: inline-block;
+                margin: 0 3px;
+            }
+        }
+
+        .item-version,
+        .item-language,
+        .form-type {
+            color: $gcms-color-highlight;
+            margin-left: 10px;
+            min-width: fit-content;
+            display: inline-flex;
+            align-content: center;
+            overflow: hidden;
+
+            .comparison-icon {
+                color: $gtx-color-mid-gray;
+                font-size: 19px;
+                vertical-align: middle;
+            }
+        }
+
+        .form-type {
+            font-size: 12px;
+        }
+    }
+
+    .dropdown {
+        margin: 0 10px;
+    }
+
+    .item-status {
+        display: inline-block;
+    }
+}
+
+@media (max-width: $aloha-size-tablet-max) {
+    .editor-toolbar .element-toolbar.regular {
+        padding-left: 0;
+    }
+
+    .toolbar-actions .item-status::ng-deep .label-wrapper,
+    .element-toolbar .save-button-label,
+    .element-toolbar .edit-button-label,
+    .element-toolbar .focus-mode-button {
+        display: none;
+    }
+
+    .toolbar-actions .item-status::ng-deep .corner-icon {
+        display: block;
+    }
+
+    .element-toolbar .save-button-icon {
+        margin-right: 0;
+    }
+
+    .element-toolbar .breadcrumb-info gtx-breadcrumbs::ng-deep .multiline .inner-wrapper {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    .toolbar-actions .item-status {
+        display: none;
+    }
+
+    .page-editor-controls {
+        height: 0px !important;
+    }
+}

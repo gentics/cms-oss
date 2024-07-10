@@ -56,7 +56,7 @@ public class UdateChecker {
 
 		// The trigger version is stored in nodesetup - if it is incremented all triggers and stored procedures
 		// are forced to be renewed
-		int triggerversion = 16;
+		int triggerversion = 17;
 
 		SimpleResultProcessor proc = new SimpleResultProcessor();
 

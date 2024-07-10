@@ -3,7 +3,6 @@ package com.gentics.contentnode.rest.model.response.admin;
 import java.util.List;
 
 import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.webcohesion.enunciate.metadata.DocumentationExample;
 
 /**
  * Response containing the available updates
@@ -14,14 +13,16 @@ public class UpdatesInfoResponse extends GenericResponse {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	protected List<String> available;
+	/**
+	 * Available updates
+	 */
+	protected List<Update> available;
 
 	/**
 	 * List of available updates
 	 * @return available updates
 	 */
-	@DocumentationExample(value = "5.34.23", value2 = "5.35.6")
-	public List<String> getAvailable() {
+	public List<Update> getAvailable() {
 		return available;
 	}
 
@@ -29,7 +30,7 @@ public class UpdatesInfoResponse extends GenericResponse {
 	 * Set available updates
 	 * @param available updates
 	 */
-	public void setAvailable(List<String> available) {
+	public void setAvailable(List<Update> available) {
 		this.available = available;
 	}
 }

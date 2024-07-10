@@ -3,7 +3,7 @@
 </div>
 <div class="modal-content">
     <div class="item-title">
-        <icon [class]="contentFrame.currentItem.type || ''">{{ iconForItemType(contentFrame.currentItem.type) }}</icon>
+        <icon [class]="contentFrame.currentItem.type || ''">{{ contentFrame.currentItem.type | gtxTypeIcon }}</icon>
         <span>{{ contentFrame.currentItem.name }}</span>
     </div>
     <p class="lead">

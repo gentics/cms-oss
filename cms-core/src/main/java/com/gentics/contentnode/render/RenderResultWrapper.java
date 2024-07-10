@@ -10,7 +10,6 @@ import java.util.Map;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.msg.NodeMessage;
-import com.gentics.contentnode.object.Icon;
 
 public class RenderResultWrapper extends RenderResult {
     
@@ -36,48 +35,48 @@ public class RenderResultWrapper extends RenderResult {
 		wrapped.addParameters(key, values);
 	}
 
-	public void debug(Class clazz, String message, String details, Icon icon) {
-		wrapped.debug(clazz, message, details, icon);
+	public void debug(Class clazz, String message, String details) {
+		wrapped.debug(clazz, message, details);
 	}
 
 	public void debug(Class clazz, String message) {
 		wrapped.debug(clazz, message);
 	}
 
-	public void debug(String type, String message, String details, Icon icon) {
-		wrapped.debug(type, message, details, icon);
+	public void debug(String type, String message, String details) {
+		wrapped.debug(type, message, details);
 	}
 
 	public void debug(String type, String message) {
 		wrapped.debug(type, message);
 	}
 
-	public void error(Class clazz, String message, String details, Icon icon) {
-		wrapped.error(clazz, message, details, icon);
+	public void error(Class clazz, String message, String details) {
+		wrapped.error(clazz, message, details);
 	}
 
 	public void error(Class clazz, String message) {
 		wrapped.error(clazz, message);
 	}
 
-	public void error(String type, String message, String details, Icon icon) {
-		wrapped.error(type, message, details, icon);
+	public void error(String type, String message, String details) {
+		wrapped.error(type, message, details);
 	}
 
 	public void error(String type, String message) {
 		wrapped.error(type, message);
 	}
 
-	public void fatal(Class clazz, String message, String details, Icon icon) {
-		wrapped.fatal(clazz, message, details, icon);
+	public void fatal(Class clazz, String message, String details) {
+		wrapped.fatal(clazz, message, details);
 	}
 
 	public void fatal(Class clazz, String message) {
 		wrapped.fatal(clazz, message);
 	}
 
-	public void fatal(String type, String message, String details, Icon icon) {
-		wrapped.fatal(type, message, details, icon);
+	public void fatal(String type, String message, String details) {
+		wrapped.fatal(type, message, details);
 	}
 
 	public void fatal(String type, String message) {
@@ -96,16 +95,16 @@ public class RenderResultWrapper extends RenderResult {
 		return wrapped.getReturnCode();
 	}
 
-	public void info(Class clazz, String message, String details, Icon icon) {
-		wrapped.info(clazz, message, details, icon);
+	public void info(Class clazz, String message, String details) {
+		wrapped.info(clazz, message, details);
 	}
 
 	public void info(Class clazz, String message) throws NodeException {
 		wrapped.info(clazz, message);
 	}
 
-	public void info(String type, String message, String details, Icon icon) {
-		wrapped.info(type, message, details, icon);
+	public void info(String type, String message, String details) {
+		wrapped.info(type, message, details);
 	}
 
 	public void info(String type, String message) {
@@ -128,16 +127,16 @@ public class RenderResultWrapper extends RenderResult {
 		return wrapped.setParameter(key, values);
 	}
 
-	public void warn(Class clazz, String message, String details, Icon icon) {
-		wrapped.warn(clazz, message, details, icon);
+	public void warn(Class clazz, String message, String details) {
+		wrapped.warn(clazz, message, details);
 	}
 
 	public void warn(Class clazz, String message) {
 		wrapped.warn(clazz, message);
 	}
 
-	public void warn(String type, String message, String details, Icon icon) {
-		wrapped.warn(type, message, details, icon);
+	public void warn(String type, String message, String details) {
+		wrapped.warn(type, message, details);
 	}
 
 	public void warn(String type, String message) {

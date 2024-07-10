@@ -1,10 +1,12 @@
 package com.gentics.contentnode.rest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Optional;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -33,24 +35,19 @@ public class Construct implements Serializable {
 	private String name;
 
 	/**
-	 * Icon of the construct
-	 */
-	private String icon;
-
-	/**
 	 * This construct may contain other tags
 	 */
-	private boolean mayContainSubtags;
+	private Boolean mayContainSubtags;
 
 	/**
 	 * This construct may be inserted into other tags
 	 */
-	private boolean mayBeSubtag;
+	private Boolean mayBeSubtag;
 
 	/**
 	 * Flag to mark, which construct shall be visible to the editor in the menu.
 	 */
-	private boolean visibleInMenu;
+	private Boolean visibleInMenu;
 
 	/**
 	 * Keyword
@@ -73,12 +70,6 @@ public class Construct implements Serializable {
 	private ConstructCategory category;
 
 	/**
-	 * Edit do (this is the do, that has to be used for filling tags based on this construct the old PHP way). Either 10008 (tag_fill.php)
-	 * for "normal" constructs or 17001 (ds_sel.php) if the construct contains an overview part
-	 */
-	Integer editdo;
-
-	/**
 	 * Creator of the folder
 	 */
 	private User creator;
@@ -97,11 +88,6 @@ public class Construct implements Serializable {
 	 * Date when the folder was modified the last time
 	 */
 	private int edate;
-
-	/**
-	 * Flag for using new tag editor
-	 */
-	private boolean newEditor;
 
 	/**
 	 * URL to the external editor
@@ -126,7 +112,7 @@ public class Construct implements Serializable {
 	/**
 	 * Auto-enable the construct after creation
 	 */
-	private boolean autoEnable;
+	private Boolean autoEnable;
 
 	/**
 	 * HTML tag, assigned to the editor wrapper of the instances of this construct, in edit mode
@@ -134,13 +120,24 @@ public class Construct implements Serializable {
 	private String liveEditorTagName;
 
 	/**
-	 * The javascript "hopedit" hook which, if available, should replace the "hopedit" call.
+	 * Whether to open the tag editor immediately after inserting the construct.
 	 */
-	private String hopeditHook;
+	private boolean openEditorOnInsert;
+
+	/**
+	 * The placement mode for the constructs edit icons.
+	 */
+	private EditorControlStyle editorControlStyle;
+
+
+	/**
+	 * Whether edit icons should be placed inside the rendered construct.
+	 */
+	private boolean editorControlsInside;
 
 	/**
 	 * Keyword for this construct
-	 * 
+	 *
 	 * @return keyword
 	 */
 	public String getKeyword() {
@@ -157,19 +154,8 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Sets the icon for this construct
-	 * 
-	 * @param icon
-	 * @return fluent API
-	 */
-	public Construct setIcon(String icon) {
-		this.icon = icon;
-		return this;
-	}
-
-	/**
 	 * Sets the name for this construct
-	 * 
+	 *
 	 * @param name
 	 * @return fluent API
 	 */
@@ -180,47 +166,67 @@ public class Construct implements Serializable {
 
 	/**
 	 * Whether a tag of this construct may be inserted/nested in other tags
-	 * 
+	 *
 	 * @return True or false
 	 */
-	public boolean getMayBeSubtag() {
+	public Boolean getMayBeSubtag() {
 		return this.mayBeSubtag;
 	}
 
 	/**
+	 * Whether a tag of this construct may be inserted/nested in other tags
+	 *
+	 * @return Optional of flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getMayBeSubtagOptional() {
+		return Optional.ofNullable(this.mayBeSubtag);
+	}
+
+	/**
 	 * Sets whether a tag of this construct may be a nested in another tag.
-	 * 
+	 *
 	 * @param value
 	 * @return fluent API
 	 */
-	public Construct setMayBeSubtag(boolean value) {
+	public Construct setMayBeSubtag(Boolean value) {
 		this.mayBeSubtag = value;
 		return this;
 	}
 
 	/**
 	 * Whether this construct may contain other tags.
-	 * 
+	 *
 	 * @return
 	 */
-	public boolean getMayContainSubtags() {
+	public Boolean getMayContainSubtags() {
 		return this.mayContainSubtags;
 	}
 
 	/**
+	 * Whether this construct may contain other tags.
+	 *
+	 * @return Optional of mayContainSubtags flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getMayContainSubtagsOptional() {
+		return Optional.ofNullable(this.mayContainSubtags);
+	}
+
+	/**
 	 * Sets whether this construct may contain other tags. This means tags can be inserted into a tag from this construct
-	 * 
+	 *
 	 * @param value
 	 * @return fluent API
 	 */
-	public Construct setMayContainSubtags(boolean value) {
+	public Construct setMayContainSubtags(Boolean value) {
 		this.mayContainSubtags = value;
 		return this;
 	}
 
 	/**
 	 * Set the description
-	 * 
+	 *
 	 * @param description
 	 * @return fluent API
 	 */
@@ -231,7 +237,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets the constructId for this construct
-	 * 
+	 *
 	 * @param constructId
 	 * @deprecated use setId() instead
 	 */
@@ -241,7 +247,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Construct id of this construct
-	 * 
+	 *
 	 * @return
 	 * @deprecated use getId() instead
 	 */
@@ -251,7 +257,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * ID of this construct
-	 * 
+	 *
 	 * @return id
 	 */
 	public Integer getId() {
@@ -260,7 +266,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the id of this construct
-	 * 
+	 *
 	 * @param id
 	 *            id
 	 * @return fluent API
@@ -290,7 +296,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Name of this construct
-	 * 
+	 *
 	 * @return
 	 */
 	public String getName() {
@@ -299,7 +305,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Description of this construct
-	 * 
+	 *
 	 * @return description
 	 */
 	public String getDescription() {
@@ -307,17 +313,8 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Icon of this construct
-	 * 
-	 * @return
-	 */
-	public String getIcon() {
-		return this.icon;
-	}
-
-	/**
 	 * Creator of the construct
-	 * 
+	 *
 	 * @return the creator
 	 */
 	public User getCreator() {
@@ -334,7 +331,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Last Editor of the construct
-	 * 
+	 *
 	 * @return the editor
 	 */
 	public User getEditor() {
@@ -390,29 +387,8 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Edit do
-	 * 
-	 * @return edit do
-	 */
-	public Integer getEditdo() {
-		return editdo;
-	}
-
-	/**
-	 * Set the edit do
-	 * 
-	 * @param editdo
-	 *            edit do
-	 * @return fluent API
-	 */
-	public Construct setEditdo(Integer editdo) {
-		this.editdo = editdo;
-		return this;
-	}
-
-	/**
 	 * Category of the construct
-	 * 
+	 *
 	 * @return category
 	 */
 	public ConstructCategory getCategory() {
@@ -421,31 +397,13 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the category
-	 * 
+	 *
 	 * @param category
 	 *            category
 	 * @return fluent API
 	 */
 	public Construct setCategory(ConstructCategory category) {
 		this.category = category;
-		return this;
-	}
-
-	/**
-	 * Flag for using the new Tag Editor
-	 * @return newEditor flag
-	 */
-	public boolean isNewEditor() {
-		return newEditor;
-	}
-
-	/**
-	 * Set the flag for new Tag Editor
-	 * @param newEditor flag
-	 * @return fluent API
-	 */
-	public Construct setNewEditor(boolean newEditor) {
-		this.newEditor = newEditor;
 		return this;
 	}
 
@@ -489,7 +447,7 @@ public class Construct implements Serializable {
 	 * True if the construct shall be visible in the menu, false if not
 	 * @return true for visible constructs, false for hidden
 	 */
-	public boolean isVisibleInMenu() {
+	public Boolean getVisibleInMenu() {
 		return visibleInMenu;
 	}
 
@@ -498,7 +456,7 @@ public class Construct implements Serializable {
 	 * @param visibleInMenu true for visible, false for hidden
 	 * @return fluent API
 	 */
-	public Construct setVisibleInMenu(boolean visibleInMenu) {
+	public Construct setVisibleInMenu(Boolean visibleInMenu) {
 		this.visibleInMenu = visibleInMenu;
 		return this;
 	}
@@ -571,8 +529,17 @@ public class Construct implements Serializable {
 	 * Flag for automatically enabling new tags, which are created based on this construct
 	 * @return flag
 	 */
-	public boolean isAutoEnable() {
+	public Boolean getAutoEnable() {
 		return autoEnable;
+	}
+
+	/**
+	 * Flag for automatically enabling new tags, which are created based on this construct
+	 * @return Optional of flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getAutoEnableOptional() {
+		return Optional.ofNullable(this.autoEnable);
 	}
 
 	/**
@@ -580,7 +547,7 @@ public class Construct implements Serializable {
 	 * @param autoEnable flag
 	 * @return fluent API
 	 */
-	public Construct setAutoEnable(boolean autoEnable) {
+	public Construct setAutoEnable(Boolean autoEnable) {
 		this.autoEnable = autoEnable;
 		return this;
 	}
@@ -604,21 +571,67 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Javascript "hopedit" hook which, if available
-	 * should replace the "hopedit" call.
-	 * @return hopedit hook
+	 * Whether the tag editor should be opened immediately when the construct
+	 * is inserted.
+	 *
+	 * @return Whether the tag editor should be opened immediately when the construct
+	 * is inserted.
 	 */
-	public String getHopeditHook() {
-		return hopeditHook;
+	public boolean isOpenEditorOnInsert() {
+		return openEditorOnInsert;
 	}
 
 	/**
-	 * Set the hopedit hook
-	 * @param hopeditHook hook
+	 * Set whether the tag editor should be opened immediately when the
+	 * construct is inserted.
+	 *
+	 * @param openEditorOnInsert Whether the tag editor should be opened
+	 * 		immediately when the construct is inserted.
+	 *
 	 * @return fluent API
 	 */
-	public Construct setHopeditHook(String hopeditHook) {
-		this.hopeditHook = hopeditHook;
+	public Construct setOpenEditorOnInsert(boolean openEditorOnInsert) {
+		this.openEditorOnInsert = openEditorOnInsert;
+		return this;
+	}
+
+	/**
+	 * Get the placement mode for edit icons.
+	 * @return The placement mode for edit icons.
+	 */
+	public EditorControlStyle getEditorControlStyle() {
+		return editorControlStyle;
+	}
+
+	/**
+	 * Set the placement mode for edit icons.
+	 * @param editorControlStyle The placement mode for edit icons.
+	 * @return fluent API
+	 */
+	public Construct setEditorControlStyle(EditorControlStyle editorControlStyle) {
+		this.editorControlStyle = editorControlStyle;
+		return this;
+	}
+
+	/**
+	 * Whether the edit icons should be displayed inside the rendered construct.
+	 * @return Whether the edit icons should be displayed inside the rendered construct.
+	 */
+	public boolean isEditorControlsInside() {
+		return editorControlsInside;
+	}
+
+
+	/**
+	 * Set Whether the edit icons should be displayed inside the rendered
+	 * construct.
+	 *
+	 * @param editorControlsInside Whether the edit icons should be displayed
+	 * 		inside the rendered construct.
+	 * @return fluent API
+	 */
+	public Construct setEditorControlsInside(boolean editorControlsInside) {
+		this.editorControlsInside = editorControlsInside;
 		return this;
 	}
 

@@ -1,7 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { Folder, InheritableItem, ItemType, Node as NodeModel } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 
 /**
@@ -23,8 +22,6 @@ export class MultiMoveModal implements IModalDialog {
     itemType: ItemType;
     canNotBeMoved: InheritableItem[];
     willBeMoved: InheritableItem[];
-
-    iconForItemType = iconForItemType;
 
     ngOnInit(): void {
         this.willBeMoved = [];

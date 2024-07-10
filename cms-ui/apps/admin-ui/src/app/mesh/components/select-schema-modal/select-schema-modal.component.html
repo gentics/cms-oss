@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ title | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-schema-table
+        [hideActions]="true"
+        [multiple]="multiple"
+        [(selected)]="selected"
+    ></gtx-mesh-schema-table>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        (click)="confirmSelection()"
+    >
+        {{ 'shared.confirm_selection' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

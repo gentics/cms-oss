@@ -1,27 +1,43 @@
 import {
+    MultiValidationResult,
+    TagEditorContext,
+    Translator,
+    ValidationResult,
+    VariableTagEditorContext,
+} from '@gentics/cms-integration-api-models';
+import {
     EditableObjectTag,
     EditableTag,
-    MultiValidationResult,
     RegexValidationInfo,
     StringTagPartProperty,
-    TagEditorContext,
     TagPart,
     TagPartProperty,
     TagPartType,
     TagPropertyMap,
     TagPropertyType,
     TagType,
-    ValidationResult,
-    VariableTagEditorContext,
 } from '@gentics/cms-models';
-import { BehaviorSubject } from 'rxjs';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { TagEditorContextImpl } from '../app/tag-editor/common/impl/tag-editor-context-impl';
-import { getMockTagEditorTranslator } from '../app/tag-editor/common/impl/tag-editor-context.spec';
-import { getExampleNodeData, getExamplePageData } from './test-data.mock';
 
 /**
  * Contains test data and mocks for TagEditor and TagPropertyEditor tests.
  */
+
+class MockTranslator {
+    instant(key: string): string {
+        return key;
+    }
+    get(key: string): Observable<string> {
+        return of(key);
+    }
+}
+
+/** Returns a mocked Translator that will always return the key for instant() and of(key) for get(). */
+export function getMockTagEditorTranslator(): Translator {
+    return new MockTranslator() as any;
+}
 
 
 /**
@@ -71,8 +87,8 @@ var excludedProperties: Set<string>;
 
 /** Gets the set of MockTagPropertyInfo properties that should not be copied to a TagProperty. */
 function getExludedProperties(): Set<string> {
-    if (!excludedProperties) {
-        excludedProperties =  new Set([ 'editable', 'hidden', 'hideInEditor', 'keyword', 'mandatory', 'type', 'typeId' ]);
+    if (excludedProperties == null || excludedProperties.size === 0) {
+        excludedProperties = new Set([ 'editable', 'hidden', 'hideInEditor', 'keyword', 'mandatory', 'type', 'typeId' ]);
     }
     return excludedProperties;
 }
@@ -97,7 +113,6 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         id: typeof tagTypeInfo.id === 'number' ? tagTypeInfo.id : 4711,
         keyword: tagTypeInfo.keyword || 'test_tagtype',
         name: tagTypeInfo.name || 'Test Tag',
-        icon: tagTypeInfo.icon || 'tag.gif',
         parts: [],
     };
 
@@ -181,7 +196,7 @@ function createTagProperty<T extends TagPartProperty>(src: MockTagPropertyInfo<T
 }
 
 /** Creates an example EditableTag object with String TagParts. */
-export function getExampleEditableTag(): EditableTag {
+export const getExampleEditableTag: () => EditableTag = () => {
     const tagPropInfos: MockTagPropertyInfo<StringTagPartProperty>[] = [
         {
             stringValue: '',
@@ -218,7 +233,8 @@ export function getExampleEditableTag(): EditableTag {
             typeId: TagPartType.Text,
         },
     ];
-    return mockEditableTag(tagPropInfos);
+    const mocked = mockEditableTag(tagPropInfos);
+    return mocked;
 }
 
 /**
@@ -268,6 +284,7 @@ export function getMockedTagEditorContext(
         contextInfo.translator,
         contextInfo.variableContext,
         contextInfo.gcmsUiServices,
+        contextInfo.withDelete,
     );
 }
 

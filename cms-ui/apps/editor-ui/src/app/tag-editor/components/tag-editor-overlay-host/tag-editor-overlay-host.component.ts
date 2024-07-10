@@ -6,9 +6,10 @@ import {
     OnDestroy,
     OnInit,
     QueryList,
-    ViewChildren
+    ViewChildren,
 } from '@angular/core';
-import { EditableTag, TagEditorContext, TagEditorError } from '@gentics/cms-models';
+import { TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { EditableTag } from '@gentics/cms-models';
 import { delay, filter, take } from 'rxjs/operators';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -24,7 +25,7 @@ import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.compo
     selector: 'tag-editor-overlay-host',
     templateUrl: './tag-editor-overlay-host.component.html',
     styleUrls: ['./tag-editor-overlay-host.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -38,11 +39,13 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
     currentTag: EditableTag = null;
     isVisible = false;
     isIE11 = false;
+    editResolve: (result: TagEditorResult) => void;
+    editReject: (err?: any) => void;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
         private tagEditorService: TagEditorService,
-        private userAgentRef: UserAgentRef
+        private userAgentRef: UserAgentRef,
     ) {}
 
     ngOnInit(): void {
@@ -66,7 +69,7 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    openTagEditor(tag: EditableTag, context: TagEditorContext): Promise<EditableTag> {
+    openTagEditor(tag: EditableTag, context: TagEditorContext): Promise<TagEditorResult> {
         if (this.currentTag) {
             throw new TagEditorError('A TagEditor instance is already open in the content-frame.');
         }
@@ -74,13 +77,16 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
         this.currentTag = tag;
         this.changeDetector.markForCheck();
 
-        return new Promise<EditableTag>((resolve, reject) => {
+        return new Promise<TagEditorResult>((resolve, reject) => {
+            this.editResolve = resolve;
+            this.editReject = reject;
+
             this.tagEditorHostList.changes.pipe(
                 filter((list: QueryList<TagEditorHostComponent>) => list.length > 0),
                 // Without delay(), the dynamically created TagEditor component (inside the TagEditorHost) would not be
                 // initialized correctly, e.g., no lifecycle hooks would be called.
                 delay(0),
-                take(1)
+                take(1),
             ).subscribe((list: QueryList<TagEditorHostComponent>) => {
                 // There can only be one element in the list, because of our template.
                 list.first.editTag(tag, context)
@@ -91,6 +97,10 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
                     .catch(reason => {
                         this.closeTagEditor();
                         reject(reason);
+                    })
+                    .finally(() => {
+                        this.editResolve = null;
+                        this.editReject = null;
                     });
                 this.isVisible = true;
                 this.changeDetector.markForCheck();
@@ -103,6 +113,9 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
      */
     forceCloseTagEditor(): void {
         this.closeTagEditor();
+        if (this.editReject != null) {
+            this.editReject(new Error('Force closed'));
+        }
     }
 
     private closeTagEditor(): void {

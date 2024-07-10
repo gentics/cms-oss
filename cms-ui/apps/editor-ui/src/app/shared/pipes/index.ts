@@ -18,5 +18,5 @@ export * from './permission/permission.pipe';
 export * from './router-commands-for-item/router-commands-for-item.pipe';
 export * from './truncate-number/truncate-number.pipe';
 export * from './truncate-path/truncate-path.pipe';
+export * from './type-icon/type-icon.pipe';
 export * from './user-full-name/user-full-name.pipe';
-

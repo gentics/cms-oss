@@ -1,16 +1,16 @@
 package com.gentics.contentnode.tests.migration;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.job.AbstractUserActionJob;
-import com.gentics.contentnode.migration.jobs.AbstractMigrationJob;
 import com.gentics.contentnode.migration.jobs.TemplateMigrationJob;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.TemplateMigrationEditableTagMapping;
@@ -97,13 +97,12 @@ public class TemplateMigrationTest {
 		request.setOptions(options);
 
 		// Create and execute job
-		TemplateMigrationJob job = new TemplateMigrationJob();
+		TemplateMigrationJob job = new TemplateMigrationJob()
+				.setRequest(request);
 
-		job.addParameter(AbstractMigrationJob.PARAM_REQUEST, request);
-		job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, t.getSessionId());
-		job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
+		AtomicBoolean foreGround = new AtomicBoolean(true);
+		job.execute(10000, TimeUnit.SECONDS, () -> foreGround.set(false));
 
-		assertTrue(job.execute(10000));
-
+		assertThat(foreGround.get()).as("Job finished in foreground").isTrue();
 	}
 }

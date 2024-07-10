@@ -1,0 +1,12 @@
+
+<div [class]="publishedState.toLocaleLowerCase()"  class="content-state-wrapper" [title]="title">
+    <div class="state-icon">
+        <container-element [ngSwitch]="publishedState">
+            <icon *ngSwitchCase="PublishedState.PUBLISHED" class="published">cloud</icon>
+            <icon *ngSwitchCase="PublishedState.ARCHIVED" class="archived">cloud</icon>
+            <icon *ngSwitchCase="PublishedState.DRAFT" class="draft">cloud_off</icon>
+            <icon *ngSwitchCase="PublishedState.UPDATED" class="updated">cloud_upload</icon>
+        </container-element>
+    </div>
+    <span class="state-text">{{ PublishedStateTranslations.get(publishedState) | i18n  }}</span>
+</div>

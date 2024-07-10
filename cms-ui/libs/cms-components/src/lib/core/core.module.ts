@@ -16,6 +16,7 @@ import {
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
     GtxUserMenuToggleComponent,
+    PasswordConfirmInputComponent,
     StringListComponent,
     VersionModalComponent,
 } from './components';
@@ -53,6 +54,7 @@ const COMPONENTS: any[] = [
     KeyI18nValueListInputComponent,
     VersionModalComponent,
     BrowseBoxComponent,
+    PasswordConfirmInputComponent,
 ];
 
 const ENTRY_COMPONENTS = [

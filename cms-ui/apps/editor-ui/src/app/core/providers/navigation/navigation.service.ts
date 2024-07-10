@@ -1,8 +1,9 @@
 import { Location } from '@angular/common';
 import { Injectable } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
-import { EditMode, FolderItemType } from '@gentics/cms-models';
-import { EditorStateUrlOptions } from '../../../state';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderItemType } from '@gentics/cms-models';
+import { EditorStateUrlOptions } from '../../../state/modules/editor/editor.actions';
 
 export type ListUrlParams = {
     nodeId: number;
@@ -104,7 +105,7 @@ export class NavigationService {
     ): InstructionActions {
         // Image Editing is provided by EditorOverlay
         // This helper funcion would help to move from ContentFrame editors
-        if (itemType === 'image' && editMode === 'edit') {
+        if (itemType === 'image' && editMode === EditMode.EDIT) {
             return this.modal(nodeId, itemType, itemId, editMode, options);
         } else {
             return this.detail(nodeId, itemType, itemId, editMode, options);

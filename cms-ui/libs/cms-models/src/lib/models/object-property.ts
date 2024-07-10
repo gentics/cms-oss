@@ -12,7 +12,7 @@ export enum ObjectPropertiesObjectType {
 };
 
 /** DevTools Package
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Package.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Package.html
  */
 export interface ObjectPropertyBase<T extends ModelType> {
     /** globald ID */
@@ -53,7 +53,10 @@ export interface ObjectProperty<T extends ModelType = DefaultModelType> extends 
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface ObjectPropertyBO<T extends ModelType = DefaultModelType> extends ObjectPropertyBase<T> {
     /** Internal ID of the object property definition */
     id: string;

@@ -2,16 +2,26 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
-import { EditableTag, FolderTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    FolderResponse,
+    FolderTagPartProperty,
+    ResponseCode,
+    TagPart,
+    TagPartType,
+    TagPropertyType,
+} from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { getExampleFolderData } from '../../../../../testing/test-data.mock';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
-import { Api, ApiBase } from '../../../../core/providers/api';
+import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -27,7 +37,7 @@ import { TagPropertyEditorResolverService } from '../../../providers/tag-propert
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { ImagePreviewComponent } from '../../shared/image-preview/image-preview.component';
 import { UploadWithPropertiesComponent } from '../../shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { FolderUrlTagPropertyEditor } from './folder-url-tag-property-editor.component';
 
@@ -73,7 +83,10 @@ class MockUploadConflictService { }
  */
 describe('FolderUrlTagPropertyEditor', () => {
 
-    let getItemSpy: jasmine.Spy;
+    let client: GCMSTestRestClientService;
+    let folderGet: jasmine.Spy<jasmine.Func>;
+
+    let folderReturnValue: Observable<FolderResponse>;
 
     beforeEach(() => {
         configureComponentTest({
@@ -90,7 +103,7 @@ describe('FolderUrlTagPropertyEditor', () => {
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
-                Api,
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -105,26 +118,32 @@ describe('FolderUrlTagPropertyEditor', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 UploadWithPropertiesComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    FolderUrlTagPropertyEditor,
-                ],
-            },
-        });
+
+        client = TestBed.inject(GCMSRestClientService) as any;
+        folderGet = client.folder.get = jasmine.createSpy('folder.get', client.folder.get).and.callFake(() => folderReturnValue);
     });
 
     beforeEach(() => {
-        const api = TestBed.get(Api) as Api;
-        getItemSpy = spyOn(api.folders, 'getItem');
+        client.reset();
+        folderGet.calls.reset();
+
+        // Default value
+        folderReturnValue = of({
+            folder: { id: -99 },
+        } as any);
     });
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as FolderTagPartProperty;
@@ -137,62 +156,40 @@ describe('FolderUrlTagPropertyEditor', () => {
             const editorElement = fixture.debugElement.query(By.directive(FolderUrlTagPropertyEditor));
             expect(editorElement).toBeTruthy();
 
-            // Set up the return values for folderApi.getItem().
-            const getItemReturnValues: Observable<any>[] = [];
+            // Set up the return values for folder.get
             if (origTagProperty.folderId) {
                 // If an initial folder is set, we need to add a response for loading the folder.
                 if (origTagProperty.folderId === FOLDER_A.id) {
                     // Simulated existing folder
-                    getItemReturnValues.push(
-                        of({
-                            folder: getExampleFolderData({ id: origTagProperty.folderId }),
-                        }),
-                        of({
-                            folder: getExampleFolderData({ id: origTagProperty.folderId }),
-                        }),
-                    );
+                    folderReturnValue = of({
+                        folder: getExampleFolderData({ id: origTagProperty.folderId }),
+                    } as any);
                 } else {
                     // Simulated removed folder
-                    getItemReturnValues.push(
-                        throwError({
-                            messages: [ {
-                                message: 'The specified folder was not found.',
-                                type: 'CRITICAL',
-                            } ],
-                            responseInfo: {
-                                responseCode: 'NOTFOUND',
-                                responseMessage: 'The specified folder was not found.',
-                            },
-                        }),
-                        throwError({
-                            messages: [ {
-                                message: 'The specified folder was not found.',
-                                type: 'CRITICAL',
-                            } ],
-                            responseInfo: {
-                                responseCode: 'NOTFOUND',
-                                responseMessage: 'The specified folder was not found.',
-                            },
-                        }),
-                    );
-                }
-            } else {
-                // Simulated removed folder
-                getItemReturnValues.push(
-                    throwError({
+                    folderReturnValue = throwError({
                         messages: [ {
                             message: 'The specified folder was not found.',
                             type: 'CRITICAL',
                         } ],
                         responseInfo: {
-                            responseCode: 'NOTFOUND',
+                            responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified folder was not found.',
                         },
-                    }),
-                );
+                    });
+                }
+            } else {
+                // Simulated removed folder
+                folderReturnValue = throwError({
+                    messages: [ {
+                        message: 'The specified folder was not found.',
+                        type: 'CRITICAL',
+                    } ],
+                    responseInfo: {
+                        responseCode: ResponseCode.NOT_FOUND,
+                        responseMessage: 'The specified folder was not found.',
+                    },
+                });
             }
-
-            getItemSpy.and.returnValues(...getItemReturnValues);
 
             const editor: FolderUrlTagPropertyEditor = editorElement.componentInstance;
             editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
@@ -220,20 +217,10 @@ describe('FolderUrlTagPropertyEditor', () => {
             }
 
             // If an image was pre-selected, make sure that is has been loaded.
-            let callIndex = 1;
             if (origTagProperty.folderId) {
-                expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.folderId, 'wrong folder ID loaded');
-                expect(getItemSpy.calls.argsFor(0)[1]).toEqual('folder', 'wrong item type loaded');
-                expect(getItemSpy.calls.argsFor(0)[2]).toEqual({ nodeId: context.node.id }, 'wrong node ID');
-                ++callIndex;
+                expect(folderGet).toHaveBeenCalledWith(origTagProperty.folderId, { nodeId: context.node.id });
             }
-            expect(getItemSpy.calls.count()).toBe(callIndex);
-
-
-            getItemSpy.and.stub();
-            getItemSpy.calls.reset();
         }
-
 
         it('initializes properly for unset folder',
             componentTest(() => TestComponent, (fixture, instance) => {

@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from'lodash-es'
 import { objectDiff } from './object-diff';
 
 const TEST_OBJ = {

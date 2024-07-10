@@ -1,4 +1,111 @@
 {
-    "extends": "./tsconfig.base.json",
-    "include": ["apps/**/*.ts", "libs/**/*.ts"],
+    "compileOnSave": false,
+    "compilerOptions": {
+        "rootDir": ".",
+        "sourceMap": true,
+        "declaration": false,
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "importHelpers": true,
+        "resolveJsonModule": true,
+        // Strictness - Needs to be upped at some point
+        "forceConsistentCasingInFileNames": true,
+        "useDefineForClassFields": false,
+        "strict": false,
+        "noImplicitOverride": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": false,
+        "strictPropertyInitialization": false,
+        "target": "ES2022",
+        "module": "esnext",
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "typeRoots": [
+            "./node_modules/@types",
+            "./typings"
+        ],
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@admin-ui": [
+                "apps/admin-ui/src/app"
+            ],
+            "@admin-ui/*": [
+                "apps/admin-ui/src/app/*"
+            ],
+            "@admin-ui/testing": [
+                "apps/admin-ui/src/testing"
+            ],
+            "@admin-ui/testing/*": [
+                "apps/admin-ui/src/testing/*"
+            ],
+            "@editor-ui": [
+                "apps/editor-ui/src"
+            ],
+            "@editor-ui/*": [
+                "apps/editor-ui/src/*"
+            ],
+            "@gentics/cms-components": [
+                "libs/cms-components/src/public-api"
+            ],
+            "@gentics/cms-models": [
+                "libs/cms-models/src/public-api"
+            ],
+            "@gentics/cms-models/*": [
+                "libs/cms-models/src/lib/*"
+            ],
+            "@gentics/aloha-models": [
+                "dist/libs/aloha-models/src/public-api",
+                "libs/aloha-models/src/public-api"
+            ],
+            "@gentics/cms-rest-client": [
+                "libs/cms-rest-client/src/public-api"
+            ],
+            "@gentics/cms-rest-client/*": [
+                "libs/cms-rest-client/src/lib/*"
+            ],
+            "@gentics/cms-rest-client-angular": [
+                "libs/cms-rest-client-angular/src/public-api"
+            ],
+            "@gentics/cms-rest-client-angular/testing": [
+                "libs/cms-rest-client-angular/src/lib/testing"
+            ],
+            "@gentics/cms-rest-clients-angular": [
+                "libs/cms-rest-clients-angular/src/public-api"
+            ],
+            "@gentics/cms-rest-clients-angular/testing": [
+                "libs/cms-rest-clients-angular/src/testing"
+            ],
+            "@gentics/cms-rest-clients-angular/*": [
+                "libs/cms-rest-clients-angular/src/lib/*"
+            ],
+            "@gentics/form-generator": [
+                "libs/form-generator/src/public-api"
+            ],
+            "@gentics/image-editor": [
+                "libs/image-editor/src/public-api"
+            ],
+            "@gentics/ui-core": [
+                "libs/ui-core/src/public-api"
+            ],
+            "@gentics/ui-core/testing": [
+                "libs/ui-core/src/lib/testing"
+            ],
+            "@gentics/ui-core/testing/*": [
+                "libs/ui-core/src/lib/testing/*"
+            ],
+            "@gentics/cms-integration-api-models": [
+                "libs/cms-integration-api-models/src/public-api"
+            ],
+        }
+    },
+    "exclude": [
+        "node_modules",
+        "tmp"
+    ]
 }

@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
-import { ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { ItemInNode } from '@gentics/cms-models';
 
 export const GCMS_UI_SERVICES_PROVIDER = new InjectionToken<GcmsUiServices>('GCMS_UI_SERVICES_PROVIDER');
 

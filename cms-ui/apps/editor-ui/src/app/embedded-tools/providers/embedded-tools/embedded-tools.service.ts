@@ -22,7 +22,7 @@ import { ToolApiChannelService } from '../tool-api-channel/tool-api-channel.serv
 import { TabbedTool } from './tabbed-tool';
 
 /** Matches "/tools/:toolname[/:tool-sub-path]" */
-const toolsPathRegex = /^\/tools(?:\/([^\/]+)(?:\/(.+))?)?$/;
+const toolsPathRegex = /^\/tools(?:\/([^/]+)(?:\/(.+))?)?$/;
 
 /** Needed for Internet Explorer to allow cross-domain postMessage API */
 const BLANK_PAGE = 'assets/tool-blank.html';
@@ -194,7 +194,7 @@ export class EmbeddedToolsService implements OnDestroy {
             return closeTool();
         }
 
-        return api.hasUnsavedChanges().then(unsavedChanges => {
+        return Promise.resolve(api.hasUnsavedChanges()).then(unsavedChanges => {
             if (!unsavedChanges) {
                 return closeTool();
             }
@@ -220,8 +220,10 @@ export class EmbeddedToolsService implements OnDestroy {
         const api = this.channelService.getApi(toolKey);
         const currentSubpath = this.state.now.tools.subpath[toolKey];
         if (api && api.navigate && subpath !== currentSubpath) {
-            api.navigate(subpath)
-                .catch(err => { });
+            Promise.resolve(api.navigate(subpath))
+                .catch(() => {
+                    // Ignore all errors
+                });
         }
     }
 

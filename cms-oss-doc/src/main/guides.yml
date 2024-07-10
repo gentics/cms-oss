@@ -119,6 +119,9 @@ index:
     - title: "GlobalIdSync Tool"
       url:   "transport_globalidsync"
       text:  "Tool for synchronizing global IDs between systems"
+    - title: "GCMSUI Bridge"
+      text: "Learn how and for what to use the GCMSUI Bridge in your custom UI implementations"
+      url: ui_bridge
 
   Authentication:
     - title: "Authentication via REST API"

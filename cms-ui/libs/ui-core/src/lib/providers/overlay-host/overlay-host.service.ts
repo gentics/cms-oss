@@ -1,4 +1,5 @@
 import { Injectable, Optional, SkipSelf, ViewContainerRef } from '@angular/core';
+import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 
 /**
  * The OverlayHostService is used to get a reference to the ViewConainerRef of the
@@ -17,7 +18,10 @@ export class OverlayHostService {
      * instantiated a second time. This second instance will not have been registered with the OverlayHostComponent,
      * so we need to check out the injector tree and grab the hostView from the parent OverlayHostService.
      */
-    constructor(@Optional() @SkipSelf() private parentInstance?: OverlayHostService) {
+    constructor(
+        private sizeTracker: SizeTrackerService,
+        @Optional() @SkipSelf() private parentInstance?: OverlayHostService,
+    ) {
         if (parentInstance) {
             this.hostView = parentInstance.hostView;
             this.promiseResolveFns = parentInstance.promiseResolveFns;
@@ -33,6 +37,7 @@ export class OverlayHostService {
         if (0 < this.promiseResolveFns.length) {
             this.resolveHostView();
         }
+        this.sizeTracker.startViewportTracking();
     }
 
     /**

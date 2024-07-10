@@ -1,0 +1,6 @@
+It is now possible to define several properties using environment variables:
+* Hostname of a Node
+* Portal Preview URL for a Node
+* Username and Password for ContentRepository
+* Connection URL for ContentRepository
+* Attribute Basepath for ContentRepository

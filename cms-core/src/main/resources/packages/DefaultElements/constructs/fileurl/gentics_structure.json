@@ -1,7 +1,6 @@
 {
   "globalId" : "A547.14546",
   "keyword" : "fileurl",
-  "icon" : "url.gif",
   "name" : {
     "de" : "[URL] Datei",
     "en" : "[URL] File"
@@ -12,8 +11,8 @@
   },
   "mayBeSubtag" : true,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.14173",
     "name" : {

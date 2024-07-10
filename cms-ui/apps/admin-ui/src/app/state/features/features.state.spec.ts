@@ -1,7 +1,7 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Feature, NodeFeature } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 import { AppStateService } from '../providers/app-state/app-state.service';
 import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
 import { SetGlobalFeature, SetNodeFeatures } from './features.actions';

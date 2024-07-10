@@ -1,10 +1,9 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { AdminUIEntityDetailRoutes, ContentPackageDetailTabs, GcmsAdminUiRoute, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
+import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     ContentPackageDetailComponent,
-    ContentPackageDetailTabs,
     ContentPackageMasterComponent,
 } from './components';
 import { CanActivateContentPackageGuard } from './providers';
@@ -15,8 +14,8 @@ export const CONTENT_STAGING_ROUTES: GcmsAdminUiRoute[] = [
         component: ContentPackageMasterComponent,
     },
     {
-        path: 'package',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.CONTENT_PACKAGE,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },
@@ -35,7 +34,7 @@ export const CONTENT_STAGING_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateContentPackageGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

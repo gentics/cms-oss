@@ -1,0 +1,34 @@
+.mesh-browser-container {
+
+    &.logged-out {
+        margin-top:1rem;
+
+        .login-gate-wrapper {
+            margin-top: 1rem;
+        }
+    }
+
+    overflow-y: auto;
+
+    .login-gate-wrapper {
+        height: 80%;
+    }
+    
+    .overview-header {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+    
+        .back-button {
+            margin-right: 1.5rem;
+        }
+    
+        .overview-title {
+            font-size: 1.1rem;
+        }
+    }
+}
+
+.no-project {
+    margin-top: 3rem;
+}

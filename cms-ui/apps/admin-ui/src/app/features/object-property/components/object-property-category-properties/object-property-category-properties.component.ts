@@ -1,8 +1,8 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { LanguageDataService } from '@admin-ui/shared';
+import { LanguageHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsI18nValue,
     Language,
@@ -10,7 +10,7 @@ import {
     Normalized,
     ObjectPropertyCategoryBO,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 
 export interface ObjectPropertyCategoryPropertiesFormData {
@@ -33,7 +33,10 @@ export enum ObjectPropertyCategoryPropertiesMode {
     templateUrl: './object-property-category-properties.component.html',
     styleUrls: ['./object-property-category-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ObjectPropertyCategoryPropertiesComponent)],
+    providers: [
+        generateFormProvider(ObjectPropertyCategoryPropertiesComponent),
+        generateValidatorProvider(ObjectPropertyCategoryPropertiesComponent),
+    ],
 })
 export class ObjectPropertyCategoryPropertiesComponent
     extends BasePropertiesComponent<ObjectPropertyCategoryBO<Normalized>>
@@ -50,7 +53,7 @@ export class ObjectPropertyCategoryPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
     ) {
         super(changeDetector);
     }
@@ -58,7 +61,7 @@ export class ObjectPropertyCategoryPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.languages$ = this.languageData.watchSupportedLanguages();
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;
@@ -92,14 +95,6 @@ export class ObjectPropertyCategoryPropertiesComponent
             };
         } else {
             return formData;
-        }
-    }
-
-    protected override onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                nameI18n: this.value?.nameI18n || {},
-            });
         }
     }
 

@@ -4,8 +4,6 @@ There are serval Aloha Editor plugins that allow the integration of Aloha Editor
 
 * gcn/gcn-plugin - This is the main integeration plugin which enabled frontend editing with Aloha Editor.
 * gcn/fileupload - This plugin allows to use the fileupload for newly created links with Aloha Editor.
-* gcn/image - This is a small plugin that contains interface methods to the 'commons/image' plugin.
-* gcn/imagemanipulation2 - This is the Aloha Editor Image Manipulation 2 plugin.
 
 endprologue.
 
@@ -162,10 +160,6 @@ expected to return an object with the following information:
 h4. Gentics CMS Fileupload Plugin +gcn/gcnfileupload+
 
 The Gentics CMS Fileupload Plugin allows you to upload files by adding a button to the FloatingMenus "Link" tab. If you click the "Upload File" button a prompt will appear asking you to select a file. You may also add a description for your file. The file will be linked as soon as the upload finishes.
-
-h4. Gentics CMS Image Plugin +gcn/image+
-
-The Gentics CMS Image Plugin is currently used to edit images from the backend and is not designed to be used with standard Aloha Editor inline editing.
 
 h4. Gentics CMS Linkbrowser Plugin +gcn/linkbrowser+
 

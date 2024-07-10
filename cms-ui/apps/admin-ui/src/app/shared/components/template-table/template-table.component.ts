@@ -2,19 +2,19 @@ import { BO_PERMISSIONS, TemplateBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
     TemplateTableLoaderOptions,
     TemplateTableLoaderService,
 } from '@admin-ui/core';
-import { ContextMenuService, DELETE_ACTION, UNASSIGN_FROM_PACKAGE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, Template } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BasePackageEntityTableComponent } from '../base-package-entity-table/base-package-entity-table.component';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
+import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 
 @Component({
     selector: 'gtx-template-table',
@@ -46,7 +46,6 @@ export class TemplateTableComponent
         loader: TemplateTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -54,10 +53,9 @@ export class TemplateTableComponent
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

@@ -82,6 +82,7 @@ h3. Maximum dimension in pixel
 The allowed maximum size of an uploaded image (in pixel) can be set with the following configuration parameter:
 
 <shell filename="conf/*.yml">
-# The default maximum dimensions are 4000x4000
-image_maxdimensions: "4000x4000"
+config:
+  # The default maximum dimensions are 4000x4000
+  images_maxdimensions: "4000x4000"
 </shell>

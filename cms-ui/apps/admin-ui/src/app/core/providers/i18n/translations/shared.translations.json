@@ -84,8 +84,12 @@
         "de": "Beim Zuweisen der CR-Fragmente zum ContentRepository ist ein Fehler aufgetreten"
     },
     "assign_languages_to_node": {
-        "en": "Assign Languages to Node",
+        "en": "Assign languages to Node",
         "de": "Sprachen zu Node hinzufügen"
+    },
+    "unassign_languages_from_node": {
+        "en": "Unassign language from Node",
+        "de": "Sprache von Node entfernen"
     },
     "assign_languages_to_node_title": {
         "en": "Assign languages to Node \"{{ entityName }}\"",
@@ -223,6 +227,10 @@
         "en": "Entity",
         "de": "Entität"
     },
+    "type" : {
+        "en": "Type",
+        "de": "Typ"
+    },    
     "element": {
         "en": "Element",
         "de": "Element"
@@ -515,6 +523,10 @@
         "en": "Datacheck result of \"{{ entityName }}\"",
         "de": "Datenprüfergebnis von „{{ entityName }}“"
     },
+    "title_management_of_entity": {
+        "en": "Management of \"{{ entityName }}\"",
+        "de": "Verwaltung von „{{ entityName }}“"
+    },
     "title_properties_of_folder": {
         "en": "Properties of Folder \"{{ entityName }}\"",
         "de": "Eigenschaften von Ordner „{{ entityName }}“"
@@ -799,8 +811,20 @@
         "en": "Value",
         "de": "Wert"
     },
+    "confirm_button": {
+        "en": "Confirm",
+        "de": "Bestätigen"
+    },
     "confirm_selection": {
         "en": "Confirm",
         "de": "Bestätigen"
+    },
+    "message_send": {
+        "en": "Message has been sent",
+        "de": "Nachricht wurde gesendet"
+    },
+    "message_sent_error": {
+        "en": "Error sending message",
+        "de": "Die Nachricht konnte nicht gesendet werden"
     }
 }

@@ -100,7 +100,7 @@
     <a
         *ngIf="linkDetails; else textRenderer"
         class="gtx-table-cell-link"
-        [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:item.id:tab"
+        [routerLink]="AdminUIEntityDetailRoutes.CONTENT_REPOSITORY | gtxEntityDetailRouterLink:item.id:tab"
         [title]="date > 0 ? (date | i18nDate:'dateTime') : ''"
         (click)="cancelEvent($event)"
     >{{ label }}</a>

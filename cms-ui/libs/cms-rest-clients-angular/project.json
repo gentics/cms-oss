@@ -1,0 +1,54 @@
+{
+    "name": "cms-rest-clients-angular",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "libs/cms-rest-clients-angular/src",
+    "tags": ["lib", "angular", "publish"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json",
+                "project": "libs/cms-rest-clients-angular/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/cms-rest-clients-angular/**/*.ts",
+                    "libs/cms-rest-clients-angular/**/*.html"
+                ]
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner cms-rest-clients-angular --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-clients-angular"
+            }
+        }
+    }
+}

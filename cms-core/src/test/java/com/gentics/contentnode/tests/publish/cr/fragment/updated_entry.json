@@ -13,5 +13,6 @@
 	"displayfield": false,
 	"segmentfield": false,
 	"urlfield": false,
-	"elasticsearch": null
+	"elasticsearch": null,
+	"noIndex": false
 }

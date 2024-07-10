@@ -112,6 +112,10 @@ h4. @publish@
 
 This task will start a publish run.
 
+h4. @convertimages@
+
+This task will convert non-webp images to webp format for all nodes that have the "WebP Conversion feature":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#webp-conversion activated.
+
 h3. Custom Tasks
 
 When creating a custom task, only scripts in @/cms/scheduler-commands@ are valid commands by default. Unless the feature "INSECURE_SCHEDULER_COMMAND":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#insecure-scheduler-command is enabled, only scripts in @/cms/scheduler-commands@ may be executed. Other commands will be not be started by the scheduler.

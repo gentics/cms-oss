@@ -274,23 +274,6 @@
 			tagparts.anchor = anchorUrlMatch ? anchorUrlMatch[2] : '';
 		}
 
-		// Make sure the href attribute of the link is consistent with the
-		// data fields after saving.
-		var linkHref = href;
-
-		if (tagparts.anchor) {
-			linkHref += '#' + tagparts.anchor;
-		}
-
-		if (!linkHref) {
-			linkHref = '#';
-		}
-
-		$link.attr('href', linkHref);
-		$link.attr('data-gentics-gcn-url', tagparts.url);
-		$link.attr('data-gentics-gcn-fileurl', tagparts.fileurl);
-		$link.attr('data-gentics-gcn-anchor', tagparts.anchor);
-
 		return tagparts;
 	}
 

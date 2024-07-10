@@ -44,6 +44,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.publish.PublishQueueStats;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.publish.wrapper.PublishableTemplate;
 import com.gentics.contentnode.render.RenderType;
@@ -467,11 +468,18 @@ public class NodeFactory {
 				registerObjectFactory(dbTable.clazz(), factory);
 			}
 		}
+	}
 
-		try {
-			factory.initialize();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+	/**
+	 * Initialize all registered object factories
+	 */
+	public void initializeObjectFactories() {
+		for (ObjectFactory factory : factorySet) {
+			try {
+				factory.initialize();
+			} catch (NodeException e) {
+				logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+			}
 		}
 	}
 
@@ -1577,7 +1585,7 @@ public class NodeFactory {
 		if (!isInitialized()) {
 			throw new NodeException("Could not start dirt queue worker, factory is not initialized");
 		}
-		if (dirtQueueWorkerThread != null) {
+		if (isDirtQueueWorkerRunning()) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Dirt queue worker is already running, no need to start it");
 			}
@@ -1591,6 +1599,18 @@ public class NodeFactory {
 		dirtQueueWorkerThread.start();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Started dirt queue worker thread");
+		}
+	}
+
+	/**
+	 * Check whether the dirtqueue worker thread is up and running
+	 * @return true, iff thread is alive
+	 */
+	public boolean isDirtQueueWorkerRunning() {
+		if (dirtQueueWorkerThread == null) {
+			return false;
+		} else {
+			return dirtQueueWorkerThread.isAlive();
 		}
 	}
 
@@ -1757,6 +1777,7 @@ public class NodeFactory {
 			while (!stopped && !isInterrupted()) {
 				QueueEntry entry = null;
 				boolean doSleep = true;
+				boolean doUpdatePublishQueueStats = false;
 
 				if (DistributionUtil.isTaskExecutionAllowed()) {
 					try (Trx trx = new Trx()) {
@@ -1791,6 +1812,10 @@ public class NodeFactory {
 									// event was triggered, delete the queue entry
 									entry.delete();
 									doSleep = false;
+									// after a maintenance action, update the publish queue stats immediately
+									if (entry.isMaintenanceAction()) {
+										doUpdatePublishQueueStats = true;
+									}
 								}
 							}
 						} else {
@@ -1820,6 +1845,10 @@ public class NodeFactory {
 						} else {
 							logger.error("Error while fetching next entry", e);
 						}
+					}
+
+					if (doUpdatePublishQueueStats) {
+						PublishQueueStats.get().refresh();
 					}
 				}
 

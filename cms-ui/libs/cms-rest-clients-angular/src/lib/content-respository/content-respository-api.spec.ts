@@ -1,4 +1,4 @@
-import { ContentRepositoryCreateRequest, ContentRepositoryUpdateRequest } from '@gentics/cms-models';
+import { ContentRepositoryCreateRequest, ContentRepositoryPasswordType, ContentRepositoryType, ContentRepositoryUpdateRequest } from '@gentics/cms-models';
 import { MockApiBase } from '../base/api-base.mock';
 import { ContentrespositoryApi } from './content-respository-api';
 
@@ -21,7 +21,7 @@ describe('ContentRepositoryApi', () => {
 
     it('getContentRepository sends a GET request to "contentrepositories/id"', () => {
         const id = 1;
-        contentRepositoryApi.getContentRepository(`${id}`);
+        contentRepositoryApi.getContentRepository(id);
 
         expect(apiBase.get).toHaveBeenCalledWith(`contentrepositories/${id}`);
     });
@@ -29,10 +29,11 @@ describe('ContentRepositoryApi', () => {
     it('createContentRepository sends a POST request to "contentrepositories"', () => {
         const payload: ContentRepositoryCreateRequest = {
             name: 'Test-Content-Repository-01',
-            crType: 'mesh',
+            crType: ContentRepositoryType.MESH,
             dbType: 'mysql',
             username: 'root',
-            usePassword: false,
+            passwordType: ContentRepositoryPasswordType.NONE,
+            passwordProperty: '',
             url: 'jdbc:mariadb://db:3306/contentRepository',
             basepath: '',
             instantPublishing: true,
@@ -42,10 +43,15 @@ describe('ContentRepositoryApi', () => {
             defaultPermission: '',
             diffDelete: true,
             projectPerNode: false,
+            http2: false,
+            noFoldersIndex: false,
+            noFilesIndex: false,
+            noPagesIndex: false,
+            noFormsIndex: false,
         };
         contentRepositoryApi.createContentRepository(payload);
 
-        expect(apiBase.get).toHaveBeenCalledWith('contentrepositories', payload);
+        expect(apiBase.post).toHaveBeenCalledWith('contentrepositories', payload);
     });
 
     it('updateContentRepository sends a PUT request to "contentrepositories/id"', () => {
@@ -53,16 +59,16 @@ describe('ContentRepositoryApi', () => {
         const payload: ContentRepositoryUpdateRequest = {
             name: 'Test-Content-Repository-02',
         };
-        contentRepositoryApi.updateContentRepository(`${id}`, payload);
+        contentRepositoryApi.updateContentRepository(id, payload);
 
-        expect(apiBase.get).toHaveBeenCalledWith(`contentrepositories/${id}`, payload);
+        expect(apiBase.put).toHaveBeenCalledWith(`contentrepositories/${id}`, payload);
     });
 
     it('deleteContentRepository sends a DELETE request to "contentrepositories/id"', () => {
         const id = 1;
-        contentRepositoryApi.deleteContentRepository(`${id}`);
+        contentRepositoryApi.deleteContentRepository(id);
 
-        expect(apiBase.get).toHaveBeenCalledWith(`contentrepositories/${id}`);
+        expect(apiBase.delete).toHaveBeenCalledWith(`contentrepositories/${id}`);
     });
 
 

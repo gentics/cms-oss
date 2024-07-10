@@ -1,7 +1,7 @@
 import { SelectOption } from './tag-property-values';
 
 /** Possible Tagpart types
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_TagpartType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_TagpartType.html
  */
 export enum TagPropertyType {
     STRING = 'STRING',
@@ -30,7 +30,7 @@ export enum TagPropertyType {
 }
 
 /** Markup Language types
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_MarkupLanguage.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_MarkupLanguage.html
  */
 export enum MarkupLanguageType {
     HTML = 1,
@@ -57,12 +57,15 @@ export enum MarkupLanguageType {
 
 /**
  * Defines the concrete type of a TagPart.
- * @see https://www.gentics.com/Content.Node/guides/gcn_part_types.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/gcn_part_types.html
  */
 export enum TagPartType {
     /** Used for normal text (without HTML), which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering. */
     Text = 1,
-    /** Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering, unless they occur within HTML tags or immediately follow an HTML tag. */
+    /**
+     * Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering,
+     * unless they occur within HTML tags or immediately follow an HTML tag.
+     */
     TextHtml = 2,
     /** Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering. */
     Html = 3,
@@ -72,13 +75,19 @@ export enum TagPartType {
     UrlImage = 6,
     /**	Reference a file. */
     UrlFile = 8,
-    /** Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field. No conversion will be done while rendering. */
+    /**
+     * Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field.
+     * No conversion will be done while rendering.
+     */
     TextShort = 9,
     /** Variant of the type Text/HTML with a larger textarea in the tagfill dialog. */
     TextHtmlLong = 10,
     /** Render a tag of another page. */
     TagPage = 11,
-    /** The overview part type creates and overview which can be configured using a the provided wizard. WARNING: Cannot be used together with other tag parts that are set as editable. */
+    /**
+     * The overview part type creates and overview which can be configured using a the provided wizard.
+     * WARNING: Cannot be used together with other tag parts that are set as editable.
+     */
     Overview = 13,
     /** Users can enter values (newline separated), and can choose whether to render them as ordered or unordered list. */
     List = 15,
@@ -118,7 +127,10 @@ export enum TagPartType {
     Node = 40,
     /** @deprecated */
     Form = 41,
-    /** The CMS Form part lets the user select a form from the CMS. See Gentics CMS Forms for details. NOTE: Parts of this type can only be used in the new Editor User Interface. */
+    /**
+     * The CMS Form part lets the user select a form from the CMS. See Gentics CMS Forms for details.
+     * NOTE: Parts of this type can only be used in the new Editor User Interface.
+     */
     CmsForm = 42,
 }
 
@@ -158,7 +170,7 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
 
 /**
  * Selection Settings for type SELECT or MULTISELECT
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_SelectSetting.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_SelectSetting.html
  */
 export interface SelectSetting {
 
@@ -175,7 +187,7 @@ export interface SelectSetting {
 
 /**
  * Enumeration of the type of objects in an overview
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_ListType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ListType.html
  */
 export enum ListType {
     PAGE = 'PAGE',
@@ -187,7 +199,7 @@ export enum ListType {
 
 /**
  * Enumeration of the selection types in an overview
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_SelectType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_SelectType.html
  */
 export enum SelectType {
 
@@ -206,7 +218,7 @@ export enum SelectType {
 
 /**
  * Model for overview settings
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_OverviewSetting.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_OverviewSetting.html
  */
 export interface OverviewSetting {
 

@@ -19,6 +19,6 @@ const PROVIDERS: any[] = [
     ],
     declarations: [AppComponent],
     providers: PROVIDERS,
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -1,7 +1,6 @@
 import { ContentPackageOperations, I18nNotificationService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { ContentPackageBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -31,7 +30,7 @@ export class CreateContentPackageModalComponent extends BaseModal<ContentPackage
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl(null, createNestedControlValidator());
+        this.form = new UntypedFormControl(null);
     }
 
     ngOnDestroy(): void {

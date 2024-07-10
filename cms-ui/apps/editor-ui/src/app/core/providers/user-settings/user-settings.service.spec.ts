@@ -1,7 +1,8 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { GcmsTestData } from '@gentics/cms-models';
+import { ENVIRONMENT_TOKEN } from '@editor-ui/app/development/development-tools';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';
-import { Observable, of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService, STATE_MODULES, UIActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -64,10 +65,6 @@ class MockServerStorage {
     set = jasmine.createSpy('set').and.callFake(() => Promise.resolve());
 }
 
-class MockNavigationService {
-
-}
-
 class MockErrorHandler {
 
 }
@@ -80,36 +77,35 @@ describe('UserSettingsService', () => {
     let publishQueueActions: MockPublishQueueActions;
     let uiActions: MockUIActions;
     let i18nService: MockI18nService;
-    let notification: MockNotificationService;
     let localStorage: MockLocalStorage;
     let serverStorage: MockServerStorage;
-    let errorHandler: MockErrorHandler;
-    let subscriptions: any[];
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: FolderActionsService, useClass: MockFolderActions },
+                { provide: PublishQueueActionsService, useClass: MockPublishQueueActions },
+                { provide: ENVIRONMENT_TOKEN, useValue: 'testing' },
+                { provide: UIActionsService, useClass: MockUIActions },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: NotificationService, useClass: MockNotificationService },
+                { provide: LocalStorage, useClass: MockLocalStorage },
+                { provide: ServerStorage, useClass: MockServerStorage },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
+                UserSettingsService,
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
-
-        userSettings = new UserSettingsService(
-            state,
-            (folderActions = new MockFolderActions()) as any as FolderActionsService,
-            (publishQueueActions = new MockPublishQueueActions()) as any as PublishQueueActionsService,
-            'testing', // environment
-            (uiActions = new MockUIActions()) as any as UIActionsService,
-            (i18nService = new MockI18nService()) as any as I18nService,
-            (notification = new MockNotificationService()) as any as NotificationService,
-            (localStorage = new MockLocalStorage()) as any as LocalStorage,
-            (serverStorage = new MockServerStorage()) as any as ServerStorage,
-            (errorHandler = new MockErrorHandler()) as any as ErrorHandler,
-        );
-
-        subscriptions = state.trackSubscriptions();
+        state = TestBed.inject(ApplicationStateService) as TestApplicationState;
+        userSettings = TestBed.inject(UserSettingsService);
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        publishQueueActions = TestBed.inject(PublishQueueActionsService) as any;
+        uiActions = TestBed.inject(UIActionsService) as any;
+        i18nService = TestBed.inject(I18nService) as any;
+        localStorage = TestBed.inject(LocalStorage) as any;
+        serverStorage = TestBed.inject(ServerStorage) as any;
     });
 
     it('gets created okay', () => {
@@ -138,15 +134,21 @@ describe('UserSettingsService', () => {
     describe('loadUserSettingsWhenLoggedIn', () => {
 
         it('waits until the app state signals a logged-in user', () => {
-            expect(subscriptions.length).toBe(0);
             userSettings.loadUserSettingsWhenLoggedIn();
-            expect(state.getSubscribedBranches()).toContain('auth');
             expect(localStorage.getForUser).not.toHaveBeenCalled();
         });
 
         it('loads settings from localStorage and serverStorage when a user logs in', () => {
-            state.mockState({ auth: { currentUserId: null, loggingIn: false } });
-            serverStorage.getAll.and.returnValue(Observable.never());
+            state.mockState({
+                auth: {
+                    currentUserId: null,
+                    loggingIn: false,
+                },
+                ui: {
+                    nodesLoaded: true,
+                },
+            });
+            serverStorage.getAll.and.returnValue(NEVER);
             userSettings.loadUserSettingsWhenLoggedIn();
             expect(localStorage.getForUser).not.toHaveBeenCalled();
 
@@ -161,8 +163,11 @@ describe('UserSettingsService', () => {
                     currentUserId: 1234,
                     isLoggedIn: true,
                 },
+                ui: {
+                    nodesLoaded: true,
+                },
             });
-            serverStorage.getAll.and.returnValue(Observable.never());
+            serverStorage.getAll.and.returnValue(NEVER);
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                 if (key === 'activeLanguage') { return 'testLanguage'; }
                 if (key === 'folderSorting') { return { sortBy: 'cdate', sortOrder: 'desc' }; }
@@ -181,12 +186,15 @@ describe('UserSettingsService', () => {
                     currentUserId: 1234,
                     isLoggedIn: true,
                 },
+                ui: {
+                    nodesLoaded: true,
+                },
             });
 
             const testServerStorage = {
                 uiLanguage: 'de',
-                recentItems: [ GcmsTestData.getExamplePageData() ],
-                favourites: [ GcmsTestData.getExamplePageData() ],
+                recentItems: [ getExamplePageData() ],
+                favourites: [ getExamplePageData() ],
             };
             serverStorage.getAll.and.returnValue(of(testServerStorage).pipe(first()));
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
@@ -206,7 +214,7 @@ describe('UserSettingsService', () => {
             expect(folderActions.setActiveLanguage).toHaveBeenCalledWith(defaultUserSettings.activeLanguage);
             expect(folderActions.setRepositoryBrowserDisplayFields).toHaveBeenCalledWith('page', defaultUserSettings.pageDisplayFieldsRepositoryBrowser);
 
-            for (let actions of [ folderActions, uiActions, publishQueueActions ]) {
+            for (const actions of [ folderActions, uiActions, publishQueueActions ]) {
                 const expectedCalledActionsSpies = Object.keys(actions).filter(key => key !== 'navigateToDefaultNode');
                 expectedCalledActionsSpies.forEach(key => {
                     const spy: jasmine.Spy = actions[key];
@@ -216,8 +224,16 @@ describe('UserSettingsService', () => {
         }));
 
         it('re-loads all settings from localStorage and serverStorage when a different user logs in', () => {
-            state.mockState({ auth: { currentUserId: null, loggingIn: false } });
-            serverStorage.getAll.and.returnValue(Observable.never());
+            state.mockState({
+                auth: {
+                    currentUserId: null,
+                    loggingIn: false,
+                },
+                ui: {
+                    nodesLoaded: true,
+                },
+            });
+            serverStorage.getAll.and.returnValue(NEVER);
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                 if (userId === 1234 && key === 'uiLanguage') { return 'language of first user'; }
                 if (userId === 9876 && key === 'uiLanguage') { return 'language of second user'; }
@@ -248,10 +264,16 @@ describe('UserSettingsService', () => {
                 localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                     if (key === 'lastNodeId') { return undefined; }
                 });
-                serverStorage.getAll.and.returnValue(Observable.of({}));
+                serverStorage.getAll.and.returnValue(of({}));
 
                 state.mockState({
-                    auth: { currentUserId: 1234, isLoggedIn: true },
+                    auth: {
+                        currentUserId: 1234,
+                        isLoggedIn: true,
+                    },
+                    ui: {
+                        nodesLoaded: true,
+                    },
                     folder: {
                         nodes: {
                             list: [ 1, 2, 3, 4 ],
@@ -302,10 +324,16 @@ describe('UserSettingsService', () => {
                 localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                     if (key === 'lastNodeId') { return 2; }
                 });
-                serverStorage.getAll.and.returnValue(Observable.of({}));
+                serverStorage.getAll.and.returnValue(of({}));
 
                 state.mockState({
-                    auth: { currentUserId: 1234, isLoggedIn: true },
+                    auth: {
+                        currentUserId: 1234,
+                        isLoggedIn: true,
+                    },
+                    ui: {
+                        nodesLoaded: true,
+                    },
                     folder: {
                         nodes: {
                             list: [ 1, 2, 3, 4 ],
@@ -356,12 +384,18 @@ describe('UserSettingsService', () => {
                 localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                     if (key === 'lastNodeId') { return undefined; }
                 });
-                serverStorage.getAll.and.returnValue(Observable.of({
+                serverStorage.getAll.and.returnValue(of({
                     lastNodeId: 2,
                 }));
 
                 state.mockState({
-                    auth: { currentUserId: 1234, isLoggedIn: true },
+                    auth: {
+                        currentUserId: 1234,
+                        isLoggedIn: true,
+                    },
+                    ui: {
+                        nodesLoaded: true,
+                    },
                     folder: {
                         activeNode: 2,
                         nodes: {
@@ -413,12 +447,18 @@ describe('UserSettingsService', () => {
                 localStorage.getForUser.and.callFake((userId: number, key: string): any => {
                     if (key === 'lastNodeId') { return 5; }
                 });
-                serverStorage.getAll.and.returnValue(Observable.of({
+                serverStorage.getAll.and.returnValue(of({
                     lastNodeId: 5,
                 }));
 
                 state.mockState({
-                    auth: { currentUserId: 1234, isLoggedIn: true },
+                    auth: {
+                        currentUserId: 1234,
+                        isLoggedIn: true,
+                    },
+                    ui: {
+                        nodesLoaded: true,
+                    },
                     folder: {
                         nodes: {
                             list: [ 1, 2, 3, 4 ],

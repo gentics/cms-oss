@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy
 import { Form, FormRequestOptions, Page, PageRequestOptions, QueuedActionRequestClear, TimeManagement } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { getFormattedTimeMgmtValue, pageVersionsGetLatest } from '../../../core/providers/i18n/i18n-utils';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
@@ -127,8 +128,9 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
 
             this.selectedLanguageVariants[this.item.id] = [this.item.id];
 
-            permissionLoad$ = this.permissions.forItem(this.item.id, 'page', this.currentNodeId)
-                .map(permissions => permissions.publish);
+            permissionLoad$ = this.permissions.forItem(this.item.id, 'page', this.currentNodeId).pipe(
+                map(permissions => permissions.publish),
+            )
         }
 
         if (this.item.type === 'form') {
@@ -136,8 +138,9 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
 
             this.selectedLanguageVariants[this.item.id] = [this.item.id];
 
-            permissionLoad$ = this.permissions.forItem(this.item.id, 'form', this.currentNodeId)
-                .map(permissions => permissions.publish);
+            permissionLoad$ = this.permissions.forItem(this.item.id, 'form', this.currentNodeId).pipe(
+                map(permissions => permissions.publish),
+            );
         }
 
 
@@ -256,7 +259,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             clearOfflineAt: false,
         };
 
-        let itemIDs: number[] = [];
+        const itemIDs: number[] = [];
 
         this.itemsToBeModified.forEach(item => {
             // eslint-disable-next-line @typescript-eslint/no-for-in-array, guard-for-in

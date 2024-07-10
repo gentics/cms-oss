@@ -1,10 +1,8 @@
-import { DataSourceDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormArray, UntypedFormControl, ValidatorFn } from '@angular/forms';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSourceTagPartProperty, SelectOption, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, ISortableEvent, generateFormProvider } from '@gentics/ui-core';
-import { isEqual, pick } from 'lodash';
+import { isEqual, pick } from'lodash-es'
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -25,7 +23,6 @@ export class DataSourcePartFillComponent extends BaseFormElementComponent<DataSo
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        protected dataSourceData: DataSourceDataService,
     ) {
         super(changeDetector);
     }
@@ -46,7 +43,7 @@ export class DataSourcePartFillComponent extends BaseFormElementComponent<DataSo
     }
 
     protected onValueChange(): void {
-        if ((this.value?.options || []).length !== (this.form?.length ?? 0) && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if ((this.value?.options || []).length !== (this.form?.length ?? 0)) {
             this.rebuildForm(this.value?.options ?? []);
         }
     }

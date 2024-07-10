@@ -1,0 +1,7 @@
+.symbol-grid {
+    // Actually 400px wide, but 17px for the scroll-bar
+    width: 417px;
+    max-height: 320px;
+    display: block;
+    scrollbar-gutter: stable;
+}

@@ -15,14 +15,14 @@ describe('ObjectPropertyCategoryApi', () => {
         const options = { pageSize: -1 };
         objectpropertycategoryApi.getObjectPropertyCategories(options);
 
-        expect(apiBase.get).toHaveBeenCalledWith('objectpropertycategory', options);
+        expect(apiBase.get).toHaveBeenCalledWith('objectproperty/category', options);
     });
 
     it('getObjectPropertyCategory sends a GET request to "objectpropertycategory/id"', () => {
         const id = 'globalId';
         objectpropertycategoryApi.getObjectPropertyCategory(id);
 
-        expect(apiBase.get).toHaveBeenCalledWith(`objectpropertycategory/${id}`);
+        expect(apiBase.get).toHaveBeenCalledWith(`objectproperty/category/${id}`);
     });
 
 });

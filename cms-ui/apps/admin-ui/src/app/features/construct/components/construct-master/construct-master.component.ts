@@ -1,11 +1,11 @@
-import { BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
-import { ConstructTableLoaderService, ConstructOperations, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { BO_PERMISSIONS, ConstructBO, EditableEntity } from '@admin-ui/common';
+import { ConstructHandlerService, ConstructTableLoaderService, I18nNotificationService, I18nService } from '@admin-ui/core';
 import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GcmsPermission, NormalizableEntityType, TagType } from '@gentics/cms-models';
+import { GcmsPermission, TagType } from '@gentics/cms-models';
 import { ModalService, TableActionClickEvent } from '@gentics/ui-core';
 import { combineLatest, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -24,7 +24,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
 
     public selection: string[] = [];
 
-    protected entityIdentifier: NormalizableEntityType = 'construct';
+    protected entityIdentifier = EditableEntity.CONSTRUCT;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -33,7 +33,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         appState: AppStateService,
         protected i18n: I18nService,
         protected loader: ConstructTableLoaderService,
-        protected operations: ConstructOperations,
+        protected handler: ConstructHandlerService,
         protected modalService: ModalService,
         protected notification: I18nNotificationService,
     ) {
@@ -169,7 +169,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         }
 
         this.subscriptions.push(
-            combineLatest(constructs.map(con => this.operations.update(String(con.id), { categoryId: response }).pipe(
+            combineLatest(constructs.map(con => this.handler.updateMapped(con.id, { categoryId: response }).pipe(
                 map(cat => cat.id),
                 catchError(err => {
                     this.notification.show({

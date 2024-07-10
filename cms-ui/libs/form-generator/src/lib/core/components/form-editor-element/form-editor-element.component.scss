@@ -256,8 +256,8 @@
 }
 
 .form-element-properties-editor-container--opened {
-    max-height: 99rem;
-    min-height: 2rem;
+    max-height: 50rem;
+    overflow-y: auto;    min-height: 2rem;
     border-top: 1px solid #ddd;
     opacity: 1;
 }

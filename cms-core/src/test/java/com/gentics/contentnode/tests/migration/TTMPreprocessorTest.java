@@ -8,7 +8,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -102,7 +104,6 @@ public class TTMPreprocessorTest {
 		node = Trx.supply(() -> createNode());
 		fromConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setKeyword("from");
-			c.setIconName("icon.png");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setKeyname("text");
@@ -113,7 +114,6 @@ public class TTMPreprocessorTest {
 
 		toConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setKeyword("to");
-			c.setIconName("icon.png");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setKeyname("text");
@@ -645,20 +645,17 @@ public class TTMPreprocessorTest {
 		List<Integer> oldEntries = getJobs();
 
 		try (Trx trx = new Trx(createSession(), true)) {
-			TagTypeMigrationJob job = new TagTypeMigrationJob();
-			job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
-			job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
-			job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, new ArrayList<>(request.getObjectIds()));
+			TagTypeMigrationJob job = new TagTypeMigrationJob()
+					.setRequest(request)
+					.setType(request.getType())
+					.setObjectIds(request.getObjectIds())
+					.setHandlePagesByTemplate(false)
+					.setHandleAllNodes(false)
+					.setPreventTriggerEvent(false);
 
-			job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, false);
-			job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, false);
-			job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, false);
-
-			job.addParameter(TagTypeMigrationJob.PARAM_SESSIONID, trx.getTransaction().getSessionId());
-			job.addParameter(TagTypeMigrationJob.PARAM_USERID, trx.getTransaction().getUserId());
-
-			assertTrue("Expected the job to finish", job.execute(1000));
-			assertEquals("Job result", "resultOK", job.getJobResult());
+			AtomicBoolean foreground = new AtomicBoolean(true);
+			job.execute(1000, TimeUnit.SECONDS, () -> foreground.set(false));
+			assertTrue("Expected the job to finish", foreground.get());
 			trx.success();
 		}
 
@@ -679,14 +676,12 @@ public class TTMPreprocessorTest {
 		List<Integer> oldEntries = getJobs();
 
 		try (Trx trx = new Trx(createSession(), true)) {
-			TemplateMigrationJob job = new TemplateMigrationJob();
-			job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
+			TemplateMigrationJob job = new TemplateMigrationJob()
+					.setRequest(request);
 
-			job.addParameter(TagTypeMigrationJob.PARAM_SESSIONID, trx.getTransaction().getSessionId());
-			job.addParameter(TagTypeMigrationJob.PARAM_USERID, trx.getTransaction().getUserId());
-
-			assertTrue("Expected the job to finish", job.execute(1000));
-			assertEquals("Job result", "resultOK", job.getJobResult());
+			AtomicBoolean foreground = new AtomicBoolean(true);
+			job.execute(1000, TimeUnit.SECONDS, () -> foreground.set(false));
+			assertTrue("Expected the job to finish", foreground.get());
 			trx.success();
 		}
 

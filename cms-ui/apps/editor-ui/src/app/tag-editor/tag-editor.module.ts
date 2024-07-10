@@ -11,16 +11,18 @@ import { ImagePreviewComponent } from './components/shared/image-preview/image-p
 import { SortableArrayListComponent } from './components/shared/sortable-array-list/sortable-array-list.component';
 import { UploadWithPropertiesModalComponent } from './components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { UploadWithPropertiesComponent } from './components/shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from './components/shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from './components/shared/validation-error-info/validation-error-info.component';
 import { TagEditorHostComponent } from './components/tag-editor-host/tag-editor-host.component';
 import { TagEditorOverlayHostComponent } from './components/tag-editor-overlay-host/tag-editor-overlay-host.component';
 import { TagPropertyEditorHostComponent } from './components/tag-property-editor-host/tag-property-editor-host.component';
 import { CheckboxTagPropertyEditor } from './components/tag-property-editors/checkbox-tag-property-editor/checkbox-tag-property-editor.component';
 import { DataSourceTagPropertyEditor } from './components/tag-property-editors/datasource-tag-property-editor/datasource-tag-property-editor.component';
-import { FileOrImageUrlTagPropertyEditor } from './components/tag-property-editors/file-or-image-url-tag-property-editor/file-or-image-url-tag-property-editor.component';
+import {
+    FileOrImageUrlTagPropertyEditor,
+} from './components/tag-property-editors/file-or-image-url-tag-property-editor/file-or-image-url-tag-property-editor.component';
 import { FolderUrlTagPropertyEditor } from './components/tag-property-editors/folder-url-tag-property-editor/folder-url-tag-property-editor.component';
-import { FormlistTagPropertyEditor } from './components/tag-property-editors/formlist-tag-property-editor/formlist-tag-property-editor.component';
 import { FormTagPropertyEditorComponent } from './components/tag-property-editors/form-tag-property-editor/form-tag-property-editor.component';
+import { FormlistTagPropertyEditor } from './components/tag-property-editors/formlist-tag-property-editor/formlist-tag-property-editor.component';
 import { ListTagPropertyEditor } from './components/tag-property-editors/list-tag-property-editor/list-tag-property-editor.component';
 import { NodeSelectorTagPropertyEditor } from './components/tag-property-editors/node-selector-tag-property-editor/node-selector-tag-property-editor.component';
 import { OverviewTagPropertyEditor } from './components/tag-property-editors/overview-tag-property-editor/overview-tag-property-editor.component';
@@ -31,7 +33,6 @@ import { TextTagPropertyEditor } from './components/tag-property-editors/text-ta
 import { ObjectTagNamePipe } from './pipes/object-tag-name/object-tag-name.pipe';
 import { TagPropertyLabelPipe } from './pipes/tag-property-label/tag-property-label.pipe';
 import { FormgeneratorApiService } from './providers/formgenerator-api/formgenerator-api.service';
-import { IFrameStylesService } from './providers/iframe-styles/iframe-styles.service';
 import { TagEditorService } from './providers/tag-editor/tag-editor.service';
 import { TagPropertyEditorResolverService } from './providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 
@@ -62,7 +63,7 @@ export const COMPONENTS: any[] = [
     TextTagPropertyEditor,
     UploadWithPropertiesComponent,
     UploadWithPropertiesModalComponent,
-    ValidationErrorInfo,
+    ValidationErrorInfoComponent,
 ];
 
 export const PIPES: any[] = [
@@ -72,7 +73,6 @@ export const PIPES: any[] = [
 
 export const PROVIDERS: any[] = [
     FormgeneratorApiService,
-    IFrameStylesService,
     TagEditorService,
     TagPropertyEditorResolverService,
 ];
@@ -118,6 +118,6 @@ export const ENTRY_COMPONENTS: any[] = [
     imports: IMPORTS,
     exports: EXPORTS,
     declarations: DECLARATIONS,
-    providers: PROVIDERS
+    providers: PROVIDERS,
 })
 export class TagEditorModule { }

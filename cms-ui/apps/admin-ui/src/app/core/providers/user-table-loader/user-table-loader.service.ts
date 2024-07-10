@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, TableLoadOptions, UserBO } from '@admin-ui/common';
+import { applyPermissions, BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, TableLoadOptions, UserBO } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Raw, User, UserListOptions, UserListResponse } from '@gentics/cms-models';
@@ -42,7 +42,7 @@ export class UserTableLoaderService extends BaseTableLoaderService<User<Raw>, Us
         return loader.pipe(
             map(response => {
                 const entities = response.items.map(user => this.mapToBusinessObject(user));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
 
                 return {
                     entities,

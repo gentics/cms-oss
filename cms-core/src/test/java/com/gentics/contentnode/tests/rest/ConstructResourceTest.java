@@ -18,6 +18,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -211,6 +212,11 @@ public class ConstructResourceTest {
 				if (!preserve.contains(construct.getKeyword())) {
 					construct.delete();
 				}
+			}
+		});
+		operate(t -> {
+			for (com.gentics.contentnode.object.ConstructCategory cat : t.getObjects(com.gentics.contentnode.object.ConstructCategory.class, DBUtils.select("SELECT id FROM construct_category", DBUtils.IDS))) {
+				cat.delete();
 			}
 		});
 	}
@@ -548,7 +554,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInTemplate() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -575,7 +580,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInPage() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -598,7 +602,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInObjectProperty() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -701,6 +704,95 @@ public class ConstructResourceTest {
 		assertEquals(updated.getConstruct().getDescriptionI18n(), description);
 	}
 
+	@Test
+	public void whenUpdatingConstructPartsOnly_constructPropertiesShouldNotChange() throws NodeException {
+		final List nodeList = Collections.singletonList(execute(Node::getId, node1));
+
+		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
+		construct.setKeyword("testtag");
+		construct.setName("Select", "en");
+
+		construct.setMayBeSubtag(true);
+		construct.setMayContainSubtags(true);
+		construct.setAutoEnable(true);
+		construct.setVisibleInMenu(true);
+
+		List<Part> parts = this.createConstructParts();
+		construct.setParts(parts);
+		ConstructLoadResponse createdConstruct = new ConstructResourceImpl().create(construct, nodeList);
+		assertResponseOK(createdConstruct);
+		assertThat(createdConstruct.getConstruct()).as("Created construct").isNotNull();
+
+		// Update only parts
+		com.gentics.contentnode.rest.model.Construct updateConstruct = new com.gentics.contentnode.rest.model.Construct();
+		Part textPart = new Part();
+		textPart.setTypeId(supply(() -> getPartTypeId(ShortTextPartType.class)));
+		textPart.setName("input2");
+
+
+		List<Part> updatedParts = new ArrayList<>();
+		updatedParts.addAll(parts);
+		updatedParts.add(textPart);
+		updateConstruct.setParts(updatedParts);
+
+		final Integer constructId = createdConstruct.getConstruct().getId();
+		ConstructLoadResponse updateResponse = new ConstructResourceImpl().update(constructId.toString(), updateConstruct, nodeList);
+
+		// should not affect construct properties
+		assertResponseOK(updateResponse);
+		assertThat(updateResponse.getConstruct().getParts()).hasSize(3);
+		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
+		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
+		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
+	}
+
+	@Test
+	public void whenUpdatingConstructProperties_constructPartsShouldNotChange() throws NodeException {
+		final List nodeList = Collections.singletonList(execute(Node::getId, node1));
+
+		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
+		construct.setKeyword("testtag");
+		construct.setName("Select", "en");
+
+		List<Part> parts = this.createConstructParts();
+		construct.setParts(parts);
+
+		ConstructLoadResponse createdConstruct = new ConstructResourceImpl().create(construct, nodeList);
+		assertResponseOK(createdConstruct);
+		assertThat(createdConstruct.getConstruct()).as("Created construct").isNotNull();
+
+		// Update only properties
+		com.gentics.contentnode.rest.model.Construct updateConstruct = new com.gentics.contentnode.rest.model.Construct();
+		updateConstruct.setMayBeSubtag(true);
+		updateConstruct.setMayContainSubtags(true);
+		updateConstruct.setAutoEnable(true);
+		updateConstruct.setVisibleInMenu(true);
+
+		final Integer constructId = createdConstruct.getConstruct().getId();
+		ConstructLoadResponse updateResponse = new ConstructResourceImpl().update(constructId.toString(), updateConstruct, nodeList);
+
+		// should not affect parts
+		assertResponseOK(updateResponse);
+		assertThat(updateResponse.getConstruct().getParts()).hasSize(2);
+		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
+		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
+		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
+	}
+
+	private List<Part> createConstructParts() throws NodeException {
+		Part selectPart = new Part();
+		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
+
+		SelectSetting setting = new SelectSetting();
+		selectPart.setSelectSettings(setting);
+
+		Part textPart = new Part();
+		textPart.setTypeId(supply(() -> getPartTypeId(ShortTextPartType.class)));
+		textPart.setName("input");
+		textPart.setMandatory(false);
+
+		return Arrays.asList(selectPart, textPart);
+	}
 	@Test
 	public void testUpdateReassign() throws NodeException {
 		ConstructLoadResponse response = createRandomConstruct(node1);
@@ -955,7 +1047,6 @@ public class ConstructResourceTest {
 	public void testCreateWithSelectPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -990,7 +1081,6 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -1043,7 +1133,6 @@ public class ConstructResourceTest {
 	public void testCreateWithOverviewPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("overview");
-		create.setIcon("bla");
 		create.setName("Overview", "en");
 		Part overviewPart = new Part();
 		overviewPart.setTypeId(supply(() -> getPartTypeId(OverviewPartType.class)));
@@ -1082,7 +1171,6 @@ public class ConstructResourceTest {
 	public void testUpdateWithOverviewPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("overview");
-		create.setIcon("bla");
 		create.setName("Overview", "en");
 		Part overviewPart = new Part();
 		overviewPart.setTypeId(supply(() -> getPartTypeId(OverviewPartType.class)));
@@ -1139,7 +1227,6 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -1203,7 +1290,6 @@ public class ConstructResourceTest {
 		}
 		ConstructLoadResponse response = supply(user, () -> {
 			com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct()
-					.setIcon("icon")
 					.setName(MiscUtils.getRandomNameOfLength(10), "en")
 					.setKeyword(MiscUtils.getRandomNameOfLength(8));
 			return new ConstructResourceImpl().create(construct, Arrays.stream(nodes).map(Node::getId).collect(Collectors.toList()));

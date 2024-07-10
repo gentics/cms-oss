@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkFields;
 import static com.gentics.contentnode.rest.util.MiscUtils.comparator;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 import static com.gentics.contentnode.rest.util.MiscUtils.filter;
 import static com.gentics.contentnode.rest.util.MiscUtils.getFolder;
 import static com.gentics.contentnode.rest.util.MiscUtils.getNode;
@@ -228,7 +227,6 @@ public class TemplateResourceImpl implements TemplateResource {
 			String tagName = tag.getName();
 			int constructId = tag.getConstructId();
 			String constructName = tag.getConstruct().getName().toString();
-			String constructIcon = tag.getConstruct().getIconName();
 
 			Map<Integer, AtomicInteger> pagesOutOfSync = getPagesOutOfSync(templateId, tagName, constructId);
 			int outOfSync = pagesOutOfSync.values().stream().mapToInt(AtomicInteger::get).sum();
@@ -242,7 +240,7 @@ public class TemplateResourceImpl implements TemplateResource {
 				}
 			}
 
-			return new TagStatus().setName(tagName).setConstructId(constructId).setConstructName(constructName).setConstructIcon(constructIcon)
+			return new TagStatus().setName(tagName).setConstructId(constructId).setConstructName(constructName)
 					.setInSync(getPagesInSync(templateId, tagName, constructId)).setMissing(getPagesMissing(templateId, tagName)).setOutOfSync(outOfSync)
 					.setIncompatible(incompatible);
 		}).filter(ResolvableFilter.get(filter, "name")).sort(ResolvableComparator.get(sort, "name")).page(paging).to(new TagStatusResponse());
@@ -309,7 +307,7 @@ public class TemplateResourceImpl implements TemplateResource {
 					return templateInNode;
 				})
 				.perms(permFunction(perms, pair -> pair.getRight(), ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
+				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description"))
 				.sort(comparator(sortingParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
 				.page(pagingParams)
 				.to(new TemplateInNodeResponse());
@@ -457,7 +455,7 @@ public class TemplateResourceImpl implements TemplateResource {
 
 			TemplateSaveJob job = new TemplateSaveJob(restTemplate, request.getDelete(), request.isUnlock(), request.isSyncPages(), request.getSync(),
 					request.isForceSync());
-			GenericResponse response = executeJob(job, null, false);
+			GenericResponse response = job.execute();
 			trx.success();
 			return response;
 		}

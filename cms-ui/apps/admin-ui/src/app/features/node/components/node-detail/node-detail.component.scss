@@ -15,14 +15,6 @@ gtx-entity-detail-header {
     }
 }
 
-.disabledArea ::ng-deep dx-data-grid {
-    pointer-events: none;
-
-    dx-check-box {
-        opacity: 0.2;
-    }
-}
-
 @keyframes fadeIn {
     from { opacity: 0; }
       to { opacity: 1; }

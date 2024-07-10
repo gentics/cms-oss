@@ -1,9 +1,7 @@
-<div *ngIf="environment === 'development'">development build</div>
-
 <div
     class="container"
     [class.is-clickable]="versionData"
-    (click)="containerClicked()"
+    (click)="openModal()"
 >
     <div class="label">
         {{ appTitle }}<span *ngIf="versionData && versionData.version">&nbsp;version {{ versionData.version }}</span>

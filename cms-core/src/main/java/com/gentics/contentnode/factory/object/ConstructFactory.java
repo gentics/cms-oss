@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.function.Function;
@@ -37,6 +38,7 @@ import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
 import com.gentics.contentnode.factory.ObjectFactory;
+import com.gentics.contentnode.factory.RecalcConstructCategorySortOrderTransactional;
 import com.gentics.contentnode.factory.RefreshPermHandler;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
@@ -49,7 +51,6 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ConstructCategory;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.EditableValueList;
-import com.gentics.contentnode.object.Icon;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
@@ -63,6 +64,7 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -127,28 +129,15 @@ public class ConstructFactory extends AbstractFactory {
 		@DataField("keyword")
 		@Updateable
 		protected String keyword;
-        
-		protected Icon icon;
 
-		@DataField("icon")
-		@Updateable
-		protected String iconName;
 		protected I18nString description;
 
 		@DataField("description_id")
 		protected int descriptionId;
 
-		@DataField("hopedithook")
-		@Updateable
-		protected String hopeditHook;
-
 		@DataField("liveeditortagname")
 		@Updateable
 		protected String liveEditorTagName;
-
-		@DataField("new_editor")
-		@Updateable
-		protected boolean newEditor;
 
 		@DataField("external_editor_url")
 		@Updateable
@@ -191,6 +180,19 @@ public class ConstructFactory extends AbstractFactory {
 		@Updateable
 		protected boolean mayBeSubtag;
 
+		@DataField("edit_on_insert")
+		@Updateable
+		protected boolean editOnInsert;
+
+		@DataField("editor_control_style")
+		@Updateable
+		protected EditorControlStyle editorControlStyle = EditorControlStyle.ASIDE;
+
+		@DataField("editor_control_inside")
+		@Updateable
+		protected boolean editorControlInside;
+
+
 		/**
 		 * Create an empty instance
 		 * @param info object info
@@ -204,7 +206,6 @@ public class ConstructFactory extends AbstractFactory {
 				List<Integer> partIds, List<Integer> valueIds) throws NodeException {
 			super(id, info);
 			setDataMap(this, dataMap);
-			this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
 			this.name = new CNI18nString(Integer.toString(nameId));
 			this.description = new CNI18nString(Integer.toString(descriptionId));
 			this.partIds = partIds != null ? new Vector<Integer>(partIds) : null;
@@ -235,15 +236,6 @@ public class ConstructFactory extends AbstractFactory {
 
 		public String getKeyword() {
 			return keyword;
-		}
-
-		public Icon getIcon() {
-			return icon;
-		}
-
-		@Override
-		public String getIconName() {
-			return iconName;
 		}
 
 		public I18nString getDescription() {
@@ -525,20 +517,11 @@ public class ConstructFactory extends AbstractFactory {
 			}
 		}
 
-		public String getHopeditHook() {
-			return hopeditHook;
-		}
-
 		/* (non-Javadoc)
 		 * @see com.gentics.contentnode.object.Construct#getLiveEditorTagName()
 		 */
 		public String getLiveEditorTagName() {
 			return liveEditorTagName;
-		}
-
-		@Override
-		public boolean isNewEditor() throws NodeException {
-			return newEditor;
 		}
 
 		@Override
@@ -571,6 +554,21 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public boolean mayBeSubtag() {
 			return mayBeSubtag;
+		}
+
+		@Override
+		public boolean editOnInsert() {
+			return editOnInsert;
+		}
+
+		@Override
+		public EditorControlStyle editorControlStyle() {
+			return editorControlStyle;
+		}
+
+		@Override
+		public boolean editorControlInside() {
+			return editorControlInside;
 		}
 
 		/**
@@ -835,31 +833,6 @@ public class ConstructFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.hopeditHook, hopeditHook)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': hopeditHook changed from '%s' to '%s'", this,
-							this.hopeditHook, hopeditHook));
-				}
-				this.hopeditHook = hopeditHook;
-				this.modified = true;
-			}
-		}
-
-		@Override
-		public void setIconName(String iconName) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.iconName, iconName)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': iconName changed from '%s' to '%s'", this,
-							this.iconName, iconName));
-				}
-				this.iconName = iconName;
-				this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
-				this.modified = true;
-			}
-		}
-
-		@Override
 		public void setKeyword(String keyword) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.keyword, keyword)) {
 				if (logger.isDebugEnabled()) {
@@ -879,18 +852,6 @@ public class ConstructFactory extends AbstractFactory {
 							this.liveEditorTagName, liveEditorTagName));
 				}
 				this.liveEditorTagName = liveEditorTagName;
-				this.modified = true;
-			}
-		}
-
-		@Override
-		public void setNewEditor(boolean newEditor) throws ReadOnlyException {
-			if (this.newEditor != newEditor) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': newEditor changed from '%b' to '%b'", this,
-							this.newEditor, newEditor));
-				}
-				this.newEditor = newEditor;
 				this.modified = true;
 			}
 		}
@@ -944,6 +905,45 @@ public class ConstructFactory extends AbstractFactory {
 		public void setConstructCategoryId(Integer id) throws ReadOnlyException {
 			if (categoryId != ObjectTransformer.getInt(id, 0)) {
 				categoryId = ObjectTransformer.getInt(id, 0);
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditOnInsert(boolean editOnInsert) {
+			if (this.editOnInsert != editOnInsert) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editOnInsert changed from '%b' to '%b'",
+						this, this.editOnInsert, editOnInsert));
+				}
+				this.editOnInsert = editOnInsert;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlStyle(EditorControlStyle editorControlStyle) {
+			if (this.editorControlStyle != editorControlStyle) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlStyle changed from '%d' to '%d'",
+						this, this.editorControlStyle, editorControlStyle));
+				}
+				this.editorControlStyle = editorControlStyle;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlInside(boolean editorControlInside) {
+			if (this.editorControlInside != editorControlInside) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlInside changed from '%b' to '%b'",
+						this, this.editorControlInside, editorControlInside));
+				}
+				this.editorControlInside = editorControlInside;
 				this.modified = true;
 			}
 		}
@@ -1394,6 +1394,7 @@ public class ConstructFactory extends AbstractFactory {
 					t.addTransactional(new TransactionalTriggerEvent(ConstructCategory.class, getId(), getModifiedData(origObject, this), Events.UPDATE));
 				}
 			}
+			t.addTransactional(new RecalcConstructCategorySortOrderTransactional(Optional.of(this)));
 
 			if (isModified) {
 				t.dirtObjectCache(ConstructCategory.class, getId());
@@ -1405,7 +1406,7 @@ public class ConstructFactory extends AbstractFactory {
 		/**
 		 * Sets initial permissions for the construct category
 		 * @param id the object's id
-		 * @throws NodeException 
+		 * @throws NodeException
 		 */
 		private void setInitialPermissions() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -1464,7 +1465,7 @@ public class ConstructFactory extends AbstractFactory {
 				"SELECT construct_id AS id, id AS id2 FROM part WHERE construct_id IN " + idSql,
 				"SELECT part.construct_id AS id, value.id AS id2 FROM part,value WHERE part.id = value.part_id AND "
 						+ "value.contenttag_id = 0 AND value.templatetag_id = 0 AND value.objtag_id = 0 AND " + "part.construct_id IN " + idSql };
-    		
+
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_SQL + idSql, preloadSql);
 		} else if (ConstructCategory.class.equals(clazz)) {
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_CATEGORY_SQL + idSql);
@@ -1627,6 +1628,7 @@ public class ConstructFactory extends AbstractFactory {
 		Collection<ConstructCategory> toDelete = getDeleteList(t, ConstructCategory.class);
 
 		toDelete.add(category);
+		t.addTransactional(new RecalcConstructCategorySortOrderTransactional(Optional.empty()));
 	}
 
 	/**

@@ -1,82 +1,45 @@
 @import "../../../../styles/variables";
+@import "../../../../styles/flex-modal";
 
-.modal-inner {
-    max-height: 80%;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
+@include flex-modal;
 
 .modal-title {
+    padding: 12px 24px 0;
     display: flex;
-    font-size: $gtx-font-size-lead;
-}
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
 
-.modal-compatibility-state {
-    font-size: $gtx-font-size-lead;
-    margin: auto 0;
-    display: inline-block;
-    height: 24px;
-
-    icon {
-        margin-right: 0.5rem;
-        font-size: 1.5rem;
+    h5 {
+        margin: 0;
     }
 }
 
-.modal-btn-close {
-    display: flex;
-    margin-left: 2rem;
-    cursor: pointer;
+.version-group {
+    padding: 10px 0 20px;
 
-    icon {
-        font-size: 2rem;
-    }
-}
-
-.modal-body {
-
-    table tr td:last-child {
-        text-align: right;
-    }
-}
-
-.list-gmcs-components {
-    padding-left: 1rem;
-}
-
-.node-versions-title {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-}
-.node-versions-list {
-    margin-block-start: 0;
-    list-style-type: square;
-
-    tr {
-        border-bottom: none;
+    .version-group-label {
+        padding: 5px;
+        border-bottom: 1px solid $gtx-color-warning;
+        text-transform: uppercase;
     }
 
-    td {
-        padding: 4px 0;
+    .version-table-wrapper {
+        overflow: auto;
     }
 
-    li {
-        text-indent: 1rem;
-        margin-bottom: 1rem;
-    }
-    li > ul > li {
-        text-indent: 2rem;
+    .component-version {
+        td {
+            padding: 5px;
+
+            &:first-child {
+                padding-left: 2rem;
+            }
+        }
     }
 }
 
 .compatibility-state {
-
     icon {
         font-size: $gtx-font-size-lead;
         cursor: help;

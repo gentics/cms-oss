@@ -1,4 +1,3 @@
-import { GcmsUiLanguage } from '../gcms-ui-bridge';
 import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
@@ -13,6 +12,7 @@ import { Feature, NodeFeature, NodeFeatureModel, NodeFeatures } from './feature'
 import { File } from './file';
 import { Folder } from './folder';
 import { Group } from './group';
+import { PermissionsAndRoles, PermissionsSet } from './group-permissions';
 import { I18nLanguage } from './i18n-language';
 import { Image } from './image';
 import { FolderItemType, InheritableItem, Item, Usage } from './item';
@@ -24,33 +24,45 @@ import { ObjectProperty } from './object-property';
 import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { Page, PageWithExternalLinks } from './page';
-import { GcmsPermission, PermissionsAndRoles, PermissionsMapCollection, PermissionsSet } from './permissions';
-import { PrivilegeMapFromServer } from './permissions/cms/privileges';
+import { GcmsPermission, PermissionsMapCollection } from './permissions';
+import { PrivilegeMapFromServer } from './privileges';
 import { Role, RolePermissions } from './role';
 import { Schedule } from './schedule';
 import { ScheduleExecution } from './schedule-execution';
 import { ScheduleTask } from './schedule-task';
 import { SchedulerStatus } from './scheduler';
-import { StagedItemsMap } from './staging-status';
-import { Tag, TagStatus, TagType } from './tag';
-import { TagmapEntry } from './tagmap-entry';
+import { StagedItemsMap, StagingStatus } from './staging-status';
+import { Construct, Tag, TagStatus, TagType } from './tag';
+import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
-import { GtxVersionNodeInfo } from './version';
+import { NodeVersionInfo, Variant } from './version';
 
 // GENERIC RESPONSE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export enum ResponseCode {
+    OK = 'OK',
+    NOT_FOUND = 'NOTFOUND',
+    INVALID_DATA = 'INVLIDDATA',
+    FAILURE = 'FAILURE',
+    PERMISSION = 'PERMISSION',
+    AUTH_REQUIRED = 'AUTHREQUIRED',
+    MAINTENANCE_MODE = 'MAINTENANCEMODE',
+    NOT_LICENSED = 'NOTLICENSED',
+    LOCKED = 'LOCKED',
+}
 
 /**
  * Most responses contain a responseInfo property, so should
  * extend this interface.
  */
 export interface Response {
+    [x: string]: any;
 
     responseInfo: {
-        // TODO: add more codes as we discover them.
-        responseCode: 'OK' | 'NOTFOUND' | 'INVALIDDATA' | 'FAILURE' | 'PERMISSION' | 'AUTHREQUIRED' | 'MAINTENANCEMODE';
+        responseCode: ResponseCode;
         responseMessage?: string;
     };
 
@@ -110,6 +122,10 @@ export interface PermissionListResponse<T> extends ListResponse<T> {
     }
 }
 
+export interface StagableItemResponse {
+    stagingStatus?: StagingStatus;
+}
+
 export interface StageableListResponse<T> extends ListResponse<T>, StagedItemsList { }
 
 export interface StagedItemsList {
@@ -127,6 +143,8 @@ export interface GenericItemResponse<T> extends Response {
  * Response from `folder/getItems`
  */
 export interface ItemListResponse extends ListResponse<Item<Raw>>, StagedItemsList { }
+
+export interface ImageListResponse extends ListResponse<Image<Raw>>, StagedItemsList { }
 
 /**
  * Response from `/admin/actionlog`
@@ -173,9 +191,16 @@ export interface ItemMoveResponse extends Response {
  * Response from the `<type>/disinherit/<id>` endpoint.
  */
 export interface InheritanceResponse extends Response {
+    exclude: boolean;
     disinherit: number[];
     disinheritDefault: boolean;
+    inheritable: number[];
+}
+
+export interface MultipleInheritanceResponse extends Response {
     exclude: boolean;
+    disinherit: number[];
+    partialDisinherit: number[];
     inheritable: number[];
 }
 
@@ -201,6 +226,16 @@ export interface FolderListResponse extends BaseListResponse, StagedItemsList {
 export interface FolderCreateResponse extends Response {
     folder: Folder<Raw>;
     messages: ResponseMessage[];
+}
+
+export interface PageExternalLink {
+    pageId: number;
+    pageName: string;
+    links: string[];
+}
+
+export interface FolderExternalLinksResponse extends Response {
+    pages: PageExternalLink[];
 }
 
 // INDEX //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,9 +370,9 @@ export interface TemplateListResponse extends BaseListResponse {
 export interface PagedTemplateListResponse extends PermissionListResponse<Template<Raw>> { }
 
 /**
- * Response from `node/{nodeId}/templates`
+ * Response from `node/{nodeId}/constructs` and the like
  */
-export interface PagedConstructListResponse extends ListResponse<Tag> { }
+export interface PagedConstructListResponse extends PermissionListResponse<Construct> { }
 
 /**
  * Response from `template/link/id` and `template/unlink/id`
@@ -388,6 +423,44 @@ export interface PageListResponse extends BaseListResponse, StagedItemsList {
     pages: Page<Raw>[];
 }
 
+export interface PageCopyResultInfo {
+    newPageId: number;
+    targetFolderId: number;
+    targetFolderChannelId: number;
+    sourcePageId: number;
+}
+
+export interface PageCopyResponse extends Response {
+    pages: Page<Raw>[];
+    pageCopyMappings: PageCopyResultInfo[];
+}
+
+export interface PagePreviewResponse extends Response {
+    preview: string;
+}
+
+export interface PageRenderResponse extends Response {
+    content: string;
+    properties?: Record<string, any>;
+    tags?: Tag[];
+    metaeditables?: any[];
+    time: number;
+    inheritedContent?: string;
+    inheritedProperties?: Record<string, string>;
+}
+
+export interface PageTagListResponse extends Response {
+    tags: Tag[];
+}
+
+export interface TagCreateResponse extends Response {
+    tag: Tag;
+}
+
+export interface MultiTagCreateResponse extends Response {
+    created: Record<string, Tag>;
+}
+
 export type ICreateResponse = FolderCreateResponse | PageCreateResponse;
 
 // FILE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +508,7 @@ export interface FormCreateResponse extends Response {
 /**
  * Response from `GET /form/:id`
  */
-export interface FormResponse extends Response {
+export interface FormResponse extends Response, StagableItemResponse {
     item: Form<Raw>;
 }
 
@@ -501,7 +574,7 @@ export type I18nLanguageSetResponse = Response;
  * Response from `GET /i18n/get`
  */
 export interface I18nLanguageResponse extends Response {
-    code: GcmsUiLanguage;
+    code: string;
 }
 
 /**
@@ -645,6 +718,12 @@ export type TagmapEntryCreateResponse = TagmapEntryResponse;
  */
 export type TagmapEntryUpdateResponse = TagmapEntryResponse;
 
+/**
+ * Response from `GET contentrepositories/:id/entries/check`
+ */
+export interface TagmapEntryCheckResponse extends ListResponse<TagmapEntryError> {}
+
+
 // QUEUE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -672,7 +751,8 @@ export interface LoginResponse extends Response {
 export interface VersionResponse extends Response {
     cmpVersion: string;
     version: string;
-    nodeInfo: { [key: string]: GtxVersionNodeInfo; };
+    variant: Variant;
+    nodeInfo: { [key: string]: NodeVersionInfo; };
 }
 
 /**
@@ -798,12 +878,31 @@ export interface PermissionResponse extends Response {
     permissionsMap?: PermissionsMapCollection;
 }
 
+export interface GroupPermissionBitsResponse extends Response {
+    groups: Record<string, string>;
+}
+
 /**
  * A response for a single permission type (i.E. 'view', 'edit') for a single instance.
  * Response from `perm/<permission>/<type>/<id>` endpoint.
  */
 export interface SinglePermissionResponse extends Response {
     granted: boolean;
+}
+
+export interface PolicyResponse {
+    name: string;
+    uri: string;
+}
+
+export interface GroupPolicy {
+    default: boolean;
+    name: string;
+    uri: string;
+}
+
+export interface PolicyGroupResponse {
+    policy: GroupPolicy[];
 }
 
 // USAGE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -826,6 +925,30 @@ export interface LocalizationsResponse extends Response {
     masterId: number;
     masterNodeId: number;
     nodeIds: { [itemId: number]: number };
+    total: number;
+    hidden: number;
+    online: number[];
+    offline: number[];
+}
+
+export interface ChannelLocalizationInfo extends ObjectLocalizationInfo {
+    channelId: number;
+
+    folder: ObjectLocalizationInfo;
+    page: ObjectLocalizationInfo;
+    image: ObjectLocalizationInfo;
+    file: ObjectLocalizationInfo;
+    template: ObjectLocalizationInfo;
+}
+
+export interface ObjectLocalizationInfo {
+    inherited: number,
+    localizaed: number,
+    local: number;
+}
+
+export interface LocalizationInfoResponse extends Response {
+    channels: ChannelLocalizationInfo[];
 }
 
 // USAGE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1004,6 +1127,8 @@ export interface PackageCreateResponse extends Response {
 
 export interface PackageSyncResponse extends Response {
     enabled: boolean;
+    /** The user which enabled the sync. */
+    user?: User;
 }
 
 // OBJECTPROPERTY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1244,9 +1369,9 @@ export interface MaintenanceModeResponse extends Response {
 
 /**
  * Response from:
- * * `GET /scheduler/status`
- * * `PUT /scheduler/suspend`
- * * `PUT /scheduler/resume`
+ * `GET /scheduler/status`
+ * `PUT /scheduler/suspend`
+ * `PUT /scheduler/resume`
  */
 export interface SchedulerStatusResponse extends Response {
     /** The current status of the scheduler */
@@ -1312,3 +1437,42 @@ export interface ContentPackageSyncResponse extends Response {
     progress?: ContentPackageSyncProgress;
 }
 
+// CLUSTERING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ClusterInformationResponse extends Response {
+    /** If clustering feature is enabled. */
+    feature: boolean;
+    /** If this is the master node. */
+    master: boolean;
+    /** If the cluster (hazelcast) is started. */
+    started: boolean;
+    /** UUIDs of all cluster memebers. */
+    memebers: string[];
+    /** Info of this cluster memeber. */
+    localMember: {
+        /** UUID of this cluster memeber. */
+        uuid: string;
+        /** Name of this cluster memeber. */
+        name: string;
+    };
+}
+
+// HASHING/CONTENT STAGING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ImplementationHashResponse extends Response {
+    hash: string;
+    base: string;
+}
+
+// FILE UPLOAD MANIPULATOR (FUM) /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export enum FUMStatus {
+    OK = 'OK',
+    ERROR = 'ERROR',
+}
+
+export interface FUMStatusResponse {
+    status: FUMStatus;
+    type: string;
+    msg: string;
+}

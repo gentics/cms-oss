@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -11,6 +11,7 @@ import { SelectOptionGroupDirective } from '../../directives/select-option-group
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { componentTest } from '../../testing';
 import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
@@ -46,9 +47,11 @@ describe('SelectComponent', () => {
             ],
             providers: [
                 OverlayHostService,
+                SizeTrackerService,
                 { provide: ConfigService, useValue: defaultConfig },
             ],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
         TestBed.overrideModule(BrowserDynamicTestingModule, {
             set: {
@@ -137,7 +140,7 @@ describe('SelectComponent', () => {
         <gtx-select label="testLabel"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
+            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-list');
 
             expect(dropdown.classList).toContain('with-label');
         },

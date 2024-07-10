@@ -2,11 +2,14 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter, Input, OnInit,
+    EventEmitter,
+    Input,
+    OnInit,
     Optional,
     Output,
 } from '@angular/core';
-import { Moment, momentjs } from '../../common';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { generateFormProvider } from '../../utils';
@@ -38,6 +41,12 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
 export class DateTimePickerComponent
     extends BaseFormElementComponent<number>
     implements OnInit {
+
+    /**
+     * Set to overwrite texts and date formatting in the modal.
+     */
+    @Input()
+    public formatProvider: DateTimePickerFormatProvider;
 
     /** Sets the date picker to be auto-focused. Handled by `AutofocusDirective`. */
     @Input()
@@ -79,6 +88,10 @@ export class DateTimePickerComponent
     @Input()
     public displaySeconds = true;
 
+    /** Placeholder which is shown if nothing is selected. */
+    @Input()
+    public placeholder = '';
+
     /** Fires when the "clear" button is clicked on a clearable DateTimePicker. */
     @Output()
     public clear = new EventEmitter<any>();
@@ -92,20 +105,20 @@ export class DateTimePickerComponent
     constructor(
         changeDetector: ChangeDetectorRef,
         @Optional()
-        private formatProvider: DateTimePickerFormatProvider,
+        private defaultFormatProvider: DateTimePickerFormatProvider,
         private modalService: ModalService,
     ) {
         super(changeDetector);
         this.booleanInputs.push('selectYear', 'displayTime', 'displaySeconds', 'clearable', 'autofocus');
 
-        if (!formatProvider) {
-            this.formatProvider = new DateTimePickerFormatProvider();
+        if (!defaultFormatProvider) {
+            this.defaultFormatProvider = new DateTimePickerFormatProvider();
         }
     }
 
     ngOnInit(): void {
         this.subscriptions.push(
-            this.formatProvider.changed$.subscribe(() => this.updateDisplayValue()),
+            (this.formatProvider || this.defaultFormatProvider).changed$.subscribe(() => this.updateDisplayValue()),
         );
     }
 
@@ -124,7 +137,7 @@ export class DateTimePickerComponent
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.momentValue = momentjs.unix(timestamp);
+        this.momentValue = unix(timestamp);
         this.updateDisplayValue();
     }
 
@@ -146,7 +159,7 @@ export class DateTimePickerComponent
                 padding: false,
             }, {
                 timestamp: this.getUnixTimestamp(),
-                formatProvider: this.formatProvider,
+                formatProvider: (this.formatProvider || this.defaultFormatProvider),
                 displayTime: this.displayTime,
                 displaySeconds: this.displaySeconds,
                 min: this.min,
@@ -156,6 +169,10 @@ export class DateTimePickerComponent
             const timestamp: number = await dialog.open();
             this.triggerChange(timestamp);
         } catch (err) {
+            // Ignore user close
+            if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                return;
+            }
             console.error('Error while opening the DateTimePicker Modal!', err);
         }
     }
@@ -171,7 +188,7 @@ export class DateTimePickerComponent
         } else if (this.format) {
             this.displayValue = this.momentValue.format(this.format);
         } else {
-            this.displayValue = this.formatProvider.format(this.momentValue, this.displayTime, this.displaySeconds);
+            this.displayValue = (this.formatProvider || this.defaultFormatProvider).format(this.momentValue, this.displayTime, this.displaySeconds);
         }
 
         this.changeDetector.markForCheck();

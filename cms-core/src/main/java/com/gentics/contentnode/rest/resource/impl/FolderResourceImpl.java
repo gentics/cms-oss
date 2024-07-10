@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.createNodeConflictMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
@@ -19,9 +19,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -650,14 +653,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#load(com.gentics.contentnode.rest.model.request.MultiFolderLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiFolderLoadResponse load(MultiFolderLoadRequest request) {
+	public MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		Set<Reference> references = new HashSet<>();
 
@@ -672,22 +671,22 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<com.gentics.contentnode.object.Folder> allFolders =
 				t.getObjects(com.gentics.contentnode.object.Folder.class, request.getIds());
-			List<Folder> returnedFolders = new ArrayList<>(allFolders.size());
 
-			for (com.gentics.contentnode.object.Folder folder: allFolders) {
-				if (ObjectPermission.view.checkObject(folder)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(folder))) {
-					if (forUpdate) {
-						folder = t.getObject(folder, true);
-					}
-
-					Folder restFolder = ModelBuilder.getFolder(folder, null, references);
-
-					if (restFolder != null) {
-						returnedFolders.add(restFolder);
-					}
+			List<Folder> returnedFolders = getItemList(request.getIds(), allFolders, folder -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(folder.getId());
+				ids.addAll(folder.getChannelSet().values());
+				return ids;
+			}, folder -> {
+				if (forUpdate) {
+					folder = t.getObject(folder, true);
 				}
-			}
+				return ModelBuilder.getFolder(folder, null, references);
+			}, folder -> {
+				return ObjectPermission.view.checkObject(folder)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(folder));
+			}, fillWithNulls);
+
 			MultiFolderLoadResponse response = new MultiFolderLoadResponse(returnedFolders);
 
 			// TODO make for filtered folders
@@ -2538,8 +2537,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 */
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
-		try {
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) {
+		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
+		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// set the channel ID if given
 			boolean isChannelIdset = setChannelToTransaction(nodeId);
 
@@ -2974,9 +2974,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	public GenericResponse move(@PathParam("id") String id, FolderMoveRequest request) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		com.gentics.contentnode.object.Folder folder = getFolder(id, false);
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
 				request.getFolderId(), request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 	/* (non-Javadoc)
@@ -2992,9 +2992,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
 			localIds.add(folder.getId());
 		}
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
 				request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 

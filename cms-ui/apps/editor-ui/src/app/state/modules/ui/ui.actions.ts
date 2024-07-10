@@ -1,5 +1,6 @@
 import { UIOverrides } from '@editor-ui/app/shared/providers/ui-overrides/ui-overrides.model';
-import { GcmsUiLanguage, GtxVersion, I18nLanguage, UsersnapSettings } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { I18nLanguage, UsersnapSettings, Version } from '@gentics/cms-models';
 import { AppState, UIMode } from '../../../common/models';
 import { ActionDeclaration } from '../../state-utils';
 
@@ -22,7 +23,7 @@ export class SetBreadcrumbExpandedAction {
 @ActionDeclaration(UI_STATE_KEY)
 export class SetCMPVersionAction {
     constructor(
-        public version: GtxVersion,
+        public version: Version,
     ) {}
 }
 
@@ -86,5 +87,35 @@ export class SetHideExtrasAction {
 export class SetUIModeAction {
     constructor(
         public mode: UIMode,
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetConstructFavourites {
+    constructor(
+        public favourites: string[],
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class IncreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class DecreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class ResetOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetTagEditorOpenAction {
+    constructor(
+        public isOpen: boolean,
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetNodesLoadedAction {
+    constructor(
+        public loaded: boolean,
     ) {}
 }

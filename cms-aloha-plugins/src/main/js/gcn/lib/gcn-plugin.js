@@ -3,6 +3,7 @@
 /**
  * @typedef {object} TagFillOptions
  * @property {boolean=} skipInsert If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
+ * @property {boolean=} withDelete If the tag-fill/user should be able to delete the tag in question.
  */
 
 /*!
@@ -19,64 +20,49 @@ define([
 	) + '/gcnjsapi.js',
 	'aloha/core',
 	'jquery',
-	'util/json2',
-	'aloha/plugin',
-	'i18n!gcn/nls/i18n',
-	'i18n!aloha/nls/i18n',
-	'ui/dialog',
-	'ui/ui',
-	'ui/button',
-	'ui/arena',
-	'ui/menuButton',
-	'ui/accordionMenuButton',
 	'PubSub',
-	'block/blockmanager',
-	'gcn/gcn-block',
-	'aloha/engine',
+	'aloha/plugin',
 	'aloha/ephemera',
 	'aloha/contenthandlermanager',
-	'gcn/tagcopycontenthandler',
-	'util/dom',
-	'gcn/jquery.noty',
-	'gcn/gcn-tags',
-	'gcn/gcn-util',
+	'ui/ui-plugin',
+	'ui/dialog',
+	'block/blockmanager',
 	'util/misc',
+	'link/link-plugin',
+	'gcn/gcn-block',
+	'gcn/tagcopycontenthandler',
+	'gcn/gcn-tags',
 	'gcn/gcn-links',
-	'gcn/gcn-repository',
-	'css!gcn/css/aloha-gcn.css',
-	'css!gcn/css/gui.css'
+	'gcn/gcmsui-surface',
+	'i18n!gcn/nls/i18n',
+	'css!gcn/css/aloha-gcn.css'
 ], function (
 	_GCN_,
 	Aloha,
 	jQuery,
-	JSON,
-	Plugin,
-	i18n,
-	i18nCore,
-	Dialog,
-	Ui,
-	Button,
-	Arena,
-	MenuButton,
-	AccordionMenuButton,
 	PubSub,
-	BlockManager,
-	GCNBlock,
-	Engine,
+	Plugin,
 	Ephemera,
 	ContentHandlerManager,
+	UiPlugin,
+	Dialog,
+	BlockManager,
+	Misc,
+	LinkPlugin,
+	GCNBlock,
 	TagCopyContentHandler,
-	Dom,
-	noty,
 	Tags,
-	Util,
-	Misc
+	GCNLinks,
+	GCMSUISurface,
+	i18n,
 ) {
 	'use strict';
 
 	var $ = jQuery;
 	var GCN = window.GCN;
 	var gcnPlugin;
+
+	var INTERNAL_LINK_PATH = '/alohapage';
 
 	/**
 	 * When there are modified editables and one would click a link to
@@ -139,7 +125,7 @@ define([
 			var construct;
 			for (construct in constructs) {
 				if (constructs.hasOwnProperty(construct)
-						&& id === constructs[construct].id) {
+					&& id === constructs[construct].id) {
 					success(constructs[construct]);
 					return;
 				}
@@ -176,7 +162,20 @@ define([
 				// that will potentially re-rendered after closing the tagfill
 				page._updateEditableBlocks();
 
-				GCMSUI.openTagEditor(tag._data, construct, page._data).then(function (newtag) {
+				GCMSUI.openTagEditor(tag._data, construct, page._data, options).then(function (result) {
+
+					if (result.doDelete) {
+						var $block = $('.aloha-block[id="GENTICS_BLOCK_' + tag._data.id + '"]');
+						var block = BlockManager.getBlock($block);
+
+						block.unblock();
+						$block.remove();
+						tag.remove();
+						return;
+					}
+
+					var newtag = result.tag;
+
 					page.tag(tagname, function (tag) {
 						var parts = tag.parts();
 						var partslength = parts.length;
@@ -188,7 +187,7 @@ define([
 								var newvalue = GCN.TagParts[newpart.type](newpart);
 								// special hack for parts of type "PAGE" for preserving the nodeId
 								if (newpart.type === "PAGE" && jQuery.type(newvalue) === 'number') {
-									tag.part(parts[i], {pageId: newvalue, nodeId: newpart.nodeId});
+									tag.part(parts[i], { pageId: newvalue, nodeId: newpart.nodeId });
 								} else {
 									tag.part(parts[i], newvalue);
 								}
@@ -207,7 +206,7 @@ define([
 							Tags.decorate(tag, data);
 						}, html);
 					});
-				}).catch(function() {});
+				}).catch(function () { });
 			},
 			function (msg) {
 				GCN.handleError(GCN.createError('COULD_NOT_OPEN_TAG', msg, gcn));
@@ -238,12 +237,6 @@ define([
 	var pageObjectHandlers = [];
 
 	/**
-	 * "Loading" button, that is inserted into the gcnArean and shown until the
-	 * correct buttons have been prepared (which is done asynchronously)
-	 */
-	var loadingButton;
-
-	/**
 	 * Gentics Content.Node Integration Plugin.
 	 */
 	gcnPlugin = Plugin.create('gcn', {
@@ -266,17 +259,6 @@ define([
 		maximized: false,
 
 		/**
-		 * @type {object<?>} This stores references to Aloha.ui.Buttons, which
-		 *                   are needed to update pressed states etc.
-		 */
-		buttons: {},
-
-		/**
-		 * Contains references to all tag insert buttons/menues (including the ones for a specific editable) 
-		 */
-		tagInsertMenus: {},
-		
-		/**
 		 * @type {Aloha.Editable} The last active editable since we disable all
 		 *                        editables when a lightbox opens. We can use
 		 *                        this property to reactivate the last active
@@ -289,6 +271,7 @@ define([
 		 *                  of the last active editable's parents.
 		 */
 		lastActiveEditableScrollPositions: null,
+
 		/**
 		 * @type {string} Base URL for the REST API.
 		 * @todo use gcnjsapi
@@ -300,11 +283,6 @@ define([
 		 * @type {GCN.PageAPI} An API object to the page we will be working on.
 		 */
 		page: null,
-
-		/**
-		 * @type {Arena} The UI box that will hold the tag or other gcn related buttons
-		 */
-		arena: null,
 
 		/**
 		 * allows you to specify an error handler function by setting
@@ -357,12 +335,10 @@ define([
 				GCN.sub('error-encountered', plugin.settings.errorHandler);
 			} else {
 				GCN.sub('error-encountered', function (error) {
-					Aloha.Log.error(GCN,
-							error.toString());
+					Aloha.Log.error(GCN, error.toString());
 				});
 			}
 			GCN.sub('tag.rendered-for-editing', function (msg) {
-				plugin.setupConstructsButton(msg.tag.parent().id());
 				Tags.decorate(msg.tag, msg.data, msg.callback);
 			});
 		},
@@ -383,8 +359,8 @@ define([
 
 				for (i = 0; i < j; ++i) {
 					Dialog.alert({
-						title : 'Gentics Content.Node',
-						text  : messages[i].message
+						title: 'Gentics Content.Node',
+						text: messages[i].message
 					});
 				}
 			}
@@ -406,13 +382,13 @@ define([
 
 			if (Aloha.Log.isDebugEnabled()) {
 				var numEditables = this.settings.editablesNode ?
-				                 this.settings.editablesNode.length : 0;
+					this.settings.editablesNode.length : 0;
 
 				var numBlocks = this.settings.blocks ?
-				              this.settings.blocks.length : 0;
+					this.settings.blocks.length : 0;
 
 				var numTags = this.settings.tags ?
-				            this.settings.tags.length : 0;
+					this.settings.tags.length : 0;
 
 				Aloha.Log.debug(this,
 					'Loaded page with id { ' + this.settings.id + ' }.');
@@ -425,344 +401,19 @@ define([
 		},
 
 		/**
-		 * Add insert contenttag menu to the floating menu.
-		 *
-		 * @param {number|string} pageId Id of page whose node constructs we
-		 *                               will populate the button with.
-		 */
-		setupConstructsButton: function (pageId) {
-			if (this.isConstructsInitialized) {
-				return;
-			}
-
-			// create the "Loading" button
-			loadingButton = new (Button.extend({
-				tooltip: i18n.t('button.loading'),
-				iconUrl: '/images/system/loading1.gif'
-			}));
-
-			// show the "Loading" button (until the insert icons have been prepared)
-			this.arena = Ui.adopt("gcnArena", Arena);
-			this.arena.adopt(loadingButton);
-			loadingButton.disable();
-			loadingButton.show();
-
-			this.isConstructsInitialized = true;
-
-			var that = this;
-
-			GCN.page(pageId).node().constructCategories(function (categoriesData) {
-				
-				if (!categoriesData) {
-					return;
-				}
-				// Add the uncategorized group to the list of categories
-				categoriesData.categorySortorder.push('GCN_UNCATEGORIZED');
-
-				that.populateTagInsertMenu(categoriesData);
-			});
-		},
-		
-		
-		/**
-		 * Convinience method that can be used to hide the given buttonset
-		 * @param {object} buttonSet
-		 */
-		_hideTagInsertButtonSet: function (buttonSet) {
-			this._setTagInsertButtonSetVisibility(buttonSet, false);
-		},
-		
-		/**
-		 * Convinence method that can be used to show the given buttonset
-		 * @param {object} buttonSet
-		 */
-		_showTagInsertButtonSet: function (buttonSet) {
-			this._setTagInsertButtonSetVisibility(buttonSet, true);	
-		},
-		
-		/**
-		 * This method will hide/show the given tag insert buttonset according to the visible flag
-		 * @param {object} buttonSet
-		 * @param {Boolean} visible
-		 */
-		_setTagInsertButtonSetVisibility: function (buttonSet, visible) {
-			
-			if (buttonSet && buttonSet.tagInsertDropDownButton) {
-				buttonSet.tagInsertDropDownButton.show(visible);
-			}
-
-			if (buttonSet && buttonSet.uncategorizedTagInsertButtons && typeof buttonSet.uncategorizedTagInsertButtons === 'object') {
-				for (var i = 0; i < buttonSet.uncategorizedTagInsertButtons.length; i++) {
-					var currentButton = buttonSet.uncategorizedTagInsertButtons[i];
-					
-					// Only handle buttons with valid data 
-					if (!currentButton) {
-						continue;
-					}
-					
-					currentButton.show(visible);
-				}
-			}
-		},
-		
-		/**
-		 * This method will create a button set for the tag insert buttons. These buttons will be filtered according to the whitelist
-		 * @param {object} constructWhitelist
-		 * @param {object} categories Object that contains all the construct categories and construct information
-		 */
-		createSpecificEditableMenu: function (constructData, constructWhitelist) {
-			var that = this;
-			var contentTagsMenu  = [];
-			var uncategorizedConstructButtons = [];
-			var constructButton;
-
-			var i;
-			// Iterate over all categories
-			for (i in constructData.categorySortorder) {
-				if (constructData.categorySortorder.hasOwnProperty(i)) {
-					var categoryName = constructData.categorySortorder[i];
-					var isEmptyCategory = categoryName === 'GCN_UNCATEGORIZED';
-					var category = constructData.categories[categoryName];
-					var filteredCategoryConstructButtons = [];
-					var wasConstructHandled = false;
-					// Skip categories that have no constructs. This might be 
-					// the case when the system has no uncategorized tagtypes
-					if (!category) {
-						continue;
-					}
-
-					// Iterate over all constructs in the current category
-					var constructName;
-					for (constructName in category.constructs) {
-						// The magic link construct should not be shown in the insert menu.
-						if (constructName === GCN.settings.MAGIC_LINK) {
-							continue;
-						}
-
-						if (category.constructs.hasOwnProperty(constructName)) {
-							var construct = category.constructs[constructName];
-
-							// Handle only tags that are insertable into other tags
-							if (!construct.mayBeSubtag) {
-								continue;
-							}
-
-							// Skip the construct, if flagged to be invisible
-							if (construct.visibleInMenu === false) {
-								continue;
-							}
-
-							// Skip this construct when it is not listed within the whitelist
-							if (constructWhitelist !== null && (constructWhitelist && jQuery.inArray(constructName, constructWhitelist) === -1)) {
-								continue;
-							}
-							wasConstructHandled = true;
-
-							var clickHandler = (function (constructId) {
-								return function () {
-									that.createTag(constructId);
-								};
-							})(construct.constructId);
-
-							var iconUrl = '/images/content/constr/' + construct.icon;
-
-							// Constructs without category will be added as buttons
-							// directly to the floating menu.
-							if (isEmptyCategory) {
-								constructButton = new (Button.extend({
-									tooltip: construct.name,
-									iconUrl: iconUrl,
-									click: clickHandler
-								}));
-								uncategorizedConstructButtons.push(constructButton);
-							} else {
-								constructButton = {
-									text: construct.name,
-									iconUrl: iconUrl,
-									click: clickHandler
-								};
-								filteredCategoryConstructButtons.push(constructButton);
-							}
-						}
-					}
-
-					if (!isEmptyCategory && wasConstructHandled) {
-						contentTagsMenu.push({
-							text: categoryName,
-							menu: filteredCategoryConstructButtons,
-							iconUrl: '/images/content/constructopen.gif'
-						});
-					}
-				}
-			}
-
-			var tagInsertDropDownButton = null;
-			if (contentTagsMenu.length > 0) {
-				var props = {
-					tooltip: i18n.t('insert_tag'),
-					menu: contentTagsMenu,
-					iconUrl: '/images/content/constructopen.gif'
-				};
-
-				if (isResponsiveMode()) {
-					tagInsertDropDownButton = new (AccordionMenuButton.extend(props));
-				} else {
-					tagInsertDropDownButton = new (MenuButton.extend(props));
-				}
-			}
-
-			var buttonSet = {'tagInsertDropDownButton': tagInsertDropDownButton, 'uncategorizedTagInsertButtons': uncategorizedConstructButtons };
-
-			return buttonSet;
-		},
-		
-		/**
-         * Adds the given buttons to the floating menu 
-         * Gets the component types for the given buttons.
-		 *
-		 * @param {object} buttons Buttonset with dropdown and uncategorized buttons
-		 */
-		_addTagInsertButtonsToArena: function (arena, buttons) {
-			// Omit processing the buttonset when no data was specified
-			if (!buttons) {
-				return;
-			}
-
-			if (buttons.tagInsertDropDownButton) {
-				// add the insert tag button
-				arena.adopt(buttons.tagInsertDropDownButton);
-			}
-
-			// Add all buttons with no category to the floatingmenu
-			if (buttons.uncategorizedTagInsertButtons && buttons.uncategorizedTagInsertButtons.length > 0) {
-				// add constructs without category directly to the floating menu
-				for (var i = 0; i < buttons.uncategorizedTagInsertButtons.length; ++i) {
-					arena.adopt(buttons.uncategorizedTagInsertButtons[i]);
-				}
-			}
-		},
-		
-		/**
-		 * Populates the tag insert menu. This method will create multiple
-		 * variations for the tag insert buttons. For each editable a
-		 * configuration of a different variation will be created. We do this so
-		 * that we can hide and show the appropriate variation for each activated
-		 * editable.
-		 * @param {object} categories construct categories
-		 */
-		populateTagInsertMenu: function (categoryData) {
-			var that = this,
-				loadingArena = this.arena;
-			
-			that.arena = Ui.adopt("gcnArena", Arena);
-			that.arena.hide();
-
-			// Create editable specific tag menu variation for each editable configuration
-			if (this.settings.editables) {
-				jQuery.each(this.settings.editables, function (index, editableConfiguration) {
-					// Ommitt the editable configuration when the needed information are not provided
-					if (!editableConfiguration.tagtypeWhitelist) {
-						return true;
-					}
-					
-					var key = index;
-					that.tagInsertMenus[key] = that.createSpecificEditableMenu(categoryData, editableConfiguration.tagtypeWhitelist);
-					that._addTagInsertButtonsToArena(that.arena, that.tagInsertMenus[key]);
-					that._hideTagInsertButtonSet(that.tagInsertMenus[key]);
-				});
-			}
-
-			// Create default configuration tag menu
-			var defaultTagInsertMenu = that.createSpecificEditableMenu(categoryData, null);
-			// Use the given whitelist for default instead of using the buttonset that contain all buttons
-			if (this.settings.config && this.settings.config.tagtypeWhitelist) {
-				// Overwrite the default buttonset with the more specific whitelist default buttonset
-				defaultTagInsertMenu = that.createSpecificEditableMenu(categoryData, this.settings.config.tagtypeWhitelist);
-			}
-			// Add the buttons and reference to the default insert buttonset
-			that.tagInsertMenus['gtx-default-buttonset'] = defaultTagInsertMenu;
-			that._addTagInsertButtonsToArena(that.arena, that.tagInsertMenus['gtx-default-buttonset']);
-			that._hideTagInsertButtonSet(that.tagInsertMenus['gtx-default-buttonset']);
-
-			// hide the "loading button"
-			loadingButton.hide();
-			loadingArena.hide();
-
-			// if an editable is currently active, show the insert tag menu
-			if (Aloha.activeEditable) {
-				that._showInsertTagMenu(Aloha.activeEditable);
-			}
-		},
-
-		/**
-		 * Show the insert tag menu for the given editable.
-		 * @param {Object} editable the editable
-		 */
-		_showInsertTagMenu: function (editable) {
-			var that = this, config = this.getEditableConfig(editable.obj);
-			var areThereButtons = false;
-
-			// Check whether this editable owns a specific configuration
-			if (config && config['aloha-editable-selector'] && that.tagInsertMenus.hasOwnProperty(config['aloha-editable-selector'])) {
-				jQuery.each(that.tagInsertMenus, function (currentId, setOfTagInsertButtons) {
-					if (currentId === config['aloha-editable-selector']) {
-						that._showTagInsertButtonSet(setOfTagInsertButtons);
-
-						if (setOfTagInsertButtons.tagInsertDropDownButton
-								|| setOfTagInsertButtons.uncategorizedTagInsertButtons.length > 0) {
-							areThereButtons = true;
-						}
-					} else {
-						that._hideTagInsertButtonSet(setOfTagInsertButtons);
-					}
-				});
-			} else {
-				// Use the default buttonset for every other case
-				jQuery.each(that.tagInsertMenus, function (currentId, setOfTagInsertButtons) {
-					if (currentId === 'gtx-default-buttonset') {
-						that._showTagInsertButtonSet(setOfTagInsertButtons);
-
-						if (setOfTagInsertButtons.tagInsertDropDownButton
-								|| setOfTagInsertButtons.uncategorizedTagInsertButtons.length > 0) {
-							areThereButtons = true;
-						}
-					} else {
-						that._hideTagInsertButtonSet(setOfTagInsertButtons);
-					}
-				});
-			}
-
-			if (areThereButtons) {
-				this.arena.show();
-			} else {
-				this.arena.hide();
-			}
-		},
-
-		/**
 		 * registers plugin-internal handlers to Aloha Editor Events
 		 */
 		registerAlohaHandlers: function () {
 			var that = this;
-			
+
 			Aloha.bind('aloha-editable-activated', function (e, params) {
 				// if an editable is activated all block icons have to be
 
 				// hidden jQuery('.aloha-editicons').fadeOut('normal');
-				that._showInsertTagMenu(params.editable);
 				Misc.addEditingHelpers(params.editable.obj);
 				params.editable.obj.parents('.aloha-editable').each(function () {
 					Misc.addEditingHelpers(jQuery(this));
 				});
-			});
-
-			PubSub.sub('aloha.selection.context-change', function (message) {
-				var container = message.range.startContainer;
-				if (Dom.findHighestElement(container, "a", null)) {
-						that.arena.hide();
-				} else if (Aloha.getActiveEditable()) {
-					that._showInsertTagMenu(Aloha.getActiveEditable());
-				}
 			});
 
 			Aloha.bind('aloha-smart-content-changed', function (event, data) {
@@ -829,7 +480,7 @@ define([
 			}
 			return false;
 		},
-		
+
 		/**
 		 * Determine if we are operating in backend mode.  Backend mode means
 		 * that backend GCN facilities are available to use.
@@ -849,11 +500,18 @@ define([
 		init: function () {
 			var that = this;
 
+			// Create the GCMSUI Surface and set it as active.
+			// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
+			var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
+			UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
+
 			// make some classes ephemeral. Those classes may be added to tags while initializing them
 			// if they are not ephemeral, the modification check of the editables would always detect them
 			// as modifications
 			Ephemera.classes('GENTICS_block');
 			Ephemera.classes('aloha-block-GCNBlock');
+
+			GCNLinks.interjectLinkPlugin(LinkPlugin);
 
 			// Set the proxy_prefix setting
 			if (this.settings.proxy_prefix) {
@@ -861,7 +519,7 @@ define([
 			} else {
 				GCN.settings.proxy_prefix = "";
 			}
-			
+
 			// Set rendermode (frontend/backend)
 			GCN.settings.linksRenderMode = this.settings.links || 'backend';
 
@@ -895,7 +553,7 @@ define([
 					// TODO Error handling
 					this.page = GCN.page(this.settings.id, {
 						update: false
-					}, function () {});
+					}, function () { });
 				}
 
 				if (this.settings.id && !Aloha.settings.readonly) {
@@ -915,7 +573,7 @@ define([
 			// because saving is done asynchronously, we cannot save the page before leaving the page,
 			// so we can just warn the editor
 			// we do not use jQuery here, because for some unknown reason this won't work in IE7 mode.
-			window.onbeforeunload = function() {
+			window.onbeforeunload = function () {
 				if (suppressNextUnsavedChangesDialog) {
 					suppressNextUnsavedChangesDialog = false;
 				} else {
@@ -924,13 +582,11 @@ define([
 					}
 				}
 			};
-			
+
 			// register the handler for copying tags
 			if (this.settings.copy_tags) {
 				ContentHandlerManager.register('gcn-tagcopy', TagCopyContentHandler);
 			}
-
-			this.displayLastActionMessage();
 
 			// preview forms (mainly for page preview or in non-blocks)
 			if (gcnPlugin.settings.forms) {
@@ -981,7 +637,7 @@ define([
 				// master objects and inherited channel objects. It will always return the master object.
 				// We therefor need to modify the atposidx parameter and replace the node folder id.
 				var atposidx = folder.prop('atposidx');
-				atposidx = atposidx.replace(new RegExp("^-[0-9]+","g"),"-" + that.settings.nodeFolderId);
+				atposidx = atposidx.replace(new RegExp("^-[0-9]+", "g"), "-" + that.settings.nodeFolderId);
 				if (top && top.tree && top.tree.openFolder) {
 					top.tree.openFolder(
 						that.settings.folderId,
@@ -990,7 +646,7 @@ define([
 				}
 			});
 		},
-		
+
 		/**
 		 * Passes the magiclinkconstruct value, that was received from the
 		 * settings, on to the GCN JS API.  The magic link is the the
@@ -1005,16 +661,16 @@ define([
 		 */
 		setMagicLinkOnGCNLib: function (constructs, magiclinkconstruct) {
 			var areIdAndKeywordMatched = constructs[GCN.settings.MAGIC_LINK] &&
-					constructs[GCN.settings.MAGIC_LINK].constructId ===
-						magiclinkconstruct;
+				constructs[GCN.settings.MAGIC_LINK].constructId ===
+				magiclinkconstruct;
 
 			if (!areIdAndKeywordMatched) {
 				var keyword;
 
 				for (keyword in constructs) {
 					if (constructs.hasOwnProperty(keyword) &&
-							constructs[keyword].constructId ===
-								magiclinkconstruct) {
+						constructs[keyword].constructId ===
+						magiclinkconstruct) {
 						GCN.settings.MAGIC_LINK = keyword;
 						break;
 					}
@@ -1050,8 +706,8 @@ define([
 				typeof this.settings.id === 'undefined'
 			);
 			var source = hasPageIdSetting
-			           ? GCN.page(this.settings.id).node()
-					   : GCN.Admin;
+				? GCN.page(this.settings.id).node()
+				: GCN.Admin;
 			var that = this;
 			source.constructs(function (constructs) {
 				if (that.settings.magiclinkconstruct) {
@@ -1141,7 +797,7 @@ define([
 							data.tags.push(block);
 						}
 						page.tag(tag.tagname)
-						    .edit('#' + tag.element, data, onRender);
+							.edit('#' + tag.element, data, onRender);
 					}
 				}
 				// A helper is added that searches each editable for editing-
@@ -1178,7 +834,7 @@ define([
 			// Set editables unmodified after successful save.
 			for (i in Aloha.editables) {
 				if (Aloha.editables.hasOwnProperty(i) &&
-						Aloha.editables[i] instanceof Aloha.Editable) {
+					Aloha.editables[i] instanceof Aloha.Editable) {
 					Aloha.editables[i].setUnmodified();
 				}
 			}
@@ -1225,7 +881,7 @@ define([
 					// Check whether the page was translated from another page.
 					Dialog.confirm({
 						title: 'Gentics Content.Node',
-						text : i18n.t('save.synctrans.confirm'),
+						text: i18n.t('save.synctrans.confirm'),
 						answer: function (answer) {
 							data.synctrans = answer;
 							plugin._savePage(data);
@@ -1238,8 +894,8 @@ define([
 		},
 
 		/**
-	     * Finds and specially handles editables of meta attributes like
-	     * `page.name' to update the internal page object.
+		 * Finds and specially handles editables of meta attributes like
+		 * `page.name' to update the internal page object.
 		 *
 		 * @return {boolean} True if no error occured during this process.
 		 */
@@ -1254,15 +910,15 @@ define([
 
 			for (i in editables) {
 				if (editables.hasOwnProperty(i) &&
-						editables[i] instanceof Aloha.Editable) {
+					editables[i] instanceof Aloha.Editable) {
 					editable = editables[i];
 					gcnEditable = this.findLoadedEditable(editable.getId());
 
 					if (gcnEditable && gcnEditable.metaproperty &&
-							gcnEditable.metaproperty.substring(0, 5) === 'page.') {
+						gcnEditable.metaproperty.substring(0, 5) === 'page.') {
 						prop = gcnEditable.metaproperty.substring(5);
 						var errorOccurred = false;
-						propValue = page.prop(prop, editable.getContents(), function(error) {
+						propValue = page.prop(prop, editable.getContents(), function (error) {
 							errorOccurred = true;
 							var errorMessage = "Property '" + prop + "' could not be saved."
 							if (error.code === 'ATTRIBUTE_CONSTRAINT_VIOLATION') {
@@ -1270,8 +926,8 @@ define([
 							}
 
 							Dialog.alert({
-								title : 'Gentics Content.Node',
-								text  : errorMessage
+								title: 'Gentics Content.Node',
+								text: errorMessage
 							});
 							return false;
 						});
@@ -1295,17 +951,17 @@ define([
 				data = {};
 			}
 
-			var showMessages  = !data.silent;
-			var onsuccess     = data.onsuccess;
-			var onfailure     = data.onfailure;
-			var unlock        = !!data.unlock;
-			var createVersion = typeof(data.createVersion) == "undefined" ? unlock : !!data.createVersion;
+			var showMessages = !data.silent;
+			var onsuccess = data.onsuccess;
+			var onfailure = data.onfailure;
+			var unlock = !!data.unlock;
+			var createVersion = typeof (data.createVersion) == "undefined" ? unlock : !!data.createVersion;
 
 			if (!onfailure) {
 				onfailure = function (data) {
 					Dialog.alert({
-						title : 'Gentics Content.Node',
-						text : i18n.t('restcall.savepage.error')
+						title: 'Gentics Content.Node',
+						text: i18n.t('restcall.savepage.error')
 					});
 				};
 			}
@@ -1319,8 +975,8 @@ define([
 			// If the saving is done synchronously, we show a progress dialog.
 			if (!data.async) {
 				cancelSaveProgess = Dialog.progress({
-					title : 'Gentics Content.Node',
-					text  : i18n.t('save.progress')
+					title: 'Gentics Content.Node',
+					text: i18n.t('save.progress')
 				});
 			} else {
 				cancelSaveProgess = null;
@@ -1345,7 +1001,7 @@ define([
 
 			this._callPageObjectHandlers(this.page);
 
-			this.page.save({unlock: unlock, createVersion: createVersion}, function (page) {
+			this.page.save({ unlock: unlock, createVersion: createVersion }, function (page) {
 				if (cancelSaveProgess) {
 					cancelSaveProgess();
 				}
@@ -1355,8 +1011,8 @@ define([
 					var i;
 					for (i = 0; i < messages.length; ++i) {
 						Dialog.alert({
-							title : 'Gentics Content.Node',
-							text  : messages[i].message
+							title: 'Gentics Content.Node',
+							text: messages[i].message
 						});
 					}
 				}
@@ -1414,10 +1070,10 @@ define([
 			// GCN.node(nodeId).createFolder(data.onsuccess, data.onfailure);
 
 			if (typeof data.success === 'undefined') {
-				data.success = function () {};
+				data.success = function () { };
 			}
 			if (typeof data.failure === 'undefined') {
-				data.failure = function () {};
+				data.failure = function () { };
 			}
 
 			data.url = this.settings.stag_prefix + this.restUrl + '/folder/create/';
@@ -1472,17 +1128,17 @@ define([
 				}
 			}
 		},
-		
+
 		/**
 		 * Strips unwanted classes before saving (eg. aloha-block)
 		 * @param classes String that contains all the classes sperated by spaces
 		 * @return the sanitized classes string
 		 */
 		cleanBlockClasses: function (classes) {
-			
+
 			if (classes) {
 				return classes.replace(/aloha-block\s|aloha-block$|^aloha-block$/g, "");
-			} 
+			}
 			return classes;
 		},
 
@@ -1535,11 +1191,11 @@ define([
 			}
 
 			var ajaxSettings = {
-				type        : data.type,
-				dataType    : data.dataType || 'json',
-				timeout     : data.timeout || 60000,
-				contentType : data.contentType || 'application/json; charset=utf-8',
-				data        : JSON.stringify(data.body)
+				type: data.type,
+				dataType: data.dataType || 'json',
+				timeout: data.timeout || 60000,
+				contentType: data.contentType || 'application/json; charset=utf-8',
+				data: JSON.stringify(data.body)
 			};
 
 			ajaxSettings.url = data.url + '?sid=' + GCN.sid + '&time=' + (new Date()).getTime();
@@ -1555,11 +1211,11 @@ define([
 							for (i = 0; i < data.params[paramName].length; i++) {
 								paramVal = data.params[paramName][i];
 								ajaxSettings.url += '&' + paramName +
-								                    '=' + encodeURIComponent(paramVal);
+									'=' + encodeURIComponent(paramVal);
 							}
 						} else {
 							ajaxSettings.url += '&' + paramName +
-							                    '=' + encodeURIComponent(data.params[paramName]);
+								'=' + encodeURIComponent(data.params[paramName]);
 						}
 					}
 				}
@@ -1580,47 +1236,47 @@ define([
 			jQuery.ajax(ajaxSettings);
 		},
 
-	/**
-	 * Determines the editdo for a given tagid.
-	 * 
-	 * @param {number} tagid The id of the tag.
-	 * @param {function} success Callback, which will receive the editdo as
-	 *                           the first parameter.
-	 * @param {function} error Callback, which will receive the
-	 *                         errormessage as the first parameter.
-	 */
-	_getEditDo: function (tagid, success, error) {
-		var page = this.page;
-		Tags.getById(page, tagid, function (tag) {
-			getConstructById(
-				page,
-				tag.prop('constructId'),
-				function (construct) {
-					success(construct.editdo);
-				},
-				error
-			);
-		}, error);
-	},
+		/**
+		 * Determines the editdo for a given tagid.
+		 * 
+		 * @param {number} tagid The id of the tag.
+		 * @param {function} success Callback, which will receive the editdo as
+		 *                           the first parameter.
+		 * @param {function} error Callback, which will receive the
+		 *                         errormessage as the first parameter.
+		 */
+		_getEditDo: function (tagid, success, error) {
+			var page = this.page;
+			Tags.getById(page, tagid, function (tag) {
+				getConstructById(
+					page,
+					tag.prop('constructId'),
+					function (construct) {
+						success(construct.editdo);
+					},
+					error
+				);
+			}, error);
+		},
 
-	
-	/**
-	 * Saves the page and open the tagfill dialog for the given tag in a
-	 * new window.
-	 *
-	 * @param {number|string} tagId The id of the tag.
-	 * @param {number|string} pageId The id of page the tag belongs to.
-	 *                               Note that this page must already have
-	 *                               had its data fetched.
-	 * @param {TagFillOptions=} options The options for opening the tag-fill.
-	 */
-	openTagFill: function (tagId, pageId, options) {
-		var gcn = this;
 
-		Tags.getById(GCN.page(pageId), tagId, function (tag) {
-			openTagFill(tag, gcn, options);
-		});
-	},
+		/**
+		 * Saves the page and open the tagfill dialog for the given tag in a
+		 * new window.
+		 *
+		 * @param {number|string} tagId The id of the tag.
+		 * @param {number|string} pageId The id of page the tag belongs to.
+		 *                               Note that this page must already have
+		 *                               had its data fetched.
+		 * @param {TagFillOptions=} options The options for opening the tag-fill.
+		 */
+		openTagFill: function (tagId, pageId, options) {
+			var gcn = this;
+
+			Tags.getById(GCN.page(pageId), tagId, function (tag) {
+				openTagFill(tag, gcn, options);
+			});
+		},
 
 		/**
 		 * Create a new tag in the page
@@ -1639,8 +1295,8 @@ define([
 			var plugin = this;
 			var selection = Aloha.Selection.getRangeObject();
 			var magicValue = (selection && selection.getText)
-			               ? selection.getText()
-			               : '';
+				? selection.getText()
+				: '';
 			if (typeof success !== 'function') {
 				success = function (html, tag, data, frontendEditing) {
 					plugin.handleBlock(data, true, function () {
@@ -1791,7 +1447,7 @@ define([
 				}
 
 				$handled.find('>.aloha-editicons:not(.aloha-editicons-hover)')
-				        .fadeIn('fast');
+					.fadeIn('fast');
 
 				Aloha.trigger('gcn-block-handled', $handled);
 
@@ -1827,19 +1483,19 @@ define([
 			var plugin = this;
 			var output = '';
 			jQuery.ajax({
-				url      : plugin.settings.renderBlockContentURL,
-				type     : 'POST',
-				timeout  : 10000,
-				data     : {content: content},
-				dataType : 'text',
-				async    : false,
-				success  : function (response) {
+				url: plugin.settings.renderBlockContentURL,
+				type: 'POST',
+				timeout: 10000,
+				data: { content: content },
+				dataType: 'text',
+				async: false,
+				success: function (response) {
 					if (callback) {
 						callback(response);
 					}
 					output = response;
 				},
-				error    : function (data) {
+				error: function (data) {
 					plugin.errorHandler('restcall.renderblock', data);
 					if (callback) {
 						callback('');
@@ -1850,54 +1506,13 @@ define([
 		},
 
 		/**
-		 * Based on the setting "lastAction", it uses the
-		 * noty jquery library to display a status message
-		 * that the saving or publishing of a page was successful.
-		 * This is currently implemented for saving and publishing a page.
-		 */
-		displayLastActionMessage: function() {
-			var i18nAction = null;
-			if (typeof window.noty !== 'function') {
-				return;
-			}
-
-			if (!this.settings.lastAction) {
-				return;
-			}
-
-			switch (this.settings.lastAction) {
-				case "save":
-					i18nAction = "saved";
-					break;
-				case "publish":
-					i18nAction = "published";
-					break;
-			}
-
-			if (i18nAction === null) {
-				return;
-			}
-
-			window.noty({
-				text:         i18n.t("action." + i18nAction),
-				type:         'alert',
-				dismissQueue: true,
-				modal:        false,
-				maxVisible:   1,
-				timeout:      4000,
-				layout:       'topCenter',
-				theme:        'defaultTheme'
-			});
-		},
-
-		/**
 		 * When the page is openend in edit mode, a request to "save" the page (empty)
 		 * is sent to the REST API for keeping the page lock alive
 		 */
 		startKeepalivePing: function () {
 			if (!Aloha.settings.readonly) {
 				var plugin = this;
-				window.setInterval(function() {
+				window.setInterval(function () {
 					var data = {
 						url: plugin.settings.stag_prefix + plugin.restUrl + '/page/save/' + plugin.settings.id,
 						body: {
@@ -1919,7 +1534,7 @@ define([
 		 */
 		previewForms: function ($element) {
 			var plugin = this;
-			$element.find('[data-gcn-formid]').each(function() {
+			$element.find('[data-gcn-formid]').each(function () {
 				var $elem = $(this);
 				var formId = $elem.attr('data-gcn-formid');
 				var formLanguage = $elem.attr('data-gcn-formlanguage');

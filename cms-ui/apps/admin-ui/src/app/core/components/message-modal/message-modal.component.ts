@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { IModalDialog } from '@gentics/ui-core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 
-import { AppStateService } from '@admin-ui/state';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { map } from 'rxjs/operators';
@@ -15,7 +14,7 @@ import { MessageLink } from '../message-body';
     styleUrls: ['./message-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessageModalComponent implements IModalDialog, OnInit {
+export class MessageModalComponent implements IModalDialog {
     @Input() message: Message<Normalized>;
 
     nodes$: Observable<Node[]>;
@@ -23,17 +22,10 @@ export class MessageModalComponent implements IModalDialog, OnInit {
     sendMessageText: string;
 
     constructor(
-        private appState: AppStateService,
         private entityManager: EntityManagerService,
         private api: GcmsApi,
         private notification: I18nNotificationService,
     ) {}
-
-    ngOnInit(): void {
-        /*this.nodes$ = this.appState.select(state => state.folder.nodes.list)
-            .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id)));*/
-
-    }
 
     getFullName(userId: number): Observable<string> {
         const user$ = this.entityManager.getEntity('user', userId);
@@ -45,12 +37,12 @@ export class MessageModalComponent implements IModalDialog, OnInit {
     sendMessage(): void {
         this.api.messages.sendMessage(this.transformValuesForApi(this.sendMessageText, this.message.sender)).subscribe(() => {
             this.notification.show({
-                message: 'message.message_sent',
+                message: 'shared.message_sent',
                 type: 'success',
             });
         }, error => {
             this.notification.show({
-                message: 'message.message_sent_error',
+                message: 'shared.message_sent_error',
                 type: 'alert',
                 delay: 5000,
             });

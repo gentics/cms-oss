@@ -8,14 +8,34 @@
     </div>
 
     <div class="tag-property-editors">
-        <div *ngFor="let tagPart of editableTagParts" class="tag-property-editor-row row column" [ngClass]="tagPart?.keyword ? 'gtx-tag-part-keyword__' + tagPart.keyword : 'gtx-tag-part-keyword__no-keyword'">
+        <div
+            *ngFor="let tagPart of editableTagParts"
+            class="tag-property-editor-row"
+            [ngClass]="tagPart?.keyword ? 'gtx-tag-part-keyword__' + tagPart.keyword : 'gtx-tag-part-keyword__no-keyword'"
+        >
             <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
         </div>
     </div>
 
     <div *ngIf="!onTagChangeFn" class="footer">
-        <gtx-button class="cancel-button" type="secondary" (click)="onCancelClick()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-        <gtx-button class="ok-button" [disabled]="!allPropertiesValid" (click)="onOkClick()">{{ 'common.okay_button' | i18n }}</gtx-button>
+        <gtx-button
+            *ngIf="context?.withDelete"
+            class="delete-button"
+            type="alert"
+            (click)="onDeleteClick()"
+        >{{ 'common.delete_button' | i18n }}</gtx-button>
+
+        <gtx-button
+            class="cancel-button"
+            type="secondary"
+            (click)="onCancelClick()"
+        >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+        <gtx-button
+            class="ok-button"
+            [disabled]="!allPropertiesValid"
+            (click)="onOkClick()"
+        >{{ 'common.okay_button' | i18n }}</gtx-button>
     </div>
 
 </div>

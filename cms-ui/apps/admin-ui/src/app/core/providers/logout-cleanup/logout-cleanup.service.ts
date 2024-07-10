@@ -8,7 +8,6 @@ import {
     selectLogoutEvent,
 } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Index } from '@gentics/cms-models';
 import { takeUntil } from 'rxjs/operators';
 
 /**
@@ -24,7 +23,7 @@ export class LogoutCleanupService extends InitializableServiceBase {
      * Using such a map will trigger a compile error if we add a new AppState branch,
      * but forget to define whether it needs to be cleaned up.
      */
-    private cleanupActions: Index<keyof AppState, () => void>  = {
+    private cleanupActions: Record<keyof AppState, () => void>  = {
         auth: null,
         entity: () => this.appState.dispatch(new ClearAllEntities()),
         features: null,
@@ -33,6 +32,7 @@ export class LogoutCleanupService extends InitializableServiceBase {
         messages: () => this.appState.dispatch(new ClearMessageState()),
         permissions: () => this.appState.dispatch(new ClearAllPermissions()),
         ui: null,
+        mesh: null,
     };
 
     constructor(

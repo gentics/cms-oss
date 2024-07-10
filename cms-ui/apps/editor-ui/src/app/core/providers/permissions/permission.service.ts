@@ -1,14 +1,24 @@
 import { Injectable } from '@angular/core';
-import { AppState } from '@editor-ui/app/common/models';
-import { ApplicationStateService, ItemFetchingSuccessAction } from '@editor-ui/app/state';
+import {
+    AppState,
+    EditorPermissions,
+    getNoPermissions,
+} from '@editor-ui/app/common/models';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { ItemFetchingSuccessAction } from '@editor-ui/app/state/modules/folder/folder.actions';
+import {
+    DefaultPermissionsFactory,
+    FolderInstancePermissions,
+    InstancePermissions,
+    TypePermissions,
+    UniformInstancePermissions,
+    UniformTypePermissions,
+} from '@gentics/cms-components';
 import {
     AccessControlledType,
-    DefaultPermissionsFactory,
-    EditorPermissions,
     File,
     FilePermissions,
     Folder,
-    FolderInstancePermissions,
     FolderItemOrTemplateType,
     FolderItemType,
     FolderPermissions,
@@ -19,9 +29,7 @@ import {
     GcmsRolePrivilegeMapCollection,
     Image,
     ImagePermissions,
-    Index,
     InheritableItem,
-    InstancePermissions,
     Item,
     ItemPermissions,
     Language,
@@ -34,13 +42,9 @@ import {
     PrivilegeMapFromServer,
     RolePrivileges,
     Template,
-    TypePermissions,
-    UniformInstancePermissions,
-    UniformTypePermissions,
-    getNoPermissions,
 } from '@gentics/cms-models';
-import { cloneDeep, isEqual } from 'lodash';
-import { Observable, combineLatest, forkJoin, of as observableOf } from 'rxjs';
+import { cloneDeep, isEqual } from 'lodash-es';
+import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import {
     catchError,
     distinctUntilChanged,
@@ -233,11 +237,11 @@ export class PermissionService {
             create$: perm((p) => p.folder.create),
             delete$: perm((p) => p.folder.delete),
             edit$: perm((p) => p.folder.edit),
-            import$: observableOf(false),
+            import$: of(false),
             inherit$: perm((p) => p.folder.inherit),
             localize$: perm((p) => p.folder.localize),
-            publish$: observableOf(false),
-            translate$: observableOf(false),
+            publish$: of(false),
+            translate$: of(false),
             view$: perm((p) => p.folder.view),
         };
 
@@ -268,8 +272,8 @@ export class PermissionService {
             import$: perm((p) => p.file.import),
             inherit$: perm((p) => p.file.inherit),
             localize$: perm((p) => p.file.localize),
-            publish$: observableOf(false),
-            translate$: observableOf(false),
+            publish$: of(false),
+            translate$: of(false),
             view$: perm((p) => p.file.view),
         };
 
@@ -280,8 +284,8 @@ export class PermissionService {
             import$: perm((p) => p.image.import),
             inherit$: perm((p) => p.image.inherit),
             localize$: perm((p) => p.image.localize),
-            publish$: observableOf(false),
-            translate$: observableOf(false),
+            publish$: of(false),
+            translate$: of(false),
             view$: perm((p) => p.image.view),
         };
 
@@ -289,11 +293,11 @@ export class PermissionService {
             create$: perm((p) => p.template.create),
             delete$: perm((p) => p.template.delete),
             edit$: perm((p) => p.template.edit),
-            import$: observableOf(false),
+            import$: of(false),
             inherit$: perm((p) => p.template.inherit),
             localize$: perm((p) => p.template.localize),
-            publish$: observableOf(false),
-            translate$: observableOf(false),
+            publish$: of(false),
+            translate$: of(false),
             view$: perm((p) => p.template.view),
         };
 
@@ -414,14 +418,14 @@ export class PermissionService {
             const item = (appState.entities[itemType] || [])[itemId];
 
             if (item) {
-                item$ = observableOf(item);
+                item$ = of(item);
             } else {
                 item$ = this.api.folders.getItem(itemId, itemType, { nodeId }).pipe(
                     map((response) => (<any>response)[itemType]),
                 );
             }
         } else {
-            item$ = Observable.of(
+            item$ = of(
                 idOrItem as File | Folder | Form | Image | Page | Template,
             );
             nodeId = typeOrNodeId as number;
@@ -575,7 +579,7 @@ export class PermissionService {
         const entity = entityPath && entityPath[id];
         let parentFolder$: Observable<number>;
         if (entity) {
-            parentFolder$ = observableOf(this.getParentFolderId(entity));
+            parentFolder$ = of(this.getParentFolderId(entity));
         } else {
             parentFolder$ = this.api.folders.getItem(
                 id,
@@ -698,7 +702,7 @@ export class PermissionService {
                 ),
             ),
             catchError((error) => {
-                return observableOf(
+                return of(
                     new UniformInstancePermissions(
                         type,
                         false,
@@ -949,7 +953,7 @@ export class PermissionService {
      * @param languageString language code
      */
     private checkGroupAndRolePagePermission(
-        perm: Partial<Index<GcmsPermission, boolean>> | undefined,
+        perm: Partial<Record<GcmsPermission, boolean>> | undefined,
         role: GcmsRolePrivilegeMapCollection | undefined,
         permissionName: GcmsPermission | GcmsRolePrivilege,
         languageString?: string,

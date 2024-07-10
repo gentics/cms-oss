@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
@@ -100,15 +102,6 @@ public abstract class AbstractCRModel extends ContentRepositoryModel {
 	}
 
 	@Override
-	public Boolean getUsePassword() {
-		return null;
-	}
-
-	@Override
-	public void setUsePassword(Boolean usePassword) {
-	}
-
-	@Override
 	public String getUsername() {
 		return null;
 	}
@@ -131,5 +124,14 @@ public abstract class AbstractCRModel extends ContentRepositoryModel {
 	 */
 	public void setEntries(List<TagmapEntryModel> entries) {
 		this.entries = entries;
+	}
+
+	@Override
+	public String getBasepath() {
+		if (!StringUtils.isBlank(basepathProperty)) {
+			return null;
+		} else {
+			return super.getBasepath();
+		}
 	}
 }

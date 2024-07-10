@@ -1,4 +1,4 @@
-import { TemplateTagBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, TemplateTagBO } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -18,6 +18,8 @@ import { TemplateTagTableLoaderOptions, TemplateTagTableLoaderService } from '..
 export class TemplateTagTableComponent
     extends BaseEntityTableComponent<TemplateTag, TemplateTagBO, TemplateTagTableLoaderOptions>
     implements OnChanges {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public templateId: number | string;
@@ -77,10 +79,6 @@ export class TemplateTagTableComponent
         return {
             templateId: this.templateId,
         };
-    }
-
-    protected override callToDeleteEntity(id: string): Promise<void> {
-        return (this.loader as TemplateTagTableLoaderService).deleteEntity(this.templateId, id);
     }
 
     protected createTableActionLoading(): Observable<TableAction<TemplateTagBO>[]> {

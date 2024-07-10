@@ -13,13 +13,21 @@
         <div *ngFor="let item of conflictingFiles">
             <gtx-contents-list-item [ngClass]="item.type || ''">
                 <div class="item-icon">
-                    <i class="material-icons" [attr.translate]="'no'">{{ iconForItemType(item.type) }}</i>
+                    <icon [attr.translate]="'no'">{{ item.type | gtxTypeIcon }}</icon>
                 </div>
                 <div class="item-primary">
                     <span class="item-name">{{ item.name }}</span>
                 </div>
-                <gtx-radio-button [(ngModel)]="selected[getKey(item)]" [value]="true" [label]="'modal.replace_label' | i18n"></gtx-radio-button>
-                <gtx-radio-button [(ngModel)]="selected[getKey(item)]" [value]="false" [label]="'modal.create_label' | i18n"></gtx-radio-button>
+                <gtx-radio-button
+                    [value]="true"
+                    [label]="'modal.replace_label' | i18n"
+                    [(ngModel)]="selected[getKey(item)]"
+                ></gtx-radio-button>
+                <gtx-radio-button
+                    [value]="false"
+                    [label]="'modal.create_label' | i18n"
+                    [(ngModel)]="selected[getKey(item)]"
+                ></gtx-radio-button>
             </gtx-contents-list-item>
         </div>
     </div>

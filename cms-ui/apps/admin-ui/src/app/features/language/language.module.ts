@@ -1,17 +1,23 @@
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-import { LanguageDetailComponent, LanguageMasterComponent } from './components';
+import {
+    CreateLanguageModalComponent,
+    LanguageEditorComponent,
+    LanguageMasterComponent,
+    LanguagePropertiesComponent,
+} from './components';
 import { LANGUAGE_ROUTES } from './language.routes';
-import { CanActivateLanguageGuard } from './providers';
 
 @NgModule({
     declarations: [
         LanguageMasterComponent,
-        LanguageDetailComponent,
+        LanguagePropertiesComponent,
+        CreateLanguageModalComponent,
+        LanguageEditorComponent,
     ],
     providers: [
-        CanActivateLanguageGuard,
+        provideRouter(LANGUAGE_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

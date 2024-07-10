@@ -4,7 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 /**
- * Binary data provider resource
+ * Binary data provider resource returning text content.
  */
 @Path("/binary")
 public final class BinaryDataResource {

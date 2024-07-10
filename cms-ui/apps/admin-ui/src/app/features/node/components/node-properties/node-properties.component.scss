@@ -4,19 +4,18 @@
     max-width: 100%;
 }
 
+.container-validator-errors {
+    color: $gtx-color-alert;
+}
+
 .gtx-inheritance-info {
     color: $gcms-color-icon-inheritance;
     display: flex;
-    opacity: 0;
+    opacity: 1;
     margin-bottom: 19px;
     margin-left: 8px;
 
     icon {
         margin-right: 3px;
-    }
-
-    &.visible {
-        opacity: 1;
-        animation: fadeIn 0.15s cubic-bezier(0.470, 0.000, 0.745, 0.715) both
     }
 }

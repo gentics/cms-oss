@@ -1,4 +1,6 @@
-import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, UsersnapSettings } from '@gentics/cms-models';
+import { EditableEntity } from '@admin-ui/common';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { EntityIdType, NormalizableEntityType, Update, UsersnapSettings, Version } from '@gentics/cms-models';
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import type { UIStateSettings } from './ui.state';
@@ -14,7 +16,7 @@ export class SetUIVersion {
 @ActionDeclaration(UI)
 export class SetCmpVersion {
     static readonly type = 'SetCmpVersion';
-    constructor(public version: GtxVersion) {}
+    constructor(public version: Version) {}
 }
 
 @ActionDeclaration(UI)
@@ -26,7 +28,7 @@ export class SetBackendLanguage {
 @ActionDeclaration(UI)
 export class SetCmsUpdates {
     static readonly type = 'SetCmsUpdates';
-    constructor(public available: string[]) {}
+    constructor(public available: Update[]) {}
 }
 
 @ActionDeclaration(UI)
@@ -81,7 +83,7 @@ export class DisableFocusMode {
 export class SetUIFocusEntity {
     static readonly type = 'SetUIFocusEntity';
     constructor(
-        public focusEntityType: NormalizableEntityType,
+        public focusEntityType: NormalizableEntityType | EditableEntity,
         public focusEntityId: EntityIdType,
         public focusEntityNodeId?: number,
     ) {}

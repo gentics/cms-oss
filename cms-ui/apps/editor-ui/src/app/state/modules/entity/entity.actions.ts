@@ -1,4 +1,5 @@
-import { EditMode, Message, Normalized } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Message, Normalized } from '@gentics/cms-models';
 import { NormalizedSchema } from 'normalizr';
 import { AppState, EntityState, EntityTypesMap } from '../../../common/models';
 import { ActionDeclaration } from '../../state-utils';

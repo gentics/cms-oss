@@ -2,21 +2,21 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 @Pipe({
-    name: 'duration',
+    name: 'gtxDuration',
 })
 export class DurationPipe implements PipeTransform {
 
-    private readonly secFormatter = Intl.NumberFormat(this.translate.currentLang, {
+    private readonly SECOND_FORMATTER = Intl.NumberFormat(this.translate.currentLang, {
         style: 'unit',
         unit: 'second',
         unitDisplay: 'short',
     } as any);
-    private readonly minFormatter = Intl.NumberFormat(this.translate.currentLang, {
+    private readonly MINUTE_FORMATTER = Intl.NumberFormat(this.translate.currentLang, {
         style: 'unit',
         unit: 'minute',
         unitDisplay: 'short',
     } as any);
-    private readonly hourFormatter = Intl.NumberFormat(this.translate.currentLang, {
+    private readonly HOUR_FORMATTER = Intl.NumberFormat(this.translate.currentLang, {
         style: 'unit',
         unit: 'hour',
         unitDisplay: 'short',
@@ -26,13 +26,13 @@ export class DurationPipe implements PipeTransform {
         private translate: TranslateService,
     ) {}
 
-    transform(value: number, ...args: any[]): any {
+    transform(value: number): any {
         if (!Number.isInteger(value)) {
             return value;
         }
 
         if (value < 90) {
-            return this.secFormatter.format(value);
+            return this.SECOND_FORMATTER.format(value);
         }
 
         value = value / 60;
@@ -41,12 +41,12 @@ export class DurationPipe implements PipeTransform {
         }
 
         if (value < 60) {
-            return this.minFormatter.format(value);
+            return this.MINUTE_FORMATTER.format(value);
         }
 
         const minutes = value % 60;
         value = Math.trunc(value / 60);
 
-        return `${this.hourFormatter.format(value)} ${this.minFormatter.format(minutes)}`;
+        return `${this.HOUR_FORMATTER.format(value)} ${this.MINUTE_FORMATTER.format(minutes)}`;
     }
 }

@@ -1,71 +1,60 @@
-import { ContentRepositoryOperations } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
-import { ContentRepositoryBO, ContentRepositoryCreateRequest } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { ContentRepositoryBO } from '@admin-ui/common';
+import { ContentRepositoryHandlerService, ErrorHandler } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { BaseModal, IModalDialog } from '@gentics/ui-core';
+import {
+    ContentRepositoryPropertiesFormData,
+    ContentRepositoryPropertiesMode,
+} from '../content-repository-properties/content-repository-properties.component';
 
 @Component({
     selector: 'gtx-create-content-repository-modal',
     templateUrl: './create-content-repository-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateContentRepositoryModalComponent implements IModalDialog, OnInit {
+export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepositoryBO> implements IModalDialog, OnInit {
 
-    /** form instance */
-    form: UntypedFormControl;
+    public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
-    isValid: boolean;
+    public form: FormControl<ContentRepositoryPropertiesFormData>;
+    public loading = false;
 
     constructor(
-        private contentRepositoryOperations: ContentRepositoryOperations,
-    ) { }
+        private changeDetector: ChangeDetectorRef,
+        private handler: ContentRepositoryHandlerService,
+        private errorHandler: ErrorHandler,
+    ) {
+        super();
+    }
 
     ngOnInit(): void {
-        const payload: ContentRepositoryCreateRequest = {
-            name: '',
-            crType: null,
-            dbType: '',
-            username: '',
-            password: '',
-            usePassword: false,
-            url: '',
-            basepath: '',
-            instantPublishing: false,
-            languageInformation: false,
-            permissionInformation: false,
-            permissionProperty: '',
-            defaultPermission: '',
-            diffDelete: false,
-            elasticsearch: null,
-            projectPerNode: false,
-        };
         // instantiate form
-        this.form = new UntypedFormControl(payload);
-    }
-
-    closeFn = (entityCreated: ContentRepositoryBO) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = (entityCreated: ContentRepositoryBO) => {
-            close(entityCreated);
-        };
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
+        this.form = new FormControl<ContentRepositoryPropertiesFormData>(null);
     }
 
     /**
      * If user clicks to create a new contentRepository
      */
-    buttonCreateEntityClicked(): void {
-        this.createEntity()
-            .then(contentRepositoryCreated => this.closeFn(contentRepositoryCreated));
-    }
+    async buttonCreateEntityClicked(): Promise<void> {
+        // Filter out property-type proeprties
+        const { basepathType: _basepathType, urlType: _urlType, usernameType: _usernameType, ...formData } = this.form.value;
+        // Normalize for REST call
+        const normalized = (this.handler).normalizeForREST(formData as any);
 
-    private createEntity(): Promise<ContentRepositoryBO> {
-        return this.contentRepositoryOperations.create(this.form.value).toPromise();
+        this.form.disable();
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            const created = await this.handler.createMapped(normalized as any).toPromise();
+            this.closeFn(created);
+        } catch (error) {
+            this.form.enable();
+            this.loading = false;
+            this.changeDetector.markForCheck();
+            this.errorHandler.catch(error, { notification: true });
+        }
     }
 
 }

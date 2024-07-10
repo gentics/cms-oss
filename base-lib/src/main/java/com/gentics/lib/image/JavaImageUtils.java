@@ -17,10 +17,13 @@ import javax.media.jai.PlanarImage;
 
 import org.apache.commons.imaging.ImageInfo;
 import org.apache.commons.imaging.Imaging;
+import org.apache.commons.lang.StringUtils;
 import org.jmage.filter.FilterException;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.sksamuel.scrimage.Dimension;
+import com.sksamuel.scrimage.ImmutableImage;
 
 import net.sf.image4j.codec.ico.ICODecoder;
 
@@ -138,6 +141,7 @@ public final class JavaImageUtils {
 		// Read the image and extract the information
 		try {
 			BufferedImage img1 = null;
+			ImmutableImage img2 = null;
 
 			// ico's are not supported by ImageIO
 			// com.twelvemonkeys.imageio which should add ico support throws an exception
@@ -147,16 +151,22 @@ public final class JavaImageUtils {
 				if (!ObjectTransformer.isEmpty(imgs)) {
 					img1 = imgs.get(0);
 				}
+			} else if (StringUtils.startsWith(fileType, "image/webp")) {
+				img2 = ImmutableImage.loader().fromStream(in);
 			} else {
 				img1 = ImageIO.read(in);
 			}
 
-			if (img1 == null) {
+			if (img1 != null) {
+				dimX = img1.getWidth();
+				dimY = img1.getHeight();
+			} else if (img2 != null) {
+				Dimension dimensions = img2.dimensions();
+				dimX = dimensions.getX();
+				dimY = dimensions.getY();
+			} else {
 				throw new NodeException("The image could not be read from stream.");
 			}
-
-			dimX = img1.getWidth();
-			dimY = img1.getHeight();
 
 			return new Point(dimX, dimY);
 		} catch (IOException e) {

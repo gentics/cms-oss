@@ -6,7 +6,7 @@ export type FeaturesInfo = { [key in Feature]: boolean };
 
 /**
  * Exposes the state of a subset of the CMS features listed at
- * https://www.gentics.com/Content.Node/guides/feature_overview.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/feature_overview.html
  *
  * Note that the naming convention of the state keys differs from the rest of the state,
  * since they reflect the keys used by the CMS.

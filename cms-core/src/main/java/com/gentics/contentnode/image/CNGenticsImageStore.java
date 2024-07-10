@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +40,9 @@ import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 
+import com.gentics.lib.image.WEBPEncoder;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.jcs.JCS;
 
 import com.gentics.api.lib.cache.PortalCache;
@@ -48,6 +51,8 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.upload.FileInformation;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.BiConsumer;
+import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.HandleDependenciesTrx;
@@ -55,10 +60,12 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.publish.FilePublisher;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.PublishRenderResult;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -129,6 +136,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	private GenticsImageStoreResult imageStoreResult;
 
 	public final static String JPEG_QUALITY_CONF = "image_resizer_jpeg_quality";
+	public final static String WEBP_QUALITY_CONF = "image_resizer_webp_quality";
+	public final static String WEBP_LOSSLESS_CONF = "image_resizer_webp_lossless";
 
 	public CNGenticsImageStore(NodeConfig config) {
 		this(config, null);
@@ -138,9 +147,14 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		this.config = config;
 		this.transaction = transaction;
 		this.storageDirectory = new File(ConfigurationValue.GIS_PATH.get());
-		// set the jpeg quality (if configured)
+		// Set image resizer properties (if configured).
 		Double jpegQuality = ObjectTransformer.getDouble(config.getDefaultPreferences().getProperty(JPEG_QUALITY_CONF), null);
+		Double webpQuality = ObjectTransformer.getDouble(config.getDefaultPreferences().getProperty(WEBP_QUALITY_CONF), null);
+		Boolean webpLossless = ObjectTransformer.getBoolean(config.getDefaultPreferences().getProperty(WEBP_LOSSLESS_CONF), null);
+
 		setJPEGQuality(jpegQuality);
+		setWebpQuality(webpQuality);
+		setWebpLossless(webpLossless);
 	}
 
 	/**
@@ -303,12 +317,25 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	}
 
 	/**
+	 * Get the IDs of imagestoreimage entries, which are referenced by entries in publish_imagestoretarget. Those are the imagestoreimages, which need to be resized in the CMS
+	 * and written into the filesystem
+	 * @return set of IDs
+	 * @throws NodeException
+	 */
+	public Set<Integer> getGISImagesToFilesystem() throws NodeException {
+		return DBUtils.select(
+				"SELECT DISTINCT imagestoreimage_id id FROM publish_imagestoretarget pit LEFT JOIN imagestoretarget it ON pit.imagestoretarget_id = it.id",
+				DBUtils.IDS);
+	}
+
+	/**
 	 * Renders all images from the imagestoreimage table that are not up-to-date.
 	 * @param publisher gets kept alive if specified
+	 * @param gisImageIds IDs of imagestoreimage entries, which are used for publishing into the filesystem
 	 * @return information about processed images
 	 * @throws NodeException
 	 */
-	public GenticsImageStoreResult renderImages(CnMapPublisher publisher) throws NodeException {
+	public GenticsImageStoreResult renderImages(CnMapPublisher publisher, Set<Integer> gisImageIds) throws NodeException {
 		imageStoreResult = new GenticsImageStoreResult(0, 0);
 		Transaction t = TransactionManager.getCurrentTransaction();
 		final Map<Integer, ImageDescription> toUpdate = new HashMap<Integer, CNGenticsImageStore.ImageDescription>();
@@ -317,7 +344,10 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			@Override
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 				while(rs.next()) {
-					toUpdate.put(rs.getInt("id"), new ImageDescription(rs.getInt("id"), rs.getInt("contentfile_id"), rs.getString("transform")));
+					int id = rs.getInt("id");
+					if (gisImageIds.contains(id)) {
+						toUpdate.put(id, new ImageDescription(id, rs.getInt("contentfile_id"), rs.getString("transform")));
+					}
 				}
 			}
 		}, Transaction.UPDATE_STATEMENT);
@@ -336,7 +366,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	/**
 	 * Creates hardlinks in the pub folder according to the imagestoretarget entries
 	 */
-	public void createLinks(FilePublisher fp) throws NodeException {
+	public void createLinks(FilePublisher fp, Set<Integer> gisImageIds) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		final HashMap<FileDescription, String> links = new HashMap<FileDescription, String>();
 		// We need to access data written in the publish transaction, so we declare this to be an update statement.
@@ -344,7 +374,10 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			@Override
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 				while(rs.next()) {
-					links.put(new FileDescription(new ImageDescription(rs.getInt("id"), rs.getInt("contentfile_id"), rs.getString("transform")), rs.getInt("node_id")), rs.getString("hash"));
+					int id = rs.getInt("id");
+					if (gisImageIds.contains(id)) {
+						links.put(new FileDescription(new ImageDescription(id, rs.getInt("contentfile_id"), rs.getString("transform")), rs.getInt("node_id")), rs.getString("hash"));
+					}
 				}
 			}
 		}, Transaction.UPDATE_STATEMENT);
@@ -417,16 +450,29 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @throws NodeException
 	 */
 	public void cleanupImages() throws NodeException {
-		final List<Integer> staleTargets = new ArrayList<Integer>();
+		final List<Integer> staleTargets1 = new ArrayList<Integer>();
 		// We need to access data written in the publish transaction, so we declare this to be an update statement.
 		DBUtils.executeStatement("SELECT it.id from imagestoretarget it left join publish_imagestoretarget pit on pit.imagestoretarget_id = it.id where pit.imagestoretarget_id IS NULL", new SQLExecutor() {
 			@Override
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 				while(rs.next()) {
-					staleTargets.add(rs.getInt("id"));
+					staleTargets1.add(rs.getInt("id"));
 				}
-					}
+			}
 		}, Transaction.UPDATE_STATEMENT);
+
+		final List<Integer> staleTargets2 = new ArrayList<Integer>();
+		// We need to access data written in the publish transaction, so we declare this to be an update statement.
+		DBUtils.executeStatement("SELECT it.id from imagestoretarget it left join meshpublish_imagestoretarget pit on pit.imagestoretarget_id = it.id where pit.imagestoretarget_id IS NULL", new SQLExecutor() {
+			@Override
+			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+				while(rs.next()) {
+					staleTargets2.add(rs.getInt("id"));
+				}
+			}
+		}, Transaction.UPDATE_STATEMENT);
+
+		final List<Integer> staleTargets = new ArrayList<>(CollectionUtils.intersection(staleTargets1, staleTargets2));
 
 		DBUtils.executeMassStatement("DELETE FROM imagestoretarget where id in ", "", staleTargets, 1, null, Transaction.DELETE_STATEMENT);
 
@@ -461,8 +507,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 				while(rs.next()) {
 					existingHashes.add(rs.getString("hash"));
-		}
-		}
+				}
+			}
 		}, Transaction.UPDATE_STATEMENT);
 		if (storageDirectory.exists()) {
 			for (File f : storageDirectory.listFiles()) {
@@ -470,12 +516,12 @@ public class CNGenticsImageStore extends GenticsImageStore {
 					for(File f2 : f.listFiles()) {
 						if (f2.isFile() && !existingHashes.contains(f2.getName())) {
 							f2.delete();
-			}
-			}
+						}
+					}
+				}
 			}
 		}
-		}
-		}
+	}
 
 	/**
 	 * Resize a single image
@@ -701,13 +747,22 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		final ImageInformation[] image = new ImageInformation[1];
 
 		final String paramFullImagePath = fullImagePath;
-		DBUtils.executeStatement("select contentfile.id id, node.id nodeId, contentfile.edate from contentfile " + "left join folder on contentfile.folder_id = folder.id "
-					+ "left join node on folder.node_id = node.id " + "where concat(node.pub_dir, folder.pub_dir, contentfile.name) = ? AND contentfile.name = ? AND contentfile.deleted = 0",
+		DBUtils.executeStatement("select c.id id, cn.id nodeId, c.edate edate from contentfile c "
+				+ " left join folder cf on c.folder_id = cf.id "
+				+ " left join node cn on cf.node_id = cn.id "
+				+ " left join folder nf on nf.id = cn.folder_id " 
+						+ "where ("
+							+ " concat('/', cn.pub_dir, cf.pub_dir, c.name) = ?"
+							+ " OR concat(nf.pub_dir, cf.pub_dir, c.name) = ?"
+							+ " OR concat(cf.pub_dir, c.name) = ?"
+							+ ") AND c.name = ? AND c.deleted = 0",
 				new SQLExecutor() {
 					@Override
 					public void prepareStatement(PreparedStatement stmt) throws SQLException {
 						stmt.setString(1, paramFullImagePath);
-						stmt.setString(2, imageName);
+						stmt.setString(2, paramFullImagePath);
+						stmt.setString(3, paramFullImagePath);
+						stmt.setString(4, imageName);
 					}
 
 					@Override
@@ -719,11 +774,10 @@ public class CNGenticsImageStore extends GenticsImageStore {
 								// path
 								logger.error("Found another image for publish path {" + paramFullImagePath + "}: " + rs.getInt("id") + " (using image "
 										+ image[0].getFileId() + ")");
-				}
-			}
-		}
+							}
+						}
+					}
 				});
-
 		return image[0];
 	}
 
@@ -874,6 +928,20 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		return createCacheKey(fileId, mode, width, height, eDate);
 	}
 
+	public static class ImageVariant {
+
+		public final String fieldKey;
+		public final ImageDescription description;
+		public final ImageInformation information;
+
+		public ImageVariant(String fieldKey, ImageDescription description, ImageInformation information) {
+			super();
+			this.description = description;
+			this.information = information;
+			this.fieldKey = fieldKey;
+		}
+	}
+
 	/**
 	 * Inner helper class for storing image information (image id, filepath and
 	 * hostname of the node)
@@ -972,7 +1040,9 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 *            is passed
 	 * @throws NodeException
 	 */
-	public static void processGISUrls(final int publishId, Node pageNode, String source, Map<String, Node> nodes, Map<String, ImageInformation> allImageData) throws NodeException {
+	public static <K, I extends GisImageInitiator<K>> void processGISUrls(final I initiator, Node pageNode, String source, Map<String, Node> nodes, Map<String, ImageInformation> allImageData,
+				BiFunction<FileDescription, I, Integer> gisLinkSaver, BiConsumer<I, Set<Integer>> gisLinkCleaner) throws NodeException {
+
 		Set<Integer> targetIds = new HashSet<Integer>();
 		// get all image src'es for resized images
 		Matcher m = SANE_IMAGESTORE_URL_PATTERN.matcher(source);
@@ -983,8 +1053,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			// check whether publish process shall be interrupted
 			PublishRenderResult.checkInterrupted();
 
-			// Change the used current Host when this GIS call references a
-			// foreign node
+			// Change the used current Host when this GIS call references a foreign node
 			if (hostname == null) {
 				hostname = pageNode.getHostname();
 			}
@@ -992,9 +1061,13 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			String imageUrl = m.group("imageurl");
 			ImageInformation image = getImage(hostname, imageUrl, allImageData);
 			if (image != null) {
-				ImageDescription idesc = new ImageDescription(0, image.getFileId(), m.group("transform"));
-				FileDescription fdesc = new FileDescription(idesc, image.getNodeId());
-				targetIds.add(storeGISLink(fdesc, publishId));
+				int fileId = image.getFileId();
+				int nodeId = image.getNodeId();
+				String transform = m.group("transform");
+				ImageDescription idesc = new ImageDescription(0, fileId, transform);
+				FileDescription fdesc = new FileDescription(idesc, nodeId);
+				initiator.setImageData(imageUrl);
+				targetIds.add(gisLinkSaver.apply(fdesc, initiator));
 			} else {
 				RenderResult rr = TransactionManager.getCurrentTransaction().getRenderResult();
 				if (rr != null) {
@@ -1002,8 +1075,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 				}
 			}
 		}
-		deleteExcessGISLinksForPublishId(publishId, targetIds);
-
+		gisLinkCleaner.accept(initiator, targetIds);
 	}
 
 	/**
@@ -1011,6 +1083,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @param hostname hostname
 	 * @param imageUrl image URL
 	 * @param allImageData map containing all image data
+	 * @param useOnlyCachedData 
 	 * @return image information object or null if not found
 	 * @throws NodeException
 	 */
@@ -1025,24 +1098,126 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	}
 
 	/**
+	 * Remove the entries from meshpublish_imagestoretarget with the given object type and object IDs for the node
+	 * @param nodeId node ID
+	 * @param objType object type
+	 * @param objIds object IDs
+	 * @throws NodeException
+	 */
+	public static void removeFromMeshPublish(int nodeId, int objType, Collection<Integer> objIds) throws NodeException {
+		if (!CollectionUtils.isEmpty(objIds)) {
+			DBUtils.executeMassStatement(
+					"DELETE FROM meshpublish_imagestoretarget WHERE entity_type = ? AND node_id = ? AND entity_id IN", "",
+					objIds, 3, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, objType);
+							stmt.setInt(2, nodeId);
+						}
+					}, Transaction.DELETE_STATEMENT);
+		}
+	}
+
+	/**
+	 * Get the list of files, which used to have GIS variants in Mesh but don't have them any more
+	 * @param nodeId node ID
+	 * @return list of images
+	 * @throws NodeException
+	 */
+	public static List<ContentFile> getStaleMeshPublishFiles(int nodeId) throws NodeException {
+		Set<Integer> fileIds = DBUtils.select(
+				"SELECT contentfile_id id FROM imagestoreimage ii LEFT JOIN imagestoretarget it ON ii.id = it.imagestoreimage_id"
+						+ " LEFT JOIN meshpublish_imagestoretarget mit ON it.id = mit.imagestoretarget_id"
+						+ " WHERE it.node_id = ? AND mit.imagestoretarget_id IS NULL",
+				pst -> {
+					pst.setInt(1, nodeId);
+				}, DBUtils.IDS, Transaction.UPDATE_STATEMENT);
+		return TransactionManager.getCurrentTransaction().getObjects(ContentFile.class, fileIds);
+	}
+
+	public static List<ImageVariant> collectImageVariants(int nodeId) throws NodeException {
+		List<ImageVariant> result = new ArrayList<>();
+		DBUtils.executeStatement("SELECT distinct mit.entity_id entity_id, mit.entity_type entity_type, mit.field_key field_key, isi.contentfile_id contentfile_id, isi.transform transform, mit.webrootpath webrootpath, isi.edate edate "
+				+ " from meshpublish_imagestoretarget mit "
+				+ " inner join imagestoretarget ist on mit.imagestoretarget_id = ist.id "
+				+ " inner join imagestoreimage isi on ist.imagestoreimage_id = isi.id "
+				+ " where mit.node_id = ? ", new SQLExecutor() {
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				stmt.setInt(1, nodeId);
+			}
+			@Override
+			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+				 while (rs.next()) {
+					ImageInformation info = new ImageInformation(rs.getInt("contentfile_id"), nodeId, rs.getString("webrootpath"), rs.getInt("edate"));
+					ImageDescription desc = new ImageDescription(rs.getInt("entity_id"), rs.getInt("entity_type"), rs.getString("transform"));
+					result.add(new ImageVariant(rs.getString("field_key"), desc, info));
+				}
+			}
+		});
+		return result;
+	}
+
+	/**
 	 * Stores a link between the specified image file and publish entry,
-	 * creating the image file db entry if it doesn't yet exist
+	 * creating the image file db entry if it doesn't yet exist. Variant for {@link MeshPublisher}.
 	 *
 	 * @param fdesc
 	 *            the requested image file
-	 * @param publishId
+	 * @param initiator
+	 *            
+	 * @return
+	 * @throws NodeException
+	 */
+	public static int storeGISLink(final FileDescription fdesc, final MeshPublisherGisImageInitiator initiator) throws NodeException {
+		int ifid = storeImageFileEntry(fdesc);
+		final boolean[] exists = new boolean[] { false };
+		// We need to access data written in the publish transaction, so we declare this to be an update statement.
+		DBUtils.executeStatement("SELECT imagestoretarget_id from meshpublish_imagestoretarget where node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and imagestoretarget_id = ? ", new SQLExecutor() {
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				Object[] fkey = initiator.getInitiatorForeignKey();
+				stmt.setInt(1, (int) fkey[0]);
+				stmt.setInt(2, (int) fkey[1]);
+				stmt.setInt(3, (int) fkey[2]);
+				stmt.setString(4, (String) fkey[3]);
+				stmt.setInt(5, ifid);
+			}
+			@Override
+			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+				exists[0] = rs.next();
+			}
+		}, Transaction.UPDATE_STATEMENT);
+
+		if (!exists[0]) {
+			int length = initiator.getInitiatorForeignKey().length;
+			Object[] fkey = new Object[length + 1];
+			System.arraycopy(initiator.getInitiatorForeignKey(), 0, fkey, 0, length);
+			fkey[length] = ifid;
+			DBUtils.executeInsert("INSERT INTO meshpublish_imagestoretarget (node_id, entity_id, entity_type, field_key, webrootpath, imagestoretarget_id) values (?,?,?,?,?,?)", fkey);
+		}
+		return ifid;
+	}
+
+	/**
+	 * Stores a link between the specified image file and publish entry,
+	 * creating the image file db entry if it doesn't yet exist. Variant for {@link FilePublisher}.
+	 *
+	 * @param fdesc
+	 *            the requested image file
+	 * @param initiator
 	 *            the publish entry to associate the image file with
 	 * @return imagestoretarget_id created/used
 	 * @throws NodeException
 	 */
-	private static int storeGISLink(final FileDescription fdesc, final int publishId) throws NodeException {
+	private static int storeGISLink(final FileDescription fdesc, final FilePublisherGisImageInitiator initiator) throws NodeException {
 		int ifid = storeImageFileEntry(fdesc);
 		final boolean[] exists = new boolean[] { false };
 		// We need to access data written in the publish transaction, so we declare this to be an update statement.
 		DBUtils.executeStatement("SELECT publish_id, imagestoretarget_id from publish_imagestoretarget where publish_id = ? and imagestoretarget_id = ? ", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, publishId);
+				stmt.setInt(1, initiator.getInitiatorForeignKey());
 				stmt.setInt(2, ifid);
 			}
 			@Override
@@ -1051,7 +1226,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 		}, Transaction.UPDATE_STATEMENT);
 		if (!exists[0]) {
-			DBUtils.executeInsert("INSERT INTO publish_imagestoretarget (publish_id, imagestoretarget_id) values (?,?)", new Object[] { publishId, ifid });
+			DBUtils.executeInsert("INSERT INTO publish_imagestoretarget (publish_id, imagestoretarget_id) values (?,?)", new Object[] { initiator.getInitiatorForeignKey(), ifid });
 		}
 		return ifid;
 	}
@@ -1124,7 +1299,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @author escitalopram
 	 *
 	 */
-	static class ImageDescription {
+	public static class ImageDescription {
 		public final int id;
 		public final int contentfileId;
 		public final String transform;
@@ -1141,7 +1316,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @author escitalopram
 	 *
 	 */
-	static class FileDescription {
+	public static class FileDescription {
 		public final int nodeId;
 		public final ImageDescription description;
 
@@ -1160,11 +1335,11 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @param usedTargetIds imagetarget ids used by the publish entry
 	 * @throws NodeException
 	 */
-	private static void deleteExcessGISLinksForPublishId(final int publishId, Set<Integer> usedTargetIds) throws NodeException {
+	private static void deleteExcessGISLinksForPublishId(final FilePublisherGisImageInitiator initiator, Set<Integer> usedTargetIds) throws NodeException {
 		IntegerColumnRetriever retr = new IntegerColumnRetriever("imagestoretarget_id") {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, publishId);
+				stmt.setInt(1, initiator.getInitiatorForeignKey());
 			}
 		};
 		// We need to access data written in the publish transaction, so we declare this to be an update statement
@@ -1177,7 +1352,37 @@ public class CNGenticsImageStore extends GenticsImageStore {
 					excessTargetIds), 2, new SQLExecutor() {
 				@Override
 				public void prepareStatement(PreparedStatement stmt) throws SQLException {
-					stmt.setInt(1, publishId);
+					stmt.setInt(1, initiator.getInitiatorForeignKey());
+				}
+			}, Transaction.DELETE_STATEMENT);
+		}
+	}
+
+	public static void deleteExcessGISLinksForPublishId(final MeshPublisherGisImageInitiator initiator, Set<Integer> usedTargetIds) throws NodeException {
+		Object[] fkey = initiator.getInitiatorForeignKey();
+		IntegerColumnRetriever retr = new IntegerColumnRetriever("imagestoretarget_id") {
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				stmt.setInt(1, (int) fkey[0]);
+				stmt.setInt(2, (int) fkey[1]);
+				stmt.setInt(3, (int) fkey[2]);
+				stmt.setString(4, (String) fkey[3]);
+			}
+		};
+		// We need to access data written in the publish transaction, so we declare this to be an update statement
+		DBUtils.executeStatement("SELECT imagestoretarget_id from meshpublish_imagestoretarget where node_id = ? and entity_id = ? and entity_type = ? and field_key = ? ", retr, Transaction.UPDATE_STATEMENT);
+		Set<Integer> existingTargetIds = new HashSet<>(retr.getValues());
+		Set<Integer> excessTargetIds = new HashSet<>(existingTargetIds);
+		excessTargetIds.removeAll(usedTargetIds);
+		if (excessTargetIds.size() > 0) {
+			DBUtils.executeMassStatement("DELETE from meshpublish_imagestoretarget WHERE node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and imagestoretarget_id in", "", 
+					excessTargetIds, 5, new SQLExecutor() {
+				@Override
+				public void prepareStatement(PreparedStatement stmt) throws SQLException {
+					stmt.setInt(1, (int) fkey[0]);
+					stmt.setInt(2, (int) fkey[1]);
+					stmt.setInt(3, (int) fkey[2]);
+					stmt.setString(4, (String) fkey[3]);
 				}
 			}, Transaction.DELETE_STATEMENT);
 		}
@@ -1224,7 +1429,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 				}
 			}, Transaction.UPDATE_STATEMENT);
 			Node n = t.getObject(Node.class, nodeId[0], -1, false);
-			CNGenticsImageStore.processGISUrls(id, n, source[0], null, allImageData);
+			CNGenticsImageStore.processGISUrls(new FilePublisherGisImageInitiator(id), n, source[0], null, allImageData, CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
 		}
 		if (!handled.isEmpty()) {
 			DBUtils.executeMassStatement("UPDATE publish set updateimagestore = 0 where id in ", "", handled, 1, null, Transaction.UPDATE_STATEMENT);
@@ -1270,7 +1475,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 
 	/**
 	 * Invokes the GIS and returns the resized image
-	 * 
+	 *
 	 * @param mode
 	 * @param width
 	 * @param height
@@ -1315,6 +1520,14 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			filterChainProperties.put("JPEG_QUALITY", jpegQuality);
 		}
 
+		if (webpQuality != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_QUALITY, webpQuality);
+		}
+
+		if (webpLossless != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_LOSSLESS, webpLossless);
+		}
+
 		if (!StringUtils.isEmpty(filePath)) {
 			filterChainProperties.put("filePath", filePath);
 		}
@@ -1348,7 +1561,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			if (useOriginalIfResizeFails) {
 				logger.error(msg + " - using original image data.");
 				// An error happened, so read in the file and store it in an FileInformation.
-				// Note: this is done, so we don't store a FileInformation object in the cache which 
+				// Note: this is done, so we don't store a FileInformation object in the cache which
 				// contains only a reference to a file..
 				File file = new File(filePath);
 				byte[] bytes = new byte[(int) file.length()];

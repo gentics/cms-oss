@@ -1,0 +1,109 @@
+@import 'variables';
+
+:host {
+    display: flex;
+    overflow: auto hidden;
+}
+
+.control-element.tab-controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-element {
+    width: 100%;
+}
+
+.control-element:not(.active) {
+    display: none;
+}
+
+.component-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 100%;
+    align-items: center;
+    gap: 0.25rem;
+
+    &:first-child {
+        margin-left: 0;
+    }
+}
+
+.group-separator {
+    width: 0px;
+    height: calc(100% - 1rem);
+    display: block;
+    margin: auto 0;
+    border-left: 1px solid $gtx-color-light-gray;
+}
+
+.dynamic-component.hidden {
+    display: none;
+}
+
+.gtx-mobile-menu-floater {
+    display: contents;
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    :host {
+        overflow: hidden;
+    }
+
+    .gtx-mobile-menu-floater {
+        --gtx-menu-size: 64px;
+        position: fixed;
+        width: 100%;
+        height: var(--gtx-menu-size);
+        top: calc(var(--gtx-vvh) - var(--gtx-menu-size));
+        background: $gtx-color-off-white;
+        border-top: 2px solid $gtx-color-warning;
+        right: 0;
+        z-index: 100;
+        display: block;
+    }
+
+    .component-group {
+        display: contents;
+    }
+
+    .group-separator {
+        display: none;
+    }
+
+    .gtx-mobile-menu {
+        height: var(--gtx-menu-size);
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        padding: 0 0.5rem;
+
+        &.stable {
+            justify-content: space-between;
+        }
+
+        .gtx-menu-element {
+            flex: 0 0;
+            margin: auto 0;
+            padding: 0 0.25rem;
+            display: block;
+
+            &.inactive {
+                display: none;
+            }
+
+            .gtx-menu-button {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    }
+}
+

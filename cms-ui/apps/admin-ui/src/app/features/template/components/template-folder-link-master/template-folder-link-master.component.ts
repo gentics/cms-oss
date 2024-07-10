@@ -4,7 +4,7 @@ import { FolderLinkEvent } from '@admin-ui/shared';
 import { SelectState } from '@admin-ui/state';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, Folder, NormalizableEntityType } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 

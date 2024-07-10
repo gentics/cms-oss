@@ -1,17 +1,18 @@
 @import "variables";
 
-// This is based on https://www.w3schools.com/howto/howto_css_modals.asp,
-// https://css-tricks.com/centering-css-complete-guide/, and the Gentics UI Core ModalDialogComponent.
-
 .tag-editor-bg {
     display: none;
     flex-direction: row;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 1;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    padding-top: 3rem;
+    padding-top: 4rem;
+    align-items: flex-start;
+    justify-content: center;
 
     &.visible {
         display: flex;
@@ -22,12 +23,8 @@
         align-items: stretch;
 
         width: 90%;
-        max-height: 65vh;
-
-        position: absolute;
-        margin: auto;
-        left: 5%;
-        right: 5%;
+        min-height: 1px;
+        max-height: calc((var(--gtx-vvh) * 0.9) - 4rem);
 
         background-color: white;
         padding: 20px;

@@ -33,6 +33,7 @@
         <factory class="com.gentics.lib.image.JPEGEncoder"/>
         <factory class="com.gentics.lib.image.PNGEncoder"/>
         <factory class="com.gentics.lib.image.GifEncoder"/>
+        <factory class="com.gentics.lib.image.WEBPEncoder"/>
         <factory class="org.jmage.encoder.DefaultImageEncoder"/>
     </encodermanager>
 

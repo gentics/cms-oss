@@ -1,4 +1,4 @@
-import { Component, Injectable } from '@angular/core';
+import { Component, Injectable, OnDestroy } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { componentTest } from './component-test';
 import { mustFail } from './must-fail';
@@ -87,7 +87,7 @@ xdescribe('componentTest', () => {
         mustFail(
             componentTest(() => SimpleComponent, fixture => {
                 expect('black').toBe('a very bright white');
-                expect(23).toBe('the last digit of PI');
+                expect(23).toBe('the last digit of PI' as any);
                 expect('a truth').toBe('a truth');
                 expect('a lie').toBe('a lie');
             }),
@@ -115,7 +115,7 @@ xdescribe('componentTest', () => {
 
     it('destroys the component it creates, calling their ngOnDestroy method', () => {
         let componentWithOnDestroyInstance: ComponentWithOnDestroy;
-        let test = componentTest(() => ComponentWithOnDestroy, (fixture, instance) => {
+        const test = componentTest(() => ComponentWithOnDestroy, (fixture, instance) => {
             componentWithOnDestroyInstance = instance;
         });
         test();
@@ -160,14 +160,14 @@ xdescribe('componentTest', () => {
 
 
 @Component({
-    template: 'This should pass'
-    })
+    template: 'This should pass',
+})
 class SimpleComponent { }
 
 
 @Component({
-    template: 'This should fail'
-    })
+    template: 'This should fail',
+})
 class ComponentThatThrowsInConstructor {
     constructor() {
         throw new Error('Something went wrong in ComponentThatThrowsInConstructor.');
@@ -175,9 +175,9 @@ class ComponentThatThrowsInConstructor {
 }
 
 @Component({
-    template: 'This will be destroyed'
-    })
-class ComponentWithOnDestroy {
+    template: 'This will be destroyed',
+})
+class ComponentWithOnDestroy implements OnDestroy {
     public wasDestroyed = false;
     ngOnDestroy(): void {
         this.wasDestroyed = true;
@@ -189,8 +189,8 @@ class ComponentWithOnDestroy {
 class ServiceThatIsNotAddedAsProvider {}
 
 @Component({
-    template: 'This component is missing its provider'
-    })
+    template: 'This component is missing its provider',
+})
 class ComponentThatNeedsAServiceThatIsNotAddedAsProvider {
     constructor(svc: ServiceThatIsNotAddedAsProvider) { }
 }
@@ -207,8 +207,8 @@ class OverwrittenPieService {
 }
 
 @Component({
-    template: 'I spy with my little pie'
-    })
+    template: 'I spy with my little pie',
+})
 class ComponentThatNeedsAnExistingService {
     constructor(public service: PieService) {}
 }

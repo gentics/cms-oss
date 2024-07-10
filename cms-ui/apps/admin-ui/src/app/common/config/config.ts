@@ -1,4 +1,4 @@
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 
 /** UI localizations */
 export const UI_LANGUAGES: GcmsUiLanguage[] = ['en', 'de'];

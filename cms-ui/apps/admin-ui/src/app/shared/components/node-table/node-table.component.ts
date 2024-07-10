@@ -1,18 +1,18 @@
-import { BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
 import {
     I18nNotificationService,
     I18nService,
     NodeOperations,
     NodeTableLoaderService,
-    PermissionsService
+    PermissionsService,
 } from '@admin-ui/core';
-import { WizardService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { WizardService } from '../../providers/wizard/wizard.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 
 @Component({
@@ -22,6 +22,8 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     protected rawColumns: TableColumn<NodeBO>[] = [
         {

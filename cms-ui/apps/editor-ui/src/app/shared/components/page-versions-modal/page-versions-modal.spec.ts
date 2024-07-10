@@ -1,9 +1,9 @@
+/* eslint-disable id-blacklist */
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { Router } from '@angular/router';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { Page, PageResponse } from '@gentics/cms-models';
+import { Page, PageResponse, ResponseCode } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
@@ -40,12 +40,6 @@ describe('PageVersionsModal', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [PageVersionsModal],
-            },
-        });
-
         api = TestBed.get(Api);
         modalService = TestBed.get(ModalService);
     });
@@ -66,7 +60,7 @@ describe('PageVersionsModal', () => {
     );
 
     it('shows the right label if page version is current', componentTest(() => TestComponent, async (fixture, instance) => {
-        let currentPage: Partial<Page> = {
+        const currentPage: Partial<Page> = {
             type: 'page',
             fileName: 'pageName',
             description: 'description',
@@ -124,7 +118,7 @@ describe('PageVersionsModal', () => {
     );
 
     it('shows the right label if page version is published', componentTest(() => TestComponent, async (fixture, instance) => {
-        let publishedPage: Partial<Page> = {
+        const publishedPage: Partial<Page> = {
             type: 'page',
             fileName: 'pageName',
             description: 'description',
@@ -182,7 +176,7 @@ describe('PageVersionsModal', () => {
     );
 
     it('shows the right label if page version is planned to be published', componentTest(() => TestComponent, async (fixture, instance) => {
-        let plannedPage: Partial<Page> = {
+        const plannedPage: Partial<Page> = {
             type: 'page',
             fileName: 'pageName',
             description: 'description',
@@ -245,7 +239,7 @@ describe('PageVersionsModal', () => {
     );
 
     it('shows the right label if page version is planned to be taken offline', componentTest(() => TestComponent, async (fixture, instance) => {
-        let plannedPage: Partial<Page> = {
+        const plannedPage: Partial<Page> = {
             type: 'page',
             fileName: 'pageName',
             description: 'description',
@@ -309,7 +303,7 @@ describe('PageVersionsModal', () => {
 
     it('shows the right label if page version is planned to be published and to be taken offline, but should be published first',
         componentTest(() => TestComponent, async (fixture, instance) => {
-            let plannedPage: Partial<Page> = {
+            const plannedPage: Partial<Page> = {
                 type: 'page',
                 fileName: 'pageName',
                 description: 'description',
@@ -383,7 +377,7 @@ describe('PageVersionsModal', () => {
 
     it('shows the right label if page version is planned to be published and to be taken offline, but should be taken offline first',
         componentTest(() => TestComponent, async (fixture, instance) => {
-            let plannedPage: Partial<Page> = {
+            const plannedPage: Partial<Page> = {
                 type: 'page',
                 fileName: 'pageName',
                 description: 'description',
@@ -457,8 +451,8 @@ describe('PageVersionsModal', () => {
 });
 
 @Component({
-    template: `<gtx-overlay-host></gtx-overlay-host>`
-    })
+    template: '<gtx-overlay-host></gtx-overlay-host>',
+})
 
 class TestComponent {
     nodeId = 1;
@@ -497,7 +491,7 @@ class MockApi {
 
     folders = {
         getItem: () => {
-            return of({ responseInfo: { responseCode: 'OK' }, page: this.pageSample } as PageResponse).pipe(delay(0));
+            return of({ responseInfo: { responseCode: ResponseCode.OK }, page: this.pageSample } as PageResponse).pipe(delay(0));
         },
     };
 }

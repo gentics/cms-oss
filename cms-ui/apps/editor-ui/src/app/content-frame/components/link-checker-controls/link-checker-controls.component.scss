@@ -1,0 +1,98 @@
+@import 'variables';
+@import 'aloha-utils';
+
+.link-item {
+    user-select: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .link-label,
+    .link-opener {
+        @include gtxButtonCore;
+    }
+
+    .link-label {
+        white-space: nowrap;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+        padding: 0.25rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    .link-opener {
+        padding: 0.25rem 0;
+        width: 22px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+
+        icon {
+            height: 20px;
+            width: 20px;
+            font-size: 20px;
+        }
+    }
+}
+
+.links-container {
+    height: 100%;
+    width: 100%;
+
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.link-options {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    background: #fff;
+    border-radius: 0;
+
+    .link-option-button {
+        padding: 0.5rem 0.75rem;
+        flex: 1 1 auto;
+        background: transparent;
+        border-radius: 0;
+        border: none;
+        outline: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+
+        icon {
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+        }
+
+        .link-button-label {
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        &:hover {
+            background: $gtx-color-off-white;
+        }
+    }
+
+    .link-edit-button {
+        color: $gtx-color-primary;
+    }
+
+    .link-delete-button {
+        color: $gtx-color-alert;
+    }
+}
+
+.no-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    padding: 0 1rem;
+}

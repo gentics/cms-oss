@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IndexByKey } from '@gentics/cms-models';
-import { GcmsUiLanguage } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
@@ -20,7 +20,7 @@ export interface JoinOptions {
     withLast?: boolean;
     quoted?: boolean;
     separator?: string;
-};
+}
 
 const DEFAULT_JOIN_OPTIONS: JoinOptions = {
     withLast: true,
@@ -100,7 +100,7 @@ export class I18nService extends ServiceBase {
         }
 
         const partsCopy = [...parts];
-        const {withLast, quoted, separator} = { ...DEFAULT_JOIN_OPTIONS, ...(options || {})};
+        const { withLast, quoted, separator } = { ...DEFAULT_JOIN_OPTIONS, ...(options || {}) };
 
         if (parts.length === 1) {
             return parts[0];
@@ -131,9 +131,11 @@ export class I18nService extends ServiceBase {
     private preProcessKey(key: string | string[], params?: any): string | string[] {
         if (typeof key === 'string') {
             return applyShortcuts(key, params);
-        } else {
+        }
+        if (Array.isArray(key)) {
             return key.map(k => applyShortcuts(k));
         }
+        return key;
     }
 
 }

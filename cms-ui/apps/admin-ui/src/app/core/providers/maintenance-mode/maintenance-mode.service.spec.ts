@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { IndexByKey, MaintenanceModeResponse } from '@gentics/cms-models';
+import { IndexByKey, MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { NEVER, Subject, Subscription } from 'rxjs';
@@ -115,7 +115,7 @@ describe('MaintenanceModeService', () => {
                 message: 'Stop working, the building is on fire!',
                 messages: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
 

@@ -1,19 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor, ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     StringTagPartProperty,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
     TagPartType,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
 
@@ -24,8 +20,8 @@ import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
     selector: 'text-tag-property-editor',
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */

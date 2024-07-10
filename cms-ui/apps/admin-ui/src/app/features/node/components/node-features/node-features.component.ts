@@ -4,16 +4,16 @@ import {
     Component,
     Input,
     OnChanges,
-    OnDestroy
+    OnDestroy,
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
-import { Index, IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
+import { IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Subject } from 'rxjs';
 import { map, takeUntil, takeWhile } from 'rxjs/operators';
 
-export type NodeFeaturesFormData = Partial<Index<NodeFeature, boolean>>;
+export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
 
 /**
  * Creates a dynamic form based on `availableFeatures` and shows a checkbox for

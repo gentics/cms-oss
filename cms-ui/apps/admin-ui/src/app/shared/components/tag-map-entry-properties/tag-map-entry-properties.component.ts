@@ -13,17 +13,16 @@ import {
     OnInit,
     SimpleChanges,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE, GtxJsonValidator } from '@gentics/cms-components';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import {
-    AnyModelType,
+    EditableTagmapEntry,
     MeshTagmapEntryAttributeTypes,
     SQLTagmapEntryAttributeTypes,
-    TagmapEntry,
     TagmapEntryAttributeTypes,
     TagmapEntryPropertiesObjectType,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { environment } from 'apps/admin-ui/src/environments/environment';
 
 export enum TagmapEntryPropertiesMode {
@@ -31,20 +30,41 @@ export enum TagmapEntryPropertiesMode {
     UPDATE = 'update',
 }
 
+/** These properties are locked/readonly when the tagmap entry is marked as `reserved` */
+const RESERVED_LOCKED_PROPERTIES: (keyof EditableTagmapEntry)[] = [
+    'tagname',
+    'mapname',
+    'objType',
+    'attributeType',
+    'targetType',
+    'multivalue',
+    'filesystem',
+    'foreignlinkAttribute',
+    'foreignlinkAttributeRule',
+    'segmentfield',
+    'displayfield',
+];
+
 @Component({
     selector: 'gtx-tag-map-entry-properties',
     templateUrl: './tag-map-entry-properties.component.html',
     styleUrls: ['./tag-map-entry-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(TagMapEntryPropertiesComponent)],
+    providers: [
+        generateFormProvider(TagMapEntryPropertiesComponent),
+        generateValidatorProvider(TagMapEntryPropertiesComponent),
+    ],
 })
-export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<TagmapEntry> implements OnInit, OnChanges {
+export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<EditableTagmapEntry> implements OnInit, OnChanges {
 
     @Input()
-    mode: TagmapEntryPropertiesMode;
+    public mode: TagmapEntryPropertiesMode;
 
     @Input()
-    displayFields: TagmapEntryDisplayFields;
+    public displayFields: TagmapEntryDisplayFields;
+
+    @Input()
+    public reserved = false;
 
     attributes: { id: TagmapEntryAttributeTypes; label: string; }[] = [];
 
@@ -104,32 +124,35 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
         }
     }
 
-    protected createForm(): UntypedFormGroup {
-        return new UntypedFormGroup({
-            mapname: new UntypedFormControl('', Validators.required),
-            tagname: new UntypedFormControl('', Validators.required),
-            objType: new UntypedFormControl('', Validators.required),
-            attributeType: new UntypedFormControl('', Validators.required),
-            multivalue: new UntypedFormControl(false),
-            targetType: new UntypedFormControl(null),
-            segmentfield: new UntypedFormControl(null),
-            displayfield: new UntypedFormControl(null),
+    protected createForm(): FormGroup<FormProperties<EditableTagmapEntry>> {
+        return new FormGroup<FormProperties<EditableTagmapEntry>>({
+            mapname: new FormControl(this.value?.mapname || '', Validators.required),
+            tagname: new FormControl(this.value?.tagname || '', Validators.required),
+            objType: new FormControl(this.value?.objType ?? 0, Validators.required),
+            attributeType: new FormControl(this.value?.attributeType ?? 0, Validators.required),
+            multivalue: new FormControl(this.value?.multivalue ?? false),
+            targetType: new FormControl(this.value?.targetType),
+            segmentfield: new FormControl(this.value?.segmentfield ?? false),
+            displayfield: new FormControl(this.value?.displayfield ?? false),
+            category: new FormControl(this.value?.category ?? ''),
             // Mesh CR
-            urlfield: new UntypedFormControl(false),
-            elasticsearch: new UntypedFormControl('', GtxJsonValidator),
-            micronodeFilter: new UntypedFormControl(null),
+            urlfield: new FormControl(this.value?.urlfield ?? false),
+            noIndex: new FormControl(this.value?.noIndex ?? false),
+            elasticsearch: new FormControl(this.value?.elasticsearch ?? null, GtxJsonValidator),
+            micronodeFilter: new FormControl(this.value?.micronodeFilter),
             // SQL CR
-            filesystem: new UntypedFormControl(false),
-            optimized: new UntypedFormControl(false),
-            foreignlinkAttribute: new UntypedFormControl(null, Validators.required),
-            foreignlinkAttributeRule: new UntypedFormControl(null),
+            filesystem: new FormControl(this.value?.filesystem ?? false),
+            optimized: new FormControl(this.value?.optimized ?? false),
+            foreignlinkAttribute: new FormControl(this.value?.foreignlinkAttribute, Validators.required),
+            foreignlinkAttributeRule: new FormControl(this.value?.foreignlinkAttributeRule),
         });
     }
 
-    protected configureForm(value: TagmapEntry<AnyModelType>, loud?: boolean): void {
+    protected configureForm(value: EditableTagmapEntry, loud?: boolean): void {
         const options = { emitEvent: !!loud };
-        const dynamicControls = [
+        const dynamicControls: (keyof EditableTagmapEntry)[] = [
             'urlfield',
+            'noIndex',
             'elasticsearch',
             'micronodeFilter',
             'filesystem',
@@ -141,17 +164,16 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
 
         // On default, disable all controls which may not be valid
         for (const ctlName of dynamicControls) {
-            this.form.get(ctlName).disable({ emitEvent: false });
+            this.form.controls[ctlName].disable(options);
         }
 
-        const enableControls: string[] = [];
+        const enableControls: (keyof EditableTagmapEntry)[] = [];
         let targetTypeIsRequired = false;
 
         if (this.displayFields === TagmapEntryDisplayFields.ALL || this.displayFields === TagmapEntryDisplayFields.MESH) {
 
-
             // fields of CrTypeMesh
-            enableControls.push('urlfield', 'elasticsearch');
+            enableControls.push('urlfield', 'noIndex', 'elasticsearch');
 
             switch (value?.attributeType) {
                 case MeshTagmapEntryAttributeTypes.BINARY:
@@ -222,21 +244,26 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
             }
         }
 
-        this.form.get('targetType').setValidators(targetTypeIsRequired ? Validators.required : null);
-        for (const ctlName of enableControls) {
-            this.form.get(ctlName).enable(options);
+        this.form.controls.targetType.setValidators(targetTypeIsRequired ? Validators.required : null);
+
+        setControlsEnabled(this.form, enableControls, true, options);
+
+        if (this.reserved) {
+            setControlsEnabled(this.form, RESERVED_LOCKED_PROPERTIES, false, options);
         }
     }
 
-    protected assembleValue(value: TagmapEntry<AnyModelType>): TagmapEntry<AnyModelType> {
+    protected assembleValue(value: EditableTagmapEntry): EditableTagmapEntry {
         return value;
     }
 
     protected override onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            const tmpObj: Partial<TagmapEntry> = {};
+        if (this.form && this.value) {
+            const tmpObj: Partial<EditableTagmapEntry> = {};
             Object.keys(this.form.controls).forEach(controlName => {
-                tmpObj[controlName] = this.value?.[controlName] || null;
+                if (this.value?.hasOwnProperty?.(controlName)) {
+                    tmpObj[controlName] = this.value?.[controlName];
+                }
             });
 
             if (tmpObj?.elasticsearch) {
@@ -257,7 +284,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
                 (tmpObj as any).elasticsearch = esSettings;
             }
 
-            this.form.setValue(tmpObj);
+            this.form.patchValue(tmpObj);
         }
     }
 }

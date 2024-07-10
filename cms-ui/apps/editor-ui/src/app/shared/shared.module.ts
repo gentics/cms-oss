@@ -16,7 +16,7 @@ import {
     DetailChip,
     DisplayFieldSelector,
     ExternalAssetsModalComponent,
-    FavouriteToggle,
+    FavouriteToggleComponent,
     FilePropertiesForm,
     FileStatusLabel,
     FolderPropertiesForm,
@@ -38,13 +38,13 @@ import {
     LanguageContextSelectorComponent,
     LinkTemplateComponent,
     LinkTemplateModal,
-    ListFilter,
+    ListFilterComponent,
     ListItemDetails,
     MasonryGridComponent,
     MultiDeleteModal,
     MultiMoveModal,
     MultiRestoreModalComponent,
-    NodeSelector,
+    NodeSelectorComponent,
     NodeSelectorTree,
     PageLanguageIndicatorComponent,
     PageLanguageIndicatorCurrentComponent,
@@ -74,7 +74,7 @@ import {
     TimeManagementModal,
     TranslatePageModal,
     UploadButtonComponent,
-    UsageList,
+    UsageListComponent,
     UsageModalComponent,
 } from './components';
 import {
@@ -103,6 +103,7 @@ import {
     RouterCommandsForItemPipe,
     TruncateNumberPipe,
     TruncatePathPipe,
+    TypeIconPipe,
     UserFullNamePipe,
 } from './pipes';
 import {
@@ -123,7 +124,7 @@ const COMPONENTS = [
     ChipSearchBarComponent,
     DetailChip,
     DynamicDisableDirective,
-    FavouriteToggle,
+    FavouriteToggleComponent,
     FilePropertiesForm,
     FileStatusLabel,
     FolderContextMenuComponent,
@@ -144,11 +145,11 @@ const COMPONENTS = [
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
     LanguageContextSelectorComponent,
-    ListFilter,
+    ListFilterComponent,
     ListItemDetails,
     MasonryGridComponent,
     MasonryItemDirective,
-    NodeSelector,
+    NodeSelectorComponent,
     NodeSelectorTree,
     OverrideSlotDirective,
     PageLanguageIndicatorComponent,
@@ -192,7 +193,7 @@ const ENTRY_COMPONENTS = [
     TakePagesOfflineModal,
     TimeManagementModal,
     TranslatePageModal,
-    UsageList,
+    UsageListComponent,
     UsageModalComponent,
 ];
 
@@ -218,6 +219,7 @@ const PIPES = [
     RouterCommandsForItemPipe,
     TruncateNumberPipe,
     TruncatePathPipe,
+    TypeIconPipe,
     UserFullNamePipe,
 ];
 

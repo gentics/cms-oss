@@ -2,8 +2,8 @@ package com.gentics.contentnode.devtools;
 
 import static com.gentics.contentnode.devtools.Synchronizer.fixSorting;
 import static com.gentics.contentnode.devtools.Synchronizer.mapper;
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import com.gentics.contentnode.etc.Consumer;
 import java.io.ByteArrayOutputStream;
@@ -255,7 +255,6 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 
 		// normalize and synchronize
 		model.setKeyword(folderName);
-		model.setIcon(ObjectTransformer.getString(model.getIcon(), ""));
 		transform(model, editable, false);
 
 		Map<GlobalId, MissingValueReference> missingReferences = new HashMap<>();
@@ -366,15 +365,21 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		if (from.getGlobalId() != null) {
 			to.setGlobalId(new GlobalId(from.getGlobalId()));
 		}
-		to.setHopeditHook(from.getHopeditHook());
-		to.setIconName(from.getIcon());
 		to.setKeyword(from.getKeyword());
 		to.setLiveEditorTagName(from.getLiveEditorTagName());
 		I18NHelper.forI18nMap(from.getName(), (translation, id) -> to.setName(translation, id));
 		to.setAutoEnable(from.isAutoEnable());
 		to.setMayBeSubtag(from.isMayBeSubtag());
 		to.setMayContainSubtags(from.isMayContainsSubtags());
-		to.setNewEditor(from.isNewEditor());
+		if (from.getEditOnInsert() != null) {
+			to.setEditOnInsert(from.getEditOnInsert());
+		}
+		if (from.getEditorControlStyle() != null) {
+			to.setEditorControlStyle(from.getEditorControlStyle());
+		}
+		if (from.getEditorControlsInside() != null) {
+			to.setEditorControlInside(from.getEditorControlsInside());
+		}
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		// transform parts

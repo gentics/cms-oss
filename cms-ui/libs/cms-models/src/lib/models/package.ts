@@ -1,7 +1,7 @@
 import { DefaultModelType, ModelType } from './type-util';
 
 /** DevTools Package
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Package.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Package.html
  */
 export interface Package<T extends ModelType = DefaultModelType> {
     /** Package name */
@@ -24,9 +24,9 @@ export interface Package<T extends ModelType = DefaultModelType> {
     subPackages?: PackageBO<T>[];
 }
 
-/** DevTools Package
+/**
  * Data model as defined by frontend.
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Package.html
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface PackageBO<T extends ModelType = DefaultModelType> extends Package<T> {
     /** __Important__: Virtual property not present in REST API response */

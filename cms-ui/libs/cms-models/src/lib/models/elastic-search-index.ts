@@ -1,4 +1,4 @@
-import { DefaultModelType, ModelType, Normalizable, NormalizableEntity, Raw } from './type-util';
+import { DefaultModelType, ModelType, NormalizableEntity } from './type-util';
 
 /**
  * A GCMS Elastic Search index.

@@ -2,10 +2,10 @@
     [selectable]="true"
     [inlineSelection]="true"
     [inlineExpansion]="true"
-    [selection]="selection"
+    [selected]="selected"
     [actions]="actions"
     (select)="handleSelectEvent($event)"
     (unselect)="handleUnselectEvent($event)"
-    (selectionChange)="updateSelection($event)"
+    (selectedChange)="updateSelection($event)"
     (actionClick)="handleAction($event)"
 ></gtx-folder-trable>

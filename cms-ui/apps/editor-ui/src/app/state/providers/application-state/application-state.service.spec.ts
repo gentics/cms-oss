@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
-import { getExampleUserData } from '../../../../testing/test-data.mock';
+import { getExampleUserData } from '@gentics/cms-models/testing/test-data.mock';
 import { STATE_MODULES } from '../../modules';
 import { LoginSuccessAction, LogoutSuccessAction, StartLoginAction, StartLogoutAction } from '../../modules/auth/auth.actions';
 import { TestApplicationState } from '../../test-application-state.mock';

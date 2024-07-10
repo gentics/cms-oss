@@ -1,15 +1,14 @@
 {
   "globalId" : "A547.69716",
   "keyword" : "velocity",
-  "icon" : "tag.gif",
   "name" : {
     "de" : "Velocity",
     "en" : "Velocity"
   },
   "mayBeSubtag" : false,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.69722",
     "name" : {

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentPackageCreateRequest, ContentPackageSaveRequest } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ContentPackagePropertiesMode {
     UPDATE = 'update',
@@ -16,7 +16,10 @@ type ContentPackagePropertiesValue = ContentPackageSaveRequest | ContentPackageC
     templateUrl: './content-package-properties.component.html',
     styleUrls: ['./content-package-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ContentPackagePropertiesComponent)],
+    providers: [
+        generateFormProvider(ContentPackagePropertiesComponent),
+        generateValidatorProvider(ContentPackagePropertiesComponent),
+    ],
 })
 export class ContentPackagePropertiesComponent extends BasePropertiesComponent<ContentPackagePropertiesValue> {
 
@@ -36,14 +39,5 @@ export class ContentPackagePropertiesComponent extends BasePropertiesComponent<C
 
     protected override assembleValue(value: ContentPackagePropertiesValue): ContentPackagePropertiesValue {
         return value;
-    }
-
-    protected override onValueChange(): void {
-        if (this.form  && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                name: this.value?.name || null,
-                description: this.value?.description || null,
-            });
-        }
     }
 }

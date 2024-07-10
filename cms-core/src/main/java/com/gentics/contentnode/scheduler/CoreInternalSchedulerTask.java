@@ -126,7 +126,16 @@ public enum CoreInternalSchedulerTask implements InternalSchedulerTask {
 		}
 
 		return publishInfo.getReturnCode() == PublishInfo.RETURN_CODE_SUCCESS;
-	})
+	}),
+
+	/**
+	 * Task that converts images to WebP format. Conversion is only done for nodes with {@link Feature#WEBP_CONVERSION}
+	 * enabled, and for images which are not already WebP images.
+	 */
+	convertimages(
+		"Convert images",
+		"Converts images to WebP format for all nodes where the webp_conversion feature is active",
+		new ConvertImagesJob()::convert);
 	;
 
 	/**

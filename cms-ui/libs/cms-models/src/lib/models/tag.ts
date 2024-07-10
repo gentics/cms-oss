@@ -138,9 +138,6 @@ export interface TagTypeBase<T extends ModelType> {
     /** Description of th etag in multiple languages */
     descriptionI18n?: CmsI18nValue;
 
-    /** The icon of the TagType (use `TagTypeIconPipe` for displaying it in a template). */
-    icon: string;
-
     /** The list of TagParts of this TagType. */
     parts: TagPart[];
 
@@ -164,8 +161,6 @@ export interface TagTypeBase<T extends ModelType> {
     editor?: User;
     /** Last Edit Date of the construct */
     edate?: number;
-    /** Edit do */
-    editdo?: number;
     /** Category id of the construct */
     categoryId?: number;
     /** Category name of the construct */
@@ -176,6 +171,18 @@ export interface TagTypeBase<T extends ModelType> {
     visibleInMenu?: boolean;
     /** True if tags of this construct shall be enabled by default */
     autoEnable?: boolean;
+    /** If the tag-editor should be opened when the tag get's inserted in a page. */
+    openEditorOnInsert?: boolean;
+    /** How the controls should be displayed in the page. */
+    editorControlStyle?: EditorControlStyle;
+    /** If the controls should be displayed inside/over the tag. */
+    editorControlsInside?: boolean;
+}
+
+export enum EditorControlStyle {
+    ABOVE = 'ABOVE',
+    ASIDE = 'ASIDE',
+    CLICK = 'CLICK',
 }
 
 /** Data model as defined by backend. */
@@ -184,11 +191,18 @@ export interface TagType<T extends ModelType = DefaultModelType> extends TagType
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface TagTypeBO<T extends ModelType = DefaultModelType> extends TagTypeBase<T>, InstancePermissionItem {
     /** Internal ID of the object property definition */
     id: string;
 }
+
+export type Construct = TagType;
+/** @deprecated */
+export type ConstructBO = TagTypeBO;
 
 /**
  * @returns The TagPart that corresponds to the specified TagProperty
@@ -226,7 +240,8 @@ export interface TagStatus {
 }
 
 /**
- * Business-Object representation of a Tag-Status
+ * Business-Object representation of a Tag-Status.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface TagStatusBO extends TagStatus {
     /** Pseudo ID - is actually the `name` property, but is required for internal application usage. */

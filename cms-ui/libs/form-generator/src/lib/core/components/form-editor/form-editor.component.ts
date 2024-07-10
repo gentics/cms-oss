@@ -5,9 +5,11 @@ import {
     ElementRef,
     EventEmitter,
     Input,
+    OnChanges,
     OnDestroy,
     OnInit,
     Output,
+    SimpleChanges,
     ViewChild,
 } from '@angular/core';
 import {
@@ -15,18 +17,16 @@ import {
     CmsFormElementInsertionInformation,
     CmsFormElementInsertionType,
     CmsFormType,
-    EditMode,
     Form,
     FormBO,
     Normalized,
-    Page,
     Raw,
 } from '@gentics/cms-models';
-import { cloneDeep as _cloneDeep } from 'lodash';
-import { Subject } from 'rxjs';
+import { cloneDeep } from 'lodash-es';
+import { Subscription } from 'rxjs';
+import { FormEditorConfiguration } from '../../../common/models/form-editor-configuration';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorConfigurationService, FormEditorService } from '../../providers';
-import { FormEditorConfiguration } from '../../../common/models/form-editor-configuration';
 import { FormEditorMappingService } from '../../providers/form-editor-mapping/form-editor-mapping.service';
 import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
 
@@ -37,62 +37,16 @@ import { FormEditorElementListComponent } from '../form-editor-element-list/form
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
 })
-export class FormEditorComponent implements OnInit, OnDestroy {
-    private _form: FormBO<Raw | Normalized>;
-
-    private configurationFetched = false;
-
-    get form(): Form<Raw | Normalized> {
-        return this.formEditorMappingService.mapFormBOToForm(this._form);
-    }
-
-    @Input() set form(value: Form) {
-        this.formEditorConfigurationService.getConfiguration$(
-            !!value.data.type ? value.data.type : CmsFormType.GENERIC,
-        ).subscribe((configuration: FormEditorConfiguration) => {
-            this.configurationFetched = true;
-            this._form = this.formEditorMappingService.mapFormToFormBO(value, configuration);
-            this.onFormUpdated();
-            this.changeDetectorRef.markForCheck();
-            this.setFormEditorMenu();
-        });
-    }
-
-    get formElements(): CmsFormElementBO[] {
-        if (this._form && this._form.data) {
-            return this._form.data.elements;
-        } else {
-            return undefined;
-        }
-    }
-
-    get formType(): CmsFormType {
-        if (this._form && this._form.data) {
-            return this._form.data.type;
-        } else {
-            return undefined;
-        }
-    }
+export class FormEditorComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input()
-    isDisabled = false;
+    public form: Form;
 
     @Input()
-    set formEditMode(v: EditMode) {
-        this._formEditMode = v;
-        if (v === 'preview') {
-            this.menuVisible = false;
-        } else if (v === 'edit') {
-            if (this.configurationFetched) {
-                this.menuVisible = true;
-            }
-        }
-    }
+    public disabled = false;
 
-    get formEditMode(): EditMode {
-        return this._formEditMode;
-    }
-    private _formEditMode: EditMode = 'preview';
+    @Input()
+    public readonly = true;
 
     /** Current UI language. */
     @Input()
@@ -120,7 +74,6 @@ export class FormEditorComponent implements OnInit, OnDestroy {
      */
     @Output()
     validityChange = new EventEmitter<boolean>();
-
 
     @ViewChild('formBackground', { static: false })
     formBackground: ElementRef<HTMLElement>;
@@ -157,14 +110,16 @@ export class FormEditorComponent implements OnInit, OnDestroy {
     /** Map of open element's properties menu is visible. */
     propertiesEditorOpenMap: boolean[] = [];
 
+    public mappedForm: FormBO<Raw | Normalized>;
+
+    public configurationFetched = false;
+
     /** To compare if changed. */
     private formMemory: string;
 
-    private destroyed$ = new Subject<void>();
+    private latestConfigSub: Subscription | null;
 
-    private configuration: FormEditorConfiguration;
-
-    private updateFormInputWithNewConfiguration: (configuration: FormEditorConfiguration) => void;
+    private fetchedConfigType: CmsFormType;
 
     dragEnterDepth = 0;
 
@@ -177,49 +132,71 @@ export class FormEditorComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void { }
 
-    setFormEditorMenu(): void {
-        if (this.formEditorIsReadOnly()) {
-            return;
-        }
-        this.menuVisible = true;
-        this.changeDetectorRef.markForCheck();
-    }
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.form) {
+            const configType = this.form?.data?.type ?? CmsFormType.GENERIC;
 
-    private onFormUpdated(): void {
-        this._form = _cloneDeep(this._form);
-        this.formMemory = JSON.stringify(this._form);
-        this.formEditorService.formLanguages = this._form.languages;
+            if (configType !== this.fetchedConfigType) {
+                this.fetchConfig(configType);
+            }
+        }
     }
 
     ngOnDestroy(): void {
-        this.destroyed$.next();
-        this.destroyed$.complete();
+        if (this.latestConfigSub) {
+            this.latestConfigSub.unsubscribe();
+        }
     }
 
     identify(index: number, element: CmsFormElementBO): string {
         return element.globalId;
     }
 
+    setFormEditorMenu(): void {
+        if (this.readonly) {
+            return;
+        }
+        this.menuVisible = true;
+        this.changeDetectorRef.markForCheck();
+    }
+
+    private fetchConfig(configType: CmsFormType): void {
+        if (this.latestConfigSub) {
+            this.latestConfigSub.unsubscribe();
+        }
+
+        this.latestConfigSub = this.formEditorConfigurationService.getConfiguration$(configType).subscribe(configuration => {
+            this.configurationFetched = true;
+            this.fetchedConfigType = configType;
+            this.mappedForm = this.formEditorMappingService.mapFormToFormBO(this.form, configuration);
+            this.onFormUpdated();
+            this.changeDetectorRef.markForCheck();
+            this.setFormEditorMenu();
+        });
+    }
+
+    private onFormUpdated(): void {
+        this.mappedForm = cloneDeep(this.mappedForm);
+        this.formMemory = JSON.stringify(this.mappedForm);
+        this.formEditorService.formLanguages = this.mappedForm.languages;
+    }
+
     propertiesEditorOpen(): boolean {
         return this.propertiesEditorOpenMap.some(e => e);
     }
 
-    formEditorIsReadOnly(): boolean {
-        return this.formEditMode !== 'edit';
-    }
-
     public onElementsChange(elements: CmsFormElementBO[]): void {
-        if (this._form && this._form.data) {
-            this._form.data.elements = elements;
+        if (this.mappedForm && this.mappedForm.data) {
+            this.mappedForm.data.elements = elements;
         }
-        if (this.formMemory !== JSON.stringify(this._form)) {
-            this.formModified.emit(this.form);
+        if (this.formMemory !== JSON.stringify(this.mappedForm)) {
+            this.formModified.emit(this.formEditorMappingService.mapFormBOToForm(this.mappedForm));
         }
     }
 
     onFormElementInsert(insertionInformation: CmsFormElementInsertionInformation): void {
         if (insertionInformation.insertionType === CmsFormElementInsertionType.MOVE) {
-            this.removeElementByName(this._form.data.elements, insertionInformation.element.name)
+            this.removeElementByName(this.mappedForm.data.elements, insertionInformation.element.name)
         }
     }
 

@@ -8,7 +8,7 @@
         [value]="form.value.datasourceId"
         (valueChange)="loadEntries($event)"
     >
-        <gtx-option *ngFor="let dsEntry of (dataSourceMap | entries)" [value]="dsEntry.value.id">{{ dsEntry.value.name }}</gtx-option>
+        <gtx-option *ngFor="let dsEntry of (dataSourceMap | gtxEntries)" [value]="dsEntry.value.id">{{ dsEntry.value.name }}</gtx-option>
     </gtx-select>
 
     <gtx-textarea

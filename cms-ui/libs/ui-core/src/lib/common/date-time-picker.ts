@@ -9,6 +9,7 @@ export interface DateTimePickerStrings {
     weekdays: string[];
     weekdaysShort?: string[];
     weekdaysMin?: string[];
+    weekStart?: number;
 }
 
 export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
@@ -29,7 +30,7 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'September',
         'October',
         'November',
-        'December'
+        'December',
     ],
     monthsShort: [
         'Jan',
@@ -43,7 +44,7 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'Sep',
         'Oct',
         'Nov',
-        'Dec'
+        'Dec',
     ],
     weekdays: [
         'Sunday',
@@ -52,7 +53,7 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'Wednesday',
         'Thursday',
         'Friday',
-        'Saturday'
+        'Saturday',
     ],
     weekdaysShort: [
         'Sun',
@@ -61,7 +62,7 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'Wed',
         'Thu',
         'Fri',
-        'Sat'
+        'Sat',
     ],
     weekdaysMin: [
         'Su',
@@ -70,6 +71,6 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'We',
         'Th',
         'Fr',
-        'Sa'
-    ]
+        'Sa',
+    ],
 };

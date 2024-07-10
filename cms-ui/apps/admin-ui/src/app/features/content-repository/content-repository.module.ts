@@ -1,30 +1,32 @@
+import { MeshModule } from '@admin-ui/mesh';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import {
-    ContentRepositoryDetailComponent,
+    ContentRepositoryEditorComponent,
     ContentRepositoryMasterComponent,
     ContentRepositoryPropertiesComponent,
     CreateContentRepositoryModalComponent,
     ManageContentRepositoryRolesModal,
 } from './components';
 import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
-import { CanActivateContentRepositoryGuard } from './providers';
 
 @NgModule({
+    id: 'admin-ui_content-repository',
     declarations: [
-        ContentRepositoryDetailComponent,
+        ContentRepositoryEditorComponent,
         ContentRepositoryMasterComponent,
         ContentRepositoryPropertiesComponent,
         CreateContentRepositoryModalComponent,
         ManageContentRepositoryRolesModal,
     ],
     providers: [
-        CanActivateContentRepositoryGuard,
+        provideRouter(CONTENT_REPOSIROTY_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,
         RouterModule.forChild(CONTENT_REPOSIROTY_ROUTES),
+        MeshModule,
     ],
 })
 export class ContentRepositoryModule {}

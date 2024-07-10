@@ -1,10 +1,12 @@
+import { ContentRepositoryBO } from '@admin-ui/common';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
-import { ContentRepositoryDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ContentMaintenanceType, ContentRepositoryBO, Normalized, Response } from '@gentics/cms-models';
+import { ContentMaintenanceType, Response } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export enum MaintenanceActionModalAction {
     REPUBLISH_OBJECTS = 'republish_objects',
@@ -31,28 +33,30 @@ export class MaintenanceActionModalComponent extends BaseModal<boolean> implemen
     ];
 
     @Input()
-    modalAction: MaintenanceActionModalAction;
+    public modalAction: MaintenanceActionModalAction;
 
     @Input()
-    selectedNodeIds: number[] = [];
+    public selectedNodeIds: number[] = [];
 
     formGroup: UntypedFormGroup;
 
-    allContentRespositories$: Observable<ContentRepositoryBO<Normalized>[]>;
+    allContentRespositories$: Observable<ContentRepositoryBO[]>;
 
     private subscriptions: Subscription[] = [];
 
     constructor(
         private adminOperations: AdminOperations,
         private formBuilder: UntypedFormBuilder,
-        private contentRepositoryDataService: ContentRepositoryDataService,
+        private contentRepositoryHandler: ContentRepositoryHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
         // fetch form data options
-        this.allContentRespositories$ = this.contentRepositoryDataService.getEntitiesFromApi();
+        this.allContentRespositories$ = this.contentRepositoryHandler.listMapped().pipe(
+            map(list => list.items),
+        );
 
         // init form
         this.formGroup = this.formBuilder.group({
@@ -61,8 +65,8 @@ export class MaintenanceActionModalComponent extends BaseModal<boolean> implemen
             attributes: [{ value: '', disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             clearPublishCache: [{ value: false, disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             limitToDateRange: [false],
-            start: [{ value: null, disabled: true } ],
-            end: [{ value: null, disabled: true }],
+            start: [ ],
+            end: [ ],
         });
 
         // listen to form value changes

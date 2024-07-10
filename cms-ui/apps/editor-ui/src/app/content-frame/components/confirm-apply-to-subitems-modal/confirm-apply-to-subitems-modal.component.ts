@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { ItemWithObjectTags, ObjectTag } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 
 /**
  * A modal for the user to confirm that he wants to apply an object property to all subitems of a certain type.
@@ -17,7 +16,6 @@ export class ConfirmApplyToSubitemsModalComponent implements IModalDialog {
 
     item: ItemWithObjectTags;
     objPropId: string;
-    iconForItemType = iconForItemType;
 
     get objPropName(): string {
         return this.item && this.objPropId ? (this.item.tags[this.objPropId] as ObjectTag).displayName : '';

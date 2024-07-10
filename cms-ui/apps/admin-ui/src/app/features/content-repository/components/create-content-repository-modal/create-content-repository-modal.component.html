@@ -1,19 +1,21 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
 <div class="modal-title">
     <h5>{{ 'modal.create_contentRepository_title' | i18n }}</h5>
 </div>
+
 <div class="modal-content">
     <gtx-content-repository-properties
         *ngIf="form"
         [formControl]="form"
-        mode="create"
-        (isValidChange)="isValid = $event"
-    >
-    </gtx-content-repository-properties>
+        [mode]="ContentRepositoryPropertiesMode.CREATE"
+    ></gtx-content-repository-properties>
 </div>
+
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!isValid"
+        [disabled]="!form.valid || loading"
         (click)="buttonCreateEntityClicked()"
     >
         {{ 'modal.create_button' | i18n }}

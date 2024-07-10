@@ -22,7 +22,6 @@ import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.logging.log4j.Level;
-import org.quartz.JobExecutionException;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
@@ -50,7 +49,6 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.expressionparser.functions.FunctionRegistry;
 import com.gentics.lib.jaxb.JAXBHelper;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
@@ -241,7 +239,7 @@ public class ContentNodeTestContext {
 	 * @throws NodeException
 	 * @throws JobExecutionException 
 	 */
-	public String login(String login, String password) throws NodeException, JobExecutionException {
+	public String login(String login, String password) throws NodeException {
 		if (transaction != null) {
 			transaction.commit();
 		}

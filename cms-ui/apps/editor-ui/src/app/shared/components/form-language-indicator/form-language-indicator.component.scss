@@ -18,7 +18,7 @@ $gcms-icon-background-size: $gcms-icon-size;
     position: absolute;
     direction: ltr;
     display: inline-block;
-    font-family: 'Material Icons';
+    font-family: 'Material Symbols';
     font-size: $gcms-icon-font-size;
     font-style: normal;
     font-weight: normal;
@@ -145,7 +145,7 @@ $gcms-icon-background-size: $gcms-icon-size;
                 background-color: $gcms-color-stateUntranslated;
             }
         }
-    
+
         .stateModified {
             &:before {
                 @extend .status-icons;
@@ -161,7 +161,7 @@ $gcms-icon-background-size: $gcms-icon-size;
                 top: 0;
             }
         }
-    
+
         .stateInQueue {
             &:before {
                 @extend .status-icons;
@@ -176,7 +176,7 @@ $gcms-icon-background-size: $gcms-icon-size;
                 top: 0;
             }
         }
-    
+
         .statePlanned {
             &:before {
                 @extend .status-icons;
@@ -191,7 +191,7 @@ $gcms-icon-background-size: $gcms-icon-size;
                 bottom: 0;
             }
         }
-    
+
         .stateInherited {
             &:before {
                 @extend .status-icons;
@@ -206,7 +206,7 @@ $gcms-icon-background-size: $gcms-icon-size;
                 bottom: 0;
             }
         }
-    
+
         .stateLocalized {
             &:before {
                 @extend .status-icons;
@@ -231,7 +231,7 @@ $gcms-icon-background-size: $gcms-icon-size;
         color: $gcms-color-highlight;
     }
 
-    &:hover, 
+    &:hover,
     &:hover .stateModified:after,
     &:hover .stateInQueue:after,
     &:hover .statePlanned:after,

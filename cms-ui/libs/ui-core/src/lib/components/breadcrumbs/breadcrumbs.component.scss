@@ -35,7 +35,7 @@
     div a.breadcrumb:not(.last):nth-child(3)::after {
         content: '\E5CC  ';
         display: inline-block;
-        font-family: 'Material Icons';
+        font-family: 'Material Symbols Outlined';
         font-weight: normal;
         font-style: normal;
         font-size: 25px;
@@ -84,7 +84,6 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        font-size: 0;
     }
 
     @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
@@ -97,7 +96,6 @@
         .lastPart {
             text-overflow: clip;
             direction: ltr;
-            font-size: 0;
         }
     }
 
@@ -246,6 +244,12 @@
         }
     }
 
+    /* This one needs to be hidden, since the ::after element of the first breadcrumb is already shown */
+    .nav-wrapper .breadcrumb + .lastPart .breadcrumb:first-of-type::before {
+        display: none;
+        content: '';
+    }
+
     @media #{$small-and-down} {
         > nav {
             > .nav-wrapper {
@@ -257,7 +261,7 @@
                         content: '\E5CB';
                         color: $gtx-breadcrumbs-inactive-color;
                         display: inline-block;
-                        font-family: 'Material Icons';
+                        font-family: 'Material Symbols';
                         font-weight: normal;
                         font-style: normal;
                         font-size: 25px;

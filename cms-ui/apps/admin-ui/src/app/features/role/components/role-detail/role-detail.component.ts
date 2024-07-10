@@ -1,41 +1,30 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, RoleDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
-import { EditorTabTrackerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
+import { EditorTabTrackerService, LanguageHandlerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
 import { RoleDataService } from '@admin-ui/shared';
 import { BaseDetailComponent } from '@admin-ui/shared/components';
-import { LanguageDataService } from '@admin-ui/shared/providers/language-data';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import {
     AccessControlledType,
     AnyModelType,
     GcmsPermission,
-    Index,
     Language,
     NormalizableEntityTypesMap,
     Normalized,
     PagePrivileges,
     Raw,
-    Role,
     RoleBO,
     RolePermissions,
     RoleUpdateRequest,
-    TypePermissions,
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { distinctUntilChanged, map, publishReplay, refCount, switchMap, takeUntil, tap, repeat, delay } from 'rxjs/operators';
+import { delay, distinctUntilChanged, map, repeat, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
-
-export enum RoleDetailTabs {
-    PROPERTIES = 'properties',
-    PAGE_PRIVILEGES = 'pagePrivileges',
-    FILE_PRIVILEGES = 'filePrivileges',
-}
 
 // *************************************************************************************************
 /**
@@ -92,7 +81,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<RoleDetailTabs, FormTabHandle>;
+    private tabHandles: Record<RoleDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -102,7 +91,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         roleData: RoleDataService,
         changeDetectorRef: ChangeDetectorRef,
         private roleOperations: RoleOperations,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
         private permissionsService: PermissionsService,
         private editorTabTracker: EditorTabTrackerService,
         private tableLoader: RoleTableLoaderService,
@@ -174,10 +163,10 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         });
 
         this.permissionRolesRead$ = this.permissionsService.getPermissions(AccessControlledType.ROLE).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route).pipe(
             map((tabId: RoleDetailTabs) => !Object.values(RoleDetailTabs).includes(tabId) ? RoleDetailTabs.PROPERTIES : tabId),
@@ -187,12 +176,8 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
     }
 
     private initLanguageData(): void {
-        this.languageData.watchAllEntities().pipe(
-            takeUntil(this.stopper.stopper$),
-            publishReplay(1),
-            refCount(),
-        ).subscribe((currentLanguages: Language[]) => {
-            this.currentLanguagesSorted = currentLanguages.sort((languageA: Language, languageB: Language) => {
+        this.languageHandler.listMapped().subscribe((currentLanguages) => {
+            this.currentLanguagesSorted = currentLanguages.items.sort((languageA: Language, languageB: Language) => {
                 return languageA.name.localeCompare(languageB.name);
             });
             this.updatePageLanguagesSortedAndRemainingChildControlNames();
@@ -261,7 +246,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
      * Initialize form 'Properties'
      */
     protected fgPropertiesInit(): void {
-        this.fgProperties = new UntypedFormControl(cloneDeep(this.currentEntity), createNestedControlValidator());
+        this.fgProperties = new UntypedFormControl(cloneDeep(this.currentEntity));
         this.fgPropertiesSaveDisabled$ = createFormSaveDisabledTracker(this.fgProperties);
     }
 
@@ -309,7 +294,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
             translatepage: rolePermissions.page.translatepage,
         }, { onlySelf: false, emitEvent: false });
 
-        const pageLanguagesPrivileges: Index<string, PagePrivileges> = rolePermissions.pageLanguages;
+        const pageLanguagesPrivileges: Record<string, PagePrivileges> = rolePermissions.pageLanguages;
         const updatedPageLanguagesPrivileges: string[] = [];
 
         const pageLanguagesFormGroup: UntypedFormGroup = (this.fgPagePrivileges.get('pageLanguages') as UntypedFormGroup);

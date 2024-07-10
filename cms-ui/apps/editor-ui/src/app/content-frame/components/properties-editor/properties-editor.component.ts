@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange } from '@angular/core';
+import { EditableProperties } from '@editor-ui/app/common/models';
 import {
+    CmsFormData,
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
-    EditableNodeProps,
     EditablePageProps,
     FileOrImage,
     Folder,
@@ -17,8 +18,6 @@ import {
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-
-export type EditableProperties = EditableFolderProps | EditablePageProps | EditableFileProps | EditableNodeProps | EditableFormProps;
 
 @Component({
     selector: 'properties-editor',
@@ -131,14 +130,14 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                 return {
                     name: item.name,
                     description: (item as Folder).description,
-                    directory: (item as Folder).publishDir,
+                    directory: (item as any).directory ?? (item as Folder).publishDir,
                     descriptionI18n: (item as Folder).descriptionI18n,
                     nameI18n: (item as Folder).nameI18n,
                     publishDirI18n: (item as Folder).publishDirI18n,
                 } as EditableFolderProps;
 
             case 'form':{
-                let dataProperties: Partial<EditableFormProps> = {};
+                let dataProperties: Partial<CmsFormData> = {};
                 if ((item as Form).data) {
                     dataProperties = {
                         email: (item as Form).data.email,
@@ -160,13 +159,13 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                     languages: (item as Form).languages,
                     successPageId: (item as Form).successPageId,
                     successNodeId: (item as Form).successNodeId,
-                    ...dataProperties,
-                } as EditableFormProps;
+                    data: dataProperties,
+                };
             }
 
             case 'page':
                 return {
-                    pageName: item.name,
+                    pageName: (item as any).pageName ?? item.name,
                     fileName: (item as Page).fileName,
                     description: (item as Page).description,
                     niceUrl: (item as Page).niceUrl,
@@ -190,26 +189,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
 
             case 'node':
             case 'channel':
-                return {
-                    contentRepository: item.publishContentMap,
-                    contentRepositoryFiles: item.publishContentMapFiles,
-                    contentRepositoryFolders: item.publishContentMapFolders,
-                    contentRepositoryPages: item.publishContentMapPages,
-                    defaultFileFolderId: item.defaultFileFolderId,
-                    defaultImageFolderId: item.defaultImageFolderId,
-                    disablePublish: item.disablePublish,
-                    fileSystem: item.publishFs,
-                    fileSystemBinaryDir: item.binaryPublishDir,
-                    fileSystemFiles: item.publishFsFiles,
-                    fileSystemPageDir: item.publishDir,
-                    fileSystemPages: item.publishFsPages,
-                    host: item.host,
-                    https: item.https,
-                    nodeName: item.name,
-                    urlRenderingFiles: item.urlRenderWayFiles,
-                    urlRenderingPages: item.urlRenderWayPages,
-                    utf8: item.utf8,
-                } as EditableNodeProps;
+                return item;
 
             default:
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

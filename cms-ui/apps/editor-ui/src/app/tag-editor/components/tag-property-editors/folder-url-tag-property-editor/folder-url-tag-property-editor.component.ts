@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
 import { FolderActionsService } from '@editor-ui/app/state';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     FileOrImage,
@@ -14,17 +14,14 @@ import {
     ItemInNode,
     Page,
     Raw,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable, merge, of } from 'rxjs';
-import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 
 /**
@@ -81,7 +78,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
     private stopper = new ObservableStopper();
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private folderActions: FolderActionsService,
         private repositoryBrowserClient: RepositoryBrowserClient,
@@ -93,7 +90,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.selectedFolder = new SelectedItemHelper('folder', context.node.id, this.api.folders);
+        this.selectedFolder = new SelectedItemHelper('folder', context.node.id, this.client);
 
         this.displayValue$ = merge(
             this.selectedFolder.selectedItem$.pipe(
@@ -141,7 +138,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
             .pipe(
                 switchMap((selectedFolder) => {
                     if (selectedFolder) {
-                        return this.api.folders.getItem(selectedFolder.id, 'folder')
+                        return this.client.folder.get(selectedFolder.id)
                             .pipe(
                                 map(response => response.folder),
                                 catchError(err => of(err)),
@@ -152,7 +149,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                             )
                     }
 
-                    return this.api.folders.getItem(this.page.folderId, 'folder')
+                    return this.client.folder.get(this.page.folderId)
                         .pipe(
                             map(response => response.folder),
                             catchError(err => of(err)),
@@ -225,7 +222,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
 
     onCreateSubfolderClick(): void {
         this.creatingSubfolder = true;
-        this.selectedFolder.selectedItem$.take(1).subscribe(parentFolder => {
+        this.selectedFolder.selectedItem$.pipe(take(1)).subscribe(parentFolder => {
             this.folderActions.createNewFolder({
                 name: this.subfolderName,
                 description: '',

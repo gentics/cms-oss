@@ -1,0 +1,13 @@
+<gtx-input
+    class="search-input"
+    [class.has-label]="!!settings?.searchLabel"
+    [label]="settings?.searchLabel"
+    [value]="searchText"
+    (change)="updateSearchText($event)"
+></gtx-input>
+
+<gtx-symbol-grid
+    class="symbol-grid"
+    [symbols]="filteredSymbols"
+    [formControl]="control"
+></gtx-symbol-grid>

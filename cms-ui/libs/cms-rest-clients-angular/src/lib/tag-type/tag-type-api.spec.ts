@@ -13,7 +13,7 @@ describe('TagTypeApi', () => {
 
     it('getTagType sends the correct GET request', () => {
         tagTypeApi.getTagType(4711);
-        expect(apiBase.get).toHaveBeenCalledWith('construct/load/4711');
+        expect(apiBase.get).toHaveBeenCalledWith('construct/4711');
     });
 
 });

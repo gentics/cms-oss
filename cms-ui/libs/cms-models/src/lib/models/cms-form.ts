@@ -1,8 +1,9 @@
-import { RepositoryBrowserOptions } from '../repository-browser';
+/* eslint-disable @typescript-eslint/naming-convention */
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
 import { InheritableItem } from './item';
 import { PageVersion } from './page';
+import { SerializableRepositoryBrowserOptions } from './repository-browser';
 import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 import { User } from './user';
 
@@ -74,11 +75,12 @@ export interface FormQueuedActionRequestClear {
 
 /**
  * Represents a form version in the CMS
- * https://www.gentics.com/Content.Node/guides/restapi/json_FormVersion.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_FormVersion.html
  */
 export interface FormVersion {
 
     /** Version number */
+    // eslint-disable-next-line id-blacklist
     number: string;
 
     /** Version timestamp */
@@ -121,32 +123,6 @@ export interface FormTranslationStatus {
 }
 
 /**
- * The user-editable properties of a Form object.
- */
-export interface EditableFormProps {
-    name?: string;
-    description?: string;
-    email?: string;
-    successPageId?: number;
-    successNodeId?: number;
-    mailsource_pageid?: number;
-    mailsource_nodeid?: number;
-    successurl_i18n?: CmsFormElementI18nValue<string>;
-
-    /**
-     * @deprecated old property, interpret as if all languages of successurl_i18n were set to this value
-     */
-    successurl?: string;
-
-    mailsubject_i18n?: CmsFormElementI18nValue<string>;
-    mailtemp_i18n?: CmsFormElementI18nValue<string>;
-    elements?: CmsFormElement[];
-    languages?: string[];
-    templateContext?: string;
-    type?: CmsFormType;
-}
-
-/**
  * External Link Checker form list item, contains the form and the external links
  */
 export interface FormWithExternalLinks<T extends ModelType = DefaultModelType> {
@@ -158,7 +134,7 @@ export interface FormWithExternalLinks<T extends ModelType = DefaultModelType> {
 /**
  * Base for form representation in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_Form.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Form.html
  */
 interface FormBase<T extends ModelType = DefaultModelType> extends InheritableItem<T> {
 
@@ -240,11 +216,19 @@ export interface Form<T extends ModelType = DefaultModelType> extends FormBase<T
 
 /**
  * Represents a form in the CMS with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface FormBO<T extends ModelType = DefaultModelType> extends FormBase<T> {
     /** Inner form data */
     data: CmsFormDataBO;
 }
+
+/**
+ * The user-editable properties of a Form object.
+ */
+export type EditableFormProps = Partial<Pick<Form, 'name' | 'description' | 'languages' | 'successNodeId' | 'successPageId'>> & {
+    data?: Partial<CmsFormData>;
+};
 
 
 /**
@@ -298,6 +282,7 @@ export interface CmsFormData extends CmsFormDataBase {
 
 /**
  * Form-specific data and form elements with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface CmsFormDataBO extends CmsFormDataBase {
     /** Form type */
@@ -332,6 +317,7 @@ export interface CmsFormElement extends CmsFormElementBase {
 
 /**
  * Basic CMS form element interface with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface CmsFormElementBO extends CmsFormElementBase {
     /** Human-readable Element type name. */
@@ -433,7 +419,7 @@ export interface CmsFormElementPropertySelectableOptions extends CmsFormElementP
 
 export interface CmsFormElementPropertyRepositoryBrowser extends CmsFormElementPropertyBase {
     type: CmsFormElementPropertyType.REPOSITORY_BROWSER;
-    options: RepositoryBrowserOptions;
+    options: SerializableRepositoryBrowserOptions;
     nodeId?: number;
     value?: number | number[];
 }

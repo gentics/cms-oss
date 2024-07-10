@@ -1,0 +1,1 @@
+Editor User Interface: The handling of some errors from the REST API (like e.g. when trying to log in with invalid user credentials) was broken and has been fixed.

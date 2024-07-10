@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -51,10 +52,10 @@ import com.gentics.contentnode.factory.MultiChannellingFallbackList;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
-import com.gentics.contentnode.job.AbstractUserActionJob;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -85,6 +86,7 @@ import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentNodeItem;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -105,7 +107,6 @@ import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TypePermissionList;
 import com.gentics.contentnode.rest.model.response.UserListResponse;
 import com.gentics.contentnode.rest.resource.UserResource;
-import com.gentics.contentnode.rest.resource.impl.AbstractContentNodeResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -960,80 +961,6 @@ public class MiscUtils {
 		message.setMessage(nodeMessage.getMessage());
 
 		return message;
-	}
-
-	/**
-	 * Execute the given job and handle results (job finished, job sent to background or job failed)
-	 * @param job job to execute
-	 * @param requestedForegroundTime requested foregroud time (may be empty)
-	 * @throws NodeException
-	 */
-	public static GenericResponse executeJob(AbstractUserActionJob job, Integer requestedForegroundTime) throws NodeException {
-		return executeJob(job, requestedForegroundTime, true);
-	}
-
-	/**
-	 * Execute the given job and handle results (job finished, job sent to background or job failed)
-	 * @param job job to execute
-	 * @param requestedForegroundTime requested foregroud time (may be empty)
-	 * @param requestRecovery true to request recovery (e.g. if the server is shut down), false if not
-	 * @throws NodeException
-	 */
-	public static GenericResponse executeJob(AbstractUserActionJob job, Integer requestedForegroundTime, boolean requestRecovery) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, t.getSessionId());
-		job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
-
-		int foregroundTime = ObjectTransformer.getInt(
-				t.getNodeConfig().getDefaultPreferences().getProperty("backgroundjob_foreground_time"), 5);
-
-		if (requestedForegroundTime != null) {
-			foregroundTime = requestedForegroundTime.intValue();
-		}
-
-		boolean finishedInForeground = job.execute(foregroundTime, false, true, requestRecovery);
-
-		if (!finishedInForeground) {
-			CNI18nString message = new CNI18nString("job_sent_to_background");
-
-			message.addParameter(job.getJobDescription());
-			return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, "Job sent to background"));
-		} else {
-			// Finished in Foreground
-			GenericResponse response = new GenericResponse();
-
-			// add messages from the job
-			List<NodeMessage> messages = job.getMessages();
-
-			for (NodeMessage nodeMessage : messages) {
-				response.addMessage(getMessageFromNodeMessage(nodeMessage));
-			}
-
-			if (AbstractUserActionJob.RESULT_INSUFFICIENT_PRIVILEGES.equals(job.getJobResult())) {
-				CNI18nString message = new CNI18nString("job_error");
-
-				message.addParameter(job.getJobDescription());
-				response.addMessage(new Message(Type.WARNING, message.toString()));
-				response.setResponseInfo(new ResponseInfo(ResponseCode.PERMISSION, "Insufficient privileges to perform the job"));
-			} else if (AbstractUserActionJob.RESULT_INTERNAL_ERROR.equals(job.getJobResult())) {
-				Exception e = (Exception) job.getExceptions().get(0);
-
-				NodeLogger.getNodeLogger(AbstractContentNodeResource.class).error("Error while doing background job " + job.getJobDescription(), e);
-				CNI18nString message = new CNI18nString("job_error");
-
-				message.addParameter(job.getJobDescription());
-				response.addMessage(new Message(Type.CRITICAL, message.toString()));
-				response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-			} else if (AbstractUserActionJob.RESULT_FAILURE.equals(job.getJobResult())) {
-				response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Job finished with error"));
-			} else {
-				// Everything is ok
-				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Job finished successfully"));
-			}
-
-			return response;
-		}
 	}
 
 	/**
@@ -2412,6 +2339,21 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Wrap the given consumer into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
+	 * @param throwingConsumer consumer that throws {@link NodeException}
+	 */
+	public static <R> java.util.function.Consumer<R> wrap(
+			Consumer<R> throwingConsumer) {
+		return value -> {
+			try {
+				throwingConsumer.accept(value);
+			} catch (NodeException exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	/**
 	 * Make a new object mapper, with LF newlines, non-nulls serialization, output indentation.
 	 * 
 	 * @return mapper instance
@@ -2430,5 +2372,66 @@ public class MiscUtils {
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")))
 				.setSerializationInclusion(serializationInclusion)
 				.enable(SerializationFeature.INDENT_OUTPUT);
+	}
+
+	/**
+	 * Assert that the given contentrepository is a Mesh CR. If not, throw a {@link RestMappedException} with an appropriate message
+	 * @param cr contentrepository to check
+	 * @throws NodeException
+	 */
+	public static void assertMeshCr(ContentRepository cr) throws NodeException {
+		if (cr.getCrType() != ContentRepositoryModel.Type.mesh) {
+			String translatedType = I18NHelper.get("crtype." + cr.getCrType().name() + ".short");
+			throw new RestMappedException(I18NHelper.get("contentrepository.invalidtype", cr.getName(), translatedType)).setResponseCode(ResponseCode.INVALIDDATA)
+					.setStatus(Status.CONFLICT);
+		}
+	}
+
+	/**
+	 * Transform the given list of loaded NodeObjects into ContentNodeItems. The order of the elements is given by the list of ids, by which the elements were loaded.
+	 * 
+	 * @param <O> type of output items
+	 * @param <I> type of input items
+	 * @param ids list of originally requested IDs
+	 * @param loaded loaded objects. The items might have different IDs in cases of multichannelling
+	 * @param idFunction function which gets all (possible) original IDs which might have resulted in loaded the specific entity
+	 * @param transformer transformer function to transform the input entity into the output entity
+	 * @param filter optional filter function
+	 * @param fillWithNulls true to fill the output list with nulls, if requested IDs could not be loaded at all (or were filtered by the filter function).
+	 * @return output list
+	 * @throws NodeException
+	 */
+	public static <O extends ContentNodeItem, I extends NodeObject> List<O> getItemList(List<Integer> ids,
+			Collection<I> loaded, Function<I, Set<Integer>> idFunction, Function<I, O> transformer,
+			Function<I, Boolean> filter, boolean fillWithNulls) throws NodeException {
+		if (filter == null) {
+			filter = entity -> true;
+		}
+
+		Map<Integer, I> lookupMap = new HashMap<>();
+		for (I entity : loaded) {
+			Set<Integer> entityIds = idFunction.apply(entity);
+			for (Integer id : entityIds) {
+				lookupMap.put(id, entity);
+			}
+		}
+
+		List<O> output = new ArrayList<>();
+
+		for (Integer id : ids) {
+			I entity = lookupMap.get(id);
+
+			if (entity != null && !filter.apply(entity)) {
+				entity = null;
+			}
+
+			if (entity != null) {
+				output.add(transformer.apply(entity));
+			} else if (fillWithNulls) {
+				output.add(null);
+			}
+		}
+
+		return output;
 	}
 }

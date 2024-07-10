@@ -1,5 +1,5 @@
 import { LocationStrategy } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, getTestBed, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -44,6 +44,7 @@ describe('Breadcrumbs:', () => {
             ],
             declarations: [BreadcrumbsComponent, ButtonComponent, IconDirective, TestComponent],
             teardown: { destroyAfterEach: false },
+            schemas: [NO_ERRORS_SCHEMA],
         });
     });
 

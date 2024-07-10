@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import {
     CompleteTagEditor,
     CustomTagEditor,
-    EditableTag,
     TagChangedFn,
     TagEditor,
     TagEditorContext,
     TagEditorError,
+    TagEditorResult,
     WindowWithCustomTagEditor,
-} from '@gentics/cms-models';
+} from '@gentics/cms-integration-api-models';
+import { EditableTag } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 
 /**
@@ -19,8 +20,8 @@ import { cloneDeep } from 'lodash-es';
     selector: 'custom-tag-editor-host',
     templateUrl: './custom-tag-editor-host.component.html',
     styleUrls: ['./custom-tag-editor-host.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class CustomTagEditorHostComponent implements CompleteTagEditor {
 
     /** The URL of the custom TagEditor. */
@@ -53,15 +54,15 @@ export class CustomTagEditorHostComponent implements CompleteTagEditor {
     allPropertiesValid: boolean;
 
     /** The resolution methods of the Promise returned by editTag. */
-    private editTagResolve: (editedTag: EditableTag) => void;
+    private editTagResolve: (result: TagEditorResult) => void;
     private editTagReject: (reason: any) => void;
 
     constructor(private changeDetector: ChangeDetectorRef) {}
 
-    editTag(tag: EditableTag, context: TagEditorContext): Promise<EditableTag> {
+    editTag(tag: EditableTag, context: TagEditorContext): Promise<TagEditorResult> {
         this.onTagChangeFn = null;
         this.startEditingTag(tag, context);
-        return new Promise<EditableTag>((resolve, reject) => {
+        return new Promise<TagEditorResult>((resolve, reject) => {
             this.editTagResolve = resolve;
             this.editTagReject = reject;
         });
@@ -94,6 +95,13 @@ export class CustomTagEditorHostComponent implements CompleteTagEditor {
         }
     }
 
+    onDeleteClick(): void {
+        this.editTagResolve({
+            doDelete: true,
+            tag: this.tag,
+        });
+    }
+
     /** Event handler for the Cancel button, which is shown when simulating non-live edit mode (i.e., `editTag()`). */
     onCancelClick(): void {
         this.editTagReject(undefined);
@@ -101,7 +109,10 @@ export class CustomTagEditorHostComponent implements CompleteTagEditor {
 
     /** Event handler for the OK button, which is shown when simulating non-live edit mode (i.e., `editTag()`). */
     onOkClick(): void {
-        this.editTagResolve(this.tag);
+        this.editTagResolve({
+            doDelete: false,
+            tag: this.tag,
+        });
     }
 
     /** Event handler for the close button, which is shown if there is an error loading the custom TagEditor, except in live edit mode. */

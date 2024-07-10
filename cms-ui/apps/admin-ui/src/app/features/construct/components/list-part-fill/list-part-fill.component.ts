@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ListTagPartProperty, OrderedUnorderedListTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 @Component({
     selector: 'gtx-list-part-fill',

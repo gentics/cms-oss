@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { InheritableItem, Item, ItemType, Language, Normalized, Page } from '@gentics/cms-models';
 import { PaginationService } from 'ngx-pagination';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { EntityStateUtil } from '../../../shared/util/entity-states';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 
 function filterBy(filter: string, item: InheritableItem, prop: string): boolean {
-    let val: string = (<any> item)[prop];
+    const val: string = (<any> item)[prop];
     if (!val) {
         return false;
     }
@@ -18,7 +17,7 @@ function filterBy(filter: string, item: InheritableItem, prop: string): boolean 
     templateUrl: './wastebin-list.component.html',
     styleUrls: ['./wastebin-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [PaginationService]
+    providers: [PaginationService],
 })
 export class WastebinList implements OnChanges, OnInit {
 
@@ -50,7 +49,6 @@ export class WastebinList implements OnChanges, OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.icon = iconForItemType(this.type);
         this.filteredItems = this.items;
     }
 
@@ -110,14 +108,14 @@ export class WastebinList implements OnChanges, OnInit {
                 return allPages;
             }
 
-            let variantIds =  Object.keys(page.languageVariants || {}).map(lang => page.languageVariants[+lang]);
-            let idsToAdd = 0 < variantIds.length ? variantIds : [page.id];
+            const variantIds =  Object.keys(page.languageVariants || {}).map(lang => page.languageVariants[+lang]);
+            const idsToAdd = 0 < variantIds.length ? variantIds : [page.id];
             return allPages.concat(idsToAdd);
         }, []);
     }
 
     getDeletedByName(item: InheritableItem): string {
-        let user = item.deleted.by;
+        const user = item.deleted.by;
         return `${user.firstName} ${user.lastName}`;
     }
 
@@ -127,7 +125,7 @@ export class WastebinList implements OnChanges, OnInit {
     isSelected(item: InheritableItem<Normalized>): boolean {
         if (item.type === 'page') {
             // for pages, we consider the row selected if any of its language variants are selected
-            let variants = this.getVariants(item as Page<Normalized>);
+            const variants = this.getVariants(item as Page<Normalized>);
             return 0 < variants.filter(page => this.selected[page.id] === true).length;
         } else {
             return this.selected[item.id] === true;
@@ -178,7 +176,7 @@ export class WastebinList implements OnChanges, OnInit {
     }
 
     updateSelection(ids: number[], selected: boolean): void {
-        let selectedItems = this.selectedItems || [];
+        const selectedItems = this.selectedItems || [];
         let newSelection: number[] = [];
 
         if (selected === true) {

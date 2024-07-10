@@ -1,4 +1,4 @@
-import { ContentRepositoryFragmentBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ContentRepositoryFragmentBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ContentRepositoryFragment, NormalizableEntityType } from '@gentics/cms-models';
@@ -11,5 +11,5 @@ import { ContentRepositoryFragment, NormalizableEntityType } from '@gentics/cms-
 export class ContentRepositoryFragmentMasterComponent extends BaseTableMasterComponent<ContentRepositoryFragment, ContentRepositoryFragmentBO> {
 
     protected entityIdentifier: NormalizableEntityType = 'contentRepositoryFragment';
-    protected detailPath = 'cr-fragment';
+    protected detailPath = AdminUIEntityDetailRoutes.CR_FRAGMENT;
 }

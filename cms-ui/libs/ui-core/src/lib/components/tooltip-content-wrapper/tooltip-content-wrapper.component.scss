@@ -7,7 +7,7 @@
     visibility: hidden;
     opacity: 0.0;
     transition: 300ms opacity;
-    z-index: 50;
+    z-index: 999;
     display: inline-block;
     top: var(--trigger-y);
     left: var(--trigger-x);
@@ -31,7 +31,12 @@
     }
 
     &.position-top {
-        margin-top: calc((-1 * var(--content-height)) - var(--tooltip-extra-offset));
+        margin-top: calc(max(
+            /* Maximal range until it'ld "fall out" of the screen on the top side */
+            (var(--trigger-y) + var(--tooltip-extra-offset)) * -1,
+            /* Alignment */
+            (-1 * var(--content-height)) - var(--tooltip-extra-offset)
+        ));
     }
 
     &.position-left {
@@ -54,7 +59,14 @@
 
         &.position-top,
         &.position-bottom {
-            margin-left: calc((var(--trigger-width) - var(--content-width)) * 0.5);
+            margin-left: calc(
+                max(
+                    /* Maximal range until it'ld "fall out" of the screen on the left side */
+                    var(--trigger-x) * -1,
+                    /* Center alignment */
+                    ((var(--trigger-width) - var(--content-width)) * .5)
+                )
+            )
         }
     }
 

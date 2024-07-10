@@ -1,7 +1,7 @@
 <div class="left-items">
 
     <span class="item-icon">
-        <icon>{{ iconForItemType(itemType) }}</icon>
+        <icon>{{ itemType | gtxTypeIcon }}</icon>
     </span>
     <span class="type" *ngIf="filtering">
         {{ 'editor.item_count_header_matching' | i18n:{ count: itemCount, _items: itemType } }}

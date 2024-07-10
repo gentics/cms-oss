@@ -1,8 +1,26 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    OnDestroy,
+    OnInit,
+    QueryList,
+    ViewChildren,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { fileSchema, folderSchema, imageSchema, nodeSchema, pageSchema, templateSchema } from '@editor-ui/app/common/models';
+import {
+    fileSchema,
+    folderSchema,
+    imageSchema,
+    noItemPermissions,
+    nodeSchema,
+    pageSchema,
+    templateSchema,
+} from '@editor-ui/app/common/models';
 import { MarkObjectPropertiesAsModifiedAction, SetHideExtrasAction, addNormalizedEntities } from '@editor-ui/app/state';
 import { WindowRef, coerceToBoolean } from '@gentics/cms-components';
+import { TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     EntityType,
@@ -12,11 +30,9 @@ import {
     ObjectTag,
     Raw,
     Tag,
-    TagEditorChangeMessage,
     Template,
-    noItemPermissions,
 } from '@gentics/cms-models';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { Schema, normalize } from 'normalizr';
 import { Observable, Subscription, combineLatest, from, of, throwError } from 'rxjs';
 import { distinctUntilChanged, filter, map, publishReplay, refCount, startWith, switchMap, tap } from 'rxjs/operators';
@@ -327,8 +343,10 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
             tagOwner: item,
             tagType: tag.tagType,
             readOnly: isReadOnly,
+            withDelete: false,
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const isValid = tagEditorContext.validator.validateAllTagProperties(tag.properties).allPropertiesValid;
         this.markObjectPropertiesAsModifiedInState(false, isValid && !isReadOnly);
 

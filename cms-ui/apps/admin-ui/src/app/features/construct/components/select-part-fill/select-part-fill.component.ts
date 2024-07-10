@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSourceEntry, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 @Component({
     selector: 'gtx-select-part-fill',
@@ -30,10 +29,6 @@ export class SelectPartFillComponent extends BaseFormElementComponent<SelectTagP
     }
 
     protected onValueChange(): void {
-        if ((this.value as any) === CONTROL_INVALID_VALUE) {
-            return;
-        }
-
         this.selectedEntries = (this.value?.selectedOptions ?? []).map(option => Number(option.id));
         if (!this.multiple && this.selectedEntries.length > 1) {
             this.selectedEntries = [this.selectedEntries[0]];

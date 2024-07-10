@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { UIMode } from '@editor-ui/app/common/models';
-import { EditorPermissions, Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
+import { EditorPermissions, UIMode } from '@editor-ui/app/common/models';
+import { Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
 import { ContextMenuOperationsService } from '../../providers/context-menu-operations/context-menu-operations.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
 

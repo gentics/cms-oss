@@ -79,10 +79,7 @@ public class VelocityPartType extends AbstractVelocityPartType implements Transf
 
 		try {
 			// when edit mode is edit or realedit, switch to preview mode
-			if (editMode == RenderType.EM_EDIT) {
-				editModeChanged = true;
-				renderType.setEditMode(RenderType.EM_PREVIEW);
-			} else if (editMode == RenderType.EM_ALOHA) {
+			if (editMode == RenderType.EM_ALOHA) {
 				editModeChanged = true;
 				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
 			}

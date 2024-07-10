@@ -695,7 +695,7 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 			try {
 				code.append(renderer.render(renderResult, template));
 			} catch (Exception e) {
-				renderResult.error("Overview", "Could not render object in overview, skipping", e.getMessage(), null);
+				renderResult.error("Overview", "Could not render object in overview, skipping", e.getMessage());
 			} finally {
 				renderType.pop((StackResolvable) object);
 			}
@@ -762,7 +762,7 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 					try {
 						code.append(renderer.render(renderResult, template));
 					} catch (Exception e) {
-						renderResult.error("Overview", "Could not render object in overview, skipping", e.getMessage(), null);
+						renderResult.error("Overview", "Could not render object in overview, skipping", e.getMessage());
 					} finally {
 						if (useUrlResolver) {
 							renderType.pop(urlResolver);

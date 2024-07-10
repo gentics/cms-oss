@@ -4,13 +4,12 @@
     </div>
 
     <div class="modal-content">
-        <div class="gtx-modal-datagrid-container">
-            <gtx-node-table
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="nodeIdsSelected"
-            ></gtx-node-table>
-        </div>
+        <gtx-node-table
+            class="modal-table"
+            [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="nodeIdsSelected"
+        ></gtx-node-table>
     </div>
 
     <div class="modal-footer">

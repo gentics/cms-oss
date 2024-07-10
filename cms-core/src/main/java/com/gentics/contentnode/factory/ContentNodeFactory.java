@@ -104,6 +104,8 @@ public class ContentNodeFactory {
 		factory.registerObjectFactory(new RegexFactory());
 		factory.registerObjectFactory(new RoleFactory());
 		factory.registerObjectFactory(new SchedulerFactory());
+
+		factory.initializeObjectFactories();
 	}
 
 	/**
@@ -356,6 +358,14 @@ public class ContentNodeFactory {
 	 */
 	public void stopDirtQueueWorker() throws NodeException {
 		factory.stopDirtQueueWorker();
+	}
+
+	/**
+	 * Check whether the dirtqueue worker thread is up and running
+	 * @return true, iff thread is alive
+	 */
+	public boolean isDirtQueueWorkerRunning() {
+		return factory.isDirtQueueWorkerRunning();
 	}
 
 	/**

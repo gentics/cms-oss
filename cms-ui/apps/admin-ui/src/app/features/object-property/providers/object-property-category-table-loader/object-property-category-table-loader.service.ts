@@ -1,9 +1,8 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, ObjectPropertyCategoryBO, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, ObjectPropertyCategoryOperations } from '@admin-ui/core';
+import { discard, EntityPageResponse, ObjectPropertyCategoryBO, TableLoadOptions } from '@admin-ui/common';
+import { BaseTableLoaderService, EntityManagerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ObjectPropertyCategory } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -13,8 +12,7 @@ export class ObjectPropertyCategoryTableLoaderService extends BaseTableLoaderSer
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
-        protected operations: ObjectPropertyCategoryOperations,
+        protected handler: ObjectPropertyCategoryHandlerService,
     ) {
         super('objectPropertyCategory', entityManager, appState);
     }
@@ -24,30 +22,19 @@ export class ObjectPropertyCategoryTableLoaderService extends BaseTableLoaderSer
     }
 
     public deleteEntity(entityId: string): Promise<void> {
-        return this.operations.delete(entityId).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ObjectPropertyCategoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
 
-        return this.api.objectPropertycategories.getObjectPropertyCategories(loadOptions).pipe(
+        return this.handler.listMapped(null as never, loadOptions).pipe(
             map(response => {
-                const entities = response.items.map(category => this.mapToBusinessObject(category));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
-    }
-
-    public mapToBusinessObject(category: ObjectPropertyCategory): ObjectPropertyCategoryBO {
-        return {
-            ...category,
-            [BO_ID]: String(category.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: category.name,
-        };
     }
 }

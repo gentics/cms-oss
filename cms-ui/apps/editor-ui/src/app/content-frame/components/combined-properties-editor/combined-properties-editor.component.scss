@@ -12,8 +12,10 @@
 :host {
     display: flex;
     flex-direction: row;
-    height: 100%;
-    // overflow: auto;
+    min-height: 1px;
+    flex: 1 1 auto;
+    width: 100%;
+    position: relative;
 
     .hidden {
         display: none;
@@ -88,7 +90,8 @@ hr {
 }
 
 .properties-tabs {
-    width: 20%;
+    min-width: 20%;
+    max-width: 25%;
     padding-top: 10px;
     padding-bottom: 10px;
     box-sizing: border-box;
@@ -347,7 +350,7 @@ tag-editor-overlay-host.active {
 
         .properties-tabs {
             flex: 0 0 auto;
-            width: 100%;
+            min-width: 100%;
             padding-right: 1.5rem;
         }
     }

@@ -23,7 +23,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     Observable,
@@ -147,13 +147,13 @@ const GCMSSEARCH_SEARCHABLE_PROPERTY_OBJECTTYPE: GtxChipSearchChipPropertyOption
  * Emitted values of `chipSearchBarConfig$` vary
  * depending on application features defined in app state:
  *
- * ### Feature [nice_urls](https://gentics.com/Content.Node/guides/feature_overview.html#nice-urls)
+ * ### Feature [nice_urls](https://gentics.com/Content.Node/cmp8/guides/feature_overview.html#nice-urls)
  * `chipSearchBarConfig$` shall contain configuration data for
  * `GtxChipSearchConfig.searchableProperties[].value === 'niceurl' | 'niceUrl'` only if
  * feature `nice_urls` is active; otherwise `GtxChipSearchSearchFilterMap` may contain
  * filters causing CMS REST API to return errors of class `400`.
  *
- * ### Feature [elastic_search](https://gentics.com/Content.Node/guides/feature_elasticsearch.html)
+ * ### Feature [elastic_search](https://gentics.com/Content.Node/cmp8/guides/feature_elasticsearch.html)
  * Since the various QueryAssemblerServices provide different sets of query parameters,
  * `chipSearchBarConfig$` must provide different configuration for the QueryAssemblerService
  * to proceed determined in {@link FolderActionsService.getItems}.

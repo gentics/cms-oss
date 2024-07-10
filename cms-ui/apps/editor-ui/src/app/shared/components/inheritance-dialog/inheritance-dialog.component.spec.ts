@@ -10,7 +10,7 @@ import { InheritanceDialog } from './inheritance-dialog.component';
 describe('InheritanceDialog', () => {
 
     function defaultSetup(fixture: ComponentFixture<InheritanceDialog>): void {
-        let instance = fixture.componentRef.instance;
+        const instance = fixture.componentRef.instance;
         instance.item = <any> {
             id: 42,
             name: 'Test Folder',

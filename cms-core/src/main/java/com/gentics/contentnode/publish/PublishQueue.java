@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -24,6 +25,7 @@ import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyManager.DirtCounter;
 import com.gentics.contentnode.events.Events;
@@ -67,6 +69,11 @@ public class PublishQueue {
 	 * Batch Size for deleting finished entries from the publish queue
 	 */
 	protected static int batchSize = 100;
+
+	/**
+	 * Thread Factory for the remover service
+	 */
+	protected static ThreadFactory removerThreadFactory = new PrefixedThreadFactory("publishqueue-remover");
 
 	/**
 	 * ExecutorService that will remove objects from the publishqueue in batches
@@ -250,7 +257,7 @@ public class PublishQueue {
 			return objectsToPublishCount;
 		}
 
-		removerService = Executors.newSingleThreadExecutor();
+		removerService = Executors.newSingleThreadExecutor(removerThreadFactory);
 
 		TransactionManager.execute(new TransactionManager.Executable() {
 			public void execute() throws NodeException {
@@ -978,8 +985,9 @@ public class PublishQueue {
 			}
 
 			if (attributes.length == 0 && REMOVING_ACTIONS.contains(action)) {
-				// TODO comment
-				if (MeshPublisher.supportsAlternativeLanguages(object)) {
+				// when objects are deleted or taken offline, we need to know, which language the object had, in order to remove the correct language variant from mesh.
+				// exception: when the object was REMOVEd (means: moved to another node), we want to remove all language variants from mesh.
+				if (MeshPublisher.supportsAlternativeLanguages(object) || action == Action.REMOVE) {
 					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object) };
 				} else {
 					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object),

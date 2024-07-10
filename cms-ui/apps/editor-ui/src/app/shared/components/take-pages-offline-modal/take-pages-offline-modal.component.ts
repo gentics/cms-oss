@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { IModalDialog } from '@gentics/ui-core';
 import { InheritableItem, ItemType } from '@gentics/cms-models';
 import { LanguageVariantMap } from '../../../common/models';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 
 export interface MultiPagesOfflineResult {
     delete: InheritableItem[];
@@ -29,7 +28,6 @@ export class TakePagesOfflineModal implements IModalDialog {
 
     itemType: ItemType = 'page';
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
-    iconForItemType = iconForItemType;
 
     get deleteCount(): number {
         return this.flattenMap(this.selectedLanguageVariants).length;

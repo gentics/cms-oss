@@ -1,6 +1,5 @@
-import { ContentRepositoryOperations } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { Node, Normalized } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import { delay } from 'rxjs/operators';
@@ -24,16 +23,16 @@ export class AssignContentrepositoriesToNodesModalComponent extends BaseModal<nu
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        private contentRepositoryOperations: ContentRepositoryOperations,
+        private handler: ContentRepositoryHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.contentRepositoryOperations.getAssignedNodes(this.contentRepositoryId).pipe(
+        this.handler.getAssignedNodes(this.contentRepositoryId).pipe(
             delay(0),
-        ).subscribe((node: Node<Normalized>[]) => {
-            this.nodeIdsSelected = node.map(n => n.id);
+        ).subscribe(nodes => {
+            this.nodeIdsSelected = nodes.map(node => node.id);
             this.nodeIdsInitial = this.nodeIdsSelected.slice();
             this.changeDetector.markForCheck();
         });
@@ -43,7 +42,7 @@ export class AssignContentrepositoriesToNodesModalComponent extends BaseModal<nu
      * If user clicks "assign"
      */
     buttonAssignContentRepositoryToNodesClicked(): void {
-        this.contentRepositoryOperations
+        this.handler
             .changeAssignedNodesOfContentRepository(this.contentRepositoryId, this.nodeIdsSelected)
             .toPromise()
             .then(() => this.closeFn(this.nodeIdsSelected));

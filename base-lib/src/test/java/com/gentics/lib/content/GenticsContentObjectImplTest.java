@@ -1,41 +1,58 @@
 package com.gentics.lib.content;
 
-import static org.mockito.Matchers.eq;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-
-import com.gentics.contentnode.tests.category.BaseLibTest;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 import com.gentics.api.lib.datasource.HandlePool;
+import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.content.DatatypeHelper.AttributeType;
 import com.gentics.lib.content.GenticsContentObjectImpl.SortedValue;
 import com.gentics.lib.datasource.CNDatasource;
 import com.gentics.lib.datasource.SQLHandle;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
- * Simple test that verifies that the doPrefetchAttributes method is invoked
- * multiple times if needed.
+ * Simple test that verifies that the doPrefetchAttributes method is invoked multiple times if
+ * needed.
  *
  * @author johannes2
- *
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ DatatypeHelper.class, DB.class, GenticsContentObjectImpl.class, SortedValue.class })
-// Powermock issue 288 - httpclient compatibility
-@PowerMockIgnore("javax.*")
 @Category(BaseLibTest.class)
 public class GenticsContentObjectImplTest {
+
+	private static MockedStatic<DatatypeHelper> datatypeHelper;
+	private static MockedStatic<DB> db;
+	private static MockedStatic<SortedValue> sortedValue;
+
+
+	@Before()
+	public void setup(){
+		datatypeHelper = mockStatic(DatatypeHelper.class);
+ 		db = mockStatic(DB.class);
+		sortedValue = mockStatic(SortedValue.class);
+	}
+
+	@After()
+	public void tearDown(){
+		datatypeHelper.close();
+		db.close();
+		sortedValue.close();
+	}
 
 	/**
 	 * Invoke the test for the given parameters.
@@ -45,10 +62,11 @@ public class GenticsContentObjectImplTest {
 	 * @param nExpectedInvocations
 	 * @throws Exception
 	 */
-	private void invokeTest(String driverName, int nContentObjects, int nExpectedInvocations) throws Exception {
-
+	private void invokeTest(String driverName, int nContentObjects, int nExpectedInvocations)
+			throws Exception {
+		final String ATTRIBUTE_COLUMN = "blub";
 		int timeStamp = -1;
-		String[] prefetchAttribs = { "name" };
+		String[] prefetchAttribs = {"name"};
 
 		// Create some mocks
 		CNDatasource datasource = mock(CNDatasource.class);
@@ -57,23 +75,20 @@ public class GenticsContentObjectImplTest {
 		DBHandle dbHandle = mock(DBHandle.class);
 
 		// Mock db access
-		Mockito.when(sqlHandle.getDBHandle()).thenReturn(dbHandle);
-		Mockito.when(handlePool.getHandle()).thenReturn(sqlHandle);
-		Mockito.when(datasource.getHandlePool()).thenReturn(handlePool);
+		when(sqlHandle.getDBHandle()).thenReturn(dbHandle);
+		when(handlePool.getHandle()).thenReturn(sqlHandle);
+		when(datasource.getHandlePool()).thenReturn(handlePool);
+		when(datasource.getDatabaseProductName()).thenReturn(driverName);
 
 		// Mock the datatype helper
-		AttributeType attrType = PowerMockito.mock(AttributeType.class);
-		when(attrType.getColumn()).thenReturn("blub");
-		mockStatic(DatatypeHelper.class);
-		when(DatatypeHelper.getComplexDatatype(dbHandle, "name")).thenReturn(attrType);
+		AttributeType attrType = mock(AttributeType.class);
+		when(attrType.getColumn()).thenReturn(ATTRIBUTE_COLUMN);
 
-		// Mock sort class to avoid NPE
-		mockStatic(SortedValue.class);
+		datatypeHelper.when(() -> DatatypeHelper.getComplexDatatype(dbHandle, "name"))
+				.thenReturn(attrType);
 
-		// Mock the DB class
-		mockStatic(DB.class);
-		when(DB.getDatabaseProductName(dbHandle)).thenReturn(driverName);
-		Mockito.when(datasource.getDatabaseProductName()).thenReturn(driverName);
+		db.when(() -> DB.getDatabaseProductName(dbHandle)).thenReturn(driverName);
+
 
 		// Mock a simple contentobject. We will add it multiple times to the
 		// final set of objects to save some time.
@@ -87,18 +102,23 @@ public class GenticsContentObjectImplTest {
 		}
 
 		// Now spy upon our class under test
-		PowerMockito.spy(GenticsContentObjectImpl.class);
-		GenticsContentObjectImpl.prefillContentObjects(datasource, objects, prefetchAttribs, timeStamp, true, false);
+		try (MockedStatic<GenticsContentObjectImpl> genticsContentObject = mockStatic(
+				GenticsContentObjectImpl.class, Mockito.CALLS_REAL_METHODS)) {
+			// this method is actually invoked
+			GenticsContentObjectImpl.prefillContentObjects(datasource, objects, prefetchAttribs,
+					timeStamp, true, false);
 
-		// Verify that the doPrefetchAttributes was invoked exactly the expected
-		// times
-		PowerMockito.verifyPrivate(GenticsContentObjectImpl.class, Mockito.times(nExpectedInvocations)).invoke("doPrefetchAttributes", eq(dbHandle), eq(datasource),
-				Mockito.notNull(), Mockito.notNull(), eq("blub"), eq(timeStamp), Mockito.notNull(), Mockito.notNull(), Mockito.notNull(), Mockito.notNull(), eq(false));
+			// Verify that the doPrefetchAttributes was invoked exactly the expected times
+			genticsContentObject.verify(
+					() -> GenticsContentObjectImpl.doPrefetchAttributes(eq(dbHandle), eq(datasource),
+							anyList(), anyList(), eq(ATTRIBUTE_COLUMN), anyInt(), anyList(), any(), anyMap(),
+							anyMap(), anyBoolean()), times(nExpectedInvocations));
+		}
 	}
 
 	/**
-	 * Create some objects and verify that the doPrefetchAttributes method is
-	 * only invoked a single time.
+	 * Create some objects and verify that the doPrefetchAttributes method is only invoked a single
+	 * time.
 	 *
 	 * @throws Exception
 	 */
@@ -108,8 +128,8 @@ public class GenticsContentObjectImplTest {
 	}
 
 	/**
-	 * Verify that the doPrefetchAttributes is also invoked multiple times when
-	 * we are above the limit.
+	 * Verify that the doPrefetchAttributes is also invoked multiple times when we are above the
+	 * limit.
 	 *
 	 * @throws Exception
 	 */
@@ -117,15 +137,15 @@ public class GenticsContentObjectImplTest {
 	public void testPrefillContentObjectForMSSQL() throws Exception {
 		int nTimesLimit = 4;
 		int nObjectsAboveLimit = 1;
-		int nContentObjects = GenticsContentObjectImpl.MAX_PREFETCH_SIZE_MSSQL * nTimesLimit + nObjectsAboveLimit;
+		int nContentObjects =
+				GenticsContentObjectImpl.MAX_PREFETCH_SIZE_MSSQL * nTimesLimit + nObjectsAboveLimit;
 		int nExpectedInvocations = nTimesLimit + nObjectsAboveLimit;
 		invokeTest("Microsoft SQL Server", nContentObjects, nExpectedInvocations);
 	}
 
 	/**
-	 * Test whether the max prefetch size limitation for oracle works as
-	 * expected and that the doPrefetchAttributes method is invoked multiple
-	 * times.
+	 * Test whether the max prefetch size limitation for oracle works as expected and that the
+	 * doPrefetchAttributes method is invoked multiple times.
 	 *
 	 * @throws Exception
 	 */
@@ -137,14 +157,14 @@ public class GenticsContentObjectImplTest {
 		// doPrefetchAttributes method.
 		int nTimesLimit = 4;
 		int nObjectsAboveLimit = 1;
-		int nContentObjects = GenticsContentObjectImpl.MAX_PREFETCH_SIZE_ORACLE * nTimesLimit + nObjectsAboveLimit;
+		int nContentObjects =
+				GenticsContentObjectImpl.MAX_PREFETCH_SIZE_ORACLE * nTimesLimit + nObjectsAboveLimit;
 		int nExpectedInvocations = nTimesLimit + nObjectsAboveLimit;
 		invokeTest("Oracle", nContentObjects, nExpectedInvocations);
 	}
 
 	/**
-	 * Verify that the doPrefetchAttributes method is only invoked a single
-	 * time.
+	 * Verify that the doPrefetchAttributes method is only invoked a single time.
 	 *
 	 * @throws Exception
 	 */

@@ -471,8 +471,32 @@
         "en": "Sort construct categories",
         "de": "Tagtyp Kategorien sortieren"
     },
+    "update_button": {
+        "de": "Aktualisieren",
+        "en": "Update"
+    },
     "synchronize_content_repository_roles_title": {
         "en": "Synchronize Mesh roles of \"{{crName}}\"",
         "de": "Mesh Rollen von „{{crName}}“ synchronisieren"
+    },
+    "version_info_label_system": {
+        "en": "System",
+        "de": "System"
+    },
+    "version_info_label_nodes": {
+        "en": "Nodes",
+        "de": "Nodes"
+    },
+    "version_info_label_mesh": {
+        "en": "Mesh Version",
+        "de": "Mesh Version"
+    },
+    "version_info_label_portal_type": {
+        "en": "Portal Type",
+        "de": "Portal Typ"
+    },
+    "version_info_label_portal_version": {
+        "en": "Portal Version",
+        "de": "Portal Version"
     }
 }

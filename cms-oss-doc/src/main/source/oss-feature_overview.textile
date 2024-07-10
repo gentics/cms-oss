@@ -187,6 +187,15 @@ feature:
 
 When this feature is enabled, inbox messages are also sent as eMails. Find further information in the section about "eMail sending":email_sending.html
 
+h3. Insecure Scheduler Command
+
+<shell filename="conf/features.yml">
+feature:
+	insecure_scheduler_command: true
+</shell>
+
+Whether to allow custom scheduler tasks to execute commands outside of @/cms/scheduler-commands@. This is disabled by default, and it is highly recommended not to activate this feature on production environments. Instead create shell scripts in @/cms/scheduler-commands@ which execute the desired commands. See the "scheduler documentation":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#custom-tasks for more information.
+
 h3. Instant Publishing
 
 This feature allows enabling the immediate writing of published objects into a ContentRepository.
@@ -493,11 +502,13 @@ feature:
 
 Enables the "wastebin functionality":feature_wastebin.html.
 
-h3. Insecure Scheduler Command
+h3. WebP Conversion
 
 <shell filename="conf/features.yml">
 feature:
-	insecure_scheduler_command: true
+	webp_conversion: true
 </shell>
 
-Whether to allow custom scheduler tasks to execute commands outside of @/cms/scheduler-commands@. This is disabled by default, and it is highly recommended not to activate this feature on production environments. Instead create shell scripts in @/cms/scheduler-commands@ which execute the desired commands. See the "scheduler documentation":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#custom-tasks for more information.
+NOTE: Publishing WebP images to a "Mesh ContentRepository":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#mesh-contentrepository, requires a version of Mesh that also supports WebP for "image manipulation":https://getmesh.io/docs/image-manipulation/.
+
+When active the CMS will automatically convert uploaded images to WebP format for nodes which have the feature enabled. Only newly uploaded images will be converted automatically. The internal "image conversion":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#convertimages scheduler job is available to convert images that were uploaded when the feature was not active.

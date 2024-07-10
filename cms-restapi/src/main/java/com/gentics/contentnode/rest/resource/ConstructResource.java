@@ -288,6 +288,7 @@ public interface ConstructResource {
 	 * <li><code>id</code></li>
 	 * <li><code>globalId</code></li>
 	 * <li><code>name</code></li>
+	 * <li><code>sortOrder</code></li>
 	 * </ul>
 	 * @return response with categories list
 	 * @throws Exception

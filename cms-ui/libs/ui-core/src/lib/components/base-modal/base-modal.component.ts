@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
+import { ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { IModalDialog } from '../../common';
 
 @Component({ template: '' })
 export abstract class BaseModal<T> implements IModalDialog {
 
-    closeFn: (value: T) => void;
-    cancelFn: (value?: T) => void;
-    errorFn: (error: Error) => void;
+    closeFn: (value: T, reason?: ModalClosingReason) => void = () => {};
+    cancelFn: (value?: T, reason?: ModalClosingReason) => void = () => {};
+    errorFn: (error: Error) => void = () => {};
 
     registerCloseFn(fn: (value: T) => void): void {
         this.closeFn = fn;

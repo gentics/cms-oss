@@ -11,6 +11,10 @@
     box-shadow: 0 0 0 1px $gtx-color-primary;
 }
 
+.container-validator-errors {
+    color: $gtx-color-alert;
+}
+
 [formcontrolname="elasticsearch"] {
 
     ::ng-deep textarea {

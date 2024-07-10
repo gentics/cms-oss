@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ (mode === ProjectPropertiesMode.CREATE ? 'mesh.create_project' : 'mesh.update_project') | i18n: { entityName: project?.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-project-properties
+        [mode]="mode"
+        [formControl]="form"
+    ></gtx-mesh-project-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form.valid && form.enabled"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ (mode === ProjectPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

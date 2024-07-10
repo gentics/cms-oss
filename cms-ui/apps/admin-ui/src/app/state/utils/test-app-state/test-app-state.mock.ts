@@ -3,7 +3,7 @@ import { Injectable, Injector } from '@angular/core';
 import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
 import { Actions, NgxsModule, Store } from '@ngxs/store';
 import { ActionContext } from '@ngxs/store/src/actions-stream';
-import { cloneDeep as _cloneDeep, merge as _merge } from 'lodash';
+import { cloneDeep as _cloneDeep, merge as _merge } from'lodash-es'
 import { Observable, OperatorFunction } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AppState } from '../../app-state';

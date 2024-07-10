@@ -1,5 +1,5 @@
 import { schema, Schema } from 'normalizr';
-import { Index, NormalizableEntity, Normalized, normalizrPreProcessEntity } from '../type-util';
+import { NormalizableEntity, Normalized, normalizrPreProcessEntity } from '../type-util';
 import { NormalizableEntityType } from './gcms-normalizer-types';
 
 /**
@@ -8,7 +8,7 @@ import { NormalizableEntityType } from './gcms-normalizer-types';
  * This class is not exported from `@gentics/cms-models`, because `GcmsNormalizer` should
  * be used for normalization/denormalization.
  */
-export class GcmsNormalizationSchemas implements Index<NormalizableEntityType, Schema> {
+export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, Schema> {
 
     readonly construct = new schema.Entity('construct', {}, { processStrategy: normalizrPreProcessEntity });
     readonly constructCategory = new schema.Entity('constructCategory', {}, { processStrategy: normalizrPreProcessEntity });

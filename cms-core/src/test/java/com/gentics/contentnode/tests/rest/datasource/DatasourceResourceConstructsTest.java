@@ -76,7 +76,6 @@ public class DatasourceResourceConstructsTest extends AbstractListSortAndFilterT
 					.apply(Builder.create(com.gentics.contentnode.object.Construct.class, c -> {
 						c.setName(randomStringGenerator.generate(5, 10), 1);
 						c.setName(randomStringGenerator.generate(5, 10), 2);
-						c.setIconName(randomStringGenerator.generate(5));
 						c.setKeyword(randomStringGenerator.generate(5, 10));
 						c.setDescription(randomStringGenerator.generate(10, 20), 1);
 						c.setDescription(randomStringGenerator.generate(10, 20), 2);

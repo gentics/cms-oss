@@ -16,30 +16,32 @@ import {ComponentFixture, fakeAsync, TestBed, getTestBed} from '@angular/core/te
  * needs to be updated, only this function needs to change.
  */
 export function componentTest<T>(
-        forComponent: () => ComponentType<T>,
-        test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
-    ): () => void;
+    forComponent: () => ComponentType<T>,
+    test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
+): () => void;
 
 /**
  * Defines a component unit test with a different template.
  */
 export function componentTest<T>(
-        forComponent: () => ComponentType<T>,
-        template: string,
-        test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
-    ): () => void;
+    forComponent: () => ComponentType<T>,
+    template: string,
+    test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
+): () => void;
 
 /**
  * Defines a component unit test with TestComponentBuilder overwrites,
  * e.g. using different providers / templates / directives.
  */
 export function componentTest<T>(
-        forComponent: () => ComponentType<T>,
-        overwrites: (testBed: TestBed) => TestBed,
-        test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
-    ): () => void;
+    forComponent: () => ComponentType<T>,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    overwrites: (testBed: TestBed) => TestBed,
+    test: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
+): () => void;
 
 export function componentTest<T>(componentFn: () => ComponentType<T>, second: any, third?: any): () => void {
+    // eslint-disable-next-line prefer-rest-params
     const args = Array.from(arguments);
     return function wrappedComponentTest(): void {
         // Parse possible combination of arguments
@@ -67,7 +69,7 @@ export function componentTest<T>(componentFn: () => ComponentType<T>, second: an
                     (reason: any) => {
                         fixture.destroy();
                         return Promise.reject(reason);
-                    }
+                    },
                 );
         });
 
@@ -75,15 +77,13 @@ export function componentTest<T>(componentFn: () => ComponentType<T>, second: an
     };
 }
 
-export interface ComponentType<T> {
-    new (...args: any[]): T;
-}
+export type ComponentType<T> = new (...args: any[]) => T;
 
 function parseOverloadArguments<T>(args: any[]): {
-                                       template?: string,
-                                       overwritesFn?: (testBed: TestBed) => TestBed,
-                                       testFn: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
-                                   } {
+    template?: string,
+    overwritesFn?: (testBed: TestBed) => TestBed,
+    testFn: (fixture: ComponentFixture<T>, instance: T) => (void | Promise<any>)
+} {
     if (typeof args[1] === 'function' && !args[2]) {
         return { testFn: args[1] };
     } else if (typeof args[1] === 'string') {

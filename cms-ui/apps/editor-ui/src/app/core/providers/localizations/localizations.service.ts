@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { InheritableItem, ItemType } from '@gentics/cms-models';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { defaultIfEmpty, map } from 'rxjs/operators';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
@@ -39,7 +39,7 @@ export class LocalizationsService {
             };
         });
 
-        return Observable.forkJoin(normalizedItems.map(item => this.getLocalizations(item.type, item.id))).pipe(
+        return forkJoin(normalizedItems.map(item => this.getLocalizations(item.type, item.id))).pipe(
             map(localizationsArray => {
                 const map: LocalizationMap = {};
                 normalizedItems.forEach((item, index) => {

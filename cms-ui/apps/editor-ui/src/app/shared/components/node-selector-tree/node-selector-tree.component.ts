@@ -9,12 +9,20 @@ import { NodeBranch } from '../../../core/providers/node-hierarchy-builder/node-
 @Component ({
     selector: 'node-selector-tree',
     templateUrl: './node-selector-tree.tpl.html',
-    styleUrls: ['./node-selector-tree.scss']
+    styleUrls: ['./node-selector-tree.scss'],
 })
 export class NodeSelectorTree {
-    @Input() branches: NodeBranch[] = [];
-    @Input() depth: number = 0;
+
+    @Input()
+    public branches: NodeBranch[] = [];
+
+    @Input()
+    public depth = 0;
+
     /** If true, a routerLink will be used to make each list item a link */
-    @Input() useLinks: boolean = true;
-    @Output() nodeSelected = new EventEmitter<Node>();
+    @Input()
+    public useLinks = true;
+
+    @Output()
+    public nodeSelected = new EventEmitter<Node>();
 }

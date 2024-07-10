@@ -4,11 +4,14 @@ package com.gentics.contentnode.tools.update;
  * Logger for some action
  */
 public class Logger implements AutoCloseable {
+	protected long start;
+
 	/**
 	 * Create an instance, will output the message to stdout (without newline)
 	 * @param message message
 	 */
 	public Logger(String message) {
+		start = System.currentTimeMillis();
 		System.out.print(message + "...");
 	}
 
@@ -24,6 +27,8 @@ public class Logger implements AutoCloseable {
 	 */
 	@Override
 	public void close() {
-		System.out.println("done");
+		long duration = System.currentTimeMillis() - start;
+		System.out.println();
+		System.out.println(String.format("...done, (took %d ms)", duration));
 	}
 }

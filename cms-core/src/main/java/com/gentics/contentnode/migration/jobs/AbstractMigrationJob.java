@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor;
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor.Result;
@@ -11,7 +12,9 @@ import com.gentics.api.contentnode.migration.MigrationException;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
-import com.gentics.contentnode.job.AbstractUserActionJob;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.job.AbstractBackgroundJob;
 import com.gentics.contentnode.migration.MigrationDBLogger;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Page;
@@ -27,7 +30,7 @@ import com.gentics.lib.log.NodeLogger;
  * @author Taylor
  * 
  */
-public abstract class AbstractMigrationJob extends AbstractUserActionJob {
+public abstract class AbstractMigrationJob extends AbstractBackgroundJob {
 
 	/**
 	 * The job type for a tagtype migration
@@ -110,6 +113,14 @@ public abstract class AbstractMigrationJob extends AbstractUserActionJob {
 	protected List<IMigrationPreprocessor> preprocessors;
 
 	/**
+	 * Create an instance. This will also set the {@link #jobId} to the next available jobId
+	 * @throws NodeException
+	 */
+	public AbstractMigrationJob() throws NodeException {
+		jobId = getNextJobId();
+	}
+
+	/**
 	 * Returns the counter value for omitted objects
 	 * @return
 	 */
@@ -153,46 +164,6 @@ public abstract class AbstractMigrationJob extends AbstractUserActionJob {
 	 * Unique jobId
 	 */
 	protected int jobId;
-
-	/**
-	 * Mappings parameter key
-	 */
-	public static final String PARAM_REQUEST = "request";
-
-	/**
-	 * Handle by template parameter key
-	 */
-	public static final String PARAM_HANDLE_PAGES_BY_TEMPLATE = "handlePagesByTemplate";
-
-	/**
-	 * Handle all nodes parameter key
-	 */
-	public static final String PARAM_HANDLE_ALL_NODES = "handleAllNodes";
-
-	/**
-	 * Prevent trigger event parameter key
-	 */
-	public static final String PARAM_PREVENT_TRIGGER_EVENT = "preventTriggerEvent";
-
-	/**
-	 * Type parameter key
-	 */
-	public static final String PARAM_TYPE = "type";
-
-	/**
-	 * Selected Item ID parameter key
-	 */
-	public static final String PARAM_SELECTED_ITEM_ID = "selectedId";
-
-	/**
-	 * Selected Item Type parameter key
-	 */
-	public static final String PARAM_SELECTED_ITEM_TYPE = "selectedType";
-
-	/**
-	 * Object Ids parameter key
-	 */
-	public static final String PARAM_OBJECTIDS = "objectIds";
 
 	/**
 	 * Key for the ttm commit batch size option
@@ -319,12 +290,20 @@ public abstract class AbstractMigrationJob extends AbstractUserActionJob {
 		return Result.pass;
 	}
 
-	public int getMigrationJobId() {
-		return jobId;
+	/**
+	 * Get the next available jobId
+	 * @return next jobId (starting with 1)
+	 * @throws NodeException
+	 */
+	protected int getNextJobId() throws NodeException {
+		return Optional.ofNullable(Trx.supply(() -> {
+			return DBUtils.select("SELECT max(job_id) maximum FROM migrationjob", DBUtils.firstInt("maximum"));
+		})).orElse(0) + 1;
 	}
 
-	public String getName() {
-		return this.jobName;
+
+	public int getMigrationJobId() {
+		return jobId;
 	}
 
 	public int getPercentCompleted() {

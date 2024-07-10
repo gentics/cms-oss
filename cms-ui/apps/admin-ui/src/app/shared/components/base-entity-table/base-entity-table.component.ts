@@ -1,20 +1,30 @@
-import { BO_DISPLAY_NAME, BO_ID, BusinessObject, TableLoadEndEvent, TableLoadOptions, TableLoadResponse, TableLoadStartEvent } from '@admin-ui/common';
-import { BaseTableLoaderService, I18nService } from '@admin-ui/core';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BusinessObject,
+    EditableEntity,
+    TableLoadEndEvent,
+    TableLoadOptions,
+    TableLoadResponse,
+    TableLoadStartEvent,
+} from '@admin-ui/common';
+import { BaseTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import {
     BaseComponent,
-    cancelEvent,
-    coerceInstance, ModalService,
+    ModalService,
     TableAction,
     TableActionClickEvent,
     TableColumn,
     TableRow,
     TableSelectAllType,
     TableSortOrder,
+    cancelEvent,
+    coerceInstance,
 } from '@gentics/ui-core';
-import { combineLatest, Observable, of, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
 
@@ -40,10 +50,16 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selected: string[] = [];
 
     @Input()
+    public multiple = true;
+
+    @Input()
     public activeEntity: string;
 
     @Input()
     public extraActions: TableAction<O>[] = [];
+
+    @Input()
+    public filters: Record<string, any> = {};
 
     @Output()
     public rowClick = new EventEmitter<TableRow<O>>();
@@ -71,6 +87,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     protected abstract rawColumns: TableColumn<O>[];
     protected abstract entityIdentifier: NormalizableEntityType;
+    protected focusEntityType: NormalizableEntityType | EditableEntity;
 
     // Table data
     public columns: TableColumn<O>[] = [];
@@ -92,7 +109,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     protected loadTrigger = new Subject<void>();
     protected actionRebuildTrigger = new Subject<void>();
     protected actionRebuildTrigger$ = this.actionRebuildTrigger.asObservable();
-    protected builtActions: TableAction<O>[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -169,6 +185,15 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         }
         this.query = newQuery;
         this.reload();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public applyFilterValue(field: string, value: any): void {
+        this.filters[field] = value;
+        this.query = value;
+
+        // Reload the table with the new filter value
+        this.loadTrigger.next();
     }
 
     public updateSelection(newSelection: string[]): void {
@@ -297,6 +322,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             sortBy: sortValue,
             sortOrder: this.sortOrder,
             query: this.query,
+            filters: this.filters,
         };
     }
 
@@ -384,16 +410,16 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
                 entityNames,
             },
         );
-        const confimed = await dialog.open();
+        const confirmed = await dialog.open();
 
-        if (!confimed) {
+        if (!confirmed) {
             return false;
         }
 
         for (const singleEntity of entities) {
             // If the current entity is being edited right now, then we need to close the editor.
             if (this.activeEntity === singleEntity[BO_ID]) {
-                this.appState.dispatch(new SetUIFocusEntity(this.entityIdentifier, undefined));
+                this.appState.dispatch(new SetUIFocusEntity(this.focusEntityType || this.entityIdentifier, undefined));
             }
             await this.callToDeleteEntity(singleEntity[BO_ID]);
         }
@@ -405,6 +431,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected callToDeleteEntity(id: string): Promise<void> {
-        return this.loader.deleteEntity(id);
+        return this.loader.deleteEntity(id, this.createAdditionalLoadOptions());
     }
 }

@@ -2,16 +2,18 @@ import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
-import { EditableTag, PageTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, FolderResponse, PageResponse, PageTagPartProperty, ResponseCode, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { getExamplePageData } from '../../../../../testing/test-data.mock';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
-import { Api, ApiBase } from '../../../../core/providers/api';
+import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
@@ -23,7 +25,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../../state
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { PageUrlTagPropertyEditor } from './page-url-tag-property-editor.component';
 
@@ -40,7 +42,7 @@ const PAGE_B_REMOVED = getExamplePageData({ id: -10 });
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;
@@ -74,7 +76,12 @@ class MockFolderActions { }
  */
 describe('PageUrlTagPropertyEditor', () => {
 
-    let getItemSpy: jasmine.Spy;
+    let client: GCMSTestRestClientService;
+    let pageGet: jasmine.Spy<jasmine.Func>;
+    let folderGet: jasmine.Spy<jasmine.Func>;
+
+    let pageReturnValue: Observable<PageResponse>;
+    let folderReturnValue: Observable<FolderResponse>;
 
     beforeEach(() => {
         configureComponentTest({
@@ -90,7 +97,7 @@ describe('PageUrlTagPropertyEditor', () => {
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                Api,
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -102,27 +109,35 @@ describe('PageUrlTagPropertyEditor', () => {
                 TagPropertyEditorHostComponent,
                 TagPropertyLabelPipe,
                 TestComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
                 MockI18nPipe,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    PageUrlTagPropertyEditor,
-                ],
-            },
-        });
-    });
 
-    beforeEach(() => {
-        const api = TestBed.get(Api) as Api;
-        getItemSpy = spyOn(api.folders, 'getItem');
+        client = TestBed.inject(GCMSRestClientService) as any;
+        pageGet = client.page.get = jasmine.createSpy('page.get', client.page.get).and.callFake(() => pageReturnValue);
+        folderGet = client.folder.get = jasmine.createSpy('folder.get', client.folder.get).and.callFake(() => folderReturnValue);
     });
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        beforeEach(() => {
+            client.reset();
+            pageGet.calls.reset();
+            folderGet.calls.reset();
+
+            // Default value
+            folderReturnValue = of({
+                folder: { id: -99 },
+            } as any);
+        });
+
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as PageTagPartProperty;
@@ -136,61 +151,39 @@ describe('PageUrlTagPropertyEditor', () => {
             expect(editorElement).toBeTruthy();
 
             // Set up the return values for folderApi.getItem().
-            const getItemReturnValues: Observable<any>[] = [];
             if (origTagProperty.pageId) {
                 // If an initial page is set, we need to add a response for loading the page.
                 if (origTagProperty.pageId === PAGE_A.id) {
                     // Simulated existing page
-                    getItemReturnValues.push(
-                        of({
-                            page: getExamplePageData({ id: origTagProperty.pageId }),
-                        }),
-                        of({
-                            page: getExamplePageData({ id: origTagProperty.pageId }),
-                        }),
-                    );
+                    pageReturnValue = of({
+                        page: getExamplePageData({ id: origTagProperty.pageId }),
+                    } as any)
                 } else {
                     // Simulated removed page
-                    getItemReturnValues.push(
-                        throwError({
-                            messages: [ {
-                                message: 'The specified page was not found.',
-                                type: 'CRITICAL',
-                            } ],
-                            responseInfo: {
-                                responseCode: 'NOTFOUND',
-                                responseMessage: 'The specified page was not found.',
-                            },
-                        }),
-                        throwError({
-                            messages: [ {
-                                message: 'The specified page was not found.',
-                                type: 'CRITICAL',
-                            } ],
-                            responseInfo: {
-                                responseCode: 'NOTFOUND',
-                                responseMessage: 'The specified page was not found.',
-                            },
-                        }),
-                    );
-                }
-            } else {
-                // Simulated removed page
-                getItemReturnValues.push(
-                    throwError({
+                    pageReturnValue = throwError({
                         messages: [ {
                             message: 'The specified page was not found.',
                             type: 'CRITICAL',
                         } ],
                         responseInfo: {
-                            responseCode: 'NOTFOUND',
+                            responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified page was not found.',
                         },
-                    }),
-                );
+                    });
+                }
+            } else {
+                // Simulated removed page
+                pageReturnValue = throwError({
+                    messages: [ {
+                        message: 'The specified page was not found.',
+                        type: 'CRITICAL',
+                    } ],
+                    responseInfo: {
+                        responseCode: ResponseCode.NOT_FOUND,
+                        responseMessage: 'The specified page was not found.',
+                    },
+                });
             }
-
-            getItemSpy.and.returnValues(...getItemReturnValues);
 
             const editor: PageUrlTagPropertyEditor = editorElement.componentInstance;
             editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
@@ -224,19 +217,11 @@ describe('PageUrlTagPropertyEditor', () => {
             }
 
             // If an image was pre-selected, make sure that is has been loaded.
-            let callIndex = 1;
             if (origTagProperty.pageId) {
-                expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.pageId, 'wrong page ID loaded');
-                expect(getItemSpy.calls.argsFor(0)[1]).toEqual('page', 'wrong item type loaded');
-                expect(getItemSpy.calls.argsFor(0)[2]).toEqual({ nodeId: context.node.id }, 'wrong node ID');
-                ++callIndex;
+                expect(pageGet).toHaveBeenCalledWith(origTagProperty.pageId, { nodeId: context.node.id });
+            } else {
+                expect(pageGet).not.toHaveBeenCalled();
             }
-
-            expect(getItemSpy.calls.count()).toBe(callIndex);
-
-
-            getItemSpy.and.stub();
-            getItemSpy.calls.reset();
         }
 
         it('initializes properly for unset TagPropertyType.PAGE and internal page',

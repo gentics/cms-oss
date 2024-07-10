@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ExternalLinkStatistics, Language, LinkCheckerPageList, Node, NodeFeature, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { uniqWith } from 'lodash';
+import { uniqWith } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
 import { concatMap, debounceTime, distinctUntilChanged, filter, first, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { FilterOptions } from '../../common/models/filter-options';
@@ -26,8 +26,8 @@ export interface NodeStats {
 }
 
 @Injectable({
-    providedIn: 'root'
-    })
+    providedIn: 'root',
+})
 export class LinkCheckerService {
 
     protected pages$ = new Subject<LinkCheckerPageList>();
@@ -99,10 +99,10 @@ export class LinkCheckerService {
             this.nodeStats$.next(nodeStats);
 
             const nodeId = this.filterService.options.nodeId;
-            const firstNode = (nodes.slice().shift() || {}).node;
+            const firstNode = nodes[0]?.node;
 
             // Select default node if null
-            if (nodeId === null && !!firstNode && !!firstNode.id) {
+            if (nodeId === null && firstNode?.id != null) {
                 this.filterService.options.nodeId = firstNode.id;
             }
 

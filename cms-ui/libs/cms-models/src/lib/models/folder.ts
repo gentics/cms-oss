@@ -1,6 +1,6 @@
 import { InheritableItem } from './item';
 import { PermissionsMapCollection } from './permissions';
-import { PrivilegeFlagName, PrivilegeMap } from './permissions/cms/privileges';
+import { PrivilegeFlagName, PrivilegeMap } from './privileges';
 import { Tags } from './tag';
 import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 
@@ -35,8 +35,8 @@ export interface GtxI18nProperty { [key: string]: string }
 /**
  * A Folder object as returned from the various folder endpoints:
  *
- * http://www.gentics.com/Content.Node/guides/restapi/resource_FolderResource.html
- * https://www.gentics.com/Content.Node/guides/restapi/json_Folder.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_FolderResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Folder.html
  */
 export interface Folder<T extends ModelType = DefaultModelType> extends InheritableItem<T> {
     type: 'folder';

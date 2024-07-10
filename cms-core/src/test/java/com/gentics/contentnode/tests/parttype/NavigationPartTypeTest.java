@@ -54,7 +54,6 @@ public class NavigationPartTypeTest {
 			return create(Construct.class, navconst -> {
 				navconst.setName("navconst", 1);
 				navconst.setAutoEnable(true);
-				navconst.setIconName("karl");
 				navconst.setKeyword("navconst");
 
 				navconst.getParts().add(create(Part.class, navpart -> {

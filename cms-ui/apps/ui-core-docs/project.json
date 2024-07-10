@@ -1,0 +1,110 @@
+{
+    "name": "ui-core-docs",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "prefix": "gtx",
+    "sourceRoot": "apps/ui-core-docs/src",
+    "tags": ["app", "docs", "demo", "angular"],
+    "targets": {
+        "compile": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/ui-core-docs",
+                "commands": [
+                    "ts-node --skipProject -O \"{\\\"strict\\\":false}\" ./compile-docs.ts"
+                ]
+            }
+        },
+        "build": {
+            "executor": "@nx/angular:webpack-browser",
+            "dependsOn": ["compile"],
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "customWebpackConfig": {
+                    "path": "apps/ui-core-docs/webpack.partial.js"
+                },
+                "outputPath": "dist/apps/ui-core-docs",
+                "index": "apps/ui-core-docs/src/index.html",
+                "main": "apps/ui-core-docs/src/main.ts",
+                "polyfills": ["apps/ui-core-docs/src/polyfills.ts"],
+                "tsConfig": "apps/ui-core-docs/tsconfig.app.json",
+                "assets": [
+                    "apps/ui-core-docs/src/favicon.ico",
+                    "apps/ui-core-docs/src/assets"
+                ],
+                "styles": ["apps/ui-core-docs/src/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/ui-core-docs/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "scripts": [],
+                "allowedCommonJsDependencies": [
+                    "@bevacqua/rome",
+                    "@gentics/ui-core",
+                    "cropperjs"
+                ],
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true,
+                "vendorChunk": false,
+                "buildOptimizer": true,
+                "aot": true
+            },
+            "configurations": {
+                "production": {},
+                "development": {
+                    "buildOptimizer": false,
+                    "optimization": false,
+                    "vendorChunk": true,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true
+                },
+                "ci": {
+                    "progress": false
+                }
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@nx/angular:webpack-dev-server",
+            "options": {
+                "proxyConfig": "proxy.conf.json",
+                "liveReload": false
+            },
+            "configurations": {
+                "production": {
+                    "browserTarget": "ui-core-docs:build:production"
+                },
+                "development": {
+                    "browserTarget": "ui-core-docs:build:development"
+                }
+            },
+            "defaultConfiguration": "development"
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "apps/ui-core-docs/**/*.ts",
+                    "apps/ui-core-docs/**/*.html"
+                ]
+            }
+        },
+        "test": {
+            "executor": "nx:noop"
+        },
+        "serve-static": {
+            "executor": "@nx/web:file-server",
+            "options": {
+                "buildTarget": "ui-core-docs:build"
+            }
+        }
+    }
+}

@@ -36,7 +36,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to the node resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_NodeResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_NodeResource.html
  *
  */
 export class NodeApi {
@@ -112,7 +112,7 @@ export class NodeApi {
     /**
      * Get list of languages activated for the node
      */
-    getNodeLanguageList(nodeId: number, options?: NodeLanguageListRequest): Observable<ListResponse<Language>> {
+    getNodeLanguageList(nodeId: number | string, options?: NodeLanguageListRequest): Observable<ListResponse<Language>> {
         return this.apiBase.get(`node/${nodeId}/languages`, options);
     }
 

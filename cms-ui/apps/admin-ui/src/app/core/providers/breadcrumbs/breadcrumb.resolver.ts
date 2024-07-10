@@ -1,5 +1,5 @@
 import { Injectable, Injector } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { BreadcrumbInfo } from './breadcrumb-info';
@@ -35,7 +35,7 @@ export type ResolveBreadcrumbFn = (route: ActivatedRouteSnapshot, injector: Inje
   ```
  */
 @Injectable()
-export class BreadcrumbResolver implements Resolve<BreadcrumbInfo> {
+export class BreadcrumbResolver  {
 
     constructor(private injector: Injector) {}
 

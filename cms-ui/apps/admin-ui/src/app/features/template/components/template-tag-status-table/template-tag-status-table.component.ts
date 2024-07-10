@@ -1,4 +1,4 @@
-import { TagStatusBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, TagStatusBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, TemplateTagStatusOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -20,6 +20,8 @@ const SYNC_ACTION = 'syncTag';
 export class TemplateTagStatusTableComponent
     extends BaseEntityTableComponent<TagStatus, TagStatusBO, TemplateTagStatusTableLoaderOptions>
     implements OnChanges {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public templateId: number | string;
@@ -66,7 +68,7 @@ export class TemplateTagStatusTableComponent
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: TemplateTagStatusTableLoaderService,
+        protected loader: TemplateTagStatusTableLoaderService,
         modalService: ModalService,
         protected entityOperations: TemplateTagStatusOperations,
         protected notification: I18nNotificationService,

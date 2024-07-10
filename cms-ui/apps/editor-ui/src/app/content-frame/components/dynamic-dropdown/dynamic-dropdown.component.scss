@@ -1,0 +1,101 @@
+@import 'variables';
+@import 'aloha-utils';
+
+.dropdown-overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 500;
+    top: 0;
+    left: 0;
+}
+
+:host {
+    position: absolute;
+    left: var(--target-x);
+    top: calc(var(--target-y) + var(--target-height));
+    z-index: 1000;
+}
+
+.gtx-context-menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 501;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    @include gtxCommonButtonShadow;
+
+    .context-menu-header {
+        @include gtxCommonHeader;
+        transition: 200ms;
+        display: none;
+
+        .header-confirm-button {
+            display: block;
+        }
+
+        .header-abort-button {
+            background: #e3e4da;
+            color: $gtx-color-off-black;
+            border: 1px solid transparent;
+            outline: none;
+            padding: 0.125rem 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            transition: 200ms;
+            text-transform: uppercase;
+            white-space: nowrap;
+            margin-left: 0.75rem;
+            @include gtxCommonButtonShadow();
+
+            &:hover {
+                background: #e9eae3;
+            }
+
+            &:focus {
+                border-color: #c1c4ad;
+            }
+        }
+    }
+
+    &.with-confirm .context-menu-header {
+        display: flex;
+    }
+
+    .context-menu-content {
+        background: $gtx-color-off-white;
+        flex: 1 1 auto;
+        min-height: 1px;
+        display: flex;
+
+        &::ng-deep .gtx-table-size-input {
+            padding: 0.25rem 0.75rem;
+        }
+
+        &::ng-deep .gtx-editor-input {
+            padding: 0.25rem 0.5rem;
+            min-width: 240px;
+        }
+    }
+}
+
+.generic-text-content {
+    padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    .gtx-context-menu {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: calc(min(.4 * var(--gtx-vvh), 16rem));
+
+        .context-menu-header {
+            display: flex;
+            height: 60px;
+        }
+    }
+}

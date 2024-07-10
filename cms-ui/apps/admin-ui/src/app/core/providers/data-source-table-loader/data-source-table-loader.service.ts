@@ -1,26 +1,27 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, DataSourceBO, discard, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { DataSourceBO, discard, EntityList, EntityPageResponse, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { DataSource, DataSourceListResponse, Raw } from '@gentics/cms-models';
+import { DataSource, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
 import { EntityManagerService } from '../entity-manager';
-import { DataSourceOperations } from '../operations';
 
 export interface DataSourceTableLoaderOptions {
     packageName?: string;
 }
 
 @Injectable()
-export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSource<Raw>, DataSourceBO, DataSourceTableLoaderOptions> {
+export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSource<Raw>, DataSourceBO, DataSourceTableLoaderOptions>
+    implements PackageTableEntityLoader<DataSourceBO, DataSourceTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: DataSourceOperations,
+        protected handler: DataSourceHandlerService,
     ) {
         super('dataSource', entityManager, appState);
     }
@@ -30,21 +31,19 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
         additionalOptions?: DataSourceTableLoaderOptions,
     ): Observable<EntityPageResponse<DataSourceBO>> {
         const loadOptions = this.createDefaultOptions(options);
-        let loader: Observable<DataSourceListResponse>;
+        let loader: Observable<EntityList<DataSourceBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getDataSources(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
-            loader = this.api.dataSource.getDataSources(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(ds => this.mapToBusinessObject(ds));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
@@ -55,16 +54,14 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(Number(entityId)).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
-    protected mapToBusinessObject(ds: DataSource<Raw>): DataSourceBO {
-        return {
-            ...ds,
-            [BO_ID]: String(ds.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: ds.name,
-        };
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
     }
 
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
+    }
 }

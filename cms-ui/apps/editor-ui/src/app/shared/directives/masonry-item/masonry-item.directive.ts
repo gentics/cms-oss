@@ -1,33 +1,31 @@
-import {AfterViewChecked, AfterViewInit, Directive, ElementRef, EventEmitter, Output} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, EventEmitter, OnDestroy, Output } from '@angular/core';
 
 /** See MasonryGrid for usage. */
 @Directive({
-    // tslint:disable directive-selector
-    selector: 'masonry-item, [masonryItem]'
+    selector: 'masonry-item, [masonryItem]',
 })
-export class MasonryItemDirective implements AfterViewChecked, AfterViewInit {
+export class MasonryItemDirective implements AfterViewInit, OnDestroy {
 
-    private previousHeight: number;
+    @Output()
+    public sizeChange = new EventEmitter<true>();
 
-    @Output() heightChange = new EventEmitter<true>();
+    private obs: ResizeObserver;
 
-    constructor(private elementRef: ElementRef) {}
+    constructor(
+        private elementRef: ElementRef<HTMLElement>,
+    ) { }
 
     ngAfterViewInit(): void {
-        // Store initial size of masonry-item tag or tag with masonryItem attribute
-        if (this.elementRef.nativeElement !== null) { // null in case native elements are not supported (e.g. in web workers)
-            this.previousHeight = this.elementRef.nativeElement.offsetHeight;
-        }
+        this.obs = new ResizeObserver(() => {
+            this.sizeChange.emit();
+        });
+        this.obs.observe(this.elementRef.nativeElement);
     }
 
-    ngAfterViewChecked(): void {
-        // Check size of masonry-item tag or tag with masonryItem attribute after change detection happened on any kind of content (projected or view)
-        if (this.elementRef.nativeElement !== null) { // null in case native elements are not supported (e.g. in web workers)
-            const height = this.elementRef.nativeElement.offsetHeight;
-            if (this.previousHeight !== height) {
-                this.heightChange.emit(true);
-            }
-            this.previousHeight = height;
+    ngOnDestroy(): void {
+        if (this.obs) {
+            this.obs.disconnect();
+            this.obs = null;
         }
     }
 }

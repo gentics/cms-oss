@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -33,9 +34,8 @@ import com.gentics.contentnode.distributed.TrxCallable;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.QueueWithDelay;
-import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
@@ -116,6 +116,11 @@ public class Synchronizer {
 	 * Sync Path Queue
 	 */
 	private static QueueWithDelay<PathWithPriority> syncEventQueue = null;
+
+	/**
+	 * Thread Factory
+	 */
+	private static ThreadFactory threadFactory = new PrefixedThreadFactory("package-synchronizer");
 
 	/**
 	 * Queue handler
@@ -224,7 +229,7 @@ public class Synchronizer {
 			syncEventQueue = new QueueWithDelay<>(syncQueueDelay, TimeUnit.MILLISECONDS, (o1, o2) -> Integer.compare(o1.priority, o2.priority));
 
 			// start the queue handler
-			queueHandler = Executors.newSingleThreadExecutor();
+			queueHandler = Executors.newSingleThreadExecutor(threadFactory);
 			queueHandler.execute(() -> {
 				boolean run = true;
 				while (run) {
@@ -525,66 +530,6 @@ public class Synchronizer {
 	 */
 	public static void clearCache() {
 		container.clearCache();
-	}
-
-	/**
-	 * Unwrap and re-throw any NodeException wrapped into a RuntimeException and thrown from the given operator
-	 * @param operator operator
-	 * @throws NodeException
-	 */
-	public static void unwrap(Operator operator) throws NodeException {
-		try {
-			operator.operate();
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof NodeException) {
-				throw (NodeException) e.getCause();
-			} else {
-				throw e;
-			}
-		}
-	}
-
-	/**
-	 * Unwrap and re-throw any NodeException wrapped into a RuntimeException and throws from the given supplier
-	 * @param supplier supplier
-	 * @return supplied value
-	 * @throws NodeException
-	 */
-	public static <R> R unwrap(Supplier<R> supplier) throws NodeException {
-		try {
-			return supplier.supply();
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof NodeException) {
-				throw (NodeException) e.getCause();
-			} else {
-				throw e;
-			}
-		}
-	}
-
-	/**
-	 * Wrap the given operator into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
-	 * @param operator operator
-	 */
-	public static void wrap(Operator operator) {
-		try {
-			operator.operate();
-		} catch (NodeException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Wrap the given supplier into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
-	 * @param supplier supplier
-	 * @return supplied value
-	 */
-	public static <R> R wrap(Supplier<R> supplier) {
-		try {
-			return supplier.supply();
-		} catch (NodeException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	/**

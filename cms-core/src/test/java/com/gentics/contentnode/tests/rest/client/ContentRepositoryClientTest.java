@@ -62,6 +62,7 @@ import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.CRElasticsearchModel;
 import com.gentics.contentnode.rest.model.ContentRepositoryListResponse;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel.PasswordType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -430,6 +431,7 @@ public class ContentRepositoryClientTest {
 			crModel.setUrl("new url-value");
 			crModel.setUsername("new username-value");
 			crModel.setPassword("new password-value");
+			crModel.setPasswordType(PasswordType.value);
 			crModel.setInstantPublishing(false);
 			crModel.setLanguageInformation(false);
 			crModel.setPermissionInformation(false);

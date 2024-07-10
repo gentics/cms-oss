@@ -31,8 +31,6 @@ import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.FilenameUtils;
 
-import com.gentics.api.imagestore.GenticsImageStoreRequest;
-import com.gentics.api.imagestore.RequestDecorator;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.upload.FileInformation;
@@ -59,12 +57,12 @@ public class GenticsImageStoreServlet extends HttpServlet {
 	 * Portal basepath
 	 */
 	private String portalBasePath;
-	
+
 	/**
 	 * Regex that will be used to determine the portal basepath
 	 */
 	private String portalBasePathRegEx;
-    
+
 	/**
 	 * logger
 	 */
@@ -83,24 +81,24 @@ public class GenticsImageStoreServlet extends HttpServlet {
 	 * be reachable from the host the GenticsImageStore runs on, and in such cases it is useful to be
 	 * able to specify a custom urlPrefix which should include the scheme, host and optionally the port
 	 * of the host where images should be fetched from. For example http://localhost:8080
-	 * 
+	 *
 	 * May be null.
 	 */
 	private volatile URI urlPrefix = null;
-    
+
 	/**
 	 * Will be instantiated with a class given by an optional servlet parameter which enables the user
 	 * to customize exactly how requests to images are mapped to the actual location where the image
 	 * will be fetched from.
-	 * 
+	 *
 	 * May be null.
 	 */
 	private volatile ImageUriMapper uriMapper = null;
-    
+
 	/**
 	 * Will be instantiated with a class given by an optional servlet parameter which enables the user
 	 * to modify header information and data in requests to the GenticsImageStore
-	 * 
+	 *
 	 * May be null.
 	 */
 	private volatile RequestDecorator requestDecoratorClass = null;
@@ -132,7 +130,7 @@ public class GenticsImageStoreServlet extends HttpServlet {
 				throw new ServletException(e);
 			}
 		}
-		
+
 		String uriMapperClass = getServletConfig().getInitParameter("uriMapper");
 
 		if (null != uriMapperClass) {
@@ -146,11 +144,11 @@ public class GenticsImageStoreServlet extends HttpServlet {
 				throw new ServletException(e);
 			}
 		}
-		
+
 		String requestDecoratorClass = getServletConfig().getInitParameter("requestDecorator");
 
 		if (null != requestDecoratorClass) {
-			
+
 			try {
 				this.requestDecoratorClass = (RequestDecorator) Class.forName(requestDecoratorClass).newInstance();
 			} catch (InstantiationException e) {
@@ -191,9 +189,9 @@ public class GenticsImageStoreServlet extends HttpServlet {
 				imageURL = basePathUrlMatcher.group();
 				pathInfo = pathInfo.substring(0, basePathUrlMatcher.start());
 			}
-			
+
 		} else {
-        
+
 			// Fall back to default portal base path
 			if (portalBasePath == null) {
 				portalBasePath = "/Portal.Node";
@@ -206,9 +204,9 @@ public class GenticsImageStoreServlet extends HttpServlet {
 				imageURL = pathInfo.substring(portalBasePathIndex);
 				pathInfo = pathInfo.substring(0, portalBasePathIndex);
 			}
-	
+
 		}
-    	
+
 		if (imageURL == null) {
 			logger.error("Imageurl could not be determined. Perhaps your configured base path {" + portalBasePath + "} is not matching the given imageurl {" + pathInfo + "}");
 			response.sendError(HttpStatus.SC_BAD_REQUEST, "");
@@ -297,23 +295,23 @@ public class GenticsImageStoreServlet extends HttpServlet {
 
 	/**
 	 * Gets the absolute URI for a relative image path.
-	 * 
+	 *
 	 * If the urlPrefix servlet parameter is provided, it will be used to make the given imagePath absolute.
 	 * If urlPrefix is not provided, the scheme, host and port of the given request will be used to make the given imagePath absolute.
 	 * Additionally, if the urlMapper servlet parameter is provided, it will be given the now absolute imagePath
 	 * and whatever it returns replaces the absoulte imagePath.
-	 * 
+	 *
 	 * @param request
 	 * 		  The request to this servlet which fetches the image from the path specified with imagePath.
 	 * @param imagePath
 	 * 		  The relative path to an image.
 	 * @return
 	 * 		  The absolute URI for this image.
-	 * @throws ServletException 
+	 * @throws ServletException
 	 * 		  If the given imagePath can not be made absolute because it is of an incorrect format.
 	 */
 	private URI toImageUri(HttpServletRequest request, String imagePath) throws ServletException {
-    	
+
 		URL url;
 
 		try {
@@ -329,7 +327,7 @@ public class GenticsImageStoreServlet extends HttpServlet {
 		} catch (MalformedURLException e) {
 			throw new ServletException(e);
 		}
-        
+
 		URI imageUri;
 
 		try {
@@ -356,14 +354,14 @@ public class GenticsImageStoreServlet extends HttpServlet {
 		} catch (URISyntaxException e) {
 			throw new ServletException(e);
 		}
-        
+
 		if (null != uriMapper) {
 			imageUri = uriMapper.mapImageUri(request, imageUri);
 		}
-        
-		return imageUri; 
+
+		return imageUri;
 	}
-    
+
 	/**
 	 * parse query string to extract parameters, but do not urldecode to avoid encoding issues
 	 * @param queryString querystring of the URL
@@ -397,12 +395,12 @@ public class GenticsImageStoreServlet extends HttpServlet {
 			String topleftx, String toplefty, String cropwidth, String cropheight,
 			HttpServletRequest request, HttpServletResponse response, String imagePath) throws ServletException,
 				IOException, NodeException {
-    	
+
 		// get imageUri
 		URI imageUri = toImageUri(request, imagePath);
 		// get original filename - will be empty if there is no filename in imagePath
 		String originalFileName = FilenameUtils.getName(imageUri.getPath());
-    	
+
 		// create Map of headers
 		Map<String, String> headers = new HashMap<String, String>(1);
 		Enumeration<?> headerNames = request.getHeaderNames();
@@ -415,7 +413,7 @@ public class GenticsImageStoreServlet extends HttpServlet {
 				headers.put(name, value);
 			}
 		}
-		
+
 		// create GenticsImageStoreRequest bean
 		GenticsImageStoreRequest genticsImageStoreRequest = new GenticsImageStoreRequest();
 
@@ -423,24 +421,41 @@ public class GenticsImageStoreServlet extends HttpServlet {
 		genticsImageStoreRequest.setHeaders(headers);
 		genticsImageStoreRequest.setImageUri(imageUri.toString());
 		genticsImageStoreRequest.setQueryString(request.getQueryString());
-    	
+
 		// intercept GenticsImageStoreRequest with the configured request decorator, if enabled
 		if (null != requestDecoratorClass) {
 			requestDecoratorClass.decorateRequest(genticsImageStoreRequest, request);
 		}
 
-//		// create a dummy config
-//		Properties props = new Properties();
-//		props.put("contentnode.url", genticsImageStoreRequest.getImageUri());
-		
 		GenticsImageStore imageStore = new GenticsImageStore();
 		imageStore.setLoadTimeout(loadTimeout);
 		Double jpegQuality = ObjectTransformer.getDouble(getServletConfig().getInitParameter("jpegquality"), null);
 		if (jpegQuality != null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Setting jpegQuality to " + jpegQuality);
-				imageStore.setJPEGQuality(jpegQuality);
 			}
+
+			imageStore.setJPEGQuality(jpegQuality);
+		}
+
+		Double webpQuality = ObjectTransformer.getDouble(getServletConfig().getInitParameter("webpquality"), null);
+
+		if (webpQuality != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Setting webpQuality to " + webpQuality);
+			}
+
+			imageStore.setWebpQuality(webpQuality);
+		}
+
+		Boolean webpLossless = ObjectTransformer.getBoolean(getServletConfig().getInitParameter("webplossless"), null);
+
+		if (webpLossless != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Setting webpLossless to " + webpLossless);
+			}
+
+			imageStore.setWebpLossless(webpLossless);
 		}
 
 		if (logger.isDebugEnabled()) {

@@ -1,6 +1,6 @@
 import { I18nKey, RequiredInstancePermissions, RequiredTypePermissions } from '@admin-ui/core';
 import { InjectionToken } from '@angular/core';
-import { IndexByKey, Omit } from '@gentics/cms-models';
+import { IndexByKey } from '@gentics/cms-models';
 import { WithOptional } from '../utils';
 import { ADMIN_MODULE_ACTION_PERMISSIONS } from './action-permissions/admin-module.action-permissions';
 import { CONSTRUCT_MODULE_ACTION_PERMISSIONS } from './action-permissions/construct-module.action-permissions';

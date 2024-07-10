@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, NodeBO, TableLoadOptions } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, NodeBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Node, NodeListRequestOptions, Raw } from '@gentics/cms-models';
@@ -21,8 +21,16 @@ export class NodeTableLoaderService extends BaseTableLoaderService<Node, NodeBO>
         super('node', entityManager, appState);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public canDelete(entityId: string | number): Promise<boolean> {
         return Promise.resolve(true);
+    }
+
+    public isChannel(entity: Node<Raw>): boolean {
+        if (entity?.masterNodeId !== entity?.id) {
+            return true;
+        }
+        return false;
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
@@ -36,7 +44,7 @@ export class NodeTableLoaderService extends BaseTableLoaderService<Node, NodeBO>
         return this.api.node.getNodes(loadOptions).pipe(
             map(response => {
                 const entities = response.items.map(node => this.mapToBusinessObject(node));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
 
                 return {
                     entities,

@@ -7,7 +7,6 @@ import {
     BrowserDynamicTestingModule,
     platformBrowserDynamicTesting,
 } from '@angular/platform-browser-dynamic/testing';
-import './app/rxjs-compat';
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(

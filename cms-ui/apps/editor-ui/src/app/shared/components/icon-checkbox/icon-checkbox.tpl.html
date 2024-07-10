@@ -1,8 +1,11 @@
-<div #wrapper
-     class="icon-checkbox-wrapper"
-     [class.checked]="selected">
+<div
+    #wrapper
+    class="icon-checkbox-wrapper"
+    [class.checked]="selected"
+    [class.disabled]="disabled"
+>
     <div class="item-icon">
-        <i *ngIf="icon || !image; else showImage" class="material-icons" [attr.translate]="'no'">{{ icon }}</i>
+        <icon *ngIf="icon || !image; else showImage">{{ icon }}</icon>
         <ng-template #showImage>
             <image-thumbnail
                 [image]="image"
@@ -12,7 +15,8 @@
             </image-thumbnail>
         </ng-template>
     </div>
-    <div class="item-checkbox">
+
+    <div *ngIf="selected || !disabled" class="item-checkbox">
         <gtx-checkbox
             [checked]="selected"
             [disabled]="disabled"

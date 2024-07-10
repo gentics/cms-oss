@@ -1,14 +1,20 @@
-import { ExposableToolAPI } from './exposable-tool-api';
-import { ExposedGCMSUIAPI } from './exposed-gcmsui-api';
-import { RemoteMethodCallMessage, ToolHandshake, ToolProtocolMessage, UIHandshake } from './sendmessage-protocol';
-import { RemoteMethodReturnMessage, RemoteMethodThrowMessage } from './sendmessage-protocol';
+import {
+    ExposableEmbeddedToolAPI,
+    ExposedGCMSUIAPI,
+    RemoteMethodCallMessage,
+    RemoteMethodReturnMessage,
+    RemoteMethodThrowMessage,
+    ToolHandshake,
+    ToolProtocolMessage,
+    UIHandshake,
+} from '@gentics/cms-integration-api-models';
 
 const TIMEOUT = 20000;
 
 export class ToolApi {
 
     /** Connect an embedded tool to the Gentics CMSUI. */
-    static connect(toolApiToExpose: ExposableToolAPI = {}): Promise<ToolApi> {
+    static connect(toolApiToExpose: ExposableEmbeddedToolAPI = {}): Promise<ToolApi> {
         if (typeof Promise !== 'function') {
             throw new Error('GCMSToolAPI: No native Promise support. Add a polyfill for older browsers!');
         }
@@ -26,16 +32,17 @@ export class ToolApi {
     }
 
     private constructor(
-        public tool: ExposableToolAPI,
+        public tool: ExposableEmbeddedToolAPI,
         public ui: ExposedGCMSUIAPI,
         public port: MessagePort,
-        public handshake: UIHandshake) { }
+        public handshake: UIHandshake,
+    ) { }
 
 }
 
 function createMessageChannelToParentWindow(): MessagePort | undefined {
     const channel = new MessageChannel();
-    const parentFrame = window.opener || window.parent;
+    const parentFrame: Window = window.opener || window.parent;
     if (parentFrame && parentFrame !== window) {
         parentFrame.postMessage('gcms-tool-api', '*', [channel.port2]);
         return channel.port1;
@@ -43,8 +50,9 @@ function createMessageChannelToParentWindow(): MessagePort | undefined {
     return undefined;
 }
 
-function performHandshake(port: MessagePort, toolApi: ExposableToolAPI): Promise<{ handshake: UIHandshake, uiAPI: ExposedGCMSUIAPI }> {
+function performHandshake(port: MessagePort, toolApi: ExposableEmbeddedToolAPI): Promise<{ handshake: UIHandshake, uiAPI: ExposedGCMSUIAPI }> {
     return new Promise((resolve, reject) => {
+        // eslint-disable-next-line prefer-const
         let timeout: any;
         const onMessageReceived = (event: MessageEvent) => {
             const handshake: UIHandshake = event.data;
@@ -73,13 +81,13 @@ function performHandshake(port: MessagePort, toolApi: ExposableToolAPI): Promise
     });
 }
 
-function sendMethodsExposedByToolToUI(port: MessagePort, toolApi: ExposableToolAPI): void {
+function sendMethodsExposedByToolToUI(port: MessagePort, toolApi: ExposableEmbeddedToolAPI): void {
     const handshake: ToolHandshake = {
         type: 'handshake',
-        supportedMethods: []
+        supportedMethods: [],
     };
 
-    for (const key of Object.keys(toolApi).filter(Boolean) as Array<keyof ExposableToolAPI>) {
+    for (const key of Object.keys(toolApi).filter(Boolean) as Array<keyof ExposableEmbeddedToolAPI>) {
         switch (key) {
             case 'hasUnsavedChanges':
             case 'navigate':
@@ -107,7 +115,7 @@ function createAPIObjectFromHandshake(port: MessagePort, handshake: UIHandshake)
                     type: 'methodcall',
                     name: method.name,
                     args,
-                    callid
+                    callid,
                 };
 
                 const onMessage = (event: MessageEvent) => {
@@ -128,18 +136,18 @@ function createAPIObjectFromHandshake(port: MessagePort, handshake: UIHandshake)
             });
         };
         Object.defineProperty(remoteCallableMethod, 'name', {
-            value: method.name + ' [in GCMSUI]'
+            value: method.name + ' [in GCMSUI]',
         });
-        apiObject[method.name as keyof ExposedGCMSUIAPI] = remoteCallableMethod as any;
+        apiObject[method.name ] = remoteCallableMethod as any;
     }
     return apiObject;
 }
 
-function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableToolAPI): any {
+function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableEmbeddedToolAPI): any {
     port.addEventListener('message', event => {
         const msg: ToolProtocolMessage = event.data;
         if (typeof msg === 'object' && msg && msg.type === 'methodcall' && msg.name && msg.callid) {
-            const method = methods[msg.name as keyof ExposableToolAPI];
+            const method = methods[msg.name as keyof ExposableEmbeddedToolAPI];
 
             Promise.resolve().then(() => {
                 if (!method) {
@@ -151,7 +159,7 @@ function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableT
                     const returnValueMessage: RemoteMethodReturnMessage = {
                         type: 'methodreturn',
                         callid: msg.callid,
-                        value: returnValue
+                        value: returnValue,
                     };
                     port.postMessage(returnValueMessage);
                 }, error => {
@@ -161,7 +169,7 @@ function makeExposedMethodsRemoteCallable(port: MessagePort, methods: ExposableT
                     const throwMessage: RemoteMethodThrowMessage = {
                         type: 'methodthrow',
                         callid: msg.callid,
-                        error
+                        error,
                     };
                     port.postMessage(throwMessage);
                 });
@@ -178,12 +186,12 @@ function buildRealErrorObject(error: Error): Error {
     Object.defineProperty(realError, 'name', {
         configurable: true,
         writable: true,
-        value: error.name
+        value: error.name,
     });
     Object.defineProperty(realError, 'stack', {
         configurable: true,
         writable: true,
-        value: error.stack
+        value: error.stack,
     });
     return realError;
 }

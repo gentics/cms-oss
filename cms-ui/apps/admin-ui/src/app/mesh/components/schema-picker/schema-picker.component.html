@@ -1,0 +1,19 @@
+<div *ngIf="label" class="label">{{ label }}</div>
+<div class="wrapper">
+    <div class="display-value">
+        <span *ngIf="displayValue; else placeholderTpl" class="actual-value">{{ displayValue }}</span>
+        <ng-template #placeholderTpl>
+            <span class="placeholder">{{ placeholder }}</span>
+        </ng-template>
+    </div>
+    <div class="button-wrapper">
+        <button class="select-button" [disabled]="disabled" (click)="pickNewValues()">
+            <icon>edit</icon>
+        </button>
+    </div>
+    <div *ngIf="clearable == null ? !required : clearable" class="button-wrapper">
+        <button class="clear-button" [disabled]="disabled" (click)="clearValue()">
+            <icon>close</icon>
+        </button>
+    </div>
+</div>

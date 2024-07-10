@@ -14,6 +14,7 @@ define('gcn/gcn-links', [
 	'aloha',
 	'PubSub',
 	'aloha/pluginmanager',
+	'aloha/ephemera',
 	'util/dom-to-xhtml',
 	'i18n!gcn/nls/i18n',
 ], function (
@@ -22,10 +23,37 @@ define('gcn/gcn-links', [
 	Aloha,
 	PubSub,
 	PluginManager,
+	Ephemera,
 	DomToXhtml,
 	i18n
 ) {
 	'use strict';
+
+	// Link block attributes
+	var ATTR_TAG_ID = 'data-gcn-tagid';
+	var ATTR_TAG_NAME = 'data-gcn-tagname';
+
+	// General link attributes
+	var ATTR_ANCHOR = 'data-gentics-gcn-anchor';
+	var ATTR_URL = 'data-gentics-gcn-url';
+	var ATTR_HREF = 'href';
+	var ATTR_FILE_URL = 'data-gentics-gcn-fileurl';
+	var ATTR_CHANNEL_ID = 'data-gcn-channelid';
+	var ATTR_HREF_LANG = 'hreflang';
+	var ATTR_TITLE = 'title';
+	
+	// Internal Link attributes
+	var ATTR_REPOSITORY = 'data-gentics-aloha-repository';
+	var ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
+	var ATTR_OBJECT_ONLINE = 'data-gentics-aloha-object-online';
+	
+	// Misc constants
+	var REPO_INTERNAL_LINK = 'com.gentics.aloha.GCN.Page';
+	var TYPE_PAGE = '10007';
+	var TYPE_FILE = '10008';
+	var TYPE_IMAGE = '10011';
+
+	Ephemera.attributes(ATTR_TAG_NAME, ATTR_OBJECT_ONLINE);
 
 	/**
 	 * Matches an absolute URI.
@@ -42,30 +70,10 @@ define('gcn/gcn-links', [
 	 *
 	 * @type {RegExp}
 	 */
-	var ABSOLUTE_URI = new RegExp('^'
-		+ '('
-		+ '(([a-z]){3,10}:)?\/\/' // "scheme://" or "//"
-		+ ')|('                   // or
-		+ '([a-z]){3,10}:'        // "scheme:"
-		+ ').+',
-		'i');
+	var ABSOLUTE_URI = new RegExp('([a-z][a-z0-9-+.]+):(?:\/\/)?(.+)', 'i');
 
-	/**
-	 * Marks the given field appropriately depending on the validity of the
-	 * given link information.
-	 *
-	 * @param {jQuery<HTMLElement>} $field The href input field.
-	 * @param {string} href The href value of the given input field.
-	 * @param {boolean} internal True if the link being edited is an internal link.
-	 */
-	function mark($field, href, internal) {
-		// The link must either be internal, just an anchor or absolute.
-		if (internal || href.indexOf('#') == 0 || ABSOLUTE_URI.test(href)) {
-			$field.parent().removeClass('gcn-link-uri-warning');
-		} else {
-			$field.parent().addClass('gcn-link-uri-warning');
-		}
-	}
+	var originalLinkContextProviderFn;
+	var originalLinkUpsertFn;
 
 	/**
 	 * Determines whether the given link is marked as an internal link or not.
@@ -73,8 +81,161 @@ define('gcn/gcn-links', [
 	 * @param {jQuery<HTMLElement>} $link The link to be checked.
 	 */
 	function isInternal($link) {
-		return undefined !== $link.attr('data-gentics-aloha-repository');
+		return null != $link.attr(ATTR_REPOSITORY);
 	}
+
+	function interjectLinkPlugin(plugin) {
+		originalLinkContextProviderFn = plugin.createInsertLinkContext;
+		originalLinkUpsertFn = plugin.upsertLink;
+
+		plugin.createInsertLinkContext = function(existingLink) {
+			var context = originalLinkContextProviderFn(existingLink);
+
+			if (context.controls.url.options == null) {
+				context.controls.url.options = {};
+			}
+			context.controls.url.options.showPicker = true;
+
+			var originalValidateFn = context.controls.url.validate;
+			context.controls.url.validate = function(value) {
+				// If it's an internal link, we do the validation here
+				if (value.isInternal) {
+					if (value.internalTargetId != null && value.internalTargetId > 0) {
+						return null;
+					}
+
+					return { required: true };
+				}
+
+				if (typeof originalValidateFn === 'function') {
+					return originalValidateFn(value);
+				}
+				return null;
+			};
+
+			if (existingLink && $(existingLink)) {
+				context.initialValue = extractLinkTargetFromElement(context.initialValue, existingLink);
+			}
+
+			return context;
+		};
+
+		plugin.upsertLink = function(linkElement, formData) {
+			var link = originalLinkUpsertFn(linkElement, formData, true);
+
+			if (!formData.url.isInternal) {
+				stripInternalLinkAttributesFromElement(link);
+			} else {
+				applyLinkTargetToElement(formData, link);
+			}
+
+			plugin.hrefChange(link);
+
+			return link;
+		};
+	}
+
+	function stripInternalLinkAttributesFromElement(link) {
+		link.removeAttribute(ATTR_REPOSITORY);
+		link.removeAttribute(ATTR_OBJECT_ID);
+		link.removeAttribute(ATTR_CHANNEL_ID);
+		link.removeAttribute(ATTR_FILE_URL);
+		link.removeAttribute(ATTR_URL);
+		link.removeAttribute(ATTR_TITLE);
+	}
+
+	/**
+	 * 
+	 * @param {LinkTarget} data The LinkTarget value
+	 * @param {HTMLAnchorElement} link The anchor element
+	 * @returns {ExtendedLinkTarget} An extended form of the LinkTarget with internal properties for the GCMSUI set.
+	 */
+	function extractLinkTargetFromElement(data, link) {
+		var objId = link.getAttribute(ATTR_OBJECT_ID);
+
+		// Not actually an internal link
+		if (objId == null || objId === '') {
+			return data;
+		}
+
+		var targetId = 0;
+		var targetType = '';
+		var targetLabel = link.getAttribute(ATTR_TITLE) || '';
+		var targetNodeId = null;
+
+		/** @type {array.<string>} */
+		var objData;
+		if (objId.includes('.')) {
+			objData = objId.split('.');
+		} else {
+			// Default to a page type if it has no specification
+			objData = ['10007', objId];
+		}
+
+		switch (objData[0]) {
+			case TYPE_FILE:
+				targetType = 'file';
+				break;
+
+			case TYPE_IMAGE:
+				targetType = 'image';
+				break;
+
+			default:
+			case TYPE_FILE:
+				targetType = 'page';
+				break;
+		}
+
+		targetId = parseInt(objData[1], 10);
+
+		var channelId = link.getAttribute(ATTR_CHANNEL_ID);
+		if (channelId != null && channelId !== '') {
+			targetNodeId = parseInt(channelId, 10);
+		}
+
+		data.url = Object.assign({}, data.url, {
+			anchor: link.getAttribute(ATTR_ANCHOR) || data.url.anchor,
+			isInternal: true,
+			internalTargetLabel: targetLabel,
+			internalTargetId: targetId,
+			internalTargetType: targetType,
+			internalTargetNodeId: targetNodeId,
+		});
+
+		return data;
+	}
+
+	/**
+	 * @param {ExtendedLinkTarget} data The form data from the link form
+	 * @param {HTMLAnchorElement} link The Link element to apply the data to
+	 */
+	function applyLinkTargetToElement(data, link) {
+		var objId;
+
+		switch (data.url.internalTargetType) {
+			case 'image':
+				objId = TYPE_IMAGE;
+				break;
+
+			case 'file':
+				objId = TYPE_FILE;
+				break;
+			
+			default:
+			case 'page':
+				objId = TYPE_PAGE;
+				break;
+		}
+
+		link.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
+		link.setAttribute(ATTR_TITLE, data.url.internalTargetLabel);
+		link.setAttribute(ATTR_OBJECT_ID, objId + '.' + data.url.internalTargetId);
+		link.setAttribute(ATTR_CHANNEL_ID, data.url.internalTargetNodeId);
+		link.setAttribute(ATTR_URL, data.url.href);
+		link.setAttribute(ATTR_HREF, '#' + data.url.anchor);
+		link.setAttribute(ATTR_ANCHOR, data.url.anchor);
+	};
 
 	/**
 	 * Updates the data attributes of the specified link element according to
@@ -97,62 +258,24 @@ define('gcn/gcn-links', [
 		}
 
 		if (anchorLinks) {
-			$link.attr('data-gentics-gcn-anchor', anchor);
+			$link.attr(ATTR_ANCHOR, anchor);
 		} else {
 			//For saving the page we need to leave the 'data-gentics-gcn-anchor' attribute
 			//empty and add the anchor to the href, if the anchorLinks setting is deactivated
-			$link.attr('data-gentics-gcn-anchor','');
+			$link.attr(ATTR_ANCHOR,'');
 			if (anchor) {
 				href = href + '#' + anchor;
 			}
 		}
 
 		if (!isInternal($link)) {
-			$link.attr('data-gentics-gcn-url', href);
+			$link.attr(ATTR_URL, href);
 		} else {
 			// Internal links would still work without this, because
 			// they ignore the href attribute, but the attribute can
 			// end up looking quite strange without some cleanup.
-			$link.attr('href', '#' + anchor);
+			$link.attr(ATTR_HREF, '#' + anchor);
 		}
-	}
-
-	/**
-	 * Retreives the assosciated warning icon for the given input field.
-	 * Will create one if not is found.
-	 *
-	 * @param {jQuery<HTMLElement>} $input
-	 * @param {string} title optional title (defaults to translation of error.invalid-uri)
-	 * @return {jQuery<HTMLElement>} Icon DOM Element.
-	 */
-	function getIcon($input, title) {
-		var $container = $input.parent();
-		var $icon = $container.find('>span.gcn-link-warning-icon');
-		title = title || i18n.t('error.invalid-uri');
-		if (0 === $icon.length) {
-			$icon = $('<span class="gcn-link-warning-icon"'
-				+ ' title="' + title
-				+ '">!</span>');
-			$container.append($icon);
-		}
-		$icon.attr('title', title);
-		return $icon;
-	}
-
-	/**
-	 * Handle link interaction messages.
-	 *
-	 * @param {object} msg PubSub message with the following properties:
-	 *                     {String} href - The href value of the input field
-	 *                     {HTMLElement} input - The input field element
-	 *                     {HTMLElement} element - The link in focus.
-	 */
-	function handle(msg) {
-		var $input = $(msg.input);
-		var $element = $(msg.element);
-
-		getIcon($input);
-		mark($input, $.trim(msg.href), isInternal($element));
 	}
 
 	function getMagiclinkTags(page, report) {
@@ -196,11 +319,8 @@ define('gcn/gcn-links', [
 		getMagiclinkTags(page, cleanMagiclinkTags);
 	});
 
-	PubSub.sub('aloha.link.selected', handle);
-
 	PubSub.sub('aloha.link.changed', function (msg) {
 		update($(msg.element), $.trim(msg.href));
-		handle(msg);
 	});
 	
 	PubSub.sub('aloha.link.pasted', function (msg) {
@@ -210,7 +330,7 @@ define('gcn/gcn-links', [
 	});
 
 	return {
-		isInternal : isInternal,
-		getIcon	   : getIcon
+		isInternal: isInternal,
+		interjectLinkPlugin: interjectLinkPlugin,
 	};
 });

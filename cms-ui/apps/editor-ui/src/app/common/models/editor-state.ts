@@ -1,4 +1,5 @@
-import { EditMode, FolderItemType, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderItemType, PageVersion } from '@gentics/cms-models';
 
 export type EditorTab = 'preview' | 'properties';
 

@@ -4,6 +4,7 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_CHANGE_PERM;
 import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_DELETE;
 import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_UPDATE;
 import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -49,6 +50,7 @@ import com.gentics.contentnode.factory.RefreshPermHandler;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -113,6 +115,32 @@ public class ContentRepositoryFactory extends AbstractFactory {
 	 */
 	public ContentRepositoryFactory() {
 		super();
+	}
+
+	@Override
+	public void initialize() throws NodeException {
+		super.initialize();
+
+		// get all existing CRs, which have a _property set
+		List<ContentRepository> crs = Trx.supply(t -> t.getObjects(ContentRepository.class, DBUtils.select(
+				"SELECT id FROM contentrepository WHERE username_property != '' OR url_property != '' OR basepath_property != ''",
+				DBUtils.IDLIST)));
+
+		// resolve the properties, because their value might have changed
+		for (ContentRepository cr : crs) {
+			try {
+				Trx.consume(update -> {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					update = t.getObject(update, true);
+					update.resolveBasepathProperty();
+					update.resolveUrlProperty();
+					update.resolveUsernameProperty();
+					update.save();
+				}, cr);
+			} catch (NodeException e) {
+				logger.error("Error while resolving properties set for cr " + I18NHelper.getName(cr));
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -217,6 +245,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected String basepath;
 
+		@DataField("basepath_property")
+		@Updateable
+		protected String basepathProperty;
+
 		@DataField("crtype")
 		@Updateable
 		protected Type crType = Type.cr;
@@ -229,13 +261,25 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected String username;
 
+		@DataField("username_property")
+		@Updateable
+		protected String usernameProperty;
+
 		@DataField("password")
 		@Updateable
 		protected String password;
 
+		@DataField("password_is_property")
+		@Updateable
+		protected boolean passwordProperty;
+
 		@DataField("url")
 		@Updateable
 		protected String url;
+
+		@DataField("url_property")
+		@Updateable
+		protected String urlProperty;
 
 		@DataField("elasticsearch")
 		@Updateable
@@ -244,6 +288,26 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@DataField("project_per_node")
 		@Updateable
 		protected boolean projectPerNode;
+
+		@DataField("http2")
+		@Updateable
+		protected boolean http2;
+
+		@DataField("nofoldersindex")
+		@Updateable
+		protected boolean noFoldersIndex;
+
+		@DataField("nofilesindex")
+		@Updateable
+		protected boolean noFilesIndex;
+
+		@DataField("nopagesindex")
+		@Updateable
+		protected boolean noPagesIndex;
+
+		@DataField("noformsindex")
+		@Updateable
+		protected boolean noFormsIndex;
 
 		@DataField("version")
 		@Updateable
@@ -357,6 +421,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getBasepathProperty() {
+			return basepathProperty;
+		}
+
+		@Override
 		public Type getCrType() {
 			return crType;
 		}
@@ -372,13 +441,28 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getUsernameProperty() {
+			return usernameProperty;
+		}
+
+		@Override
 		public String getPassword() {
 			return password;
 		}
 
 		@Override
+		public boolean isPasswordProperty() {
+			return passwordProperty;
+		}
+
+		@Override
 		public String getUrl() {
 			return url;
+		}
+
+		@Override
+		public String getUrlProperty() {
+			return urlProperty;
 		}
 
 		@Override
@@ -394,6 +478,31 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public String getVersion() {
 			return version;
+		}
+
+		@Override
+		public boolean isHttp2() {
+			return http2;
+		}
+
+		@Override
+		public boolean isNoFoldersIndex() {
+			return noFoldersIndex;
+		}
+
+		@Override
+		public boolean isNoFilesIndex() {
+			return noFilesIndex;
+		}
+
+		@Override
+		public boolean isNoPagesIndex() {
+			return noPagesIndex;
+		}
+
+		@Override
+		public boolean isNoFormsIndex() {
+			return noFormsIndex;
 		}
 
 		@Override
@@ -604,7 +713,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			}
 
 			Map<String, String> datasourceProperties = new HashMap<String, String>();
-			datasourceProperties.put("attribute.path", basepath);
+			datasourceProperties.put("attribute.path", getEffectiveBasepath());
 			datasourceProperties.put("sanitycheck", "false");
 			datasourceProperties.put("autorepair", "false");
 			datasourceProperties.put("sanitycheck2", "false");
@@ -811,10 +920,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 						+ dbType + "} in configuration.");
 			}
 
-			handleProperties.put("url", url);
+			handleProperties.put("url", getEffectiveUrl());
 			handleProperties.put("driverClass", driverClass);
-			handleProperties.put("username", username);
-			handleProperties.put("passwd", password);
+			handleProperties.put("username", getEffectiveUsername());
+			handleProperties.put("passwd", getEffectivePassword());
 			handleProperties.put("type", "jdbc");
 			handleProperties.put(SQLHandle.PARAM_NAME, name);
 			handleProperties.put(SQLHandle.PARAM_FETCHSIZE, config.getDefaultPreferences().getProperty("contentrepository_fetchsize"));
@@ -967,9 +1076,31 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void setBasepath(String basepath) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.basepath, basepath)) {
+			if (!StringUtils.isEqual(this.basepath, basepath) || !StringUtils.isEmpty(this.basepathProperty)) {
 				this.basepath = basepath;
+				this.basepathProperty = "";
 				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setBasepathProperty(String basepathProperty) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.basepathProperty, basepathProperty)) {
+				this.basepathProperty = basepathProperty;
+				this.modified = true;
+				resolveBasepathProperty();
+			}
+		}
+
+		@Override
+		public void resolveBasepathProperty() throws ReadOnlyException {
+			// if basepathProperty is not empty, resolve and set basepath also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.basepathProperty)) {
+				String resolvedBasepath = substituteSingleProperty(this.basepathProperty, ContentRepository.CR_ATTRIBUTEPATH_FILTER);
+				if (!StringUtils.isEqual(this.basepath, resolvedBasepath)) {
+					this.basepath = resolvedBasepath;
+					this.modified = true;
+				}
 			}
 		}
 
@@ -992,9 +1123,31 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void setUsername(String username) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.username, username)) {
+			if (!StringUtils.isEqual(this.username, username) || !StringUtils.isEmpty(this.usernameProperty)) {
 				this.username = username;
+				this.usernameProperty = "";
 				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setUsernameProperty(String usernameProperty) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.usernameProperty, usernameProperty)) {
+				this.usernameProperty = usernameProperty;
+				this.modified = true;
+				resolveUsernameProperty();
+			}
+		}
+
+		@Override
+		public void resolveUsernameProperty() throws ReadOnlyException {
+			// if usernameProperty is not empty, resolve and set username also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.usernameProperty)) {
+				String resolvedUsername = substituteSingleProperty(this.usernameProperty, ContentRepository.CR_USERNAME_FILTER);
+				if (!StringUtils.isEqual(this.username, resolvedUsername)) {
+					this.username = resolvedUsername;
+					this.modified = true;
+				}
 			}
 		}
 
@@ -1007,10 +1160,40 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void setUrl(String url) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.url, url)) {
-				this.url = url;
+		public void setPasswordProperty(boolean passwordProperty) throws ReadOnlyException {
+			if (this.passwordProperty != passwordProperty) {
+				this.passwordProperty = passwordProperty;
 				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setUrl(String url) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.url, url) || !StringUtils.isEmpty(this.urlProperty)) {
+				this.url = url;
+				this.urlProperty = "";
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setUrlProperty(String urlProperty) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.urlProperty, urlProperty)) {
+				this.urlProperty = urlProperty;
+				this.modified = true;
+				resolveUrlProperty();
+			}
+		}
+
+		@Override
+		public void resolveUrlProperty() throws ReadOnlyException {
+			// if urlProperty is not empty, resolve and set url also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.urlProperty)) {
+				String resolvedUrl = substituteSingleProperty(this.urlProperty, ContentRepository.CR_URL_FILTER);
+				if (!StringUtils.isEqual(this.url, resolvedUrl)) {
+					this.url = resolvedUrl;
+					this.modified = true;
+				}
 			}
 		}
 
@@ -1018,6 +1201,46 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setElasticsearch(String elasticsearch) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.elasticsearch, elasticsearch)) {
 				this.elasticsearch = elasticsearch;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setHttp2(boolean http2) throws ReadOnlyException {
+			if (this.http2 != http2) {
+				this.http2 = http2;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoFoldersIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFoldersIndex != noIndex) {
+				this.noFoldersIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoFilesIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFilesIndex != noIndex) {
+				this.noFilesIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoPagesIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noPagesIndex != noIndex) {
+				this.noPagesIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoFormsIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFormsIndex != noIndex) {
+				this.noFormsIndex = noIndex;
 				this.modified = true;
 			}
 		}
@@ -1054,10 +1277,13 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			setName(UniquifyHelper.makeUnique(name, ContentRepository.MAX_NAME_LENGTH, "SELECT name FROM contentrepository WHERE id != ? AND name = ?",
 					SeparatorType.blank, ObjectTransformer.getInt(getId(), -1)));
 			// normalize data that must not be null
-			setBasepath(ObjectTransformer.getString(getBasepath(), ""));
-			setUsername(ObjectTransformer.getString(username, ""));
+			basepath = ObjectTransformer.getString(basepath, "");
+			setBasepathProperty(ObjectTransformer.getString(basepathProperty, ""));
+			username = ObjectTransformer.getString(username, "");
+			usernameProperty = ObjectTransformer.getString(usernameProperty, "");
 			setPassword(ObjectTransformer.getString(password, ""));
-			setUrl(ObjectTransformer.getString(url, ""));
+			url = ObjectTransformer.getString(url, "");
+			urlProperty = ObjectTransformer.getString(urlProperty, "");
 			setPermissionProperty(ObjectTransformer.getString(permissionProperty, ""));
 			setDefaultPermission(ObjectTransformer.getString(defaultPermission, ""));
 			setDbType(ObjectTransformer.getString(dbType, ""));
@@ -1199,7 +1425,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat,
-				boolean segmentfield, boolean displayfield, boolean urlfield) throws NodeException {
+				boolean segmentfield, boolean displayfield, boolean urlfield, boolean noIndex) throws NodeException {
 			if (!type.validFor(crType)) {
 				throw new NodeException(String.format("Attribute type %s is not valid for ContentRepository %s of type %s", type, name, crType));
 			}
@@ -1215,6 +1441,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			entry.setSegmentfield(segmentfield);
 			entry.setDisplayfield(displayfield);
 			entry.setUrlfield(urlfield);
+			entry.setNoIndex(noIndex);
 			getEntries().add(entry);
 		}
 	}
@@ -1284,6 +1511,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@DataField("segmentfield")
 		@Updateable
 		protected boolean segmentfield;
+
+		@DataField("no_index")
+		@Updateable
+		protected boolean noIndex;
 
 		@DataField("displayfield")
 		@Updateable
@@ -1431,6 +1662,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public boolean isUrlfield() {
 			return urlfield;
 		}
+
+		@Override
+		public boolean isNoIndex() {
+			return noIndex;
+		};
 
 		@Override
 		public String getElasticsearch() {
@@ -1604,6 +1840,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
+			if (this.noIndex != noIndex) {
+				this.noIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public void setSegmentfield(boolean segmentfield) throws ReadOnlyException, NodeException {
 			if (this.segmentfield != segmentfield) {
 				this.segmentfield = segmentfield;
@@ -1693,6 +1937,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			setDisplayfield(oEntry.isDisplayfield());
 			setSegmentfield(oEntry.isSegmentfield());
 			setUrlfield(oEntry.isUrlfield());
+			setNoIndex(oEntry.isNoIndex());
 			setElasticsearch(oEntry.getElasticsearch());
 		}
 	}
@@ -1979,7 +2224,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "elasticsearch", "micronode_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;
@@ -2123,6 +2368,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public boolean isUrlfield() {
 			return ObjectTransformer.getBoolean(model.getUrlfield(), false);
+		}
+
+		@Override
+		public boolean isNoIndex() {
+			return ObjectTransformer.getBoolean(model.getNoIndex(), false);
 		}
 
 		@Override
@@ -2339,6 +2589,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setNoIndex(boolean noIndex) throws ReadOnlyException ,NodeException {
+			if (isNoIndex() != noIndex) {
+				model.setNoIndex(noIndex);
+				this.modified = true;
+			}
+		};
+
+		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 			boolean isModified = this.modified;
@@ -2358,6 +2616,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 				model.setOptimized(isOptimized());
 				model.setSegmentfield(isSegmentfield());
 				model.setUrlfield(isUrlfield());
+				model.setNoIndex(isNoIndex());
 				setMapname(ObjectTransformer.getString(getMapname(), ""));
 				setTagname(ObjectTransformer.getString(getTagname(), ""));
 				setCategory(ObjectTransformer.getString(getCategory(), ""));

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, ViewChild } from '@angular/core';
+import { Component, EventEmitter, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
@@ -6,7 +6,7 @@ import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { FilePickerComponent } from './file-picker.component';
 
-describe('File Picker:', () => {
+describe('FilePickerComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         providers: [
@@ -14,6 +14,7 @@ describe('File Picker:', () => {
         ],
         declarations: [FilePickerComponent, FileDropAreaDirective, TestComponent, ButtonComponent],
         teardown: { destroyAfterEach: false },
+        schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('is created ok',
@@ -29,7 +30,7 @@ describe('File Picker:', () => {
                 <gtx-file-picker [disabled]="true"></gtx-file-picker>`,
             fixture => {
                 fixture.detectChanges();
-                let nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.disabled).toBe(true);
             },
             ),
@@ -40,7 +41,7 @@ describe('File Picker:', () => {
                 <gtx-file-picker [multiple]="false"></gtx-file-picker>`,
             fixture => {
                 fixture.detectChanges();
-                let nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.multiple).toBe(false);
             },
             ),
@@ -51,7 +52,7 @@ describe('File Picker:', () => {
                 <gtx-file-picker accept="video/*"></gtx-file-picker>`,
             fixture => {
                 fixture.detectChanges();
-                let nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.accept).toBe('video/*');
             },
             ),
@@ -62,7 +63,7 @@ describe('File Picker:', () => {
                 <gtx-file-picker size="large" icon></gtx-file-picker>`,
             fixture => {
                 fixture.detectChanges();
-                let button: ButtonComponent = fixture.debugElement.query(By.directive(ButtonComponent)).componentInstance;
+                const button: ButtonComponent = fixture.debugElement.query(By.directive(ButtonComponent)).componentInstance;
                 expect(button.size).toBe('large');
                 expect(button.icon).toBe(true);
             },

@@ -1,9 +1,10 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    ComponentFactoryResolver, EventEmitter,
+    EventEmitter,
     Injectable,
     Input,
+    NO_ERRORS_SCHEMA,
     Output,
     Type,
     ViewChild,
@@ -11,7 +12,6 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { timer as observableTimer } from 'rxjs';
 import { take, tap } from 'rxjs/operators';
 import { IModalInstance, IModalOptions } from '../../common/modal';
@@ -19,6 +19,7 @@ import { IconDirective } from '../../directives/icon/icon.directive';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
@@ -31,10 +32,9 @@ import { DateTimePickerComponent } from './date-time-picker.component';
 const TEST_TIMESTAMP = 1457971763;
 
 let modalService: SpyModalService;
-let overlayHostService: OverlayHostService;
 let formatProviderToUse: DateTimePickerFormatProvider | null = null;
 
-describe('DateTimePicker:', () => {
+describe('DateTimePickerComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -55,15 +55,11 @@ describe('DateTimePicker:', () => {
                 { provide: DateTimePickerFormatProvider, useFactory: (): any => formatProviderToUse },
                 { provide: ModalService, useClass: SpyModalService },
                 { provide: UserAgentProvider, useClass: MockUserAgentRef },
-                { provide: OverlayHostService, useFactory: () => overlayHostService = new OverlayHostService() },
+                OverlayHostService,
+                SizeTrackerService,
             ],
+            schemas: [NO_ERRORS_SCHEMA],
             teardown: { destroyAfterEach: false },
-        });
-
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                declarations: [DynamicModal, DateTimePickerModal],
-            },
         });
     });
 
@@ -81,6 +77,7 @@ describe('DateTimePicker:', () => {
     it('shows its modal when clicked',
         componentTest(() => TestComponent, fixture => {
             openDatepickerModal(fixture);
+            modalService = TestBed.inject(ModalService) as any;
             expect(modalService.lastModal).toBeDefined();
         }),
     );
@@ -116,6 +113,7 @@ describe('DateTimePicker:', () => {
         it('does not send a timestamp if none is set',
             componentTest(() => TestComponent, fixture => {
                 openDatepickerModal(fixture);
+                modalService = TestBed.inject(ModalService) as any;
                 expect(modalService.lastLocals).toBeDefined();
                 const timestamp: number = modalService.lastLocals['timestamp'];
                 expect(timestamp).toEqual(0);
@@ -372,6 +370,7 @@ describe('DateTimePicker:', () => {
                 fixture.detectChanges();
                 tick();
                 const modal = openDatepickerModal(fixture);
+                modalService = TestBed.inject(ModalService) as any;
                 expect(modalService.lastLocals['timestamp']).toBe(TEST_TIMESTAMP, 'local not set');
 
                 const mockControls: MockDateTimePickerControls = fixture.debugElement
@@ -510,6 +509,7 @@ describe('DateTimePicker:', () => {
                 const firstValue = nativeInput.value;
 
                 let pretendDatepickerModalWasClosed!: (timestamp: number) => void;
+                modalService = TestBed.inject(ModalService) as any;
                 modalService.fromComponent = () => Promise.resolve<any>({
                     open: () => new Promise<number>(resolve => {
                         pretendDatepickerModalWasClosed = resolve;
@@ -538,8 +538,9 @@ function openDatepickerModal(fixture: ComponentFixture<TestComponent>): { instan
     tick();
     fixture.detectChanges();
 
+    modalService = TestBed.inject(ModalService) as any;
     const instance = modalService.lastModal.instance as DateTimePickerModal;
-    const query = (selector: string): HTMLElement => modalService.lastModal.element.querySelector(selector) ;
+    const query = (selector: string): HTMLElement => modalService.lastModal.element.querySelector(selector);
     return { instance, query };
 }
 
@@ -598,14 +599,6 @@ class SpyModalService extends ModalService {
     lastOptions: IModalOptions;
     lastLocals: { [key: string]: any };
     lastModal: IModalInstance<any>;
-
-    constructor(
-        componentFactoryResolver: ComponentFactoryResolver,
-        overlayHostService: OverlayHostService,
-    ) {
-        super(componentFactoryResolver, overlayHostService);
-        modalService = this; // eslint-disable-line @typescript-eslint/no-this-alias
-    }
 
     fromComponent(
         component: Type<any>,

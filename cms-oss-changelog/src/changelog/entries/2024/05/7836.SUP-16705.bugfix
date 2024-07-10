@@ -1,0 +1,2 @@
+Reloading the configuration (over the Admin UI, REST API or UpdateImplementation command-line tool) will now only
+interrupt possibly running background threads, if absolutely necessary.

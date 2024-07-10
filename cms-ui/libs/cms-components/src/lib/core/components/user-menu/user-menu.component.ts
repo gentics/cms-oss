@@ -5,8 +5,8 @@ import {
     Input,
     Output,
 } from '@angular/core';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
-import { UILanguage } from '../../providers/i18n/i18n.service';
 
 /**
  * The right-hand side menu for user information and settings.
@@ -41,11 +41,6 @@ import { UILanguage } from '../../providers/i18n/i18n.service';
  *           </gtx-tab>
  *       </gtx-tabs>
  *
- *       <gtx-link-to-manual
- *           *ngIf="!(featureHideManual$ | async)"
- *           bottom
- *       ></gtx-link-to-manual>
- *
  *       <gtx-app-version-label
  *           bottom
  *           [versionData]="cmpVersion$ | async"
@@ -68,11 +63,11 @@ export class GtxUserMenuComponent {
     /** All languages available to choose from in language switcher. */
     @Input() supportedLanguages: I18nLanguage[] = [];
     /** The language currently selected */
-    @Input() currentlanguage: UILanguage;
+    @Input() currentlanguage: GcmsUiLanguage;
     /** On event user clicks logout button. */
     @Output() logout = new EventEmitter<void>();
     /** On event user clicks setLanguage button. */
-    @Output() setLanguage = new EventEmitter<UILanguage>();
+    @Output() setLanguage = new EventEmitter<GcmsUiLanguage>();
     /** On event user clicks user-menu button in upper right screen corner. */
     @Output() toggle = new EventEmitter<boolean>();
     /** On event user clicks showPasswordModal button. */
@@ -82,7 +77,7 @@ export class GtxUserMenuComponent {
         return this.user ? this.user.firstName + ' ' + this.user.lastName : '';
     }
 
-    setLanguageClicked(code: UILanguage): void {
+    setLanguageClicked(code: GcmsUiLanguage): void {
         // Do nothing if the same language has been clicked again
         if (code === this.currentlanguage) {
             return;

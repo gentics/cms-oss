@@ -80,7 +80,6 @@ public class NavigationPartTypeRenderingTest {
 			return create(Construct.class, navconst -> {
 				navconst.setName("navconst", 1);
 				navconst.setAutoEnable(true);
-				navconst.setIconName("karl");
 				navconst.setKeyword("navconst");
 
 				navconst.getParts().add(create(Part.class, navpart -> {
@@ -127,7 +126,6 @@ public class NavigationPartTypeRenderingTest {
 			return create(Construct.class, booleanConstruct -> {
 				booleanConstruct.setName("check", 1);
 				booleanConstruct.setAutoEnable(true);
-				booleanConstruct.setIconName("bla");
 				booleanConstruct.setKeyword("check");
 
 				booleanConstruct.getParts().add(create(Part.class, checkpart -> {

@@ -1,5 +1,5 @@
+import { Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { Subject } from 'rxjs/Subject';
 import { FocalPointService } from './focal-point.service';
 
 describe('FocalPointService', () => {

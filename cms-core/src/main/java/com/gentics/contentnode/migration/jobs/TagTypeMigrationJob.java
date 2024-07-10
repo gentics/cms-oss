@@ -10,21 +10,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 
-import org.quartz.JobDataMap;
-
 import com.gentics.api.contentnode.migration.IMigrationPostprocessor;
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor;
-import com.gentics.api.contentnode.migration.MigrationException;
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor.Result;
+import com.gentics.api.contentnode.migration.MigrationException;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.NodeFactory;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.migration.MigrationDBLogger;
 import com.gentics.contentnode.migration.MigrationHelper;
 import com.gentics.contentnode.migration.MigrationPartMapper;
@@ -36,12 +37,12 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Tag;
@@ -119,30 +120,96 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 */
 	protected String reinvokeObjectType;
 
-	@SuppressWarnings("unchecked")
-	@Override
-	protected boolean getJobParameters(JobDataMap map) {
-		reinvokeObjectId = (Integer) map.get(PARAM_SELECTED_ITEM_ID);
-		reinvokeObjectType = (String) map.get(PARAM_SELECTED_ITEM_TYPE);
-		request = (TagTypeMigrationRequest) map.get(PARAM_REQUEST);
-		jobId = (Integer) map.get(PARAM_JOBID);
-		type = (String) map.get(PARAM_TYPE);
-		objectIds = (List<Integer>) map.get(PARAM_OBJECTIDS);
-		handlePagesByTemplate = ObjectTransformer.getBoolean(map.get(PARAM_HANDLE_PAGES_BY_TEMPLATE), false);
-		handleAllNodes = ObjectTransformer.getBoolean(map.get(PARAM_HANDLE_ALL_NODES), false);
-		preventTriggerEvent = ObjectTransformer.getBoolean(map.get(PARAM_PREVENT_TRIGGER_EVENT), false);
-
-		mappings = request.getMappings();
-
-		// Check that all parameters were set
-		return (!mappings.isEmpty() && (jobId != 0) && (type != null) && ("global".equals(type) || !ObjectTransformer.isEmpty(objectIds)));
+	/**
+	 * Create an instance
+	 * @throws NodeException
+	 */
+	public TagTypeMigrationJob() throws NodeException {
+		super();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.gentics.contentnode.job.AbstractUserActionJob#getJobDescription()
+	/**
+	 * Set the reinvokeObjectId
+	 * @param reinvokeObjectId ID
+	 * @return fluent API
 	 */
+	public TagTypeMigrationJob setReinvokeObjectId(Integer reinvokeObjectId) {
+		this.reinvokeObjectId = reinvokeObjectId;
+		return this;
+	}
+
+	/**
+	 * Set the reinvokeObjectType
+	 * @param reinvokeObjectType ID
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setReinvokeObjectType(String reinvokeObjectType) {
+		this.reinvokeObjectType = reinvokeObjectType;
+		return this;
+	}
+
+	/**
+	 * Set the request
+	 * @param request request
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setRequest(TagTypeMigrationRequest request) {
+		this.request = request;
+		mappings = request.getMappings();
+		return this;
+	}
+
+	/**
+	 * Set the migration type
+	 * @param type type
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setType(String type) {
+		this.type = type;
+		return this;
+	}
+
+	/**
+	 * Set the object IDs
+	 * @param objectIds IDs
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setObjectIds(List<Integer> objectIds) {
+		this.objectIds = objectIds;
+		return this;
+	}
+
+	/**
+	 * Set flag to handle pages by template
+	 * @param handlePagesByTemplate flag
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setHandlePagesByTemplate(Boolean handlePagesByTemplate) {
+		this.handlePagesByTemplate = Optional.ofNullable(handlePagesByTemplate).orElse(false);
+		return this;
+	}
+
+	/**
+	 * Set flag to handle all nodes
+	 * @param handleAllNodes flag
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setHandleAllNodes(Boolean handleAllNodes) {
+		this.handleAllNodes = Optional.ofNullable(handleAllNodes).orElse(false);
+		return this;
+	}
+
+	/**
+	 * Set flag to prevent triggering events
+	 * @param preventTriggerEvent flag
+	 * @return fluent API
+	 */
+	public TagTypeMigrationJob setPreventTriggerEvent(Boolean preventTriggerEvent) {
+		this.preventTriggerEvent = Optional.ofNullable(preventTriggerEvent).orElse(false);
+		return this;
+	}
+
+	@Override
 	public String getJobDescription() {
 		return new CNI18nString("tagtypemigrationjob").toString();
 	}
@@ -154,6 +221,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private void handlePageMigration(Set<Integer> migrationObjectIds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		// Apply migration to all affected pages
 		int nPageBatchSizeCounter = 1;
 		for (Integer pageId : migrationObjectIds) {
@@ -190,6 +258,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private void handleTemplateMigration(Set<Integer> migrationObjectIds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		// Apply migration to all affected templates
 		int nTemplateBatchSizeCounter = 0;
 		for (Integer templateId : migrationObjectIds) {
@@ -226,6 +295,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private void handleObjDefMigration(Set<Integer> migrationObjectIds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		// Apply migration to all affected object tag definitions
 		int nObjectBatchSizeCounter = 0;
 		for (Integer objectId : migrationObjectIds) {
@@ -252,6 +322,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Map<Class<? extends NodeObject>, Set<Integer>> collectGlobalMigrationObjects() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Set<Integer> templateIds = new HashSet<>();
 		Set<Integer> pageIds = new HashSet<>();
 		Set<Integer> objTagDefIds = new HashSet<>();
@@ -353,12 +424,9 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 		return map;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.gentics.contentnode.job.AbstractUserActionJob#processAction()
-	 */
-	protected void processAction() {
+	@Override
+	protected void processAction() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		init();
 
@@ -457,7 +525,8 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	/**
 	 * Set some additional properties
 	 */
-	private void init() {
+	private void init() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		ttmCommitBatchSize = ObjectTransformer.getInt(t.getNodeConfig().getDefaultPreferences().getProperty(MIGRATION_COMMIT_BATCH_SIZE_KEY), -1);
 
 		// prevent immediate unlocking of objects
@@ -467,7 +536,8 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	/**
 	 * Sets various migration options
 	 */
-	private void handleMigrationOptions() {
+	private void handleMigrationOptions() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		// We disable InstantPublishing to speed up the migration process
 		t.setInstantPublishingEnabled(false);
 
@@ -487,6 +557,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Page invokePostProcessors(List<MigrationPostProcessor> sortedProcessors, Page page) throws ReadOnlyException, NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Page newPage = page;
 		Collections.sort(sortedProcessors);
 		for (MigrationPostProcessor configuredPostProcessor : sortedProcessors) {
@@ -545,6 +616,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean migratePage(Integer pageId) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		dbLogger.createMigrationJobItemEntry(jobId, pageId, Page.TYPE_PAGE, STATUS_STARTED);
 		logger.debug("Starting migration of page {" + pageId + "}");
 		Page page = null;
@@ -629,6 +701,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean migrateTemplate(Integer templateId) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		dbLogger.createMigrationJobItemEntry(jobId, templateId, Template.TYPE_TEMPLATE, STATUS_STARTED);
 		logger.debug("Starting migration of template {" + templateId + "}");
 
@@ -707,6 +780,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Template invokePostProcessors(List<MigrationPostProcessor> sortedProcessors, Template template) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Template newTemplate = template;
 		for (MigrationPostProcessor configuredPostProcessor : sortedProcessors) {
 
@@ -746,6 +820,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Folder invokePostProcessors(List<MigrationPostProcessor> sortedProcessors, Folder folder) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		Folder newFolder = folder;
 		for (MigrationPostProcessor configuredPostProcessor : sortedProcessors) {
 			try {
@@ -776,6 +851,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private File invokePostProcessors(List<MigrationPostProcessor> sortedProcessors, File file) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		File newFile = file;
 		for (MigrationPostProcessor configuredPostProcessor : sortedProcessors) {
 			try {
@@ -806,6 +882,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private ImageFile invokePostProcessors(List<MigrationPostProcessor> sortedProcessors, ImageFile image) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		ImageFile newImage = image;
 		for (MigrationPostProcessor configuredPostProcessor : sortedProcessors) {
 			try {
@@ -837,6 +914,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean migrateObjectTagDefintion(Integer objectTagDefId) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		ObjectTagDefinition objectTagDefinition = null;
 		logger.debug("Starting migration of object tag definition {" + objectTagDefId + "}");
@@ -1019,6 +1097,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Result applyMappings(Collection<? extends Tag> tags) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// Check all tags in the collection if they are included in the mapping
 		for (Tag tag : tags) {
@@ -1068,6 +1147,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean validateMapping(Set<Integer> migrationObjectIds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		logger.debug("Validating provided mappings...");
 
@@ -1141,6 +1221,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean validateOverviewMapping(Value value, MigrationPartMapping partMapping) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		int valuePartId = ObjectTransformer.getInt(value.getPartId(), 0);
 
@@ -1184,6 +1265,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private boolean validateUrlMapping(Value value, MigrationPartMapping partMapping) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		int valuePartId = ObjectTransformer.getInt(value.getPartId(), 0);
 
@@ -1260,6 +1342,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Set<Integer> getMigrationObjectIds() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		if ("global".equalsIgnoreCase(type)) {
 			return Collections.emptySet();
 		}

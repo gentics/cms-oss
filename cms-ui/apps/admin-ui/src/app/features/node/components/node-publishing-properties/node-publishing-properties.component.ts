@@ -1,68 +1,48 @@
-import { FormControlOnChangeFn, ObservableStopper } from '@admin-ui/common';
-import { DisableableControlValueAccessor } from '@admin-ui/shared/directives/action-allowed/action-allowed.directive';
-import { SelectState } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, OnDestroy, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { ContentRepository, GtxNodePageLanguageCode, Index, IndexById, Normalized } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual as _isEqual } from 'lodash';
-import { Observable } from 'rxjs';
-import { distinctUntilChanged, map, startWith, takeUntil } from 'rxjs/operators';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, Raw } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 /**
- * Defines the data editable by the `NodePropertiesComponent`.
- *
- * To convey the validity state of the user's input, the onChange callback will
- * be called with `null` if the form data is currently invalid.
+ * Defines the data editable by the `NodePublishingPropertiesComponent`.
  */
-export interface NodePublishingPropertiesFormData {
-    disableUpdates: boolean;
-    fileSystem: boolean;
-    fileSystemPages: boolean;
-    fileSystemPagesDir: string;
-    fileSystemFiles: boolean;
-    fileSystemBinaryDir: string;
-    contentRepository: boolean;
-    contentRepositoryPages: boolean;
-    contentRepositoryFiles: boolean;
-    contentRepositoryFolders: boolean;
-    contentRepositoryId: number;
-    urlRenderWayPages: number;
-    urlRenderWayFiles: number;
-    omitPageExtension: boolean;
-    pageLanguageCode: GtxNodePageLanguageCode;
-}
+export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'publishFs' | 'publishFsPages' | 'publishDir' |
+'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
+'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
 
-/* eslint-disable @typescript-eslint/indent */
-type ContentRepositoryControlNames = keyof Pick<NodePublishingPropertiesFormData,
-    'contentRepositoryFiles'
-    | 'contentRepositoryFolders'
-    | 'contentRepositoryPages'
->;
+const FILE_SYSTEM_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishFsPages',
+    'publishFsFiles',
+];
 
-type FileSystemControlNames = keyof Pick<NodePublishingPropertiesFormData,
-    'fileSystemBinaryDir'
-    | 'fileSystemFiles'
-    | 'fileSystemPages'
-    | 'fileSystemPagesDir'
->;
+const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishContentMap',
+    'publishContentMapFiles',
+    'publishContentMapFolders',
+    'publishContentMapPages',
+];
 
-type SeoControlNames = keyof Pick<NodePublishingPropertiesFormData,
-    'omitPageExtension'
-    | 'pageLanguageCode'
->;
-/* eslint-enable @typescript-eslint/indent */
+const PUBLISH_MAP_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishContentMapFiles',
+    'publishContentMapFolders',
+    'publishContentMapPages',
+];
 
 @Component({
     selector: 'gtx-node-publishing-properties',
     templateUrl: './node-publishing-properties.component.html',
     styleUrls: ['./node-publishing-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(NodePublishingPropertiesComponent)],
+    providers: [
+        generateFormProvider(NodePublishingPropertiesComponent),
+        generateValidatorProvider(NodePublishingPropertiesComponent),
+    ],
 })
-export class NodePublishingPropertiesComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, DisableableControlValueAccessor {
+export class NodePublishingPropertiesComponent extends BasePropertiesComponent<NodePublishingPropertiesFormData> implements OnInit {
 
-    public readonly GtxNodePageLanguageCode = GtxNodePageLanguageCode;
+    public readonly NodePageLanguageCode = NodePageLanguageCode;
 
     public readonly URL_MODES = {
         0: 'node.url_mode_automatic',
@@ -72,224 +52,136 @@ export class NodePublishingPropertiesComponent implements OnInit, OnChanges, OnD
         4: 'node.url_mode_wo_domain',
     };
 
-    @Input()
-    public disabled = false;
+    public contentRepositories: ContentRepository<Raw>[] = [];
 
-    @SelectState(state => state.entity.contentRepository)
-    public contentRepositories$: Observable<IndexById<ContentRepository<Normalized>>>;
+    public publishDirsLinked: boolean;
 
-    public fgPublishing: UntypedFormGroup;
-
-    public linkInputs: boolean;
-
-    get contentRepositoryDisabled(): boolean {
-        return !this.fgPublishing.get('contentRepository').value;
-    }
-
-    get fileSystemDisabled(): boolean {
-        return !this.fgPublishing.get('fileSystem').value;
-    }
-
-    get fileSystemPagesDisabled(): boolean {
-        return !this.fgPublishing.get('fileSystemPages').value;
-    }
-
-    get fileSystemFilesDisabled(): boolean {
-        return !this.fgPublishing.get('fileSystemFiles').value;
-    }
-
-    private fileSystemControls: Index<FileSystemControlNames, UntypedFormControl>;
-    private contentrepositoriesystemControls: Index<ContentRepositoryControlNames, UntypedFormControl>;
-    private seoSystemControls: Index<SeoControlNames, UntypedFormControl>;
-
-    private stopper = new ObservableStopper();
+    private previousPublishCr = false;
 
     constructor(
-        private changeDetector: ChangeDetectorRef,
-    ) {}
-
-    ngOnInit(): void {
-        this.initForm();
+        changeDetector: ChangeDetectorRef,
+        private client: GCMSRestClientService,
+    ) {
+        super(changeDetector);
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.disabled) {
-            this.setDisabledState(this.disabled);
-        }
-    }
+    public override ngOnInit(): void {
+        super.ngOnInit();
 
-    ngOnDestroy(): void {
-        this.stopper.stop();
-    }
-
-    fileDirChange(cr: ContentRepository): void {
-        if (cr.crType === 'mesh' && !cr.projectPerNode) {
-            this.fgPublishing.patchValue({
-                fileSystemPagesDir: null,
-                fileSystemBinaryDir: null,
-            }, {
-                emitEvent: false,
-            });
-
-            this.fileSystemControls.fileSystemBinaryDir.disable();
-            this.fileSystemControls.fileSystemPagesDir.disable();
-        } else {
-            this.fileSystemControls.fileSystemBinaryDir.enable();
-            this.fileSystemControls.fileSystemPagesDir.enable();
-        }
-
-        this.fgPublishing.markAsPristine();
-    }
-
-    writeValue(value: NodePublishingPropertiesFormData): void {
-        if (value) {
-            // CRs are loaded directly from the state. In the state, they are stored as BOs,
-            // where the ID has been converted from number to a string.
-            // To make it properly visible in the select, we have to convert it to a string as well.
-            if (value.contentRepositoryId != null && typeof value.contentRepositoryId !== 'string') {
-                (value as any).contentRepositoryId = value.contentRepositoryId + '';
+        this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
+            this.contentRepositories = res.items;
+            if (this.form) {
+                this.configureForm(this.form.value as any, false);
             }
-
-            this.fgPublishing.patchValue(value);
-            this.linkInputs = value.fileSystemBinaryDir === value.fileSystemPagesDir;
-        } else {
-            this.fgPublishing.reset();
-        }
-        this.onFormDataChange(this.fgPublishing.value);
-        this.fgPublishing.markAsPristine();
+            this.changeDetector.markForCheck();
+        }));
     }
 
-    registerOnChange(fn: FormControlOnChangeFn<NodePublishingPropertiesFormData>): void {
-        this.fgPublishing.valueChanges.pipe(
-            map((formData: NodePublishingPropertiesFormData) => this.fgPublishing.valid ? formData : null),
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(fn);
-    }
+    protected createForm(): FormGroup<FormProperties<NodePublishingPropertiesFormData>> {
+        this.previousPublishCr = this.value?.publishContentMap ?? false;
 
-    registerOnTouched(fn: any): void { }
+        return new FormGroup<FormProperties<NodePublishingPropertiesFormData>>({
+            disablePublish: new FormControl(this.value?.disablePublish),
 
-    setDisabledState(isDisabled: boolean): void {
-        if (isDisabled) {
-            this.fgPublishing.disable({ emitEvent: false, onlySelf: true });
-        } else {
-            this.fgPublishing.enable({ emitEvent: false, onlySelf: true });
-        }
-    }
+            publishFs: new FormControl(this.value?.publishFs),
+            publishFsPages: new FormControl(this.value?.publishFsPages),
+            publishDir: new FormControl(this.value?.publishDir),
+            publishFsFiles: new FormControl(this.value?.publishFsFiles),
+            binaryPublishDir: new FormControl(this.value?.binaryPublishDir),
 
-    contentRepositoryChange(value: boolean): void {
-        this.fgPublishing.patchValue({
-            contentRepositoryPages: value,
-            contentRepositoryFiles: value,
-            contentRepositoryFolders: value,
-        }, {
-            emitEvent: true,
+            publishContentMap: new FormControl(this.value?.publishContentMap),
+            publishContentMapPages: new FormControl(this.value?.publishContentMapPages),
+            publishContentMapFiles: new FormControl(this.value?.publishContentMapFiles),
+            publishContentMapFolders: new FormControl(this.value?.publishContentMapFolders),
+            contentRepositoryId: new FormControl(this.value?.contentRepositoryId),
+
+            urlRenderWayFiles: new FormControl(this.value?.urlRenderWayPages),
+            urlRenderWayPages: new FormControl(this.value?.urlRenderWayFiles),
+
+            omitPageExtension: new FormControl(this.value?.omitPageExtension),
+            pageLanguageCode: new FormControl(this.value?.pageLanguageCode),
         });
     }
 
-    fileSystemChange(value: boolean): void {
-        this.fgPublishing.patchValue({
-            fileSystemPages: value,
-            fileSystemFiles: value,
-        }, {
-            emitEvent: true,
-        });
-    }
+    protected configureForm(value: NodePublishingPropertiesFormData, loud?: boolean): void {
+        loud = !!loud;
+        const options = { emitEvent: loud, onlySelf: true };
 
-    fileSystemDirChange(value: string): void {
-        if (this.linkInputs) {
-            this.fgPublishing.patchValue({
-                fileSystemPagesDir: value,
-                fileSystemBinaryDir: value,
-            }, {
-                emitEvent: false,
-            });
+        setControlsEnabled(this.form, FILE_SYSTEM_CONTROLS, value?.publishFs, options);
+        setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
+        const crAllowsDirs = this.checkContentRepository();
+
+        setControlsEnabled(this.form, ['publishDir'], !!value?.publishFs && value?.publishFsPages && crAllowsDirs, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], !!value?.publishFs && value?.publishFsFiles && crAllowsDirs, options);
+
+        // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
+        this.form.updateValueAndValidity();
+        const tmpValue = this.form.value;
+        // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
+        // If so, then set these to `true`, to enable them by default.
+        if (tmpValue?.publishContentMap
+            && !this.previousPublishCr
+            && !tmpValue?.publishContentMapFiles
+            && !tmpValue?.publishContentMapFolders
+            && !tmpValue?.publishContentMapPages
+        ) {
+            this.form.patchValue({
+                publishContentMapFiles: true,
+                publishContentMapFolders: true,
+                publishContentMapPages: true,
+            }, options);
         }
+        this.previousPublishCr = tmpValue?.publishContentMap ?? false;
+
+        this.checkPublishDirectories(loud);
     }
 
-    toggleLinkInputs(): void {
-        if (!this.linkInputs) {
-            this.linkInputs = true;
-            const pageDir = this.fgPublishing.get('fileSystemPagesDir').value;
-            if (pageDir !== this.fgPublishing.get('fileSystemBinaryDir').value) {
-                this.fgPublishing.get('fileSystemBinaryDir').setValue(pageDir);
-            }
-        } else {
-            this.linkInputs = false;
-        }
+    protected assembleValue(value: NodePublishingPropertiesFormData): NodePublishingPropertiesFormData {
+        const tmp: NodePublishingPropertiesFormData = {...value};
+
+        /* Defaulting is done in the parent before sending it to the API */
+
+        // // Default the controls to false (If they are disabled, the value is `null`)
+        // [...CR_CONTROLS, ...FILE_SYSTEM_CONTROLS].forEach(field => {
+        //     (tmp as any)[field] = tmp[field] ?? false;
+        // });
+        // PUBLISH_DIR_CONTROLS.forEach(field => {
+        //     (tmp  as any)[field] = tmp[field] || '';
+        // });
+
+        return tmp;
     }
 
-    private initForm(): void {
-        this.contentrepositoriesystemControls = {
-            contentRepositoryFiles: new UntypedFormControl({ disabled: true, value: false }),
-            contentRepositoryFolders: new UntypedFormControl({ disabled: true, value: false }),
-            contentRepositoryPages: new UntypedFormControl({ disabled: true, value: false }),
-        };
+    protected checkContentRepository(): boolean {
+        let enabled = true;
 
-        this.fileSystemControls = {
-            fileSystemPages: new UntypedFormControl({ disabled: true, value: false }),
-            fileSystemPagesDir: new UntypedFormControl({ disabled: true, value: false }),
-            fileSystemFiles: new UntypedFormControl({ disabled: true, value: false }),
-            fileSystemBinaryDir: new UntypedFormControl({ disabled: true, value: false }),
-        };
-
-        this.seoSystemControls = {
-            omitPageExtension: new UntypedFormControl(true),
-            pageLanguageCode: new UntypedFormControl(GtxNodePageLanguageCode.NONE),
-        };
-
-        this.fgPublishing = new UntypedFormGroup({
-            disableUpdates: new UntypedFormControl(null),
-            fileSystem: new UntypedFormControl(null),
-            ...this.fileSystemControls,
-            contentRepository: new UntypedFormControl(null),
-            ...this.contentrepositoriesystemControls,
-            contentRepositoryId: new UntypedFormControl(null),
-            urlRenderWayPages: new UntypedFormControl(null),
-            urlRenderWayFiles: new UntypedFormControl(null),
-            ...this.seoSystemControls,
-        });
-
-        this.fgPublishing.valueChanges.pipe(
-            startWith({}),
-            distinctUntilChanged(_isEqual),
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(formData => this.onFormDataChange(formData));
-    }
-
-    private onFormDataChange(formData: NodePublishingPropertiesFormData): void {
-        if (!formData) {
-            formData = {} as any;
-        }
-
-        this.contentRepositories$.subscribe(cr => {
-            Object.values(cr).forEach(contentRepository => {
-                if (contentRepository.id === formData.contentRepositoryId) {
-                    this.fileDirChange(contentRepository);
-                }
-            });
-        });
-
-        const fsPubEnabled = !!formData.fileSystem;
-        const fsContentRepositoryEnabled = !!formData.contentRepository;
-
-        this.setControlEnabledState(this.fileSystemControls.fileSystemFiles, fsPubEnabled);
-        this.setControlEnabledState(this.fileSystemControls.fileSystemPages, fsPubEnabled);
-
-        this.setControlEnabledState(this.contentrepositoriesystemControls.contentRepositoryFiles, fsContentRepositoryEnabled);
-        this.setControlEnabledState(this.contentrepositoriesystemControls.contentRepositoryFolders, fsContentRepositoryEnabled);
-        this.setControlEnabledState(this.contentrepositoriesystemControls.contentRepositoryPages, fsContentRepositoryEnabled);
-
-        this.fgPublishing.updateValueAndValidity();
-    }
-
-    private setControlEnabledState(control: UntypedFormControl, enabled: boolean): void {
-        if (control.enabled !== enabled) {
-            if (enabled) {
-                control.enable();
-            } else {
-                control.disable();
+        if (this.form.value.contentRepositoryId > 0) {
+            const found = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+            if (found && found.crType === ContentRepositoryType.MESH && found.projectPerNode) {
+                enabled = false;
             }
         }
+
+        return enabled;
     }
 
+    protected checkPublishDirectories(loud: boolean = false): void {
+        // Nothing to do if they are not linked
+        if (!this.publishDirsLinked) {
+            return;
+        }
+
+        const dir = this.form.controls.publishDir.value;
+        const binDirCtl = this.form.controls.binaryPublishDir;
+
+        if (dir !== binDirCtl.value) {
+            binDirCtl.setValue(dir, { emitEvent: loud });
+        }
+    }
+
+    togglePublishDirLink(): void {
+        this.publishDirsLinked = !this.publishDirsLinked;
+        this.checkPublishDirectories();
+    }
 }

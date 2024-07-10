@@ -1,27 +1,19 @@
 package com.gentics.contentnode.tests.devtools;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
 
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
 import com.gentics.contentnode.rest.resource.impl.devtools.PackageResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -29,6 +21,16 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.infrastructure.TestEnvironment;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Test cases for the package resource
@@ -156,7 +158,7 @@ public class PackageResourceTest {
 			PackageListResponse packages = resource.list(new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean());
 			ContentNodeRESTUtils.assertResponseOK(packages);
 
-			assertThat(packages.getItems().stream().map(p -> p.getName()).collect(Collectors.toList())).as("Package list").containsOnlyElementsOf(packageNames);
+			assertThat(packages.getItems().stream().map(Package::getName).collect(Collectors.toList())).as("Package list").containsOnlyElementsOf(packageNames);
 
 			trx.success();
 		}
@@ -241,6 +243,52 @@ public class PackageResourceTest {
 			}
 		}
 	}
+
+
+	@Test
+	public void givenPackageShouldListDependencies() throws Exception {
+		final String PACKAGE_NAME = "manual";
+
+		try (Trx trx = new Trx()) {
+			PackageResource resource = new PackageResourceImpl();
+			resource.add(PACKAGE_NAME);
+
+			PackageResource packageResource = new PackageResourceImpl();
+			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(
+					PACKAGE_NAME, false, 0, null, null);
+
+			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(
+					ResponseCode.OK);
+			assertThat(packageConsistencyResponse.checkCompleteness()).isTrue();
+		}
+	}
+
+	@Test(expected = EntityNotFoundException.class)
+	public void givenNotExistingPackageShouldThrowException() throws Exception {
+		final String PACKAGE_NAME = "not-existing";
+
+		PackageResource packageResource = new PackageResourceImpl();
+		GenericResponse packageConsistencyResponse = packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false,  0,null, null);
+
+		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.NOTFOUND);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void givenInvalidFilterShouldThrowException() throws Exception {
+		final String PACKAGE_NAME = "manual";
+		try (Trx trx = new Trx()) {
+			PackageResource resource = new PackageResourceImpl();
+			resource.add(PACKAGE_NAME);
+		}
+
+		PackageResource packageResource = new PackageResourceImpl();
+		GenericResponse packageConsistencyResponse = packageResource.performPackageConsistencyCheck(
+				PACKAGE_NAME,false, 0, new FilterPackageCheckBean().withCompletenessFilter("notexisting-filter"),null);
+
+		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(
+				ResponseCode.FAILURE);
+	}
+
 
 	/**
 	 * Add the given number of packages with random names

@@ -1,9 +1,14 @@
-import { UIHandshake } from '../../../../../embedded-tools-api/sendmessage-protocol';
-import { ExposableGCMSUIAPI } from '../tool-api-channel/exposable-gcmsui-api';
-import { CallableEmbeddedToolAPI } from '../tool-api-channel/callable-embedded-tool-api';
-import { ToolProtocolMessage, ToolHandshake, RemoteMethodCallMessage, RemoteMethodReturnMessage,
-    RemoteMethodThrowMessage } from '../../../../../embedded-tools-api/sendmessage-protocol';
-
+import {
+    UIHandshake,
+    RemoteMethodCallMessage,
+    RemoteMethodReturnMessage,
+    RemoteMethodThrowMessage,
+    ToolHandshake,
+    ToolProtocolMessage,
+    ExposedGCMSUIAPI,
+    ExposableEmbeddedToolAPI,
+    UIHandshakeMethod,
+} from '@gentics/cms-integration-api-models';
 
 interface DeferredPromise<T> {
     resolve(value: T): void;
@@ -15,10 +20,11 @@ export class ToolMessagingChannel {
     private pendingCalls = new Map<string, DeferredPromise<any>>();
 
     constructor(
-            private toolPath: string,
-            private port: MessagePort,
-            private exposedApi: ExposableGCMSUIAPI,
-            public remoteApi: CallableEmbeddedToolAPI) {
+        private toolPath: string,
+        private port: MessagePort,
+        private exposedApi: ExposedGCMSUIAPI,
+        public remoteApi: ExposableEmbeddedToolAPI,
+    ) {
         port.addEventListener('message', this.onMessage);
         port.start();
         this.uiHandshake();
@@ -48,18 +54,18 @@ export class ToolMessagingChannel {
     }
 
     private uiHandshake(): void {
-        const supportedMethods = Object.keys(this.exposedApi)
+        const supportedMethods: UIHandshakeMethod[] = Object.keys(this.exposedApi)
             .filter(name => !name.startsWith('_'))
             .filter(name => typeof (this.exposedApi as any)[name] === 'function')
             .map(name => ({
-                name: name as keyof ExposableGCMSUIAPI,
-                returns: 'Promise' as 'Promise'
-            }));
+                name: name as keyof ExposableEmbeddedToolAPI,
+                returns: 'Promise' as const,
+            } as any));
 
         const handshake: UIHandshake = {
             type: 'handshake',
             path: this.toolPath,
-            supportedMethods
+            supportedMethods,
         };
         this.port.postMessage(handshake);
     }
@@ -74,16 +80,17 @@ export class ToolMessagingChannel {
 
     private callUiMethod(message: RemoteMethodCallMessage): void {
         Promise.resolve()
-        .then(() => {
+            .then(() => {
                 this.onMessageCallHook(message);
                 const method = (this.exposedApi as any)[message.name];
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 return method.apply(this.exposedApi, message.args);
             })
             .then(returnValue => {
                 const response: RemoteMethodReturnMessage = {
                     type: 'methodreturn',
                     callid: message.callid,
-                    value: returnValue
+                    value: returnValue,
                 };
                 this.port.postMessage(response);
             })
@@ -94,8 +101,8 @@ export class ToolMessagingChannel {
                     error: {
                         message: error.message,
                         name: error.name,
-                        stack: error.stack
-                    }
+                        stack: error.stack,
+                    },
                 };
                 this.port.postMessage(response);
             });
@@ -110,7 +117,7 @@ export class ToolMessagingChannel {
                 type: 'methodcall',
                 name: methodName,
                 callid,
-                args
+                args,
             };
             this.port.postMessage(message);
         });
@@ -144,15 +151,16 @@ export class ToolMessagingChannel {
                 configurable: true,
                 enumerable: true,
                 writable: true,
-                value: serializedError.stack
+                value: serializedError.stack,
             });
         }
         Object.defineProperty(fakeConstructor, 'name', {
-            value: serializedError.name
+            value: serializedError.name,
         });
         fakeConstructor.prototype = Object.create(Error.prototype);
         fakeConstructor.prototype.name = serializedError.name;
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const nativeError = new (fakeConstructor as any)(serializedError.message);
         return nativeError;
     }

@@ -375,7 +375,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			ret = false;
 		}
 
-		if (ObjectTransformer.isEmpty(reqNode.getHost())) {
+		if (org.apache.commons.lang3.StringUtils.isAllBlank(reqNode.getHost(), reqNode.getHostProperty())) {
 			errors.add("no hostname");
 			msg = new CNI18nString("domne_oder_ip_adresse.zb_www.gentics.com");
 			response.addMessage(
@@ -898,6 +898,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 			newNode.setFolder(rootFolder);
 			newNode.setHostname(reqNode.getHost());
+			newNode.setHostnameProperty(reqNode.getHostProperty());
 
 			if (reqNode.isHttps() != null) {
 				newNode.setHttps(reqNode.isHttps());
@@ -983,9 +984,16 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.getMeshPreviewUrl() != null) {
 					newNode.setMeshPreviewUrl(reqNode.getMeshPreviewUrl());
 				}
+				if (reqNode.getMeshPreviewUrlProperty() != null) {
+					newNode.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
+				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					newNode.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());
+				}
+
+				if (reqNode.isPublishImageVariants() != null) {
+					newNode.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
 			}
 
@@ -1078,6 +1086,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 			if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
 				node.setHostname(reqNode.getHost());
+			}
+			if (reqNode.getHostProperty() != null) {
+				node.setHostnameProperty(reqNode.getHostProperty());
 			}
 			if (reqNode.isHttps() != null) {
 				node.setHttps(reqNode.isHttps());
@@ -1231,8 +1242,16 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 					node.setMeshPreviewUrl(reqNode.getMeshPreviewUrl());
 				}
 
+				if (reqNode.getMeshPreviewUrlProperty() != null) {
+					node.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
+				}
+
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					node.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());
+				}
+
+				if (reqNode.isPublishImageVariants() != null) {
+					node.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
 			}
 
@@ -2141,6 +2160,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				}
 
 				Node node = getNode(nodeId, ObjectPermission.view);
+				if (node.isChannel()) {
+					throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels"))
+							.setStatus(Status.BAD_REQUEST);
+				}
 				String message = NodeCopyQueueEntry.copy(node, request);
 
 				trx.success();

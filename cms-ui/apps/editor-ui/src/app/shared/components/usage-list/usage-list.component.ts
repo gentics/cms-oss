@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Item, ItemType, Language, Normalized, Page, Template, UsageType } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
@@ -9,12 +10,19 @@ import { ApplicationStateService } from '../../../state';
     selector: 'usage-list',
     templateUrl: './usage-list.tpl.html',
     styleUrls: ['./usage-list.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UsageList {
-    @Input() items: Item<Normalized>[];
-    @Input() type: UsageType;
-    @Output() itemClick = new EventEmitter<Item>();
+export class UsageListComponent implements OnInit {
+
+    @Input()
+    public items: Item<Normalized>[];
+
+    @Input()
+    public type: UsageType;
+
+    @Output()
+    public itemClick = new EventEmitter<Item>();
+
     languages$: Observable<Language[]>;
     activeNodeId$: Observable<number>;
     icon: string;
@@ -27,8 +35,9 @@ export class UsageList {
     ngOnInit(): void {
         const itemType = this.usageToItemType(this.type);
         this.icon = iconForItemType(itemType);
-        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list)
-            .map(list => list.map(id => this.entityResolver.getLanguage(id)));
+        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
+            map(list => list.map(id => this.entityResolver.getLanguage(id))),
+        );
         this.activeNodeId$ = this.appState.select(state => state.folder.activeNode);
     }
 
@@ -74,10 +83,10 @@ export class UsageList {
         if (page.type !== 'page' || !page.languageVariants || Object.keys(page.languageVariants).length < 1) {
             return [];
         }
-        let languages = Object.keys(page.languageVariants)
+        const languages = Object.keys(page.languageVariants)
             .map(id => this.entityResolver.getLanguage(+id));
         // move the current page language to the front of the array.
-        let currentLanguageIndex = languages.map(l => l.id).indexOf(page.contentGroupId);
+        const currentLanguageIndex = languages.map(l => l.id).indexOf(page.contentGroupId);
         languages.splice(0, 0, languages.splice(currentLanguageIndex, 1)[0]);
         return languages;
     }

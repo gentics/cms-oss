@@ -31,7 +31,7 @@ import { AppStateService } from '@admin-ui/state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { createDelayedObservable } from '@admin-ui/testing';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import { Component, EventEmitter, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -408,6 +408,7 @@ xdescribe('GroupMasterComponent', () => {
                 NodeDataService,
                 TEST_APP_STATE,
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         appState = TestBed.get(AppStateService);

@@ -1,5 +1,10 @@
 {
     "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": [
+            "node", "jquery"
+        ]
+    },
     "files": [
         "src/main.ts",
         "src/polyfills.ts"
@@ -16,7 +21,12 @@
         "src/testing/**",
         "**/*.mock.ts",
         "**/*.spec.ts",
-        "*.ngx-build-plus-plugin.js",
-        "**/*.worker.ts"
+        "**/*.worker.ts",
+        "cypress/**/*",
+        "cypress.config.ts",
+        "**/*.cy.ts",
+        "**/*.cy.js",
+        "**/*.cy.tsx",
+        "**/*.cy.jsx"
     ]
 }

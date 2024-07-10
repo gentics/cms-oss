@@ -10,18 +10,17 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '@editor-ui/app/common/models';
 import {
-    EditorPermissions, FolderItemType,
+    FolderItemType,
     FolderItemTypePlural,
     Item,
     Language,
     Node as NodeModel,
     Normalized,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';
@@ -42,7 +41,7 @@ interface ItemsHashMap {
     styleUrls: ['./item-list.component.scss'],
     providers: [PaginationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input()
@@ -129,8 +128,9 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list)
-            .map(list => list.map(id => this.entityResolver.getLanguage(id)));
+        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
+            map(list => list.map(id => this.entityResolver.getLanguage(id))),
+        );
         this.showAllLanguages$ = this.appState.select(state => state.folder.displayAllLanguages);
         this.showStatusIcons$ = this.appState.select(state => state.folder.displayStatusIcons);
         this.showDeleted$ = this.appState.select(state => state.folder.displayDeleted);
@@ -255,7 +255,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         if (this.itemInEditor && this.items.length > 0 && this.items[0].type === 'page') {
             for (let i = 1; i < this.items.length; i++) {
                 if (this.items[i].id === this.itemInEditor.id) {
-                    let page = Math.floor(i / this.paginationConfig.itemsPerPage) + 1;
+                    const page = Math.floor(i / this.paginationConfig.itemsPerPage) + 1;
                     this.folderActions.setCurrentPage('page', page);
                 }
             }
@@ -264,7 +264,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
     updateItemHash(): void {
         const itemHash: ItemsHashMap = {};
-        for (let item of this.items) {
+        for (const item of this.items) {
             itemHash[item.id] = item;
         }
         this.itemHash$.next(itemHash);

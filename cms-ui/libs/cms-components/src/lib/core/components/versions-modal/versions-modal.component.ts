@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { GtxVersionCompatibility, GtxVersionNodeInfo } from '@gentics/cms-models';
+import { VersionCompatibility, NodeVersionInfo } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
 @Component({
@@ -9,7 +9,7 @@ import { BaseModal } from '@gentics/ui-core';
 })
 export class VersionModalComponent extends BaseModal<void> {
 
-    public readonly GtxVersionCompatibility = GtxVersionCompatibility;
+    public readonly VersionCompatibility = VersionCompatibility;
 
     @Input()
     cmpVersion: string;
@@ -18,8 +18,8 @@ export class VersionModalComponent extends BaseModal<void> {
     cmsVersion: string;
 
     @Input()
-    nodeVersions: { nodeName: string; nodeInfo: GtxVersionNodeInfo; }[] = [];
+    nodeVersions: { nodeName: string; nodeInfo: NodeVersionInfo; }[] = [];
 
     @Input()
-    compatibilityState: GtxVersionCompatibility;
+    compatibilityState: VersionCompatibility;
 }

@@ -409,7 +409,6 @@ public class MeshMicronodePublishTest {
 		construct = Trx.supply(() -> {
 			return create(Construct.class, c -> {
 				c.setAutoEnable(true);
-				c.setIconName("icon");
 				c.setKeyword("construct");
 				c.setName("Test Construct", 1);
 				c.getNodes().add(node);

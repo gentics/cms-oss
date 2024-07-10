@@ -1,0 +1,13 @@
+{
+  "components" : [ {
+    "name" : "CMS OSS",
+    "modules" : [ {
+      "name" : "Javascript Library",
+      "dependencies" : [ {
+        "name" : "json2.js",
+        "current" : "2011-10-19",
+        "latest" : "2023-05-10"
+      } ]
+    } ]
+  } ]
+}

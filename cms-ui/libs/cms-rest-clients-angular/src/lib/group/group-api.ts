@@ -31,7 +31,7 @@ export type GroupSearchFilterMap = { [P in keyof Group]?: Group[P] | null; };
  * API methods related to the group resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_GroupResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_GroupResource.html
  *
  */
 export class GroupApi {

@@ -1,4 +1,4 @@
-import { detailLoading, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE, PermissionsTreeType } from '@admin-ui/common';
+import { detailLoading, FormGroupTabHandle, FormTabHandle, GroupDetailTabs, NULL_FORM_TAB_HANDLE, PermissionsTreeType } from '@admin-ui/common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
@@ -16,23 +16,13 @@ import {
     AccessControlledType,
     GcmsPermission,
     Group,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-
-export enum GroupDetailTabs {
-    PROPERTIES = 'properties',
-    SUB_GROUPS = 'subgroups',
-    CONTENT_PERMISSIONS = 'contentPermissions',
-    ADMIN_PERMISSIONS = 'adminPermissions',
-    GROUP_USERS = 'groupUsers',
-}
 
 // *************************************************************************************************
 /**
@@ -72,7 +62,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<GroupDetailTabs, FormTabHandle>;
+    private tabHandles: Record<GroupDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -119,7 +109,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         });
 
         this.permissionContentRead$ = this.permissionsService.getPermissions(AccessControlledType.CONTENT).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);

@@ -1,0 +1,55 @@
+<div *ngIf="displayItems?.length > 0; else noContent" class="links-container">
+    <gtx-dropdown-list
+        #dropdown
+        *ngFor="let item of displayItems"
+        class="dropdown"
+        [belowTrigger]="true"
+        [sticky]="false"
+        [width]="'content'"
+        [disabled]="true"
+        (open)="handleDropdownOpen($event)"
+    >
+        <gtx-dropdown-trigger>
+            <div class="link-item">
+                <button
+                    class="link-label"
+                    (click)="focusElement(item.element)"
+                >
+                    <span class="link-label-text">{{ item.href }}</span>
+                </button>
+                <button
+                    class="link-opener"
+                    (click)="openDropdown(dropdown)"
+                >
+                    <icon>keyboard_arrow_down</icon>
+                </button>
+            </div>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="link-options">
+                <button
+                    class="link-option-button link-edit-button"
+                    (click)="openLinkEditor(item.element)"
+                >
+                    <icon>edit</icon>
+                    <span class="link-button-label">{{ 'aloha.link_checker_edit' | i18n }}</span>
+                </button>
+
+                <button
+                    class="link-option-button link-delete-button"
+                    (click)="deleteLinkElement(item.element)"
+                >
+                    <icon>delete</icon>
+                    <span class="link-button-label">{{ 'aloha.link_checker_delete' | i18n }}</span>
+                </button>
+            </div>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+</div>
+
+<ng-template #noContent>
+    <div class="no-content">
+        <span class="no-content-label">{{ 'aloha.link_checker_no_content' | i18n }}</span>
+    </div>
+</ng-template>

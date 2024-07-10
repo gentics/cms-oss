@@ -1,13 +1,12 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ConstructBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { BO_ID, BO_PERMISSIONS, ConstructBO, EntityList, EntityPageResponse, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { DevToolsConstructListResponse, PagedConstructListRequestOptions, PermissionListResponse, TagType } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { PagedConstructListRequestOptions, TagType } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
 import { EntityManagerService } from '../entity-manager';
-import { ConstructOperations } from '../operations';
 
 export interface ConstructTableLoaderOptions {
     packageName?: string;
@@ -15,13 +14,13 @@ export interface ConstructTableLoaderOptions {
 }
 
 @Injectable()
-export class ConstructTableLoaderService extends BaseTableLoaderService<TagType, ConstructBO, ConstructTableLoaderOptions> {
+export class ConstructTableLoaderService extends BaseTableLoaderService<TagType, ConstructBO, ConstructTableLoaderOptions>
+    implements PackageTableEntityLoader<ConstructBO, ConstructTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
-        protected operations: ConstructOperations,
+        protected handler: ConstructHandlerService,
     ) {
         super('construct', entityManager, appState);
     }
@@ -31,7 +30,7 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(entityId).toPromise();
+        return this.handler.delete(entityId).toPromise();
     }
 
     public override storeEntity(entity: ConstructBO, id?: string): void {
@@ -69,36 +68,31 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
             perms: true,
             embed: 'category',
         };
-        let loader: Observable<PermissionListResponse<TagType> | DevToolsConstructListResponse>;
+        let loader: Observable<EntityList<ConstructBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getConstructs(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else if (additionalOptions?.dataSourceId) {
-            loader = this.api.dataSource.getConstructs(additionalOptions.dataSourceId, loadOptions as any);
+            loader = this.handler.listFromDataSourceMapped(additionalOptions.dataSourceId, null as never, loadOptions as any);
         } else {
-            loader = this.api.tagType.getTagTypes(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(construct => this.mapToBusinessObject(construct));
-                this.applyPermissions(entities, response as PermissionListResponse<TagType>);
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
     }
 
-    public mapToBusinessObject(construct: TagType): ConstructBO {
-        return {
-            ...construct,
-            [BO_ID]: String(construct.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: construct.name,
-        };
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
     }
 
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
+    }
 }

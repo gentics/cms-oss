@@ -1,6 +1,6 @@
 import { BO_ID, ConstructCategoryBO, TableLoadEndEvent, TableSortEvent, sortEntityRow } from '@admin-ui/common';
-import { ConstructCategoryOperations } from '@admin-ui/core';
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { BaseModal, TableRow } from '@gentics/ui-core';
 
 @Component({
@@ -16,7 +16,7 @@ export class ConstructCategorySortModal extends BaseModal<boolean> {
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected operations: ConstructCategoryOperations,
+        protected handler: ConstructCategoryHandlerService,
     ) {
         super();
     }
@@ -34,7 +34,7 @@ export class ConstructCategorySortModal extends BaseModal<boolean> {
         this.changeDetector.markForCheck();
 
         try {
-            await this.operations.sort(this.rows.map(row => row.item[BO_ID])).toPromise();
+            await this.handler.sort(this.rows.map(row => row.item[BO_ID])).toPromise();
             this.closeFn(true);
         } catch (error) {
             this.disabled = false;

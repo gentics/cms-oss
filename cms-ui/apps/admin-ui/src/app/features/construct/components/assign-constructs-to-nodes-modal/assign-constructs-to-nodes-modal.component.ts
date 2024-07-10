@@ -1,10 +1,10 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ConstructOperations, I18nNotificationService, NodeOperations } from '@admin-ui/core';
+import { ConstructHandlerService, I18nNotificationService, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, IndexById, Node, Raw, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { intersection } from 'lodash';
-import { forkJoin, Subscription } from 'rxjs';
+import { intersection } from'lodash-es'
+import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -29,7 +29,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
     constructor(
         private changeDetector: ChangeDetectorRef,
         private nodeOperations: NodeOperations,
-        private constructOperations: ConstructOperations,
+        private handler: ConstructHandlerService,
         private notification: I18nNotificationService,
     ) {
         super();
@@ -55,7 +55,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
         // in the list then.
         this.subscription.add(forkJoin([
             this.nodeOperations.getAll(),
-            ...this.constructs.map(con => this.constructOperations.getLinkedNodes(con.id).pipe(
+            ...this.constructs.map(con => this.handler.getLinkedNodes(con.id).pipe(
                 map(linked => ([con.id, linked])),
             )),
         ]).subscribe(([nodes, ...linkedNodesPerConstruct]) => {
@@ -105,7 +105,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
 
             for (const nodeToAdd of toAdd) {
                 try {
-                    await this.constructOperations.linkToNode(construct.id, nodeToAdd).toPromise();
+                    await this.handler.linkToNode(construct.id, nodeToAdd).toPromise();
                     addSuccess.add(nodeToAdd);
                 } catch (err) {
                     this.notification.show({
@@ -122,7 +122,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
 
             for (const nodeToRemove of toRemove) {
                 try {
-                    await this.constructOperations.unlinkFromNode(construct.id, nodeToRemove).toPromise();
+                    await this.handler.unlinkFromNode(construct.id, nodeToRemove).toPromise();
                     removeSucess.add(nodeToRemove);
                 } catch (err) {
                     this.notification.show({

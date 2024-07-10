@@ -5,7 +5,7 @@ import { Overview, SelectOption } from './tag-property-values';
 import { DefaultModelType, ModelType } from './type-util';
 
 /** Possible Tagpart types
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Property.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Property.html
  */
 export type TagPartProperty =
     | StringTagPartProperty
@@ -202,7 +202,7 @@ export interface DataSourceTagPartProperty extends BaseTagPartProperty {
     options: SelectOption[];
 }
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_Part.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Part.html */
 export interface TagPart<T extends ModelType = DefaultModelType> {
     /** global id of the part */
     globalId?: string;
@@ -244,4 +244,13 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     overviewSettings?: OverviewSetting;
     /** Selection settings (if type is SELECT or MULTISELECT) */
     selectSettings?: SelectSetting;
+}
+
+export interface PartType {
+    id: number;
+    name: string;
+    description: string;
+    auto: boolean;
+    javaClass: string;
+    deprecated: boolean;
 }

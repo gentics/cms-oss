@@ -265,7 +265,6 @@ public class SyncTest {
 					Construct construct = (Construct) o;
 					assertThat(construct).as("construct")
 						.hasKeyword("testconstruct")
-						.hasIcon("text.gif")
 						.hasName("de", "Test Tagtyp")
 						.hasName("en", "Test Tagtype")
 						.hasDescription("de", "Das ist der Test Tagtyp")
@@ -428,6 +427,7 @@ public class SyncTest {
 				} else if (o instanceof ContentRepository) {
 					ContentRepository cr = (ContentRepository) o;
 					assertThat(cr).as("contentrepository").hasFieldOrPropertyWithValue("instantPublishing", false);
+					assertThat(cr).as("contentrepository").hasFieldOrPropertyWithValue("noPagesIndex", false);
 				} else {
 					fail(String.format("Unexpected object %s", o));
 				}
@@ -532,6 +532,7 @@ public class SyncTest {
 						} else if (o instanceof ContentRepository) {
 							ContentRepository cr = (ContentRepository) o;
 							cr.setInstantPublishing(!cr.isInstantPublishing());
+							cr.setNoPagesIndex(!cr.isNoPagesIndex());
 						} else {
 							fail(String.format("Unexpected object %s", o));
 						}

@@ -1,7 +1,7 @@
 import { AppStateService, SwitchEditorTab } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
 

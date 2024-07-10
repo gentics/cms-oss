@@ -1,85 +1,226 @@
 <form [formGroup]="form">
     <div class="split-row">
         <div class="name-row">
-                <gtx-input [label]="('editor.item_name_label' | i18n) + '*'" formControlName="nodeName" [gtxDisabled]="disabled" required [autofocus]="mode === 'create'"></gtx-input>
-                <div *ngIf="masterNode?.id !== node?.id" class="inheritance-info">
-                    <icon>input</icon>
-                    {{ 'editor.inherited_tooltip' | i18n:{ master: masterNode?.name } }}
-                </div>
+            <gtx-input
+                formControlName="name"
+                [label]="('editor.item_name_label' | i18n) + '*'"
+                [gtxDisabled]="disabled"
+                [autofocus]="mode === 'create'"
+            ></gtx-input>
+
+            <div *ngIf="node?.id !== node?.inheritedFromId" class="inheritance-info">
+                <icon>input</icon>
+                {{ 'editor.inherited_tooltip' | i18n:{ master: node?.masterName } }}
+            </div>
         </div>
-        <gtx-input [label]="('editor.node_hostname_label' | i18n) + '*'" formControlName="host" [gtxDisabled]="disabled" required></gtx-input>
     </div>
+
+    <div class="split-row">
+        <gtx-select
+            [label]="('editor.node_hostname_type_label' | i18n) + ' *'"
+            [value]="hostnameType"
+            [clearable]="false"
+            (valueChange)="updateHostnameType($event)"
+        >
+            <gtx-option
+                *ngFor="let type of HOSTNAME_TYPES"
+                [value]="type.id"
+            >{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+    </div>
+
+    <div class="split-row">
+        <gtx-input
+            formControlName="host"
+            [label]="('editor.node_hostname_label' | i18n) + '*'"
+        ></gtx-input>
+    </div>
+
+    <div class="split-row" *ngIf="!hostnamePropertyDisabled">
+        <gtx-input
+            formControlName="hostProperty"
+            [label]="('editor.node_hostname_property_label' | i18n) + '*'"
+        ></gtx-input>
+    </div>
+
+    <div class="split-row">
+        <span
+            *ngIf="form?.controls?.hostProperty?.hasError('pattern')"
+            class="container-validator-errors"
+        >{{ 'editor.node_hostname_property_pattern' | i18n }}</span>
+    </div>
+
     <div class="split-row checkbox-row">
-        <gtx-checkbox formControlName="utf8" label="utf8" [gtxDisabled]="disabled"></gtx-checkbox>
-        <gtx-checkbox formControlName="https" label="https" [gtxDisabled]="disabled"></gtx-checkbox>
+        <gtx-checkbox
+            label="utf8"
+            formControlName="utf8"
+            [gtxDisabled]="disabled"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            label="https"
+            formControlName="https"
+            [gtxDisabled]="disabled"
+        ></gtx-checkbox>
     </div>
+
     <div class="default-folder-select">
-        <gtx-input [value]="defaultFileFolder?.path" readonly="true" [label]="'editor.node_default_file_upload_folder_label' | i18n"></gtx-input>
-        <gtx-button flat type="secondary" size="small" (click)="clearDefaultFolder('file')" [disabled]="!defaultFileFolder"><icon>clear</icon></gtx-button>
-        <gtx-button flat type="primary" size="small" (click)="selectDefaultFolder('file')">{{ 'editor.node_select_default_folder_label' | i18n }}</gtx-button>
+        <gtx-input
+            readonly="true"
+            [value]="defaultFileFolder?.path"
+            [label]="'editor.node_default_file_upload_folder_label' | i18n"
+        ></gtx-input>
+
+        <gtx-button
+            flat
+            type="secondary"
+            size="small"
+            [disabled]="!defaultFileFolder"
+            (click)="clearDefaultFolder('file')"
+        >
+            <icon>clear</icon>
+        </gtx-button>
+
+        <gtx-button
+            flat
+            type="primary"
+            size="small"
+            (click)="selectDefaultFolder('file')"
+        >
+            {{ 'editor.node_select_default_folder_label' | i18n }}
+        </gtx-button>
     </div>
+
     <div class="default-folder-select">
-        <gtx-input [value]="defaultImageFolder?.path" readonly="true" [label]="'editor.node_default_image_upload_folder_label' | i18n"></gtx-input>
-        <gtx-button flat type="secondary" size="small" (click)="clearDefaultFolder('image')" [disabled]="!defaultImageFolder"><icon>clear</icon></gtx-button>
-        <gtx-button flat type="primary" size="small" (click)="selectDefaultFolder('image')">{{ 'editor.node_select_default_folder_label' | i18n }}</gtx-button>
+        <gtx-input
+            readonly="true"
+            [value]="defaultImageFolder?.path"
+            [label]="'editor.node_default_image_upload_folder_label' | i18n"
+        ></gtx-input>
+
+        <gtx-button
+            flat
+            type="secondary"
+            size="small"
+            (click)="clearDefaultFolder('image')"
+            [disabled]="!defaultImageFolder"
+        >
+            <icon>clear</icon>
+        </gtx-button>
+
+        <gtx-button
+            flat
+            type="primary"
+            size="small"
+            (click)="selectDefaultFolder('image')"
+        >
+            {{ 'editor.node_select_default_folder_label' | i18n }}
+        </gtx-button>
     </div>
+
     <h3 class="heading">
         <div class="title">{{ 'editor.node_properties_publishing_heading' | i18n }}</div>
-        <gtx-checkbox formControlName="disablePublish" [label]="'editor.node_properties_disable_publishing' | i18n" [gtxDisabled]="disabled"></gtx-checkbox>
+        <gtx-checkbox
+            formControlName="disablePublish"
+            [label]="'editor.node_properties_disable_publishing' | i18n"
+            [gtxDisabled]="disabled"
+        ></gtx-checkbox>
     </h3>
-    <div class="publishing-section" [class.disabled]="publishingDisabled">
 
+    <div class="publishing-section" [class.disabled]="publishingDisabled">
         <div class="section file-system">
             <div class="publish-target">
-                <gtx-checkbox formControlName="fileSystem" [label]="'editor.node_properties_file_system' | i18n" [gtxDisabled]="publishingDisabled"></gtx-checkbox>
+                <gtx-checkbox
+                    formControlName="publishFs"
+                    [label]="'editor.node_properties_file_system' | i18n"
+                    [gtxDisabled]="publishingDisabled"
+                ></gtx-checkbox>
             </div>
+
             <div class="section-split" [class.disabled]="fileSystemDisabled">
                 <div class="pages link-inputs-wrapper">
                     <div class="type page">
-                        <gtx-checkbox formControlName="fileSystemPages" [label]="'common.type_pages' | i18n" [gtxDisabled]="fileSystemDisabled"></gtx-checkbox>
+                        <gtx-checkbox
+                            formControlName="publishFsPages"
+                            [label]="'common.type_pages' | i18n"
+                            [gtxDisabled]="fileSystemDisabled"
+                        ></gtx-checkbox>
                     </div>
-                    <gtx-input formControlName="fileSystemPageDir"
-                               [label]="'editor.node_properties_page_directory' | i18n"
-                               (change)="fileSystemDirChange($event)"
-                               [gtxDisabled]="fileSystemDisabled || !form.get('fileSystemPages').value"></gtx-input>
-                    <div class="link-inputs no-select"
-                         [title]="'editor.node_properties_share_directories' | i18n"
-                         [class.disabled]="fileSystemDisabled"
-                         [class.active]="linkInputs"
-                         (click)="toggleLinkInputs()">
+
+                    <gtx-input
+                        formControlName="publishDir"
+                        [label]="'editor.node_properties_page_directory' | i18n"
+                        (change)="fileSystemDirChange($event)"
+                        [gtxDisabled]="fileSystemDisabled || !form.controls.publishFsPages?.value"
+                    ></gtx-input>
+
+                    <div
+                        class="link-inputs no-select"
+                        [title]="'editor.node_properties_share_directories' | i18n"
+                        [class.disabled]="fileSystemDisabled"
+                        [class.active]="linkInputs"
+                        (click)="toggleLinkInputs()"
+                    >
                         <icon>link</icon>
                     </div>
                 </div>
+
                 <div class="binaries">
                     <div class="type file">
-                        <gtx-checkbox formControlName="fileSystemFiles" [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)" [gtxDisabled]="fileSystemDisabled"></gtx-checkbox>
+                        <gtx-checkbox
+                            formControlName="publishFsFiles"
+                            [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
+                            [gtxDisabled]="fileSystemDisabled"
+                        ></gtx-checkbox>
                     </div>
-                    <gtx-input formControlName="fileSystemBinaryDir"
-                               [label]="'editor.node_properties_binary_directory' | i18n"
-                               (change)="fileSystemDirChange($event)"
-                               [gtxDisabled]="fileSystemDisabled || !form.get('fileSystemFiles').value"></gtx-input>
+
+                    <gtx-input
+                        formControlName="binaryPublishDir"
+                        [label]="'editor.node_properties_binary_directory' | i18n"
+                        (change)="fileSystemDirChange($event)"
+                        [gtxDisabled]="fileSystemDisabled || !form.controls?.publishFsFiles?.value"
+                    ></gtx-input>
                 </div>
             </div>
         </div>
 
         <div class="section content-repository">
             <div class="publish-target">
-                <gtx-checkbox formControlName="contentRepository" [label]="'editor.node_properties_content_repository' | i18n" [gtxDisabled]="publishingDisabled"></gtx-checkbox>
+                <gtx-checkbox
+                    formControlName="publishContentMap"
+                    [label]="'editor.node_properties_content_repository' | i18n"
+                    [gtxDisabled]="publishingDisabled"
+                ></gtx-checkbox>
             </div>
+
             <div class="section-split" [class.disabled]="contentRepositoryDisabled">
                 <div class="pages">
                     <div class="type page">
-                        <gtx-checkbox formControlName="contentRepositoryPages" [label]="'common.type_pages' | i18n" [gtxDisabled]="contentRepositoryDisabled"></gtx-checkbox>
+                        <gtx-checkbox
+                            formControlName="publishContentMapPages"
+                            [label]="'common.type_pages' | i18n"
+                            [gtxDisabled]="contentRepositoryDisabled"
+                        ></gtx-checkbox>
                     </div>
                 </div>
+
                 <div class="binaries">
                     <div class="type file">
-                        <gtx-checkbox formControlName="contentRepositoryFiles" [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)" [gtxDisabled]="contentRepositoryDisabled"></gtx-checkbox>
+                        <gtx-checkbox
+                            formControlName="publishContentMapFiles"
+                            [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
+                            [gtxDisabled]="contentRepositoryDisabled"
+                        ></gtx-checkbox>
                     </div>
                 </div>
+
                 <div class="folders">
                     <div class="type folder">
-                        <gtx-checkbox formControlName="contentRepositoryFolders" [label]="('common.type_folders' | i18n) + ' & ' + ('common.type_images' | i18n)" [gtxDisabled]="contentRepositoryDisabled"></gtx-checkbox>
+                        <gtx-checkbox
+                            formControlName="publishContentMapFolders"
+                            [label]="('common.type_folders' | i18n) + ' & ' + ('common.type_images' | i18n)"
+                            [gtxDisabled]="contentRepositoryDisabled"
+                        ></gtx-checkbox>
                     </div>
                 </div>
             </div>
@@ -91,7 +232,7 @@
                 <gtx-select
                     [label]="'common.type_pages' | i18n"
                     [disabled]="publishingDisabled"
-                    formControlName="urlRenderingPages"
+                    formControlName="urlRenderWayPages"
                 >
                     <gtx-option [value]="0">{{ 'editor.url_rendering_automatic' | i18n }}</gtx-option>
                     <gtx-option [value]="1">{{ 'editor.url_rendering_portal_link' | i18n }}</gtx-option>
@@ -103,7 +244,7 @@
                 <gtx-select
                     [label]="('common.type_folders' | i18n) + ' & ' + ('common.type_images' | i18n)"
                     [disabled]="publishingDisabled"
-                    formControlName="urlRenderingFiles"
+                    formControlName="urlRenderWayFiles"
                 >
                     <gtx-option [value]="0">{{ 'editor.url_rendering_automatic' | i18n }}</gtx-option>
                     <gtx-option [value]="1">{{ 'editor.url_rendering_portal_link' | i18n }}</gtx-option>

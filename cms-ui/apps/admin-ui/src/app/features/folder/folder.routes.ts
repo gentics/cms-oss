@@ -1,6 +1,6 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { AdminUIEntityDetailRoutes, FolderDetailTabs, GcmsAdminUiRoute, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
+import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { FolderDetailComponent, FolderMasterComponent } from './components';
 import { CanActivateFolderGuard } from './providers';
@@ -11,8 +11,8 @@ export const FOLDER_ROUTES: GcmsAdminUiRoute[] = [
         component: FolderMasterComponent,
     },
     {
-        path: 'folder',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.FOLDER,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },
@@ -31,14 +31,14 @@ export const FOLDER_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateFolderGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },
             },
             {
                 path: ':id',
-                redirectTo: ':id/properties',
+                redirectTo: `:id/${FolderDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

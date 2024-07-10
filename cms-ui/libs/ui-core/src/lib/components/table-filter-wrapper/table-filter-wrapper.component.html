@@ -1,0 +1,17 @@
+<div class="wrapper" [class.has-value]="hasValue">
+    <icon class="filter-icon">{{ icon }}</icon>
+    <div class="filter-content">
+        <ng-content></ng-content>
+    </div>
+    <div class="clear-container" *ngIf="hasClear">
+        <gtx-button
+            icon
+            class="clear-button"
+            type="alert"
+            [disabled]="disabled"
+            (click)="triggerClear()"
+        >
+            <icon class="clear-icon">clear</icon>
+        </gtx-button>
+    </div>
+</div>

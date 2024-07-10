@@ -86,7 +86,7 @@
     <a
         *ngIf="value > 0"
         class="gtx-table-cell-link"
-        [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:value"
+        [routerLink]="AdminUIEntityDetailRoutes.CONTENT_REPOSITORY | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.contentRepositoryName || value }}</a>
 </ng-template>
@@ -95,7 +95,7 @@
     <a
         *ngIf="value > 0 && value !== row.item.id"
         class="gtx-table-cell-link"
-        [routerLink]="'node' | gtxEntityDetailRouterLink:value"
+        [routerLink]="AdminUIEntityDetailRoutes.NODE | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.masterName || value }}</a>
 </ng-template>

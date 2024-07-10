@@ -19,8 +19,8 @@ export interface EditableFileProps {
  * Superinterface for CMS files and images.
  *
  * Contains the common properties of the REST API types `File` and `Image`:
- * https://www.gentics.com/Content.Node/guides/restapi/json_File.html
- * https://www.gentics.com/Content.Node/guides/restapi/json_Image.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_File.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Image.html
  */
 export interface FileOrImage<T extends ModelType = DefaultModelType> extends InheritableItem<T> {
 
@@ -93,7 +93,7 @@ export interface FileOrImage<T extends ModelType = DefaultModelType> extends Inh
 /**
  * Describes a file in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_File.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_File.html
  */
 export interface File<T extends ModelType = DefaultModelType> extends FileOrImage<T> {
     '@class'?: 'com.gentics.contentnode.rest.model.File';

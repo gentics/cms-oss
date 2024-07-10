@@ -4,18 +4,20 @@ import { AddTypePermissionsMap, AppStateService } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
-    AccessControlledType,
-    GcmsPermission,
-    GcmsPermissionsMap,
-    Index,
     InstancePermissions,
     InstancePermissionsImpl,
-    PermissionResponse,
-    PermissionsMapCollection,
     TypePermissions,
     TypePermissionsImpl,
     UniformInstancePermissions,
     UniformTypePermissions,
+} from '@gentics/cms-components';
+import {
+    AccessControlledType,
+    GcmsPermission,
+    GcmsPermissionsMap,
+    PermissionResponse,
+    PermissionsMapCollection,
+    ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
@@ -47,7 +49,7 @@ deepFreeze(MOCK_PERM_MAP2);
 
 function mockPermissionsResponse(permissionsCollection: PermissionsMapCollection): Observable<PermissionResponse> {
     const response: PermissionResponse = {
-        responseInfo: { responseCode: 'OK' },
+        responseInfo: { responseCode: ResponseCode.OK },
         perm: '1001',
         permissionsMap: permissionsCollection,
     };
@@ -120,6 +122,7 @@ describe('PermissionsService', () => {
 
         Object.keys(expectedPermissions.permissions).forEach((perm: GcmsPermission) => {
             const expectedValue = expectedPermissions.permissions[perm];
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             expect(actualPermissions.hasPermission(perm)).toBe(expectedValue, `Expected permission '${perm}' to be ${expectedValue}`);
         });
     }
@@ -385,7 +388,7 @@ describe('PermissionsService', () => {
             getInstancePermissionsSpy = spyOn(permissionsService, 'getInstancePermissions');
         });
 
-        function setUpTypePermissions(mockedPermissions: Partial<Index<AccessControlledType, Partial<GcmsPermissionsMap>>>): void {
+        function setUpTypePermissions(mockedPermissions: Partial<Record<AccessControlledType, Partial<GcmsPermissionsMap>>>): void {
             getTypePermissionsSpy.and.callFake(
                 type => createDelayedObservable(new TypePermissionsImpl(type, { permissions: mockedPermissions[type] })),
             );

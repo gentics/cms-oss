@@ -1,15 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     BooleanTagPartProperty,
     EditableTag,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 
 /**
@@ -19,7 +16,7 @@ import {
     selector: 'checkbox-tag-property-editor',
     templateUrl: './checkbox-tag-property-editor.component.html',
     styleUrls: ['./checkbox-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CheckboxTagPropertyEditor implements TagPropertyEditor {
 
@@ -74,7 +71,7 @@ export class CheckboxTagPropertyEditor implements TagPropertyEditor {
         if (newValue.type !== TagPropertyType.BOOLEAN) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by CheckboxTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as BooleanTagPartProperty;
+        this.tagProperty = newValue ;
         this.isChecked = this.tagProperty.booleanValue;
         this.changeDetector.markForCheck();
     }

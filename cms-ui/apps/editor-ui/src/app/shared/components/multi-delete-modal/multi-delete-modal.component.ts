@@ -3,7 +3,6 @@ import { Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
 
@@ -48,8 +47,6 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
 
     /** Meaning: `{ formId: languageCodesOfForm[] }` */
     selectedFormLanguageVariants: { [formId: number]: string[] } = {};
-
-    iconForItemType = iconForItemType;
 
     deleteCount: number;
 

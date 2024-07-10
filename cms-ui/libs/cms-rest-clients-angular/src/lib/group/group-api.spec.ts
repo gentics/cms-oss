@@ -6,11 +6,13 @@ import {
     GroupListOptions,
     GroupPermissionsListOptions,
     GroupSetPermissionsRequest,
+    GroupUpdateRequest,
     GroupUserCreateRequest,
-    Omit,
+    PagingSortOrder,
 } from '@gentics/cms-models';
 import { MockApiBase } from '../util/api-base.mock';
 import { GroupApi } from './group-api';
+import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 
 const GROUP_ID = 2;
 const PARENT_GROUP_ID = 3;
@@ -38,21 +40,23 @@ describe('GroupApi', () => {
 
     it('getGroups() sends the correct GET request', () => {
         groupApi.getGroupsTree();
-        expect(apiBase.get).toHaveBeenCalledWith(`group/load`);
+        expect(apiBase.get).toHaveBeenCalledWith('group/load', undefined);
     });
 
     it('getGroupsFlattned() sends the correct GET request', () => {
         groupApi.listGroups();
-        expect(apiBase.get).toHaveBeenCalledWith(`group/list`, undefined);
+        expect(apiBase.get).toHaveBeenCalledWith('group', undefined);
     });
 
     it('getGroupsFlattned() sends the correct GET request with query parameters', () => {
         const options: GroupListOptions = {
-            sortby: 'name',
-            sortorder: 'asc',
+            sort: {
+                attribute: 'name',
+                sortOrder: PagingSortOrder.Asc,
+            },
         };
         groupApi.listGroups(options);
-        expect(apiBase.get).toHaveBeenCalledWith(`group/list`, options);
+        expect(apiBase.get).toHaveBeenCalledWith('group', { ...options, sort: stringifyPagingSortOptions(options.sort) });
     });
 
     it('getGroup() sends the correct GET request', () => {
@@ -62,7 +66,7 @@ describe('GroupApi', () => {
 
     it('getSubgroups() sends the correct GET request', () => {
         groupApi.getSubgroups(GROUP_ID);
-        expect(apiBase.get).toHaveBeenCalledWith(`group/${GROUP_ID}/groups`);
+        expect(apiBase.get).toHaveBeenCalledWith(`group/${GROUP_ID}/groups`, undefined);
     });
 
     it('createSubgroup() sends the correct PUT request', () => {
@@ -85,7 +89,7 @@ describe('GroupApi', () => {
     });
 
     it('updateGroup() sends the correct POST request', () => {
-        const update: Omit<Group, 'id' | 'children'> = {
+        const update: GroupUpdateRequest = {
             name: 'New Name',
             description: 'New Description',
         };

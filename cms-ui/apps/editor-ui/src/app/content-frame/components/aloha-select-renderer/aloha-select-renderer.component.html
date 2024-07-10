@@ -1,0 +1,14 @@
+<gtx-select
+    *ngIf="settings"
+    [value]="settings.value"
+    [label]="settings.label"
+    [multiple]="settings.multiple"
+    [clearable]="settings.clearable"
+    [placeholder]="settings.placeholder"
+    (valueChange)="triggerChange($event)"
+>
+    <gtx-option
+        *ngFor="let option of (settings?.options || [])"
+        [value]="option.id"
+    >{{ option.label }}</gtx-option>
+</gtx-select>

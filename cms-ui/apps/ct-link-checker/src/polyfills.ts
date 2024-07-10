@@ -17,16 +17,6 @@
  * BROWSER POLYFILLS
  */
 
-import 'core-js/features/array/flat';
-import 'core-js/features/array/flat-map';
-import 'core-js/features/array/includes';
-
-import 'core-js/features/object/entries';
-import 'core-js/features/object/get-own-property-descriptors';
-import 'core-js/features/object/values';
-
-import 'core-js/actual/structured-clone';
-
 // Used for reflect-metadata in JIT. If you use AOT (and only Angular decorators), you can remove.
 import 'core-js/proposals/reflect-metadata';  // Run `npm install --save web-animations-js`.
 
@@ -68,5 +58,6 @@ import 'zone.js';  // Included with Angular CLI.
 (window as any).global = window;
 
 /* Add Buffer support, because serialize-to-js expects Buffer type is there (like in Node.js) */
+// eslint-disable-next-line import/no-nodejs-modules
 import { Buffer } from 'buffer';
 (window as any).Buffer = Buffer;

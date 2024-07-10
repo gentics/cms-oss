@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { EditorOverlayModal } from '../editor-overlay-modal/editor-overlay-modal.component';
 
 /**
@@ -9,14 +8,13 @@ import { EditorOverlayModal } from '../editor-overlay-modal/editor-overlay-modal
 @Component({
     selector: 'confirm-close-modal',
     templateUrl: './confirm-close-modal.tpl.html',
-    styleUrls: ['./confirm-close-modal.scss']
+    styleUrls: ['./confirm-close-modal.scss'],
 })
 export class ConfirmCloseModal implements IModalDialog {
     closeFn: (result: ConfirmCloseResult) => void;
     cancelFn: (val?: any) => void;
 
     currentModal: EditorOverlayModal;
-    iconForItemType = iconForItemType;
 
     saveAndClose(): void {
         this.closeFn('save');

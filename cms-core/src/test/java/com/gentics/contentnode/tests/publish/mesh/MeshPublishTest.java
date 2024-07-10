@@ -39,6 +39,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.File;
@@ -54,6 +55,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel.PasswordType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
@@ -97,9 +99,13 @@ public class MeshPublishTest {
 
 	private static Integer contentEntryId;
 
+	private static Integer pageUrlConstructId;
+
 	private static Template template;
 
 	private static Map<String, ContentLanguage> languages;
+
+	private static String meshCrUrl;
 
 	@Rule
 	public MeshTestRule meshTestRule = new MeshTestRule(mesh);
@@ -120,6 +126,8 @@ public class MeshPublishTest {
 		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
 		crId = createMeshCR(mesh, MESH_PROJECT_NAME);
 
+		meshCrUrl = supply(t -> t.getObject(ContentRepository.class, crId).getEffectiveUrl());
+
 		TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(crId), false, null, null, null);
 		assertResponseCodeOk(entriesResponse);
 		contentEntryId = entriesResponse.getItems().stream().filter(entry -> "content".equals(entry.getMapname())).findFirst()
@@ -131,7 +139,7 @@ public class MeshPublishTest {
 
 		template = Trx.supply(() -> createTemplate(node.getFolder(), "Template"));
 
-		Integer pageUrlConstructId = Trx.supply(() -> createConstruct(node, PageURLPartType.class, "pageurl", "url"));
+		pageUrlConstructId = Trx.supply(() -> createConstruct(node, PageURLPartType.class, "pageurl", "url"));
 		Trx.operate(() -> createObjectPropertyDefinition(Folder.TYPE_FOLDER, pageUrlConstructId, "Startpage", "startpage"));
 	}
 
@@ -154,9 +162,13 @@ public class MeshPublishTest {
 		contentEntry.setTagname("");
 		crResource.updateEntry(Integer.toString(crId), Integer.toString(contentEntryId), contentEntry);
 
-		// disable instant publishing
+		// disable instant publishing and set username/password and URL
 		ContentRepositoryModel crModel = new ContentRepositoryModel();
 		crModel.setInstantPublishing(false);
+		crModel.setUsername("admin");
+		crModel.setPassword("admin");
+		crModel.setPasswordType(PasswordType.value);
+		crModel.setUrl(meshCrUrl);
 		crResource.update(Integer.toString(crId), crModel);
 	}
 
@@ -489,7 +501,8 @@ public class MeshPublishTest {
 
 		// create 100 schemas and assign to project
 		for (int i = 0; i < 100; i++) {
-			SchemaResponse schemaResponse = mesh.client().createSchema(new SchemaCreateRequest().setName(String.format("DummySchema_%d", i))).blockingGet();
+			SchemaResponse schemaResponse = mesh.client().createSchema(
+					new SchemaCreateRequest().setNoIndex((i % 2) == 0).setName(String.format("DummySchema_%d", i))).blockingGet();
 			mesh.client().assignSchemaToProject(MESH_PROJECT_NAME, schemaResponse.getUuid()).blockingGet();
 		}
 
@@ -617,6 +630,98 @@ public class MeshPublishTest {
 		assertObject("Check otherpage", mesh.client(), MESH_PROJECT_NAME, otherpage, true, meshPage -> {
 			assertThat(meshPage.getFields().getStringField("filename").getString()).isEqualTo("page.html");
 		});
+	}
+
+	/**
+	 * Test moving contents from a folder and then deleting that folder
+	 * @throws Exception
+	 */
+	@Test
+	public void testMoveContentsIntoOtherNode() throws Exception {
+		String otherMeshProjectName = "othertestproject";
+
+		// create other unattended node
+		Node otherNode = supply(() -> createNode("otherNode", "OtherNode", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
+		Integer otherCrId = createMeshCR(mesh, otherMeshProjectName);
+
+		try {
+			TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(otherCrId), false, null, null, null);
+			assertResponseCodeOk(entriesResponse);
+
+			Trx.operate(() -> update(otherNode, n -> {
+				n.setContentrepositoryId(otherCrId);
+			}));
+
+			Trx.operate(trx -> {
+				template.getNodes().add(otherNode);
+				trx.getObject(Construct.class, pageUrlConstructId).getNodes().add(otherNode);
+			});
+
+			// create folder1 containing a page
+			Folder folder1 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(node.getFolder().getId());
+					f.setName("Testfolder 1");
+					f.setPublishDir("folder1");
+				});
+			});
+
+			Page page = Trx.supply(() -> {
+				return create(Page.class, p -> {
+					p.setTemplateId(template.getId());
+					p.setFolderId(folder1.getId());
+					p.setName("Page");
+				});
+			});
+			Trx.consume(upd -> update(upd, Page::publish), page);
+
+			// create folder2 (empty)
+			Folder folder2 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(otherNode.getFolder().getId());
+					f.setName("Testfolder 2");
+					f.setPublishDir("folder2");
+				});
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), MESH_PROJECT_NAME, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder1));
+				});
+			});
+
+			// move page to folder2
+			Trx.operate(() -> {
+				OpResult result = page.move(folder2, 0, true);
+				assertThat(result.isOK()).isTrue();
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), otherMeshProjectName, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder2));
+				});
+			});
+		} finally {
+			operate(() -> otherNode.delete(true));
+		}		
 	}
 
 	/**
@@ -1104,5 +1209,34 @@ public class MeshPublishTest {
 				assertThat(node.getAvailableLanguages().get("en")).as("English version").hasFieldOrPropertyWithValue("published", true);
 			});
 		});
+	}
+
+	/**
+	 * Test that the {@link MeshPublisher} uses property substitution for the username/password and URL when connecting to Mesh
+	 * @throws Exception
+	 */
+	@Test
+	public void testPropertySubstitution() throws Exception {
+		// update username, password and URL to a system property
+		ContentRepositoryModel crModel = new ContentRepositoryModel();
+		crModel.setUsernameProperty("${sys:CR_USERNAME_TEST}");
+		crModel.setPasswordProperty("${sys:CR_PASSWORD_TEST}");
+		crModel.setPasswordType(PasswordType.property);
+		crModel.setUrlProperty("${sys:CR_URL_TEST}");
+		crResource.update(Integer.toString(crId), crModel);
+
+		// set the system properties
+		System.setProperty("CR_USERNAME_TEST", "admin");
+		System.setProperty("CR_PASSWORD_TEST", "admin");
+		System.setProperty("CR_URL_TEST", meshCrUrl);
+
+		// repair the CR
+		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+		ContentNodeRESTUtils.assertResponseOK(response);
+		if (response.getContentRepository().getCheckStatus() != Status.ok) {
+			fail(response.getContentRepository().getCheckResult());
+		}
+
+		assertMeshProject(mesh.client(), MESH_PROJECT_NAME);
 	}
 }

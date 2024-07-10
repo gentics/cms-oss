@@ -1,7 +1,7 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MessageFromServer } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { Observable, throwError } from 'rxjs';
+import { NEVER, Observable, of, throwError } from 'rxjs';
 import { ApplicationStateService } from '..';
 import { Api } from '../../../core/providers/api/api.service';
 import { STATE_MODULES } from '../../modules';
@@ -33,7 +33,7 @@ describe('MessageActionsService', () => {
             let loadingWasStarted = false;
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages').and.callFake(() => {
                 loadingWasStarted = true;
-                return Observable.never();
+                return NEVER;
             });
 
             messageActions.fetchAllMessages();
@@ -44,7 +44,7 @@ describe('MessageActionsService', () => {
 
         it('fetches read and unread messages from the API', fakeAsync(() => {
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages')
-                .and.callFake(() => Observable.never());
+                .and.callFake(() => NEVER);
 
             messageActions.fetchAllMessages();
             tick();
@@ -62,7 +62,7 @@ describe('MessageActionsService', () => {
                 type: 'INFO',
                 isInstantMessage: false,
             };
-            api.messages.getMessages = () => Observable.of({ messages: [message] });
+            api.messages.getMessages = () => of({ messages: [message] });
 
             messageActions.fetchAllMessages();
             tick();
@@ -84,7 +84,7 @@ describe('MessageActionsService', () => {
             };
 
             api.messages.getMessages = (unreadOnly: boolean) =>
-                Observable.of({ messages: unreadOnly ? unreadMessages : allMessages });
+                of({ messages: unreadOnly ? unreadMessages : allMessages });
 
             let resolved = false;
             messageActions.fetchAllMessages()
@@ -114,7 +114,7 @@ describe('MessageActionsService', () => {
             };
 
             api.messages.getMessages = (unreadOnly: boolean) =>
-                Observable.of({ messages: unreadOnly ? unreadMessages : allMessages });
+                of({ messages: unreadOnly ? unreadMessages : allMessages });
 
             let resolved = false;
             messageActions.fetchAllMessages()
@@ -142,7 +142,7 @@ describe('MessageActionsService', () => {
         }));
 
         it('does not reject the returned Promise when loading fails', fakeAsync(() => {
-            api.messages.getMessages = () => Observable.throw('Failed to load');
+            api.messages.getMessages = () => throwError('Failed to load');
             let rejected = false;
 
             messageActions.fetchAllMessages()
@@ -158,7 +158,7 @@ describe('MessageActionsService', () => {
             let wasDispatched = false;
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages').and.callFake(() => {
                 wasDispatched = true;
-                return Observable.never();
+                return NEVER;
             });
 
             messageActions.fetchUnreadMessages();
@@ -168,7 +168,7 @@ describe('MessageActionsService', () => {
 
         it('fetches unread messages from the API', () => {
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages')
-                .and.callFake(() => Observable.never());
+                .and.callFake(() => NEVER);
 
             messageActions.fetchUnreadMessages();
 
@@ -185,7 +185,7 @@ describe('MessageActionsService', () => {
                 type: 'INFO',
                 isInstantMessage: false,
             };
-            api.messages.getMessages = () => Observable.of({ messages: [message] });
+            api.messages.getMessages = () => of({ messages: [message] });
 
             messageActions.fetchUnreadMessages();
             tick();
@@ -205,7 +205,7 @@ describe('MessageActionsService', () => {
                 3: jasmine.objectContaining({ id: 3, message: 'Message Three', sender: 1, unread: true }),
             };
 
-            api.messages.getMessages = () => Observable.of({ messages: unreadMessages });
+            api.messages.getMessages = () => of({ messages: unreadMessages });
 
             let resolved = false;
             messageActions.fetchUnreadMessages()
@@ -230,7 +230,7 @@ describe('MessageActionsService', () => {
                 3: jasmine.objectContaining({ id: 3, message: 'Message Three', sender: 1, unread: true }),
             };
 
-            api.messages.getMessages = () => Observable.of({ messages: unreadMessages });
+            api.messages.getMessages = () => of({ messages: unreadMessages });
 
             let resolved = false;
             messageActions.fetchUnreadMessages()
@@ -257,7 +257,7 @@ describe('MessageActionsService', () => {
         }));
 
         it('does not reject returned Promise when loading fails', fakeAsync(() => {
-            api.messages.getMessages = () => Observable.throw('Failed to load');
+            api.messages.getMessages = () => throwError('Failed to load');
             let rejected = false;
 
             messageActions.fetchUnreadMessages()
@@ -283,7 +283,7 @@ describe('MessageActionsService', () => {
 
         it('marks the passed messages as read via the API', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
-                .and.returnValue(Observable.never());
+                .and.returnValue(NEVER);
 
             messageActions.markMessagesAsRead([1, 2, 3]);
             tick();
@@ -293,7 +293,7 @@ describe('MessageActionsService', () => {
 
         it('marks the messages as read in the app state when the API request succeeds', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
-                .and.callFake(() => Observable.of({}));
+                .and.callFake(() => of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
             tick();
@@ -303,7 +303,7 @@ describe('MessageActionsService', () => {
 
         it('does not mark the messages as read in the app state  when the API request fails', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
-                .and.callFake(() => Observable.throw('Request failed'));
+                .and.callFake(() => throwError('Request failed'));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
             tick();
@@ -313,7 +313,7 @@ describe('MessageActionsService', () => {
 
         it('works with an array of message IDs as input', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
-                .and.callFake(() => Observable.of({}));
+                .and.callFake(() => of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
             tick();

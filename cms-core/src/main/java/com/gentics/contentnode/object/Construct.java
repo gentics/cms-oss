@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.object;
 
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +35,7 @@ import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 
 /**
@@ -72,12 +73,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		} else if (from.getName() != null) {
 			to.setName(from.getName(), 1);
 		}
-		if (from.getHopeditHook() != null) {
-			to.setHopeditHook(from.getHopeditHook());
-		}
-		if (from.getIcon() != null) {
-			to.setIconName(from.getIcon());
-		}
 		if (from.getKeyword() != null) {
 			to.setKeyword(from.getKeyword());
 		}
@@ -90,10 +85,18 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		if (from.getCategoryId() != null) {
 			to.setConstructCategoryId(from.getCategoryId());
 		}
-		to.setAutoEnable(from.isAutoEnable());
-		to.setMayBeSubtag(from.getMayBeSubtag());
-		to.setMayContainSubtags(from.getMayContainSubtags());
-		to.setNewEditor(from.isNewEditor());
+		unwrap(()-> {
+			from.getAutoEnableOptional().ifPresent(wrap(to::setAutoEnable));
+			from.getMayContainSubtagsOptional().ifPresent(wrap(to::setMayContainSubtags));
+			from.getMayBeSubtagOptional().ifPresent(wrap(to::setMayBeSubtag));
+		});
+
+		if (from.getEditorControlStyle() != null) {
+			to.setEditorControlStyle(from.getEditorControlStyle());
+		}
+
+		to.setEditorControlInside(from.isEditorControlsInside());
+		to.setEditOnInsert(from.isOpenEditorOnInsert());
 
 		if (from.getParts() != null) {
 			List<Part> parts = to.getParts();
@@ -136,8 +139,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setDescriptionI18n(I18NHelper.toI18nMap(from.getDescription()));
 		to.setNameI18n(I18NHelper.toI18nMap(from.getName()));
 		to.setKeyword(from.getKeyword());
-		to.setIcon(from.getIconName());
-		to.setEditdo(from.containsOverviewPart() ? 17001 : 10008);
 		to.setCreator(ModelBuilder.getUser(from.getCreator()));
 		to.setCdate(from.getCDate().getIntTimestamp());
 		to.setEditor(ModelBuilder.getUser(from.getEditor()));
@@ -145,7 +146,9 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setAutoEnable(from.isAutoEnable());
 		to.setMayBeSubtag(from.mayBeSubtag());
 		to.setMayContainSubtags(from.mayContainSubtags());
-		to.setNewEditor(from.isNewEditor());
+		to.setOpenEditorOnInsert(from.editOnInsert());
+		to.setEditorControlStyle(from.editorControlStyle());
+		to.setEditorControlsInside(from.editorControlInside());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 		ConstructCategory category = from.getConstructCategory();
 
@@ -182,15 +185,15 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	public final static BiFunction<Construct, ConstructModel, ConstructModel> NODE2DEVTOOL = (from, to) -> {
 		to.setDescription(I18NHelper.toI18nMap(from.getDescription()));
 		to.setGlobalId(from.getGlobalId().toString());
-		to.setHopeditHook(from.getHopeditHook());
-		to.setIcon(from.getIconName());
 		to.setKeyword(from.getKeyword());
 		to.setLiveEditorTagName(from.getLiveEditorTagName());
 		to.setMayBeSubtag(from.mayBeSubtag());
 		to.setMayContainsSubtags(from.mayContainSubtags());
+		to.setEditOnInsert(from.editOnInsert());
+		to.setEditorControlStyle(from.editorControlStyle());
+		to.setEditorControlsInside(from.editorControlInside());
 		to.setAutoEnable(from.isAutoEnable());
 		to.setName(I18NHelper.toI18nMap(from.getName()));
-		to.setNewEditor(from.isNewEditor());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		unwrap(() -> {
@@ -288,29 +291,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 */
 	@FieldSetter("keyword")
 	public void setKeyword(String keyword) throws ReadOnlyException {
-		failReadOnly();
-	}
-
-	/**
-	 * get an icon of the construct.
-	 * @return the icon for this construct.
-	 */
-	public abstract Icon getIcon();
-
-	/**
-	 * Get the icon name
-	 * @return icon name
-	 */
-	@FieldGetter("icon")
-	public abstract String getIconName();
-
-	/**
-	 * Set icon name
-	 * @param iconName icon name
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("icon")
-	public void setIconName(String iconName) throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -477,23 +457,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		// no part is inline editable
 		return false;
 	}
-    
-	/**
-	 * returns the javascript "hopedit" hook which, if available
-	 * should replace the 'hopedit' call.
-	 */
-	@FieldGetter("hopedithook")
-	public abstract String getHopeditHook();
-
-	/**
-	 * Set the hopedit hook
-	 * @param hopeditHook hopedit hook
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("hopedithook")
-	public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
-		failReadOnly();
-	}
 
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.object.ValueContainer#resolvePartsWithShortCuts()
@@ -517,24 +480,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 */
 	@FieldSetter("liveeditortagname")
 	public void setLiveEditorTagName(String liveEditorTagName) throws ReadOnlyException {
-		failReadOnly();
-	}
-
-	/**
-	 * Check whether tags generated from this construct shall be edited with the new tag editor
-	 * @return newEditor flag
-	 * @throws NodeException
-	 */
-	@FieldGetter("new_editor")
-	public abstract boolean isNewEditor() throws NodeException;
-
-	/**
-	 * Set the newEditor flag
-	 * @param newEditor flag
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("new_editor")
-	public void setNewEditor(boolean newEditor) throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -563,7 +508,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	public abstract SystemUser getCreator() throws NodeException;
 
 	/**
-	 * get the creation date 
+	 * get the creation date
 	 * @return creation date
 	 */
 	public abstract ContentNodeDate getCDate();
@@ -574,7 +519,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-    
+
 	/**
 	 * get the last edit date
 	 * @return edit date
@@ -629,6 +574,60 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 */
 	@FieldSetter("intext")
 	public void setMayBeSubtag(boolean mayBeSubtag) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Return true if tag editor should be opened immediately when the
+	 * construct is inserted.
+	 * @return true if tag editor should be opened on insert.
+	 */
+	@FieldGetter("edit_on_insert")
+	public abstract boolean editOnInsert();
+
+	/**
+	 * Set whether the tag editor should be opened immediately when the
+	 * construct is inserted.
+	 *
+	 * @param editOnInsert Whether the tag editor should be opened on insert.
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("edit_on_insert")
+	public void setEditOnInsert(boolean editOnInsert) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get mode where the editor icons should be placed for this construct.
+	 * @return Mode where the editor icons should be placed for this construct.
+	 */
+	@FieldGetter("editor_control_style")
+	public abstract EditorControlStyle editorControlStyle();
+
+	/**
+	 * Set the mode where the editor controls should be placed.
+	 * @param editorControlStyle The mode where the editor controls should be placed.
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("editor_control_style")
+	public void setEditorControlStyle(EditorControlStyle editorControlStyle) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Return true if the editor controls should be displayed inside the rendered construct.
+	 * @return true if the editor controls should be displayed inside the rendered construct.
+	 */
+	@FieldGetter("editor_control_inside")
+	public abstract boolean editorControlInside();
+
+	/**
+	 * Set whether the editor controls should be placed inside the rendered construct.
+	 * @param editorControlInside Whether the editor controls should be placed inside the rendered construct.
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("editor_control_inside")
+	public void setEditorControlInside(boolean editorControlInside) throws ReadOnlyException {
 		failReadOnly();
 	}
 

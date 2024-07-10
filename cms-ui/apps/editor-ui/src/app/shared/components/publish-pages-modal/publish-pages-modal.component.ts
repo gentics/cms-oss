@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { LanguageVariantMap } from '@editor-ui/app/common/models';
 import { ItemType, Language, Page } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 
@@ -30,7 +29,6 @@ export class PublishPagesModalComponent implements IModalDialog {
 
     itemType: ItemType = 'page';
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
-    iconForItemType = iconForItemType;
 
     constructor(
         private entityResolver: EntityResolver,

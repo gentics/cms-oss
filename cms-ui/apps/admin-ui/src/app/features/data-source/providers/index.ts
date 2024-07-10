@@ -1,1 +1,1 @@
-export * from './can-activate-data-source/can-activate-data-source.guard';
+export * from './data-source-entry-table-loader/data-source-entry-table-loader.service';

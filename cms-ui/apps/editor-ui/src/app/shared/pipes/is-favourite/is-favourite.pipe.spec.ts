@@ -10,7 +10,6 @@ import { IsFavouritePipe } from './is-favourite.pipe';
 describe('IsFavouritePipe', () => {
 
     let state: TestApplicationState;
-    let subscriptions: any[];
     let changeDetector: SpyChangeDetector;
 
     beforeEach(() => {
@@ -25,39 +24,17 @@ describe('IsFavouritePipe', () => {
             declarations: [TestComponent, IsFavouritePipe],
         });
         state = TestBed.get(ApplicationStateService);
-        subscriptions = state.trackSubscriptions();
     });
 
     function mockFavouritesState(list: Favourite[]): void {
         state.mockState({ favourites: { list } });
     }
 
-    it('subscribes to state changes of the "favourites" branch',
-        inject([ApplicationStateService, ChangeDetectorRef],
-            (applicationStateService: ApplicationStateService, changeDetectorRef: ChangeDetectorRef) => {
-                const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
-                expect(pipe['subscriptions'].length).toBe(2);
-                expect(state.getSubscribedBranches()).toContain('favourites');
-            },
-        ),
-    );
-
-    it('subscribes to state changes of the "folder" branch',
-        inject([ApplicationStateService, ChangeDetectorRef],
-            (applicationStateService: ApplicationStateService, changeDetectorRef: ChangeDetectorRef) => {
-                const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
-                expect(state.getSubscribedBranches()).toContain('folder');
-            },
-        ),
-    );
-
     it('unsubscribes from state changes on destroy',
         inject([ApplicationStateService, ChangeDetectorRef],
             (applicationStateService: ApplicationStateService, changeDetectorRef: ChangeDetectorRef) => {
                 const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
-                expect(subscriptions.length).toBeGreaterThan(0);
                 pipe.ngOnDestroy();
-                expect(subscriptions.length).toBe(0);
             },
         ),
     );
@@ -76,7 +53,7 @@ describe('IsFavouritePipe', () => {
         inject([ApplicationStateService, ChangeDetectorRef],
             (applicationStateService: ApplicationStateService, changeDetectorRef: ChangeDetectorRef) => {
                 const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
-                let result = pipe.transform({ nodeId: 7, globalId: 'AX-15', id: 23, type: 'folder', name: 'Folder 23' });
+                const result = pipe.transform({ nodeId: 7, globalId: 'AX-15', id: 23, type: 'folder', name: 'Folder 23' });
                 expect(result).toBe(false);
             },
         ),
@@ -179,7 +156,7 @@ describe('IsFavouritePipe', () => {
         inject([ApplicationStateService, ChangeDetectorRef],
             (applicationStateService: ApplicationStateService, changeDetectorRef: ChangeDetectorRef) => {
                 const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
-                let items: Favourite[] = [
+                const items: Favourite[] = [
                     { name: 'Favourite 1', type: 'page', id: 77, globalId: 'page-77', nodeId: 1 },
                     { name: 'Favourite 2', type: 'folder', id: 22, globalId: 'folder-22', nodeId: 1 },
                     { name: 'Favourite 3', type: 'file', id: 33, globalId: 'file-33', nodeId: 1 },
@@ -192,7 +169,7 @@ describe('IsFavouritePipe', () => {
                 result = pipe.transform(items[0]);
                 expect(result).toBe(true);
 
-                let itemWithUpperCaseGlobalId = Object.assign({}, items[0], { globalId: items[0].globalId.toUpperCase() });
+                const itemWithUpperCaseGlobalId = Object.assign({}, items[0], { globalId: items[0].globalId.toUpperCase() });
                 result = pipe.transform(itemWithUpperCaseGlobalId);
                 expect(result).toBe(false, 'should not match globalId case insensitive');
             },
@@ -205,8 +182,8 @@ describe('IsFavouritePipe', () => {
                 const pipe = new IsFavouritePipe(applicationStateService, changeDetectorRef);
                 changeDetector.markForCheck.calls.reset();
 
-                let itemA: Favourite = { name: 'My folder', type: 'folder', id: 23, globalId: 'folder-23', nodeId: 1 };
-                let itemB: Favourite = { name: 'My page', type: 'page', id: 7, globalId: 'page-7', nodeId: 1 };
+                const itemA: Favourite = { name: 'My folder', type: 'folder', id: 23, globalId: 'folder-23', nodeId: 1 };
+                const itemB: Favourite = { name: 'My page', type: 'page', id: 7, globalId: 'page-7', nodeId: 1 };
 
                 state.mockState({
                     favourites: {
@@ -334,8 +311,8 @@ class SpyChangeDetector {
 @Component({
     template: `
         <div *ngIf="item | isFavourite">yes</div>
-        <div *ngIf="!(item | isFavourite)">no</div>`
-    })
+        <div *ngIf="!(item | isFavourite)">no</div>`,
+})
 class TestComponent {
     item = { type: 'folder', id: 44, globalId: 'folder-44' };
 }

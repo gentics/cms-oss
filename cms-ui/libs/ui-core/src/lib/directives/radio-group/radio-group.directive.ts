@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 import { RadioButtonComponent } from '../../components/radio-button/radio-button.component';
 import { generateFormProvider } from '../../utils';
@@ -11,14 +11,18 @@ import { generateFormProvider } from '../../utils';
     selector: 'gtx-radio-group, [gtx-radio-group]',
     providers: [generateFormProvider(RadioGroupDirective)],
 })
-export class RadioGroupDirective implements ControlValueAccessor {
+export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 
     private static instanceCounter = 0;
 
     private radioButtons: RadioButtonComponent[] = [];
     private groupID: number;
 
-    public writtenValue: any;
+    @Input()
+    public value: any;
+
+    @Output()
+    public valueChange = new EventEmitter<any>();
 
     get uniqueName(): string {
         return `group-${this.groupID}`;
@@ -28,10 +32,16 @@ export class RadioGroupDirective implements ControlValueAccessor {
         this.groupID = RadioGroupDirective.instanceCounter++;
     }
 
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.value) {
+            this.forwardValueToRadios();
+        }
+    }
+
     add(radio: RadioButtonComponent): void {
         if (this.radioButtons.indexOf(radio) < 0) {
             this.radioButtons.push(radio);
-            radio.writeValue(this.writtenValue);
+            radio.writeValue(this.value);
         }
     }
 
@@ -53,16 +63,20 @@ export class RadioGroupDirective implements ControlValueAccessor {
         // ngModel value, we will cause "changed after checked" errors in dev mode.
         setTimeout(() => {
             this.onChange(selected ? selected.value : null);
+            this.valueChange.emit(selected ? selected.value : null);
             this.onTouched();
         });
     }
 
-    writeValue(value: any): void {
-        this.writtenValue = value;
-
+    private forwardValueToRadios() {
         for (const radio of this.radioButtons) {
-            radio.writeValue(value);
+            radio.writeValue(this.value);
         }
+    }
+
+    writeValue(value: any): void {
+        this.value = value;
+        this.forwardValueToRadios();
     }
 
     registerOnChange(fn: () => any): void {

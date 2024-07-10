@@ -1,7 +1,7 @@
 <gtx-sidebar-item [title]="title">
     <div class="row">
         <div class="title">{{ 'widget.cms_status_version_information' | i18n }}</div>
-        <a href="#">{{ (uiState$ | async).cmpVersion?.version }} </a>
+        {{ (uiState$ | async).cmpVersion?.version }} {{ (uiState$ | async).cmpVersion?.variant }}
     </div>
 
     <div class="row" *ngIf="(updates$ | async) as updates">

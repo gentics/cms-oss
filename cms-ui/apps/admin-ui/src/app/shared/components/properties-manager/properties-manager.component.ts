@@ -12,7 +12,8 @@ import {
     SimpleChanges,
     TemplateRef,
 } from '@angular/core';
-import { Feature, ICON_MAPPING, Tag, TagEditorChange } from '@gentics/cms-models';
+import { TagEditorChange } from '@gentics/cms-integration-api-models';
+import { Feature, Tag } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -131,7 +132,6 @@ export class PropertiesManagerComponent implements OnChanges, OnInit {
             isGroup: false,
             id: `${prefix}_${tagName}`,
             label: tag.name,
-            icon: ICON_MAPPING[tag.construct?.icon || null],
         };
 
         tagNames[tab.id] = tagName;

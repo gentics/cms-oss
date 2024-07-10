@@ -19,7 +19,7 @@
         </gtx-dropdown-item>
 
         <gtx-dropdown-item
-            *ngFor="let pkg of contentPackages | values"
+            *ngFor="let pkg of contentPackages | gtxValues"
             [class.selected]="selectedPackage === pkg.id"
             (click)="onSelectChange(pkg.id)"
         >{{ pkg.name }}</gtx-dropdown-item>

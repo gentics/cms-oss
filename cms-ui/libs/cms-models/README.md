@@ -4,23 +4,6 @@ This library contains TypeScript interfaces for
 
 * the most commonly used data types supplied by the [GCMS REST API](https://www.gentics.com/Content.Node/guides/restapi/data.html)
 * the types used by the repository browser
-* the [new TagEditor](https://www.gentics.com/Content.Node/guides/feature_new_tag_editor.html)
-* the [window.GCMSUI](https://www.gentics.com/Content.Node/guides/feature_gcmsui_object.html) object available in editor IFrames
-
-Many Gentics apps use an app state, where nested model types are normalized before storing them in the state.
-For details about this, please see the [Normalizable Model Types](#normalizable-model-types) section.
-
-## Package repository settings
-
-Authenticate:
-```bash
-npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
-```
-
-Setup @gentics scope to the APA IT repository:
-```bash
-npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
-```
 
 ## Installing
 
@@ -31,6 +14,9 @@ Run `npm i --save @gentics/cms-models` in your project's folder.
 You can then import the types from this package, e.g., `import { Page } from '@gentics/cms-models';`.
 
 ## Normalizable Model Types
+
+> **DEPRECATED**: Please do not use any of the normalization features/utility.
+> Normalization/mangling of the regular Rest models are application dependend, and should be done in the application layer.
 
 Many Gentics apps store model objects, which may have nested model objects, in the application state in a normalized form obtained using [normalizr](https://github.com/paularmstrong/normalizr).
 For such model types, their corresponding interfaces support both the **normalized** form stored in the app state and the **raw** form, which is returned by the REST API.
@@ -117,21 +103,3 @@ export type Page<T extends ModelType = AnyModelType> = Page<T>;
 ```
 
 To normalize or denormalize entities, the [GcmsNormalizer](./src/lib/models/gcms-normalizer/gcms-normalizer.ts) should be used.
-
-## Build
-
-Run `npm run build:models` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Testing package locally
-
-Do a build and run `npm link` in the `dist/libs/cms-models/` folder. After that go to your project where you want to use this package and run `npm link @gentics/cms-models`.
-
-## Publishing
-
-You need to authenticate before publishing the package!
-
-After building your library with `npm run build cms-models`, go to the dist folder `cd dist/libs/cms-models` and run `npm publish`.
-
-## Running unit tests
-
-Run `npm test cms-models` to execute the unit tests via [Karma](https://karma-runner.github.io).

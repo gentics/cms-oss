@@ -1,5 +1,6 @@
 import { Injectable, OnInit } from '@angular/core';
-import { File as FileModel, Folder, GcmsUiLanguage, Image, Node, Page } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { File as FileModel, Folder, Image, Node, Page } from '@gentics/cms-models';
 import { IModalDialog, ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { ApplicationStateService } from '../../../state';

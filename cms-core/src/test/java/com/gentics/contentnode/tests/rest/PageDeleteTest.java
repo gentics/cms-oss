@@ -109,7 +109,7 @@ public class PageDeleteTest {
 		});
 
 		operate(() -> {
-			assertResponseOK(getPageResource().delete(Integer.toString(english.getId()), null));
+			assertResponseOK(getPageResource().delete(Integer.toString(english.getId()), null, null));
 		});
 
 		assertNotDeleted(german);
@@ -153,7 +153,7 @@ public class PageDeleteTest {
 
 		// delete the english variant
 		operate(() -> {
-			assertResponseOK(getPageResource().delete(Integer.toString(english.getId()), null));
+			assertResponseOK(getPageResource().delete(Integer.toString(english.getId()), null, null));
 		});
 
 		assertNotDeleted(german);
@@ -162,7 +162,7 @@ public class PageDeleteTest {
 
 		// delete the german variant (which is the last one) -> also french must be deleted
 		operate(() -> {
-			assertResponseOK(getPageResource().delete(Integer.toString(german.getId()), null));
+			assertResponseOK(getPageResource().delete(Integer.toString(german.getId()), null, null));
 		});
 
 		assertDeleted(german);

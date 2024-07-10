@@ -1,20 +1,22 @@
-import { MultiModuleUserActionPermissions, UserActionPermissions, USER_ACTION_PERMISSIONS } from '@admin-ui/common';
+import { MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { AddTypePermissionsMap } from '@admin-ui/state/permissions/permissions.actions';
 import { Inject, Injectable } from '@angular/core';
 import {
-    AccessControlledType,
     DefaultPermissionsFactory,
-    EntityIdType,
     FolderInstancePermissions,
-    GcmsPermission,
     InstancePermissions,
     TypePermissions,
     UniformInstancePermissions,
     UniformTypePermissions,
+} from '@gentics/cms-components';
+import {
+    AccessControlledType,
+    EntityIdType,
+    GcmsPermission,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { combineLatest, Observable, of as observableOf, ReplaySubject } from 'rxjs';
+import { Observable, ReplaySubject, combineLatest, of } from 'rxjs';
 import {
     catchError,
     map,
@@ -153,7 +155,7 @@ export class PermissionsService extends ServiceBase {
                 }),
                 catchError(error => {
                     this.errorHandler.catch(error, { notification: true });
-                    return observableOf(null);
+                    return of(null);
                 }),
                 switchMapTo(permsFromAppState$),
             );
@@ -183,7 +185,7 @@ export class PermissionsService extends ServiceBase {
         nodeId?: number,
         forceRefresh: boolean = false,
     ): Observable<InstancePermissions> {
-        const cacheKey = `${type}/${instanceId}${nodeId ? '/' + nodeId : ''}`;
+        const cacheKey = `${type}/${instanceId}${nodeId ? `/${nodeId}` : ''}`;
         if (!forceRefresh && this.instanceCache[cacheKey]) {
             return (this.instanceCache[cacheKey]).asObservable();
         }
@@ -208,7 +210,7 @@ export class PermissionsService extends ServiceBase {
             }),
             catchError(error => {
                 this.errorHandler.catch(error, { notification: true });
-                return observableOf(new UniformInstancePermissions(type, false, instanceId, nodeId));
+                return of(new UniformInstancePermissions(type, false, instanceId, nodeId));
             }),
         );
     }
@@ -257,7 +259,7 @@ export class PermissionsService extends ServiceBase {
             nodeId = nodeIdOrPermissions;
         }
 
-        const cacheKey = `${type}/${instanceId}${nodeId > 0 ? '/' + nodeId : ''}`;
+        const cacheKey = `${type}/${instanceId}${nodeId > 0 ? `/${nodeId}` : ''}`;
         const constructed: InstancePermissions = {
             type,
             instanceId,
@@ -280,7 +282,7 @@ export class PermissionsService extends ServiceBase {
     checkPermissions(requiredPermissions: RequiredPermissions | RequiredPermissions[]): Observable<boolean> {
         // empty array will return true
         if (Array.isArray(requiredPermissions) && requiredPermissions.length === 0) {
-            return observableOf(true);
+            return of(true);
         }
         const reqPermissions = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
         const permChecks: Observable<boolean>[] = reqPermissions.map(reqPerm => this.executePermissionsCheck(reqPerm));

@@ -1,6 +1,7 @@
 import {
     EntityIdType,
     Response,
+    ScheduleCreateReqeust,
     ScheduleExecutionListOptions,
     ScheduleExecutionListResponse,
     ScheduleExecutionResponse,
@@ -10,6 +11,7 @@ import {
     SchedulerStatusResponse,
     SchedulerSuspendRequest,
     ScheduleSaveReqeust,
+    ScheduleTaskCreateRequest,
     ScheduleTaskListOptions,
     ScheduleTaskListResponse,
     ScheduleTaskResponse,
@@ -49,7 +51,7 @@ export class SchedulerApi {
         return this.apiBase.get('scheduler/task', options);
     }
 
-    createTask(body: ScheduleTaskSaveRequest): Observable<ScheduleTaskResponse> {
+    createTask(body: ScheduleTaskCreateRequest): Observable<ScheduleTaskResponse> {
         return this.apiBase.post('scheduler/task', body);
     }
 
@@ -81,7 +83,7 @@ export class SchedulerApi {
         return this.apiBase.get('scheduler/schedule', options);
     }
 
-    createSchedule(body: ScheduleSaveReqeust): Observable<ScheduleResponse> {
+    createSchedule(body: ScheduleCreateReqeust): Observable<ScheduleResponse> {
         return this.apiBase.post('scheduler/schedule', body);
     }
 

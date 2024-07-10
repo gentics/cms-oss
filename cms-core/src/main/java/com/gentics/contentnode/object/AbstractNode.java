@@ -156,7 +156,22 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public void setPublishImageVariants(boolean publishImageVariants) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
 	public void setHostname(String hostname) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setHostnameProperty(String hostProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void resolveHostnameProperty() throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -401,6 +416,16 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 
 	@Override
 	public void setMeshPreviewUrl(String url) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setMeshPreviewUrlProperty(String urlProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void resolveMeshPreviewUrlProperty() throws ReadOnlyException {
 		failReadOnly();
 	}
 

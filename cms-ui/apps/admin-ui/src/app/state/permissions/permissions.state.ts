@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AccessControlledType, Index, PermissionsMapCollection } from '@gentics/cms-models';
+import { AccessControlledType, PermissionsMapCollection } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils';
 import { AddTypePermissionsMap, ClearAllPermissions } from './permissions.actions';
@@ -7,7 +7,7 @@ import { AddTypePermissionsMap, ClearAllPermissions } from './permissions.action
 /**
  * Maps each `AccessControlledType` to its `PermissionsMapCollection` if it has been loaded.
  */
-export type TypePermissionsIndex = Partial<Index<AccessControlledType, PermissionsMapCollection>>;
+export type TypePermissionsIndex = Partial<Record<AccessControlledType, PermissionsMapCollection>>;
 
 /**
  * Contains the currently loaded permissions of the current user.

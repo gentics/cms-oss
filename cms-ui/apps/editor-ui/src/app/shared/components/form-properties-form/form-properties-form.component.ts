@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -11,12 +11,12 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
+import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { FormProperties } from '@gentics/cms-components';
 import {
+    CmsFormData,
     CmsFormElementI18nValue,
     CmsFormType,
     EditableFormProps,
@@ -27,7 +27,7 @@ import {
     Page,
     Raw,
 } from '@gentics/cms-models';
-import { FolderApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     FormEditorConfiguration,
     FormEditorConfigurationService,
@@ -36,7 +36,8 @@ import {
     FormPropertiesConfiguration,
 } from '@gentics/form-generator';
 import { UILanguage } from '@gentics/image-editor';
-import { isEqual } from 'lodash';
+import { setControlsEnabled } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
@@ -49,6 +50,8 @@ import { SelectedItemHelper } from '../../util/selected-item-helper/selected-ite
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy {
+
+    public readonly CMS_FORM_TYPES: CmsFormType[] = Object.values(CmsFormType);
 
     @Input()
     public nodeId: number;
@@ -86,11 +89,8 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     @Output()
     public changes = new EventEmitter<EditableFormProps>();
 
-    formGroup: UntypedFormGroup;
-    private subscriptions: Subscription[] = [];
-    formValue: EditableFormProps = {};
-
-    formTypes: CmsFormType[] = Object.values(CmsFormType);
+    formGroup: FormGroup<FormProperties<EditableFormProps>>;
+    dataGroup: FormGroup<FormProperties<CmsFormData>>;
 
     /** Copy of the form property for easy access in the template / avoid several reevaluations due to function calls in the template */
     useInternalSuccessPage: boolean;
@@ -99,6 +99,8 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     /** The helper for managing and loading the selected internal page. */
     private selectedInternalPageHelper: SelectedItemHelper<ItemInNode<Page<Raw>>>;
     private selectedEmailTemplatePageHelper: SelectedItemHelper<ItemInNode<Page<Raw>>>;
+
+    private subscriptions: Subscription[] = [];
 
     successPageDisplayValue$: Observable<string>;
     emailTemplatePageDisplayValue$: Observable<string>;
@@ -125,7 +127,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     );
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private appState: ApplicationStateService,
         private formEditorService: FormEditorService,
         private formEditorConfigurationService: FormEditorConfigurationService,
@@ -136,45 +138,47 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
 
     ngOnInit(): void {
         // fallback: transfers old successurl to new successurl_i18n
-        const { successurl, successurl_i18n } = this.migrateSuccessUrl(this.properties.successurl, this.properties.successurl_i18n, this.properties.languages);
-        this.properties.successurl = successurl;
-        this.properties.successurl_i18n = successurl_i18n;
+        const { successurl, successurl_i18n } = this.migrateSuccessUrl(
+            this.properties?.data?.successurl,
+            this.properties?.data?.successurl_i18n,
+            this.properties.languages,
+        );
+        if (this.properties.data == null) {
+            this.properties.data = {};
+        }
+        this.properties.data.successurl = successurl;
+        this.properties.data.successurl_i18n = successurl_i18n;
 
-        this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(this.properties.type ? this.properties.type : CmsFormType.GENERIC).pipe(
+        this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(this.properties?.data?.type ?? CmsFormType.GENERIC).pipe(
             take(1),
         ).subscribe((formEditorConfiguration: FormEditorConfiguration): void => {
             this.formPropertiesConfigurationSubject.next(formEditorConfiguration.form_properties);
-            this.previousFormType = this.properties.type ? this.properties.type : CmsFormType.GENERIC;
+            this.previousFormType = this.properties?.data?.type ?? CmsFormType.GENERIC;
         }));
 
         // set up form controls
-        this.formGroup = new UntypedFormGroup({
-            name: new UntypedFormControl(this.properties.name || '', Validators.required),
-            description: new UntypedFormControl(this.properties.description || ''),
-            email: new UntypedFormControl(this.properties.email || ''),
-            mailsubject_i18n: new UntypedFormControl(this.properties.mailsubject_i18n || null),
-            successPageId: new UntypedFormControl(this.properties.successPageId || 0),
-            successNodeId: new UntypedFormControl(this.properties.successNodeId || 0),
-            successurl_i18n: new UntypedFormControl(this.properties.successurl_i18n || null),
-            mailsource_pageid: new UntypedFormControl(this.properties.mailsource_pageid || null),
-            mailsource_nodeid: new UntypedFormControl(this.properties.mailsource_nodeid || null),
-            mailtemp_i18n: new UntypedFormControl(this.properties.mailtemp_i18n || null),
+        this.dataGroup = new FormGroup<FormProperties<CmsFormData>>({
+            email: new FormControl(this.properties?.data?.email || ''),
+            successurl_i18n: new FormControl(this.properties?.data?.successurl_i18n || null),
+            mailsubject_i18n: new FormControl(this.properties?.data?.mailsubject_i18n || null),
+            mailsource_pageid: new FormControl(this.properties?.data?.mailsource_pageid || null),
+            mailsource_nodeid: new FormControl(this.properties?.data?.mailsource_nodeid || null),
+            mailtemp_i18n: new FormControl(this.properties?.data?.mailtemp_i18n || null),
             // set default value
-            languages: new UntypedFormControl(this.properties.languages || null),
-            templateContext: new UntypedFormControl(this.properties.templateContext || ''),
-            type: new UntypedFormControl(this.properties.type || CmsFormType.GENERIC),
+            templateContext: new FormControl(this.properties?.data?.templateContext || ''),
+            type: new FormControl(this.properties?.data?.type || CmsFormType.GENERIC),
             // needs to be stored here, otherwise updating data object without elements will delete whole form
-            elements: new UntypedFormControl(this.properties.elements || []),
-            useInternalSuccessPage: new UntypedFormControl(this.isInternalPageUsed(
-                this.properties.successPageId,
-                this.properties.successNodeId,
-                this.properties.successurl_i18n,
-            )),
-            useEmailPageTemplate: new UntypedFormControl(this.isEmailTemplateUsed(
-                this.properties.mailsource_pageid,
-                this.properties.mailsource_nodeid,
-                this.properties.mailtemp_i18n,
-            )),
+            elements: new FormControl(this.properties?.data?.elements || []),
+        });
+
+        this.formGroup = new FormGroup<FormProperties<EditableFormProps>>({
+            name: new FormControl(this.properties.name || '', Validators.required),
+            description: new FormControl(this.properties.description || ''),
+            successPageId: new FormControl(this.properties?.successPageId || 0),
+            successNodeId: new FormControl(this.properties?.successNodeId || 0),
+            languages: new FormControl(this.properties?.languages || null),
+
+            data: this.dataGroup,
         },
         /**
          * In order to check if for mdata has been modified and since `deepEqual` can't be used
@@ -190,15 +194,15 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
         this.useInternalSuccessPage = this.isInternalPageUsed(
             this.properties.successPageId,
             this.properties.successNodeId,
-            this.properties.successurl_i18n,
+            this.properties?.data?.successurl_i18n,
         );
         this.useEmailPageTemplate = this.isEmailTemplateUsed(
-            this.properties.mailsource_pageid,
-            this.properties.mailsource_nodeid,
-            this.properties.mailtemp_i18n,
+            this.properties?.data?.mailsource_pageid,
+            this.properties?.data?.mailsource_nodeid,
+            this.properties?.data?.mailtemp_i18n,
         );
 
-        this.selectedInternalPageHelper = new SelectedItemHelper('page', -1, this.api.folders);
+        this.selectedInternalPageHelper = new SelectedItemHelper('page', -1, this.client);
         if (typeof this.properties.successPageId === 'number' && this.properties.successPageId !== 0) {
             /**
              * successNodeId is not checked to display an honest representation of the data currently stored in the CMS.
@@ -209,13 +213,13 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
              */
             this.selectedInternalPageHelper.setSelectedItem(this.properties.successPageId, this.properties.successNodeId);
         } else {
-            this.formGroup.get('successPageId').setValue(0, { emitEvent: false });
-            this.formGroup.get('successNodeId').setValue(0, { emitEvent: false });
+            this.formGroup.controls.successPageId.setValue(0, { emitEvent: false });
+            this.formGroup.controls.successNodeId.setValue(0, { emitEvent: false });
             this.selectedInternalPageHelper.setSelectedItem(null);
         }
 
-        this.selectedEmailTemplatePageHelper = this.initSelectedItemHelper('page', -1, this.api.folders);
-        if (typeof this.properties.mailsource_pageid === 'number' && this.properties.mailsource_pageid !== 0) {
+        this.selectedEmailTemplatePageHelper = this.initSelectedItemHelper('page', -1);
+        if (typeof this.properties.data.mailsource_pageid === 'number' && this.properties.data.mailsource_pageid !== 0) {
             /**
              * mailsource_pageid is not checked to display an honest representation of the data currently stored in the CMS.
              *
@@ -223,10 +227,10 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
              * that something is selected. However, we cannot guarantee with this util class to find the page the backend uses
              * without its corresponding node.
              */
-            this.selectedEmailTemplatePageHelper.setSelectedItem(this.properties.mailsource_pageid, this.properties.mailsource_nodeid);
+            this.selectedEmailTemplatePageHelper.setSelectedItem(this.properties.data.mailsource_pageid, this.properties.data.mailsource_nodeid);
         } else {
-            this.formGroup.get('mailsource_pageid').setValue(0, { emitEvent: false });
-            this.formGroup.get('mailsource_nodeid').setValue(0, { emitEvent: false });
+            this.dataGroup.controls.mailsource_pageid.setValue(0, { emitEvent: false });
+            this.dataGroup.controls.mailsource_nodeid.setValue(0, { emitEvent: false });
             this.selectedEmailTemplatePageHelper.setSelectedItem(null);
         }
 
@@ -249,45 +253,22 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
              * However, sometimes only a partial form is emitted (this has not yet been debugged).
              * Thus, in that case we simply ignore that type is undefined and proceed as usual / as before.
              */
-            if (!!changes.type && changes.type !== this.previousFormType) {
-                this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(changes.type).pipe(
+            if (!!changes.data?.type && changes.data.type !== this.previousFormType) {
+                this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(changes.data.type).pipe(
                     take(1),
                 ).subscribe((formEditorConfiguration: FormEditorConfiguration): void => {
                     this.formPropertiesConfigurationSubject.next(formEditorConfiguration.form_properties);
-                    this.previousFormType = changes.type;
+                    this.previousFormType = changes.data.type;
                 }));
             }
 
-            // update of property languages to update i18n inputs
-            this.useInternalSuccessPage = !!changes.useInternalSuccessPage;
-
-            // remove data that is not needed based on ''useInternalSuccessPage''
-            this.formValue = {
-                name: changes.name,
-                description: changes.description,
-                email: changes.email,
-                mailsubject_i18n: changes.mailsubject_i18n,
-                successPageId: changes.useInternalSuccessPage ? changes.successPageId : 0, // 0 if unused
-                successNodeId: changes.useInternalSuccessPage ? changes.successNodeId : 0, // 0 if unused
-                successurl_i18n: !changes.useInternalSuccessPage ? changes.successurl_i18n : undefined, // undefined if unused
-                mailsource_pageid: changes.useEmailPageTemplate ? changes.mailsource_pageid : 0, // 0 if unused
-                mailsource_nodeid: changes.useEmailPageTemplate ? changes.mailsource_nodeid : 0, // 0 if unused
-                mailtemp_i18n: !changes.useEmailPageTemplate ? changes.mailtemp_i18n: undefined, // undefined if unused
-                languages: changes.languages,
-                templateContext: changes.templateContext,
-                type: changes.type || this.form.type || null,
-                elements: changes.elements,
-            };
-
-            this.useInternalSuccessPage = changes.useInternalSuccessPage;
-            this.useEmailPageTemplate = changes.useEmailPageTemplate;
             this.changeDetector.markForCheck();
 
             const isModified = !this.formGroup.pristine;
             // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
             this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(isModified, this.formGroup.valid));
 
-            this.changes.emit(this.formValue);
+            this.changes.emit(changes);
         }));
 
         this.activeFormLanguageCode$ = this.appState.select(state => state.folder.activeFormLanguage).pipe(
@@ -316,7 +297,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
         this.preselectSingleLanguage();
         if (this.formGroup && this.properties.languages) {
-            this.formGroup.get('languages').setValue(this.properties.languages, { emitEvent: false });
+            this.formGroup.controls.languages.setValue(this.properties.languages, { emitEvent: false });
         }
 
         const isAnotherForm = changes.form ?? changes.form?.previousValue.id !== changes.form?.currentValue.id;
@@ -334,18 +315,24 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     initSelectedItemHelper(
         itemType: 'page' | 'folder' | 'file' | 'image' | 'form',
         defaultNodeId: number,
-        folderApi: FolderApi,
     ): SelectedItemHelper<ItemInNode<Page<Raw>>> {
-        return new SelectedItemHelper(itemType, defaultNodeId, folderApi);
+        return new SelectedItemHelper(itemType, defaultNodeId, this.client);
     }
 
-    setRadioState(input: string, value: boolean): void {
-        const ctl = this.formGroup.get(input);
-        if (ctl != null) {
-            ctl.setValue(value);
-            ctl.markAsDirty();
-        }
-        this.changeDetector.detectChanges();
+    updateEmailTemplate(doUse: boolean): void {
+        this.useEmailPageTemplate = doUse;
+        this.formGroup.markAsDirty();
+
+        setControlsEnabled(this.dataGroup, ['mailsource_nodeid', 'mailsource_pageid'], doUse);
+        setControlsEnabled(this.dataGroup, ['mailtemp_i18n'], !doUse);
+    }
+
+    updateInternalSuccessPage(doUse: boolean): void {
+        this.useInternalSuccessPage = doUse;
+        this.formGroup.markAsDirty();
+
+        setControlsEnabled(this.formGroup, ['successPageId', 'successNodeId'], doUse);
+        setControlsEnabled(this.dataGroup, ['successurl_i18n'], !doUse);
     }
 
     updateForm(properties: EditableFormProps): void {
@@ -355,47 +342,43 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
         if (!properties) {
             return;
         }
-        if ((!properties.type && this.previousFormType !== CmsFormType.GENERIC) || properties.type !== this.previousFormType) {
-            this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(properties.type ? properties.type : CmsFormType.GENERIC).pipe(
+        if ((!properties?.data?.type && this.previousFormType !== CmsFormType.GENERIC) || properties?.data?.type !== this.previousFormType) {
+            this.subscriptions.push(this.formEditorConfigurationService.getConfiguration$(properties?.data?.type ?? CmsFormType.GENERIC).pipe(
                 take(1),
             ).subscribe((formEditorConfiguration: FormEditorConfiguration): void => {
                 this.formPropertiesConfigurationSubject.next(formEditorConfiguration.form_properties);
-                this.previousFormType = properties.type ? properties.type : CmsFormType.GENERIC;
+                this.previousFormType = properties?.data?.type ?? CmsFormType.GENERIC;
             }));
         }
 
         // fallback: transfers old successurl to new successurl_i18n
-        const { successurl, successurl_i18n } = this.migrateSuccessUrl(properties.successurl, properties.successurl_i18n, properties.languages);
-        properties.successurl = successurl;
-        properties.successurl_i18n = successurl_i18n;
+        const { successurl, successurl_i18n } = this.migrateSuccessUrl(
+            properties?.data?.successurl,
+            properties?.data?.successurl_i18n,
+            properties.languages,
+        );
+        if (properties.data == null) {
+            properties.data = {};
+        }
+        properties.data.successurl = successurl;
+        properties.data.successurl_i18n = successurl_i18n;
         this.useInternalSuccessPage = !!properties.successPageId;
         if (!this.useInternalSuccessPage) {
             this.selectedInternalPageHelper.setSelectedItem(null);
         }
 
         // set form input values
-        this.formGroup.get('name').setValue(properties.name, { emitEvent: false });
-        this.formGroup.get('description').setValue(properties.description, { emitEvent: false });
-        this.formGroup.get('email').setValue(properties.email, { emitEvent: false });
-        this.formGroup.get('mailsubject_i18n').setValue(properties.mailsubject_i18n, { emitEvent: false });
-        this.formGroup.get('successPageId').setValue(properties.successPageId, { emitEvent: false });
-        this.formGroup.get('successNodeId').setValue(properties.successNodeId, { emitEvent: false });
-        this.formGroup.get('successurl_i18n').setValue(properties.successurl_i18n, { emitEvent: false });
-        this.formGroup.get('mailsource_pageid').setValue(properties.mailsource_pageid, { emitEvent: false });
-        this.formGroup.get('mailsource_nodeid').setValue(properties.mailsource_nodeid, { emitEvent: false });
-        this.formGroup.get('mailtemp_i18n').setValue(properties.mailtemp_i18n, { emitEvent: false });
-        this.formGroup.get('languages').setValue(properties.languages, { emitEvent: false });
-        this.formGroup.get('templateContext').setValue(properties.templateContext || '', { emitEvent: false });
-        this.formGroup.get('type').setValue(properties.type || CmsFormType.GENERIC, { emitEvent: false });
-        // needs to be stored here, otherwise updating data object without elements will delete whole form
-        this.formGroup.get('elements').setValue(properties.elements, { emitEvent: false });
-        this.formGroup.get('useInternalSuccessPage').setValue(
-            this.isInternalPageUsed(properties.successPageId, properties.successNodeId, properties.successurl_i18n),
-            { emitEvent: false },
+        this.formGroup.patchValue(properties, { emitEvent: false });
+
+        this.useInternalSuccessPage = this.isInternalPageUsed(
+            properties.successPageId,
+            properties.successNodeId,
+            properties.data.successurl_i18n,
         );
-        this.formGroup.get('useEmailPageTemplate').setValue(
-            this.isEmailTemplateUsed(properties.mailsource_pageid, properties.mailsource_nodeid, this.properties.mailtemp_i18n),
-            { emitEvent: false },
+        this.useEmailPageTemplate = this.isEmailTemplateUsed(
+            properties.data.mailsource_pageid,
+            properties.data.mailsource_nodeid,
+            this.properties.data.mailtemp_i18n,
         );
         this.formGroup.markAsPristine();
     }
@@ -412,7 +395,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
 
     browseForEmailTemplatePage(): void {
         let startFolder;
-        const browserNodeId = this.formGroup.get('mailsource_nodeid').value || this.nodeId;
+        const browserNodeId = this.dataGroup.controls.mailsource_nodeid.value || this.nodeId;
 
         if (this.repositoryBrowserItemCache['mailsource_pageid']?.folderId) {
             startFolder = this.repositoryBrowserItemCache['mailsource_pageid'].folderId;
@@ -437,8 +420,8 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
         const pageId = page && typeof page.id === 'number' ? page.id : 0;
         const nodeId = page && typeof page.nodeId === 'number' ? page.nodeId : 0;
         this.formGroup.markAsDirty();
-        this.formGroup.get('successPageId').setValue(pageId, { emitEvent: false });
-        this.formGroup.get('successNodeId').setValue(nodeId); /* has to emit event to trigger form value changes */
+        this.formGroup.controls.successPageId.setValue(pageId, { emitEvent: false });
+        this.formGroup.controls.successNodeId.setValue(nodeId); /* has to emit event to trigger form value changes */
     }
 
     setEmailTemplatePage(page: ItemInNode<Page<Raw>>): void {
@@ -446,8 +429,8 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
         this.selectedEmailTemplatePageHelper.setSelectedItem(page);
         const pageId = page && typeof page.id === 'number' ? page.id : 0;
         const nodeId = page && typeof page.nodeId === 'number' ? page.nodeId : 0;
-        this.formGroup.get('mailsource_pageid').setValue(pageId, { emitEvent: false });
-        this.formGroup.get('mailsource_nodeid').setValue(nodeId);
+        this.dataGroup.controls.mailsource_pageid.setValue(pageId, { emitEvent: false });
+        this.dataGroup.controls.mailsource_nodeid.setValue(nodeId);
         this.changeDetector.markForCheck();
     }
 
@@ -563,7 +546,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
      * @param templateContextOptions the values allowed for selection
      */
     private updateTemplateContextValidator(templateContextOptions: FormElementPropertyOptionConfiguration[] | null): void {
-        const templateContextFormControl: AbstractControl | null = this.formGroup.get('templateContext');
+        const templateContextFormControl: AbstractControl | null = this.dataGroup.controls.templateContext;
         if (!templateContextFormControl) {
             return;
         }

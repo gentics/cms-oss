@@ -1,3 +1,5 @@
+import { ModalClosingReason } from '@gentics/cms-integration-api-models';
+
 /**
  * Config options used when invoking ModalService.dialog()
  */
@@ -21,8 +23,8 @@ export interface IDialogConfig {
  * Settings which determine the look and behaviour of the modal wrapper window itself
  */
 export interface IModalOptions {
-    onOpen?: Function;
-    onClose?: Function;
+    onOpen?: () => void;
+    onClose?: (reason?: ModalClosingReason) => void;
     closeOnOverlayClick?: boolean;
     closeOnEscape?: boolean;
     width?: string;
@@ -48,13 +50,13 @@ export interface IModalDialog {
     closeFn: (val: any) => void;
 
     /** Can be called to close the modal by cancelling. */
-    cancelFn: (val?: any) => void;
+    cancelFn: (val?: any, reason?: ModalClosingReason) => void;
 
     /** Is passed a callback which can be called by the modal to close and return a value. */
     registerCloseFn: (close: (val: any) => void) => void;
 
     /** Is passed a callback which can be called by the modal to cancel. */
-    registerCancelFn: (cancel: (val: any) => void) => void;
+    registerCancelFn: (cancel: (val: any, reason?: ModalClosingReason) => void) => void;
 
     /** Is passed a callback which can be called by the modal to signal an error and close. */
     registerErrorFn?: (errorFn: (err: Error) => void) => void;
@@ -65,5 +67,5 @@ export const DEFAULT_MODAL_OPTIONS: IModalOptions = {
     padding: true,
     width: null,
     closeOnEscape: true,
-    closeOnOverlayClick: true
+    closeOnOverlayClick: true,
 };

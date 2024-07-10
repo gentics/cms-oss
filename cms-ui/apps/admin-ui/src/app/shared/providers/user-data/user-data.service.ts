@@ -1,7 +1,7 @@
 import { EntityManagerService, I18nNotificationService, I18nService, PermissionsService, UserOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { AccessControlledType, Group, Normalized, Raw, TypePermissions, User, UserListOptions } from '@gentics/cms-models';
+import { AccessControlledType, Group, Normalized, Raw, User, UserListOptions } from '@gentics/cms-models';
 import { Observable, OperatorFunction, forkJoin, of } from 'rxjs';
 import { catchError, first, map, switchMap, tap } from 'rxjs/operators';
 import { masterLoading } from '../../../common/utils/rxjs-loading-operators/master-loading.operator';
@@ -37,7 +37,7 @@ export class UserDataService extends ExtendedEntityDataServiceBase<'user', UserO
     getEntitiesFromApi(): Observable<User<Raw>[]> {
         // check if allowed to read groups
         return this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN).pipe(
-            switchMap((typePermissions: TypePermissions) => {
+            switchMap(() => {
                 const entityListRequestOptions: UserListOptions = {
                     // groups: typePermissions.hasPermission(GcmsPermission.READ),
                 };

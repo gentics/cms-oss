@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { StateContext } from '@ngxs/store';
 import { append, iif, patch, removeItem } from '@ngxs/store/operators';
 import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
@@ -27,6 +28,7 @@ import {
 } from './editor.actions';
 
 const INITIAL_EDITOR_STATE: EditorState = {
+    compareWithId: undefined,
     editorIsOpen: false,
     editorIsFocused: false,
     fetching: false,
@@ -50,19 +52,13 @@ const INITIAL_EDITOR_STATE: EditorState = {
 export class EditorStateModule {
 
     @ActionDefinition(CancelEditingAction)
-    cancelEditing(ctx: StateContext<EditorState>, action: CancelEditingAction): void {
+    cancelEditing(ctx: StateContext<EditorState>, _action: CancelEditingAction): void {
         ctx.patchState({
             contentModified: false,
             objectPropertiesModified: false,
         });
     }
 
-    /**
-     * Changes to the specified `EditorTab`.
-     *
-     * @param tab The `EditorTab` that should be switched to.
-     * @param propertiesTab (optional) The properties tab to switch to; if this is omitted, `ITEM_PROPERTIES_TAB` will be used as the default value.
-     */
     @ActionDefinition(ChangeTabAction)
     handleChangeTabAction(ctx: StateContext<EditorState>, action: ChangeTabAction): void {
         if (!['preview', 'properties'].includes(action.tab)) {
@@ -76,7 +72,7 @@ export class EditorStateModule {
     }
 
     @ActionDefinition(CloseEditorAction)
-    handleCloseEditorAction(ctx: StateContext<EditorState>, action: CloseEditorAction): void {
+    handleCloseEditorAction(ctx: StateContext<EditorState>, _action: CloseEditorAction): void {
         ctx.patchState({
             editorIsOpen: false,
             editorIsFocused: false,
@@ -110,7 +106,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'compareVersionContents',
+            editMode: EditMode.COMPARE_VERSION_CONTENTS,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',
@@ -130,7 +126,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'compareVersionSources',
+            editMode: EditMode.COMPARE_VERSION_SOURCES,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',
@@ -150,7 +146,7 @@ export class EditorStateModule {
      */
     @ActionDefinition(EditItemAction)
     handleEditItemAction(ctx: StateContext<EditorState>, action: EditItemAction): void {
-        ctx.patchState({
+        ctx.setState(patch({
             // Static changes
             contentModified: false,
             editorIsOpen: true,
@@ -167,11 +163,13 @@ export class EditorStateModule {
             nodeId: action.settings.nodeId,
             openTab: action.settings.openTab,
             openPropertiesTab: action.settings.openPropertiesTab,
-        });
+            // Only set the focus-mode, if provided.
+            focusMode: iif(typeof action.settings.focusMode === 'boolean', action.settings.focusMode),
+        }));
     }
 
     @ActionDefinition(FocusEditorAction)
-    handleFocusEditorAction(ctx: StateContext<EditorState>, action: FocusEditorAction): void {
+    handleFocusEditorAction(ctx: StateContext<EditorState>, _action: FocusEditorAction): void {
         const state = ctx.getState();
 
         ctx.setState(patch({
@@ -180,7 +178,7 @@ export class EditorStateModule {
     }
 
     @ActionDefinition(FocusListAction)
-    handleFocusListAction(ctx: StateContext<EditorState>, action: FocusListAction): void {
+    handleFocusListAction(ctx: StateContext<EditorState>, _action: FocusListAction): void {
         ctx.patchState({
             editorIsFocused: false,
         });
@@ -206,7 +204,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'previewVersion',
+            editMode: EditMode.PREVIEW_VERSION,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',
@@ -236,21 +234,21 @@ export class EditorStateModule {
     }
 
     @ActionDefinition(StartSavingAction)
-    handleStartSavingAction(ctx: StateContext<EditorState>, action: StartSavingAction): void {
+    handleStartSavingAction(ctx: StateContext<EditorState>, _action: StartSavingAction): void {
         ctx.patchState({
             saving: true,
         });
     }
 
     @ActionDefinition(SaveSuccessAction)
-    handleSaveSuccessAction(ctx: StateContext<EditorState>, action: SaveSuccessAction): void {
+    handleSaveSuccessAction(ctx: StateContext<EditorState>, _action: SaveSuccessAction): void {
         ctx.patchState({
             saving: false,
         });
     }
 
     @ActionDefinition(SaveErrorAction)
-    handleSaveErrorAction(ctx: StateContext<EditorState>, action: SaveErrorAction): void {
+    handleSaveErrorAction(ctx: StateContext<EditorState>, _action: SaveErrorAction): void {
         ctx.patchState({
             saving: false,
         });

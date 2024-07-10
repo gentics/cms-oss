@@ -1,18 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     File as FileModel,
     Folder,
     FolderItemType,
     Image,
     Node,
     Page,
-    RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
+import { of } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
@@ -138,7 +137,7 @@ describe('CustomScriptHostService', () => {
                 { response: { file: { baz: 'quux' } } },
             ];
             folderActions.uploadFiles = jasmine.createSpy('uploadFiles')
-                .and.returnValue(Observable.of(uploadResponses));
+                .and.returnValue(of(uploadResponses));
         });
 
         it('calls FolderActionsService.uploadFiles() with correct args for image when node has a defaultImageFolderId', () => {
@@ -270,7 +269,7 @@ class MockContentFrame {
     filePicker = {
         multiple: true,
         accept: '',
-        fileSelect: Observable.of('MOCK_FILE'),
+        fileSelect: of('MOCK_FILE'),
     };
     filePickerWrapper = {
         nativeElement: {

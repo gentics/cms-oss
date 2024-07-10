@@ -17,7 +17,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to ConstructCategoryCategories.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ConstructCategoryResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ConstructCategoryResource.html
  */
 export class ConstructCategoryApi {
 
@@ -29,7 +29,7 @@ export class ConstructCategoryApi {
      * Get all construct categories.
      * **Important:** This method only works for Admin users.
      */
-    getConstructCategoryCategories(options: ConstructCategoryListOptions): Observable<ConstructCategoryListResponse> {
+    getConstructCategoryCategories(options?: ConstructCategoryListOptions): Observable<ConstructCategoryListResponse> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);

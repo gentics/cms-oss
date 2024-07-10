@@ -6,7 +6,7 @@ import {
     isEqual as _isEqual,
     isMatchWith as _isMatchWith,
     mergeWith as _mergeWith,
-} from 'lodash';
+} from'lodash-es'
 import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils/state-utils';
 import { AddEntities, ClearAllEntities, DeleteAllEntitiesInBranch, DeleteEntities, UpdateEntities } from './entity.actions';
 

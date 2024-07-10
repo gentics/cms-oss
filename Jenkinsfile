@@ -359,6 +359,10 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
+                            // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
+                            sh "Xvfb :99 &"
+                            sh "export DISPLAY=:99"
+
                             // run the integration tests in the ui-module
                             sh "mvn integration-test -B -fae -pl :cms-ui " +
                                 // Setup NPM correctly for this run
@@ -368,6 +372,7 @@ spec:
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
+                            sh "pkill Xvfb"
                         }
                     }
                 }

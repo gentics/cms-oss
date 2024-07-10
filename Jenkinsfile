@@ -381,9 +381,7 @@ spec:
             post {
                 always {
                     script {
-                        // Ignore missing test results if we only run one test
-                        boolean allowEmptyResults = (params.singleTest ? true : false)
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: false
                     }
                 }
             }

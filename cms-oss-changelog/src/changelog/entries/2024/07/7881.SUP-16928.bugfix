@@ -1,0 +1,2 @@
+Editor User Inferface: After sending an inbox message, an empty success message box was shown. This has been fixed,
+the success message will now be shown with the correct text.

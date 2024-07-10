@@ -7,8 +7,15 @@
 
     <div *ngIf="publisherStatus" class="row">
         <div class="title">
-            {{ 'scheduler.status' | i18n }}:
+            {{ 'dashboard.scheduler' | i18n }}:
             <div><b>{{ ('scheduler.status_' + publisherStatus) | i18n }}</b></div>
+        </div>
+    </div>
+
+    <div *ngIf="info.phase" class="row">
+        <div class="title">
+            {{ 'widget.publishing_process_publish_status' | i18n }}:
+            <div><b>{{ info.phase }}</b></div>
         </div>
     </div>
 

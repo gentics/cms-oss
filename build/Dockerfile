@@ -27,8 +27,11 @@ RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE} main contrib non
  && apt-get install --assume-yes eatmydata \
   		doxygen mariadb-client git-core gawk sed parallel build-essential sudo \
   		less vim tar sed psmisc file pwgen locales zip unzip nmap pkg-config libtool libtool-bin bison \
-  		debhelper lintian devscripts unp bzip2 rsync docker-ce=5:20* docker-ce-cli=5:20* \
-		python2.7 libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb \
+  		debhelper lintian devscripts unp bzip2 rsync docker-ce=5:20* docker-ce-cli=5:20* python2.7 \
+		# Cypress Dependencies
+		# From https://docs.cypress.io/guides/getting-started/installing-cypress#UbuntuDebian
+		# And https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
+		libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb libgbm1 libcups2 libatk-bridge2.0-0 libatk1.0-0 \
  && apt-get install --assume-yes --allow-unauthenticated google-chrome-beta
 
 # Set locale

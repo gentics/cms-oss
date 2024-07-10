@@ -18,6 +18,7 @@
                     "quiet": true,
                     "cypressConfig": "apps/admin-ui-e2e/cypress.config.ci.ts",
                     "devServerTarget": "",
+                    "baseUrl": "http://localhost:8080",
                     "env": {
                         "CI": true
                     }

@@ -221,6 +221,6 @@
     "yaml-loader": "^0.7.0"
   },
   "optionalDependencies": {
-    "@nx/nx-linux-x64-gnu": "19.2.1"
+    "@nx/nx-linux-x64-gnu": "19.3.2"
   }
 }

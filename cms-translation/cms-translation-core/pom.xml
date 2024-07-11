@@ -11,6 +11,7 @@
 
   <artifactId>cms-translation-core</artifactId>
   <name>Gentics CMS Translation - Core</name>
+  <packaging>jar</packaging>
 
   <dependencyManagement>
     <dependencies>

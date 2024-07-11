@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.StringUtils;
 
 @Authenticated
-@RequiredFeature(Feature.TRANSLATION)
+@RequiredFeature(Feature.AUTOMATIC_TRANSLATION)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/translation")
 public class TranslationResourceImpl implements TranslationResource {

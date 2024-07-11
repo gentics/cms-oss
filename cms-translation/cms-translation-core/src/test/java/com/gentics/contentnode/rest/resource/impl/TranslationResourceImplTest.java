@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 
-@GCNFeature(set = {Feature.TRANSLATION})
+@GCNFeature(set = {Feature.AUTOMATIC_TRANSLATION})
 public class TranslationResourceImplTest {
 
 	public final static Integer FOLDER_ID = 28;

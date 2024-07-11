@@ -192,12 +192,15 @@ public enum ConfigurationValue {
 	/**
 	 * The auth token for the translation provider
 	 */
-	TRANSLATION_AUTH_TOKEN("TRANSLATION_AUTH_TOKEN", "com.gentics.contentnode.translation.auth.token", "translation.auth.token"),
+	TRANSLATION_AUTH_TOKEN("AUTOMATIC_TRANSLATION_AUTH_TOKEN", "com.gentics.contentnode.automatic_translation.auth.token", "automatic_translation.auth.token"),
 
 	/**
 	 * The language settings for the configured provider.
 	 */
-	TRANSLATION_LANGUAGE_PREFERENCES("TRANSLATION_LANGUAGE_PREFERENCES", "com.gentics.contentnode.translation.language", "translation.language")
+	TRANSLATION_LANGUAGE_PREFERENCES("AUTOMATIC_TRANSLATION_LANG_PREF", "com.gentics.contentnode.automatic_translation.language", "automatic_translation.language"),
+
+
+	TRANSLATION_SERVICE_IMPLEMENTATION("AUTOMATIC_TRANSLATION_IMPLEMENTATION", "com.gentics.contentnode.automatic_translation.implementation", "automatic_translation.implementation")
 
 	;
 

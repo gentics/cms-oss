@@ -98,7 +98,7 @@ public enum Feature {
 	WEBP_CONVERSION(true),
 	UPLOAD_FILE_PROPERTIES(true),
 	UPLOAD_IMAGE_PROPERTIES(true),
-	TRANSLATION(true);
+	AUTOMATIC_TRANSLATION(true);
 
 	/**
 	 * Service loader for implementations of {@link FeatureService}

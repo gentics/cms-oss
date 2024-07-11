@@ -45,6 +45,14 @@
             <ng-container *ngIf="meshCrEnabled">
                 <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | i18n }}</div>
 
+                <gtx-input
+                    type="text"
+                    [required]="false"
+                    [label]="('node.mesh_project_name' | i18n)"
+                    [placeholder]="'node.mesh_project_name' | i18n"
+                    formControlName="meshProjectName"
+                ></gtx-input>
+
                 <gtx-select
                     [label]="('node.mesh_preview_url_type' | i18n) + ' *'"
                     [value]="previewType"

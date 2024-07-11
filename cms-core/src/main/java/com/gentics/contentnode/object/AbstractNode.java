@@ -435,6 +435,11 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public void setMeshProjectName(String meshProjectName) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
 	public Node getConflictingNode() throws NodeException {
 		// get all other nodes
 		Transaction t = TransactionManager.getCurrentTransaction();

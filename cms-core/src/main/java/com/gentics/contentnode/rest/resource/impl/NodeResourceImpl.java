@@ -995,6 +995,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.isPublishImageVariants() != null) {
 					newNode.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
+
+				if (reqNode.getMeshProjectName() != null) {
+					newNode.setMeshProjectName(reqNode.getMeshProjectName());
+				}
 			}
 
 			if (reqNode.getLanguagesId() != null) {
@@ -1252,6 +1256,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 				if (reqNode.isPublishImageVariants() != null) {
 					node.setPublishImageVariants(reqNode.isPublishImageVariants());
+				}
+
+				if (reqNode.getMeshProjectName() != null) {
+					node.setMeshProjectName(reqNode.getMeshProjectName());
 				}
 			}
 

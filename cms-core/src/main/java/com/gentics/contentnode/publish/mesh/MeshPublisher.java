@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;
@@ -935,7 +934,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getMeshName(Node node) throws NodeException {
-		return FileUtil.sanitizeName(node.getFolder().getName(), REPLACEMENT_MAP, null, null);
+		String name = node.getMeshProjectName();
+		if (org.apache.commons.lang3.StringUtils.isBlank(name)) {
+			name = node.getFolder().getName();
+		}
+		return FileUtil.sanitizeName(name, REPLACEMENT_MAP, null, null);
 	}
 
 	/**
@@ -946,7 +949,12 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getBranchName(Node channel, String implementationVersion) throws NodeException {
-		return getBranchName(channel.getFolder().getName(), implementationVersion);
+		String name = channel.getMeshProjectName();
+		if (org.apache.commons.lang3.StringUtils.isBlank(name)) {
+			name = channel.getFolder().getName();
+		}
+
+		return getBranchName(name, implementationVersion);
 	}
 
 	/**

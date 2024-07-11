@@ -142,6 +142,9 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** Mesh Project, this node publishes into */
     meshProject: string;
 
+    /** Configured Mesh Project Name */
+    meshProjectName?: string;
+
     /** Whether insecure connections to the preview URL are allowed */
     insecurePreviewUrl: boolean;
 

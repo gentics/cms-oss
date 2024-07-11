@@ -1,0 +1,2 @@
+When publishing into a Mesh Content.Repository with "Project per Node" activated, it is now possible to
+define the Mesh Project and Branch names in the Node/Channel properties instead of having them derived from the name of the Node/Channel.

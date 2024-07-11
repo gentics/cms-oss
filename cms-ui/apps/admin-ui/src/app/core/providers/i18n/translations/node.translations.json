@@ -135,6 +135,10 @@
         "en": "Mesh Preview URL property must be entered in format ${env:NODE_PREVIEWURL_...} or ${sys:NODE_PREVIEWURL_...}.",
         "de": "Mesh Vorschau URL Eigenschaft muss im Format ${env:NODE_PREVIEWURL_...} oder ${sys:NODE_PREVIEWURL_...} angegeben werden."
     },
+    "mesh_project_name": {
+        "en": "Mesh Project/Branch Name",
+        "de": "Mesh Projekt/Branch Name"
+    },
     "node_name": {
         "en": "Node name",
         "de": "Nodename"

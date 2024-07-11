@@ -898,6 +898,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	void setInsecurePreviewUrl(boolean insecurePreviewUrl) throws ReadOnlyException;
 
 	/**
+	 * Get the mesh project name
+	 * @return mesh project name
+	 */
+	@FieldGetter("mesh_project_name")
+	String getMeshProjectName();
+
+	/**
+	 * Set the mesh project name
+	 * @param meshProjectName mesh project name
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("mesh_project_name")
+	void setMeshProjectName(String meshProjectName) throws ReadOnlyException;
+
+	/**
 	 * Get the list of features that are activated for the node.
 	 * This will not return features, that cannot be activated per node or are generally deactivated.
 	 * For channels, this will include features that are set on the master node and are inheritable

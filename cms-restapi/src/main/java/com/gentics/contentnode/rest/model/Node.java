@@ -65,6 +65,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	private String meshPreviewUrlProperty;
 	private Boolean insecurePreviewUrl;
 	private String meshProject;
+	private String meshProjectName;
 	private Boolean omitPageExtension;
 	private PageLanguageCode pageLanguageCode;
 
@@ -603,6 +604,14 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setMeshProject(String meshProject) {
 		this.meshProject = meshProject;
+	}
+
+	public String getMeshProjectName() {
+		return meshProjectName;
+	}
+
+	public void setMeshProjectName(String meshProjectName) {
+		this.meshProjectName = meshProjectName;
 	}
 
 	public Boolean getOmitPageExtension() {

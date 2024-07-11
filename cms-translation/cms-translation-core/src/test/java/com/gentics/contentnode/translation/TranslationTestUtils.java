@@ -6,15 +6,15 @@ import java.util.Map;
 
 public class TranslationTestUtils {
 
-	public static MapPreferences mockTranslationConfig(String provider, String apiToken) {
+	public static MapPreferences mockTranslationConfig(String implementationClass, String apiToken) {
 		Map<String, Object> nodeRuntimeConfig = new HashMap<>();
 		Map<String, Object> translationConfig = new HashMap<>();
 
-		translationConfig.put("provider", provider);
+		translationConfig.put("implementation", implementationClass);
 		translationConfig.put("auth", mockAuthConfig(apiToken));
 		translationConfig.put("language", mockLanguageConfig());
 
-		nodeRuntimeConfig.put("translation", translationConfig);
+		nodeRuntimeConfig.put("automatic_translation", translationConfig);
 
 		return new MapPreferences(nodeRuntimeConfig);
 	}

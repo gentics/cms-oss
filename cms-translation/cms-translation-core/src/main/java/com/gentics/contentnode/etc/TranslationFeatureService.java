@@ -29,11 +29,11 @@ public class TranslationFeatureService implements FeatureService {
 			return false;
 		}
 		var isCreated = TranslationUtil.createServiceDefinitionFileIfNeeded();
-		if(!isCreated) {
+		if (!isCreated) {
 			return false;
 		}
-		TranslationUtil.reloadService();
-		return true;
+
+		return TranslationUtil.reloadService();
 	}
 
 }

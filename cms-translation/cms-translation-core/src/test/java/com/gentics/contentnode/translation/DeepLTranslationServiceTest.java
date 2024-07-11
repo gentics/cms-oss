@@ -21,12 +21,12 @@ class DeepLTranslationServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		final String TRANSLATION_PROVIDER = "deepl";
+		final String TRANSLATION_IMPLEMENTATION = "com.gentics.contentnode.api.translation.DeepLTranslationService";
 
 		MockedStatic<NodeConfigRuntimeConfiguration> mockedNodeRuntimeConfig = Mockito.mockStatic(
 				NodeConfigRuntimeConfiguration.class);
 		mockedNodeRuntimeConfig.when(NodeConfigRuntimeConfiguration::getPreferences)
-				.thenReturn(mockTranslationConfig(TRANSLATION_PROVIDER, "<api-token>"));
+				.thenReturn(mockTranslationConfig(TRANSLATION_IMPLEMENTATION, "<api-token>"));
 	}
 
 	@AfterEach

@@ -40,10 +40,9 @@ public class TranslationUtil {
 	public static Optional<TranslationService> getTranslationService() {
 		if (loader.iterator().hasNext()) {
 			return Optional.of(loader.iterator().next());
-		} else {
-			logger.warn("No TranslationService implementation is available.");
-			return Optional.empty();
 		}
+		logger.warn("No TranslationService implementation is available.");
+		return Optional.empty();
 	}
 
 	/**
@@ -82,10 +81,10 @@ public class TranslationUtil {
 					implementationClass));
 
 			return true;
-		} catch (Exception ex) {
+		} catch (Exception e) {
 			logger.error(String.format(
 					"Failed to create the service definition file. Encountered error: '%s'",
-					ex.getMessage()));
+					e.getMessage()));
 			return false;
 		}
 	}
@@ -95,10 +94,11 @@ public class TranslationUtil {
 	 *
 	 * @return the classpath
 	 */
-	private static String getClasspath() {
+	public static String getClasspath() {
 		String systemClasspath = System.getProperty("java.class.path");
 
 		return Arrays.stream(systemClasspath.split(":"))
+				.filter(path -> Files.isDirectory(Paths.get(path)))
 				.findFirst()
 				.orElse(systemClasspath);
 	}
@@ -116,12 +116,14 @@ public class TranslationUtil {
 		return REFERENCE_IMPLEMENTATION;
 	}
 
-	public static void reloadService() {
+	public static boolean reloadService() {
 		try{
 			loader = ServiceLoaderUtil.load(TranslationService.class);
+			return true;
 		}
 		catch (ServiceConfigurationError e) {
-			logger.error(String.format("Could not load service. The reason is: '%s'",e.getMessage()));
+			logger.error(String.format("Could not load service. The reason is: '%s'", e.getMessage()));
+			return false;
 		}
 	}
 

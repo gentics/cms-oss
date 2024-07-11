@@ -59,5 +59,3 @@ cache/*
 data/
 logs/
 packages/
-# folder used for the java class loader (e.g.: translation service)
-external_resources

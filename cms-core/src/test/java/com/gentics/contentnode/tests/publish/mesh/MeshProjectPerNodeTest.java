@@ -211,13 +211,13 @@ public class MeshProjectPerNodeTest {
 			trx.success();
 		}
 
-		ProjectResponse project1 = assertMeshProject(mesh.client(), "Node1", SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, node1), true);
+		ProjectResponse project1 = assertMeshProject(mesh.client(), "Node1", SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, node1), true);
 		BranchListResponse branches = mesh.client().findBranches(project1.getName()).blockingGet();
 		assertThat(branches.getData()).as(String.format("Branches of project %s", project1.getName())).hasSize(1);
 		assertThat(branches.getData().get(0).getHostname()).as(String.format("Hostname of project %s", project1.getName())).isEqualTo("node1");
 		assertThat(branches.getData().get(0).getSsl()).as(String.format("SSL of project %s", project1.getName())).isFalse();
 
-		ProjectResponse project2 = assertMeshProject(mesh.client(), "Node2", SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, node2), true);
+		ProjectResponse project2 = assertMeshProject(mesh.client(), "Node2", SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, node2), true);
 		branches = mesh.client().findBranches(project2.getName()).blockingGet();
 		assertThat(branches.getData()).as(String.format("Branches of project %s", project2.getName())).hasSize(1);
 		assertThat(branches.getData().get(0).getHostname()).as(String.format("Hostname of project %s", project2.getName())).isEqualTo("node2");
@@ -241,7 +241,7 @@ public class MeshProjectPerNodeTest {
 			trx.success();
 		}
 
-		ProjectResponse project1 = assertMeshProject(mesh.client(), "Before_Update", SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, node), true);
+		ProjectResponse project1 = assertMeshProject(mesh.client(), "Before_Update", SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, node), true);
 		BranchListResponse branches = mesh.client().findBranches(project1.getName()).blockingGet();
 		assertThat(branches.getData()).as(String.format("Branches of project %s", project1.getName())).hasSize(1);
 		assertThat(branches.getData().get(0).getHostname()).as(String.format("Hostname of project %s", project1.getName())).isEqualTo("beforeUpdate");
@@ -263,7 +263,7 @@ public class MeshProjectPerNodeTest {
 			trx.success();
 		}
 
-		project1 = assertMeshProject(mesh.client(), "After_Update", SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, node), true);
+		project1 = assertMeshProject(mesh.client(), "After_Update", SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, node), true);
 		branches = mesh.client().findBranches(project1.getName()).blockingGet();
 		assertThat(branches.getData()).as(String.format("Branches of project %s", project1.getName())).hasSize(1);
 		assertThat(branches.getData().get(0).getHostname()).as(String.format("Hostname of project %s", project1.getName())).isEqualTo("afterUpdate");
@@ -426,8 +426,8 @@ public class MeshProjectPerNodeTest {
 		assertPages(mesh.client(), projectName, SCHEMA_PREFIX, project.getRootNode().getUuid(), "en", sourcePage, targetPage);
 
 		assertObject("", mesh.client(), projectName, sourcePage, true,
-				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", execute(MeshPublisher::getMeshUuid, targetPage), projectName)));
-		NodeResponse node = mesh.client().findNodeByUuid(projectName, execute(MeshPublisher::getMeshUuid, sourcePage),
+				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", (String) execute(MeshPublisher::getMeshUuid, targetPage), projectName)));
+		NodeResponse node = mesh.client().findNodeByUuid(projectName, (String) execute(MeshPublisher::getMeshUuid, sourcePage),
 				new NodeParametersImpl().setLanguages("en").setResolveLinks(LinkType.SHORT)).blockingGet();
 		assertThat(node.getFields().getStringField("content").getString()).isEqualTo("/Content.node/home/Target.html");
 	}
@@ -455,8 +455,8 @@ public class MeshProjectPerNodeTest {
 		assertPages(mesh.client(), projectName, SCHEMA_PREFIX, project.getRootNode().getUuid(), "en", sourcePage);
 
 		assertObject("", mesh.client(), projectName, sourcePage, true,
-				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", execute(MeshPublisher::getMeshUuid, targetPage), execute(n -> n.getFolder().getName(), node2))));
-		NodeResponse node = mesh.client().findNodeByUuid(projectName, execute(MeshPublisher::getMeshUuid, sourcePage),
+				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", (String) execute(MeshPublisher::getMeshUuid, targetPage), execute(n -> n.getFolder().getName(), node2))));
+		NodeResponse node = mesh.client().findNodeByUuid(projectName, (String) execute(MeshPublisher::getMeshUuid, sourcePage),
 				new NodeParametersImpl().setLanguages("en").setResolveLinks(LinkType.SHORT)).blockingGet();
 		assertThat(node.getFields().getStringField("content").getString()).isEqualTo("https://node2/Content.node/home2/Target.html");
 	}
@@ -511,7 +511,7 @@ public class MeshProjectPerNodeTest {
 		assertFiles(mesh.client(), projectName, SCHEMA_PREFIX, project.getRootNode().getUuid(), targetFile);
 
 		assertObject("", mesh.client(), projectName, sourcePage, true,
-				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", execute(MeshPublisher::getMeshUuid, targetFile), execute(n -> n.getFolder().getName(), node1))));
+				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", (String) execute(MeshPublisher::getMeshUuid, targetFile), execute(n -> n.getFolder().getName(), node1))));
 	}
 
 	/**
@@ -538,7 +538,7 @@ public class MeshProjectPerNodeTest {
 		assertFiles(mesh.client(), projectName, SCHEMA_PREFIX, project.getRootNode().getUuid());
 
 		assertObject("", mesh.client(), projectName, sourcePage, true,
-				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", execute(MeshPublisher::getMeshUuid, targetFile), execute(n -> n.getFolder().getName(), node2))));
+				contentAsserter(String.format("{{mesh.link(%s, en, %s)}}", (String) execute(MeshPublisher::getMeshUuid, targetFile), execute(n -> n.getFolder().getName(), node2))));
 	}
 
 	/**
@@ -591,9 +591,9 @@ public class MeshProjectPerNodeTest {
 		ProjectResponse project2 = assertMeshProject(mesh.client(), project2Name, SCHEMA_PREFIX);
 
 		assertFolders(mesh.client(), project1Name, SCHEMA_PREFIX, project1.getRootNode().getUuid(), folder);
-		assertFolders(mesh.client(), project1Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), subfolder);
-		assertFiles(mesh.client(), project1Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), file);
-		assertPages(mesh.client(), project1Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), "en", page);
+		assertFolders(mesh.client(), project1Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), subfolder);
+		assertFiles(mesh.client(), project1Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), file);
+		assertPages(mesh.client(), project1Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), "en", page);
 		assertFolders(mesh.client(), project2Name, SCHEMA_PREFIX, project2.getRootNode().getUuid());
 
 		Trx.operate(() -> update(folder, f -> f.move(node2.getFolder(), 0)));
@@ -605,9 +605,9 @@ public class MeshProjectPerNodeTest {
 
 		assertFolders(mesh.client(), project1Name, SCHEMA_PREFIX, project1.getRootNode().getUuid());
 		assertFolders(mesh.client(), project2Name, SCHEMA_PREFIX, project2.getRootNode().getUuid(), folder);
-		assertFolders(mesh.client(), project2Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), subfolder);
-		assertFiles(mesh.client(), project2Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), file);
-		assertPages(mesh.client(), project2Name, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), "en", page);
+		assertFolders(mesh.client(), project2Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), subfolder);
+		assertFiles(mesh.client(), project2Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), file);
+		assertPages(mesh.client(), project2Name, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), "en", page);
 	}
 
 	/**
@@ -872,14 +872,14 @@ public class MeshProjectPerNodeTest {
 		assertMeshProject(mesh.client(), getProjectName(node2), SCHEMA_PREFIX);
 
 		assertFolders(mesh.client(), project1.getName(), SCHEMA_PREFIX, project1.getRootNode().getUuid(), folder);
-		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), "en", page);
+		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), "en", page);
 
 		// move folder to other node
 		Trx.operate(() -> update(folder, f -> f.move(node2.getFolder(), 0)));
 
 		// folder and page must still exist in mesh
 		assertFolders(mesh.client(), project1.getName(), SCHEMA_PREFIX, project1.getRootNode().getUuid(), folder);
-		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), "en", page);
+		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), "en", page);
 
 		// activate instant publishing
 		Trx.operate(t -> update(t.getObject(ContentRepository.class, crId), cr -> cr.setInstantPublishing(true)));
@@ -889,7 +889,7 @@ public class MeshProjectPerNodeTest {
 
 		// folder and page must still exist in mesh
 		assertFolders(mesh.client(), project1.getName(), SCHEMA_PREFIX, project1.getRootNode().getUuid(), folder);
-		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, folder), "en", page);
+		assertPages(mesh.client(), project1.getName(), SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, folder), "en", page);
 	}
 
 	/**
@@ -952,7 +952,7 @@ public class MeshProjectPerNodeTest {
 			trx.success();
 		}
 
-		assertMeshProject(mesh.client(), alternativeMeshProjectName, SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, testNode), true);
+		assertMeshProject(mesh.client(), alternativeMeshProjectName, SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, testNode), true);
 		assertMeshProject(mesh.client(), "testnode", false);
 
 		testNode = Builder.update(testNode, upd -> {
@@ -965,7 +965,7 @@ public class MeshProjectPerNodeTest {
 		}
 
 		assertMeshProject(mesh.client(), alternativeMeshProjectName, false);
-		assertMeshProject(mesh.client(), "testnode", SCHEMA_PREFIX, execute(MeshPublisher::getMeshUuid, testNode), true);
+		assertMeshProject(mesh.client(), "testnode", SCHEMA_PREFIX, (String) execute(MeshPublisher::getMeshUuid, testNode), true);
 	}
 
 	/**

@@ -286,7 +286,7 @@ public class CMSResolver implements Resolvable {
 	 * Get the current node
 	 * @return current node
 	 */
-	protected Resolvable getNode() {
+	protected Node getNode() {
 		return node;
 	}
 

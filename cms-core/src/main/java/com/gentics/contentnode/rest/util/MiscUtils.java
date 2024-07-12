@@ -2434,4 +2434,12 @@ public class MiscUtils {
 
 		return output;
 	}
+
+	public static <I, O> O execOrNull(Function<I, O> function, I input) {
+		try {
+			return function.apply(input);
+		} catch (NodeException e) {
+			return null;
+		}
+	}
 }

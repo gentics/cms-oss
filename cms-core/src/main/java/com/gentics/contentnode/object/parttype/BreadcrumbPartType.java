@@ -322,8 +322,6 @@ public class BreadcrumbPartType extends AbstractVelocityPartType implements Tran
 		if (tmpCurrentPage instanceof Resolvable) {
 			config.currentPage = (Resolvable) tmpCurrentPage;
 		} else {
-			// logger.error("Current page not found.");
-			// throw new NodeException("Current page not found.");
 			logger.warn("Current page not found.");
 		}
 
@@ -339,6 +337,7 @@ public class BreadcrumbPartType extends AbstractVelocityPartType implements Tran
 			}
 		} else {
 			logger.warn("Current folder cannot be resolved.");
+			throw new NodeException("Current folder cannot be resolved.");
 		}
         
 		// get languagecode

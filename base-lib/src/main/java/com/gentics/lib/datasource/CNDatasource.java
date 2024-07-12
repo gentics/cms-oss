@@ -1308,7 +1308,6 @@ public class CNDatasource extends AbstractVersioningDatasource implements Simple
 				try {
 					return getCount(datasourceFilter, versionTimestamp);
 				} catch (DatasourceException e) {
-					logger.error("Error while counting results", e);
 					throw new DatasourceNotAvailableException("Error while counting results", e);
 				}
 			}
@@ -1389,7 +1388,6 @@ public class CNDatasource extends AbstractVersioningDatasource implements Simple
 					count = srp.getRow(1).getInt("c");
 				}
 			} catch (Exception e) {
-				logger.error("error while counting results", e);
 				throw new DatasourceNotAvailableException("Error while counting results", e);
 			}
 
@@ -1728,8 +1726,7 @@ public class CNDatasource extends AbstractVersioningDatasource implements Simple
 					ret = new PropertyOperand(functionParameters.get(0).toString(),
 							new PropertyResolver(new SubRuleResolver(subruleTree, (Datasource) this.clone(), subruleString)), functionParameters.get(0).toString());
 				} catch (Exception e) {
-					NodeLogger.getLogger(getClass()).error("error while rewriting SubruleFunction", e);
-					throw new UnsupportedOperationException("SubruleFunction not supported in CNDatasource");
+					throw new UnsupportedOperationException("SubruleFunction not supported in CNDatasource", e);
 				}
 			} else {
 				throw new UnsupportedOperationException("SubruleFunction with less than 2 parameters not supported in CNDatasource");
@@ -2867,7 +2864,7 @@ public class CNDatasource extends AbstractVersioningDatasource implements Simple
 			long lastUpdate = getLastUpdate(false);
 
 			if (lastUpdate == -1) {
-				logger.error("Unable to determine last update timestamp, altough sync checking was enabled.");
+				logger.warn("Unable to determine last update timestamp, altough sync checking was enabled.");
 				return true;
 			}
 			// timestamp are milliseconds, while lastUpdate are seconds..

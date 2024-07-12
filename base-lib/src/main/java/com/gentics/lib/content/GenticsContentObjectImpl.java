@@ -809,7 +809,7 @@ public class GenticsContentObjectImpl implements GenticsContentObject, Comparabl
 		// check whether the datasource is versioning, when a versiontimestamp was given
 		if (timestamp >= 0) {
 			if (!(datasource instanceof VersioningDatasource)) {
-				NodeLogger.getLogger(GenticsContentObjectImpl.class).error("cannot prefill versioned objects with non-versioning datasource");
+				NodeLogger.getLogger(GenticsContentObjectImpl.class).warn("cannot prefill versioned objects with non-versioning datasource");
 				return;
 			}
 			((VersioningDatasource) datasource).setVersionTimestamp(timestamp);

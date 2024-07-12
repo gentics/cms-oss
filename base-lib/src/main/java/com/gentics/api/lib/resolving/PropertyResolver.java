@@ -245,9 +245,10 @@ public class PropertyResolver implements Resolvable {
 								"Failed to resolve {" + propertyPath + "}: could not resolve Property {" + nextToken + "} for object {" + resolvedSoFar.toString()
 								+ "}");
 
-						logger.warn(e);
 						if (failIfUnresolvablePath) {
 							throw e;
+						} else {
+							logger.debug(e);
 						}
 					}
 				}
@@ -256,9 +257,10 @@ public class PropertyResolver implements Resolvable {
 					UnknownPropertyException e = new UnknownPropertyException(
 							"Failed to resolve {" + propertyPath + "}: could not resolve Property {" + nextToken + "} for object {" + resolvedSoFar.toString() + "}");
 
-					logger.warn(e);
 					if (failIfUnresolvablePath) {
 						throw e;
+					} else {
+						logger.debug(e);
 					}
 				}
 				path.add(new PropertyPathEntry(propertyPath, "", ret, mother));

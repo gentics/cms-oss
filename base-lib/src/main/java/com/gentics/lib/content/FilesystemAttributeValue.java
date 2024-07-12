@@ -257,7 +257,7 @@ public class FilesystemAttributeValue implements Serializable {
 					return true;
 				} catch (FileNotFoundException e) {
 					if (continueIfFileNotFound) {
-						logger.error("Error while saving data into " + valueFile + ". Continuing anyway", e);
+						logger.warn("Error while saving data into " + valueFile + ". Continuing anyway", e);
 						return false;
 					} else {
 						throw new DatasourceException("Error while saving data into " + valueFile, e);
@@ -415,7 +415,7 @@ public class FilesystemAttributeValue implements Serializable {
 					return true;
 			} catch (FileNotFoundException e) {
 				if (continueIfFileNotFound) {
-					logger.error("Error while saving data into " + newFile + ". Continuing anyway", e);
+					logger.warn("Error while saving data into " + newFile + ". Continuing anyway", e);
 					return false;
 				} else {
 					throw new DatasourceException("Error while saving data into " + newFile, e);

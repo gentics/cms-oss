@@ -54,7 +54,7 @@ public class SimpleHsqlConnector extends DefaultConnectionManager {
 
 			return DriverManager.getConnection(url, username, passwd);
 		} catch (ClassNotFoundException e) {
-			NodeLogger.getLogger(getClass()).fatal("Could not load Driver for Hsql DB!", e);
+			NodeLogger.getLogger(getClass()).error("Could not load Driver for Hsql DB!", e);
 			return null;
 		}
 	}

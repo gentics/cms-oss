@@ -458,10 +458,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			try {
 				t.rollback(false);
 			} catch (TransactionException e1) {
-				log.error("Error while rolling back while aborting resize call.", e);
-				message = new Message(Message.Type.CRITICAL, e.getMessage());
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-			}
+				log.warn("Error while rolling back while aborting resize call.", e);
+            }
 
 			message = new Message(Message.Type.CRITICAL, e.getMessage());
 			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
@@ -560,10 +558,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			try {
 				t.rollback(false);
 			} catch (TransactionException e1) {
-				log.error("Error while rolling back while aborting rotate call.", e);
-				message = new Message(Message.Type.CRITICAL, e.getMessage());
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-			}
+				log.warn("Error while rolling back while aborting rotate call.", e);
+            }
 
 			message = new Message(Message.Type.CRITICAL, e.getMessage());
 			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());

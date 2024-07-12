@@ -91,7 +91,7 @@ public abstract class ContentNodeUserServlet extends HttpServlet {
 			String error = "Invalid session ID specified: `" + request.getParameter("sid") + "'";
 
 			halt(error, response);
-			logger.error(error);
+			logger.error(error, e);
 			return null;
 		}
 		
@@ -107,7 +107,7 @@ public abstract class ContentNodeUserServlet extends HttpServlet {
 			t = factory.startTransaction(token.toString(), true);
 		} catch (NodeException e) {
 			halt("Invalid sid provided.", response);
-			logger.error("Invalid sessionId { " + token + " } provided");
+			logger.error("Invalid sessionId { " + token + " } provided", e);
 			return null;
 		}
 

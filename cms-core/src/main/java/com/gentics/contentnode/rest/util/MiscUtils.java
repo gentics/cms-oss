@@ -1096,7 +1096,7 @@ public class MiscUtils {
 			try {
 				havePermission = perm.checkObject(nodeObject);
 			} catch (NodeException e) {
-				logger.error("Could not check permission \"" + perm.name() + "\" for " + nodeObject, e);
+				logger.warn("Could not check permission \"" + perm.name() + "\" for " + nodeObject, e);
 
 				havePermission = false;
 			}

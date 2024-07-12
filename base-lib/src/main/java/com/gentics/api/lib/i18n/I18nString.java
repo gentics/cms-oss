@@ -70,7 +70,7 @@ public abstract class I18nString implements Serializable {
 			try {
 				languageProvider = LanguageProviderFactory.getInstance().getProvider();
 			} catch (NodeException e) {
-				NodeLogger.getLogger(getClass()).error("Error translating i18nstring '" + _key + "', languageprovider was null");
+				NodeLogger.getLogger(getClass()).warn("Error translating i18nstring '" + _key + "', languageprovider was null");
 			}
 		}
 		return languageProvider;

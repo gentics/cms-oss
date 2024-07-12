@@ -17,7 +17,7 @@ public class LinkCheckerLifecycleService implements LifecycleService {
 		try {
 			LinkChecker.terminate();
 		} catch (NodeException e) {
-			LinkChecker.logger.error("Error while stopping LinkChecker", e);
+			LinkChecker.logger.warn("Error while stopping LinkChecker", e);
 		}
 	}
 }

@@ -95,7 +95,7 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 					}
 				});
 			} catch (NodeException e) {
-				log.error(e);
+				log.error("Error while adding Keycloak filters: " + e.getMessage(), e);
 			}
 
 			log.info("Keycloak filter added");

@@ -206,7 +206,7 @@ public class Indexer {
 						}
 						contentBlacklist.add(Pattern.compile(patternString));
 					} catch (PatternSyntaxException e) {
-						logger.error(String.format("Ignoring invalid blacklist pattern %s", patternString), e);
+						logger.warn(String.format("Ignoring invalid blacklist pattern %s", patternString), e);
 					}
 				}
 			}
@@ -220,7 +220,7 @@ public class Indexer {
 						}
 						contentWhitelist.add(Pattern.compile(patternString));
 					} catch (PatternSyntaxException e) {
-						logger.error(String.format("Ignoring invalid whitelist pattern %s", patternString), e);
+						logger.warn(String.format("Ignoring invalid whitelist pattern %s", patternString), e);
 					}
 				}
 			}
@@ -303,7 +303,7 @@ public class Indexer {
 					}
 				}
 			} catch (InterruptedException e) {
-				logger.error("Error while stopping Indexer service", e);
+				logger.warn("Error while stopping Indexer service", e);
 				success = false;
 			}
 			service = null;

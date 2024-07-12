@@ -72,14 +72,20 @@ import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.ELASTICSEARCH, Feature.WASTEBIN, Feature.NICE_URLS })
 @RunWith(value = Parameterized.class)
 public class IndexerTest extends AbstractIndexerTest {
+	private static final Logger log = LoggerFactory.getLogger(IndexerTest.class);
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext().config(map -> {
 		map.setProperty(Indexer.THREADS_PARAM, "1");
 	});
+
+	@ClassRule
+	public static ElasticsearchContext elasticsearch = new ElasticsearchContext(ElasticsearchContext.VERSION_ES8);
 
 	/**
 	 * REST Application used as fake elasticsearch
@@ -140,7 +146,10 @@ public class IndexerTest extends AbstractIndexerTest {
 
 	@Before
 	public void setup() throws NodeException {
-		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, appContext.getBaseUri());
+		String esUrl = String.format("http://%s:%d", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
+		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
+
+		log.error("Elasticsearch URL: {}", esUrl);
 
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {

@@ -92,7 +92,7 @@ public class SearchResourceImpl extends AbstractContentNodeResource implements S
 	public Response searchType(@PathParam("type") String type, @BeanParam SearchParameterBean search, String body) throws NodeException {
 		try {
 			IndexType indexType = IndexType.valueOf(type);
-			return doSearch(String.format("%s/_search", type), search, body, Arrays.asList(indexType));
+			return doSearch("_search", search, body, Arrays.asList(indexType));
 		} catch (IllegalArgumentException e) {
 			try (Trx trx = ContentNodeHelper.trx()) {
 				throw new RestMappedException(I18NHelper.get("search.invalid.type", type)).setMessageType(Type.CRITICAL)
@@ -114,7 +114,6 @@ public class SearchResourceImpl extends AbstractContentNodeResource implements S
 	 * @param search parameter bean
 	 * @param body body
 	 * @param types types for restricting the search
-	 * @param stagingPackageName 
 	 * @return response
 	 * @throws NodeException
 	 */

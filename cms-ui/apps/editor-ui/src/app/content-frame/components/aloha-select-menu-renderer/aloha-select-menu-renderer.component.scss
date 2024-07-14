@@ -109,6 +109,12 @@
         }
     }
 
+    &:not(.icons-only):not(.has-left-icons) {
+        .select-menu-entry .entry-icon.icon-left {
+            display: none;
+        }
+    }
+
     .next-step {
         display: flex;
         flex-direction: column;

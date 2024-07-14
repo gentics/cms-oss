@@ -4,6 +4,7 @@ import { defineConfig } from 'cypress';
 export default defineConfig({
     component: {
         ...nxComponentTestingPreset(__filename),
+        video: false,
         indexHtmlFile: './cypress/support/component-index.html',
     },
 });

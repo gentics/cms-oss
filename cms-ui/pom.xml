@@ -38,11 +38,6 @@
         <ui.skip.report>false</ui.skip.report>
         <!-- If the UI module should skip the publishing to the registry -->
         <ui.skip.publish>false</ui.skip.publish>
-        <!-- In which phase the report-assembly should be executed -->
-        <ui.report.assemply.phase>package</ui.report.assemply.phase>
-
-        <!-- Internally stored phase for the assembly, because the plugin has no skip option -->
-        <ui.assembly.phase></ui.assembly.phase>
     </properties>
 
     <build>
@@ -94,6 +89,22 @@
 							</descriptors>
 						</configuration>
 					</execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>make-report-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <skipAssembly>${ui.skip.report}</skipAssembly>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>report-assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -319,43 +330,6 @@
                             <outdatedFile>${project.build.directory}/outdated.json</outdatedFile>
                             <componentName>CMS OSS</componentName>
                             <moduleName>User Interface</moduleName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-
-                <executions>
-                    <execution>
-                        <?m2e ignore?>
-                        <id>make-assembly</id>
-                        <phase>${ui.assembly.phase}</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <?m2e ignore?>
-                        <id>make-report-assembly</id>
-                        <phase>${ui.report.assemply.phase}</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>true</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>report-assembly.xml</descriptor>
-                            </descriptors>
                         </configuration>
                     </execution>
                 </executions>

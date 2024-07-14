@@ -359,6 +359,8 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
+                            // Kill any xvfb instances which might interfere
+                            sh "pkill Xvfb"
                             // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
                             sh "Xvfb :99 &"
                             sh "export DISPLAY=:99"

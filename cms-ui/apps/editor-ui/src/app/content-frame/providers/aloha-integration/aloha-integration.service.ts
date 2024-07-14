@@ -333,6 +333,7 @@ export class AlohaIntegrationService {
         this.settings$.next(null);
         this.registeredComponents = {};
         this.renderedComponents = {};
+        this.componentsSub.next({ ...this.registeredComponents });
     }
 
     public changeActivePageEditorTab(id: string): boolean {

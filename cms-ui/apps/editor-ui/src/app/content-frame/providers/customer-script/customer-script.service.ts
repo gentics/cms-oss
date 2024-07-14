@@ -198,7 +198,6 @@ export class CustomerScriptService implements OnDestroy {
             this.overlays.closeRemaining();
 
             iFrameWindow.GCMSUI = null;
-            iFrameWindow.removeEventListener('unload', onUnload);
         };
         iFrameWindow.addEventListener('unload', onUnload);
 

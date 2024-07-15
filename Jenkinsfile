@@ -360,10 +360,10 @@ spec:
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
                             // Kill any xvfb instances which might interfere, ignore response code
-                            // sh "pkill Xvfb || true"
+                            sh "pkill Xvfb || true"
                             // // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
-                            // sh "Xvfb :99 &"
-                            // sh "export DISPLAY=:99"
+                            sh "Xvfb :99 &"
+                            sh "export DISPLAY=:99"
 
                             // run the integration tests in the ui-module
                             sh "mvn integration-test -B -fae -pl :cms-ui " +
@@ -374,7 +374,7 @@ spec:
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            // sh "pkill Xvfb || true"
+                            sh "pkill Xvfb || true"
                         }
                     }
                 }

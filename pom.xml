@@ -233,6 +233,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-javadoc-plugin</artifactId>
 					<version>2.9.1</version>
+					<configuration>
+						<project>
+							<quiet>true</quiet>
+						</project>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -245,7 +250,7 @@
 					<version>3.11.0</version>
 					<configuration>
 						<executable>${env.JAVA_HOME}/bin/javac</executable>
-						<verbose>true</verbose>
+						<verbose>false</verbose>
 						<fork>true</fork>
 						<release>17</release>
 						<maxmem>1024m</maxmem>

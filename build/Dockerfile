@@ -130,12 +130,10 @@ ADD build/settings.xml /usr/share/maven/conf/settings.xml
 RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkins \
  && echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get install --assume-yes --allow-unauthenticated google-chrome-beta" >> /etc/sudoers.d/jenkins
 
-# Create cache directories for cypress (or it's dependencies), as '~/.cache' isn't mounted (only subfolders)
-# and these things don't actually need to be persistently be cached
-RUN sudo mkdir -p /home/${USER_NAME}/.cache/mesa_shader_cache \
-	&& sudo mkdir -p /home/${USER_NAME}/.cache/dconf
-RUN sudo chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/mesa_shader_cache \
-	&& sudo chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/dconf
+# Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
+ENV XDG_CACHE_HOME "/var/cache"
+# Disable mesa cache entirely
+ENV MESA_SHADER_CACHE_DISABLE "true"
 
 # Switch user
 USER ${USER_NAME}

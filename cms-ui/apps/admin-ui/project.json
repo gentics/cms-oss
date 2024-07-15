@@ -91,15 +91,15 @@
         "test": {
             "executor": "nx:run-commands",
             "options": {
-                "cwd": ".",
-                "command": "node tools/ng-test-runner admin-ui --watch=false --forceAngular"
+                "cwd": "./ng-workspace",
+                "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=false"
             },
             "configurations": {
                 "watch": {
-                    "command": "node tools/ng-test-runner admin-ui --watch=true --forceAngular"
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=true"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner admin-ui --watch=false --forceAngular --configuration=ci",
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=false --configuration=ci",
                     "color": false
                 }
             }

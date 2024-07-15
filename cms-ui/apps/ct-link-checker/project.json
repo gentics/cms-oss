@@ -89,15 +89,15 @@
         "test": {
             "executor": "nx:run-commands",
             "options": {
-                "cwd": ".",
-                "command": "node tools/ng-test-runner ct-link-checker --watch=false --forceAngular"
+                "cwd": "./ng-workspace",
+                "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=false"
             },
             "configurations": {
                 "watch": {
-                    "command": "node tools/ng-test-runner ct-link-checker --watch=true --forceAngular"
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=true"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner ct-link-checker --watch=false --forceAngular --configuration=ci",
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=false --configuration=ci",
                     "color": false
                 }
             }

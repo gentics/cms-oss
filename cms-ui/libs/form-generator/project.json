@@ -24,15 +24,15 @@
         "test": {
             "executor": "nx:run-commands",
             "options": {
-                "cwd": ".",
-                "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular"
+                "cwd": "./ng-workspace",
+                "command": "node ../node_modules/@angular/cli/bin/ng.js test form-generator --watch=false"
             },
             "configurations": {
                 "watch": {
-                    "command": "node tools/ng-test-runner form-generator --watch=true --forceAngular"
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test form-generator --watch=true"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular --configuration=ci",
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test form-generator --watch=false --configuration=ci",
                     "color": false
                 }
             }

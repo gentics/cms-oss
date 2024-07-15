@@ -24,15 +24,15 @@
         "test": {
             "executor": "nx:run-commands",
             "options": {
-                "cwd": ".",
-                "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular"
+                "cwd": "./ng-workspace",
+                "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-components --watch=false"
             },
             "configurations": {
                 "watch": {
-                    "command": "node tools/ng-test-runner cms-components --watch=true --forceAngular"
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-components --watch=true"
                 },
                 "ci": {
-                    "command": "node tools/ng-test-runner cms-components --watch=false --forceAngular --configuration=ci",
+                    "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-components --watch=false --configuration=ci",
                     "color": false
                 }
             }

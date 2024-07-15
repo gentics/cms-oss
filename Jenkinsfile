@@ -359,14 +359,14 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
-                            // Kill any xvfb instances which might interfere, ignore response code
-                            sh "pkill Xvfb || true"
-                            // // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
-                            sh "Xvfb :99 &"
-                            sh "export DISPLAY=:99"
+                            // // Kill any xvfb instances which might interfere, ignore response code
+                            // sh "pkill Xvfb || true"
+                            // // // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
+                            // sh "Xvfb :99 &"
+                            // sh "export DISPLAY=:99"
 
                             // run the integration tests in the ui-module
-                            sh "mvn integration-test -B -fae -pl :cms-ui " +
+                            sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
                                 // Setup NPM correctly for this run
                                 "-Dnodejs.npm.bin=/opt/node/bin/npm " + 
                                 // And skip all other parts - these had to run before hand or will be executed by the UI repo
@@ -374,7 +374,7 @@ spec:
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            sh "pkill Xvfb || true"
+                            // sh "pkill Xvfb || true"
                         }
                     }
                 }

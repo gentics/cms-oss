@@ -5,6 +5,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -15,6 +20,7 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
+import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.etc.config.ImageManipulationMode;
 import com.gentics.mesh.etc.config.ImageManipulatorOptions;
@@ -23,6 +29,10 @@ import com.gentics.mesh.etc.config.search.ElasticSearchOptions;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.ProtocolVersion;
+import com.gentics.testutils.database.SQLUtilException;
+import com.gentics.testutils.database.SQLUtils;
+import com.gentics.testutils.database.SQLUtilsFactory;
+import com.gentics.testutils.testdbmanager.ManagerResponse;
 
 /**
  * Mesh Context that starts a Mesh container
@@ -31,7 +41,9 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "2.1.0";
+	public final static String TESTED_MESH_VERSION = "3.0.0-SNAPSHOT";
+
+	public static final String MESH_DATABASE_SUFFIX = "_mesh";
 
 	protected LogBuffer logBuffer = new LogBuffer();
 
@@ -52,9 +64,9 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 	private String extraOpts;
 
-	private boolean useFilesystem = false;
-
 	private ImageManipulationMode imageManipulationMode = ImageManipulatorOptions.DEFAULT_IMAGE_MANIPULATION_MODE;
+
+	private SQLUtils dbUtils = null;
 
 	/**
 	 * Create an instance, using the Mesh version of the MeshRestClient
@@ -99,8 +111,32 @@ public class MeshContext extends GenericContainer<MeshContext> {
 		// We don't use ES
 		addEnv(ElasticSearchOptions.MESH_ELASTICSEARCH_URL_ENV, "null");
 
-		if (!useFilesystem) {
-			addEnv("MESH_GRAPH_DB_DIRECTORY", "null");
+		CompletableFuture<ManagerResponse> future = new CompletableFuture<>();
+		Executors.newSingleThreadExecutor().submit(() -> {
+			DBTestContext.requestGCNDB(future);
+		});
+
+		try {
+			ManagerResponse dbConnectionResponse = future.get(DBTestContext.DEFAULT_MAX_WAIT, TimeUnit.SECONDS);
+			addEnv("MESH_JDBC_DRIVER_CLASS", "org.mariadb.jdbc.Driver");
+			addEnv("MESH_JDBC_CONNECTION_URL", "jdbc:mariadb://" + dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort() + "/");
+			addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8&includeInnodbStatusInDeadlockExceptions=true&useSSL=false");
+			addEnv("MESH_JDBC_DATABASE_NAME", dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX);
+			addEnv("MESH_JDBC_DIALECT_CLASS", "org.mariadb.jdbc.Driver");
+			addEnv("MESH_JDBC_CONNECTION_USERNAME", dbConnectionResponse.getUser());
+			addEnv("MESH_JDBC_CONNECTION_PASSWORD", "");
+
+			Properties properties = dbConnectionResponse.toProperties();
+			properties.setProperty("url", properties.getProperty("url") + MESH_DATABASE_SUFFIX);
+			dbUtils = SQLUtilsFactory.getSQLUtils(properties);
+			dbUtils.connectDatabase();
+			dbUtils.createDatabase();
+		} catch (TimeoutException e) {
+			throw new IllegalStateException("Waited too long for the connection properties from gcn-testdb-manager");
+		} catch (InterruptedException e) {
+			throw new IllegalStateException("Getting the connection from gcn-testdb-manager has been interrupted");
+		} catch (Throwable e) {
+			throw new IllegalStateException("Getting the connection from gcn-testdb-manager has failed", e);
 		}
 
 		addEnv(MeshOptions.MESH_INITIAL_ADMIN_PASSWORD_ENV, "admin");
@@ -128,6 +164,18 @@ public class MeshContext extends GenericContainer<MeshContext> {
 				.build());
 		client.setLogin("admin", "admin");
 		client.login().blockingGet();
+	}
+
+	@Override
+	public void stop() {
+		super.stop();
+		try {
+			if (dbUtils != null) {
+				dbUtils.removeDatabase();
+			}
+		} catch (SQLUtilException e) {
+			log.error("Could not drop Mesh database", e);
+		}
 	}
 
 	public MeshRestClient client() {
@@ -166,16 +214,6 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 */
 	public MeshContext withNodeName(String name) {
 		this.nodeName = name;
-		return this;
-	}
-
-	/**
-	 * Run the mesh server with file system persisting enabled.
-	 * 
-	 * @return
-	 */
-	public MeshContext withFilesystem() {
-		this.useFilesystem = true;
 		return this;
 	}
 

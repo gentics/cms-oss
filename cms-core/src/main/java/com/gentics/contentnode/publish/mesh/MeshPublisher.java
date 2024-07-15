@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;
@@ -142,7 +141,7 @@ import com.gentics.mesh.core.rest.branch.BranchListResponse;
 import com.gentics.mesh.core.rest.branch.BranchReference;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
 import com.gentics.mesh.core.rest.branch.BranchUpdateRequest;
-import com.gentics.mesh.core.rest.branch.info.BranchInfoSchemaList;
+import com.gentics.mesh.core.rest.branch.info.BranchInfoSchemaListModel;
 import com.gentics.mesh.core.rest.branch.info.BranchSchemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
@@ -156,10 +155,10 @@ import com.gentics.mesh.core.rest.node.NodeListResponse;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
 import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
-import com.gentics.mesh.core.rest.node.field.BinaryField;
-import com.gentics.mesh.core.rest.node.field.MicronodeField;
+import com.gentics.mesh.core.rest.node.field.BinaryFieldModel;
+import com.gentics.mesh.core.rest.node.field.MicronodeFieldModel;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
-import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
+import com.gentics.mesh.core.rest.node.field.image.FocalPointModel;
 import com.gentics.mesh.core.rest.node.field.image.ImageManipulationRequest;
 import com.gentics.mesh.core.rest.node.field.image.ImageVariantRequest;
 import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
@@ -169,7 +168,7 @@ import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
-import com.gentics.mesh.core.rest.node.field.list.FieldList;
+import com.gentics.mesh.core.rest.node.field.list.FieldListModel;
 import com.gentics.mesh.core.rest.node.field.list.impl.BooleanFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.DateFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.MicronodeFieldListImpl;
@@ -3470,7 +3469,7 @@ public class MeshPublisher implements AutoCloseable {
 				case integer:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<Number> field = new NumberFieldListImpl();
+						FieldListModel<Number> field = new NumberFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							Number number = ObjectTransformer.getNumber(o, null);
@@ -3487,7 +3486,7 @@ public class MeshPublisher implements AutoCloseable {
 				case longtext:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<String> field = new StringFieldListImpl();
+						FieldListModel<String> field = new StringFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							String string = ObjectTransformer.getString(o, null);
@@ -3510,7 +3509,7 @@ public class MeshPublisher implements AutoCloseable {
 				case link:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<NodeFieldListItem> field = new NodeFieldListImpl();
+						FieldListModel<NodeFieldListItem> field = new NodeFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							if (o instanceof MeshLink) {
@@ -3547,7 +3546,7 @@ public class MeshPublisher implements AutoCloseable {
 				case bool:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<Boolean> field = new BooleanFieldListImpl();
+						FieldListModel<Boolean> field = new BooleanFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							Boolean bool = ObjectTransformer.getBoolean(o, null);
@@ -3563,7 +3562,7 @@ public class MeshPublisher implements AutoCloseable {
 				case date:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<String> field = new DateFieldListImpl();
+						FieldListModel<String> field = new DateFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							Integer time = ObjectTransformer.getInteger(o, null);
@@ -3583,7 +3582,7 @@ public class MeshPublisher implements AutoCloseable {
 				case micronode:
 				{
 					if (entry.isMultivalue()) {
-						FieldList<MicronodeField> field = new MicronodeFieldListImpl();
+						FieldListModel<MicronodeFieldModel> field = new MicronodeFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
 							if (o instanceof ContentTag) {
@@ -4150,11 +4149,11 @@ public class MeshPublisher implements AutoCloseable {
 		if (fields == null) {
 			return true;
 		}
-		BinaryField binaryField = fields.getBinaryField("binarycontent");
+		BinaryFieldModel binaryField = fields.getBinaryField("binarycontent");
 		if (binaryField == null) {
 			return true;
 		}
-		FocalPoint focalPoint = binaryField.getFocalPoint();
+		FocalPointModel focalPoint = binaryField.getFocalPoint();
 		if (focalPoint == null) {
 			return true;
 		}
@@ -4993,9 +4992,9 @@ public class MeshPublisher implements AutoCloseable {
 			}
 
 			// check schema versions
-			BranchInfoSchemaList schemaInfoList = client.getBranchSchemaVersions(currentProjectName, branchUuid)
+			BranchInfoSchemaListModel schemaInfoList = client.getBranchSchemaVersions(currentProjectName, branchUuid)
 					.toSingle().retry(RETRY_HANDLER).blockingGet();
-			BranchInfoSchemaList updateList = new BranchInfoSchemaList();
+			BranchInfoSchemaListModel updateList = new BranchInfoSchemaListModel();
 			for (BranchSchemaInfo schemaInfo : schemaInfoList.getSchemas()) {
 				SchemaResponse schema = schemaMap.get(schemaInfo.getName());
 				if (schema != null) {
@@ -5064,7 +5063,7 @@ public class MeshPublisher implements AutoCloseable {
 		protected boolean checkSchemaMigrations(BranchResponse branch, Map<String, Long> unmigratedSchemas) throws NodeException {
 			boolean allDone = true;
 
-			BranchInfoSchemaList schemaStatusList = client.getBranchSchemaVersions(name, branch.getUuid()).blockingGet();
+			BranchInfoSchemaListModel schemaStatusList = client.getBranchSchemaVersions(name, branch.getUuid()).blockingGet();
 			for (BranchSchemaInfo info : schemaStatusList.getSchemas()) {
 				switch (info.getMigrationStatus()) {
 				case COMPLETED:

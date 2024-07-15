@@ -64,7 +64,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
+import com.gentics.mesh.core.rest.node.field.image.FocalPointModel;
 import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.etc.config.ImageManipulationMode;
 import com.gentics.mesh.parameter.client.ImageManipulationParametersImpl;
@@ -327,7 +327,7 @@ public class GenticsImageStorePublishTest {
 				ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
 				assertThat(variants.getVariants().size()).isEqualTo(2);
 				assertThat(variants.getVariants().stream()
-							.map(var -> var.setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest(var.getHeight() == null || !var.getHeight().equals(100)).getCacheKey())
+							.map(var -> var.setFocalPoint(new FocalPointModel(0.5f, 0.5f)).toRequest(var.getHeight() == null || !var.getHeight().equals(100)).getCacheKey())
 							.collect(Collectors.toList()))
 					.containsOnlyElementsOf(params.stream().map(ImageManipulationParametersImpl::getCacheKey).collect(Collectors.toList()));
 

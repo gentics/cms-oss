@@ -132,10 +132,10 @@ RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkin
 
 # Create cache directories for cypress (or it's dependencies), as '~/.cache' isn't mounted (only subfolders)
 # and these things don't actually need to be persistently be cached
-RUN mkdir -p /home/${USER_NAME}/.cache/mesa_shader_cache \
-	&& mkdir -p /home/${USER_NAME}/.cache/dconf
-RUN chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/mesa_shader_cache \
-	&& chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/dconf
+RUN sudo mkdir -p /home/${USER_NAME}/.cache/mesa_shader_cache \
+	&& sudo mkdir -p /home/${USER_NAME}/.cache/dconf
+RUN sudo chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/mesa_shader_cache \
+	&& sudo chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/dconf
 
 # Switch user
 USER ${USER_NAME}

@@ -13,9 +13,12 @@ module.exports = {
                 reporterOptions: {
                     reporterEnabled: 'min, mocha-junit-reporter',
                     mochaJunitReporterReporterOptions: {
-                        testsuitesTitle: `Integration Tests: ${name}`,
                         mochaFile: resolve(__dirname, `.reports/${type}/${name}/CYPRESS-report.xml`),
+                        testCaseSwitchClassnameAndName: true,
                         jenkinsMode: true,
+                        rootSuiteTitle: name,
+                        testsuitesTitle: `UI Integration Tests: ${name}`,
+                        jenkinsClassnamePrefix: `ui-integration-tests.${name}`,
                     },
                 },
             };

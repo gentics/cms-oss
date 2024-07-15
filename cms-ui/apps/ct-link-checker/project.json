@@ -117,11 +117,8 @@
                 },
                 "ci": {
                     "quiet": true,
-                    "devServerTarget": "ct-link-checker:build:ci",
-                    "reporterOptions": {
-                        "color": false,
-                        "reporter": "min"
-                    }
+                    "cypressConfig": "apps/ct-link-checker/cypress.config.ci.ts",
+                    "devServerTarget": "ct-link-checker:build:ci"
                 }
             }
         }

@@ -44,6 +44,16 @@
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "image-editor-demo:build"
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "cypressConfig": "libs/ui-core/cypress.config.ci.ts",
+                    "devServerTarget": "image-editor-demo:build:ci"
+                }
             }
         },
         "nx-release-publish": {

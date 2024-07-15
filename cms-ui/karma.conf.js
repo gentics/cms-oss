@@ -7,7 +7,7 @@ const { constants } = require('karma');
 
 module.exports = (type, name, junitPackageName) => {
     if (!junitPackageName) {
-        junitPackageName = `ui.${type}.${name}`;
+        junitPackageName = `ui.unit.${name}`;
     }
 
     return {

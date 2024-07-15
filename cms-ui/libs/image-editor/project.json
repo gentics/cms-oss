@@ -52,11 +52,8 @@
                 },
                 "ci": {
                     "quiet": true,
-                    "devServerTarget": "image-editor-demo:build:ci",
-                    "reporterOptions": {
-                        "color": false,
-                        "reporter": "min"
-                    }
+                    "cypressConfig": "libs/image-editor/cypress.config.ci.ts",
+                    "devServerTarget": "image-editor-demo:build:ci"
                 }
             }
         },

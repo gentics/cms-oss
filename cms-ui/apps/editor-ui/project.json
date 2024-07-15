@@ -126,11 +126,8 @@
                 },
                 "ci": {
                     "quiet": true,
-                    "devServerTarget": "editor-ui:build:ci",
-                    "reporterOptions": {
-                        "color": false,
-                        "reporter": "min"
-                    }
+                    "cypressConfig": "apps/editor-ui/cypress.config.ci.ts",
+                    "devServerTarget": "editor-ui:build:ci"
                 }
             }
         }

@@ -1,8 +1,8 @@
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
-import { createReporterOptions } from '../../cypress-e2e.preset';
+import { createE2EReporterOptions } from '../../cypress.preset';
 
 export default defineConfig({
     e2e: nxE2EPreset(__dirname),
-    ...createReporterOptions('apps', 'editor-ui'),
+    ...createE2EReporterOptions('apps', 'editor-ui'),
 });

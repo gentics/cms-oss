@@ -7,5 +7,5 @@ export default defineConfig({
         ...nxComponentTestingPreset(__filename),
         indexHtmlFile: './cypress/support/component-index.html',
     },
-    ...createComponentReporterOptions('apps', 'editor-ui', false),
+    ...createComponentReporterOptions('libs', 'form-generator', true),
 });

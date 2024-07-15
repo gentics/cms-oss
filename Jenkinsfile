@@ -299,6 +299,7 @@ spec:
                             }
 
                             junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
+                            junit  testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -359,11 +360,6 @@ spec:
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
 
-                            // https://github.com/cypress-io/cypress/discussions/26175#discussioncomment-9700467
-                            sh "export HTTPS_PROXY="
-                            sh "export HTTP_PROXY="
-                            sh "export NO_PROXY="
-
                             // run the integration tests in the ui-module
                             sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
                                 // Setup NPM correctly for this run
@@ -381,7 +377,7 @@ spec:
             post {
                 always {
                     script {
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: false
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: false
                     }
                 }
             }

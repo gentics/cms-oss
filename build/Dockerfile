@@ -130,6 +130,13 @@ ADD build/settings.xml /usr/share/maven/conf/settings.xml
 RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkins \
  && echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get install --assume-yes --allow-unauthenticated google-chrome-beta" >> /etc/sudoers.d/jenkins
 
+# Create cache directories for cypress (or it's dependencies), as '~/.cache' isn't mounted (only subfolders)
+# and these things don't actually need to be persistently be cached
+RUN mkdir -p /home/${USER_NAME}/.cache/mesa_shader_cache \
+	&& mkdir -p /home/${USER_NAME}/.cache/dconf
+RUN chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/mesa_shader_cache \
+	&& chown 10000:${USER_NAME} /home/${USER_NAME}/.cache/dconf
+
 # Switch user
 USER ${USER_NAME}
 
@@ -137,7 +144,9 @@ USER ${USER_NAME}
 ENV MAVEN_OPTS "-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=256m"
 
 RUN mkdir -p ~/workspace \
- && mkdir -p ~/.m2/repository
+	&& mkdir -p ~/.m2/repository
+
+RUN mkdir /
 
 # TestDB Manager
 ENV TESTMANAGER_HOSTNAME "gcn-testdb-manager.gtx-dev.svc"

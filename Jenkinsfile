@@ -358,12 +358,11 @@ spec:
                             // prior to starting the tests, start the docker containers with CMS
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            
-                            // // Kill any xvfb instances which might interfere, ignore response code
-                            // sh "pkill Xvfb || true"
-                            // // // XVFB fixes: https://docs.cypress.io/guides/continuous-integration/introduction#Xvfb
-                            // sh "Xvfb :99 &"
-                            // sh "export DISPLAY=:99"
+
+                            // https://github.com/cypress-io/cypress/discussions/26175#discussioncomment-9700467
+                            sh "export HTTPS_PROXY="
+                            sh "export HTTP_PROXY="
+                            sh "export NO_PROXY="
 
                             // run the integration tests in the ui-module
                             sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
@@ -374,7 +373,6 @@ spec:
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            // sh "pkill Xvfb || true"
                         }
                     }
                 }

@@ -146,8 +146,6 @@ ENV MAVEN_OPTS "-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache
 RUN mkdir -p ~/workspace \
 	&& mkdir -p ~/.m2/repository
 
-RUN mkdir /
-
 # TestDB Manager
 ENV TESTMANAGER_HOSTNAME "gcn-testdb-manager.gtx-dev.svc"
 ENV TESTMANAGER_PORT "8080"

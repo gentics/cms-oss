@@ -131,7 +131,7 @@ RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkin
  && echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get install --assume-yes --allow-unauthenticated google-chrome-beta" >> /etc/sudoers.d/jenkins
 
 # Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
-ENV XDG_CACHE_HOME "/var/cache"
+ENV XDG_CACHE_HOME "/tmp"
 # Disable mesa cache entirely
 ENV MESA_SHADER_CACHE_DISABLE "true"
 

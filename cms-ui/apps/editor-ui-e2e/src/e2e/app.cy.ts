@@ -34,7 +34,7 @@ describe('Login', () => {
 
     it('should have the minimal node present', () => {
         cy.navigateToApp();
-        cy.login('cms');
+        cy.login('admin');
         cy.selectNode(getItem(minimalNode, entities)!.id);
         cy.get('folder-contents > .title .title-name')
             .should('exist')

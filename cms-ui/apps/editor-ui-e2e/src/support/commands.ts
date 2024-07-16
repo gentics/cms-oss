@@ -15,7 +15,7 @@ declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         navigateToApp(path?: string): Chainable<void>;
-        login(source: 'cms' | 'keycloak'): Chainable<void>;
+        login(account: string): Chainable<void>;
         selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
         findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
         itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
@@ -34,18 +34,18 @@ Cypress.Commands.add('navigateToApp', (path) => {
     cy.visit(`${appBasePath}${path || ''}`);
 });
 
-Cypress.Commands.add('login', (source) => {
+Cypress.Commands.add('login', (account) => {
     return cy.fixture('auth.json').then(auth => {
-        const data = auth[source];
-
+        const data = auth[account];
+        if (data) {
+            return data;
+        }
+        return cy.get(account);
+    }).then(data => {
         cy.get('input[type="text"]').type(data.username);
         cy.get('input[type="password"]').type(data.password);
 
-        if (source === 'cms') {
-            cy.get('button[type="submit"]').click();
-        } else {
-            cy.get('input[type="submit"]').click();
-        }
+        cy.get('button[type="submit"]').click();
     });
 });
 
@@ -53,7 +53,7 @@ Cypress.Commands.add('selectNode', (nodeId) => {
     cy.get('.node-selector [data-action="select-node"]')
         .click();
     return cy.get('.node-selector-list')
-        .find(typeof nodeId === 'number' ? `[data-id="${nodeId}"]` : `[data-global-id="${nodeId}"]`)
+        .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`)
         .click();
 });
 

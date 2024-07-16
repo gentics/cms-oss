@@ -1,6 +1,6 @@
 package com.gentics.contentnode.translation;
 
-import static com.gentics.contentnode.translation.TranslationTestUtils.mockTranslationConfig;
+import static com.gentics.contentnode.translation.ConfigurationTestUtils.mockTranslationConfig;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;

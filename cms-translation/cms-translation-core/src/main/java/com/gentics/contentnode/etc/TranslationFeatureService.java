@@ -28,8 +28,8 @@ public class TranslationFeatureService implements FeatureService {
 		if (!isActivatedAndLicensed) {
 			return false;
 		}
-		var isCreated = TranslationUtil.createServiceDefinitionFileIfNeeded();
-		if (!isCreated) {
+		var isCreatedOrAlreadyPresent = TranslationUtil.createServiceDefinitionFileIfNeeded();
+		if (!isCreatedOrAlreadyPresent) {
 			return false;
 		}
 

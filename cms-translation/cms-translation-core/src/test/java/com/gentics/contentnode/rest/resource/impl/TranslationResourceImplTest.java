@@ -10,12 +10,14 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
+import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.HTMLTextPartType;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.MultiTagCreateRequest;
@@ -26,7 +28,6 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.api.translation.TranslationService;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.BeforeClass;
@@ -45,6 +46,7 @@ public class TranslationResourceImplTest {
 	public static DBTestContext testContext = new DBTestContext();
 	static int textConstructId;
 	static int checkBoxConstructId;
+	static int linkConstructId ;
 	static SystemUser user;
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
 	TranslationService mockedTranslationService = Mockito.mock(TranslationService.class);
@@ -60,6 +62,9 @@ public class TranslationResourceImplTest {
 				() -> createNode("node", "Node", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
 		textConstructId = supply(
 				() -> createConstruct(node, HTMLTextPartType.class, textKeyword, "text"));
+
+		linkConstructId = supply(
+				() -> createConstruct(node, FileURLPartType.class, textKeyword, "link1"));
 
 		checkBoxConstructId = supply(
 				() -> createConstruct(node, CheckboxPartType.class, checkboxKeyword, "check"));
@@ -177,6 +182,7 @@ public class TranslationResourceImplTest {
 		addTagCreateRequest(create, "content2", null, textKeyword,
 				"Auch andere Inhalte sollen übersetzt werden.");
 		addTagCreateRequest(create, "non-content", checkBoxConstructId, null, null);
+		addTagCreateRequest(create, "link1", linkConstructId , null, "Das ist der Link Text");
 
 		createTagsRequest.setCreate(create);
 

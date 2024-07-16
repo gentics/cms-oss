@@ -34,8 +34,13 @@ import com.gentics.contentnode.translation.LanguageVariantService;
 import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -100,7 +105,7 @@ public class TranslationResourceImpl implements TranslationResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			CNI18nString description = new CNI18nString("job_sent_to_background");
-			description.addParameter(new CNI18nString("feature.translation").toString());
+			description.addParameter(new CNI18nString("feature.automatic_translation").toString());
 
 			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
 				LanguageVariantService languageVariantService = new LanguageVariantService();
@@ -108,7 +113,8 @@ public class TranslationResourceImpl implements TranslationResource {
 				final var sourceLanguage = loadedPage.getLanguage();
 
 				if (sourceLanguage == null) {
-					throw new InvalidRequestException(new CNI18nString("feature.translation.error.translating_page").toString());
+					throw new InvalidRequestException(
+							new CNI18nString("feature.translation.error.translating_page").toString());
 				}
 				final var sourceLanguageCode = sourceLanguage.getCode();
 				final var translatedNodePage = languageVariantService.translate(pageId, targetLanguageCode,
@@ -119,16 +125,12 @@ public class TranslationResourceImpl implements TranslationResource {
 
 				try {
 					var contentTags = this.getContentTags(pageToTranslate);
-					translationService = getTranslationService();
-
-					for (var contentTag : contentTags) {
-						var contentTagProperties = contentTag.getProperties();
-						this.translateContentTags(translationService, contentTagProperties, sourceLanguageCode,
-								targetLanguageCode);
-					}
+					this.resolveAndTranslateContentTags(contentTags, sourceLanguageCode,
+							targetLanguageCode);
 
 					final var sourceName = pageToTranslate.getName();
-					final var translatedName = translationService.translate(sourceName, sourceLanguageCode,
+					final var translatedName = getTranslationService().translate(sourceName,
+							sourceLanguageCode,
 							targetLanguageCode);
 					pageToTranslate.setName(translatedName);
 				} catch (Exception e) {
@@ -147,12 +149,123 @@ public class TranslationResourceImpl implements TranslationResource {
 
 				var response = createPageLoadResponse(updatedTranslatedNodePage, pageId);
 				CNI18nString resultMessage = new CNI18nString("backgroundjob_finished_successfully");
-				resultMessage.addParameter(new CNI18nString("feature.translation").toString());
+				resultMessage.addParameter(new CNI18nString("feature.automatic_translation").toString());
 				response.addMessage(new Message(Message.Type.SUCCESS, resultMessage.toString()));
 
 				return response;
 			});
 		}
+	}
+
+
+	private void resolveAndTranslateContentTags(List<Tag> contentTags, String sourceLanguageCode,
+			String targetLanguageCode) throws Exception {
+		final var HtmlTextPartTypeId = 2;
+		var tagsToResolve = contentTags.stream()
+				.filter(tag -> HtmlTextPartTypeId == tag.getConstructId())
+				.toList();
+
+		for (var contentTagToResolve : tagsToResolve) {
+			var resolvedTextOpt = this.getTextProperty(contentTagToResolve);
+
+			if (resolvedTextOpt.isPresent()) {
+				var resolvableText = resolvedTextOpt.get().getStringValue();
+				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
+						resolvableText);
+				var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
+
+				var resolvedAndTranslatedText = this.getTranslationService().translate(
+						resolvedText,
+						sourceLanguageCode,
+						targetLanguageCode);
+
+				// todo:
+				// unresolve resolvedAndTranslatedText
+				// save it
+				resolvedTextOpt.get().setStringValue(resolvedAndTranslatedText);
+				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
+			}
+		}
+	}
+
+
+	private String resolveTags(Map<String, Tag> untranslatedTagMap, String resolvableText) {
+		var resolvedText = resolvableText;
+		for (var tag : untranslatedTagMap.entrySet()) {
+			var tagStringValueOpt = this.getTextProperty(tag.getValue());
+			if (tagStringValueOpt.isPresent()) {
+				var tagContent = tagStringValueOpt.get().getStringValue();
+				tagContent = String.format("{{%s}}", tagContent);
+				resolvedText = resolvedText.replaceAll(tag.getKey(), tagContent);
+			}
+		}
+		return resolvedText;
+	}
+
+	// iterate over untranslatedTagMap and replace the stringValues with the translated values
+	private void updateContentTagsListToTranslatedValues(
+			String resolvedAndTranslatedText,
+			Map<String, Tag> untranslatedTagMap
+	) {
+		final Pattern regex = Pattern.compile("\\{\\{(.+?)\\}\\}", Pattern.DOTALL);
+		final Matcher matcher = regex.matcher(resolvedAndTranslatedText);
+
+		List<String> resolvedTags = new ArrayList<>();
+		while (matcher.find()) {
+			resolvedTags.add(matcher.group(1));
+		}
+
+		if (resolvedTags.size() != untranslatedTagMap.size()) {
+			throw new RuntimeException(
+					"Number of resolved tags in translated text and map of untranslated tags must be equals");
+		}
+
+		Collections.reverse(resolvedTags); // todo check if the order can be guaranteed
+
+		List<Map.Entry<String, Tag>> unTranslatedTagList = new ArrayList<>(
+				untranslatedTagMap.entrySet());
+
+		for (int i = 0; i < unTranslatedTagList.size(); i++) {
+			var contentTag = unTranslatedTagList.get(i).getValue();
+			var translatedValue = resolvedTags.get(i);
+
+			this.getTextProperty(contentTag).ifPresent(untranslatedProperty ->
+					untranslatedProperty.setStringValue(translatedValue)
+			);
+		}
+	}
+
+
+	private Map<String, Tag> getOccurringTagsFromResolvableText(
+			List<Tag> contentTags,
+			String resolvableText
+	) {
+		Pattern regex = Pattern.compile("(<node [a-zA-Z]+[0-9]+>)", Pattern.CASE_INSENSITIVE);
+		Map<String, Tag> tagMap = new HashMap<>();
+		var matcher = regex.matcher(resolvableText);
+
+		while (matcher.find()) {
+			var matchedNodeTag = matcher.group(0).trim();
+			var correspondingTag = contentTags.stream()
+					.filter(tag -> matchedNodeTag.contains(
+							tag.getName())) //todo: contains ok? gtxlink1 and gtxlik11 collide
+					.findAny()
+					.orElseThrow(() -> new RuntimeException("Corresponding tag  not found")); // todo
+			tagMap.put(matchedNodeTag, correspondingTag);
+		}
+
+		return tagMap;
+	}
+
+	private Optional<Property> getTextProperty(Tag contentTag) {
+		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
+			if (contentTagProperty != null && !StringUtils.isBlank(
+					contentTagProperty.getValue().getStringValue())) {
+				var propertyToTranslate = contentTagProperty.getValue();
+				return Optional.of(propertyToTranslate);
+			}
+		}
+		return Optional.empty();
 	}
 
 	/**
@@ -173,7 +286,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	 * This method is used to create a PageLoadResponse object.
 	 *
 	 * @param updatedTranslatedNodePage The updated page after translation.
-	 * @param pageId The ID of the page.
+	 * @param pageId                    The ID of the page.
 	 * @return PageLoadResponse The response object containing the updated page information.
 	 * @throws NodeException If there is an error while creating the PageLoadResponse.
 	 */
@@ -206,11 +319,14 @@ public class TranslationResourceImpl implements TranslationResource {
 	 * @param contentTagProperties the tags that should be translated
 	 * @param sourceLanguageCode   the language code of the source text
 	 * @param targetLanguageCode   the language code of the target text
-	 * @throws NodeException
+	 * @throws Exception
 	 */
-	private void translateContentTags(TranslationService translationService,
+	private void translateContentTag(
+			TranslationService translationService,
 			Map<String, Property> contentTagProperties,
-			String sourceLanguageCode, String targetLanguageCode) throws Exception {
+			String sourceLanguageCode,
+			String targetLanguageCode
+	) throws Exception {
 		for (var contentTagProperty : contentTagProperties.entrySet()) {
 			if (contentTagProperty != null && !StringUtils.isBlank(
 					contentTagProperty.getValue().getStringValue())) {
@@ -221,7 +337,8 @@ public class TranslationResourceImpl implements TranslationResource {
 						targetLanguageCode);
 
 				if (!VALIDATOR.test(translatedText)) {
-					throw new NodeException(new CNI18nString("feature.translation.error.markup_invalid").toString());
+					throw new NodeException(
+							new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
 
 				propertyToTranslate.setStringValue(translatedText);

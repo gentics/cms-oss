@@ -4,7 +4,7 @@ import com.gentics.contentnode.etc.MapPreferences;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TranslationTestUtils {
+public class ConfigurationTestUtils {
 
 	public static MapPreferences mockTranslationConfig(String implementationClass, String apiToken) {
 		Map<String, Object> nodeRuntimeConfig = new HashMap<>();

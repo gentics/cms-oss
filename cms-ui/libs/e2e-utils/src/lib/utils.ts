@@ -1,6 +1,6 @@
 import { File, Folder, Image, Node, Page } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
-import { FileImportData, FolderImportData, ImageImportData, IMPORT_ID, ImportData, NodeImportData, PageImportData } from './entities';
+import { FileImportData, FolderImportData, ImageImportData, IMPORT_ID, ImportData, NodeImportData, PageImportData } from './common';
 
 export function getItem(data: NodeImportData, entities: Record<string, any>): Node | null;
 export function getItem(data: FolderImportData, entities: Record<string, any>): Folder | null;

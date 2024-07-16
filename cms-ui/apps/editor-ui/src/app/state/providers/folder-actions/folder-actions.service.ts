@@ -247,6 +247,10 @@ export class FolderActionsService {
                 this.client.folder.folders(0),
             ]).pipe(
                 switchMap(([, folderRes]) => {
+                    if (folderRes.folders.length === 0) {
+                        return of([folderRes, []]);
+                    }
+
                     return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
                         map(responses => [folderRes, responses.map(res => res.node)]),
                     );
@@ -321,6 +325,15 @@ export class FolderActionsService {
      * in the list of nodes by alphabetic order.
      */
     navigateToDefaultNode(): void {
+        // If no nodes have been loaded yet, then we have to wait to be able to determine the default node
+        if (!this.appState.now.folder.nodesLoaded) {
+            this.appState.select(state => state.folder.nodesLoaded).pipe(
+                filter(loaded => loaded),
+                take(1),
+            ).subscribe(() => this.navigateToDefaultNode());
+            return;
+        }
+
         const defaultNode = this.resolveDefaultNode();
 
         if (defaultNode) {

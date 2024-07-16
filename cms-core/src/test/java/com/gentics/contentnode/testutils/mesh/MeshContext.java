@@ -142,7 +142,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 			dbUtils = SQLUtilsFactory.getSQLUtils(properties);
 			dbUtils.connectDatabase();
 			//dbUtils.createDatabase();
-			dbUtils.executeQueryManipulation("CREATE DATABASE " + dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX + " CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
+			dbUtils.executeQueryManipulation("CREATE DATABASE IF NOT EXISTS `" + dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
 		} catch (TimeoutException e) {
 			throw new IllegalStateException("Waited too long for the connection properties from gcn-testdb-manager");
 		} catch (InterruptedException e) {

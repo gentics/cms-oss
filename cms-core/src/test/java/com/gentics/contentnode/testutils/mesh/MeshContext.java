@@ -13,8 +13,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -38,6 +40,10 @@ import com.gentics.testutils.testdbmanager.ManagerResponse;
  * Mesh Context that starts a Mesh container
  */
 public class MeshContext extends GenericContainer<MeshContext> {
+
+	public static final String DOCKER_NET = "DOCKER_NET";
+	public static final String DOCKER_MESH_IMAGE = "DOCKER_MESH_IMAGE";
+
 	/**
 	 * Currently tested Mesh Version
 	 */
@@ -72,7 +78,12 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 * Create an instance, using the Mesh version of the MeshRestClient
 	 */
 	public MeshContext() {
-		super("docker.apa-it.at/gentics/mesh:" + TESTED_MESH_VERSION);
+		super(StringUtils.isNotBlank(System.getenv(DOCKER_MESH_IMAGE)) ? System.getenv(DOCKER_MESH_IMAGE) : "docker.apa-it.at/gentics/mesh:" + TESTED_MESH_VERSION);
+
+		String dockerNet = System.getenv(DOCKER_NET);
+		if (StringUtils.isNotBlank(dockerNet)) {
+			withNetworkMode(dockerNet);
+		}
 		setWaitStrategy(new LogMessageWaitStrategy().withRegEx(".*" + Pattern.quote(MeshEvent.STARTUP.address) + ".*")
 				.withStartupTimeout(Duration.of(waitTimeout, ChronoUnit.SECONDS)));
 	}
@@ -118,19 +129,20 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 		try {
 			ManagerResponse dbConnectionResponse = future.get(DBTestContext.DEFAULT_MAX_WAIT, TimeUnit.SECONDS);
-			addEnv("MESH_JDBC_DRIVER_CLASS", "org.mariadb.jdbc.Driver");
 			addEnv("MESH_JDBC_CONNECTION_URL", "jdbc:mariadb://" + dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort() + "/");
-			addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8&includeInnodbStatusInDeadlockExceptions=true&useSSL=false");
+			addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8");
 			addEnv("MESH_JDBC_DATABASE_NAME", dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX);
-			addEnv("MESH_JDBC_DIALECT_CLASS", "org.mariadb.jdbc.Driver");
 			addEnv("MESH_JDBC_CONNECTION_USERNAME", dbConnectionResponse.getUser());
 			addEnv("MESH_JDBC_CONNECTION_PASSWORD", "");
+			addEnv("MESH_DB_CONNECTOR_CLASSPATH", "/connector");
+			addFileSystemBind(new java.io.File("target/connector").getAbsolutePath(), "/connector", BindMode.READ_ONLY);
 
 			Properties properties = dbConnectionResponse.toProperties();
 			properties.setProperty("url", properties.getProperty("url") + MESH_DATABASE_SUFFIX);
 			dbUtils = SQLUtilsFactory.getSQLUtils(properties);
 			dbUtils.connectDatabase();
-			dbUtils.createDatabase();
+			//dbUtils.createDatabase();
+			dbUtils.executeQueryManipulation("CREATE DATABASE " + dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX + " CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
 		} catch (TimeoutException e) {
 			throw new IllegalStateException("Waited too long for the connection properties from gcn-testdb-manager");
 		} catch (InterruptedException e) {

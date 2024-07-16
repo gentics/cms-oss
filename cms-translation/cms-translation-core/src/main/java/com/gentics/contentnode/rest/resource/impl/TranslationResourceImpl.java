@@ -31,16 +31,12 @@ import com.gentics.contentnode.rest.resource.TranslationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.translation.LanguageVariantService;
+import com.gentics.contentnode.translation.TagResolveService;
 import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -108,7 +104,7 @@ public class TranslationResourceImpl implements TranslationResource {
 			description.addParameter(new CNI18nString("feature.automatic_translation").toString());
 
 			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
-				LanguageVariantService languageVariantService = new LanguageVariantService();
+				final var languageVariantService = new LanguageVariantService();
 				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
 				final var sourceLanguage = loadedPage.getLanguage();
 
@@ -120,12 +116,13 @@ public class TranslationResourceImpl implements TranslationResource {
 				final var translatedNodePage = languageVariantService.translate(pageId, targetLanguageCode,
 						locked, channelId, true);
 
-				var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
+				final var pageToTranslate = ModelBuilder.getPage(translatedNodePage,
 						List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
 
 				try {
 					var contentTags = this.getContentTags(pageToTranslate);
-					this.resolveAndTranslateContentTags(contentTags, sourceLanguageCode,
+					final var tagResolveService = new TagResolveService();
+					tagResolveService.resolveAndTranslateContentTags(contentTags, getTranslationService(), sourceLanguageCode,
 							targetLanguageCode);
 
 					final var sourceName = pageToTranslate.getName();
@@ -157,116 +154,6 @@ public class TranslationResourceImpl implements TranslationResource {
 		}
 	}
 
-
-	private void resolveAndTranslateContentTags(List<Tag> contentTags, String sourceLanguageCode,
-			String targetLanguageCode) throws Exception {
-		final var HtmlTextPartTypeId = 2;
-		var tagsToResolve = contentTags.stream()
-				.filter(tag -> HtmlTextPartTypeId == tag.getConstructId())
-				.toList();
-
-		for (var contentTagToResolve : tagsToResolve) {
-			var resolvedTextOpt = this.getTextProperty(contentTagToResolve);
-
-			if (resolvedTextOpt.isPresent()) {
-				var resolvableText = resolvedTextOpt.get().getStringValue();
-				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
-						resolvableText);
-				var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
-
-				var resolvedAndTranslatedText = this.getTranslationService().translate(
-						resolvedText,
-						sourceLanguageCode,
-						targetLanguageCode);
-
-				// todo:
-				// unresolve resolvedAndTranslatedText
-				// save it
-				resolvedTextOpt.get().setStringValue(resolvedAndTranslatedText);
-				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
-			}
-		}
-	}
-
-
-	private String resolveTags(Map<String, Tag> untranslatedTagMap, String resolvableText) {
-		var resolvedText = resolvableText;
-		for (var tag : untranslatedTagMap.entrySet()) {
-			var tagStringValueOpt = this.getTextProperty(tag.getValue());
-			if (tagStringValueOpt.isPresent()) {
-				var tagContent = tagStringValueOpt.get().getStringValue();
-				tagContent = String.format("{{%s}}", tagContent);
-				resolvedText = resolvedText.replaceAll(tag.getKey(), tagContent);
-			}
-		}
-		return resolvedText;
-	}
-
-	// iterate over untranslatedTagMap and replace the stringValues with the translated values
-	private void updateContentTagsListToTranslatedValues(
-			String resolvedAndTranslatedText,
-			Map<String, Tag> untranslatedTagMap
-	) {
-		final Pattern regex = Pattern.compile("\\{\\{(.+?)\\}\\}", Pattern.DOTALL);
-		final Matcher matcher = regex.matcher(resolvedAndTranslatedText);
-
-		List<String> resolvedTags = new ArrayList<>();
-		while (matcher.find()) {
-			resolvedTags.add(matcher.group(1));
-		}
-
-		if (resolvedTags.size() != untranslatedTagMap.size()) {
-			throw new RuntimeException(
-					"Number of resolved tags in translated text and map of untranslated tags must be equals");
-		}
-
-		Collections.reverse(resolvedTags); // todo check if the order can be guaranteed
-
-		List<Map.Entry<String, Tag>> unTranslatedTagList = new ArrayList<>(
-				untranslatedTagMap.entrySet());
-
-		for (int i = 0; i < unTranslatedTagList.size(); i++) {
-			var contentTag = unTranslatedTagList.get(i).getValue();
-			var translatedValue = resolvedTags.get(i);
-
-			this.getTextProperty(contentTag).ifPresent(untranslatedProperty ->
-					untranslatedProperty.setStringValue(translatedValue)
-			);
-		}
-	}
-
-
-	private Map<String, Tag> getOccurringTagsFromResolvableText(
-			List<Tag> contentTags,
-			String resolvableText
-	) {
-		Pattern regex = Pattern.compile("(<node [a-zA-Z]+[0-9]+>)", Pattern.CASE_INSENSITIVE);
-		Map<String, Tag> tagMap = new HashMap<>();
-		var matcher = regex.matcher(resolvableText);
-
-		while (matcher.find()) {
-			var matchedNodeTag = matcher.group(0).trim();
-			var correspondingTag = contentTags.stream()
-					.filter(tag -> matchedNodeTag.contains(
-							tag.getName())) //todo: contains ok? gtxlink1 and gtxlik11 collide
-					.findAny()
-					.orElseThrow(() -> new RuntimeException("Corresponding tag  not found")); // todo
-			tagMap.put(matchedNodeTag, correspondingTag);
-		}
-
-		return tagMap;
-	}
-
-	private Optional<Property> getTextProperty(Tag contentTag) {
-		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
-			if (contentTagProperty != null && !StringUtils.isBlank(
-					contentTagProperty.getValue().getStringValue())) {
-				var propertyToTranslate = contentTagProperty.getValue();
-				return Optional.of(propertyToTranslate);
-			}
-		}
-		return Optional.empty();
-	}
 
 	/**
 	 * This method is used to check if a page is read-only.

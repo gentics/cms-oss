@@ -4,79 +4,19 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
 import {
-    FileUploadOptions,
-    FolderCreateRequest,
-    NodeCreateRequest,
-    NodeFeature,
-    NodePageLanguageCode,
-    NodeUrlMode,
-    PageCreateRequest,
-} from '@gentics/cms-models';
-import { TestSize } from './common';
-
-/** Type to determine how to import/delete the entity */
-export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
-/** ID which can be referenced in other entities to determine relationships. */
-export const IMPORT_ID = Symbol('gtx-e2e-import-id');
-
-const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
-
-export interface ImportData {
-    [IMPORT_TYPE]: 'node' | 'folder' | 'page' | 'file' | 'image';
-    [IMPORT_ID]: string;
-}
-
-export interface NodeImportData extends NodeCreateRequest, ImportData {
-    [IMPORT_TYPE]: 'node';
-    /** Language codes which will be assigned */
-    languages: string[];
-    /** Features which will be assigned */
-    features: NodeFeature[];
-    templates: string[];
-}
-
-export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {
-    [IMPORT_TYPE]: 'folder';
-
-    /** The nodes `IMPORT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    motherId: string;
-}
-
-export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId'>, ImportData {
-    [IMPORT_TYPE]: 'page',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The Global-ID of the template from the Dev-Tool Package */
-    templateId: string;
-}
-
-export interface FileImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
-    [IMPORT_TYPE]: 'file',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
-}
-
-export interface ImageImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
-    [IMPORT_TYPE]: 'image',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
-}
+    BASIC_TEMPLATE_ID,
+    FolderImportData,
+    GroupImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    ImportData,
+    NodeImportData,
+    PageImportData,
+    TestSize,
+    UserImportData,
+} from './common';
 
 /*
  * REQUIRED SETUP
@@ -113,6 +53,53 @@ export const emptyNode: NodeImportData = {
     languages : [ 'en' ],
     features: [],
     templates: [BASIC_TEMPLATE_ID],
+};
+
+export const rootGroup: GroupImportData = {
+    [IMPORT_TYPE]: 'group',
+    [IMPORT_ID]: 'rootGroup',
+
+    name: 'Root-Group',
+    description: 'Integration Tests Root Group',
+
+    permissions: [
+        // Remove Admin permissions for this group
+        {
+            type: AccessControlledType.ADMIN,
+            subGroups: true,
+            perms: [
+                { type: GcmsPermission.READ, value: false },
+            ],
+        },
+    ],
+};
+
+export const userAlpha: UserImportData = {
+    [IMPORT_TYPE]: 'user',
+    [IMPORT_ID]: 'userAlpha',
+
+    group: rootGroup[IMPORT_ID],
+
+    email: 'alpha-test-user@localhost',
+    firstName: 'Test User',
+    lastName: 'Alpha',
+    password: 'alpha',
+    login: 'alpha',
+    description: 'Test User Alpha',
+};
+
+export const userBeta: UserImportData = {
+    [IMPORT_TYPE]: 'user',
+    [IMPORT_ID]: 'userBeta',
+
+    group: rootGroup[IMPORT_ID],
+
+    email: 'beta-test-user@localhost',
+    firstName: 'Test User',
+    lastName: 'beta',
+    password: 'beta',
+    login: 'beta',
+    description: 'Test User Beta',
 };
 
 /*

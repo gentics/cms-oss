@@ -1,11 +1,68 @@
-import type { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientRequestData } from '@gentics/cms-rest-client';
+import { Response as GCMSResponse } from '@gentics/cms-models';
+import {
+    GCMS_ERROR_INSTANCE,
+    GCMSRestClientRequestError,
+    type GCMSClientDriver,
+    type GCMSRestClientRequest,
+    type GCMSRestClientRequestData,
+} from '@gentics/cms-rest-client';
 
+type ErrObj = {
+    [GCMS_ERROR_INSTANCE]: true,
+    message: string,
+    request: GCMSRestClientRequestData,
+    responseCode: number,
+    rawBody?: string,
+    data?: GCMSResponse,
+    bodyError?: Error,
+}
+
+/**
+ * This hacky function exists, because when creating a new Error with the regular constructor:
+ * ```ts
+ * return new GCMSRestClientRequestError(...);
+ * ```
+ * is somehow automatically catched by Cypress, and causes the entire test to instantly fail.
+ * Additionally, setting the prototype afterwards also seems to have the same effect.
+ * Therefore we override the `Symbol.isInstance` behavior of the class to make it possible to use it like this.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_symbol.hasinstance
+ */
+function createError(request: GCMSRestClientRequestData, res: Cypress.Response<GCMSResponse>): GCMSRestClientRequestError {
+    let message = `Request "${request.method} ${request.url}" responded with error code "${res.status} "${res.statusText}"`;
+    let resMsg = res.body?.responseInfo?.responseMessage;
+
+    if (!resMsg) {
+        resMsg = res.body?.messages?.[0]?.message;
+    }
+
+    if (resMsg) {
+        message += `. Details: "${resMsg}"`;
+    }
+
+    const obj: ErrObj = {
+        [GCMS_ERROR_INSTANCE]: true,
+        message,
+        request,
+        responseCode: res.status,
+        data: res.body,
+    };
+
+    return obj as any;
+}
+
+/**
+ * Driver which has to be used when doing setup work via the GCMS-REST API
+ * in cypress tests.
+ * Note that this driver should stictly only be used in the cypress tests/commands,
+ * but *not* in any other context.
+ * Uses the `cy.request` function to perform the requests correctly.
+ */
 export class CypressDriver implements GCMSClientDriver {
 
     protected prepareRequest<T>(
         request: GCMSRestClientRequestData,
         fn: (fullUrl: string) => Partial<Cypress.RequestOptions>,
-        handler: (res: Cypress.Response<any>) => Promise<T>,
     ): GCMSRestClientRequest<T> {
         let fullUrl = request.url;
         if (request.params) {
@@ -38,12 +95,18 @@ export class CypressDriver implements GCMSClientDriver {
                     url: fullUrl,
                     method: request.method,
                     headers: request.headers,
+                    failOnStatusCode: false,
                     ...fn(fullUrl),
-                })
-                    .then(res => handler(res)
-                        .then(value => resolve(value))
-                        .catch(err => reject(err)),
-                    );
+                }).then(res => {
+                    if (!res.isOkStatusCode) {
+                        const err = createError(request, res);
+                        reject(err);
+                        return Promise.resolve(res.body);
+                    }
+
+                    resolve(res.body);
+                    return Promise.resolve(res.body);
+                });
             });
 
             return sentRequest;
@@ -63,12 +126,7 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<T> {
         return this.prepareRequest(request, () => ({
             body: body,
-        }), (res) => {
-            if (typeof res.body === 'string') {
-                return Promise.resolve(JSON.parse(res.body));
-            }
-            return Promise.resolve(res.body);
-        });
+        }));
     }
 
     performRawRequest(
@@ -77,7 +135,7 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<string> {
         return this.prepareRequest(request, () => ({
             body: body,
-        }), (res) => Promise.resolve(res.body));
+        }));
     }
 
     performDownloadRequest(
@@ -87,6 +145,6 @@ export class CypressDriver implements GCMSClientDriver {
         return this.prepareRequest(request, () => ({
             body: body,
             encoding: 'binary',
-        }), (res) => Promise.resolve(res.body));
+        }));
     }
 }

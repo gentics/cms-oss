@@ -2,6 +2,7 @@ import { Response as GCMSResponse } from '@gentics/cms-models';
 import {
     GCMS_ERROR_INSTANCE,
     GCMSRestClientRequestError,
+    validateResponseObject,
     type GCMSClientDriver,
     type GCMSRestClientRequest,
     type GCMSRestClientRequestData,
@@ -63,6 +64,7 @@ export class CypressDriver implements GCMSClientDriver {
     protected prepareRequest<T>(
         request: GCMSRestClientRequestData,
         fn: (fullUrl: string) => Partial<Cypress.RequestOptions>,
+        isBinary: boolean,
     ): GCMSRestClientRequest<T> {
         let fullUrl = request.url;
         if (request.params) {
@@ -98,14 +100,43 @@ export class CypressDriver implements GCMSClientDriver {
                     failOnStatusCode: false,
                     ...fn(fullUrl),
                 }).then(res => {
-                    if (!res.isOkStatusCode) {
-                        const err = createError(request, res);
-                        reject(err);
-                        return Promise.resolve(res.body);
+                    let body = res.body;
+                    let valid = res.isOkStatusCode;
+
+                    // If it isn't a binary response, then we can properly parse the body and inspect it for potential error messages
+                    if (!isBinary && body != null) {
+                        if (Cypress.Buffer.isBuffer(body)) {
+                            body = body.toJSON();
+                        } else if (Buffer.isBuffer(body)) {
+                            body = body.toJSON();
+                        } else if (
+                            // Very hacky, but the types are different between the runtimes which causes this issue
+                            body instanceof ArrayBuffer
+                            || Object.getPrototypeOf(body).constructor.name === 'ArrayBuffer'
+                        ) {
+                            const decoder = new TextDecoder('utf-8', { fatal: true });
+                            body = decoder.decode(body);
+                            body = JSON.parse(body);
+                        } else if (typeof body === 'string') {
+                            body = JSON.parse(body);
+                        }
+
+                        try {
+                            const err = validateResponseObject(request, body);
+                            valid = err == null;
+                        } catch (err) {
+                            valid = false;
+                        }
                     }
 
-                    resolve(res.body);
-                    return Promise.resolve(res.body);
+                    if (!valid) {
+                        const err = createError(request, res);
+                        reject(err);
+                        return Promise.resolve(body);
+                    }
+
+                    resolve(body);
+                    return Promise.resolve(body);
                 });
             });
 
@@ -126,7 +157,7 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<T> {
         return this.prepareRequest(request, () => ({
             body: body,
-        }));
+        }), false);
     }
 
     performRawRequest(
@@ -135,7 +166,7 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<string> {
         return this.prepareRequest(request, () => ({
             body: body,
-        }));
+        }), false);
     }
 
     performDownloadRequest(
@@ -144,7 +175,6 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<Blob> {
         return this.prepareRequest(request, () => ({
             body: body,
-            encoding: 'binary',
-        }));
+        }), true);
     }
 }

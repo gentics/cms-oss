@@ -85,9 +85,9 @@ function isResponseObject(value: any): value is Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateResponseObject(request: GCMSRestClientRequestData, response: any): void {
+export function validateResponseObject(request: GCMSRestClientRequestData, response: any): null | GCMSRestClientRequestError {
     if (!isResponseObject(response)) {
-        return;
+        return null;
     }
 
     if (response.responseInfo.responseCode === ResponseCode.OK) {
@@ -105,5 +105,3 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
         null,
     );
 }
-
-

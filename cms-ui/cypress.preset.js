@@ -10,8 +10,6 @@ function createReporterOptions(cypressType, type, name, isCI) {
     isCI = typeof isCI === 'boolean' ? isCI : false;
 
     if (isCI) {
-
-
         return {
             reporter: resolve(__dirname, 'node_modules/cypress-multi-reporters'),
             reporterOptions: {

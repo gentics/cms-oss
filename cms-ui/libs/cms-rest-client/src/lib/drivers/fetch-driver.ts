@@ -1,9 +1,9 @@
 import { Response as GCMSResponse } from '@gentics/cms-models';
-import { GCMSRestClientRequestError } from '../errors';
+import { GCMSRestClientAbortError, GCMSRestClientRequestError } from '../errors';
 import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientRequestData } from '../models';
 import { validateResponseObject } from '../utils';
 
-export async function parseFetchErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
+export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData, res: Response): Promise<never> {
     let raw: string;
     let parsed: GCMSResponse;
     let bodyError: Error;
@@ -37,7 +37,7 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
         });
     }
 
-    return parseFetchErrorFromAPI(request, res);
+    await parseFetchErrorFromAPI(request, res);
 }
 
 export async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<string> {
@@ -45,7 +45,7 @@ export async function textFetchResponseHandler(request: GCMSRestClientRequestDat
         return res.text();
     }
 
-    return parseFetchErrorFromAPI(request, res);
+    await parseFetchErrorFromAPI(request, res);
 }
 
 export async function blobFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<Blob> {
@@ -53,7 +53,7 @@ export async function blobFetchResponseHandler(request: GCMSRestClientRequestDat
         return res.blob();
     }
 
-    return parseFetchErrorFromAPI(request, res);
+    await parseFetchErrorFromAPI(request, res);
 }
 
 export class GCMSFetchDriver implements GCMSClientDriver {
@@ -204,7 +204,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
         }
 
         return {
-            cancel: () => abortController.abort(),
+            cancel: () => abortController.abort(new GCMSRestClientAbortError(request)),
             send: () => sendRequest(),
         };
     }

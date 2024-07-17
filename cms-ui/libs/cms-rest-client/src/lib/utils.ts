@@ -90,19 +90,20 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
         return;
     }
 
-    if (response.responseInfo.responseCode !== 'OK') {
-        // some responses contain no messages
-        response.messages = response.messages || [];
-
-        throw new GCMSRestClientRequestError(
-            response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
-            request,
-            codeToHttpCode[response.responseInfo.responseCode],
-            null,
-            response,
-            null,
-        );
+    if (response.responseInfo.responseCode === ResponseCode.OK) {
+        return;
     }
+
+    // some responses contain no messages
+    response.messages = response.messages || [];
+    throw new GCMSRestClientRequestError(
+        response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
+        request,
+        codeToHttpCode[response.responseInfo.responseCode],
+        null,
+        response,
+        null,
+    );
 }
 
 

@@ -26,13 +26,14 @@ public class TagResolveService {
 			Pattern.CASE_INSENSITIVE);
 	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
 	static final int HTML_TEXT_PART_TYPE_ID = 2;
-	static final List<Integer> RESOLVABLE_PART_IDS = List.of(1, 2, 3, 9, 10, 21);
+	static final List<Integer> UNRESOLVABLE_PART_IDS = List.of(4, 5, 6, 8, 11, 13, 15, 16, 17, 18, 19,
+			20, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42);
 
 
 	/**
 	 * This function resolves and translates content tags.
 	 *
-	 * @param contentTags The list of content tags.
+	 * @param contentTags        The list of content tags.
 	 * @param translationService The translation service to use for translating the resolved text.
 	 * @param sourceLanguageCode The source language code for translation.
 	 * @param targetLanguageCode The target language code for translation.
@@ -45,7 +46,7 @@ public class TagResolveService {
 			String targetLanguageCode
 	) throws Exception {
 		var tagsToResolve = contentTags.stream()
-				.filter(tag ->  RESOLVABLE_PART_IDS.contains(tag.getConstructId()))
+				.filter(tag -> !UNRESOLVABLE_PART_IDS.contains(tag.getConstructId()))
 				.toList();
 
 		for (var contentTagToResolve : tagsToResolve) {
@@ -67,7 +68,8 @@ public class TagResolveService {
 							new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
 
-				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap, resolvedAndTranslatedText);
+				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
+						resolvedAndTranslatedText);
 				resolvedTextOpt.get().setStringValue(unresolvedAndTranslatedText);
 				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
 			}
@@ -75,13 +77,13 @@ public class TagResolveService {
 	}
 
 	/**
-	 * This method resolves the tags in the given text.
-	 * It iterates over the untranslatedTagMap and for each tag, it retrieves the text property of the tag.
-	 * If the text property is present, it replaces the tag in the resolvable text with the content of the text property.
-	 * The content of the text property is wrapped in double curly braces.
+	 * This method resolves the tags in the given text. It iterates over the untranslatedTagMap and
+	 * for each tag, it retrieves the text property of the tag. If the text property is present, it
+	 * replaces the tag in the resolvable text with the content of the text property. The content of
+	 * the text property is wrapped in double curly braces.
 	 *
 	 * @param untranslatedTagMap The map of untranslated tags.
-	 * @param resolvableText The text in which to resolve the tags.
+	 * @param resolvableText     The text in which to resolve the tags.
 	 * @return The text with the tags resolved.
 	 */
 	private String resolveTags(Map<String, Tag> untranslatedTagMap, String resolvableText) {
@@ -100,8 +102,9 @@ public class TagResolveService {
 	/**
 	 * This function undoes the tag resolution performed by the resolveTags function.
 	 *
-	 * @param resolvedTagMap A map where the keys are the original tag names and the values are the resolved tag contents.
-	 * @param resolvedText The text with resolved tags.
+	 * @param resolvedTagMap A map where the keys are the original tag names and the values are the
+	 *                       resolved tag contents.
+	 * @param resolvedText   The text with resolved tags.
 	 * @return The original text with unresolved tags.
 	 */
 	private String unresolveTags(Map<String, Tag> resolvedTagMap, String resolvedText)
@@ -135,12 +138,13 @@ public class TagResolveService {
 	}
 
 	/**
-	 * This method updates the list of content tags with their translated values.
-	 * It iterates over the untranslatedTagMap and replaces the stringValues with the translated values.
+	 * This method updates the list of content tags with their translated values. It iterates over the
+	 * untranslatedTagMap and replaces the stringValues with the translated values.
 	 *
 	 * @param resolvedAndTranslatedText The text that has been resolved and translated.
-	 * @param untranslatedTagMap The map of tags that have not been translated.
-	 * @throws NodeException If the number of resolved tags in the translated text and the map of untranslated tags are not equal.
+	 * @param untranslatedTagMap        The map of tags that have not been translated.
+	 * @throws NodeException If the number of resolved tags in the translated text and the map of
+	 *                       untranslated tags are not equal.
 	 */
 	private void updateContentTagsListToTranslatedValues(
 			String resolvedAndTranslatedText,
@@ -174,9 +178,8 @@ public class TagResolveService {
 
 	/**
 	 * This method retrieves the tags that occur in the resolvable text from a given list of content tags.
-	 * It iterates over the resolvable text and for each tag that it finds, it adds the tag to a map with the tag's name as the key and the tag itself as the value.
 	 *
-	 * @param contentTags The list of content tags to search in.
+	 * @param contentTags    The list of content tags to search in.
 	 * @param resolvableText The text in which to find the tags.
 	 * @return A map with the names of the tags as keys and the tags themselves as values.
 	 * @throws RuntimeException If a tag is found in the resolvable text but not in the list of content tags.
@@ -192,10 +195,10 @@ public class TagResolveService {
 			var matchedNodeTag = matcher.group(0).trim();
 			var correspondingTag = contentTags.stream()
 					.filter(tag -> matchedNodeTag
-									.replace("<node", "")
-									.replace(">", "")
-									.trim()
-									.equals(tag.getName()))
+							.replace("<node", "")
+							.replace(">", "")
+							.trim()
+							.equals(tag.getName()))
 					.findAny()
 					.orElseThrow(() -> new RuntimeException("Corresponding tag  not found"));
 			tagMap.put(matchedNodeTag, correspondingTag);

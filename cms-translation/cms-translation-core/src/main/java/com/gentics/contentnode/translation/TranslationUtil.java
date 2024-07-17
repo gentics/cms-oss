@@ -127,17 +127,4 @@ public class TranslationUtil {
 		}
 	}
 
-	static public String translate(String textToTranslate, String sourceLanguage,
-			String targetLanguage) throws Exception {
-		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.AUTOMATIC_TRANSLATION)) {
-			return null;
-		}
-		return loader.execForFirst(service -> {
-			try {
-				return service.translate(textToTranslate, sourceLanguage, targetLanguage);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}).orElse(StringUtils.EMPTY);
-	}
 }

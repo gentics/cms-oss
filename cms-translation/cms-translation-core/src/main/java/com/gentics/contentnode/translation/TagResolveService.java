@@ -1,9 +1,12 @@
 package com.gentics.contentnode.translation;
 
+import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
+import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -23,6 +26,7 @@ public class TagResolveService {
 			Pattern.CASE_INSENSITIVE);
 	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
 	static final int HTML_TEXT_PART_TYPE_ID = 2;
+	static final List<Integer> RESOLVABLE_PART_IDS = List.of(1, 2, 3, 9, 10, 21);
 
 
 	/**
@@ -41,7 +45,7 @@ public class TagResolveService {
 			String targetLanguageCode
 	) throws Exception {
 		var tagsToResolve = contentTags.stream()
-				.filter(tag -> HTML_TEXT_PART_TYPE_ID == tag.getConstructId())
+				.filter(tag ->  RESOLVABLE_PART_IDS.contains(tag.getConstructId()))
 				.toList();
 
 		for (var contentTagToResolve : tagsToResolve) {
@@ -57,6 +61,11 @@ public class TagResolveService {
 						resolvedText,
 						sourceLanguageCode,
 						targetLanguageCode);
+
+				if (!VALIDATOR.test(resolvedAndTranslatedText)) {
+					throw new NodeException(
+							new CNI18nString("feature.translation.error.markup_invalid").toString());
+				}
 
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap, resolvedAndTranslatedText);
 				resolvedTextOpt.get().setStringValue(unresolvedAndTranslatedText);
@@ -146,7 +155,7 @@ public class TagResolveService {
 
 		if (resolvedTags.size() != untranslatedTagMap.size()) {
 			throw new NodeException(
-					"Number of resolved tags in translated text and map of untranslated tags must be equals");
+					"Number of resolved tags in translated text and map of untranslated tags must be equals.");
 		}
 		Collections.reverse(resolvedTags);
 

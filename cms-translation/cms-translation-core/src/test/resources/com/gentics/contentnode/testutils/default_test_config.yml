@@ -21,6 +21,7 @@ mesh:
   prepareThreshold: 1
 
 translation:
+  implementation: com.gentics.contentnode.translation.DeepLTranslationService
   auth:
     token: <api-token>
   language:

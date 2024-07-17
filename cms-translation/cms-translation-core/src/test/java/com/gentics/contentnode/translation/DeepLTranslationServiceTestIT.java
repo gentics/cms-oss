@@ -11,8 +11,8 @@ import org.mockito.Mockito;
 
 class DeepLTranslationServiceTestIT {
 
-	final String TRANSLATION_PROVIDER = "deepl";
-	final String API_TOKEN = "<api-key>";
+	static final String TRANSLATION_PROVIDER = "deepl";
+	static final String API_TOKEN = "<api-token>";
 
 	@Test
 	@Disabled("Meant for manual execution")
@@ -31,7 +31,8 @@ class DeepLTranslationServiceTestIT {
 					     
 					""";
 
-			var translatedText = TranslationUtil.translate(textToTranslate, "de", "en");
+			var translationService = TranslationUtil.getTranslationService().get();
+			var translatedText = translationService.translate(textToTranslate, "de", "en");
 			assertThat(translatedText).isEqualTo("Hello world!");
 		}
 	}

@@ -26,9 +26,12 @@ describe('Folder Management', () => {
     });
 
     beforeEach(() => {
-        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap).then(data => {
-            entities = data;
-        }));
+        cy.wrap(cleanupTest()
+            .then(() => setupTest(TestSize.MINIMAL, bootstrap))
+            .then(data => {
+                entities = data;
+            }),
+        );
     });
 
     it('should be possible to create a new folder and edit the object-properties', () => {

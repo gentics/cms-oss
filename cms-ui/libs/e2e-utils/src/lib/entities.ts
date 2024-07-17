@@ -7,8 +7,10 @@
 import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    FileImportData,
     FolderImportData,
     GroupImportData,
+    ImageImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     ImportData,
@@ -185,6 +187,28 @@ export const folderB = createRootFolder(minimalNode, 'B');
 
 export const pageOne = createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One');
 
+export const fileOne: FileImportData = {
+    [IMPORT_TYPE]: 'file',
+    [IMPORT_ID]: 'fileOne',
+
+    nodeId: minimalNode[IMPORT_ID],
+    folderId: minimalNode[IMPORT_ID],
+
+    name: 'File #1',
+    description: 'First file',
+};
+
+export const imageOne: ImageImportData = {
+    [IMPORT_TYPE]: 'image',
+    [IMPORT_ID]: 'imageOne',
+
+    nodeId: minimalNode[IMPORT_ID],
+    folderId: minimalNode[IMPORT_ID],
+
+    name: 'Image #1',
+    description: 'First image',
+};
+
 /*
  * FULL SETUP
  * ---------------------------------------------------------------- */
@@ -324,6 +348,8 @@ export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
         folderA,
         folderB,
         pageOne,
+        fileOne,
+        imageOne,
     ],
     [TestSize.FULL]: [
         fullNode,

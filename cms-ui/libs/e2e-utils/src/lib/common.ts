@@ -1,6 +1,6 @@
 import {
     AccessControlledType,
-    FileUploadOptions,
+    EditableFileProps,
     FolderCreateRequest,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -21,6 +21,7 @@ export enum TestSize {
 }
 
 export type EntityMap = Record<string, any>;
+export type BinaryMap = Record<string, Buffer>;
 
 export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
 export const ENV_CMS_EDITOR_PATH = 'CMS_EDITOR_PATH';
@@ -87,26 +88,22 @@ export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'fold
     templateId: string;
 }
 
-export interface FileImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
+export interface FileImportData extends EditableFileProps, ImportData {
     [IMPORT_TYPE]: 'file',
 
     /** The nodes `IMPROT_ID` value */
     nodeId: string;
     /** The folders/nodes `IMPORT_ID` value */
     folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
 }
 
-export interface ImageImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
+export interface ImageImportData extends EditableFileProps, ImportData {
     [IMPORT_TYPE]: 'image',
 
     /** The nodes `IMPROT_ID` value */
     nodeId: string;
     /** The folders/nodes `IMPORT_ID` value */
     folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
 }
 
 export interface GroupImportData extends GroupCreateRequest, ImportData {

@@ -1,12 +1,28 @@
-import { AccessControlledType, Folder, Group, Node, NodeFeature, Page, PagingSortOrder, Template, User } from '@gentics/cms-models';
+import {
+    File,
+    FileUploadOptions,
+    Folder,
+    FolderCreateRequest,
+    Group,
+    Node,
+    NodeFeature,
+    Page,
+    PageCreateRequest,
+    PagingSortOrder,
+    Template,
+    User,
+} from '@gentics/cms-models';
 import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import {
+    BinaryMap,
     EntityMap,
     ENV_CMS_PASSWORD,
     ENV_CMS_REST_PATH,
     ENV_CMS_USERNAME,
+    FileImportData,
     FolderImportData,
     GroupImportData,
+    ImageImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     ImportData,
@@ -83,7 +99,10 @@ async function importNode(
         templates,
         ...req
     } = data;
+
+    cy.log(`Importing node ${data[IMPORT_ID]}`, req);
     const created = (await client.node.create(req).send()).node;
+    cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
 
     await setNodeFeatures(client, created.id, features);
 
@@ -106,7 +125,15 @@ async function importNode(
     // We need the local template-ids for page references, so load all referenced templates via global id
     for (const tplId of templates) {
         const tpl = (await client.template.get(tplId).send()).template;
+
+        // Additionally, we have to link the templates to the root-folder
+        await client.template.link(tplId, {
+            nodeId: created.id,
+            folderIds: [created.folderId || created.id],
+        }).send();
+
         if (tpl) {
+            cy.log(`Loaded node template ${tplId} -> ${tpl.id}`);
             entityMap[tplId] = tpl;
         }
     }
@@ -130,13 +157,16 @@ async function importFolder(
         return null;
     }
     const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
-
-    const created = (await client.folder.create({
+    const body: FolderCreateRequest = {
         ...req,
 
         motherId: parentId,
         nodeId: (entityMap[nodeId] as Node).id,
-    }).send()).folder;
+    };
+
+    cy.log(`Importing folder ${data[IMPORT_ID]}`, body);
+    const created = (await client.folder.create(body).send()).folder;
+    cy.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
 
     return created;
 }
@@ -160,14 +190,79 @@ async function importPage(
 
     const parentId = (folderEntity as Node).folderId ?? (folderEntity as (Node | Folder)).id;
     const tplId = (entityMap[templateId] as Template).id;
-
-    const created = (await client.page.create({
+    const body: PageCreateRequest = {
         ...req,
 
         folderId: parentId,
         nodeId: (entityMap[nodeId] as Node).id,
         templateId: tplId,
-    }).send()).page;
+    };
+
+    cy.log(`Importing page ${data[IMPORT_ID]}`, body);
+    const created = (await client.page.create(body).send()).page;
+    cy.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
+
+    return created;
+}
+
+async function importFile(
+    client: GCMSRestClient,
+    entityMap: EntityMap,
+    binaryMap: BinaryMap,
+    data: FileImportData,
+): Promise<File | null> {
+    const { folderId, nodeId, ...updateData } = data;
+
+    const bin = binaryMap[data[IMPORT_ID]];
+
+    if (!bin) {
+        cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        return;
+    }
+
+    const parentEntity = entityMap[folderId];
+    const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
+    const body: FileUploadOptions = {
+        folderId: parentId,
+        nodeId: (entityMap[nodeId] as Node).id,
+    };
+
+    cy.log(`Importing file ${data[IMPORT_ID]}`, body);
+    const created = (await client.file.upload(new Blob([bin]), body).send());
+    cy.log(`Imported file ${data[IMPORT_ID]} ->`, created);
+
+    await client.file.update(created.file.id, { file: updateData }).send();
+
+    return created.file;
+}
+
+async function importImage(
+    client: GCMSRestClient,
+    entityMap: EntityMap,
+    binaryMap: BinaryMap,
+    data: ImageImportData,
+): Promise<File | null> {
+    const { folderId, nodeId, ...updateData } = data;
+
+    const bin = binaryMap[data[IMPORT_ID]];
+
+    if (!bin) {
+        cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        return;
+    }
+
+    const parentEntity = entityMap[folderId];
+    const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
+    const body: FileUploadOptions = {
+        folderId: parentId,
+        nodeId: (entityMap[nodeId] as Node).id,
+    };
+
+    cy.log(`Importing image ${data[IMPORT_ID]}`, data);
+    const created = (await client.file.upload(new Blob([bin]), body).send()).file;
+    cy.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
+
+    await client.image.update(created.id, { image: updateData }).send();
 
     return created;
 }
@@ -195,13 +290,16 @@ async function importGroup(
     let importedGroup: Group;
 
     try {
+        cy.log(`Importing group ${data[IMPORT_ID]}`, data);
         importedGroup = (await client.group.create(parentId, reqData).send()).group;
+        cy.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
     } catch (err) {
         // If the group already exists, ignore it
         if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
             throw err;
         }
 
+        cy.log(`Group ${data[IMPORT_ID]} already exists`);
         const foundGroups = (await client.group.list({ q: reqData.name }).send()).items || [];
         importedGroup = foundGroups.filter(g => g.name === reqData.name)?.[0] ?? foundGroups?.[0];
     }
@@ -238,7 +336,9 @@ async function importUser(
     const { group, ...reqData } = data;
 
     try {
+        cy.log(`Importing user ${data[IMPORT_ID]}`, data);
         const created = (await client.group.createUser((entityMap[group] as Group).id, reqData).send()).user;
+        cy.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
 
         return created;
     } catch (err) {
@@ -247,6 +347,7 @@ async function importUser(
             throw err;
         }
 
+        cy.log(`User ${data[IMPORT_ID]} already exists`);
         const foundUsers = (await client.user.list({ q: data.login }).send()).items || [];
         const found = foundUsers.filter(g => g.login === data.login)?.[0] ?? foundUsers?.[0];
 
@@ -283,6 +384,7 @@ function importEntity(
     languages: Record<string, number>,
     type: string,
     entity: ImportData,
+    binaryData?: BinaryMap,
 ): Promise<any> {
     switch (type) {
         case 'node':
@@ -293,6 +395,12 @@ function importEntity(
 
         case 'page':
             return importPage(client, entityMap, entity as PageImportData);
+
+        case 'file':
+            return importFile(client, entityMap, binaryData, entity as FileImportData);
+
+        case 'image':
+            return importImage(client, entityMap, binaryData, entity as ImageImportData);
 
         case 'group':
             return importGroup(client, entityMap, entity as GroupImportData);
@@ -307,6 +415,7 @@ function importEntity(
 
 export async function importData(
     importList: ImportData[],
+    binaryData?: BinaryMap,
 ): Promise<EntityMap> {
     const client = await createClient();
     const entityMap: EntityMap = {};
@@ -319,6 +428,7 @@ export async function importData(
             {},
             importData[IMPORT_TYPE],
             importData,
+            binaryData,
         );
         if (!entity) {
             continue;
@@ -333,6 +443,7 @@ async function setupContent(
     client: GCMSRestClient,
     pkgName: TestSize,
     data: ImportBootstrapData,
+    binaryData?: BinaryMap,
 ): Promise<EntityMap> {
     const importList = PACKAGE_MAP[pkgName];
     if (!importList) {
@@ -352,6 +463,7 @@ async function setupContent(
             data.languages,
             importData[IMPORT_TYPE],
             importData,
+            binaryData,
         );
         if (!entity) {
             continue;
@@ -400,10 +512,10 @@ export async function bootstrapSuite(size: TestSize): Promise<ImportBootstrapDat
     };
 }
 
-export async function setupTest(size: TestSize, data: ImportBootstrapData): Promise<EntityMap> {
+export async function setupTest(size: TestSize, data: ImportBootstrapData, binaryData: BinaryMap = {}): Promise<EntityMap> {
     const client = await createClient();
 
-    const map = await setupContent(client, size, data);
+    const map = await setupContent(client, size, data, binaryData);
 
     return map;
 }

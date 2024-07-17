@@ -14,18 +14,28 @@ type ItemType = 'folder' | 'page' | 'image' | 'file' | 'form';
 declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
+        loadBinaries(files: string[]): Chainable<Record<string, Buffer>>;
         navigateToApp(path?: string): Chainable<void>;
         login(account: string): Chainable<void>;
         selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
         findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
         findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
         itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
-        listAction(type: ItemType, action: string): Chainable<JQuery<HTMLElement>>;
     }
 }
 
-//
-// -- This is a parent command --
+Cypress.Commands.add('loadBinaries', (files) => {
+    const map: Record<string, Buffer> = {};
+
+    for (const fileName of files) {
+        cy.fixture(fileName, null).then(bin => {
+            map[fileName] = bin;
+        });
+    }
+
+    return cy.wrap(map);
+});
+
 Cypress.Commands.add('navigateToApp', (path) => {
     /*
      * The baseUrl is always properly configured via NX.
@@ -65,21 +75,20 @@ Cypress.Commands.add('findList', (type) => {
 
 Cypress.Commands.add('findItem', (type, id) => {
     return cy.findList(type)
-        .find(`gtx-contents-list-item[data-id="${id}"]`);
+        .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 });
 
 Cypress.Commands.add('itemAction', (type, id, action) => {
-    cy.findItem(type, id)
-        .find('.context-menu gtx-button[data-action="context-menu-trigger"]')
-        .click({ force: true });
-    return cy.get('.item-context-menu-content')
-        .find(`[data-action="${action}"]`)
-        .click({ force: true });
-});
-
-Cypress.Commands.add('listAction', (type, action) => {
-    cy.findList(type)
-        .find()
+    switch (action) {
+        // For other actions such as selecting or similar
+        default:
+            cy.findItem(type, id)
+                .find('.context-menu gtx-button[data-action="open-item-context-menu"]')
+                .click({ force: true });
+            return cy.get('.item-context-menu-content')
+                .find(`[data-action="${action}"]`)
+                .click({ force: true });
+    }
 });
 
 //

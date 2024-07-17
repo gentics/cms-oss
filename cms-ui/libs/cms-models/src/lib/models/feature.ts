@@ -98,6 +98,11 @@ export enum NodeFeature {
      * If this feature is activated a modal dialog with the images properties is opened immediately after the upload.
      */
     UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
+
+    /**
+     * If this feature is activated, automatic page translation is available
+     */
+    TRANSLATION = 'translation',
 }
 
 /**

@@ -54,5 +54,10 @@ public enum NodeFeature {
 	/**
 	 * With this feature, the properties editor will immediately open upon uploading a new image.
 	 */
-	upload_image_properties
+	upload_image_properties,
+
+	/**
+	 * This feature enables automatic text/page translation.
+	 */
+	translation,
 }

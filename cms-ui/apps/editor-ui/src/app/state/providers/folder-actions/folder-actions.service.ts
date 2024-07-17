@@ -1643,10 +1643,15 @@ export class FolderActionsService {
         await this.appState.dispatch(new StartListCreatingAction('page')).toPromise();
 
         try {
-            const res = await translationRequestFunction(pageId, {language: languageCode, channelId: nodeId});
+            const res = await translationRequestFunction(pageId, {language: languageCode, channelId: nodeId})
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
-            const newPage = res.page;
+            const newPage = res?.page ?? res;
+            // result is not available yet
+            if (!newPage) {
+                return;
+            }
+
             const oldPageId = pageId;
             const entityState = this.appState.now.entities;
             const normalized = normalize(newPage, pageSchema);
@@ -1664,7 +1669,7 @@ export class FolderActionsService {
                 },
             })).toPromise();
 
-            return res.page;
+            return res.page ?? res as any as Page;
         } catch (error) {
             await this.appState.dispatch(new ListCreatingErrorAction('page', error.message)).toPromise();
             this.errorHandler.catch(error, { notification: true });

@@ -357,6 +357,7 @@ import {
     WastebinDeleteOptions,
     WastebinRestoreOptions,
     TranslationRequestOptions,
+    GenericItemResponse,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -1047,7 +1048,7 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 export interface AbstractTranslationAPI extends BasicAPI {
     translateText: (data: TranslationTextRequest) => TranslationResponse;
-    translatePage: (pageId: number, params: TranslationRequestOptions) => PageResponse;
+    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>
 }
 
 export interface AbstractRootAPI {

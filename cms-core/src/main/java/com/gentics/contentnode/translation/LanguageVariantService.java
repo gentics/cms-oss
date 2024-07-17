@@ -4,6 +4,8 @@ package com.gentics.contentnode.translation;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.InvalidRequestException;
+import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -27,8 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Service to create language page variants
  */
-public class PageTranslationService {
-
+public class LanguageVariantService {
 
 	/**
 	 * Translate the page into the given language. When the language variant of the page exists, it
@@ -49,16 +50,7 @@ public class PageTranslationService {
 			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
-		if (channelId == null) {
-			channelId = 0;
-		}
-
-		boolean setChannel = channelId != 0;
-		if (setChannel) {
-			t.setChannelId(channelId);
-		}
-
-		try {
+		try (ChannelTrx trx = new ChannelTrx(channelId)) {
 			Page page = this.getPage(pageId.toString(), requirePermission);
 
 			Node topMasterNode = page.getFolder().getNode();
@@ -81,10 +73,10 @@ public class PageTranslationService {
 			// if a channel ID was given as a query parameter, check if it is
 			// part of a valid multichannelling environment
 			Page languageVariant = null;
-			if (channelId > 0 && (!page.isMaster() || page.isInherited())) {
+			if (channelId != null && (!page.isMaster() || page.isInherited())) {
 				Node channel = t.getObject(Node.class, channelId);
 				if (channel == null || !channel.isChannel()) {
-					throw new NodeException("Error while translating page: an invalid channel ID was given");
+					throw new InvalidRequestException("Error while translating page: an invalid channel ID was given");
 				}
 				if (!channel.getMasterNodes().contains(topMasterNode)) {
 					throw new NodeException(
@@ -118,7 +110,7 @@ public class PageTranslationService {
 				}
 			} else {
 				languageVariant = page.getLanguageVariant(languageCode);
-				this.deleteExistingLanguageVariantsWithWastebin(page, languageCode);
+				this.deleteExistingLanguageVariantsFromWastebin(page, languageCode);
 			}
 
 			if (languageVariant == null) {
@@ -138,10 +130,6 @@ public class PageTranslationService {
 			t.commit(false);
 
 			return languageVariant;
-		} finally {
-			if (setChannel) {
-				t.resetChannel();
-			}
 		}
 	}
 
@@ -202,7 +190,7 @@ public class PageTranslationService {
 			return MiscUtils.load(Page.class, pageId, ObjectPermission.view);
 		}
 
-		return MiscUtils.load(Page.class, pageId);
+		return MiscUtils.loadWithoutPermissionCheck(Page.class, pageId, true);
 	}
 
 	/**
@@ -250,12 +238,12 @@ public class PageTranslationService {
 			}
 		}
 
-		throw new NodeException(
-				String.format("Error while translating page: invalid language code '%s' given",
-						languageCode));
+		throw new InvalidRequestException(String.format(
+				"Error while translating page: invalid language code '%s' given. The provided language code may not exists on this node.",
+				languageCode));
 	}
 
-	private void deleteExistingLanguageVariantsWithWastebin(Page page, String languageCode) throws NodeException {
+	private void deleteExistingLanguageVariantsFromWastebin(Page page, String languageCode) throws NodeException {
 		// get the language variant (if one already exists)
 		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 			List<Page> languageVariants = page.getLanguageVariants(false);

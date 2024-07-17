@@ -190,11 +190,6 @@ public enum ConfigurationValue {
 	GCNJSAPI_PATH("GCNJSAPI_PATH", "com.gentics.contentnode.gcnjsapi.path"),
 
 	/**
-		* Provider for automatic text translation
-	 */
-	TRANSLATION_PROVIDER("TRANSLATION_PROVIDER", "com.gentics.contentnode.translation.provider", "translation.provider"),
-
-	/**
 	 * The auth token for the translation provider
 	 */
 	TRANSLATION_AUTH_TOKEN("TRANSLATION_AUTH_TOKEN", "com.gentics.contentnode.translation.auth.token", "translation.auth.token"),

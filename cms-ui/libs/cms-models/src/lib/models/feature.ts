@@ -102,7 +102,7 @@ export enum NodeFeature {
     /**
      * If this feature is activated, automatic page translation is available
      */
-    TRANSLATION = 'translation',
+    AUTOMATIC_TRANSLATION = 'automatic_translation',
 }
 
 /**

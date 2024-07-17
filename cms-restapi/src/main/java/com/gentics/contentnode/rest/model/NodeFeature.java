@@ -59,5 +59,5 @@ public enum NodeFeature {
 	/**
 	 * This feature enables automatic text/page translation.
 	 */
-	translation,
+	automatic_translation,
 }

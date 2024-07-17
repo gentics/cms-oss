@@ -163,7 +163,7 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit, OnDestro
 
     private isTranslationFeatureEnabled(features: {[id: number]: NodeFeature[]}): boolean {
         for (const key in features) {
-            if (features[key].includes(NodeFeature.TRANSLATION)  ) {
+            if (features[key].includes(NodeFeature.AUTOMATIC_TRANSLATION)  ) {
                 return true;
             }
         }

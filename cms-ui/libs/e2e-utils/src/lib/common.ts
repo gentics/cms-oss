@@ -41,6 +41,9 @@ export const IMPORT_ID = Symbol('gtx-e2e-import-id');
 
 export const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
 
+export const OBJECT_PROPERTY_PAGE_COLOR = '994d.ff379678-37b9-11ef-a38e-0242ac110002';
+export const OBJECT_PROPERTY_FOLDER_COLOR = 'a986.40be20e1-4318-11ef-bf28-0242ac110002';
+
 export interface ImportPermissions {
     type: AccessControlledType;
     instanceId?: string;
@@ -60,7 +63,8 @@ export interface NodeImportData extends NodeCreateRequest, ImportData {
     languages: string[];
     /** Features which will be assigned */
     features: NodeFeature[];
-    templates: string[];
+    /** Templates which will be assigned */
+    templates?: string[];
 }
 
 export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {

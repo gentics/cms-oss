@@ -213,6 +213,7 @@
             <gtx-dropdown-item
                 *ngIf="buttons.stage"
                 data-action="stage"
+                [attr.data-active]="stagingMap?.[item.globalId]?.included"
                 (click)="stageClicked(item, StagingMode.REGULAR)"
             >
                 <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'remove' : 'inventory') }}</icon>

@@ -2,6 +2,7 @@ import { Response } from '@gentics/cms-models';
 import { GCMSRestClientRequestData } from './models';
 
 export const GCMS_ERROR_INSTANCE = Symbol('gcms-rest-client-error');
+export const GCMS_ABORT_INSTANCE = Symbol('gcms-rest-client-abort');
 
 /**
  * Error class which is thrown whenever a Request to the REST-API failed.
@@ -37,6 +38,7 @@ export class GCMSRestClientRequestError extends Error {
         public bodyError?: Error,
     ) {
         super (message);
+        this[GCMS_ERROR_INSTANCE] = true;
     }
 
     /**
@@ -48,5 +50,51 @@ export class GCMSRestClientRequestError extends Error {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static [Symbol.hasInstance](obj: any): boolean {
         return obj != null && GCMS_ERROR_INSTANCE in obj;
+    }
+}
+
+/**
+ * Defines a specific error for when a Request is being canceled.
+ * The Promise of the Response will be rejected with this error,
+ * to properly indicate that the request has been properly canceled.
+ *
+ * ```ts
+ * async function myFunc() {
+ *      const client = getClient();
+ *      try {
+ *          const req = client.node.list();
+ *          const data = req.send();
+ *          req.cancel();
+ *          await data;
+ *      } catch (err) {
+ *          if (err instanceof GCMSRestClientRequestError) {
+ *              // The server responded with an error
+ *          }
+ *          if (err instanceof GCMSRestClientAbortError) {
+ *              // The request has been successfully aborted
+ *          }
+ *          // Some other actual error
+ *      }
+ * }
+ * ```
+ */
+export class GCMSRestClientAbortError extends Error {
+
+    constructor(
+        public request: GCMSRestClientRequestData,
+    ) {
+        super(`The request "${request.method} ${request.url}" has been canceled`);
+        this[GCMS_ABORT_INSTANCE] = true;
+    }
+
+    /**
+     * Hacky workaround to allow custom error objects to still be identified as correct errors.
+     * Mainly used in testing.
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_symbol.hasinstance
+     * @returns If the provided object is an instance of this class.
+     */
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static [Symbol.hasInstance](obj: any): boolean {
+        return obj != null && GCMS_ABORT_INSTANCE in obj;
     }
 }

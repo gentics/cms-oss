@@ -10,6 +10,7 @@ import { IconDirective } from '../../directives/icon/icon.directive';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
+import { ValuePathPipe } from '../../pipes/value-path/value-path.pipe';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { componentTest } from '../../testing';
@@ -44,6 +45,7 @@ describe('SelectComponent', () => {
                 DropdownTriggerDirective,
                 ScrollMaskComponent,
                 OverlayHostComponent,
+                ValuePathPipe,
             ],
             providers: [
                 OverlayHostService,

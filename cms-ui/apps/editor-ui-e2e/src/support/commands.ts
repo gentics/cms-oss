@@ -17,8 +17,10 @@ declare namespace Cypress {
         navigateToApp(path?: string): Chainable<void>;
         login(account: string): Chainable<void>;
         selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
+        findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
         findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
         itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
+        listAction(type: ItemType, action: string): Chainable<JQuery<HTMLElement>>;
     }
 }
 
@@ -57,8 +59,12 @@ Cypress.Commands.add('selectNode', (nodeId) => {
         .click();
 });
 
+Cypress.Commands.add('findList', (type) => {
+    return cy.get(`item-list .content-list[data-item-type="${type}"]`);
+});
+
 Cypress.Commands.add('findItem', (type, id) => {
-    return cy.get(`item-list .list-body[data-item-type="${type}"]`)
+    return cy.findList(type)
         .find(`gtx-contents-list-item[data-id="${id}"]`);
 });
 
@@ -68,7 +74,12 @@ Cypress.Commands.add('itemAction', (type, id, action) => {
         .click({ force: true });
     return cy.get('.item-context-menu-content')
         .find(`[data-action="${action}"]`)
-        .click();
+        .click({ force: true });
+});
+
+Cypress.Commands.add('listAction', (type, action) => {
+    cy.findList(type)
+        .find()
 });
 
 //

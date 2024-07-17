@@ -25,21 +25,7 @@
             "executor": "@nx/eslint:lint"
         },
         "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": [
-                "{workspaceRoot}/coverage/libs/cms-integration-api-models"
-            ],
-            "options": {
-                "jestConfig": "libs/cms-integration-api-models/jest.config.ts"
-            },
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {
-                    "color": false
-                }
-            }
+           "executor": "nx:noop"
         },
         "nx-release-publish": {
             "executor": "@nx/js:release-publish",

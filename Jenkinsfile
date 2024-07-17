@@ -298,6 +298,7 @@ spec:
                                 junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
+                            junit  testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
                             junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
                             junit  testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }

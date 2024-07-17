@@ -830,7 +830,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         unlock: (id) => this.executeMappedJsonRequest(POST, `/template/${id}/unlock`),
         hash: (id) => this.executeMappedJsonRequest(GET, `/template/${id}/hash`),
 
-        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/link`, body),
+        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
         unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),

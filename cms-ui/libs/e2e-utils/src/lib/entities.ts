@@ -4,7 +4,7 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, NodeFeature, NodePageLanguageCode, NodeUrlMode, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FolderImportData,
@@ -17,6 +17,7 @@ import {
     TestSize,
     UserImportData,
 } from './common';
+import { getActiveNodeFeatures } from './utils';
 
 /*
  * REQUIRED SETUP
@@ -134,7 +135,7 @@ export const minimalNode: NodeImportData = {
     description: 'minimal test',
 
     languages : [ 'de', 'en' ],
-    features: [],
+    features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,
     ],
@@ -183,7 +184,24 @@ function createPage(
 export const folderA = createRootFolder(minimalNode, 'A');
 export const folderB = createRootFolder(minimalNode, 'B');
 
-export const pageOne = createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One');
+export const pageOne: PageImportData = {
+    ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One'),
+    tags: {
+        content: {
+            id: null,
+            constructId: 2,
+            name: 'content',
+            active: true,
+            type: 'CONTENTTAG',
+            properties: {
+                text: {
+                    type: TagPropertyType.RICHTEXT,
+                    stringValue: 'This is the page',
+                },
+            },
+        },
+    },
+}
 
 /*
  * FULL SETUP
@@ -217,7 +235,7 @@ export const fullNode: NodeImportData = {
     description: 'full test',
 
     languages : [ 'de', 'en' ],
-    features: [],
+    features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,
     ],

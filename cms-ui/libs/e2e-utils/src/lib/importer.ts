@@ -1,4 +1,4 @@
-import { AccessControlledType, Folder, Group, Node, NodeFeature, Page, PagingSortOrder, Template, User } from '@gentics/cms-models';
+import { Folder, Group, Node, NodeFeature, Page, PagingSortOrder, Template, User } from '@gentics/cms-models';
 import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import {
     EntityMap,
@@ -85,7 +85,8 @@ async function importNode(
     } = data;
     const created = (await client.node.create(req).send()).node;
 
-    await setNodeFeatures(client, created.id, features);
+    const result = await setNodeFeatures(client, created.id, features);
+    console.log(result)
 
     for (const lang of languages) {
         await client.node.assignLanguage(created.id, langMap[lang]).send();
@@ -150,6 +151,7 @@ async function importPage(
         folderId,
         nodeId,
         templateId,
+        tags,
         ...req
     } = data;
 
@@ -161,15 +163,30 @@ async function importPage(
     const parentId = (folderEntity as Node).folderId ?? (folderEntity as (Node | Folder)).id;
     const tplId = (entityMap[templateId] as Template).id;
 
-    const created = (await client.page.create({
-        ...req,
+    await client.template.linkMultiple({
+        templateIds: [tplId],
+        folderIds: [parentId],
+        nodeId: parseFloat(nodeId),
+    }).send();
 
+    const pageResponse = (await client.page.create({
+        ...req,
         folderId: parentId,
         nodeId: (entityMap[nodeId] as Node).id,
         templateId: tplId,
-    }).send()).page;
+    }).send())
 
-    return created;
+    const createdPage = pageResponse.page;
+
+    await client.page.update(createdPage.id, {
+        page: {
+            tags,
+        },
+    }).send();
+
+    const loadResponse = await client.page.get(createdPage.id).send()
+
+    return loadResponse.page;
 }
 
 async function importGroup(

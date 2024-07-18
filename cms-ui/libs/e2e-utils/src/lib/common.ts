@@ -6,6 +6,7 @@ import {
     GroupUserCreateRequest,
     NodeCreateRequest,
     NodeFeature,
+    Page,
     PageCreateRequest,
     PermissionInfo,
 } from '@gentics/cms-models';
@@ -33,6 +34,7 @@ export const ENV_KEYCLOAK_ENABLED = 'FEATURE_KEYCLOAK';
 export const ENV_MULTI_CHANNELING_ENABLED = 'FEATURE_MULTI_CHANNELING';
 export const ENV_FORMS_ENABLED = 'FEATURE_FORMS';
 export const ENV_CONTENT_STAGING_ENABLED = 'FEATURE_CONTENT_STAGING';
+export const ENV_AUTOMATIC_TRANSLATION_ENABLED = 'FEATURE_AUTOMATIC_TRANSLATION';
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -76,7 +78,7 @@ export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | '
     motherId: string;
 }
 
-export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId'>, ImportData {
+export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId'>, Partial<Pick<Page, 'tags'>>, ImportData {
     [IMPORT_TYPE]: 'page',
 
     /** The nodes `IMPROT_ID` value */

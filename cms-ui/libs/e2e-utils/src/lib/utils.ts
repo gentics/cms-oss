@@ -1,4 +1,4 @@
-import { File, Folder, Image, Node, Page } from '@gentics/cms-models';
+import { File, Folder, Image, Node, NodeFeature, Page } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
 import { FileImportData, FolderImportData, ImageImportData, IMPORT_ID, ImportData, NodeImportData, PageImportData } from './common';
 
@@ -29,4 +29,15 @@ export function envNone(...vars: string[]): boolean {
 
 export function skipableSuite(doExecute: boolean, title: string, fn: (this: Suite) => void): Suite | void {
     return (doExecute ? describe : describe.skip)(title, fn);
+}
+
+export function getActiveNodeFeatures(): NodeFeature[] {
+    const activatedNodeFeatures = [];
+    Object.keys(NodeFeature).forEach((feature, _index) => {
+        if(envAny(`FEATURE_${feature}`)) {
+            activatedNodeFeatures.push(NodeFeature[feature]);
+        }
+    })
+
+    return activatedNodeFeatures;
 }

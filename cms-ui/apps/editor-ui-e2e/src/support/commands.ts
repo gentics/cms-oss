@@ -32,7 +32,7 @@ Cypress.Commands.add('navigateToApp', (path) => {
      * When using the CI however, we use the served UI from the CMS directly.
      * Therefore we also have to use the correct path for it.
      */
-    const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/';
+    const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/?skip-sso';
     cy.visit(`${appBasePath}${path || ''}`);
 });
 

@@ -25,8 +25,11 @@ import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import io.reactivex.Flowable;
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
@@ -40,6 +43,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,8 +83,13 @@ public class Indexer {
 	/** Path to the SSL certificate used by Elasticsearch (must be in .pem format). */
 	public final static String ELASTICSEARCH_CERT_PATH_PARAM = "elasticsearch.certPath";
 
-	 /** Path to the SSL certificate authority with which the certificate was created (must be in .pem format). */
+	/** Path to the SSL certificate authority with which the certificate was created (must be in .pem format). */
 	public final static String ELASTICSEARCH_CA_PATH_PARAM = "elasticsearch.caPath";
+
+	/** Username to use for basic auth when connecting to Elasticsearch. */
+	public final static String ELASTICSEARCH_USERNAME = "elasticsearch.username";
+	/** Password to use for basic auth when connecting to Elasticsearch. */
+	public final static String ELASTICSEARCH_PASSWORD = "elasticsearch.password";
 
 	public final static String INDEX_NAME_PARAM = "elasticsearch.index";
 	public final static String INDEX_SETTINGS_PARAM = "elasticsearch.settings";
@@ -125,6 +135,9 @@ public class Indexer {
 	protected static String indexName = INDEX_NAME_DEFAULT;
 
 	protected static Protocol customHttpsProtocol;
+
+	protected static Credentials credentials;
+	protected static AuthScope authScope;
 
 	/**
 	 * Content mimetype whitelist patterns
@@ -197,7 +210,8 @@ public class Indexer {
 
 		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
 		elasticsearchUrl = ObjectTransformer.getString(prefs.getProperty(ELASTICSEARCH_URL_PARAM), ELASTICSEARCH_URL_DEFAULT);
-		customHttpsProtocol = prepareCustomHttpsProtocol(prefs);
+		prepareCustomHttpsProtocol(prefs);
+		prepareAuthentication(prefs);
 		indexName = ObjectTransformer.getString(prefs.getProperty(INDEX_NAME_PARAM), INDEX_NAME_DEFAULT);
 
 		if (prefs.isFeature(Feature.ELASTICSEARCH)) {
@@ -274,35 +288,55 @@ public class Indexer {
 
 				if (indexerQueueToReplay > 0) {
 					replayIndexerQueue();
-		}
+				}
 			} catch (NodeException e) {
 				logger.error("Error while re-scheduling left-over indexing tasks", e);
-	}
+			}
 		}
 	}
 
 	/**
 	 * Create custom HTTPS protocol using the configured certificate and certificate authority for Elasticsearch.
+	 *
+	 * <p>
+	 *     The created custom {@link Protocol} is stored in {@link #customHttpsProtocol}.
+	 *
+	 * </p>
 	 * @param prefs The CMS settings.
-	 * @return A {@code Protocol} using the configured certificate and certificate authority if configured,
-	 * 		or {@code null} when the Elasticsearch URL does not use HTTPS or no certificate or certificate
-	 * 		authority are configured.
 	 */
-	protected static Protocol prepareCustomHttpsProtocol(NodePreferences prefs) {
+	protected static void prepareCustomHttpsProtocol(NodePreferences prefs) {
 		String certPath = prefs.getProperty(ELASTICSEARCH_CERT_PATH_PARAM);
 		String caPath = prefs.getProperty(ELASTICSEARCH_CA_PATH_PARAM);
 
 		if (elasticsearchUrl.startsWith("https://")) {
 			if (!StringUtils.isEmpty(certPath) && !StringUtils.isEmpty(caPath)) {
-				return new Protocol("https", new CustomSSLProtocolSocketFactory(certPath, caPath), 9200);
+				customHttpsProtocol = new Protocol("https", new CustomSSLProtocolSocketFactory(certPath, caPath), 9200);
+			} else if (logger.isInfoEnabled()) {
+				logger.info(String.format("Elasticsearch URL uses HTTPS but no custom certificate (%s) and/or certificate authority (%s) specified. Make sure that Elasticsearch is not using a self signed certificate.", ELASTICSEARCH_CERT_PATH_PARAM, ELASTICSEARCH_CA_PATH_PARAM));
+			}
+		}
+	}
+
+	protected static void prepareAuthentication(NodePreferences prefs) {
+		URL url;
+
+		try {
+			url = new URL(elasticsearchUrl);
+		} catch (MalformedURLException e) {
+			if (logger.isWarnEnabled()) {
+				logger.warn(String.format("Could not initialize basic auth for Elasticsearch client: invalid Elasticsearch URL {%s}", elasticsearchUrl));
 			}
 
-            if (logger.isInfoEnabled()) {
-                logger.info(String.format("Elasticsearch URL uses HTTPS but no custom certificate (%s) and/or certificate authority (%s) specified. Make sure that Elasticsearch is not using a self signed certificate.", ELASTICSEARCH_CERT_PATH_PARAM, ELASTICSEARCH_CA_PATH_PARAM));
-            }
-        }
+			return;
+		}
 
-		return null;
+		String username = prefs.getProperty(ELASTICSEARCH_USERNAME);
+		String password = prefs.getProperty(ELASTICSEARCH_PASSWORD);
+
+		if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
+			credentials = new UsernamePasswordCredentials(username, password);
+			authScope = new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM);
+		}
 	}
 
 	/**
@@ -742,6 +776,10 @@ public class Indexer {
 			httpClient.getHostConfiguration().setHost("localhost", 9200, protocol);
 		}
 
+		if (authScope != null && credentials != null) {
+			httpClient.getState().setCredentials(authScope, credentials);
+		}
+
 		return httpClient;
 	}
 
@@ -982,20 +1020,20 @@ public class Indexer {
 			int responseCode = httpClient.executeMethod(loadTemplateMethod);
 
 			switch(responseCode) {
-			case 200:
-				if (logger.isInfoEnabled()) {
-					logger.info("Index template found");
-				}
-				JSONObject response = new JSONObject(loadTemplateMethod.getResponseBodyAsString());
-				return response.getJSONObject(getTemplateName());
-			case 404:
-				if (logger.isInfoEnabled()) {
-					logger.info("Index template not found");
-				}
-				return null;
-			default:
-				throw new NodeException(String.format("Request to load index template returned http code %d, body %s", responseCode,
-						loadTemplateMethod.getResponseBodyAsString()));
+				case 200:
+					if (logger.isInfoEnabled()) {
+						logger.info("Index template found");
+					}
+					JSONObject response = new JSONObject(loadTemplateMethod.getResponseBodyAsString());
+					return response.getJSONObject(getTemplateName());
+				case 404:
+					if (logger.isInfoEnabled()) {
+						logger.info("Index template not found");
+					}
+					return null;
+				default:
+					throw new NodeException(String.format("Request to load index template returned http code %d, body %s", responseCode,
+							loadTemplateMethod.getResponseBodyAsString()));
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -1018,19 +1056,19 @@ public class Indexer {
 			int deleteResponseCode = httpClient.executeMethod(deleteMethod);
 
 			switch (deleteResponseCode) {
-			case 200:
-				if (logger.isInfoEnabled()) {
-					logger.info("Index template deleted");
-				}
-				break;
-			case 404:
-				if (logger.isInfoEnabled()) {
-					logger.info("Index template not found");
-				}
-				break;
-			default:
-				throw new NodeException(String.format("Request to delete index template returned http code %d, body %s",
-						deleteResponseCode, deleteMethod.getResponseBodyAsString()));
+				case 200:
+					if (logger.isInfoEnabled()) {
+						logger.info("Index template deleted");
+					}
+					break;
+				case 404:
+					if (logger.isInfoEnabled()) {
+						logger.info("Index template not found");
+					}
+					break;
+				default:
+					throw new NodeException(String.format("Request to delete index template returned http code %d, body %s",
+							deleteResponseCode, deleteMethod.getResponseBodyAsString()));
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -1085,19 +1123,19 @@ public class Indexer {
 			int pipelineResponseCode = httpClient.executeMethod(checkPipelineMethod);
 
 			switch (pipelineResponseCode) {
-			case 200:
-				if (logger.isInfoEnabled()) {
-					logger.info("Attachment pipeline found");
-				}
-				return true;
-			case 404:
-				if (logger.isInfoEnabled()) {
-					logger.info("Attachment pipeline not found");
-				}
-				return false;
-			default:
-				throw new NodeException(String.format("Request to check attachment pipeline returned http code %d, body %s", pipelineResponseCode,
-						checkPipelineMethod.getResponseBodyAsString()));
+				case 200:
+					if (logger.isInfoEnabled()) {
+						logger.info("Attachment pipeline found");
+					}
+					return true;
+				case 404:
+					if (logger.isInfoEnabled()) {
+						logger.info("Attachment pipeline not found");
+					}
+					return false;
+				default:
+					throw new NodeException(String.format("Request to check attachment pipeline returned http code %d, body %s", pipelineResponseCode,
+							checkPipelineMethod.getResponseBodyAsString()));
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -1283,10 +1321,10 @@ public class Indexer {
 			List<Node> nodes = t.getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDS));
 			for (Node node : nodes) {
 				List<ContentLanguage> nodeLanguages = node.getLanguages();
-					for (ContentLanguage language : nodeLanguages) {
-						tmpLangs.add(language.getCode());
-					}
+				for (ContentLanguage language : nodeLanguages) {
+					tmpLangs.add(language.getCode());
 				}
+			}
 			return tmpLangs;
 		});
 
@@ -1472,17 +1510,17 @@ public class Indexer {
 						SearchIndex index = getIndex(task.getIndexType(), task.getIndexLanguage());
 						if (index != null) {
 							switch (task.getAction()) {
-							case delete:
-								index.delete(task.getObjId());
-								break;
-							case put:
-								IndexableNodeObject<? extends NodeObject> toPut = task.getIndexType().load(task.getObjId());
-								if (toPut != null) {
-									index.put(toPut);
-								}
-								break;
-							default:
-								break;
+								case delete:
+									index.delete(task.getObjId());
+									break;
+								case put:
+									IndexableNodeObject<? extends NodeObject> toPut = task.getIndexType().load(task.getObjId());
+									if (toPut != null) {
+										index.put(toPut);
+									}
+									break;
+								default:
+									break;
 							}
 						}
 

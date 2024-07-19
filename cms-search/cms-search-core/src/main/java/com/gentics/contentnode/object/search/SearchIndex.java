@@ -81,7 +81,7 @@ public class SearchIndex {
 	 */
 	public final static Function<SearchIndex, IndexModel> TRANSFORM2REST = searchIndex -> {
 		IndexModel model = new IndexModel();
-		HttpClient httpClient = new HttpClient();
+		HttpClient httpClient = Indexer.getClient();
 		model.setName(searchIndex.name);
 		boolean found = searchIndex.exists(httpClient);
 		model.setFound(found);
@@ -561,7 +561,9 @@ public class SearchIndex {
 	 * @return URL
 	 */
 	public String getUrl(int id, boolean update) {
-		return String.format("%s/_doc/%s%s", url, Integer.toString(id), update ? "/_update" : "");
+		return update
+			? String.format("%s/_update/%d", url, id)
+			: String.format("%s/_doc/%d", url, id);
 	}
 
 	/**
@@ -586,7 +588,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Indexing %s", object));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			PutMethod indexObjectMethod = new PutMethod(getUrl(object));
 			JSONObject indexJSON = getIndexJSON(object);
@@ -664,7 +666,7 @@ public class SearchIndex {
 				Indexer.logger.debug(String.format("Updating %s (%s)", object, attributes));
 			}
 
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			PostMethod updateObjectMethod = new PostMethod(getUrl(object, true));
 			JSONObject updateJSON = getUpdateJSON(object, attributes);
@@ -734,7 +736,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Removing %s", object));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(object));
 
@@ -764,7 +766,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Removing object with ID %d", id));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(id, false));
 
@@ -810,10 +812,8 @@ public class SearchIndex {
 				json.put("_type", "page");
 			} else if (object instanceof Folder) {
 				json.put("_type", "folder");
-			} else if (object instanceof ImageFile) {
-				json.put("_type", "image");
 			} else if (object instanceof File) {
-				json.put("_type", "file");
+				json.put("_type", ((File) object).isImage() ? "image" : "file");
 			} else if (object instanceof Form) {
 				json.put("_type", "form");
 			}
@@ -1018,7 +1018,7 @@ public class SearchIndex {
 		Flowable<Integer> idFlowable = Flowable.generate(() -> Pair.of(new AtomicReference<String>(), new LinkedList<Integer>()), (state, emitter) -> {
 			AtomicReference<String> scrollId = state.getLeft();
 			Deque<Integer> deque = state.getRight();
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 			if (deque.isEmpty()) {
 				PostMethod searchMethod = null;
 				JSONObject search = new JSONObject();
@@ -1033,7 +1033,7 @@ public class SearchIndex {
 						.put("query", new JSONObject().put("term", new JSONObject().put("_type", type.name())));
 				} else {
 					// this is a subsequent scroll request
-					searchMethod = new PostMethod(String.format("%s_search/scroll", Indexer.elasticsearchUrl));
+					searchMethod = new PostMethod("/_search/scroll");
 					search
 						.put("scroll", "1m")
 						.put("scroll_id", scrollId.get());
@@ -1108,7 +1108,7 @@ public class SearchIndex {
 
 		try {
 			if (!ids.isEmpty()) {
-				HttpClient httpClient = new HttpClient();
+				HttpClient httpClient = Indexer.getClient();
 				for (Integer id : ids) {
 					DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(id, false));
 					int responseCode = httpClient.executeMethod(removeObjectMethod);

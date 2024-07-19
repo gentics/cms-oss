@@ -1,7 +1,40 @@
 package com.gentics.contentnode.object.search;
 
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.distributed.DistributionUtil;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.search.CustomSSLProtocolSocketFactory;
+import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.File;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.publish.cr.DummyTagmapEntry;
+import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.content.GenticsContentAttribute;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.log.NodeLogger;
+import io.reactivex.Flowable;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,41 +60,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.distributed.DistributionUtil;
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.etc.PrefixedThreadFactory;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.ContentLanguage;
-import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.publish.cr.DummyTagmapEntry;
-import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.lib.content.GenticsContentAttribute;
-import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.log.NodeLogger;
-
-import io.reactivex.Flowable;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 
 /**
  * Indexer implementation
@@ -74,6 +74,13 @@ public class Indexer {
 
 	public final static String ELASTICSEARCH_URL_PARAM = "elasticsearch.url";
 	public final static String ELASTICSEARCH_URL_DEFAULT = "http://localhost:9200/";
+
+	/** Path to the SSL certificate used by Elasticsearch (must be in .pem format). */
+	public final static String ELASTICSEARCH_CERT_PATH_PARAM = "elasticsearch.certPath";
+
+	 /** Path to the SSL certificate authority with which the certificate was created (must be in .pem format). */
+	public final static String ELASTICSEARCH_CA_PATH_PARAM = "elasticsearch.caPath";
+
 	public final static String INDEX_NAME_PARAM = "elasticsearch.index";
 	public final static String INDEX_SETTINGS_PARAM = "elasticsearch.settings";
 	public final static String TEMPLATE_PARAM = "elasticsearch.index_template";
@@ -116,6 +123,8 @@ public class Indexer {
 	protected static String elasticsearchUrl = ELASTICSEARCH_URL_DEFAULT;
 
 	protected static String indexName = INDEX_NAME_DEFAULT;
+
+	protected static Protocol customHttpsProtocol;
 
 	/**
 	 * Content mimetype whitelist patterns
@@ -188,6 +197,7 @@ public class Indexer {
 
 		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
 		elasticsearchUrl = ObjectTransformer.getString(prefs.getProperty(ELASTICSEARCH_URL_PARAM), ELASTICSEARCH_URL_DEFAULT);
+		customHttpsProtocol = prepareCustomHttpsProtocol(prefs);
 		indexName = ObjectTransformer.getString(prefs.getProperty(INDEX_NAME_PARAM), INDEX_NAME_DEFAULT);
 
 		if (prefs.isFeature(Feature.ELASTICSEARCH)) {
@@ -269,6 +279,30 @@ public class Indexer {
 				logger.error("Error while re-scheduling left-over indexing tasks", e);
 	}
 		}
+	}
+
+	/**
+	 * Create custom HTTPS protocol using the configured certificate and certificate authority for Elasticsearch.
+	 * @param prefs The CMS settings.
+	 * @return A {@code Protocol} using the configured certificate and certificate authority if configured,
+	 * 		or {@code null} when the Elasticsearch URL does not use HTTPS or no certificate or certificate
+	 * 		authority are configured.
+	 */
+	protected static Protocol prepareCustomHttpsProtocol(NodePreferences prefs) {
+		String certPath = prefs.getProperty(ELASTICSEARCH_CERT_PATH_PARAM);
+		String caPath = prefs.getProperty(ELASTICSEARCH_CA_PATH_PARAM);
+
+		if (elasticsearchUrl.startsWith("https://")) {
+			if (!StringUtils.isEmpty(certPath) && !StringUtils.isEmpty(caPath)) {
+				return new Protocol("https", new CustomSSLProtocolSocketFactory(certPath, caPath), 9200);
+			}
+
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Elasticsearch URL uses HTTPS but no custom certificate (%s) and/or certificate authority (%s) specified. Make sure that Elasticsearch is not using a self signed certificate.", ELASTICSEARCH_CERT_PATH_PARAM, ELASTICSEARCH_CA_PATH_PARAM));
+            }
+        }
+
+		return null;
 	}
 
 	/**
@@ -508,7 +542,8 @@ public class Indexer {
 			logger.info(String.format("Schedule reindex for %s", indices.keySet()));
 		}
 
-		HttpClient client = new HttpClient();
+		HttpClient client = getClient();
+
 		for (SearchIndex index : indices.keySet()) {
 			try {
 				prepare(client, index, drop);
@@ -560,7 +595,7 @@ public class Indexer {
 	/**
 	 * Get the search indices for the index type and languages
 	 * @param type index type
-	 * @param language optional languages
+	 * @param languages optional languages
 	 * @return search indices (may be empty)
 	 */
 	public final static Set<SearchIndex> getIndices(IndexType type, Set<String> languages) {
@@ -687,11 +722,35 @@ public class Indexer {
 	}
 
 	/**
+	 * Get a configured HTTP client for Elasticsearch.
+	 *
+	 * <p>
+	 *     When Elasticsearch uses HTTPS and the settings contain a certificate and certificate authority,
+	 *     the client will be configured to use this custom HTTPS configuration.
+	 * </p>
+	 *
+	 * @return The configured HTTP client for Elasticsearch
+	 */
+	public static HttpClient getClient() {
+		HttpClient httpClient = new HttpClient();
+
+		if (customHttpsProtocol != null) {
+			httpClient.getHostConfiguration().setHost("localhost", 9200, customHttpsProtocol);
+		} else {
+			Protocol protocol = elasticsearchUrl.startsWith("https://") ? Protocol.getProtocol("https") : Protocol.getProtocol("http");
+
+			httpClient.getHostConfiguration().setHost("localhost", 9200, protocol);
+		}
+
+		return httpClient;
+	}
+
+	/**
 	 * Get the URL for the index template
 	 * @return index template URL
 	 */
 	public final static String getTemplateUrl() {
-		return String.format("%s_template/%s", elasticsearchUrl, getTemplateName());
+		return String.format("/_template/%s", getTemplateName());
 	}
 
 	/**
@@ -700,7 +759,7 @@ public class Indexer {
 	 * @return pipeline URL
 	 */
 	public final static String getPipelineUrl(String pipeline) {
-		return String.format("%s_ingest/pipeline/%s", elasticsearchUrl, pipeline);
+		return String.format("/_ingest/pipeline/%s", pipeline);
 	}
 
 	/**
@@ -709,7 +768,7 @@ public class Indexer {
 	 * @return index URL
 	 */
 	public final static String getIndexUrl(String name) {
-		return String.format("%s%s", elasticsearchUrl, name);
+		return String.format("/%s", name);
 	}
 
 	/**
@@ -751,7 +810,7 @@ public class Indexer {
 			builder.append(name);
 		}).blockingGet().toString();
 
-		return String.format("%s%s", elasticsearchUrl, names);
+		return String.format("/%s", names);
 	}
 
 	/**
@@ -760,8 +819,8 @@ public class Indexer {
 	 */
 	public final static void updateIndexStats() throws NodeException {
 		try {
-			HttpClient httpClient = new HttpClient();
-			GetMethod getStats = new GetMethod(String.format("%s_cat/indices", elasticsearchUrl));
+			HttpClient httpClient = getClient();
+			GetMethod getStats = new GetMethod("/_cat/indices");
 			getStats.setQueryString(new NameValuePair[] {new NameValuePair("h", "index,docs.count")});
 			int statsResponseCode = httpClient.executeMethod(getStats);
 
@@ -832,7 +891,7 @@ public class Indexer {
 
 		// when there is a diff, we need to do something
 		if (!missing.isEmpty() || !superfluous.isEmpty()) {
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = getClient();
 
 			for (SearchIndex newIndex : missing) {
 				if (!newIndex.exists(httpClient)) {
@@ -1128,10 +1187,9 @@ public class Indexer {
 			return Collections.emptyMap();
 		}
 		Map<SearchIndex, Set<String>> result = new HashMap<>();
-
-		HttpClient httpClient = new HttpClient();
-
+		HttpClient httpClient = getClient();
 		JSONObject template = loadTemplate(httpClient);
+
 		if (template == null && templateDefinition != null) {
 			createTemplate(httpClient);
 		} else if (template != null && templateDefinition == null) {

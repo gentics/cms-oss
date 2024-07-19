@@ -150,7 +150,7 @@ public class SearchResourceImpl extends AbstractContentNodeResource implements S
 			}
 
 			// perform the search request
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 			int responseCode = httpClient.executeMethod(post);
 
 			if (responseCode != 200) {

@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -65,7 +63,6 @@ import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.testutils.RESTAppContext;
 
 /**
  * Test cases for indexing of forms
@@ -76,13 +73,6 @@ public class FormIndexerTest extends AbstractIndexerTest {
 	public static DBTestContext testContext = new DBTestContext().config(map -> {
 		map.setProperty(Indexer.THREADS_PARAM, "1");
 	});
-
-	/**
-	 * REST Application used as fake elasticsearch
-	 */
-	@ClassRule
-	public static RESTAppContext appContext = new RESTAppContext(
-			new ResourceConfig().registerResources(Resource.builder(FakeElasticsearchResource.class).build()));
 
 	private static Node node;
 
@@ -114,7 +104,10 @@ public class FormIndexerTest extends AbstractIndexerTest {
 
 	@Before
 	public void setup() throws NodeException {
-		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, appContext.getBaseUri());
+		String esUrl = String.format("http://%s:%d/", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
+		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
+
+		System.out.printf("Elasticsearch URL: %s\n", esUrl);
 
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {
@@ -388,7 +381,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertOnline(expected, node.getId(), channel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -403,7 +396,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			return update(form, Form::publish);
 		}, object -> {
 			assertIndexed(object, body(object, node, channel));
-		}, false);
+		});
 
 		indexTest(() -> {
 			try (Trx trx = new Trx()) {
@@ -417,7 +410,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -446,7 +439,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertThat(expected.get("modified").asBoolean()).as("form is modified").isFalse();
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			try (Trx trx = new Trx()) {
@@ -462,7 +455,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertThat(expected.get("modified").asBoolean()).as("form is modified").isTrue();
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -501,7 +494,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, run publish process (should publish the form)
 		indexTest(() -> {
@@ -523,7 +516,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected, node.getId(), channel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -562,7 +555,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected, node.getId(), channel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, plan form to be published at timestamp 4
 		indexTest(() -> {
@@ -580,7 +573,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt").asInt()).as("offline at").isEqualTo(4);
 			assertOnline(expected, node.getId(), channel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 4, run publish process (should take form offline)
 		indexTest(() -> {
@@ -602,7 +595,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -628,7 +621,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// revoke read permission to the testgroup
@@ -640,7 +633,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertNotGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -666,7 +659,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// create subgroup, which inherits the permissions
@@ -684,7 +677,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertGroupIds(expected, group.getId(), subGroup.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -718,7 +711,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel);
 			assertGroupIds(expected, group.getId(), subGroup.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// remove the subgroup
@@ -730,7 +723,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			assertGroupIds(expected, group.getId());
 			assertNotGroupIds(expected, testPair.getRight().getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -748,7 +741,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			Form object = pair.getLeft();
 			Node testChannel = pair.getRight();
 			assertIndexed(object, body(object, node, channel, testChannel));
-		}, false);
+		});
 	}
 
 	@Test
@@ -766,7 +759,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			return testObject;
 		}, object -> {
 			assertIndexed(object, body(object, node, channel));
-		}, false);
+		});
 	}
 
 	/**
@@ -791,7 +784,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			form.setDescription("Test Form");
 			form.setLanguages(Arrays.asList("de"));
 			try {
-				form.setData(FakeElasticsearchResource.mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
+				form.setData(AbstractIndexerTest.mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
 			} catch (IOException e) {
 				throw new NodeException(e);
 			}

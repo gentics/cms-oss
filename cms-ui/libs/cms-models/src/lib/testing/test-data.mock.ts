@@ -945,6 +945,7 @@ export function getExampleNodeData(config: MockNodeConfig = { id: 1, userId: 3 }
         meshPreviewUrl: null,
         meshPreviewUrlProperty: null,
         insecurePreviewUrl: null,
+        meshProjectName: null,
         masterNodeId: config.masterNodeId,
         omitPageExtension: false,
         pageLanguageCode: NodePageLanguageCode.FILENAME,

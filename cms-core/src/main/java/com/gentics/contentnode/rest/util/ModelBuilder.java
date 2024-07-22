@@ -1992,6 +1992,7 @@ public class ModelBuilder {
 			node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
+			node.setMeshProjectName(nodeNode.getMeshProjectName());
 			node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		}
 

@@ -7,6 +7,7 @@ import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,7 +26,9 @@ public class TagResolveService {
 	static final Pattern NODE_TAGS_PATTERN = Pattern.compile("(<node [a-z]+\\d*>)",
 			Pattern.CASE_INSENSITIVE);
 	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
-	static final int HTML_TEXT_PART_TYPE_ID = 2;
+
+	public final static NodeLogger logger = NodeLogger.getNodeLogger(TagResolveService.class);
+
 
 	/**
 	 * This function resolves and translates content tags.
@@ -74,10 +77,9 @@ public class TagResolveService {
 	}
 
 	/**
-	 * This method resolves the tags in the given text. It iterates over the untranslatedTagMap and
-	 * for each tag, it retrieves the text property of the tag. If the text property is present, it
-	 * replaces the tag in the resolvable text with the content of the text property. The content of
-	 * the text property is wrapped in double curly braces.
+	 * This method resolves the tags in the given text. It replaces the tag in the resolvable text
+	 * with the content of the text property. The content of the text property is wrapped in double
+	 * curly braces.
 	 *
 	 * @param untranslatedTagMap The map of untranslated tags.
 	 * @param resolvableText     The text in which to resolve the tags.
@@ -155,8 +157,9 @@ public class TagResolveService {
 		}
 
 		if (resolvedTags.size() != untranslatedTagMap.size()) {
-			throw new NodeException(
+			logger.warn(
 					"Number of resolved tags in translated text and map of untranslated tags must be equals.");
+			return;
 		}
 		Collections.reverse(resolvedTags);
 
@@ -228,14 +231,12 @@ public class TagResolveService {
 	private Optional<Property> getResolvablePartProperty(Tag contentTag) {
 		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
 			if (contentTagProperty != null && !StringUtils.isBlank(
-					contentTagProperty.getValue().getStringValue()) && contentTagProperty.getValue().getPartId() == 12) { //todo
+					contentTagProperty.getValue().getStringValue())) {  // todo: improve condition (e.g.: blacklist/whitelist for partIds)
 				var propertyToTranslate = contentTagProperty.getValue();
 				return Optional.of(propertyToTranslate);
 			}
 		}
 		return Optional.empty();
 	}
-
-
 
 }

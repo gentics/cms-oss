@@ -26,9 +26,6 @@ public class TagResolveService {
 			Pattern.CASE_INSENSITIVE);
 	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
 	static final int HTML_TEXT_PART_TYPE_ID = 2;
-	static final List<Integer> UNRESOLVABLE_PART_IDS = List.of(4, 5, 6, 8, 11, 13, 15, 16, 17, 18, 19,
-			20, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42);
-
 
 	/**
 	 * This function resolves and translates content tags.
@@ -46,14 +43,14 @@ public class TagResolveService {
 			String targetLanguageCode
 	) throws Exception {
 		var tagsToResolve = contentTags.stream()
-				.filter(tag -> !UNRESOLVABLE_PART_IDS.contains(tag.getConstructId()))
+				.filter(tag -> !tag.getName().contains("gtxalohapagelink"))
 				.toList();
 
 		for (var contentTagToResolve : tagsToResolve) {
-			var resolvedTextOpt = this.getTextProperty(contentTagToResolve);
+			var textProperties = this.getTextProperties(contentTagToResolve);
 
-			if (resolvedTextOpt.isPresent()) {
-				var resolvableText = resolvedTextOpt.get().getStringValue();
+			for (var textProperty : textProperties) {
+				var resolvableText = textProperty.getStringValue();
 				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
 						resolvableText);
 				final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
@@ -70,7 +67,7 @@ public class TagResolveService {
 
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
 						resolvedAndTranslatedText);
-				resolvedTextOpt.get().setStringValue(unresolvedAndTranslatedText);
+				textProperty.setStringValue(unresolvedAndTranslatedText);
 				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
 			}
 		}
@@ -89,7 +86,7 @@ public class TagResolveService {
 	private String resolveTags(Map<String, Tag> untranslatedTagMap, String resolvableText) {
 		var resolvedText = resolvableText;
 		for (var tag : untranslatedTagMap.entrySet()) {
-			var tagStringValueOpt = this.getTextProperty(tag.getValue());
+			var tagStringValueOpt = this.getResolvablePartProperty(tag.getValue());
 			if (tagStringValueOpt.isPresent()) {
 				var tagContent = tagStringValueOpt.get().getStringValue();
 				tagContent = String.format("{{%s}}", tagContent);
@@ -170,19 +167,21 @@ public class TagResolveService {
 			var contentTag = unTranslatedTagList.get(i).getValue();
 			var translatedValue = resolvedTags.get(i);
 
-			this.getTextProperty(contentTag).ifPresent(untranslatedProperty ->
+			this.getResolvablePartProperty(contentTag).ifPresent(untranslatedProperty ->
 					untranslatedProperty.setStringValue(translatedValue)
 			);
 		}
 	}
 
 	/**
-	 * This method retrieves the tags that occur in the resolvable text from a given list of content tags.
+	 * This method retrieves the tags that occur in the resolvable text from a given list of content
+	 * tags.
 	 *
 	 * @param contentTags    The list of content tags to search in.
 	 * @param resolvableText The text in which to find the tags.
 	 * @return A map with the names of the tags as keys and the tags themselves as values.
-	 * @throws RuntimeException If a tag is found in the resolvable text but not in the list of content tags.
+	 * @throws RuntimeException If a tag is found in the resolvable text but not in the list of
+	 *                          content tags.
 	 */
 	private Map<String, Tag> getOccurringTagsFromResolvableText(
 			List<Tag> contentTags,
@@ -213,16 +212,30 @@ public class TagResolveService {
 	 * @param contentTag The content tag from which to retrieve the text property.
 	 * @return An Optional containing the text property if it exists, otherwise an empty Optional.
 	 */
-	private Optional<Property> getTextProperty(Tag contentTag) {
+	private List<Property> getTextProperties(Tag contentTag) {
+		List<Property> textProperties = new ArrayList<>();
 		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
 			if (contentTagProperty != null && !StringUtils.isBlank(
 					contentTagProperty.getValue().getStringValue())) {
+				var propertyToTranslate = contentTagProperty.getValue();
+				textProperties.add(propertyToTranslate);
+			}
+		}
+		return textProperties;
+	}
+
+
+	private Optional<Property> getResolvablePartProperty(Tag contentTag) {
+		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
+			if (contentTagProperty != null && !StringUtils.isBlank(
+					contentTagProperty.getValue().getStringValue()) && contentTagProperty.getValue().getPartId() == 12) { //todo
 				var propertyToTranslate = contentTagProperty.getValue();
 				return Optional.of(propertyToTranslate);
 			}
 		}
 		return Optional.empty();
 	}
+
 
 
 }

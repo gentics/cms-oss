@@ -132,7 +132,7 @@ public class HandlebarsPartType extends TextPartType {
 			var handlebarsTemplate = handlebars.compile(source);
 			Context context = Context.newBuilder(null)
 					.resolver(INSTANCE, MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
-					.combine("cms", new ResolvableMap(cmsResolver))
+					.combine("cms", cmsResolver)
 					.build();
 			return handlebarsTemplate.apply(context);
 		} catch (Throwable e) {

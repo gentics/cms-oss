@@ -85,8 +85,7 @@ async function importNode(
     } = data;
     const created = (await client.node.create(req).send()).node;
 
-    const result = await setNodeFeatures(client, created.id, features);
-    console.log(result)
+    await setNodeFeatures(client, created.id, features);
 
     for (const lang of languages) {
         await client.node.assignLanguage(created.id, langMap[lang]).send();

@@ -17,7 +17,7 @@ The Client can easily be included in any maven project by adding the following d
 
 <javascript filename="pom.xml">
 <dependency>
-	<groupId>com.gentics</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>contentnode-restapi</artifactId>
 	<version>[Gentics CMS Version]</version>
 </dependency>

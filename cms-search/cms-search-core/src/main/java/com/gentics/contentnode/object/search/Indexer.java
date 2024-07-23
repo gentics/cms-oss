@@ -767,13 +767,28 @@ public class Indexer {
 	 */
 	public static HttpClient getClient() {
 		HttpClient httpClient = new HttpClient();
+		String proto;
+		String host;
+		int port;
+
+		try {
+			URL esUrl = new URL(elasticsearchUrl);
+
+			proto = esUrl.getProtocol();
+			host = esUrl.getHost();
+			port = esUrl.getPort();
+		} catch (MalformedURLException e) {
+			logger.error(String.format("Invalid Elasticsearch URL {%s}: %s", elasticsearchUrl, e.getMessage()), e);
+
+			return httpClient;
+		}
 
 		if (customHttpsProtocol != null) {
-			httpClient.getHostConfiguration().setHost("localhost", 9200, customHttpsProtocol);
+			httpClient.getHostConfiguration().setHost(host, port, customHttpsProtocol);
 		} else {
-			Protocol protocol = elasticsearchUrl.startsWith("https://") ? Protocol.getProtocol("https") : Protocol.getProtocol("http");
+			Protocol protocol = "https".equalsIgnoreCase(proto) ? Protocol.getProtocol("https") : Protocol.getProtocol("http");
 
-			httpClient.getHostConfiguration().setHost("localhost", 9200, protocol);
+			httpClient.getHostConfiguration().setHost(host, port, protocol);
 		}
 
 		if (authScope != null && credentials != null) {

@@ -12,6 +12,9 @@
   <artifactId>cms-translation-core</artifactId>
   <name>Gentics CMS Translation - Core</name>
   <packaging>jar</packaging>
+  <properties>
+    <assertj.version>3.26.3</assertj.version>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -73,6 +76,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -20,7 +20,7 @@ quartz:
 mesh:
   prepareThreshold: 1
 
-translation:
+automatic_translation:
   implementation: com.gentics.contentnode.translation.DeepLTranslationService
   auth:
     token: <api-token>

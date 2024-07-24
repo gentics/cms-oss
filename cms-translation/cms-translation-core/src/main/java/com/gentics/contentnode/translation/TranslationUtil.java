@@ -28,8 +28,17 @@ public class TranslationUtil {
 	/**
 	 * {@link TranslationService} service
 	 */
-	private static ServiceLoaderUtil<TranslationService> loader = ServiceLoaderUtil.load(
-			TranslationService.class);
+	private static ServiceLoaderUtil<TranslationService> loader;
+
+	static {
+		try{
+			loader = ServiceLoaderUtil.load(TranslationService.class);
+		}
+		catch (ServiceConfigurationError error) {
+			logger.error("Unable to load translation service", error);
+		}
+
+	}
 
 	/**
 	 * This method retrieves the next TranslationService from the loader.
@@ -38,7 +47,7 @@ public class TranslationUtil {
 	 * @throws NoSuchElementException If no more TranslationServices are available.
 	 */
 	public static Optional<TranslationService> getTranslationService() {
-		if (loader.iterator().hasNext()) {
+		if (loader != null && loader.iterator().hasNext()) {
 			return Optional.of(loader.iterator().next());
 		}
 		logger.warn("No TranslationService implementation is available.");
@@ -117,11 +126,10 @@ public class TranslationUtil {
 	}
 
 	public static boolean reloadService() {
-		try{
+		try {
 			loader = ServiceLoaderUtil.load(TranslationService.class);
 			return true;
-		}
-		catch (ServiceConfigurationError e) {
+		} catch (ServiceConfigurationError e) {
 			logger.error(String.format("Could not load service. The reason is: '%s'", e.getMessage()));
 			return false;
 		}

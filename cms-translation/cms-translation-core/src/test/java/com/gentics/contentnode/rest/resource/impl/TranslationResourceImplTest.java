@@ -160,7 +160,7 @@ public class TranslationResourceImplTest {
 			var response = translationResource.translate(pageToTranslate.getId(),
 					targetLanguage,true, 0, 0);
 
-			final var expectedMessage = "Error occurred while translating text.";
+			final var expectedMessage = "Error occurred while translating text";
 			final var actualMessage = response.getResponseInfo().getResponseMessage();
 
 			assertThat(actualMessage).contains(expectedMessage);

@@ -59,7 +59,6 @@ class TranslationUtilTest {
 
 		assertThat(isCreated).isTrue();
 		assertThat(isLoaded).isFalse();
-
 	}
 
 

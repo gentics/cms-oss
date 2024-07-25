@@ -664,7 +664,7 @@ public class MissingReferencesTest implements ContentStagingMethods {
 	private <T extends StageableNodeObject> T reloadObject(Class<T> objClass, GlobalId globalId) throws NodeException {
 		ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
 
-		assertResponseOK(resource.importIntoCms(CONTENT_PACKAGE_NAME, 0));
+		assertResponseOK(resource.importIntoCms(CONTENT_PACKAGE_NAME, 0, false));
 
 		return supply(t -> t.getObject(objClass, globalId));
 	}

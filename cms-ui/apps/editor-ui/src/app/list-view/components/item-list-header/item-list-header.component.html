@@ -41,7 +41,7 @@
             [activeLanguage]="folderLanguage"
             [disabled]="elasticsearchQueryActive"
             [title]="'editor.language_context_selector_disabled_search' | i18n"
-            (selectLanguage)="languageChanged($event)"
+            (languageChange)="selectLanguage($event)"
         ></language-context-selector>
 
         <ng-container *ngIf="uiMode === UIMode.EDIT">

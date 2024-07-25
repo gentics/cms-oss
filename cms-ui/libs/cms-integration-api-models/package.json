@@ -1,11 +1,11 @@
 {
   "name": "@gentics/cms-integration-api-models",
-  "version": "6.1.6",
+  "version": "6.1.8",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/aloha-models": "6.1.6",
-    "@gentics/cms-models": "6.1.6",
-    "@gentics/cms-rest-client": "6.1.6",
+    "@gentics/aloha-models": "6.1.8",
+    "@gentics/cms-models": "6.1.8",
+    "@gentics/cms-rest-client": "6.1.8",
     "@types/jquery": "^3.5.19"
   },
   "peerDependencies": {

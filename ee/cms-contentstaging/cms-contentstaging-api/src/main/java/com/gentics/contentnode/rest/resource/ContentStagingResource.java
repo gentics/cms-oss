@@ -164,12 +164,13 @@ public interface ContentStagingResource {
 	 * 
 	 * @param name package name
 	 * @param waitMs wait timeout in ms. When set to 0, response will be sent, when the action completes
+	 * @param isTest do not make an actual import, but test instead if the package can be imported.
 	 * @return response
 	 * @throws Exception
 	 */
 	@POST
 	@Path("/package/{name}/import")
-	GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
+	GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs, @QueryParam("test") @DefaultValue("false") boolean isTest) throws Exception;
 
 	/**
 	 * Export the CMS entities, contained in the package with the given name, into the package, i.e. make a package sync.

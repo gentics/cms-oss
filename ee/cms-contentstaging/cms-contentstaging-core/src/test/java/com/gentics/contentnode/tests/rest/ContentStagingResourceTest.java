@@ -714,7 +714,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
 
-		assertResponseOK(new ContentStagingResourceImpl().importIntoCms(packageName, 0));
+		assertResponseOK(new ContentStagingResourceImpl().importIntoCms(packageName, 0, false));
 		response = supply(() -> new ContentStagingResourceImpl().read(packageName));
 //		status = assertRequiredPermissions(group, "tester", "tester", restContext, 
 //				target -> target.path("content").path("package").path(packageName).path("import").request().post(Entity.json(StringUtils.EMPTY), ContentPackageLoadResponse.class), 
@@ -764,7 +764,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
 		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
 
-		supply(() -> new ContentStagingResourceImpl().importIntoCms(packageName, 5000));
+		supply(() -> new ContentStagingResourceImpl().importIntoCms(packageName, 5000, false));
 
 		page31 = supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view));
 		page32 = supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view));
@@ -994,7 +994,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		response = supply(() -> {
 			return new ContentStagingResourceImpl().read(packageName);
 		});
-		assertResponseOK(new ContentStagingResourceImpl().importIntoCms(packageName, 0));
+		assertResponseOK(new ContentStagingResourceImpl().importIntoCms(packageName, 0, false));
 		response = supply(() -> new ContentStagingResourceImpl().read(packageName));
 		while (response.getImport() != null && response.getImport().isRunning()) {
 			response = supply(() -> new ContentStagingResourceImpl().read(packageName));

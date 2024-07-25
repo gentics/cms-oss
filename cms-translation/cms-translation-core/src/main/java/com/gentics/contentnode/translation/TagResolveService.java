@@ -2,6 +2,7 @@ package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.object.Node;
@@ -56,11 +57,6 @@ public class TagResolveService {
 			for (var textProperty : textProperties) {
 				var resolvableText = textProperty.getStringValue();
 
-				// todo: check why markup is broken before
-				if (!VALIDATOR.test(resolvableText)) {
-					logger.error(new CNI18nString("feature.translation.error.markup_invalid").toString());
-				}
-
 				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
 						resolvableText, linkKeyword);
 				final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
@@ -72,6 +68,13 @@ public class TagResolveService {
 
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
 						resolvedAndTranslatedText);
+
+				var cleanHtml = unresolvedAndTranslatedText.replaceAll("(<node [a-z]+[0-9]*>)", "");
+				if (!VALIDATOR.test(cleanHtml)) {
+					throw new NodeException(
+							new CNI18nString("feature.translation.error.markup_invalid").toString());
+				}
+
 				textProperty.setStringValue(unresolvedAndTranslatedText);
 				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
 			}

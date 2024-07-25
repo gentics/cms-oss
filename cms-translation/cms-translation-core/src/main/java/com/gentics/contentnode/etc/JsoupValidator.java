@@ -20,7 +20,7 @@ public class JsoupValidator implements Validator {
 	 */
 	public static final Predicate<String> VALIDATOR = (String html) -> {
 		Validator validator = new JsoupValidator();
-		return validator.isValid(html);
+		return validator.validateAndCollectErrors(html).isEmpty();
 	};
 
 	/**

@@ -122,7 +122,8 @@ public class TranslationResourceImpl implements TranslationResource {
 				try {
 					var contentTags = this.getContentTags(pageToTranslate);
 					final var tagResolveService = new TagResolveService();
-					tagResolveService.resolveAndTranslateContentTags(contentTags, getTranslationService(), sourceLanguageCode,
+
+					tagResolveService.resolveAndTranslateContentTags(loadedPage.getChannel(), contentTags, getTranslationService(), sourceLanguageCode,
 							targetLanguageCode);
 
 					final var sourceName = pageToTranslate.getName();

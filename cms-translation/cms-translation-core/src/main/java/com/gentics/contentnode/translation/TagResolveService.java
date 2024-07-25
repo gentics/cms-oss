@@ -56,6 +56,11 @@ public class TagResolveService {
 
 			for (var textProperty : textProperties) {
 				var resolvableText = textProperty.getStringValue();
+				var isMarkupCorrupt = false;
+				if (!VALIDATOR.test(resolvableText)) {
+					 isMarkupCorrupt = true;
+					logger.warn(new CNI18nString("feature.translation.error.markup_invalid").toString());
+				}
 
 				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
 						resolvableText, linkKeyword);
@@ -70,7 +75,7 @@ public class TagResolveService {
 						resolvedAndTranslatedText);
 
 				var cleanHtml = unresolvedAndTranslatedText.replaceAll("(<node [a-z]+[0-9]*>)", "");
-				if (!VALIDATOR.test(cleanHtml)) {
+				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
 					throw new NodeException(
 							new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}

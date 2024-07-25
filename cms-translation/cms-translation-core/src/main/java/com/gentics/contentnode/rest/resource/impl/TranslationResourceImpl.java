@@ -93,17 +93,14 @@ public class TranslationResourceImpl implements TranslationResource {
 			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
 			final @QueryParam("channelId") @DefaultValue("0") Integer channelId,
-			@QueryParam("wait") @DefaultValue("1000") long waitMs
+			@QueryParam("wait") @DefaultValue("2000") long waitMs
 	) throws NodeException {
 		if (StringUtils.isEmpty(targetLanguageCode)) {
 			throw new MissingFieldException("language");
 		}
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			CNI18nString description = new CNI18nString("job_sent_to_background");
-			description.addParameter(new CNI18nString("feature.automatic_translation").toString());
-
-			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
+			return Operator.executeLocked(new CNI18nString("feature.automatic_translation").toString(), waitMs, null, () -> {
 				final var languageVariantService = new LanguageVariantService();
 				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
 				final var sourceLanguage = loadedPage.getLanguage();

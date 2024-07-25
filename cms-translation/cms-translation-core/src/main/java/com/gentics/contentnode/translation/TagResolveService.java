@@ -2,8 +2,9 @@ package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
-import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.api.translation.TranslationService;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.lib.i18n.CNI18nString;
@@ -23,12 +24,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class TagResolveService {
 
+	public static final NodeLogger logger = NodeLogger.getNodeLogger(TagResolveService.class);
 	static final Pattern NODE_TAGS_PATTERN = Pattern.compile("(<node [a-z]+\\d*>)",
 			Pattern.CASE_INSENSITIVE);
 	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
-
-	public final static NodeLogger logger = NodeLogger.getNodeLogger(TagResolveService.class);
-
 
 	/**
 	 * This function resolves and translates content tags.
@@ -40,13 +39,15 @@ public class TagResolveService {
 	 * @throws Exception If an error occurs during the process.
 	 */
 	public void resolveAndTranslateContentTags(
+			Node node,
 			List<Tag> contentTags,
 			TranslationService translationService,
 			String sourceLanguageCode,
 			String targetLanguageCode
 	) throws Exception {
-		var tagsToResolve = contentTags.stream()
-				.filter(tag -> !tag.getName().contains("gtxalohapagelink"))
+		final var linkKeyword = AlohaRenderer.getMagicLinkConstructKeyword(node);
+		final var tagsToResolve = contentTags.stream()
+				.filter(tag -> !tag.getName().contains(linkKeyword))
 				.toList();
 
 		for (var contentTagToResolve : tagsToResolve) {
@@ -54,19 +55,20 @@ public class TagResolveService {
 
 			for (var textProperty : textProperties) {
 				var resolvableText = textProperty.getStringValue();
+
+				// todo: check why markup is broken before
+				if (!VALIDATOR.test(resolvableText)) {
+					logger.error(new CNI18nString("feature.translation.error.markup_invalid").toString());
+				}
+
 				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
-						resolvableText);
+						resolvableText, linkKeyword);
 				final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
 
 				final var resolvedAndTranslatedText = translationService.translate(
 						resolvedText,
 						sourceLanguageCode,
 						targetLanguageCode);
-
-				if (!VALIDATOR.test(resolvedAndTranslatedText)) {
-					throw new NodeException(
-							new CNI18nString("feature.translation.error.markup_invalid").toString());
-				}
 
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
 						resolvedAndTranslatedText);
@@ -106,8 +108,7 @@ public class TagResolveService {
 	 * @param resolvedText   The text with resolved tags.
 	 * @return The original text with unresolved tags.
 	 */
-	private String unresolveTags(Map<String, Tag> resolvedTagMap, String resolvedText)
-			throws NodeException {
+	private String unresolveTags(Map<String, Tag> resolvedTagMap, String resolvedText) {
 		var unresolvedText = resolvedText;
 
 		final Matcher matcher = RESOLVED_TAGS_PATTERN.matcher(unresolvedText);
@@ -120,8 +121,7 @@ public class TagResolveService {
 				resolvedTagMap.entrySet());
 
 		if (translatedTagList.size() != stringsToUnresolve.size()) {
-			throw new NodeException(
-					"Number of resolved tags in text and map of untranslated tags must be equals");
+			return unresolvedText;
 		}
 
 		Collections.reverse(stringsToUnresolve);
@@ -142,13 +142,11 @@ public class TagResolveService {
 	 *
 	 * @param resolvedAndTranslatedText The text that has been resolved and translated.
 	 * @param untranslatedTagMap        The map of tags that have not been translated.
-	 * @throws NodeException If the number of resolved tags in the translated text and the map of
-	 *                       untranslated tags are not equal.
 	 */
 	private void updateContentTagsListToTranslatedValues(
 			String resolvedAndTranslatedText,
 			Map<String, Tag> untranslatedTagMap
-	) throws NodeException {
+	) {
 		final Matcher matcher = RESOLVED_TAGS_PATTERN.matcher(resolvedAndTranslatedText);
 
 		List<String> resolvedTags = new ArrayList<>();
@@ -157,7 +155,7 @@ public class TagResolveService {
 		}
 
 		if (resolvedTags.size() != untranslatedTagMap.size()) {
-			logger.warn(
+			logger.error(
 					"Number of resolved tags in translated text and map of untranslated tags must be equals.");
 			return;
 		}
@@ -188,7 +186,8 @@ public class TagResolveService {
 	 */
 	private Map<String, Tag> getOccurringTagsFromResolvableText(
 			List<Tag> contentTags,
-			String resolvableText
+			String resolvableText,
+			String linkKeyword
 	) {
 		Map<String, Tag> tagMap = new LinkedHashMap<>();
 		final var matcher = NODE_TAGS_PATTERN.matcher(resolvableText);
@@ -201,9 +200,9 @@ public class TagResolveService {
 							.replace(">", "")
 							.trim()
 							.equals(tag.getName()))
-					.findAny()
-					.orElseThrow(() -> new RuntimeException("Corresponding tag  not found"));
-			tagMap.put(matchedNodeTag, correspondingTag);
+					.filter(tag -> tag.getName().contains(linkKeyword))
+					.findAny();
+			correspondingTag.ifPresent(tag -> tagMap.put(matchedNodeTag, tag));
 		}
 
 		return tagMap;
@@ -227,11 +226,19 @@ public class TagResolveService {
 		return textProperties;
 	}
 
-
+	/**
+	 * This method is used to retrieve a resolvable property from a given content tag.
+	 *
+	 * @param contentTag The Tag object from which the property is to be retrieved.
+	 * @return An Optional<Property> object. If a property with key "text" and non-blank string value
+	 * exists, it is wrapped into an Optional and returned. Otherwise, an empty Optional is returned.
+	 */
 	private Optional<Property> getResolvablePartProperty(Tag contentTag) {
 		for (var contentTagProperty : contentTag.getProperties().entrySet()) {
-			if (contentTagProperty != null && !StringUtils.isBlank(
-					contentTagProperty.getValue().getStringValue())) {  // todo: improve condition (e.g.: blacklist/whitelist for partIds)
+			if (contentTagProperty != null
+					&& "text".equals(contentTagProperty.getKey())
+					&& !StringUtils.isBlank(contentTagProperty.getValue().getStringValue())
+			) {
 				var propertyToTranslate = contentTagProperty.getValue();
 				return Optional.of(propertyToTranslate);
 			}

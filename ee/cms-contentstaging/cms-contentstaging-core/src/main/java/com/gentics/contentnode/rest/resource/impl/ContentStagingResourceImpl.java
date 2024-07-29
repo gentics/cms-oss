@@ -62,6 +62,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -124,6 +125,7 @@ import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredPerm;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -913,6 +915,36 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			trx.success();
 		}
 		return response;
+	}
+
+	@GET
+	@javax.ws.rs.Path("/package/{name}/folder/{params: .*}")
+	public ContentPackageFolderResponse folder(@PathParam("name") String name, @PathParam("params") List<PathSegment> segments) throws NodeException {
+		Path path = checkFeatureGetPath();
+		
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ContentPackageFolderResponse response;
+			JobStatus importStatus = imports.entrySet().stream()
+					.filter(e -> e.getKey().equals(name))
+					.map(e -> e.getValue().getJobStatus())
+					.findAny().orElse(null);
+			if (importStatus == null || !importStatus.isRunning()) {
+				StoredContentPackage storedPackage = executeLocked(sanitizeCheck(name, true), () -> {
+					Path pkgPath = path.resolve(name);
+					StoredContentPackage contentPackage = loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class, stored -> stored, p -> name);
+					return contentPackage;
+				});
+				
+				response = ContentPackageFolderResponse.fromContent(null, null);
+			} else {
+				response = new ContentPackageFolderResponse();
+			}
+			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
+			response.setImport(importStatus);
+			return response;
+		} catch (IllegalStateException e) {
+			throw new NodeException("Error reading Content Package '" + name + "'", e);
+		}
 	}
 
 	/**

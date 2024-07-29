@@ -23,6 +23,10 @@ public class StagedPage extends StagedLocalizableObject {
 
 	@XmlTransient
 	@JsonIgnore
+	public static final String TYPE_NAME = "page";
+
+	@XmlTransient
+	@JsonIgnore
     public void clone(StagedPage origin) {
 		super.clone(origin);
 		this.niceUrl = origin.niceUrl;
@@ -333,7 +337,7 @@ public class StagedPage extends StagedLocalizableObject {
 	@XmlTransient
 	@JsonIgnore
     public String getTypeName() {
-		return "page";
+		return TYPE_NAME;
 	}
 
 	@XmlTransient

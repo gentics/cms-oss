@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedForm extends StagingBase {
 
+	public static final String TYPE_NAME = "form";
+
 	private static final long serialVersionUID = 9012361259459603486L;
 
 	/**
@@ -153,7 +155,7 @@ public class StagedForm extends StagingBase {
 	@XmlTransient
 	@JsonIgnore
     public String getTypeName() {
-		return "form";
+		return TYPE_NAME;
 	}
 
 	@XmlTransient

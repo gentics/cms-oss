@@ -1,5 +1,7 @@
 package com.gentics.contentnode.rest.resource;
 
+import java.util.List;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -11,12 +13,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPart;
 
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -195,4 +198,16 @@ public interface ContentStagingResource {
 	@POST
 	@Path("/package/{name}/status")
 	StagingStatusResponse status(String name, IdTypeMapRequest request) throws Exception;
+
+	/**
+	 * List the contents of a given folder of a package of the given name.
+	 * 
+	 * @param name package name
+	 * @param segments folder path
+	 * @return download response
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/package/{name}/folder/{params: .*}")
+	ContentPackageFolderResponse folder(@PathParam("name") String name, @PathParam("params") List<PathSegment> segments) throws Exception;
 }

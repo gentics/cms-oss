@@ -16,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedImage extends StagedFile {
 
+	public static final String TYPE_NAME = "image";
+
 	private static final long serialVersionUID = -1836617632473566482L;
 
 	/**
@@ -183,6 +185,6 @@ public class StagedImage extends StagedFile {
 	@XmlTransient
 	@JsonIgnore
 	public String getTypeName() {
-		return "image";
+		return TYPE_NAME;
 	}
 }

@@ -13,14 +13,11 @@ import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ContentPackageLoadResponse extends GenericResponse {
+public class ContentPackageLoadResponse extends GenericJobStatusResponse {
 
 	private static final long serialVersionUID = 2511529973008918155L;
 
 	private StagedContentPackage contentPackage;
-
-	@XmlAttribute(name = "import")
-	private JobStatus import_;
 
 	/**
 	 * JAXB constructor
@@ -55,23 +52,5 @@ public class ContentPackageLoadResponse extends GenericResponse {
 	 */
 	public void setContentPackage(StagedContentPackage contentPackage) {
 		this.contentPackage = contentPackage;
-	}
-
-	/**
-	 * Status of the latest import
-	 * 
-	 * @return
-	 */
-	public JobStatus getImport() {
-		return import_;
-	}
-
-	/**
-	 * Set import job status.
-	 * 
-	 * @param import_
-	 */
-	public void setImport(JobStatus import_) {
-		this.import_ = import_;
 	}
 }

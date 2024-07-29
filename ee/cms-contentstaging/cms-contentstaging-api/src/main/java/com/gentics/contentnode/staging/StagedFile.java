@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedFile extends StagedLocalizableObject {
 
+	public static final String TYPE_NAME = "file";
+
 	private static final long serialVersionUID = -6697807378224359696L;
 
 	/**
@@ -230,7 +232,7 @@ public class StagedFile extends StagedLocalizableObject {
 	@XmlTransient
 	@JsonIgnore
 	public String getTypeName() {
-		return "file";
+		return TYPE_NAME;
 	}
 
 	@XmlTransient

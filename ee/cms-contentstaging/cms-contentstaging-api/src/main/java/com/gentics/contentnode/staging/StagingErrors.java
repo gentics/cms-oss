@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("errors")
 public class StagingErrors implements Serializable {
 
 	private static final long serialVersionUID = 6207215423058843598L;

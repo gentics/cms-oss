@@ -318,8 +318,10 @@ public class MiscUtils {
 	 */
 	public static <T extends NodeObject> T load(Class<T> clazz, String id, boolean expectExistence, ObjectPermission...perms) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-
 		T obj = loadWithoutPermissionCheck(clazz, id, expectExistence);
+		if (obj == null) {
+			return null;
+		}
 
 		if (!t.getPermHandler().canView(obj)) {
 			throw new InsufficientPrivilegesException(I18NHelper.get(String.format("%s.nopermission", t.getTable(clazz)), id), obj, PermType.read);

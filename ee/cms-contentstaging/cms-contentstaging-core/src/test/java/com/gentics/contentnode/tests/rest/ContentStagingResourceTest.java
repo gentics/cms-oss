@@ -676,6 +676,66 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 	}
 
 	@Test
+	public void testProbeImport() throws Exception {
+		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		Integer node1ExtraConstructId = supply(() -> createConstruct(node1, LongHTMLPartType.class, "node1", "text"));
+		Page page3 = supply(() -> create(Page.class, p -> {
+			p.setFolderId(node1.getFolder().getId());
+			p.setTemplateId(pageTemplate.getId());
+			p.setName("Page 3");
+			p.getContent().addContentTag(node1ExtraConstructId);
+		}));
+		String packageName = response.getContentPackage().getName();
+		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		String folder1Id = supply(() -> folder1.getGlobalId().toString());
+		String file1Id = supply(() -> file1.getGlobalId().toString());
+		String img1Id = supply(() -> image1.getGlobalId().toString());
+		String form1Id = supply(() -> form1.getGlobalId().toString());
+		String node1Id = supply(() -> node1.getGlobalId().toString());
+		String page3Id = supply(() -> page3.getGlobalId().toString());
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "folder", folder1Id, true);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "node", node1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "file", file1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "image", img1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "form", form1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "page", page3Id, false);
+		});
+		assertResponseOK(response);
+		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFolders()).isEqualTo(2);
+		assertThat(response.getContentPackage().getPages()).isEqualTo(2);
+		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
+		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+
+		// Drop the page
+		supply(() -> new PageResourceImpl().delete(page3Id, node1.getId(), null));
+		// Drop its construct --> inconsistency!
+		operate(t -> t.getObject(Construct.class, node1ExtraConstructId).delete());
+
+		GenericResponse cplResponse = supply(() -> {
+			return new ContentStagingResourceImpl().importIntoCms(packageName, 0, true);
+		});
+		// The probe import should never fail because of the bad imported data
+		assertResponseOK(cplResponse);
+		// ... TODO add errors check
+	}
+
+	@Test
 	public void testImport() throws Exception {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
@@ -1045,7 +1105,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		{
 			// This throws on duplicated pages, which should not happen on page move
 			response.setContentPackage(new StagedContentPackage());
-			Path rootPath = dbFilesDir.toPath().resolve(packageName);
+			Path rootPath = cpFilesDir.toPath().resolve(packageName);
 			ContentStagingResourceImpl.fillContentPackageStatistic(rootPath, response.getContentPackage(), true);
 		}
 		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);

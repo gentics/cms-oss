@@ -2397,8 +2397,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					} else {
 						if (e.getCause() != null && e.getCause() instanceof NodeException) {
 							throw (NodeException) e.getCause();
+						} else if (e instanceof NodeException) {
+							throw (NodeException) (e);
+						} else if (e.getCause() != null && e.getCause() instanceof NodeException) {
+							throw (NodeException) e.getCause();
 						} else {
-							throw new IllegalStateException(e);
+							throw new NodeException(e);
 						}
 					}
 				}
@@ -2408,13 +2412,17 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						Path orphaned = haveOrphans.remove(i);
 						try {
 							importFromStageable(orphaned, packagePath, progress, tries > 0 ? Optional.of(haveOrphans) : Optional.empty(), mismatches, null);
-						} catch (IOException e) {
+						} catch (Throwable e) {
 							errors.add(StagingError.fromThrowable(idFromFilesystem(orphaned), orphaned, e));
 							if (isTest) {
 								logger.error("Error at test import of an orphaned path: " + orphaned, e);
+							} else if (e instanceof NodeException) {
+								throw (NodeException) (e);
+							} else if (e.getCause() != null && e.getCause() instanceof NodeException) {
+								throw (NodeException) e.getCause();
 							} else {
 								throw new NodeException(e);
-							}							
+							}
 						}
 					}
 					tries -= 1;

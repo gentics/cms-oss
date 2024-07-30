@@ -32,6 +32,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
     mkdir /cms/publish   && chown 1000:0 /cms/publish  -R && chmod 770 /cms/publish && \
     mkdir /cms/packages   && chown 1000:0 /cms/packages  -R && chmod 770 /cms/packages && \
     mkdir /cms/libs   && chown 1000:0 /cms/libs  -R && chmod 770 /cms/libs && \
+    mkdir /cms/classes   && chown 1000:0 /cms/classes  -R && chmod 770 /cms/classes && \
     mkdir /cms/content-packages   && chown 1000:0 /cms/content-packages  -R && chmod 770 /cms/content-packages && \
     mkdir /cms/scheduler-commands   && chown 1000:0 /cms/scheduler-commands  -R && chmod 770 /cms/scheduler-commands && \
     apk add --no-cache bash rsync curl iputils busybox-extras tar nano mariadb-client
@@ -52,5 +53,6 @@ VOLUME /cms/packages
 VOLUME /cms/content-packages
 VOLUME /cms/scheduler-commands
 VOLUME /cms/libs
+VOLUME /cms/classes
 
 ENTRYPOINT ["/cms/entrypoint.sh"]

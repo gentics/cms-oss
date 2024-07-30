@@ -53,14 +53,14 @@ import com.gentics.contentnode.rest.util.AbstractNodeObjectFilter;
 import com.gentics.contentnode.rest.util.NodeObjectFilter;
 import com.gentics.contentnode.rest.util.OrFilter;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
-import com.gentics.mesh.core.rest.branch.info.BranchInfoMicroschemaListModel;
+import com.gentics.mesh.core.rest.branch.info.BranchInfoMicroschemaList;
 import com.gentics.mesh.core.rest.branch.info.BranchMicroschemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaCreateRequest;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
-import com.gentics.mesh.core.rest.node.field.FieldModel;
+import com.gentics.mesh.core.rest.node.field.Field;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
@@ -435,7 +435,7 @@ public class MeshMicronodePublisher {
 			if (list.isEmpty()) {
 				return Completable.complete();
 			} else {
-				BranchInfoMicroschemaListModel infoList = new BranchInfoMicroschemaListModel();
+				BranchInfoMicroschemaList infoList = new BranchInfoMicroschemaList();
 				infoList.getMicroschemas().addAll(list);
 				return publisher.client.assignBranchMicroschemaVersions(projectName, branchUuid, infoList).toCompletable();
 			}
@@ -673,8 +673,8 @@ public class MeshMicronodePublisher {
 	 * @return observable emitting pairs of fieldname and field
 	 * @throws NodeException
 	 */
-	protected Observable<Pair<String, FieldModel>> toField(int nodeId, Value value, Operator postponeHandler) throws NodeException {
-		List<Pair<String, FieldModel>> fieldList = new ArrayList<>();
+	protected Observable<Pair<String, Field>> toField(int nodeId, Value value, Operator postponeHandler) throws NodeException {
+		List<Pair<String, Field>> fieldList = new ArrayList<>();
 
 		switch (value.getPart().getPartTypeId()) {
 		case 1: // Text
@@ -913,7 +913,7 @@ public class MeshMicronodePublisher {
 		Set<String> knownMicroschemaUuids = microschemaMap.values().stream().map(MicroschemaResponse::getUuid)
 				.collect(Collectors.toSet());
 
-		BranchInfoMicroschemaListModel schemaStatusList = publisher.client.getBranchMicroschemaVersions(project.name, branch.getUuid()).blockingGet();
+		BranchInfoMicroschemaList schemaStatusList = publisher.client.getBranchMicroschemaVersions(project.name, branch.getUuid()).blockingGet();
 		for (BranchMicroschemaInfo info : schemaStatusList.getMicroschemas()) {
 			// ignore unknown microschemas
 			if (!knownMicroschemaUuids.contains(info.getUuid())) {

@@ -23,7 +23,7 @@ import com.gentics.contentnode.rest.model.Overview.OrderDirection;
 import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.mesh.core.rest.common.FieldTypes;
-import com.gentics.mesh.core.rest.node.field.FieldModel;
+import com.gentics.mesh.core.rest.node.field.Field;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
@@ -109,7 +109,7 @@ public class MeshOverviewPublisher {
 	 * @param postponeHandler postpone handler
 	 * @throws NodeException
 	 */
-	public void addFields(int nodeId, List<Pair<String, FieldModel>> fieldList, Overview overview, Operator postponeHandler) throws NodeException {
+	public void addFields(int nodeId, List<Pair<String, Field>> fieldList, Overview overview, Operator postponeHandler) throws NodeException {
 		com.gentics.contentnode.rest.model.Overview restOverview = ModelBuilder.getOverview(overview);
 		fieldList.add(ImmutablePair.of(name(MicronodeField.LISTTYPE), new StringFieldImpl().setString(restOverview.getListType().toString())));
 		fieldList.add(ImmutablePair.of(name(MicronodeField.SELECTTYPE), new StringFieldImpl().setString(restOverview.getSelectType().toString())));

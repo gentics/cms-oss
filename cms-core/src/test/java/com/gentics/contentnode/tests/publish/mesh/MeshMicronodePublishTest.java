@@ -96,7 +96,7 @@ import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
-import com.gentics.mesh.core.rest.node.field.list.MicronodeFieldListModel;
+import com.gentics.mesh.core.rest.node.field.list.MicronodeFieldList;
 import com.gentics.mesh.core.rest.schema.FieldSchema;
 import com.gentics.mesh.core.rest.schema.impl.BooleanFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.ListFieldSchemaImpl;
@@ -479,7 +479,7 @@ public class MeshMicronodePublishTest {
 		}), Page::publish));
 
 		assertObject("Published page", mesh.client(), projectName, page, true, node -> {
-			MicronodeFieldListModel field = node.getFields().getMicronodeFieldList("tags");
+			MicronodeFieldList field = node.getFields().getMicronodeFieldList("tags");
 
 			if (!entry) {
 				assertThat(field).as("Field").isNull();

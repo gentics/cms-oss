@@ -68,8 +68,8 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
-import com.gentics.mesh.core.rest.node.field.BinaryFieldModel;
-import com.gentics.mesh.core.rest.node.field.NodeFieldModel;
+import com.gentics.mesh.core.rest.node.field.BinaryField;
+import com.gentics.mesh.core.rest.node.field.NodeField;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
 import com.gentics.mesh.core.rest.project.ProjectResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaCreateRequest;
@@ -558,7 +558,7 @@ public class MeshPublishTest {
 			assertPages(mesh.client(), MESH_PROJECT_NAME, MeshPublisher.getMeshUuid(folder), MeshPublisher.getMeshLanguage(page), page);
 
 			assertObject("Check folder startpage", mesh.client(), MESH_PROJECT_NAME, folder, true, meshFolder -> {
-				NodeFieldModel startPageField = meshFolder.getFields().getNodeField("startpage");
+				NodeField startPageField = meshFolder.getFields().getNodeField("startpage");
 				assertThat(startPageField).as("Startpage").isNotNull();
 				assertThat(startPageField.getUuid()).as("Startpage").isEqualTo(MeshPublisher.getMeshUuid(page));
 			});
@@ -971,7 +971,7 @@ public class MeshPublishTest {
 				.as("Created node version")
 				.endsWith(".0");
 
-			BinaryFieldModel binaryField = node.getFields().getBinaryField("binarycontent");
+			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.7f).hasFieldOrPropertyWithValue("y", 0.3f);
 		});
@@ -994,7 +994,7 @@ public class MeshPublishTest {
 				.as("Updated node version")
 				.endsWith(".0");
 
-			BinaryFieldModel binaryField = node.getFields().getBinaryField("binarycontent");
+			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.9f).hasFieldOrPropertyWithValue("y", 0.1f);
 		});

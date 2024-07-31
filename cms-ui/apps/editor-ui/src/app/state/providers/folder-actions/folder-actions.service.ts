@@ -82,6 +82,8 @@ import {
     PageListResponse,
     PagePermissions,
     PageRequestOptions,
+    PageResponse,
+    PageTranslateOptions,
     PageVariantCreateRequest,
     PageVersion,
     PagedTemplateListResponse,
@@ -102,6 +104,7 @@ import {
     TemplateRequestOptions,
     TemplateResponse,
     TimeManagement,
+    TranslationRequestOptions,
     TypedItemListResponse,
     folderItemTypePlurals,
 } from '@gentics/cms-models';
@@ -219,6 +222,10 @@ interface UpdateableItemObjectProperty <T extends FolderItemType, R extends Fold
     updatedObjProps: Partial<Tags>;
     requestOptions?: Partial<R>;
 }
+
+
+export type TranslateRequestFunction = (pageId: number, options?: PageTranslateOptions | TranslationRequestOptions) => Promise<PageResponse>;
+
 
 @Injectable()
 export class FolderActionsService {
@@ -1619,14 +1626,32 @@ export class FolderActionsService {
     /**
      * Create a new language variant of the given page.
      */
-    async createPageTranslation(nodeId: number, pageId: number, languageCode: string): Promise<Page<Raw> | void> {
+    async createPageTranslation(pageId: number, params: TranslationRequestOptions): Promise<PageResponse> {
+        return this.client.page.translate(pageId, { channelId: params.channelId, language: params.language }).toPromise();
+    }
+
+    /**
+     * Create a new language variant of the given page by executing the provided function.
+     * The function issues the actual api request.
+     */
+    async executePageTranslationFunction(
+        nodeId: number,
+        pageId: number,
+        languageCode: string,
+        translationRequestFunction: TranslateRequestFunction,
+    ): Promise<Page<Raw> | void> {
         await this.appState.dispatch(new StartListCreatingAction('page')).toPromise();
 
         try {
-            const res = await this.client.page.translate(pageId, { channelId: nodeId, language: languageCode }).toPromise();
+            const res = await translationRequestFunction(pageId, {language: languageCode, channelId: nodeId})
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
-            const newPage = res.page;
+            const newPage = res?.page ?? res;
+            // result is not available yet
+            if (!newPage) {
+                return;
+            }
+
             const oldPageId = pageId;
             const entityState = this.appState.now.entities;
             const normalized = normalize(newPage, pageSchema);
@@ -1644,7 +1669,7 @@ export class FolderActionsService {
                 },
             })).toPromise();
 
-            return res.page;
+            return res.page ?? res as any as Page;
         } catch (error) {
             await this.appState.dispatch(new ListCreatingErrorAction('page', error.message)).toPromise();
             this.errorHandler.catch(error, { notification: true });

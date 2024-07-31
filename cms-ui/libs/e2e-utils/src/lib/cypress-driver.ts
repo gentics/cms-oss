@@ -175,6 +175,7 @@ export class CypressDriver implements GCMSClientDriver {
     ): GCMSRestClientRequest<Blob> {
         return this.prepareRequest(request, () => ({
             body: body,
+            encoding: 'binary',
         }), true);
     }
 }

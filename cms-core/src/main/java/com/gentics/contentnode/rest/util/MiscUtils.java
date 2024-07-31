@@ -274,6 +274,34 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Load an object with internal or external id and don't check the permission
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param clazz object class
+	 * @param id object id (internal or external)
+	 * @param expectExistence flag to influence behaviour, when the object is not found: true will throw an EntityNotFoundException, false will return null
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	public static <T extends NodeObject> T loadWithoutPermissionCheck(Class<T> clazz, String id, boolean expectExistence) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		T obj = t.getObject(clazz, id);
+		if (obj == null) {
+			if (expectExistence) {
+				throw new EntityNotFoundException(
+						I18NHelper.get(String.format("%s.notfound", t.getTable(clazz)), id));
+			} else {
+				return null;
+			}
+		}
+		return obj;
+	}
+
+	/**
 	 * Load an object with internal or external id and check the view permission (and other optional permissions)
 	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
 	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
@@ -290,14 +318,11 @@ public class MiscUtils {
 	 */
 	public static <T extends NodeObject> T load(Class<T> clazz, String id, boolean expectExistence, ObjectPermission...perms) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		T obj = t.getObject(clazz, id);
+		T obj = loadWithoutPermissionCheck(clazz, id, expectExistence);
 		if (obj == null) {
-			if (expectExistence) {
-				throw new EntityNotFoundException(I18NHelper.get(String.format("%s.notfound", t.getTable(clazz)), id));
-			} else {
-				return null;
-			}
+			return null;
 		}
+
 		if (!t.getPermHandler().canView(obj)) {
 			throw new InsufficientPrivilegesException(I18NHelper.get(String.format("%s.nopermission", t.getTable(clazz)), id), obj, PermType.read);
 		}

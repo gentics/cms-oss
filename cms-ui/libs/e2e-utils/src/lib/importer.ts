@@ -180,6 +180,7 @@ async function importPage(
         folderId,
         nodeId,
         templateId,
+        tags,
         ...req
     } = data;
 
@@ -200,6 +201,13 @@ async function importPage(
 
     cy.log(`Importing page ${data[IMPORT_ID]}`, body);
     const created = (await client.page.create(body).send()).page;
+    if (tags) {
+        await client.page.update(created.id, {
+            page: {
+                tags,
+            },
+        }).send();
+    }
     cy.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
 
     return created;

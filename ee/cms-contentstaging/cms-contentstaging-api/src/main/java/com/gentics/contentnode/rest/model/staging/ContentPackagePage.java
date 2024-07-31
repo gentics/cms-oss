@@ -23,4 +23,11 @@ public class ContentPackagePage extends StagedPage implements ContentStagingPack
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedPage origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

@@ -23,4 +23,11 @@ public class ContentPackageImage extends StagedImage implements ContentStagingPa
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedImage origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

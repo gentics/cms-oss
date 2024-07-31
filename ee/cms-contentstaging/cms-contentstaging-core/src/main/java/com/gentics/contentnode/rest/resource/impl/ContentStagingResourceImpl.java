@@ -151,7 +151,14 @@ import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.contentnode.rest.util.StagingModelBuilder;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.staging.StageableObjectType;
+import com.gentics.contentnode.staging.StagedChannel;
+import com.gentics.contentnode.staging.StagedFile;
+import com.gentics.contentnode.staging.StagedFolder;
+import com.gentics.contentnode.staging.StagedForm;
+import com.gentics.contentnode.staging.StagedImage;
+import com.gentics.contentnode.staging.StagedNode;
 import com.gentics.contentnode.staging.StagedObjectVersion;
+import com.gentics.contentnode.staging.StagedPage;
 import com.gentics.contentnode.staging.StagingBase;
 import com.gentics.contentnode.staging.StagingError;
 import com.gentics.contentnode.staging.StagingErrors;
@@ -945,7 +952,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				List<StagingBase> items = new ArrayList<>();
 				List<StagingError> errors = new ArrayList<>();
 				
-				processContentPackageItems(path, cpackage, 
+				processContentPackageItems(path, cpackage, true,
 						page -> {
 							if (CollectionUtils.isEmpty(segments) || page.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredPage storedPage = loadFromFilesystem(page, StoredPage.class, s -> s);
@@ -1641,7 +1648,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 */
 	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
 		processContentPackageItems(
-				path, cp, 
+				path, cp, false,
 				page -> cp.setPages(cp.getPages() + 1), 
 				folder -> cp.setFolders(cp.getFolders() + 1), 
 				file -> cp.setFiles(cp.getFiles() + 1), 
@@ -1674,14 +1681,18 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				});
 	}
 
-	public static void processContentPackageItems(Path path, StagedContentPackage cp,
+	public static void processContentPackageItems(Path path, StagedContentPackage cp, boolean sort,
 				Consumer<Path> doOnPage, Consumer<Path> doOnFolder, Consumer<Path> doOnFile, Consumer<Path> doOnImage,
 				Consumer<Path> doOnForm, Consumer<Path> doOnBinary, Consumer<Path> doOnNode, Consumer<Path> doOnChannel,
 				Consumer<Path> doOnMetadata, Consumer<Path> doOnErrors, Consumer<Path> doOnAlien, TriConsumer<Path, Path, String> doOnDups, Consumer<Throwable> doOnException
 			) throws NodeException {
 		try {
 			Map<String, Path> encounteredIDs = new HashMap<>();
-			Files.walk(path).forEach(i -> {
+			Stream<Path> walker = Files.walk(path);
+			if (sort) {
+				walker = walker.sorted();
+			}
+			walker.forEach(i -> {
 				try {
 					if (encounteredBefore(i, encounteredIDs)) {
 						String objectId = getObjectId(i).get();
@@ -1689,24 +1700,54 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 					if (Files.isRegularFile(i)) {
 						if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", "metadata", i));
+							}
 							doOnMetadata.accept(i);
 						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_ERRORS_FILENAME)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", "errors", i));
+							}
 							doOnErrors.accept(i);
 						} else if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedPage.TYPE_NAME, i));
+							}
 							doOnPage.accept(i);
 						} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedForm.TYPE_NAME, i));
+							}
 							doOnForm.accept(i);
 						} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedFile.TYPE_NAME, i));
+							}
 							doOnFile.accept(i);
 						} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedImage.TYPE_NAME, i));
+							}
 							doOnImage.accept(i);
 						} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedNode.TYPE_NAME, i));
+							}
 							doOnNode.accept(i);
 						} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedFolder.TYPE_NAME, i));
+							}
 							doOnFolder.accept(i);
 						} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", StagedChannel.TYPE_NAME, i));
+							}
 							doOnChannel.accept(i);
 						} else if (i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("Found {} at {}", "binary data", i));
+							}
 							doOnBinary.accept(i);
 						} else {
 							doOnAlien.accept(i);

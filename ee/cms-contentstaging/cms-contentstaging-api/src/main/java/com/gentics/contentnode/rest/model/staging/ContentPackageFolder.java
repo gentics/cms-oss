@@ -23,4 +23,11 @@ public class ContentPackageFolder extends StagedFolder implements ContentStaging
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedFolder origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

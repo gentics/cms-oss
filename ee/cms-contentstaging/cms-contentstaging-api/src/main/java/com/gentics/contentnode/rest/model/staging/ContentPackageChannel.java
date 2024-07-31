@@ -23,4 +23,11 @@ public class ContentPackageChannel extends StagedChannel implements ContentStagi
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedChannel origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

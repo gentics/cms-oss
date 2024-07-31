@@ -23,4 +23,11 @@ public class ContentPackageFile extends StagedFile implements ContentStagingPack
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedFile origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

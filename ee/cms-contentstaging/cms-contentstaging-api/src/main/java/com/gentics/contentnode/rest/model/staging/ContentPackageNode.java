@@ -23,4 +23,11 @@ public class ContentPackageNode extends StagedNode implements ContentStagingPack
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedNode origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

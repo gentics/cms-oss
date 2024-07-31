@@ -26,14 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,6 +79,7 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
+import com.gentics.contentnode.rest.model.staging.StagedError;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
@@ -732,7 +732,12 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		// Drop the page
 		supply(() -> new PageResourceImpl().delete(page3Id, node1.getId(), null));
 		// Drop its construct --> inconsistency!
-		operate(t -> t.getObject(Construct.class, node1ExtraConstructId).delete());
+		String node1ExtraConstructGlobalId = supply(t -> {
+			Construct c = t.getObject(Construct.class, node1ExtraConstructId);
+			String gid = c.getGlobalId().toString();
+			c.delete();
+			return gid;
+		});
 
 		// The probe import should never fail because of the bad imported data
 		assertResponseOK(supply(() -> {
@@ -741,6 +746,11 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		ContentPackageFolderResponse cplResponse = supply(() -> {
 			return new ContentStagingResourceImpl().folder(packageName, UriComponent.decodePath(folder1.getName(), true));
 		});
+		assertResponseOK(cplResponse);
+		assertThat(cplResponse.getPages()).hasSize(2);
+		assertThat(cplResponse.getPages().stream().filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
+			.isNotEmpty()
+			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
 	}
 
 	@Test

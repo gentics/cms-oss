@@ -38,6 +38,18 @@ public class StagedChannel extends StagedNode {
 		this.masterNodeId = masterNodeId;
 	}
 
+	/**
+	 * Clone the origin into this entity.
+	 * 
+	 * @param origin
+	 */
+	@XmlTransient
+	@JsonIgnore
+    public void clone(StagedChannel origin) {
+		super.clone(origin);
+		this.masterNodeId = origin.masterNodeId;
+	}
+
 	@Override
 	@XmlTransient
 	@JsonIgnore

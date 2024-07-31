@@ -23,4 +23,11 @@ public class ContentPackageForm extends StagedForm implements ContentStagingPack
 	public List<StagedError> getErrors() {
 		return errors;
 	}
+
+	@Override
+	public void clone(StagedForm origin) {
+		super.clone(origin);
+		this.setId(origin.getId());
+		this.setName(origin.getName());
+	}
 }

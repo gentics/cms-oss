@@ -26,6 +26,8 @@ export type BinaryMap = Record<string, Buffer>;
 
 export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
 export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
+export const ENV_CMS_USERNAME = 'CMS_USERNAME';
+export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 
 export const ENV_MESH_CR_ENABLED = 'FEATURE_MESH_CR';
 export const ENV_KEYCLOAK_ENABLED = 'FEATURE_KEYCLOAK';

@@ -42,6 +42,9 @@ public class StagedNode extends StagingBase {
 	private boolean publishContentMapFolders;
 	private List<String> languages;
 
+	private String pageUrls;
+	private String fileUrls;
+
 	private boolean omitPageExtension;
 	private PageLanguageCode pageLanguageCode;
 
@@ -430,6 +433,22 @@ public class StagedNode extends StagingBase {
 		this.packages = packages;
 	}
 
+	public String getPageUrls() {
+		return pageUrls;
+	}
+
+	public void setPageUrls(String pageUrls) {
+		this.pageUrls = pageUrls;
+	}
+
+	public String getFileUrls() {
+		return fileUrls;
+	}
+
+	public void setFileUrls(String fileUrls) {
+		this.fileUrls = fileUrls;
+	}
+
 	public String getMeshPreviewUrlProperty() {
 		return meshPreviewUrlProperty;
 	}
@@ -472,6 +491,8 @@ public class StagedNode extends StagingBase {
 		this.hostname = origin.hostname;
 		this.hostnameProperty = origin.hostnameProperty;
 		this.meshPreviewUrlProperty = origin.meshPreviewUrlProperty;
+		this.fileUrls = origin.fileUrls;
+		this.pageUrls = origin.pageUrls;
 		this.meshProjectName = origin.meshProjectName;
 	}
 

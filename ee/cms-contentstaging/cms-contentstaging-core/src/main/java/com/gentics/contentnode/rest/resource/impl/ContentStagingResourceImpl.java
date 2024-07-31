@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -71,6 +72,7 @@ import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.comparators.ComparatorChain;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.FileUtils;
@@ -92,6 +94,7 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.etc.TriConsumer;
 import com.gentics.contentnode.exception.DuplicateValueException;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -149,6 +152,7 @@ import com.gentics.contentnode.rest.util.StagingModelBuilder;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.staging.StageableObjectType;
 import com.gentics.contentnode.staging.StagedObjectVersion;
+import com.gentics.contentnode.staging.StagingBase;
 import com.gentics.contentnode.staging.StagingError;
 import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.staging.StoredChannel;
@@ -929,13 +933,85 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					.map(e -> e.getValue().getJobStatus())
 					.findAny().orElse(null);
 			if (importStatus == null || !importStatus.isRunning()) {
-				StoredContentPackage storedPackage = executeLocked(sanitizeCheck(name, true), () -> {
-					Path pkgPath = path.resolve(name);
-					StoredContentPackage contentPackage = loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class, stored -> stored, p -> name);
+				// Check that the package is well formed
+				StagedContentPackage cpackage = executeLocked(sanitizeCheck(name, true), () -> {
+					Path packagePath = path.resolve(name);
+					StagedContentPackage contentPackage = loadFromFilesystem(
+							packagePath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class,
+							stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
 					return contentPackage;
 				});
+				ArrayDeque<String> walker = new ArrayDeque<>();
+				List<StagingBase> items = new ArrayList<>();
+				List<StagingError> errors = new ArrayList<>();
 				
-				response = ContentPackageFolderResponse.fromContent(null, null);
+				processContentPackageItems(path, cpackage, 
+						page -> {
+							if (CollectionUtils.isEmpty(segments) || page.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredPage storedPage = loadFromFilesystem(page, StoredPage.class, s -> s);
+								items.add(storedPage);
+							}
+						}, 
+						folder -> {
+							StoredFolder storedFolder = loadFromFilesystem(folder, StoredFolder.class, s -> s);
+							String folderName = storedFolder.getName();
+							if (CollectionUtils.isEmpty(segments) || folder.getParent().getFileName().toString().equals(walker.peek())) {
+								items.add(storedFolder);
+							} else if (segments.get(walker.size()).getPath().equals(folderName)) {
+								// Right folder, use it
+								walker.push(storedFolder.getId());
+							}
+						}, 
+						file -> {
+							if (CollectionUtils.isEmpty(segments) || file.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
+								items.add(storedFile);
+							}
+						}, 
+						image -> {
+							if (CollectionUtils.isEmpty(segments) || image.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
+								items.add(storedImage);
+							}
+						}, 
+						form -> {
+							if (CollectionUtils.isEmpty(segments) || form.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredForm storedForm = loadFromFilesystem(form, StoredForm.class, s -> s);
+								items.add(storedForm);
+							}
+						}, 
+						binary -> {
+							
+						}, 
+						node -> {
+							if (CollectionUtils.isEmpty(segments) /* || node.getParent().getFileName().toString().equals(walker.peek())*/) {
+								StoredNode storedNode = loadFromFilesystem(node, StoredNode.class, s -> s);
+								items.add(storedNode);
+							}
+						}, 
+						channel -> {
+							if (CollectionUtils.isEmpty(segments) /* || channel.getParent().getFileName().toString().equals(walker.peek())*/) {
+								StoredChannel storedChannel = loadFromFilesystem(channel, StoredChannel.class, s -> s);
+								items.add(storedChannel);
+							}
+						}, 
+						metadata -> {}, 
+						error -> {
+							StagingErrors storedFile = loadFromFilesystemUnsafe(error, StagingErrors.class, s -> s.toString());
+							errors.addAll(storedFile.getErrors());
+							errors.addAll(storedFile.getMismatches());
+						}, 
+						alien -> {
+							logger.warn(String.format("Alien file in the content package [%s]: %s", cpackage.getName(), alien.toString()));
+						}, 
+						(dup, orig, id) -> {
+							logger.warn(String.format("Duplicated file for id [%s] in the content package [%s]: orig: %s, dup: %s", id, cpackage.getName(), orig.toString(), dup.toString()));
+						}, 
+						exception -> {
+							logger.error(String.format("Could not process the content package [%s]", cpackage.getName()), exception);
+						}
+					);
+				response = ContentPackageFolderResponse.fromContent(items, errors);
 			} else {
 				response = new ContentPackageFolderResponse();
 			}
@@ -994,8 +1070,24 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @throws NodeException
 	 */
 	private static final <S extends StoredModel, T> T loadFromFilesystem(Path path, Class<S> storedClass, Function<S, T> adapter, Function<Path, String> nameGetter) throws NodeException {
+		return adapter.apply(loadFromFilesystemUnsafe(path, storedClass, nameGetter));
+	}
+
+
+	/**
+	 * Load a stored serializable object from the filesystem.
+	 * @param path file to read
+	 * @param storedClass stored stageable class
+	 * @param nameGetter function to get the name/ID from the given path (for generating an error message)
+	 * 
+	 * @param <S> stored serializable type
+	 * @param <T> output type
+	 * @return
+	 * @throws NodeException
+	 */
+	private static final <S extends Serializable> S loadFromFilesystemUnsafe(Path path, Class<S> storedClass, Function<Path, String> nameGetter) throws NodeException {
 		try (InputStream is = Channels.newInputStream(FileChannel.open(path, StandardOpenOption.READ).lock(0, Long.MAX_VALUE, true).channel())) {
-			return adapter.apply(mapper.readValue(is, storedClass));
+			return mapper.readValue(is, storedClass);
 		} catch (NoSuchFileException noSuchFileException) {
 			String typeName = Optional.ofNullable(storedClass.getAnnotation(StoredType.class)).map(StoredType::value).orElse("object");
 			I18nString message = new CNI18nString(typeName + ".notfound");
@@ -1335,7 +1427,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @throws IOException
 	 */
 	private Pair<String, String> importNodeFromStageable(Path currentPath, Path pathRoot, JobProgress progress,
-			Optional<List<Path>> maybeHaveOrphans, Set<String> mismatches) throws NodeException, IOException {
+			Optional<List<Path>> maybeHaveOrphans, Set<StagingError> mismatches) throws NodeException, IOException {
 		String filename = currentPath.getFileName().toString();
 		logger.info("Processing " + currentPath);
 
@@ -1376,7 +1468,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @throws IOException
 	 */
 	private void importFromStageable(Path currentPath, Path pathRoot, JobProgress progress,
-			Optional<List<Path>> maybeHaveOrphans, Set<String> mismatches, Node node) throws NodeException, IOException {
+			Optional<List<Path>> maybeHaveOrphans, Set<StagingError> mismatches, Node node) throws NodeException, IOException {
 		if (!Files.isDirectory(currentPath)) {
 			// operator, which is called when a referenced object (content object), could not be found.
 			com.gentics.contentnode.etc.Operator onReferenceNotFound = () -> {
@@ -1394,22 +1486,22 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			int processed = 0;
 			if (filename.endsWith(PAGE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Page.class, new StoredPage(),
-						(n, s) -> StagingModelBuilder.getPage(n, s, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(n, s) -> StagingModelBuilder.getPage(currentPath, n, s, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(FORM_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Form.class, new StoredForm(),
 						(n, s) -> StagingModelBuilder.getForm(n, s, onReferenceNotFound), maybeHaveOrphans, node, Optional.empty());
 			} else if (filename.endsWith(FILE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, File.class, new StoredFile(),
-						(s, n) -> StagingModelBuilder.getFile(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getFile(currentPath, s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(IMAGE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, ImageFile.class, new StoredImage(),
-						(s, n) -> StagingModelBuilder.getImage(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getImage(currentPath, s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(FOLDER_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Folder.class, new StoredFolder(),
-						(s, n) -> StagingModelBuilder.getFolder(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getFolder(currentPath, s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> {
 							StagingModelBuilder.setMultichannellingRestrictions(s, n);
 							PermissionStore.getInstance().refreshObject(Folder.TYPE_FOLDER, n.getId());
@@ -1534,8 +1626,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * 
 	 * @param path
 	 * @param cp
+	 * @throws NodeException 
 	 */
-	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) {
+	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) throws NodeException {
 		fillContentPackageStatistic(path, cp, false);
 	}
 
@@ -1544,52 +1637,90 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * 
 	 * @param path
 	 * @param cp
+	 * @throws NodeException 
 	 */
-	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) {
-		try {
-			Map<String, Path> encounteredIDs = new HashMap<>();
-			Files.walk(path).forEach(i -> {
-				if (encounteredBefore(i, encounteredIDs)) {
-					Optional<String> objectId = getObjectId(i);
+	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
+		processContentPackageItems(
+				path, cp, 
+				page -> cp.setPages(cp.getPages() + 1), 
+				folder -> cp.setFolders(cp.getFolders() + 1), 
+				file -> cp.setFiles(cp.getFiles() + 1), 
+				image -> cp.setImages(cp.getImages() + 1), 
+				form -> cp.setForms(cp.getForms() + 1), 
+				binary -> {}, 
+				node -> cp.setNodes(cp.getNodes() + 1), 
+				channel -> cp.setChannels(cp.getChannels() + 1), 
+				metadata -> {}, 
+				error -> {}, 
+				alien -> {
+					logger.warn("Removing alien file " + alien.toAbsolutePath());
+					try {
+						Files.delete(alien);
+					} catch (IOException e) {
+						logger.error("Cannot remove alien file " + alien.toAbsolutePath(), e);
+					}
+				}, 
+				(dup, orig, id) -> {
 					if (throwOnDuplications) {
-						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", objectId.get(), i, encounteredIDs.get(objectId.get())));
+						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", id, dup, orig));
 					} else {
 						return;
 					}
-				}
-				if (Files.isRegularFile(i)) {
-					if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
-						// TODO consider versions
-						cp.setPages(cp.getPages() + 1);
-					} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
-						// TODO consider versions
-						cp.setForms(cp.getForms() + 1);
-					} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
-						cp.setFiles(cp.getFiles() + 1);
-					} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
-						cp.setImages(cp.getImages() + 1);
-					} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
-						cp.setNodes(cp.getNodes() + 1);
-					} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
-						cp.setFolders(cp.getFolders() + 1);
-					} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
-						cp.setChannels(cp.getChannels() + 1);
-					} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME) 
-							|| i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
-						// ignore
-					} else {
-						logger.warn("Removing alien file " + i.toAbsolutePath());
-						try {
-							Files.delete(i);
-						} catch (IOException e) {
-							logger.error("Cannot remove alien file " + i.toAbsolutePath(), e);
+					
+				}, 
+				exception -> {
+					logger.error("Failed to collect statistic for ContentPackage " + path.getFileName(), exception);
+					// TODO drop 500 here?
+				});
+	}
+
+	public static void processContentPackageItems(Path path, StagedContentPackage cp,
+				Consumer<Path> doOnPage, Consumer<Path> doOnFolder, Consumer<Path> doOnFile, Consumer<Path> doOnImage,
+				Consumer<Path> doOnForm, Consumer<Path> doOnBinary, Consumer<Path> doOnNode, Consumer<Path> doOnChannel,
+				Consumer<Path> doOnMetadata, Consumer<Path> doOnErrors, Consumer<Path> doOnAlien, TriConsumer<Path, Path, String> doOnDups, Consumer<Throwable> doOnException
+			) throws NodeException {
+		try {
+			Map<String, Path> encounteredIDs = new HashMap<>();
+			Files.walk(path).forEach(i -> {
+				try {
+					if (encounteredBefore(i, encounteredIDs)) {
+						String objectId = getObjectId(i).get();
+						doOnDups.accept(i, encounteredIDs.get(objectId), objectId);
+					}
+					if (Files.isRegularFile(i)) {
+						if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME)) {
+							doOnMetadata.accept(i);
+						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_ERRORS_FILENAME)) {
+							doOnErrors.accept(i);
+						} else if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
+							doOnPage.accept(i);
+						} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
+							doOnForm.accept(i);
+						} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
+							doOnFile.accept(i);
+						} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
+							doOnImage.accept(i);
+						} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
+							doOnNode.accept(i);
+						} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
+							doOnFolder.accept(i);
+						} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
+							doOnChannel.accept(i);
+						} else if (i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
+							doOnBinary.accept(i);
+						} else {
+							doOnAlien.accept(i);
 						}
 					}
+				} catch (NodeException e) {
+					throw new IllegalStateException(e);
 				}
 			});
-		} catch (IOException e) {
-			logger.error("Failed to collect statistic for ContentPackage " + path.getFileName(), e);
-			// TODO drop 500 here?
+		} catch (Throwable e) {
+			if (e.getCause() != null && e.getCause() instanceof NodeException) {
+				e = e.getCause();
+			}
+			doOnException.accept(e);
 		}
 	}
 
@@ -2337,7 +2468,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		public JobStatus call() throws NodeException {
 			progress.setStarted((int) (System.currentTimeMillis() / 1000L));
 
-			Set<String> mismatches = new TreeSet<>();
+			Set<StagingError> mismatches = new TreeSet<>();
 			List<StagingError> errors = new ArrayList<>();
 			try (TrxAttribute trxAttr = TrxAttribute.with(NodeFactory.UNLOCK_AT_TRX_COMMIT, true)) {
 				List<Path> haveOrphans = new ArrayList<>();
@@ -2473,7 +2604,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					} else if (!mismatches.isEmpty()) {
 						status = Type.WARNING;
 						i18nKey = "content.staging.import.implementation_mismatch";
-						i18nParams = new String[] {name, mismatches.stream().collect(Collectors.joining("\n ", "\n ", ""))};
+						i18nParams = new String[] {name, mismatches.stream().map(err -> err.getPath() + ": " + err.getError()).collect(Collectors.joining("\n ", "\n ", ""))};
 					} else {
 						status = Type.SUCCESS;
 						i18nKey = "content.staging.import.test.success";
@@ -2490,7 +2621,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					} else {
 						throw new RestMappedException("Error while importing",
 								"content.staging.import.implementation_mismatch",
-								Arrays.asList(name, mismatches.stream().collect(Collectors.joining("\n ", "\n ", ""))));
+								Arrays.asList(name, mismatches.stream().map(err -> err.getPath() + ": " + err.getError()).collect(Collectors.joining("\n ", "\n ", ""))));
 					}
 				}				
 			} finally {

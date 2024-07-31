@@ -35,7 +35,7 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 
 	private static final long serialVersionUID = -2151578063422454979L;
 
-	private ContentPackageNode node;
+	private List<ContentPackageNode> nodes = new ArrayList<>();
 	private List<ContentPackageChannel> channels = new ArrayList<>();
 
 	private List<ContentPackageFolder> folders = new ArrayList<>();
@@ -97,18 +97,18 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 				ContentPackageNode node = new ContentPackageNode();
 				node.clone((StagedNode) item);
 				node.setErrors(myErrors);
-				response.setNode(node);
+				response.getNodes().add(node);
 				break;
 			}
 		}));
 		return response;
 	}
 
-	public ContentPackageNode getNode() {
-		return node;
+	public List<ContentPackageNode> getNodes() {
+		return nodes;
 	}
-	public void setNode(ContentPackageNode node) {
-		this.node = node;
+	public void setNodes(List<ContentPackageNode> nodes) {
+		this.nodes = nodes;
 	}
 	public List<ContentPackageChannel> getChannels() {
 		return channels;

@@ -15,10 +15,6 @@ public class ContentPackageNode extends StagedNode implements ContentStagingPack
 
 	private List<StagedError> errors;
 
-	// TODO
-	//private <..> pageUrls;
-	//private <..> fileUrls;
-
 	public void setErrors(List<StagedError> errors) {
 		this.errors = errors;
 	}

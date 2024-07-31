@@ -32,6 +32,8 @@ import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,10 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Condition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.uri.UriComponent;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -64,6 +70,7 @@ import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
 import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
@@ -681,7 +688,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		Integer node1ExtraConstructId = supply(() -> createConstruct(node1, LongHTMLPartType.class, "node1", "text"));
 		Page page3 = supply(() -> create(Page.class, p -> {
-			p.setFolderId(node1.getFolder().getId());
+			p.setFolderId(folder1.getId());
 			p.setTemplateId(pageTemplate.getId());
 			p.setName("Page 3");
 			p.getContent().addContentTag(node1ExtraConstructId);
@@ -727,12 +734,13 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		// Drop its construct --> inconsistency!
 		operate(t -> t.getObject(Construct.class, node1ExtraConstructId).delete());
 
-		GenericResponse cplResponse = supply(() -> {
-			return new ContentStagingResourceImpl().importIntoCms(packageName, 0, true);
-		});
 		// The probe import should never fail because of the bad imported data
-		assertResponseOK(cplResponse);
-		// ... TODO add errors check
+		assertResponseOK(supply(() -> {
+			return new ContentStagingResourceImpl().importIntoCms(packageName, 0, true);
+		}));
+		ContentPackageFolderResponse cplResponse = supply(() -> {
+			return new ContentStagingResourceImpl().folder(packageName, UriComponent.decodePath(folder1.getName(), true));
+		});
 	}
 
 	@Test

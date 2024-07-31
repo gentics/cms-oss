@@ -28,7 +28,7 @@ class TranslationUtilTest {
 
 	@AfterEach
 	void tearDown() throws IOException {
-		var serviceFileLocation = TranslationUtil.getClasspath();
+		var serviceFileLocation = TranslationUtil.getClasspath().get();
 		Files.deleteIfExists(
 				Paths.get(String.format("%s/META-INF/services/%s", serviceFileLocation, INTERFACE_FQDN)));
 
@@ -38,13 +38,29 @@ class TranslationUtilTest {
 	@Test
 	void givenNoServiceDefinitionFileExists_expectToCreateServiceFileAndLoadService()
 			throws IOException {
-		var isCreated = TranslationUtil.createServiceDefinitionFileIfNeeded();
+		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
 		var isLoaded = TranslationUtil.reloadService();
 
 		assertThat(isCreated).isTrue();
 		assertThat(isLoaded).isTrue();
 	}
 
+	@Test
+	void givenImplementationIsUpdated_expectToUpdateServiceFileAndReloadService()
+			throws IOException {
+		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
+		var isLoaded = TranslationUtil.reloadService();
+
+		assertThat(isCreated).isTrue();
+
+		mockedNodeRuntimeConfig.when(NodeConfigRuntimeConfiguration::getPreferences)
+				.thenReturn(mockTranslationConfig(
+						"com.gentics.contentnode.api.translation.BetterDeepLTranslationService",
+						"<api-token>"));
+
+		var isCreatedWithNewImplementation = TranslationUtil.createOrUpdateServiceDefinitionFile();
+		assertThat(isCreatedWithNewImplementation).isTrue();
+	}
 
 	@Test
 	void givenCreatingServiceFileWithInvalidImplementation_expectToFailLoadingService()
@@ -54,12 +70,11 @@ class TranslationUtilTest {
 						"com.gentics.contentnode.api.translation.BetterDeepLTranslationService",
 						"<api-token>"));
 
-		var isCreated = TranslationUtil.createServiceDefinitionFileIfNeeded();
+		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
 		var isLoaded = TranslationUtil.reloadService();
 
 		assertThat(isCreated).isTrue();
 		assertThat(isLoaded).isFalse();
 	}
-
 
 }

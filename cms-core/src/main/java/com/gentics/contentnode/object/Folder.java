@@ -44,7 +44,9 @@ import com.gentics.lib.etc.StringUtils;
  * This is a Folder of the object layer.
  */
 @TType(Folder.TYPE_FOLDER)
-public interface Folder extends ObjectTagContainer, StackResolvable, LocalizableNodeObject<Folder>, Disinheritable<Folder>, Resolvable, StageableChanneledNodeObject, NamedNodeObject, StackResolvableNodeObject {
+public interface Folder
+		extends ObjectTagContainer, StackResolvable, LocalizableNodeObject<Folder>, Disinheritable<Folder>, Resolvable,
+		StageableChanneledNodeObject, NamedNodeObject, StackResolvableNodeObject {
 	public static final int TYPE_FOLDER = 10002;
 
 	public static final int TYPE_INHERITED_FOLDER = 10034;

@@ -7,8 +7,10 @@ package com.gentics.contentnode.object.parttype;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -29,18 +31,20 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	 * do not replace any newlines
 	 */
 	public static final int REPLACENL_NONE = 0;
-    
+
 	/**
 	 * turn newlines to html breaks
 	 */
 	public static final int REPLACENL_NL2BR = 1;
-    
+
 	/**
 	 * turn newlines to html breaks, do not add breaks after tags, do add breaks
 	 * after some specific tags. #textnl2br(String) ist used.
 	 */
 	public static final int REPLACENL_EXTENDEDNL2BR = 2;
-    
+
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("text");
+
 	protected int replaceNewline;
 
 	private String parsedText;
@@ -62,6 +66,11 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 
 	public TextPartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	public void setValue(Value value) throws NodeException {

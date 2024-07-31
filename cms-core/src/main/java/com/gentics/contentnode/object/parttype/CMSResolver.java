@@ -8,6 +8,7 @@ package com.gentics.contentnode.object.parttype;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
@@ -33,6 +34,7 @@ import com.gentics.contentnode.render.RenderInfo;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 import com.gentics.portalnode.formatter.GenticsStringFormatter;
 import com.gentics.portalnode.formatter.SortImp;
 import com.gentics.portalnode.formatter.URLIncludeImp;
@@ -42,12 +44,12 @@ import com.gentics.portalnode.formatter.VelocityToolsImp;
  * Resolver for objects put into the context for AbstractExtensiblePartTypes
  * under the name "cms"
  */
-public class CMSResolver implements Resolvable {
+public class CMSResolver implements ResolvableMapWrappable {
 	protected ModeResolver modeResolver;
 
 	protected ImpsResolver impsResolver;
 
-	protected static Map properties = new HashMap();
+	protected static Map<String, Property> properties = new HashMap<>();
 
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(CMSResolver.class);
 
@@ -163,6 +165,11 @@ public class CMSResolver implements Resolvable {
 		// create the mode resolver and set the flag, whether we are rendering a foreign object
 		StackResolvable renderedRootObject = TransactionManager.getCurrentTransaction().getRenderType().getRenderedRootObject();
 		modeResolver = new ModeResolver(!Objects.equals(renderedRootObject, this.rootObject));
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return properties.keySet();
 	}
 
 	/*
@@ -286,7 +293,7 @@ public class CMSResolver implements Resolvable {
 	 * Get the current node
 	 * @return current node
 	 */
-	protected Node getNode() {
+	protected Resolvable getNode() {
 		return node;
 	}
 

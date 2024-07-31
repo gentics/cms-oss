@@ -1,6 +1,9 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -20,6 +23,8 @@ public class CmsFormPartType extends AbstractPartType {
 	 */
 	private static final long serialVersionUID = -5891996840774671325L;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("target");
+
 	/**
 	 * Create instance
 	 * @param value value
@@ -27,6 +32,11 @@ public class CmsFormPartType extends AbstractPartType {
 	 */
 	public CmsFormPartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	@Override

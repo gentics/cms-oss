@@ -6,7 +6,9 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -53,6 +55,12 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 	 */
 	public AbstractPartType(Value value) throws NodeException {
 		setValue(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		// TODO Auto-generated method stub
+		return Collections.emptySet();
 	}
 
 	/* (non-Javadoc)

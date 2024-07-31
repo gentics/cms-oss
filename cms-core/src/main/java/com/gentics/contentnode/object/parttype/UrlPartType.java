@@ -199,7 +199,7 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 			logger.error("Error while getting property resolver", e);
 			return null;
 		}
-		if (prop != null && prop.canResolve()) {
+		if (prop != null) {
 			return prop.get(key);
 		}
 

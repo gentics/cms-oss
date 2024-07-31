@@ -6,6 +6,9 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -27,6 +30,8 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 */
 	private static final long serialVersionUID = 6368429370721365947L;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("checked");
+
 	/**
 	 * flag to mark whether the box is checked
 	 */
@@ -39,6 +44,11 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 */
 	public CheckboxPartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/* (non-Javadoc)
@@ -86,7 +96,7 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
     
 	public Object get(String key) {
 		if ("checked".equals(key)) {
-			return new Boolean(isChecked());
+			return isChecked();
 		}
 		return null;
 	}

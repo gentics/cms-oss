@@ -7,6 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -56,6 +59,11 @@ public class PublishableValueList extends AbstractCollection<Value> implements V
 				values.add(value);
 			}
 		}
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return SetUtils.union(tag.getProperties().keySet(), SetUtils.hashSet("unique_tag_id"));
 	}
 
 	/* (non-Javadoc)

@@ -6,6 +6,7 @@
 package com.gentics.contentnode.object;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.resolving.StackResolvable;
@@ -43,4 +44,12 @@ public interface ObjectTagContainer extends NodeObject, StackResolvable {
 	 * @throws NodeException 
 	 */
 	Map<String, ObjectTag> getObjectTags() throws NodeException;
+
+	/**
+	 * Get the set of available object tag names without the 'object.' prefix
+	 * @param fallback true to make fallback
+	 * @return set of available object tag names
+	 * @throws NodeException
+	 */
+	Set<String> getObjectTagNames(boolean fallback) throws NodeException;
 }

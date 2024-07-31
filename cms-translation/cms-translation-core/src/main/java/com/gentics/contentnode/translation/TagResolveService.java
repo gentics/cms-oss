@@ -5,13 +5,13 @@ import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.api.translation.TranslationService;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Service to combine all tags into a combined/resolved string.
@@ -26,9 +27,29 @@ import org.apache.commons.lang3.StringUtils;
 public class TagResolveService {
 
 	public static final NodeLogger logger = NodeLogger.getNodeLogger(TagResolveService.class);
-	static final Pattern NODE_TAGS_PATTERN = Pattern.compile("(<node [a-z]+\\d*>)",
+	private static final Pattern NODE_TAGS_PATTERN = Pattern.compile("(<node [a-z]+\\d*>)",
 			Pattern.CASE_INSENSITIVE);
-	static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile("\\{\\{(.+?)}}", Pattern.DOTALL);
+	private static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile(
+			"<span data-translate-id=\"(.*?)\">(.*?)</span>", Pattern.DOTALL);
+	private final int linkConstructId;
+
+	public TagResolveService(Node node) throws NodeException {
+		this.linkConstructId = this.getConstructIdForLinks(node);
+	}
+
+	/**
+	 * This method retrieves the construct ID for links associated with a given node.
+	 *
+	 * @param node The node for which to retrieve the construct ID.
+	 * @return The construct ID associated with the links of the given node.
+	 * @throws NodeException If an error occurs while retrieving the construct ID.
+	 */
+	private int getConstructIdForLinks(Node node) throws NodeException {
+		final var linkKeyword = AlohaRenderer.getMagicLinkConstructKeyword(node);
+
+		return DBUtils.select("SELECT id FROM construct WHERE keyword = ?",
+				pst -> pst.setString(1, linkKeyword), DBUtils.firstInt("id"));
+	}
 
 	/**
 	 * This function resolves and translates content tags.
@@ -40,15 +61,13 @@ public class TagResolveService {
 	 * @throws Exception If an error occurs during the process.
 	 */
 	public void resolveAndTranslateContentTags(
-			Node node,
 			List<Tag> contentTags,
 			TranslationService translationService,
 			String sourceLanguageCode,
 			String targetLanguageCode
 	) throws Exception {
-		final var linkKeyword = AlohaRenderer.getMagicLinkConstructKeyword(node);
 		final var tagsToResolve = contentTags.stream()
-				.filter(tag -> !tag.getName().contains(linkKeyword))
+				.filter(tag -> tag.getConstructId() != this.linkConstructId)
 				.toList();
 
 		for (var contentTagToResolve : tagsToResolve) {
@@ -57,13 +76,13 @@ public class TagResolveService {
 			for (var textProperty : textProperties) {
 				var resolvableText = textProperty.getStringValue();
 				var isMarkupCorrupt = false;
-				if (!VALIDATOR.test(resolvableText)) {
-					 isMarkupCorrupt = true;
+				if (!VALIDATOR.test(resolvableText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), ""))) {
+					isMarkupCorrupt = true;
 					logger.warn(new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
 
-				var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
-						resolvableText, linkKeyword);
+				final var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
+						resolvableText);
 				final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
 
 				final var resolvedAndTranslatedText = translationService.translate(
@@ -74,14 +93,12 @@ public class TagResolveService {
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
 						resolvedAndTranslatedText);
 
-				var cleanHtml = unresolvedAndTranslatedText.replaceAll("(<node [a-z]+[0-9]*>)", "");
+				final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
 				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
 					throw new NodeException(
 							new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
-
 				textProperty.setStringValue(unresolvedAndTranslatedText);
-				this.updateContentTagsListToTranslatedValues(resolvedAndTranslatedText, untranslatedTagMap);
 			}
 		}
 	}
@@ -101,7 +118,8 @@ public class TagResolveService {
 			var tagStringValueOpt = this.getResolvablePartProperty(tag.getValue());
 			if (tagStringValueOpt.isPresent()) {
 				var tagContent = tagStringValueOpt.get().getStringValue();
-				tagContent = String.format("{{%s}}", tagContent);
+				tagContent = String.format("<span data-translate-id=\"%s\">%s</span>",
+						tag.getValue().getId(), tagContent);
 				resolvedText = resolvedText.replaceAll(tag.getKey(), tagContent);
 			}
 		}
@@ -116,70 +134,56 @@ public class TagResolveService {
 	 * @param resolvedText   The text with resolved tags.
 	 * @return The original text with unresolved tags.
 	 */
-	private String unresolveTags(Map<String, Tag> resolvedTagMap, String resolvedText) {
+	private String unresolveTags(Map<String, Tag> resolvedTagMap, String resolvedText)
+			throws NodeException {
 		var unresolvedText = resolvedText;
 
 		final Matcher matcher = RESOLVED_TAGS_PATTERN.matcher(unresolvedText);
-		List<String> stringsToUnresolve = new ArrayList<>();
-		while (matcher.find()) {
-			stringsToUnresolve.add(matcher.group(0));
-		}
-
 		List<Map.Entry<String, Tag>> translatedTagList = new ArrayList<>(
 				resolvedTagMap.entrySet());
 
-		if (translatedTagList.size() != stringsToUnresolve.size()) {
-			return unresolvedText;
+		while (matcher.find()) {
+			var tagToUnresolve = matcher.group(0);
+			var idAndText = this.extractIdAndTranslatedText(tagToUnresolve);
+			var replacementId = idAndText.getLeft();
+			var translatedText = idAndText.getRight();
+
+			var originalTag = translatedTagList.stream()
+					.filter(tag -> tag.getValue().getId() == replacementId.intValue()).findFirst()
+					.orElseThrow(()-> new NodeException("Could not find tag with id " + replacementId + " to unresolve tag"));
+			unresolvedText = resolvedText.replace(tagToUnresolve, originalTag.getKey());
+
+			// update tags with translated text
+			this.getResolvablePartProperty(originalTag.getValue()).ifPresent(untranslatedProperty ->
+					untranslatedProperty.setStringValue(translatedText)
+			);
 		}
-
-		Collections.reverse(stringsToUnresolve);
-
-		for (int i = 0; i < translatedTagList.size(); i++) {
-			var stringToUnresolve = stringsToUnresolve.get(i);
-			var nodeTag = translatedTagList.get(i).getKey();
-
-			unresolvedText = unresolvedText.replace(stringToUnresolve, nodeTag);
-		}
-
 		return unresolvedText;
 	}
 
 	/**
-	 * This method updates the list of content tags with their translated values. It iterates over the
-	 * untranslatedTagMap and replaces the stringValues with the translated values.
+	 * This method is used to extract the ID and the translated text from a given tag.
 	 *
-	 * @param resolvedAndTranslatedText The text that has been resolved and translated.
-	 * @param untranslatedTagMap        The map of tags that have not been translated.
+	 * @param tagToUnresolve The tag from which the ID and translated text are to be extracted.
+	 * @return A pair containing the extracted ID as an Integer and the translated text as a String.
+	 * @throws NodeException If there is an error while extracting the ID and translated text.
 	 */
-	private void updateContentTagsListToTranslatedValues(
-			String resolvedAndTranslatedText,
-			Map<String, Tag> untranslatedTagMap
-	) {
-		final Matcher matcher = RESOLVED_TAGS_PATTERN.matcher(resolvedAndTranslatedText);
+	private Pair<Integer, String> extractIdAndTranslatedText(String tagToUnresolve)
+			throws NodeException {
+		Matcher matcher = RESOLVED_TAGS_PATTERN.matcher(tagToUnresolve);
 
-		List<String> resolvedTags = new ArrayList<>();
-		while (matcher.find()) {
-			resolvedTags.add(matcher.group(1));
+		if (matcher.find()) {
+			var matchedId = matcher.group(1);
+			var matchedText = matcher.group(2);
+
+			try {
+				int id = Integer.parseInt(matchedId);
+				return Pair.of(id, matchedText);
+			} catch (NumberFormatException e) {
+				throw new NodeException("Unable to parse replacementId: " + matchedId + " to an integer", e);
+			}
 		}
-
-		if (resolvedTags.size() != untranslatedTagMap.size()) {
-			logger.error(
-					"Number of resolved tags in translated text and map of untranslated tags must be equals.");
-			return;
-		}
-		Collections.reverse(resolvedTags);
-
-		List<Map.Entry<String, Tag>> unTranslatedTagList = new ArrayList<>(
-				untranslatedTagMap.entrySet());
-
-		for (int i = 0; i < unTranslatedTagList.size(); i++) {
-			var contentTag = unTranslatedTagList.get(i).getValue();
-			var translatedValue = resolvedTags.get(i);
-
-			this.getResolvablePartProperty(contentTag).ifPresent(untranslatedProperty ->
-					untranslatedProperty.setStringValue(translatedValue)
-			);
-		}
+		throw new NodeException("Unable to extract replacementId or translated text from resolved tag");
 	}
 
 	/**
@@ -189,14 +193,9 @@ public class TagResolveService {
 	 * @param contentTags    The list of content tags to search in.
 	 * @param resolvableText The text in which to find the tags.
 	 * @return A map with the names of the tags as keys and the tags themselves as values.
-	 * @throws RuntimeException If a tag is found in the resolvable text but not in the list of
-	 *                          content tags.
 	 */
-	private Map<String, Tag> getOccurringTagsFromResolvableText(
-			List<Tag> contentTags,
-			String resolvableText,
-			String linkKeyword
-	) {
+	private Map<String, Tag> getOccurringTagsFromResolvableText(List<Tag> contentTags,
+			String resolvableText) {
 		Map<String, Tag> tagMap = new LinkedHashMap<>();
 		final var matcher = NODE_TAGS_PATTERN.matcher(resolvableText);
 
@@ -208,7 +207,7 @@ public class TagResolveService {
 							.replace(">", "")
 							.trim()
 							.equals(tag.getName()))
-					.filter(tag -> tag.getName().contains(linkKeyword))
+					.filter(tag -> tag.getConstructId() == this.linkConstructId)
 					.findAny();
 			correspondingTag.ifPresent(tag -> tagMap.put(matchedNodeTag, tag));
 		}

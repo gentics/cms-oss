@@ -171,6 +171,12 @@
 				<artifactId>cms-translation-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-translation-core</artifactId>
+				<version>${project.version}</version>
+				<type>test-jar</type>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>

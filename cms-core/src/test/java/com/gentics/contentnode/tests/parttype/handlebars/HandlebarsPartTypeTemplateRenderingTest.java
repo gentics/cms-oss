@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.ListUtils;
@@ -40,14 +41,72 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "{{#each (sort cms.folder.filesandimages 'type' 'desc') }}{{ url }} ({{ type }}){{#unless @last}},{{/unless}}{{/each}}", "/node/pub/dir/bin/test/testfile.txt (text/plain),/node/pub/dir/bin/test/blume.jpg (image/jpeg)", Arrays.asList(Pair.of("testPage", "folder"), Pair.of("testFolder", "filesandimages"), Pair.of("testFile", "url"), Pair.of("testImage", "url"))},
 			new Object[] { "{{#each (sort cms.folder.children 'name' 'asc')}}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "blume.jpg,English Test Page,Subfolder,testfile.txt,Test Page", null},
 			new Object[] { "{{#each cms.page.versions }}{{ number }}{{#unless @last}},{{/unless}}{{/each}}", "1.0,0.2,0.1", null},
-			new Object[] { "{{#each cms.page.tags }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "testtag", null },
+			new Object[] { "{{#each (sort cms.page.tags 'name') }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "checkbox_construct1,datasource_construct1,multi_select_construct1,node_construct1,overview_construct1,single_select_construct1,testtag,urls_construct1", null },
 			new Object[] { "{{#each (sort cms.page.languageset.pages 'language.code' 'asc') }}{{ language.code }}{{#unless @last}},{{/unless}}{{/each}}", "de,en", null },
 			new Object[] { "{{#each (sort cms.page.languageset.pages 'language.code' 'desc') }}{{ language.code }}{{#unless @last}},{{/unless}}{{/each}}", "en,de", null },
 			new Object[] { "{{#with cms.page.languageset.pages.de}}{{ name }}{{/with}}", "Test Page", null },
 			new Object[] { "{{#with cms.page.languageset.pages.en}}{{ name }}{{/with}}", "English Test Page", null },
 			new Object[] { "{{#each cms.page.pagevariants }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "Test Page", null },
-			new Object[] { "{{#each cms.page.template.tags }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "testtag", null },
+			new Object[] { "{{#each cms.page.template.tags }}{{ @key }}{{#unless @last}},{{/unless}}{{/each}}", "testtag", null },
 			new Object[] { "{{render cms.page.object.secondpage}}", "Contents of second from page", null},
+
+			// OverviewPartType
+			new Object[] { "{{{render cms.page.tags.overview_construct1 }}}", "Home<br>Subfolder<br>Test Node<br>Testfolder<br>", Arrays.asList(Pair.of("homeFolder", "name"), Pair.of("subFolder", "name"), Pair.of("rootFolder", "name"), Pair.of("testFolder", "name"))},
+			new Object[] { "{{#each cms.page.tags.overview_construct1.parts.overview.items }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "Home,Subfolder,Test Node,Testfolder", Arrays.asList(Pair.of("homeFolder", "name"), Pair.of("subFolder", "name"), Pair.of("rootFolder", "name"), Pair.of("testFolder", "name"))},
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.listType }}", "FOLDER", null },
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.selectType }}", "MANUAL", null },
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.orderBy }}", "ALPHABETICALLY", null },
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.orderDirection }}", "ASC", null },
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.maxItems }}", "0", null },
+			new Object[] { "{{ cms.page.tags.overview_construct1.parts.overview.recursive }}", "false", null },
+
+			// DatasourcePartType
+			new Object[] { "{{render cms.page.tags.datasource_construct1 }}", "EinsZweiDrei", null},
+			new Object[] { "{{#each cms.page.tags.datasource_construct1.parts.datasource.items }}{{ nr }}|{{ dsid }}|{{ key }}|{{ value }}{{#unless @last}},{{/unless}}{{/each}}", "1|1|one|Eins,2|2|two|Zwei,3|3|three|Drei", null },
+			new Object[] { "{{#each cms.page.tags.datasource_construct1.parts.datasource.selection }}{{ nr }}|{{ dsid }}|{{ key }}|{{ value }}{{#unless @last}},{{/unless}}{{/each}}", "1|1|one|Eins,2|2|two|Zwei,3|3|three|Drei", null },
+			new Object[] { "{{#each cms.page.tags.datasource_construct1.parts.datasource.keys }}{{ this }}{{#unless @last}},{{/unless}}{{/each}}", "one,two,three", null },
+			new Object[] { "{{#each cms.page.tags.datasource_construct1.parts.datasource.values }}{{ this }}{{#unless @last}},{{/unless}}{{/each}}", "Eins,Zwei,Drei", null },
+
+			// SingleSelectPartType
+			new Object[] { "{{render cms.page.tags.single_select_construct1 }}", "Grün", null },
+			new Object[] { "{{ cms.page.tags.single_select_construct1.parts.single.key }}", "green", null },
+			new Object[] { "{{ cms.page.tags.single_select_construct1.parts.single.value }}", "Grün", null },
+
+			// MultiSelectPartType
+			new Object[] { "{{render cms.page.tags.multi_select_construct1 }}", "RotBlau", null },
+			new Object[] { "{{#each cms.page.tags.multi_select_construct1.parts.multi.items }}{{ nr }}|{{ dsid }}|{{ key }}|{{ value }}{{#unless @last}},{{/unless}}{{/each}}", "1|1|red|Rot,2|2|green|Grün,3|3|blue|Blau", null },
+			new Object[] { "{{#each cms.page.tags.multi_select_construct1.parts.multi.selection }}{{ nr }}|{{ dsid }}|{{ key }}|{{ value }}{{#unless @last}},{{/unless}}{{/each}}", "1|1|red|Rot,2|3|blue|Blau", null },
+			new Object[] { "{{#each cms.page.tags.multi_select_construct1.parts.multi.keys }}{{ this }}{{#unless @last}},{{/unless}}{{/each}}", "red,blue", null },
+			new Object[] { "{{#each cms.page.tags.multi_select_construct1.parts.multi.values }}{{ this }}{{#unless @last}},{{/unless}}{{/each}}", "Rot,Blau", null },
+
+			// PageURLPartType
+			new Object[] { "{{render cms.page.tags.urls_construct1.parts.page }}", "/node/pub/dir/test/Test-Page.de.html", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.internal }}", "true", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.url }}", "/node/pub/dir/test/Test-Page.de.html", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.target.name }}", "Test Page", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.node.host }}", "test.node.hostname", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.extpage.internal }}", "false", null },
+			new Object[] { "{{render cms.page.tags.urls_construct1.parts.extpage }}", "https://www.gentics.com/", null },
+
+			// FolderURLPartType
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.folder.target.name }}", "Home", null },
+
+			// FileURLPartType
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.file.target.name }}", "testfile.txt", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.file.url }}", "/node/pub/dir/bin/test/testfile.txt", null },
+
+			// ImageURLPartType
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.name }}", "blume.jpg", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.url }}", "/node/pub/dir/bin/test/blume.jpg", null },
+
+			// CheckboxPartType
+			new Object[] { "{{render cms.page.tags.checkbox_construct1 }}", "10", null},
+			new Object[] { "{{#if cms.page.tags.checkbox_construct1.parts.check1.checked }}checked{{else}}not checked{{/if}}", "checked", null},
+			new Object[] { "{{#if cms.page.tags.checkbox_construct1.parts.check2.checked }}checked{{else}}not checked{{/if}}", "not checked", null},
+
+			// NodePartType
+			new Object[] { "{{ cms.page.tags.node_construct1.parts.node.name }}", "Test Node", null},
+			new Object[] { "{{ cms.page.tags.node_construct1.parts.node.host }}", "test.node.hostname", null},
 
 			// file properties
 			new Object[] { "cms.folder.files.[0].name", "testfile.txt", null },
@@ -101,6 +160,10 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "cms.folder.images.[0].inherited", "false", null }
 
 		));
+
+//		return Collections.singleton(
+//				new Object[] { "{{ cms.page.tags.urls_construct1.parts.file.url }}", "/node/pub/dir/bin/test/testfile.txt", null }
+//		);
 	}
 
 	@Parameter(0)

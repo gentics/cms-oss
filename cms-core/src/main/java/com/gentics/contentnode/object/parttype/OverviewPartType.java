@@ -9,7 +9,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
@@ -60,6 +63,8 @@ public class OverviewPartType extends AbstractPartType {
 	 */
 	public final static int TYPE_ID = 13;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("items", "listType", "selectType", "orderDirection", "orderBy", "maxItems", "recursive");
+
 	/**
 	 * overview id
 	 */
@@ -82,6 +87,11 @@ public class OverviewPartType extends AbstractPartType {
 	 */
 	public OverviewPartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/* (non-Javadoc)

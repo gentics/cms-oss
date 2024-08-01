@@ -5,17 +5,19 @@
  */
 package com.gentics.contentnode.object;
 
-import com.gentics.contentnode.etc.Consumer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.devtools.model.TagModel;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.LiveEditorHelper;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.factory.FieldGetter;
@@ -65,6 +67,8 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 	private static final String[] SPLITTER_TAGS = new String[0];
 
+	protected final static Set<String> resolvableKeys = SetUtils.union(ValueContainer.resolvableKeys, SetUtils.hashSet("empty", "unique_tag_id", "visible", "name"));
+
 	private int hasPartTemplate;
 
 	@DataField("construct_id")
@@ -90,8 +94,6 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	@Updateable
 	protected String name;
 
-	private static int uniqueCounter = 0;
-
 	/**
 	 * The ttype of the contenttag object.
 	 */
@@ -100,7 +102,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	/**
 	 * The ttype of the contenttag object as integer.
 	 */
-	public static final Integer TYPE_CONTENTTAG_INTEGER = new Integer(TYPE_CONTENTTAG);
+	public static final Integer TYPE_CONTENTTAG_INTEGER = Integer.valueOf(TYPE_CONTENTTAG);
 
 	/**
 	 * The ttype of the templatetag object.
@@ -110,7 +112,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	/**
 	 * The ttype of the templatetag object as integer.
 	 */
-	public static final Integer TYPE_TEMPLATETAG_INTEGER = new Integer(TYPE_TEMPLATETAG);
+	public static final Integer TYPE_TEMPLATETAG_INTEGER = Integer.valueOf(TYPE_TEMPLATETAG);
 
 	/**
 	 * The ttype of the objecttag object.
@@ -120,11 +122,16 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	/**
 	 * The ttype of the objecttag object as integer.
 	 */
-	public static final Integer TYPE_OBJECTTAG_INTEGER = new Integer(TYPE_OBJECTTAG);
+	public static final Integer TYPE_OBJECTTAG_INTEGER = Integer.valueOf(TYPE_OBJECTTAG);
 
 	protected Tag(Integer id, NodeObjectInfo info) {
 		super(id, info);
 		hasPartTemplate = -1;
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	@Override
@@ -311,13 +318,13 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 		}
 		performDelete();
 	}
-    
+
 	/**
 	 * Performs the delete of the Tag
 	 * @throws NodeException
 	 */
 	protected abstract void performDelete() throws NodeException;
-    
+
 	public Object get(String key) {
 		if ("empty".equals(key)) {
 			RenderType renderType = null;
@@ -335,7 +342,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 				String renderedContent = this.render(new RenderResult());
 
 				renderType.setEditMode(oldMode);
-				return "".equals(renderedContent) ? new Integer(1) : new Integer(0);
+				return "".equals(renderedContent) ? 1 : 0;
 			} catch (NodeException e) {
 				logger.error("Error while resolving {" + key + "}", e);
 				return null;
@@ -446,7 +453,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	public String render(RenderResult renderResult, String template, Map codeParts) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
-        
+
 		String debugTagName = System.getProperty("com.gentics.contentnode.debugtag");
 
 		if (debugTagName != null && debugTagName.equals(getName())) {
@@ -519,9 +526,9 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 		try {
 			StringBuffer source = new StringBuffer();
-    
+
 			ValueList values = getTagValues();
-            
+
 			if (debugTagName != null && debugTagName.equals(getName())) {
 				RenderResult result = t.getRenderResult();
 
@@ -530,7 +537,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 			for (Value value : values) { 
 				Part part = value.getPart();
-    
+
 				if (debugTagName != null && debugTagName.equals(getName())) {
 					RenderResult result = t.getRenderResult();
 
@@ -541,20 +548,20 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 				if (!part.isVisible()) {
 					continue;
 				}
-    
+
 				MarkupLanguage ml = part.getMarkupLanguage();
 				String tplMl = t.getRenderType().getMarkupLanguage();
 
 				if (ml != null && tplMl != null && !ml.getExtension().equals(tplMl)) {
 					continue;
 				}
-    
+
 				if (value.hasTemplate()) {
 					source.append(value.render(renderResult, template));
 				} else {
 					source.append(value.render(renderResult, null, false, true));
 				}
-    
+
 			}
 			if (debugTagName != null && debugTagName.equals(getName())) {
 				RenderResult result = t.getRenderResult();
@@ -602,10 +609,9 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 	 * 
 	 * @return True if the tag is an Aloha block. False if the tag is an Aloha editable.
 	 */
-	@SuppressWarnings("unchecked")
 	public boolean isAlohaBlock() throws NodeException {
 		List<Part> parts = this.getConstruct().getParts(); 
-        
+
 		if (parts.size() == 1) {
 			ValueList values = this.getValues();
 			Part part = parts.get(0);

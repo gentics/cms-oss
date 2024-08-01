@@ -6,6 +6,9 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -40,6 +43,8 @@ public abstract class TagPartType extends AbstractPartType {
 
 	public static final int TYPE_PAGE = 2;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("id", "page_id", "tag", "container");
+
 	private int type;
 
 	private Class<? extends Tag> tagClass;
@@ -50,6 +55,11 @@ public abstract class TagPartType extends AbstractPartType {
 		super(value);
 		this.type = type;
 		reloadValue();
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**

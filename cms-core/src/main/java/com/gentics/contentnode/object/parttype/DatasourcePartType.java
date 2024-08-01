@@ -9,10 +9,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -61,6 +64,8 @@ public class DatasourcePartType extends AbstractPartType {
 	 */
 	private static final String CONTENT_TAG_RENDERER_KEYNAME = "ds"; 
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("items", "selection", "keys", "values", "key", "value");
+
 	/**
 	 * register our ds ContentTagRenderer at the RendererFactory
 	 */
@@ -80,6 +85,11 @@ public class DatasourcePartType extends AbstractPartType {
 	 */
 	public DatasourcePartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/*

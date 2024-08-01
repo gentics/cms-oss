@@ -119,16 +119,11 @@ public class HandlebarsPartType extends TextPartType {
 			handlebars.registerHelpers(StringHelpers.class);
 			handlebars.registerHelpers(HelperSource.class);
 
-			List<String> list = List.of("one", "two", "three");
-			String[] array = list.toArray(new String[list.size()]);
-
 			StringTemplateSource source = new StringTemplateSource(templateName, getText());
 			var handlebarsTemplate = handlebars.compile(source);
 			Context context = Context.newBuilder(null)
 					.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
 					.combine("cms", new ResolvableMapWrapper(cmsResolver))
-					.combine("stringlist", list)
-					.combine("stringarray", array)
 					.build();
 			return handlebarsTemplate.apply(context);
 		} catch (Throwable e) {

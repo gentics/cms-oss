@@ -75,12 +75,12 @@ public abstract class ValueContainer extends AbstractContentObject implements St
 
 		ValueList myValues = getValues();
 
-		List parts = getConstruct().getParts();
+		List<Part> parts = getConstruct().getParts();
 
 		EditableValueList myTagValues = new EditableValueList(getId() + "-" + super.get("ttype"));
 
 		for (int i = 0; i < parts.size(); i++) {
-			Part part = (Part) parts.get(i);
+			Part part = parts.get(i);
 
 			Value value = myValues.getByPartId(part.getId());
 			PartType partType = null;

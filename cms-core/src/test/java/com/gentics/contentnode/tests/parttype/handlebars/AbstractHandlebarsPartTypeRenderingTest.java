@@ -26,6 +26,10 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.ContentTag;
+import com.gentics.contentnode.object.Datasource;
+import com.gentics.contentnode.object.Datasource.SourceType;
+import com.gentics.contentnode.object.DatasourceEntry;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
@@ -33,15 +37,27 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.object.parttype.CheckboxPartType;
+import com.gentics.contentnode.object.parttype.DatasourcePartType;
+import com.gentics.contentnode.object.parttype.FileURLPartType;
+import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
+import com.gentics.contentnode.object.parttype.ImageURLPartType;
+import com.gentics.contentnode.object.parttype.MultiSelectPartType;
+import com.gentics.contentnode.object.parttype.NodePartType;
+import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.Builder;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -93,6 +109,22 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 	static Page englishPage;
 
 	static Construct testConstruct;
+
+	static Construct overviewConstruct;
+
+	static Construct datasourceConstruct;
+
+	static Datasource datasource;
+
+	static Construct singleSelectConstruct;
+
+	static Construct multiSelectConstruct;
+
+	static Construct urlsConstruct;
+
+	static Construct checkboxConstruct;
+
+	static Construct nodeConstruct;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -331,6 +363,151 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			}).doNotSave().build());
 		}).build();
 
+		overviewConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("overview_construct");
+			c.setName("overview_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(OverviewPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("overview");
+			}).doNotSave().build());
+		}).build();
+
+		datasourceConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("datasource_construct");
+			c.setName("datasource_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(DatasourcePartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("datasource");
+			}).doNotSave().build());
+		}).build();
+
+		datasource = create(Datasource.class, d -> {
+			d.setName("Colors");
+			d.setSourceType(SourceType.staticDS);
+
+			List<DatasourceEntry> entries = d.getEntries();
+			entries.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(1);
+				ds.setKey("red");
+				ds.setValue("Rot");
+			}).doNotSave().build());
+			entries.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(2);
+				ds.setKey("green");
+				ds.setValue("Grün");
+			}).doNotSave().build());
+			entries.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(3);
+				ds.setKey("blue");
+				ds.setValue("Blau");
+			}).doNotSave().build());
+		}).build();
+
+		singleSelectConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("single_select_construct");
+			c.setName("single_select_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(SingleSelectPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("single");
+				p.setInfoInt(datasource.getId());
+			}).doNotSave().build());
+		}).build();
+
+		multiSelectConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("multi_select_construct");
+			c.setName("multi_select_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(MultiSelectPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("multi");
+				p.setInfoInt(datasource.getId());
+			}).doNotSave().build());
+		}).build();
+
+		urlsConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("urls_construct");
+			c.setName("urls_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(PageURLPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("page");
+			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(PageURLPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("extpage");
+			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(FolderURLPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("folder");
+			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(FileURLPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("file");
+			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(ImageURLPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("image");
+			}).doNotSave().build());
+		}).build();
+
+		checkboxConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("checkbox_construct");
+			c.setName("checkbox_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(CheckboxPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("check1");
+			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(CheckboxPartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("check2");
+			}).doNotSave().build());
+		}).build();
+
+		nodeConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("node_construct");
+			c.setName("node_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(NodePartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("node");
+			}).doNotSave().build());
+		}).build();
+
 		template = create(Template.class, t -> {
 			t.setFolderId(node.getFolder().getId());
 			t.setMlId(1);
@@ -374,6 +551,60 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			p.getObjectTag("secondpage").setEnabled(true);
 			getPartType(HTMLPartType.class, p.getObjectTag("common"), "html").setText("Contents of common from page");
 			p.getObjectTag("common").setEnabled(true);
+
+			// add an overview tag
+			ContentTag overviewTag = p.getContent().addContentTag(overviewConstruct.getId());
+			ContentNodeTestDataUtils.fillOverview(overviewTag, "overview", "<node name><br>", Folder.class,
+					Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_NAME, Overview.ORDERWAY_ASC, false,
+					Arrays.asList(rootFolder, homeFolder, testFolder, subFolder));
+
+			// add a datasource tag
+			ContentTag datasourceTag = p.getContent().addContentTag(datasourceConstruct.getId());
+			List<DatasourceEntry> items = getPartType(DatasourcePartType.class, datasourceTag, "datasource").getItems();
+			items.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(1);
+				ds.setKey("one");
+				ds.setValue("Eins");
+			}).doNotSave().build());
+			items.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(2);
+				ds.setKey("two");
+				ds.setValue("Zwei");
+			}).doNotSave().build());
+			items.add(create(DatasourceEntry.class, ds -> {
+				ds.setDsid(3);
+				ds.setKey("three");
+				ds.setValue("Drei");
+			}).doNotSave().build());
+
+			// add single select tag
+			ContentTag singleSelectTag = p.getContent().addContentTag(singleSelectConstruct.getId());
+			getPartType(SingleSelectPartType.class, singleSelectTag, "single").setSelected(datasource.getEntries().get(1));
+
+			// add multi select tag
+			ContentTag multiSelectTag = p.getContent().addContentTag(multiSelectConstruct.getId());
+			getPartType(MultiSelectPartType.class, multiSelectTag, "multi").setSelected(datasource.getEntries().get(0), datasource.getEntries().get(2));
+
+			// add urls tag
+			ContentTag urlsTag = p.getContent().addContentTag(urlsConstruct.getId());
+			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
+			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
+			getPartType(PageURLPartType.class, urlsTag, "extpage").setExternalTarget("https://www.gentics.com/");
+			getPartType(FolderURLPartType.class, urlsTag, "folder").setTargetFolder(homeFolder);
+			getPartType(FolderURLPartType.class, urlsTag, "folder").setNode(node);
+			getPartType(FileURLPartType.class, urlsTag, "file").setTargetFile(testFile);
+			getPartType(FileURLPartType.class, urlsTag, "file").setNode(node);
+			getPartType(ImageURLPartType.class, urlsTag, "image").setTargetImage(testImage);
+			getPartType(ImageURLPartType.class, urlsTag, "image").setNode(node);
+
+			// add a checkbox tag
+			ContentTag checkboxTag = p.getContent().addContentTag(checkboxConstruct.getId());
+			getPartType(CheckboxPartType.class, checkboxTag, "check1").setChecked(true);
+			getPartType(CheckboxPartType.class, checkboxTag, "check2").setChecked(false);
+
+			// add a node tag
+			ContentTag nodeTag = p.getContent().addContentTag(nodeConstruct.getId());
+			getPartType(NodePartType.class, nodeTag, "node").setNode(node);
 		}).at(editTimestamp).as(editor).unlock().build();
 
 		englishPage = create(Page.class, p -> {

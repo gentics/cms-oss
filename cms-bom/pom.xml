@@ -163,6 +163,11 @@
 			<!-- Translation -->
 			<dependency>
 				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-translation</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
 				<artifactId>cms-translation-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>

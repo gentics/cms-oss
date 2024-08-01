@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.ListUtils;
@@ -160,10 +159,6 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "cms.folder.images.[0].inherited", "false", null }
 
 		));
-
-//		return Collections.singleton(
-//				new Object[] { "{{ cms.page.tags.urls_construct1.parts.file.url }}", "/node/pub/dir/bin/test/testfile.txt", null }
-//		);
 	}
 
 	@Parameter(0)

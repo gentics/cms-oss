@@ -208,6 +208,6 @@ public interface ContentStagingResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/package/{name}/folder/{params: .*}")
-	ContentPackageFolderResponse folder(@PathParam("name") String name, @PathParam("params") List<PathSegment> segments) throws Exception;
+	@Path("/package/{name}/list/{pathSegments: .*}")
+	ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> segments) throws Exception;
 }

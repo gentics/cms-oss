@@ -2,7 +2,9 @@ package com.gentics.contentnode.rest.model.response;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -41,8 +43,8 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 	private List<ContentPackageFolder> folders = new ArrayList<>();
 	private List<ContentPackageFile> files = new ArrayList<>();
 	private List<ContentPackageImage> images = new ArrayList<>();
-	private List<ContentPackagePage> pages = new ArrayList<>();
-	private List<ContentPackageForm> forms = new ArrayList<>();
+	private Map<String, List<ContentPackagePage>> pages = new HashMap<>();
+	private Map<String, List<ContentPackageForm>> forms = new HashMap<>();
 
 	@XmlTransient
 	@JsonIgnore
@@ -57,12 +59,6 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 					.collect(Collectors.toList());
 
 			switch (item.getTypeName()) {
-			case StagedPage.TYPE_NAME:
-				ContentPackagePage page = new ContentPackagePage();
-				page.clone((StagedPage) item);
-				page.setErrors(myErrors);
-				response.getPages().add(page);
-				break;
 			case StagedFile.TYPE_NAME:
 				ContentPackageFile file = new ContentPackageFile();
 				file.clone((StagedFile) item);
@@ -74,12 +70,6 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 				image.clone((StagedImage) item);
 				image.setErrors(myErrors);
 				response.getImages().add(image);
-				break;
-			case StagedForm.TYPE_NAME:
-				ContentPackageForm form = new ContentPackageForm();
-				form.clone((StagedForm) item);
-				form.setErrors(myErrors);
-				response.getForms().add(form);
 				break;
 			case StagedFolder.TYPE_NAME:
 				ContentPackageFolder folder = new ContentPackageFolder();
@@ -98,6 +88,18 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 				node.clone((StagedNode) item);
 				node.setErrors(myErrors);
 				response.getNodes().add(node);
+				break;
+			case StagedPage.TYPE_NAME:
+				ContentPackagePage page = new ContentPackagePage();
+				page.clone((StagedPage) item);
+				page.setErrors(myErrors);
+				response.getPages().computeIfAbsent(page.getId(), k -> new ArrayList<>()).add(page);
+				break;
+			case StagedForm.TYPE_NAME:
+				ContentPackageForm form = new ContentPackageForm();
+				form.clone((StagedForm) item);
+				form.setErrors(myErrors);
+				response.getForms().computeIfAbsent(form.getId(), k -> new ArrayList<>()).add(form);
 				break;
 			}
 		}));
@@ -134,16 +136,16 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 	public void setImages(List<ContentPackageImage> images) {
 		this.images = images;
 	}
-	public List<ContentPackagePage> getPages() {
+	public Map<String, List<ContentPackagePage>> getPages() {
 		return pages;
 	}
-	public void setPages(List<ContentPackagePage> pages) {
+	public void setPages(Map<String, List<ContentPackagePage>> pages) {
 		this.pages = pages;
 	}
-	public List<ContentPackageForm> getForms() {
+	public Map<String, List<ContentPackageForm>> getForms() {
 		return forms;
 	}
-	public void setForms(List<ContentPackageForm> forms) {
+	public void setForms(Map<String, List<ContentPackageForm>> forms) {
 		this.forms = forms;
 	}
 }

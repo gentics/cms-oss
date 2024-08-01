@@ -683,6 +683,87 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 	}
 
 	@Test
+	public void testListFolder() throws Exception {
+		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		String packageName = response.getContentPackage().getName();
+		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		String folder1Id = supply(() -> folder1.getGlobalId().toString());
+		String file1Id = supply(() -> file1.getGlobalId().toString());
+		String img1Id = supply(() -> image1.getGlobalId().toString());
+		String form1Id = supply(() -> form1.getGlobalId().toString());
+		String node1Id = supply(() -> node1.getGlobalId().toString());
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "folder", folder1Id, true);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "node", node1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "file", file1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "image", img1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "form", form1Id, false);
+		});
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "form", form1Id, false);
+		});
+		assertResponseOK(response);
+		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFolders()).isEqualTo(2);
+		assertThat(response.getContentPackage().getPages()).isEqualTo(1);
+		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
+		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+
+		ContentPackageFolderResponse folderResponse = assertRequiredPermissions(group, "tester", "tester", restContext, 
+				target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("list").path("/").request().get(ContentPackageFolderResponse.class), 
+				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW));
+		assertResponseOK(folderResponse);
+		assertThat(folderResponse.getNodes()).hasSize(1);
+		assertThat(folderResponse.getFolders()).hasSize(0);
+		assertThat(folderResponse.getPages()).hasSize(0);
+		assertThat(folderResponse.getImages()).hasSize(0);
+		assertThat(folderResponse.getFiles()).hasSize(0);
+		assertThat(folderResponse.getForms()).hasSize(0);
+
+		folderResponse = assertRequiredPermissions(group, "tester", "tester", restContext, 
+				target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("list")
+					.path(supply(() -> node1.getFolder().getName())).request().get(ContentPackageFolderResponse.class), 
+				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW));
+		assertResponseOK(folderResponse);
+		assertThat(folderResponse.getNodes()).hasSize(0);
+		assertThat(folderResponse.getFolders()).hasSize(1);
+		assertThat(folderResponse.getPages()).hasSize(0);
+		assertThat(folderResponse.getImages()).hasSize(1);
+		assertThat(folderResponse.getFiles()).hasSize(0);
+		assertThat(folderResponse.getForms()).hasSize(1);
+
+		folderResponse = assertRequiredPermissions(group, "tester", "tester", restContext, 
+				target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("list")
+					.path(supply(() -> node1.getFolder().getName())).path(supply(() -> folder1.getName())).request().get(ContentPackageFolderResponse.class), 
+				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW));
+		assertResponseOK(folderResponse);
+		assertThat(folderResponse.getNodes()).hasSize(0);
+		assertThat(folderResponse.getFolders()).hasSize(0);
+		assertThat(folderResponse.getPages()).hasSize(1);
+		assertThat(folderResponse.getImages()).hasSize(0);
+		assertThat(folderResponse.getFiles()).hasSize(1);
+		assertThat(folderResponse.getForms()).hasSize(0);
+	}
+
+	@Test
 	public void testProbeImport() throws Exception {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
@@ -744,11 +825,10 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 			return new ContentStagingResourceImpl().importIntoCms(packageName, 0, true);
 		}));
 		ContentPackageFolderResponse cplResponse = supply(() -> {
-			return new ContentStagingResourceImpl().folder(packageName, UriComponent.decodePath(folder1.getName(), true));
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true));
 		});
 		assertResponseOK(cplResponse);
-		assertThat(cplResponse.getPages()).hasSize(2);
-		assertThat(cplResponse.getPages().stream().filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
+		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
 			.isNotEmpty()
 			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
 	}
@@ -978,7 +1058,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		});
 		assertThat(list.getItems())
 			.isNotEmpty()
-			.hasSize(7)
+			.hasSize(8)
 			.areAtMost(1, new Condition<StagedContentPackage>(pkg -> pkg.getName().equals(newPackageName), "names match"))
 			.areAtMost(1, new Condition<StagedContentPackage>(pkg -> pkg.getName().equals(packageName), "names match"));
 	}

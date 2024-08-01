@@ -187,6 +187,7 @@ import de.jkeylockmanager.manager.KeyLockManagers;
 @RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_VIEW)
 public class ContentStagingResourceImpl implements ContentStagingResource {
 
+	private static final String FOUND_AT_LOG = "Found {} at {}";
 	private static final String DOWNLOAD_EXTENSION = ".zip";
 	private static final String METADATA_EXTENSION = ".json";
 	private static final String FOLDER_EXTENSION = ".folder" + METADATA_EXTENSION;
@@ -929,9 +930,11 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	@GET
-	@javax.ws.rs.Path("/package/{name}/folder/{params: .*}")
-	public ContentPackageFolderResponse folder(@PathParam("name") String name, @PathParam("params") List<PathSegment> segments) throws NodeException {
+	@javax.ws.rs.Path("/package/{name}/list/{pathSegments: .*}")
+	public ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> rawSegments) throws NodeException {
 		Path path = checkFeatureGetPath();
+
+		final List<PathSegment> segments = rawSegments.stream().filter(s -> StringUtils.isNotBlank(s.getPath())).collect(Collectors.toList());
 		
 		try (Trx trx = ContentNodeHelper.trx()) {
 			ContentPackageFolderResponse response;
@@ -941,8 +944,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					.findAny().orElse(null);
 			if (importStatus == null || !importStatus.isRunning()) {
 				// Check that the package is well formed
+				Path packagePath = path.resolve(name);
 				StagedContentPackage cpackage = executeLocked(sanitizeCheck(name, true), () -> {
-					Path packagePath = path.resolve(name);
 					StagedContentPackage contentPackage = loadFromFilesystem(
 							packagePath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class,
 							stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
@@ -952,9 +955,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				List<StagingBase> items = new ArrayList<>();
 				List<StagingError> errors = new ArrayList<>();
 				
-				processContentPackageItems(path, cpackage, true,
+				processContentPackageItems(packagePath, cpackage, true,
 						page -> {
-							if (CollectionUtils.isEmpty(segments) || page.getParent().getFileName().toString().equals(walker.peek())) {
+							if (page.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredPage storedPage = loadFromFilesystem(page, StoredPage.class, s -> s);
 								items.add(storedPage);
 							}
@@ -962,27 +965,27 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						folder -> {
 							StoredFolder storedFolder = loadFromFilesystem(folder, StoredFolder.class, s -> s);
 							String folderName = storedFolder.getName();
-							if (CollectionUtils.isEmpty(segments) || folder.getParent().getFileName().toString().equals(walker.peek())) {
+							if (segments.size() == walker.size() && folder.getParent().getFileName().toString().equals(walker.peek())) {
 								items.add(storedFolder);
-							} else if (segments.get(walker.size()).getPath().equals(folderName)) {
+							} else if (segments.size() > walker.size() && segments.get(walker.size()).getPath().equals(folderName)) {
 								// Right folder, use it
 								walker.push(storedFolder.getId());
 							}
 						}, 
 						file -> {
-							if (CollectionUtils.isEmpty(segments) || file.getParent().getFileName().toString().equals(walker.peek())) {
+							if (segments.size() == walker.size() && file.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
 								items.add(storedFile);
 							}
 						}, 
 						image -> {
-							if (CollectionUtils.isEmpty(segments) || image.getParent().getFileName().toString().equals(walker.peek())) {
+							if (segments.size() == walker.size() && image.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
 								items.add(storedImage);
 							}
 						}, 
 						form -> {
-							if (CollectionUtils.isEmpty(segments) || form.getParent().getFileName().toString().equals(walker.peek())) {
+							if (segments.size() == walker.size() && form.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredForm storedForm = loadFromFilesystem(form, StoredForm.class, s -> s);
 								items.add(storedForm);
 							}
@@ -991,13 +994,13 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							
 						}, 
 						node -> {
-							if (CollectionUtils.isEmpty(segments) /* || node.getParent().getFileName().toString().equals(walker.peek())*/) {
+							if (CollectionUtils.isEmpty(segments)) {
 								StoredNode storedNode = loadFromFilesystem(node, StoredNode.class, s -> s);
 								items.add(storedNode);
 							}
 						}, 
 						channel -> {
-							if (CollectionUtils.isEmpty(segments) /* || channel.getParent().getFileName().toString().equals(walker.peek())*/) {
+							if (CollectionUtils.isEmpty(segments)) {
 								StoredChannel storedChannel = loadFromFilesystem(channel, StoredChannel.class, s -> s);
 								items.add(storedChannel);
 							}
@@ -1644,6 +1647,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * 
 	 * @param path
 	 * @param cp
+	 * @param throwOnDuplications set this if you want an exception thrown on a duplicated ID in the package
 	 * @throws NodeException 
 	 */
 	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
@@ -1681,14 +1685,36 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				});
 	}
 
+	/**
+	 * Walk over content staging package contents, performing operations on `doOnXXX` consumers.
+	 * 
+	 * @param path package path
+	 * @param cp package definition
+	 * @param sort set to preserve depth-first order of execution
+	 * @param doOnPage
+	 * @param doOnFolder
+	 * @param doOnFile
+	 * @param doOnImage
+	 * @param doOnForm
+	 * @param doOnBinary
+	 * @param doOnNode
+	 * @param doOnChannel
+	 * @param doOnMetadata
+	 * @param doOnErrors
+	 * @param doOnAlien
+	 * @param doOnDups
+	 * @param doOnException
+	 * @throws NodeException
+	 */
 	public static void processContentPackageItems(Path path, StagedContentPackage cp, boolean sort,
 				Consumer<Path> doOnPage, Consumer<Path> doOnFolder, Consumer<Path> doOnFile, Consumer<Path> doOnImage,
 				Consumer<Path> doOnForm, Consumer<Path> doOnBinary, Consumer<Path> doOnNode, Consumer<Path> doOnChannel,
 				Consumer<Path> doOnMetadata, Consumer<Path> doOnErrors, Consumer<Path> doOnAlien, TriConsumer<Path, Path, String> doOnDups, Consumer<Throwable> doOnException
 			) throws NodeException {
+		Stream<Path> walker = null;
 		try {
 			Map<String, Path> encounteredIDs = new HashMap<>();
-			Stream<Path> walker = Files.walk(path);
+			walker = Files.walk(path);
 			if (sort) {
 				walker = walker.sorted();
 			}
@@ -1701,55 +1727,58 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					if (Files.isRegularFile(i)) {
 						if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", "metadata", i));
+								logger.debug(String.format(FOUND_AT_LOG, "metadata", i));
 							}
 							doOnMetadata.accept(i);
 						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_ERRORS_FILENAME)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", "errors", i));
+								logger.debug(String.format(FOUND_AT_LOG, "errors", i));
 							}
 							doOnErrors.accept(i);
 						} else if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedPage.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedPage.TYPE_NAME, i));
 							}
 							doOnPage.accept(i);
 						} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedForm.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedForm.TYPE_NAME, i));
 							}
 							doOnForm.accept(i);
 						} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedFile.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedFile.TYPE_NAME, i));
 							}
 							doOnFile.accept(i);
 						} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedImage.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedImage.TYPE_NAME, i));
 							}
 							doOnImage.accept(i);
 						} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedNode.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedNode.TYPE_NAME, i));
 							}
 							doOnNode.accept(i);
 						} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedFolder.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedFolder.TYPE_NAME, i));
 							}
 							doOnFolder.accept(i);
 						} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", StagedChannel.TYPE_NAME, i));
+								logger.debug(String.format(FOUND_AT_LOG, StagedChannel.TYPE_NAME, i));
 							}
 							doOnChannel.accept(i);
 						} else if (i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("Found {} at {}", "binary data", i));
+								logger.debug(String.format(FOUND_AT_LOG, "binary data", i));
 							}
 							doOnBinary.accept(i);
 						} else {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, "alien file", i));
+							}
 							doOnAlien.accept(i);
 						}
 					}
@@ -1762,6 +1791,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				e = e.getCause();
 			}
 			doOnException.accept(e);
+		} finally {
+			if (walker != null) {
+				walker.close();
+			}
 		}
 	}
 

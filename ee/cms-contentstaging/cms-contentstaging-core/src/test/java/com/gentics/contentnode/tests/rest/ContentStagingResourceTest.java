@@ -85,6 +85,11 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.runtime.ConfigurationValue;
+import com.gentics.contentnode.staging.StagingErrorKind;
+import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -824,13 +829,32 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertResponseOK(supply(() -> {
 			return new ContentStagingResourceImpl().importIntoCms(packageName, 0, true);
 		}));
+
+		// List all
 		ContentPackageFolderResponse cplResponse = supply(() -> {
-			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true));
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), null);
 		});
 		assertResponseOK(cplResponse);
 		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
 			.isNotEmpty()
 			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
+
+		// List mismatches only
+		cplResponse = supply(() -> {
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.exception.toString());
+		});
+		assertResponseOK(cplResponse);
+		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
+			.isNotEmpty()
+			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
+
+		// List something else
+		cplResponse = supply(() -> {
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.no_binary.toString());
+		});
+		assertResponseOK(cplResponse);
+		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
+			.isEmpty();
 	}
 
 	@Test

@@ -21,6 +21,7 @@ public class StagingError implements Serializable {
 	private String path;
 	private String error;
 	private String globalId;
+	private StagingErrorKind kind;
 
 	/**
 	 * Reflection ctor.
@@ -34,10 +35,11 @@ public class StagingError implements Serializable {
 	 * @param path
 	 * @param error
 	 */
-	public StagingError(String globalId, String path, String error) {
+	public StagingError(String globalId, String path, String error, StagingErrorKind kind) {
 		this.path = path;
 		this.error = error;
 		this.globalId = globalId;
+		this.kind = kind;
 	}
 
 	/**
@@ -50,7 +52,7 @@ public class StagingError implements Serializable {
 	@XmlTransient
 	@JsonIgnore
     public static final StagingError fromThrowable(String globalId, Path path, Throwable t) {
-		return new StagingError(globalId, path.toString(), t.getMessage());
+		return new StagingError(globalId, path.toString(), t.getMessage(), StagingErrorKind.exception);
 	}
 
 	public String getPath() {
@@ -70,5 +72,11 @@ public class StagingError implements Serializable {
 	}
 	public void setGlobalId(String globalId) {
 		this.globalId = globalId;
+	}
+	public StagingErrorKind getKind() {
+		return kind;
+	}
+	public void setKind(StagingErrorKind kind) {
+		this.kind = kind;
 	}
 }

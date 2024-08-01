@@ -94,6 +94,7 @@ import com.gentics.contentnode.staging.StagedProperty;
 import com.gentics.contentnode.staging.StagedReference;
 import com.gentics.contentnode.staging.StagedTag;
 import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorKind;
 import com.gentics.contentnode.staging.StoredImage;
 import com.gentics.lib.etc.StringUtils;
 
@@ -661,7 +662,7 @@ public class StagingModelBuilder {
 					I18NHelper.get(String.format("%s.notfound", table), reference.getId()));
 		} else if (!wrapper.apply(referenced).matches(reference)) {
 			mismatches.add(new StagingError(ownerId, ownerPath.toString(), String.format("%s '%s' (%s, %d)", I18NHelper.get(table), I18NHelper.getName(referenced),
-					referenced.getGlobalId().toString(), referenced.getId())));
+					referenced.getGlobalId().toString(), referenced.getId()), StagingErrorKind.mismatch));
 			consumer.accept(referenced.getId());
 		} else {
 			consumer.accept(referenced.getId());

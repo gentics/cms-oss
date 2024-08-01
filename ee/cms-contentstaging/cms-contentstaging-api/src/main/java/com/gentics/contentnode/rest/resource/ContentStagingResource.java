@@ -204,10 +204,11 @@ public interface ContentStagingResource {
 	 * 
 	 * @param name package name
 	 * @param segments folder path
+	 * @param filter filter the results
 	 * @return download response
 	 * @throws Exception
 	 */
 	@GET
 	@Path("/package/{name}/list/{pathSegments: .*}")
-	ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> segments) throws Exception;
+	ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> segments, @QueryParam("filter") String filter) throws Exception;
 }

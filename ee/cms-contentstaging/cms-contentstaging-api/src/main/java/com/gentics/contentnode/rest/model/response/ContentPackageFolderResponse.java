@@ -30,6 +30,7 @@ import com.gentics.contentnode.staging.StagedNode;
 import com.gentics.contentnode.staging.StagedPage;
 import com.gentics.contentnode.staging.StagingBase;
 import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorKind;
 
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,15 +49,22 @@ public class ContentPackageFolderResponse extends GenericJobStatusResponse {
 
 	@XmlTransient
 	@JsonIgnore
-	public static final ContentPackageFolderResponse fromContent(List<StagingBase> items, List<StagingError> errors) {
+	public static final ContentPackageFolderResponse fromContent(List<StagingBase> items, List<StagingError> errors, StagingErrorKind filterByError) {
 		ContentPackageFolderResponse response = new ContentPackageFolderResponse();
 
 		Optional.ofNullable(items).ifPresent(i -> i.stream().forEach(item -> {
-			List<StagedError> myErrors = Optional.ofNullable(errors).orElse(Collections.emptyList()).stream()
+			List<StagingError> myStagedErrors = Optional.ofNullable(errors).orElse(Collections.emptyList()).stream()
 					.filter(e -> e.getGlobalId().equals(item.getId()))
-					.map(StagingError::getError)
-					.map(StagedError::new)
 					.collect(Collectors.toList());
+
+			if (filterByError != null) {
+				myStagedErrors = myStagedErrors.stream().filter(e -> e.getKind().equals(filterByError)).collect(Collectors.toList());
+				if (myStagedErrors.isEmpty()) {
+					return;
+				}
+			}
+
+			List<StagedError> myErrors = myStagedErrors.stream().map(s -> new StagedError(s.getError(), s.getKind())).collect(Collectors.toList());
 
 			switch (item.getTypeName()) {
 			case StagedFile.TYPE_NAME:

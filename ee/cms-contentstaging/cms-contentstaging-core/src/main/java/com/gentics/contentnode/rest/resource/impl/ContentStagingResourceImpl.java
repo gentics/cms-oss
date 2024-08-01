@@ -161,6 +161,7 @@ import com.gentics.contentnode.staging.StagedObjectVersion;
 import com.gentics.contentnode.staging.StagedPage;
 import com.gentics.contentnode.staging.StagingBase;
 import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorKind;
 import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.staging.StoredChannel;
 import com.gentics.contentnode.staging.StoredContentPackage;
@@ -177,6 +178,7 @@ import com.gentics.lib.log.NodeLogger;
 
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
+import javassist.expr.Instanceof;
 
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
@@ -931,7 +933,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@GET
 	@javax.ws.rs.Path("/package/{name}/list/{pathSegments: .*}")
-	public ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> rawSegments) throws NodeException {
+	public ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> rawSegments, @QueryParam("filter") String filter) throws NodeException {
 		Path path = checkFeatureGetPath();
 
 		final List<PathSegment> segments = rawSegments.stream().filter(s -> StringUtils.isNotBlank(s.getPath())).collect(Collectors.toList());
@@ -954,6 +956,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				ArrayDeque<String> walker = new ArrayDeque<>();
 				List<StagingBase> items = new ArrayList<>();
 				List<StagingError> errors = new ArrayList<>();
+
+				StagingErrorKind filterByError = Optional.ofNullable(filter).map(StagingErrorKind::fromValue).orElse(null);
 				
 				processContentPackageItems(packagePath, cpackage, true,
 						page -> {
@@ -976,12 +980,18 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							if (segments.size() == walker.size() && file.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
 								items.add(storedFile);
+								if (!file.getParent().resolve(makeBinaryFilename(storedFile)).toFile().exists()) {
+									errors.add(new StagingError(storedFile.getId(), file.toString(), null, StagingErrorKind.no_binary));
+								}
 							}
 						}, 
 						image -> {
 							if (segments.size() == walker.size() && image.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
 								items.add(storedImage);
+								if (!image.getParent().resolve(makeBinaryFilename(storedImage)).toFile().exists()) {
+									errors.add(new StagingError(storedImage.getId(), image.toString(), null, StagingErrorKind.no_binary));
+								}
 							}
 						}, 
 						form -> {
@@ -990,8 +1000,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								items.add(storedForm);
 							}
 						}, 
-						binary -> {
-							
+						binary -> {							
 						}, 
 						node -> {
 							if (CollectionUtils.isEmpty(segments)) {
@@ -1016,12 +1025,21 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						}, 
 						(dup, orig, id) -> {
 							logger.warn(String.format("Duplicated file for id [%s] in the content package [%s]: orig: %s, dup: %s", id, cpackage.getName(), orig.toString(), dup.toString()));
+							errors.add(new StagingError(id, dup.toString(), "Duplication of " + orig.toString(), StagingErrorKind.duplication));
+							errors.add(new StagingError(id, orig.toString(), "Duplication of " + dup.toString(), StagingErrorKind.duplication));
 						}, 
 						exception -> {
-							logger.error(String.format("Could not process the content package [%s]", cpackage.getName()), exception);
+							logger.error(String.format("Could not process the content package [%s]", cpackage.getName()));
+							if (exception instanceof NodeException) {
+								throw (NodeException) exception;
+							} else if (exception.getCause() instanceof NodeException) {
+								throw (NodeException) exception.getCause();
+							} else {
+								throw new NodeException(exception);
+							}
 						}
 					);
-				response = ContentPackageFolderResponse.fromContent(items, errors);
+				response = ContentPackageFolderResponse.fromContent(items, errors, filterByError);
 			} else {
 				response = new ContentPackageFolderResponse();
 			}
@@ -1236,7 +1254,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			// Independently of the result, we have to store the binary data along,
 			// in order for the possible references to work with this object as fully functional binary, even if the tag data is to be added later.
 			if (storedObject.hasBinary()) {
-				java.io.File binary = currentPath.getParent().resolve(storedObject.getId() + storedObject.getSuffix() + BINARY_EXTENSION).toFile();
+				java.io.File binary = currentPath.getParent().resolve(makeBinaryFilename(storedObject)).toFile();
 				if (!binary.exists()) {
 					binary.createNewFile();
 				}
@@ -2522,6 +2540,16 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 */
 	private static void executeLocked(String lockKey, com.gentics.contentnode.etc.Operator method) throws NodeException {
 		unwrap(() -> FILENAME_LOCK.executeLocked(lockKey, () -> wrap(method)));
+	}
+
+	/**
+	 * Make a binary data filename for the given object.
+	 * 
+	 * @param storedObject
+	 * @return
+	 */
+	private static final String makeBinaryFilename(StoredModel storedObject) {
+		return storedObject.getId() + storedObject.getSuffix() + BINARY_EXTENSION;
 	}
 
 	private final class StagingJobController implements Callable<GenericResponse> {

@@ -1,0 +1,25 @@
+{
+  "globalId" : "a986.40be20e1-4318-11ef-bf28-0242ac110002",
+  "type" : "folder",
+  "keyword" : "object.test_color",
+  "name" : {
+    "de" : "[Test] Ordnerfarbe",
+    "en" : "[Test] Folder color"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "constructId" : "994d.d84f0a55-37ad-11ef-a38e-0242ac110002",
+  "required" : false,
+  "inheritable" : false,
+  "category" : {
+    "globalId" : "994d.e54046e7-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 1
+  },
+  "nodeIds" : [ ]
+}

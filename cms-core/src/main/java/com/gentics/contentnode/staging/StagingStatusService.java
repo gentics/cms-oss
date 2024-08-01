@@ -21,7 +21,7 @@ public interface StagingStatusService {
 	 * @param nodeObjects
 	 * @param stagingPackageName
 	 * @param keyProvider
-	 * @param useVariants should the statuc include the object variants, if there are any
+	 * @param useVariants should the status include the object variants, if there are any
 	 * @return map of object ID / status.
 	 * @throws NodeException
 	 */

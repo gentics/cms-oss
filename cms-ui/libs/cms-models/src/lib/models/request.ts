@@ -457,7 +457,7 @@ export interface FileListOptions extends FolderListOptions {
 }
 
 /** Collection of all query parameters allowed by GCMS entities Folder, Form, File, Image, Item */
-export type GtxCmsQueryOptions = FolderListOptions & PageListOptions & FolderListOptions & FormListOptions &
+export type GtxCmsQueryOptions = FolderListOptions & PageListOptions   & FormListOptions &
 {
     /** path (e.g. /_search) */
     path?: string;
@@ -2410,4 +2410,16 @@ export interface InstancePermissionsOptions {
 
 export interface PolicyMapOptions {
     url: string;
+}
+
+export interface TranslationTextRequest {
+    targetLanguage: string;
+    sourceLanguage?: string;
+    text: string;
+}
+
+export interface TranslationRequestOptions {
+    language: string;
+    locked?: boolean;
+    channelId?: number;
 }

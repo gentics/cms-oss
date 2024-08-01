@@ -82,6 +82,8 @@ import {
     PageListResponse,
     PagePermissions,
     PageRequestOptions,
+    PageResponse,
+    PageTranslateOptions,
     PageVariantCreateRequest,
     PageVersion,
     PagedTemplateListResponse,
@@ -102,6 +104,7 @@ import {
     TemplateRequestOptions,
     TemplateResponse,
     TimeManagement,
+    TranslationRequestOptions,
     TypedItemListResponse,
     folderItemTypePlurals,
 } from '@gentics/cms-models';
@@ -220,6 +223,10 @@ interface UpdateableItemObjectProperty <T extends FolderItemType, R extends Fold
     requestOptions?: Partial<R>;
 }
 
+
+export type TranslateRequestFunction = (pageId: number, options?: PageTranslateOptions | TranslationRequestOptions) => Promise<PageResponse>;
+
+
 @Injectable()
 export class FolderActionsService {
 
@@ -247,6 +254,10 @@ export class FolderActionsService {
                 this.client.folder.folders(0),
             ]).pipe(
                 switchMap(([, folderRes]) => {
+                    if (folderRes.folders.length === 0) {
+                        return of([folderRes, []]);
+                    }
+
                     return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
                         map(responses => [folderRes, responses.map(res => res.node)]),
                     );
@@ -321,6 +332,15 @@ export class FolderActionsService {
      * in the list of nodes by alphabetic order.
      */
     navigateToDefaultNode(): void {
+        // If no nodes have been loaded yet, then we have to wait to be able to determine the default node
+        if (!this.appState.now.folder.nodesLoaded) {
+            this.appState.select(state => state.folder.nodesLoaded).pipe(
+                filter(loaded => loaded),
+                take(1),
+            ).subscribe(() => this.navigateToDefaultNode());
+            return;
+        }
+
         const defaultNode = this.resolveDefaultNode();
 
         if (defaultNode) {
@@ -974,7 +994,7 @@ export class FolderActionsService {
             return of(emptyResponse);
         }
         return this.queryAssemblerGCMSSearchService.getOptions(type, parentId, filters, options).pipe(
-            mergeMap((requestOptions: FolderListOptions & PageListOptions & FolderListOptions & FormListOptions) => {
+            mergeMap((requestOptions: FolderListOptions & PageListOptions   & FormListOptions) => {
                 // If return value of query-assembler is `null` it means that filters defined
                 // are not valid for given entity-type and thus an empty response shall be returned.
                 // Because GCMS REST API would just ignore undefined query-params and still return items in repsonse,
@@ -1606,14 +1626,32 @@ export class FolderActionsService {
     /**
      * Create a new language variant of the given page.
      */
-    async createPageTranslation(nodeId: number, pageId: number, languageCode: string): Promise<Page<Raw> | void> {
+    async createPageTranslation(pageId: number, params: TranslationRequestOptions): Promise<PageResponse> {
+        return this.client.page.translate(pageId, { channelId: params.channelId, language: params.language }).toPromise();
+    }
+
+    /**
+     * Create a new language variant of the given page by executing the provided function.
+     * The function issues the actual api request.
+     */
+    async executePageTranslationFunction(
+        nodeId: number,
+        pageId: number,
+        languageCode: string,
+        translationRequestFunction: TranslateRequestFunction,
+    ): Promise<Page<Raw> | void> {
         await this.appState.dispatch(new StartListCreatingAction('page')).toPromise();
 
         try {
-            const res = await this.client.page.translate(pageId, { channelId: nodeId, language: languageCode }).toPromise();
+            const res = await translationRequestFunction(pageId, {language: languageCode, channelId: nodeId})
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
-            const newPage = res.page;
+            const newPage = res?.page ?? res;
+            // result is not available yet
+            if (!newPage) {
+                return;
+            }
+
             const oldPageId = pageId;
             const entityState = this.appState.now.entities;
             const normalized = normalize(newPage, pageSchema);
@@ -1631,7 +1669,7 @@ export class FolderActionsService {
                 },
             })).toPromise();
 
-            return res.page;
+            return res.page ?? res as any as Page;
         } catch (error) {
             await this.appState.dispatch(new ListCreatingErrorAction('page', error.message)).toPromise();
             this.errorHandler.catch(error, { notification: true });

@@ -90,7 +90,7 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
         return;
     }
 
-    if (response.responseInfo.responseCode !== 'OK') {
+    if (response.responseInfo.responseCode !==  ResponseCode.OK) {
         // some responses contain no messages
         response.messages = response.messages || [];
 

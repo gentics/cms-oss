@@ -28,7 +28,7 @@
         <label *ngIf="label != null" (click)="viewValueContainer.focus()">{{ label }}</label>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content (keydown)="handleKeydown($event)">
+    <gtx-dropdown-content class="select-context" (keydown)="handleKeydown($event)">
         <ul
             class="select-options"
             (click)="viewValueContainer.focus()"
@@ -43,6 +43,7 @@
                 <li
                     *ngFor="let option of group.options; let optionIndex = index"
                     class="select-option"
+                    [attr.data-id]="idPath ? (option.value | gtxValuePath:idPath) : option.value"
                     [class.disabled]="group.disabled || option.disabled"
                     [class.selected]="selectedIndex[0] === groupIndex && selectedIndex[1] === optionIndex"
                     (click)="selectItem(groupIndex, optionIndex)"
@@ -55,7 +56,7 @@
 
                     <icon *ngIf="option.icon" class="material-icons">{{ option.icon }}</icon>
 
-                     {{ option.viewValue }}
+                    <span class="option-label">{{ option.viewValue }}</span>
                 </li>
             </ng-template>
 

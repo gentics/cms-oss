@@ -1,17 +1,25 @@
-import { Folder, Node, NodeFeature, Page, Template } from '@gentics/cms-models';
-import { GCMSRestClient } from '@gentics/cms-rest-client';
-import { EntityMap, ENV_CMS_PASSWORD, ENV_CMS_REST_PATH, ENV_CMS_USERNAME, TestSize } from './common';
-import { CypressDriver } from './cypress-driver';
+import { Folder, Group, Node, NodeFeature, Page, PagingSortOrder, Template, User } from '@gentics/cms-models';
+import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import {
+    EntityMap,
+    ENV_CMS_PASSWORD,
+    ENV_CMS_REST_PATH,
+    ENV_CMS_USERNAME,
     FolderImportData,
+    GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     ImportData,
     NodeImportData,
+    PageImportData,
+    TestSize,
+    UserImportData,
+} from './common';
+import { CypressDriver } from './cypress-driver';
+import {
+    emptyNode,
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
-    PageImportData,
-    emptyNode,
 } from './entities';
 
 export interface ImportBootstrapData {
@@ -20,12 +28,12 @@ export interface ImportBootstrapData {
     templates: Record<string, Template>;
 }
 
-function createClient(): Promise<GCMSRestClient> {
+export function createClient(): Promise<GCMSRestClient> {
     let sid: number | null = null;
     const client = new GCMSRestClient(
         new CypressDriver(),
         {
-            // Connection is either via DEV Server or direct, but doesn't matter
+            // The baseUrl (aka. protocol/host/port) has to be already setup when started
             connection: {
                 absolute: false,
                 basePath: Cypress.env(ENV_CMS_REST_PATH),
@@ -142,6 +150,7 @@ async function importPage(
         folderId,
         nodeId,
         templateId,
+        tags,
         ...req
     } = data;
 
@@ -153,15 +162,112 @@ async function importPage(
     const parentId = (folderEntity as Node).folderId ?? (folderEntity as (Node | Folder)).id;
     const tplId = (entityMap[templateId] as Template).id;
 
-    const created = (await client.page.create({
-        ...req,
+    await client.template.linkMultiple({
+        templateIds: [tplId],
+        folderIds: [parentId],
+        nodeId: parseFloat(nodeId),
+    }).send();
 
+    const pageResponse = (await client.page.create({
+        ...req,
         folderId: parentId,
         nodeId: (entityMap[nodeId] as Node).id,
         templateId: tplId,
-    }).send()).page;
+    }).send())
 
-    return created;
+    const createdPage = pageResponse.page;
+
+    await client.page.update(createdPage.id, {
+        page: {
+            tags,
+        },
+    }).send();
+
+    const loadResponse = await client.page.get(createdPage.id).send()
+
+    return loadResponse.page;
+}
+
+async function importGroup(
+    client: GCMSRestClient,
+    entityMap: EntityMap,
+    data: GroupImportData,
+): Promise<Group | null> {
+    const { parent, permissions, ...reqData } = data;
+
+    let parentId: number | null = null;
+
+    if (parent != null) {
+        parentId = (entityMap[parent] as Group)?.id;
+    }
+
+    if (parentId == null) {
+        parentId = (await client.group.list({
+            pageSize: 1,
+            sort: [{ attribute: 'id', sortOrder: PagingSortOrder.Asc }],
+        }).send())?.items?.[0]?.id;
+    }
+
+    let importedGroup: Group;
+
+    try {
+        importedGroup = (await client.group.create(parentId, reqData).send()).group;
+    } catch (err) {
+        // If the group already exists, ignore it
+        if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
+            throw err;
+        }
+
+        const foundGroups = (await client.group.list({ q: reqData.name }).send()).items || [];
+        importedGroup = foundGroups.filter(g => g.name === reqData.name)?.[0] ?? foundGroups?.[0];
+    }
+
+    if (importedGroup && permissions) {
+        for (const perm of permissions) {
+            const body = {
+                perms: perm.perms,
+                subGroups: perm.subGroups ?? false,
+                subObjects: perm.subObjects ?? false,
+            };
+
+            if (perm.instanceId) {
+                await client.group.setInstancePermission(
+                    importedGroup.id,
+                    perm.type,
+                    entityMap[perm.instanceId]?.id ?? perm.instanceId,
+                    body,
+                ).send();
+            } else {
+                await client.group.setPermission(importedGroup.id, perm.type, body).send();
+            }
+        }
+    }
+
+    return importedGroup;
+}
+
+async function importUser(
+    client: GCMSRestClient,
+    entityMap: EntityMap,
+    data: UserImportData,
+): Promise<User | null> {
+    const { group, ...reqData } = data;
+
+    try {
+        const created = (await client.group.createUser((entityMap[group] as Group).id, reqData).send()).user;
+
+        return created;
+    } catch (err) {
+        // If the user already exists, ignore it
+        if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
+            throw err;
+        }
+
+        const foundUsers = (await client.user.list({ q: data.login }).send()).items || [];
+        const found = foundUsers.filter(g => g.login === data.login)?.[0] ?? foundUsers?.[0];
+
+        return found;
+    }
 }
 
 async function getLanguageMapping(client: GCMSRestClient): Promise<Record<string, number>> {
@@ -204,16 +310,46 @@ function importEntity(
         case 'page':
             return importPage(client, entityMap, entity as PageImportData);
 
+        case 'group':
+            return importGroup(client, entityMap, entity as GroupImportData);
+
+        case 'user':
+            return importUser(client, entityMap, entity as UserImportData);
+
         default:
             return Promise.resolve(null);
     }
+}
+
+export async function importData(
+    importList: ImportData[],
+): Promise<EntityMap> {
+    const client = await createClient();
+    const entityMap: EntityMap = {};
+
+    for (const importData of importList) {
+        const entity = await importEntity(
+            client,
+            null,
+            entityMap,
+            {},
+            importData[IMPORT_TYPE],
+            importData,
+        );
+        if (!entity) {
+            continue;
+        }
+        entityMap[importData[IMPORT_ID]] = entity;
+    }
+
+    return entityMap;
 }
 
 async function setupContent(
     client: GCMSRestClient,
     pkgName: TestSize,
     data: ImportBootstrapData,
-): Promise<Record<string, number>> {
+): Promise<EntityMap> {
     const importList = PACKAGE_MAP[pkgName];
     if (!importList) {
         return {};
@@ -288,16 +424,38 @@ export async function setupTest(size: TestSize, data: ImportBootstrapData): Prom
     return map;
 }
 
-export async function cleanupTest(): Promise<void> {
+async function clearEmptyNodeForDeletion(client: GCMSRestClient, node: Node): Promise<void> {
+    const constructsRes = await client.node.listConstructs(node.id).send();
+    const packagesRes = await client.devTools.listFromNodes(node.id).send();
+    const objPropRes = await client.node.listObjectProperties(node.id).send();
+
+    for (const construct of (constructsRes.items || [])) {
+        await client.node.unassignConstruct(node.id, construct.id).send();
+    }
+
+    for (const pkg of (packagesRes.items || [])) {
+        await client.devTools.unassignFromNode(pkg.name, node.id).send();
+    }
+
+    for (const objProp of (objPropRes.items || [])) {
+        await client.node.unassignObjectProperty(node.id, objProp.id).send();
+    }
+}
+
+export async function cleanupTest(completeClean: boolean = false): Promise<void> {
     const client = await createClient();
 
     const nodes = (await client.node.list().send()).items || [];
 
     for (const node of nodes) {
-        // Skip the node
         if (node.name === emptyNode.node.name) {
-            continue;
+            // Skip the node if it's a simple cleanup
+            if (!completeClean) {
+                continue;
+            }
         }
+
+        await clearEmptyNodeForDeletion(client, node);
         await client.node.delete(node.id).send();
     }
 }

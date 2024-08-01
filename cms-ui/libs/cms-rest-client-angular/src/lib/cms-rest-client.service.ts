@@ -43,6 +43,7 @@ import {
     AbstractSchedulerAPI,
     AbstractSearchIndexAPI,
     AbstractTemplateAPI,
+    AbstractTranslationAPI,
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
@@ -155,6 +156,7 @@ export class GCMSRestClientService implements APIDefinition {
             schedulerTask: asAngularAPI<AbstractScheduleTaskAPI>(this.client.schedulerTask),
             searchIndex: asAngularAPI<AbstractSearchIndexAPI>(this.client.searchIndex),
             template: asAngularAPI<AbstractTemplateAPI>(this.client.template),
+            translation: asAngularAPI<AbstractTranslationAPI>(this.client.translation),
             user: asAngularAPI<AbstractUserAPI>(this.client.user),
             usersnap: asAngularAPI<AbstractUsersnapAPI>(this.client.usersnap),
             validation: asAngularAPI<AbstractValidationAPI>(this.client.validation),
@@ -336,5 +338,9 @@ export class GCMSRestClientService implements APIDefinition {
 
     get validation(): AngularAPI<AbstractValidationAPI> {
         return this.apis.validation;
+    }
+
+    get translation(): AngularAPI<AbstractTranslationAPI> {
+        return this.apis.translation;
     }
 }

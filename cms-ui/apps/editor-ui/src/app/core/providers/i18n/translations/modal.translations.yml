@@ -858,6 +858,9 @@ translate_and_edit_button:
 translate_and_compare_button:
     en: Translate and compare
     de: Übersetzen und vergleichen
+translate_automatically:
+    en: Translate automatically
+    de: Automatisch übersetzen
 translate_page_title:
     en: 'Translate Page to {{language}}'
     de: 'Seite nach {{language}} übersetzen'

@@ -1,5 +1,7 @@
 package com.gentics.contentnode.render;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EmptyStackException;
@@ -9,8 +11,13 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.devtools.MainPackageSynchronizer;
+import com.gentics.contentnode.devtools.Synchronizer;
+import com.gentics.contentnode.devtools.Synchronizer.Status;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
@@ -32,12 +39,18 @@ import com.gentics.contentnode.object.TagContainer;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.CMSResolver;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType.PackageTemplateLoader;
+import com.gentics.contentnode.object.parttype.handlebars.HelperSource;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.lib.genericexceptions.NotYetImplementedException;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.helper.ConditionalHelpers;
+import com.github.jknack.handlebars.helper.StringHelpers;
+import com.github.jknack.handlebars.io.TemplateLoader;
 
 /**
  * RenderType provides informations and settings about how code should be rendered.
@@ -144,6 +157,11 @@ public class RenderType implements RenderInfo {
 	 * Flag to mark whether the rendering is done in frontend mode
 	 */
 	private boolean frontEnd = false;
+
+	/**
+	 * Stored handlebars instances per node
+	 */
+	private Map<Node, Handlebars> handlebarsPerNode = new HashMap<>();
 
 	/**
 	 * A public constructor, which provides the renderType with all required informations.
@@ -1379,6 +1397,50 @@ public class RenderType implements RenderInfo {
 	 */
 	public ParameterScope withParameter(String name, Object value) {
 		return new ParameterScope(name, value);
+	}
+
+	/**
+	 * Get the handlebars instance for the node.
+	 * @param node node
+	 * @return handlebars instance
+	 * @throws NodeException
+	 * @throws IOException
+	 */
+	public Handlebars getHandlebars(Node node) throws NodeException, IOException {
+		if (!handlebarsPerNode.containsKey(node)) {
+			// TODO cache
+			var handlebars = new Handlebars().infiniteLoops(true);
+
+			List<TemplateLoader> templateLoaders = new ArrayList<>();
+
+			if (Synchronizer.getStatus() == Status.UP) {
+				// TODO should we cache the registered helpers in the packages?
+				for (String packageName : Synchronizer.getPackages(node)) {
+					MainPackageSynchronizer mainPack = Synchronizer.getPackage(packageName);
+					String packageHelpers = mainPack.getHandlebarsHelpers();
+
+					if (!StringUtils.isBlank(packageHelpers)) {
+						handlebars.registerHelpers(packageName, packageHelpers);
+					}
+
+					File partialsDirectory = mainPack.getHandlebarsPartialsDirectory();
+					if (partialsDirectory.isDirectory()) {
+						templateLoaders.add(new PackageTemplateLoader(packageName, partialsDirectory));
+					}
+				}
+			}
+
+			if (!templateLoaders.isEmpty()) {
+				handlebars.with(templateLoaders.toArray(new TemplateLoader[templateLoaders.size()]));
+			}
+
+			handlebars.registerHelpers(ConditionalHelpers.class);
+			handlebars.registerHelpers(StringHelpers.class);
+			handlebars.registerHelpers(HelperSource.class);
+
+			handlebarsPerNode.put(node, handlebars);
+		}
+		return handlebarsPerNode.get(node);
 	}
 
 	/**

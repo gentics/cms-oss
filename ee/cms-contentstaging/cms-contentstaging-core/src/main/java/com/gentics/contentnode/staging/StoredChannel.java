@@ -13,7 +13,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("channel")
+@StoredType(StagedChannel.TYPE_NAME)
 public class StoredChannel extends StagedChannel implements StoredModel {
 
 	private static final long serialVersionUID = 8974036508418574000L;

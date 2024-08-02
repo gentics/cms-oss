@@ -15,7 +15,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("page")
+@StoredType(StagedPage.TYPE_NAME)
 public class StoredPage extends StagedPage implements StoredModel {
 
 	private static final long serialVersionUID = -2612850855501620690L;

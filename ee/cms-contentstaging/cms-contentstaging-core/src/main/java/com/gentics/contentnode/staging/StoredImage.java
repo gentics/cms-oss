@@ -15,7 +15,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("image")
+@StoredType(StagedImage.TYPE_NAME)
 public class StoredImage extends StagedImage implements StoredModel {
 
 	private static final long serialVersionUID = 8948803662162752664L;

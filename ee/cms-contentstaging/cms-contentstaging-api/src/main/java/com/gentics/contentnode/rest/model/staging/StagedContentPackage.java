@@ -21,6 +21,8 @@ public class StagedContentPackage extends ContentPackageBase {
 	private int nodes = 0;
 	private int channels = 0;
 
+	public static final String TYPE_NAME = "contentpackage";
+
 	/**
 	 * Count of forms in the package.
 	 * 

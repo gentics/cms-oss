@@ -13,7 +13,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("form")
+@StoredType(StagedForm.TYPE_NAME)
 public class StoredForm extends StagedForm implements StoredModel {
 
 	private static final long serialVersionUID = 4937436950124555948L;

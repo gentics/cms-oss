@@ -122,6 +122,9 @@ public class Property implements Serializable {
 			case 42: // CMS Form
 				return CMSFORM;
 
+			case 43: // Handlebars
+				return HANDLEBARS;
+
 			default: // unknown types (e.g. customer specific extensions)
 				return UNKNOWN;
 			}

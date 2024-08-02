@@ -95,6 +95,14 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 		return wrapped.canResolve();
 	}
 
+	/**
+	 * Get the wrapped object
+	 * @return wrapped object
+	 */
+	public ResolvableMapWrappable getWrapped() {
+		return wrapped;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("Wrapper for %s", wrapped.toString());

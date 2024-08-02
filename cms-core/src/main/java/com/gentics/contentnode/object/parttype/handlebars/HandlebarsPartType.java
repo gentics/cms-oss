@@ -39,17 +39,8 @@ public class HandlebarsPartType extends TextPartType {
 
 	private static final long serialVersionUID = 6043235322865960951L;
 
-	protected String templateName;
-
 	public HandlebarsPartType(Value value) throws NodeException {
 		super(value);
-		String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
-				.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
-				.orElse("<unknown>");
-		String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
-				.map(Part::getKeyname).orElse("<unknown>");
-
-		templateName = String.format("%s.%s", constructKeyword, partKeyword);
 	}
 
 	@Override
@@ -57,10 +48,18 @@ public class HandlebarsPartType extends TextPartType {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		renderType.createCMSResolver();
+		Value value = getValueObject();
+
+		String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
+				.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
+				.orElse("<unknown>");
+		String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
+				.map(Part::getKeyname).orElse("<unknown>");
+		String templateName = String.format("%s.%s", constructKeyword, partKeyword);
 
 		try {
 			CMSResolver cmsResolver = renderType.getCMSResolver();
-			Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node"));
+			Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
 			Handlebars handlebars = renderType.getHandlebars(node);
 
 			StringTemplateSource source = new StringTemplateSource(templateName, getText());

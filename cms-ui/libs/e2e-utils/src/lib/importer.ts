@@ -25,7 +25,14 @@ import {
     ImageImportData,
     IMPORT_ID,
     IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_NODE,
+    IMPORT_TYPE_USER,
     ImportData,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_FOLDER,
+    ITEM_TYPE_IMAGE,
+    ITEM_TYPE_PAGE,
     NodeImportData,
     PageImportData,
     TestSize,
@@ -38,6 +45,9 @@ import {
     PACKAGE_MAP,
 } from './entities';
 
+// To enable for debugging
+const IMPORT_LOGGING = false;
+
 export interface ImportBootstrapData {
     dummyNode: number;
     languages: Record<string, number>;
@@ -45,7 +55,6 @@ export interface ImportBootstrapData {
 }
 
 export function createClient(): Promise<GCMSRestClient> {
-    let sid: number | null = null;
     const client = new GCMSRestClient(
         new CypressDriver(),
         {
@@ -54,14 +63,6 @@ export function createClient(): Promise<GCMSRestClient> {
                 absolute: false,
                 basePath: Cypress.env(ENV_CMS_REST_PATH),
             },
-            interceptors: [
-                (data) => {
-                    if (sid != null) {
-                        data.params['sid'] = `${sid}`;
-                    }
-                    return data;
-                },
-            ],
         },
     );
 
@@ -71,7 +72,8 @@ export function createClient(): Promise<GCMSRestClient> {
     })
         .send()
         .then(res => {
-            sid = res.sid;
+            // Set the SID for future requests
+            client.sid = res.sid;
             return client;
         });
 }
@@ -100,9 +102,13 @@ async function importNode(
         ...req
     } = data;
 
-    cy.log(`Importing node ${data[IMPORT_ID]}`, req);
+    if (IMPORT_LOGGING) {
+        cy.log(`Importing node ${data[IMPORT_ID]}`, req);
+    }
     const created = (await client.node.create(req).send()).node;
-    cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
+    if (IMPORT_LOGGING) {
+        cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
+    }
 
     await setNodeFeatures(client, created.id, features);
 
@@ -133,7 +139,9 @@ async function importNode(
         }).send();
 
         if (tpl) {
-            cy.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+            if (IMPORT_LOGGING) {
+                cy.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+            }
             entityMap[tplId] = tpl;
         }
     }
@@ -164,9 +172,13 @@ async function importFolder(
         nodeId: (entityMap[nodeId] as Node).id,
     };
 
-    cy.log(`Importing folder ${data[IMPORT_ID]}`, body);
+    if (IMPORT_LOGGING) {
+        cy.log(`Importing folder ${data[IMPORT_ID]}`, body);
+    }
     const created = (await client.folder.create(body).send()).folder;
-    cy.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
+    if (IMPORT_LOGGING) {
+        cy.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
+    }
 
     return created;
 }
@@ -199,7 +211,9 @@ async function importPage(
         templateId: tplId,
     };
 
-    cy.log(`Importing page ${data[IMPORT_ID]}`, body);
+    if (IMPORT_LOGGING) {
+        cy.log(`Importing page ${data[IMPORT_ID]}`, body);
+    }
     const created = (await client.page.create(body).send()).page;
     if (tags) {
         await client.page.update(created.id, {
@@ -208,7 +222,9 @@ async function importPage(
             },
         }).send();
     }
-    cy.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
+    if (IMPORT_LOGGING) {
+        cy.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
+    }
 
     return created;
 }
@@ -224,7 +240,9 @@ async function importFile(
     const bin = binaryMap[data[IMPORT_ID]];
 
     if (!bin) {
-        cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        if (IMPORT_LOGGING) {
+            cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        }
         return;
     }
 
@@ -235,13 +253,17 @@ async function importFile(
         nodeId: (entityMap[nodeId] as Node).id,
     };
 
-    cy.log(`Importing file ${data[IMPORT_ID]}`, body);
-    const created = (await client.file.upload(new Blob([bin]), body).send());
-    cy.log(`Imported file ${data[IMPORT_ID]} ->`, created);
+    if (IMPORT_LOGGING) {
+        cy.log(`Importing file ${data[IMPORT_ID]}`, body);
+    }
+    const created = (await client.file.upload(new Blob([bin]), body).send())?.file;
+    if (IMPORT_LOGGING) {
+        cy.log(`Imported file ${data[IMPORT_ID]} ->`, created);
+    }
 
-    await client.file.update(created.file.id, { file: updateData }).send();
+    await client.file.update(created.id, { file: updateData }).send();
 
-    return created.file;
+    return created;
 }
 
 async function importImage(
@@ -255,7 +277,9 @@ async function importImage(
     const bin = binaryMap[data[IMPORT_ID]];
 
     if (!bin) {
-        cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        if (IMPORT_LOGGING) {
+            cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+        }
         return;
     }
 
@@ -266,9 +290,13 @@ async function importImage(
         nodeId: (entityMap[nodeId] as Node).id,
     };
 
-    cy.log(`Importing image ${data[IMPORT_ID]}`, data);
+    if (IMPORT_LOGGING) {
+        cy.log(`Importing image ${data[IMPORT_ID]}`, data);
+    }
     const created = (await client.file.upload(new Blob([bin]), body).send()).file;
-    cy.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
+    if (IMPORT_LOGGING) {
+        cy.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
+    }
 
     await client.image.update(created.id, { image: updateData }).send();
 
@@ -298,16 +326,22 @@ async function importGroup(
     let importedGroup: Group;
 
     try {
-        cy.log(`Importing group ${data[IMPORT_ID]}`, data);
+        if (IMPORT_LOGGING) {
+            cy.log(`Importing group ${data[IMPORT_ID]}`, data);
+        }
         importedGroup = (await client.group.create(parentId, reqData).send()).group;
-        cy.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
+        if (IMPORT_LOGGING) {
+            cy.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
+        }
     } catch (err) {
         // If the group already exists, ignore it
         if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
             throw err;
         }
 
-        cy.log(`Group ${data[IMPORT_ID]} already exists`);
+        if (IMPORT_LOGGING) {
+            cy.log(`Group ${data[IMPORT_ID]} already exists`);
+        }
         const foundGroups = (await client.group.list({ q: reqData.name }).send()).items || [];
         importedGroup = foundGroups.filter(g => g.name === reqData.name)?.[0] ?? foundGroups?.[0];
     }
@@ -344,9 +378,13 @@ async function importUser(
     const { group, ...reqData } = data;
 
     try {
-        cy.log(`Importing user ${data[IMPORT_ID]}`, data);
+        if (IMPORT_LOGGING) {
+            cy.log(`Importing user ${data[IMPORT_ID]}`, data);
+        }
         const created = (await client.group.createUser((entityMap[group] as Group).id, reqData).send()).user;
-        cy.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
+        if (IMPORT_LOGGING) {
+            cy.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
+        }
 
         return created;
     } catch (err) {
@@ -355,7 +393,9 @@ async function importUser(
             throw err;
         }
 
-        cy.log(`User ${data[IMPORT_ID]} already exists`);
+        if (IMPORT_LOGGING) {
+            cy.log(`User ${data[IMPORT_ID]} already exists`);
+        }
         const foundUsers = (await client.user.list({ q: data.login }).send()).items || [];
         const found = foundUsers.filter(g => g.login === data.login)?.[0] ?? foundUsers?.[0];
 
@@ -395,25 +435,25 @@ function importEntity(
     binaryData?: BinaryMap,
 ): Promise<any> {
     switch (type) {
-        case 'node':
+        case IMPORT_TYPE_NODE:
             return importNode(client, pkgName, entityMap, languages, entity as NodeImportData);
 
-        case 'folder':
+        case ITEM_TYPE_FOLDER:
             return importFolder(client, entityMap, entity as FolderImportData);
 
-        case 'page':
+        case ITEM_TYPE_PAGE:
             return importPage(client, entityMap, entity as PageImportData);
 
-        case 'file':
+        case ITEM_TYPE_FILE:
             return importFile(client, entityMap, binaryData, entity as FileImportData);
 
-        case 'image':
+        case ITEM_TYPE_IMAGE:
             return importImage(client, entityMap, binaryData, entity as ImageImportData);
 
-        case 'group':
+        case IMPORT_TYPE_GROUP:
             return importGroup(client, entityMap, entity as GroupImportData);
 
-        case 'user':
+        case IMPORT_TYPE_USER:
             return importUser(client, entityMap, entity as UserImportData);
 
         default:

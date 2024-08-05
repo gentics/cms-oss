@@ -13,7 +13,14 @@ import {
     ImageImportData,
     IMPORT_ID,
     IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_NODE,
+    IMPORT_TYPE_USER,
     ImportData,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_FOLDER,
+    ITEM_TYPE_IMAGE,
+    ITEM_TYPE_PAGE,
     NodeImportData,
     PageImportData,
     TestSize,
@@ -27,7 +34,7 @@ import { getActiveNodeFeatures } from './utils';
 
 /** This node exists only, so all devtool-packages are linked to this node, to make the cleanup of our actual test nodes possible. */
 export const emptyNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'emptyNode',
 
     node: {
@@ -59,7 +66,7 @@ export const emptyNode: NodeImportData = {
 };
 
 export const rootGroup: GroupImportData = {
-    [IMPORT_TYPE]: 'group',
+    [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
     [IMPORT_ID]: 'rootGroup',
 
     name: 'Root-Group',
@@ -78,7 +85,7 @@ export const rootGroup: GroupImportData = {
 };
 
 export const userAlpha: UserImportData = {
-    [IMPORT_TYPE]: 'user',
+    [IMPORT_TYPE]: IMPORT_TYPE_USER,
     [IMPORT_ID]: 'userAlpha',
 
     group: rootGroup[IMPORT_ID],
@@ -92,7 +99,7 @@ export const userAlpha: UserImportData = {
 };
 
 export const userBeta: UserImportData = {
-    [IMPORT_TYPE]: 'user',
+    [IMPORT_TYPE]: IMPORT_TYPE_USER,
     [IMPORT_ID]: 'userBeta',
 
     group: rootGroup[IMPORT_ID],
@@ -110,7 +117,7 @@ export const userBeta: UserImportData = {
  * ---------------------------------------------------------------- */
 
 export const minimalNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'minimalNode',
 
     node: {
@@ -145,7 +152,7 @@ export const minimalNode: NodeImportData = {
 
 function createFolder(node: NodeImportData, parent: NodeImportData | FolderImportData, id: string): FolderImportData {
     return {
-        [IMPORT_TYPE]: 'folder',
+        [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
         [IMPORT_ID]: `folder${id}`,
 
         nodeId: node[IMPORT_ID],
@@ -168,7 +175,7 @@ function createPage(
     id: string,
 ): PageImportData {
     return {
-        [IMPORT_TYPE]: 'page',
+        [IMPORT_TYPE]: ITEM_TYPE_PAGE,
         [IMPORT_ID]: `page${id}`,
 
         folderId: folder[IMPORT_ID],
@@ -206,7 +213,7 @@ export const pageOne: PageImportData = {
 }
 
 export const fileOne: FileImportData = {
-    [IMPORT_TYPE]: 'file',
+    [IMPORT_TYPE]: ITEM_TYPE_FILE,
     [IMPORT_ID]: 'fileOne',
 
     nodeId: minimalNode[IMPORT_ID],
@@ -217,7 +224,7 @@ export const fileOne: FileImportData = {
 };
 
 export const imageOne: ImageImportData = {
-    [IMPORT_TYPE]: 'image',
+    [IMPORT_TYPE]: ITEM_TYPE_IMAGE,
     [IMPORT_ID]: 'imageOne',
 
     nodeId: minimalNode[IMPORT_ID],
@@ -232,7 +239,7 @@ export const imageOne: ImageImportData = {
  * ---------------------------------------------------------------- */
 
 export const fullNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'fullNode',
 
     node: {

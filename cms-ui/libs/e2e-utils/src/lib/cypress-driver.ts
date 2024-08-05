@@ -61,6 +61,10 @@ function createError(request: GCMSRestClientRequestData, res: Cypress.Response<G
  */
 export class CypressDriver implements GCMSClientDriver {
 
+    constructor(
+        public log: boolean,
+    ) {}
+
     protected prepareRequest<T>(
         request: GCMSRestClientRequestData,
         fn: (fullUrl: string) => Partial<Cypress.RequestOptions>,
@@ -93,7 +97,7 @@ export class CypressDriver implements GCMSClientDriver {
 
             sentRequest = new Promise((resolve, reject) => {
                 cy.request({
-                    log: false,
+                    log: this.log,
                     url: fullUrl,
                     method: request.method,
                     headers: request.headers,

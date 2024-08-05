@@ -87,6 +87,7 @@
 <gtx-file-drop-area
     #dropArea="gtxFileDropArea"
     overrideSlot="fileDragAndDrop"
+    data-action="file-drop"
     [class.page-file-hovered]="(dropArea.filesDraggedInPage$ | async)?.length > 0 && (this.isModalOpen)"
     [class.file-hovered]="(dropArea.draggedFiles$ | async)?.length > 0"
     (fileDragEnter)="setFileDropLabelLeft()"

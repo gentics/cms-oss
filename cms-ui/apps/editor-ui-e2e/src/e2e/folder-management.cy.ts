@@ -1,4 +1,4 @@
-import { Folder, FolderCreateResponse, FolderSaveRequest, SelectTagPartProperty } from '@gentics/cms-models';
+import { Folder, FolderCreateResponse, FolderSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import {
     EntityMap,
     ImportBootstrapData,
@@ -41,6 +41,7 @@ describe('Folder Management', () => {
 
         const NEW_FOLDER_NAME = 'Hello World';
         const NEW_FOLDER_PATH = 'example';
+        const OBJECT_PROPERTY = 'test_color';
         const COLOR_ID = 2;
 
         /* Create the Folder
@@ -77,20 +78,9 @@ describe('Folder Management', () => {
             cy.itemAction('folder', (folder as any as Folder).id, 'properties');
         });
 
-        cy.get('combined-properties-editor').as('properties');
-        cy.get('@properties')
-            .find('gtx-grouped-tabs .grouped-tabs .tab-link[data-id="object.test_color"]')
-            .click({ force: true });
-        cy.get('@properties')
-            .find('.properties-content .tag-editor tag-editor-host gentics-tag-editor select-tag-property-editor')
-            .as('selectEditor');
-
-        cy.get('@selectEditor')
-            .find('gtx-select .select-input')
-            .click({ force: true });
-        cy.get('gtx-dropdown-content.select-context')
-            .find(`.select-option[data-id="${COLOR_ID}"]`)
-            .click({ force: true });
+        cy.openObjectPropertyEditor(OBJECT_PROPERTY)
+            .findTagEditorElement(TagPropertyType.SELECT)
+            .selectValue(COLOR_ID);
 
         /* Save the Object-Property changes
          * ---------------------------- */
@@ -104,7 +94,7 @@ describe('Folder Management', () => {
 
         cy.get('@saveRequest').then(data => {
             const req = (data as any as Interception).request.body as FolderSaveRequest;
-            const tag = req.folder.tags?.['object.test_color'];
+            const tag = req.folder.tags?.[`object.${OBJECT_PROPERTY}`];
             const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
 
             expect(options).to.have.length(1);

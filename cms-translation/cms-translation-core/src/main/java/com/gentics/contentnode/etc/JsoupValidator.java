@@ -1,5 +1,6 @@
 package com.gentics.contentnode.etc;
 
+import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -8,6 +9,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Safelist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -15,13 +18,19 @@ import org.jsoup.safety.Safelist;
  */
 public class JsoupValidator implements Validator {
 
+	private static final NodeLogger logger = NodeLogger.getNodeLogger(JsoupValidator.class);
+
 	/**
 	 * A validator function that verifies html markup
 	 */
 	public static final Predicate<String> VALIDATOR = (String html) -> {
 		Validator validator = new JsoupValidator();
-		return validator.validateAndCollectErrors(html).isEmpty();
+		var errors = validator.validateAndCollectErrors(html);
+		errors.forEach(logger::error);
+
+		return errors.isEmpty();
 	};
+	private static final Logger log = LoggerFactory.getLogger(JsoupValidator.class);
 
 	/**
 	 * Specifies the allowed tags. i.e.: How strict the check is.

@@ -16,7 +16,7 @@ import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { PaginationInstance } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
-import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap, takeWhile } from 'rxjs/operators';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { Api } from '../../../core/providers/api';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
@@ -212,6 +212,10 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         if (!this.binaryStatus?.downloadReady) {
             return;
         }
+        this.notification.show({
+            message: 'editor.form_reports_download_started',
+            type: 'success',
+        });
 
         this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.binaryStatus.downloadUuid).subscribe(blob => {
             const time = new Date(this.binaryStatus.downloadTimestamp);
@@ -225,23 +229,32 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'secondary',
         });
 
-        this.subscriptions.push(this.api.forms.createExportDownload(this.form.id).pipe(
-            switchMap(() => this.api.forms.getExportStatus(this.form.id)),
-        ).subscribe(status => {
-            this.notification.show({
-                message: 'editor.form_reports_csv_generate_finished',
-                type: 'success',
-            });
+        this.subscriptions.push(
+            this.api.forms.createExportDownload(this.form.id).pipe(
+                switchMap(() => interval(2000).pipe(
+                    switchMap(() => this.api.forms.getExportStatus(this.form.id)),
+                    takeWhile(status => status.requestPending && !status.downloadReady , true),
+                )),
+            ).subscribe(status => {
+                this.notification.show({
+                    message: 'editor.form_reports_csv_generate_finished',
+                    type: 'success',
+                });
 
-            this.exportStatus = status;
-            this.changeDetector.markForCheck();
-        }));
+                this.exportStatus = status;
+                this.changeDetector.markForCheck();
+            }),
+        );
     }
 
     public downloadExport(): void {
         if (!this.exportStatus?.downloadReady) {
             return;
         }
+        this.notification.show({
+            message: 'editor.form_reports_download_started',
+            type: 'success',
+        });
 
         this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.exportStatus.downloadUuid).subscribe(blob => {
             const time = new Date(this.exportStatus.downloadTimestamp);

@@ -205,7 +205,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			Pattern.CASE_INSENSITIVE
 		);
 	public static final String CONTENT_PACKAGE_METADATA_FILENAME = "metadata" + METADATA_EXTENSION;
-	public static final String CONTENT_PACKAGE_ERRORS_FILENAME = "errors" + METADATA_EXTENSION;
+	public static final String CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME = "import-errors" + METADATA_EXTENSION;
 
 	/**
 	 * Logger
@@ -1538,7 +1538,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					|| filename.endsWith(CHANNEL_EXTENSION)
 					|| filename.equals(CONTENT_PACKAGE_METADATA_FILENAME) 
 					|| filename.endsWith(BINARY_EXTENSION)
-					|| filename.endsWith(CONTENT_PACKAGE_ERRORS_FILENAME)) {
+					|| filename.endsWith(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME)) {
 				// ignore - should already be processed
 			} else {
 				logger.warn("Removing alien file " + currentPath.toAbsolutePath());
@@ -1748,7 +1748,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								logger.debug(String.format(FOUND_AT_LOG, "metadata", i));
 							}
 							doOnMetadata.accept(i);
-						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_ERRORS_FILENAME)) {
+						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME)) {
 							if (logger.isDebugEnabled()) {
 								logger.debug(String.format(FOUND_AT_LOG, "errors", i));
 							}
@@ -2732,14 +2732,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					StagingErrors stagingErrors = new StagingErrors();
 					stagingErrors.setErrors(errors);
 					stagingErrors.setMismatches(new ArrayList<>(mismatches));
-					try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_ERRORS_FILENAME), 
+					try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME), 
 							StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
 						mapper.writeValue(os, stagingErrors);
 					} catch (IOException e) {
 						throw new IllegalStateException(e);
 					} 
 				} else {
-					Path errorsPath = packagePath.resolve(CONTENT_PACKAGE_ERRORS_FILENAME);
+					Path errorsPath = packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME);
 					if (FileUtils.deleteQuietly(errorsPath.toFile())) {
 						logger.info("Old errors file " + errorsPath + " has been removed.");
 					}

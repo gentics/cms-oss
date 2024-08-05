@@ -36,7 +36,6 @@ import com.github.jknack.handlebars.io.StringTemplateSource;
  * PartType implementation for using {@link Handlebars} template engine
  */
 public class HandlebarsPartType extends TextPartType {
-
 	private static final long serialVersionUID = 6043235322865960951L;
 
 	public HandlebarsPartType(Value value) throws NodeException {
@@ -55,7 +54,8 @@ public class HandlebarsPartType extends TextPartType {
 				.orElse("<unknown>");
 		String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
 				.map(Part::getKeyname).orElse("<unknown>");
-		String templateName = String.format("%s.%s", constructKeyword, partKeyword);
+		int valueId = Optional.ofNullable(value).map(Value::getId).orElse(0);
+		String templateName = String.format("%s/%s/%d", constructKeyword, partKeyword, valueId);
 
 		try {
 			CMSResolver cmsResolver = renderType.getCMSResolver();
@@ -80,7 +80,7 @@ public class HandlebarsPartType extends TextPartType {
 
 	@Override
 	public Type getPropertyType() {
-		return Property.Type.HANDLEBARS;
+		return Property.Type.RICHTEXT;
 	}
 
 	/**

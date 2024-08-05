@@ -2,7 +2,6 @@ package com.gentics.contentnode.devtools;
 
 import static com.gentics.contentnode.devtools.Synchronizer.mapper;
 
-import com.gentics.contentnode.utils.JsonSerializer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -69,6 +68,7 @@ import com.gentics.contentnode.rest.model.Overview;
 import com.gentics.contentnode.rest.model.Overview.ListType;
 import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.utils.JsonSerializer;
 import com.gentics.lib.util.FileUtil;
 
 import fi.iki.santtu.md5.MD5;
@@ -558,6 +558,10 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 	 * @return proposed filename
 	 */
 	protected String getProposedFilename(Part part) {
+		// special case for HandlebarsPartType
+		if (part.getPartTypeId() == 43) {
+			return "part." + part.getKeyname() + ".hbs";
+		}
 		switch (Property.Type.get(part.getPartTypeId())) {
 		case STRING:
 			return "part." + part.getKeyname() + ".txt";
@@ -589,7 +593,7 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 	 * @return true iff the filename belongs to a part value
 	 */
 	protected boolean isPartFilename(String filename) {
-		return filename.startsWith("part.") && (filename.endsWith(".txt") || filename.endsWith(".html") || filename.endsWith(".json"));
+		return filename.startsWith("part.") && (filename.endsWith(".txt") || filename.endsWith(".html") || filename.endsWith(".json") || filename.endsWith("hbs"));
 	}
 
 	/**

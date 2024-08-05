@@ -31,7 +31,7 @@ public class Property implements Serializable {
 	@XmlEnum(String.class)
 	@XmlType(name = "PropertyType")
 	public static enum Type {
-		STRING, RICHTEXT, BOOLEAN, FILE, IMAGE, FOLDER, PAGE, TEMPLATETAG, PAGETAG, LIST, ORDEREDLIST, UNORDEREDLIST, SELECT, MULTISELECT, DATASOURCE, OVERVIEW, UNKNOWN, TABLE, LOCALFILE, VELOCITY, BREADCRUMB, NAVIGATION, NODE, FORM, CMSFORM, HANDLEBARS;
+		STRING, RICHTEXT, BOOLEAN, FILE, IMAGE, FOLDER, PAGE, TEMPLATETAG, PAGETAG, LIST, ORDEREDLIST, UNORDEREDLIST, SELECT, MULTISELECT, DATASOURCE, OVERVIEW, UNKNOWN, TABLE, LOCALFILE, VELOCITY, BREADCRUMB, NAVIGATION, NODE, FORM, CMSFORM;
 
 		/**
 		 * Get the Type from the typeid
@@ -52,6 +52,7 @@ public class Property implements Serializable {
 			case 26: // Java Editor
 			case 27: // DHTML Editor
 			case 36: // HTML (custom form)
+			case 43: // Handlebars
 				return RICHTEXT;
 
 			case 4: // URL (page)
@@ -121,9 +122,6 @@ public class Property implements Serializable {
 
 			case 42: // CMS Form
 				return CMSFORM;
-
-			case 43: // Handlebars
-				return HANDLEBARS;
 
 			default: // unknown types (e.g. customer specific extensions)
 				return UNKNOWN;

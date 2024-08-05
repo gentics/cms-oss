@@ -48,6 +48,7 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.cache.ConcurrentMapTemplateCache;
 import com.github.jknack.handlebars.helper.ConditionalHelpers;
 import com.github.jknack.handlebars.helper.StringHelpers;
 import com.github.jknack.handlebars.io.TemplateLoader;
@@ -1408,13 +1409,13 @@ public class RenderType implements RenderInfo {
 	 */
 	public Handlebars getHandlebars(Node node) throws NodeException, IOException {
 		if (!handlebarsPerNode.containsKey(node)) {
-			// TODO cache
-			var handlebars = new Handlebars().infiniteLoops(true);
+			// each handlebars instance will have its own "private" cache implementation
+			// this also means that when the rendertype is disposed, the handlebars instances and their caches will be disposed as well
+			var handlebars = new Handlebars().infiniteLoops(true).with(new ConcurrentMapTemplateCache().setReload(true));
 
 			List<TemplateLoader> templateLoaders = new ArrayList<>();
 
 			if (Synchronizer.getStatus() == Status.UP) {
-				// TODO should we cache the registered helpers in the packages?
 				for (String packageName : Synchronizer.getPackages(node)) {
 					MainPackageSynchronizer mainPack = Synchronizer.getPackage(packageName);
 					String packageHelpers = mainPack.getHandlebarsHelpers();

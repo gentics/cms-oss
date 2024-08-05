@@ -49,14 +49,26 @@ import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.devtools.PackageSynchronizerContext;
 import com.gentics.contentnode.testutils.DBTestContext;
 
+/**
+ * Test for rendering performance with many tags or many registered helpers
+ */
 @RunWith(value = Parameterized.class)
 public class HandlebarsPartTypePerformanceTest {
 	public final static String TESTPACKAGE_NAME_PATTERN = "testpackage_%d";
 
+	/**
+	 * Tested tag counts
+	 */
 	protected final static List<Integer> tagCounts = Arrays.asList(1, 10, 100, 1000);
 
+	/**
+	 * Tested helper counts
+	 */
 	protected final static List<Integer> helperCounts = Arrays.asList(1, 10, 100, 1000);
 
+	/**
+	 * Maximum allowed render time in ms
+	 */
 	protected final static long tolerableRenderDurationMs = 5000;
 
 	@ClassRule

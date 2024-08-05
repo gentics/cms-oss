@@ -8,8 +8,6 @@ package com.gentics.contentnode.object;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.commons.collections4.SetUtils;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;

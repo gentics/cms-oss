@@ -404,7 +404,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
             editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
-            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked && (!isPage || this.alohaReady),
+            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

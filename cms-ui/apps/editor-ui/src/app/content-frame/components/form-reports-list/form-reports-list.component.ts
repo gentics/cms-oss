@@ -23,6 +23,9 @@ import { I18nNotification } from '../../../core/providers/i18n-notification/i18n
 import { ApplicationStateService } from '../../../state';
 import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete-modal.component';
 
+
+const STATUS_POLL_INTERVAL_MS = 2_000;
+
 @Component({
     selector: 'form-reports-list',
     templateUrl: './form-reports-list.component.html',
@@ -195,17 +198,21 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'secondary',
         });
 
-        this.subscriptions.push(this.api.forms.createBinaryDownload(this.form.id).pipe(
-            switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
-        ).subscribe(status => {
-            this.notification.show({
-                message: 'editor.form_reports_binary_generate_finished',
-                type: 'success',
-            });
+        this.subscriptions.push(
+            this.api.forms.createBinaryDownload(this.form.id).pipe(
+                switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
+                    switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
+                    takeWhile(status => status.requestPending || !status.downloadReady, true),
+                )),
+            ).subscribe(status => {
+                this.notification.show({
+                    message: 'editor.form_reports_binary_generate_finished',
+                    type: 'success',
+                });
 
-            this.binaryStatus = status;
-            this.changeDetector.markForCheck();
-        }));
+                this.binaryStatus = status;
+                this.changeDetector.markForCheck();
+            }));
     }
 
     public downloadBinaries(): void {
@@ -231,9 +238,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
         this.subscriptions.push(
             this.api.forms.createExportDownload(this.form.id).pipe(
-                switchMap(() => interval(2000).pipe(
+                switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.api.forms.getExportStatus(this.form.id)),
-                    takeWhile(status => status.requestPending && !status.downloadReady , true),
+                    takeWhile(status => status.requestPending || !status.downloadReady, true),
                 )),
             ).subscribe(status => {
                 this.notification.show({

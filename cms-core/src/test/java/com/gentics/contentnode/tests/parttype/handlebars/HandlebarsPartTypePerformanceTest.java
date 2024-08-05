@@ -158,7 +158,7 @@ public class HandlebarsPartTypePerformanceTest {
 				for (int i = 0; i < numTags; i++) {
 					ContentTag tag = content.addContentTag(handlebarsConstruct.getId());
 					getPartType(HandlebarsPartType.class, tag, "hb").setText("{{ cms.tag.name }}");
-					testtagContent.append(String.format("{{render cms.page.tags.%s }}|", tag.getName()));
+					testtagContent.append(String.format("{{gtx_render cms.page.tags.%s }}|", tag.getName()));
 				}
 				getPartType(HandlebarsPartType.class, p.getContentTag("testtag"), "hb").setText(testtagContent.toString());
 			}).unlock().build();

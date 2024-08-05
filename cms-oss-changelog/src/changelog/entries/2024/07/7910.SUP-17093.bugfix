@@ -1,0 +1,1 @@
+Editor User Interface: Fixed issue where context button was disabled when Aloha was not loaded (e.g.: in preview mode).

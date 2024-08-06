@@ -1,0 +1,315 @@
+h2. Rendering with Handlebars
+
+With the use of a Handlebars Part Type, the CMS is able to render content with Handlebars templates.
+
+endprologue.
+
+h3. General description
+
+The CMS uses the "handlebars.java":https://github.com/jknack/handlebars.java implementation of "Handlebars":https://handlebarsjs.com/.
+
+For a general introduction to the Handlebars templating language, see the "Handlebars Guides":https://handlebarsjs.com/guide/.
+
+h3. Usage
+
+To render a Handlebars template, you only need to add a "Handlebars" part to a tagtype. The part will use its own input as template.
+
+Below is an example of a construct with a single "Handlebars" part, that is not hidden and will render the template +{{ cms.page.name }}+ (which will output the current page's name).
+
+!images/gcn_dialogs/handlebars_construct.png!
+
+h3. Resolving
+
+The context of a rendered Handlebars part will always contain the base object +cms+ which can be used to resolve some base objects:
+
+* +cms.node+ resolves to the "node":meta_attributes.html#node of the currently rendered object.
+* +cms.folder+ resolves to the "folder":meta_attributes.html#folder of the currently rendered object (or the rendered folder).
+* +cms.page+ resolves to the currently rendered "page":meta_attributes.html#page (if the tag is rendered in a page).
+* +cms.template+ resolves to the "template":meta_attributes.html#template of the currently rendered page (of the tag is rendered in a page).
+* +cms.file+ resolves to the currently rendered "file/image":meta_attributes.html#file (of the tag is rendered in a file/image).
+* +cms.object+ resolves to the object tags of the currently rendered object.
+* +cms.rendermode+ resolves to the "rendermode":meta_attributes.html#rendermode information.
+
+INFO: To find out all possible attributes that can be resolved from the base object "cms", you can use something like +{{#each cms}}{{ @key }}:{{ this }}<br>{{/each}}+.
+This obviously does not only work for "cms", but for every object in the context.
+
+WARNING: Unlike the Velocity Part Type, the Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
+it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work.
+
+h3. Helpers
+
+Since Handlebars templating language itself is completely Logic-less, the Handlebars Part Type provides some helpers for supporting more complex rendering logic:
+
+h4. Built-in Helpers
+
+All "Built-in helpers":https://handlebarsjs.com/guide/builtin-helpers.html are supported.
+
+h4. Conditional Helpers
+
+All "Conditional Helpers":https://github.com/jknack/handlebars.java/blob/master/handlebars/src/main/java/com/github/jknack/handlebars/helper/ConditionalHelpers.java provided by handlebars.java are supported.
+
+h4. String Helpers
+
+All "String Helpers":https://github.com/jknack/handlebars.java/blob/master/handlebars/src/main/java/com/github/jknack/handlebars/helper/StringHelpers.java provided by handlebars.java are supported.
+
+h4. Additional Helpers
+
+|_. Name |_. Description |_. Example |
+| "gtx_render":#gtx_render | Render another object (e.g. a tag, page, ...) | +{{{gtx_render cms.page.tags.othertag }}}+ |
+| "gtx_edit":#gtx_edit | Like gtx_render, but will render the object in edit mode (if possible) | +{{{gtx_edit cms.page.tags.othertag }}}+ |
+| "gtx_sort":#gtx_sort | Sort a list of objects by the given attribute (which might be a path to resolve) | +{{#each (gtx_sort cms.folder.folders "name"}}{{name}}<br>{{/each}}+ |
+| "gtx_channel":#gtx_channel | Render the block in the scope of the given channel | +{{#gtx_channel cms.tag.parts.node.target}}<a href="{{ cms.page.url }}">{{ cms.page.name }}</a>{{/gtx_channel}}+ |
+| "gtx_gis":#gtx_gis | Include a resized image into the output | +<img src="{{gtx_gis cms.tag.parts.image width=100 mode="prop" }}">+ |
+| "gtx_form":#gtx_form | Include a form | +{{gtx_form cms.tag.parts.form type="java" }}+ |
+| "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
+
+h5. gtx_render
+
+This helper will render the given object (if it is e.g. a tag or a page) or output the String representation of anything else.
+
+General usage is:
+
+<shell>
+{{gtx_render object}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +object+ | Object to be rendered | _mandatory_ |
+
+NOTE: When using double curly braces, HTML code rendered from the object will be escaped. If HTML code should not be escaped, triple curly braces have to be used, see "HTML Escaping":https://handlebarsjs.com/guide/#html-escaping for details.
+
+The helper can also be used in combination with other helpers (conditional helpers for example) like shown in the following example:
+
+<shell>
+{{! Iterate over all subfolders of the current folder }}
+{{#each cms.folder.folders}}
+  {{! Omit folders, that have the checkbox in the object property "navhidden" checked }}
+  {{#neq (gtx_render this.object.navhidden) "1"}}
+    {{! Output the name of the folder }}
+    {{name}}<br>
+  {{/neq}}
+{{/each}}
+</shell>
+
+NOTE: Since gtx_render will always output a String, the comparison must also be done with the String ("1") and not with the Integer (1).
+
+WARNING: Unlike Velocity, the Handlebars Part Type will *only* render objects if the gtx_render helper is used. Simply referencing like +{{{ cms.page.tags.othertag }}}+ will not render the other tag, but will output some information about the referenced object.
+
+h5. gtx_edit
+
+TODO:
+
+h5. gtx_sort
+
+This helper can be used to sort objects by attributes (or even attribute paths).
+
+General usage is:
+
+<shell>
+{{gtx_sort list sortBy [sortOrder]}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +list+ | Objects to be sorted | _mandatory_ |
+| +sortBy+ | Attribute (or Attribute path) by which the objects shall be sorted | _mandatory_ |
+| +sortOder+ | *asc* for sorting in ascending order, *desc* for descending order | *asc* |
+
+The gtx_sort helper will in most cases be used together with the @each@ helper:
+
+<shell>
+{{! Iterate over all subfolders of the current folder, sorted by the object property "navsortorder" }}
+{{#each (gtx_sort cms.folder.folders "object.navsortorder" "asc")}}
+  {{! Omit folders, that have the checkbox in the object property "navhidden" checked }}
+  {{#neq (gtx_render this.object.navhidden) "1"}}
+    {{! Output the name of the folder and the navsortorder }}
+    {{name}} ({{gtx_render object.navsortorder}})<br>
+  {{/neq}}
+{{/each}}
+</shell>
+
+INFO: As can be seen in the example above, the +gtx_sort+ helper will resolve the attribute path for each object, if the resolved values (tags in this case) are something that can be rendered, it will
+render them, and if all values are numerical, the sorting will be done numerical.
+
+h5. gtx_channel
+
+This is a block helper, which will switch the rendering scope to the given channel for the block.
+
+General usage is:
+
+<shell>
+{{#gtx_channel node}}
+  block
+{{/gtx_channel}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +node+ | Reference to the node/channel. | _mandatory_ |
+
+The reference to the node/channel can be one of
+* local ID of a node/channel
+* global ID of a node/channel
+* A resolved node/channel object
+* Tag part of type "Node"
+
+h5. gtx_gis
+
+This helper will either render a Gentics Image Store URL for a resized image, or - when used for an installation of Gentics Portal | php - a widget that will resize that image.
+
+General usage is:
+
+<shell>
+{{gtx_gis image [width=value] [height=value] [mode=value] [type=value] [crop_width=value] [crop_heigth=value] [crop_x=value] [crop_y=value]}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +image+ | Reference to the image. | _mandatory_ |
+| +width+ | Width of the resized image | *auto* |
+| +heigth+ | Height of the resized image | *auto* |
+| +mode+ | Resizing mode ("prop", "force", "smart", "fpsmart") | *prop* |
+| +type+ | Type of the rendering ("url", "phpwidget") | *url* |
+| +crop_width+ | Cropping width | _mandatory_ |
+| +crop_height+ | Cropping height | _mandatory_ |
+| +crop_x+ | Start X coordinate of the image area (from the top left corner) | 0 |
+| +crop_y+ | Start Y coordinate of the image area (from the top left corner) | 0 |
+
+The reference to the image can be one of
+* local ID of an image
+* global ID of an image
+* A resolved image object
+* Tag part of type "Image"
+
+For details see "Gentics CMS GenticsImageStore":feature_genticsimagestore.html.
+
+h5. gtx_form
+
+This helper will include a CMS form into the tag.
+
+General usage is:
+
+<shell>
+{{{gtx_form form [type=value] [previewRoot=value] [showResults=value] [templateContext]=value }}}
+</shell>
+
+or (as block helper)
+
+<shell>
+{{#gtx_form [type=value] [previewRoot=value] [showResults=value] [templateContext]=value}}
+{{{this}}}
+{{else}}
+    no-form-block
+{{/gtx_form}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +form+ | Reference to the form | _mandatory_ |
+| +type+ | Type of used portal. Must be either *java* or *php* | *java* |
+| +previewRoot+ | HTML Element, which should be rendered as root element for the preview | *div* |
+| +templateContext+ | Additional path segments for templates used to render the form. The actual path used is the +templatesPath+ (from plugin configuration) + +/templateContext+. | (empty) |
+| +showResults+     | Boolean flag to force rendering results of a poll instead of the form itself. (This has no effect on non-poll forms.) | *false* |
+| +no-form-block+ | Block that is rendered when no form was selected. | (empty) |
+
+The reference to the form can be one of
+* local ID of a form
+* global ID of a form
+* A resolved form object
+* Tag part of type "Form"
+
+h5. gtx_i18n
+
+This helper can be used to render language specific output (in the language of the current page).
+
+General usage is:
+
+<shell>
+{{gtx_i18n [object] [de=value] [en=value] ... [default=value]}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +object+ | Optional object to resolve the translation (from the language code) | (empty) |
+| +de+ | Optional german translation | (empty) |
+| +en+ | Optional english translation | (empty) |
+| +[language code]+ | Optional translation for the given language code | (empty) |
+| +default+ | Optional default translation | (empty) |
+
+Translations given as parameters always take precedence over translations resolved from an optionally given object.
+
+The helper will first try to get the translation for the current page language (if rendered for a page and the page has a language).
+
+Then it will fall back to the remaining languages of the current node (if the node has languages assigned).
+
+Finally it will fall back to "default".
+
+If no translation is found, it will render nothing.
+
+h4. Custom helpers
+
+For implementation of custom logic, it is possible to create helpers as Javascript files in devtool packages.
+
+Every +.js+ file located in the directory +/cms/packages/[package]/handlebars/helpers/+ is interpreted as a handlebars helper.
+
+The name of the file (without extension) defines the name of the helper, which will be prefixed with the packagename to avoid naming conflicts.
+The file must contain a single JavaScript function (the name of that function does not matter).
+
+For example:
+
+<shell filename="/cms/packages/implementation_package/handlebars/helpers/get_name.js">
+function get_name(obj) {
+    return obj.name;
+}
+</shell>
+
+will be available as helper +implementation_package.get_name+ and can be used like this:
+
+<shell>
+{{implementation_package.get_name cms.page}}
+</shell>
+
+NOTE: Helpers defined in devtool packages will only be available, if the devtool package is assigned to the Node for which the object is currently rendered!
+
+NOTE: Helpers will not be synchonized into the CMS, so changes in a helper file will be effective immediately.
+
+h3. Partials
+
+For reusing templates, it is possible to define "Partials":https://handlebarsjs.com/guide/partials.html as files in devtool packages.
+
+Every +.hbs+ file located in the directory +/cms/packages/[package]/handlebars/partials/+ is interpreted as a handlebars partial.
+
+The name of the file (without extension) defines the name of the partial, which will be prefixed with the packagename to avoid naming conflicts.
+
+For example:
+
+<shell filename="/cms/packages/implementation_package/handlebars/partials/render_name.hbs">
+{{ name }}
+</shell>
+
+will be available as partial +implementation_package.render_name+ and can be used like this:
+
+<shell>
+{{> implementation_package.render_name cms.page }}
+</shell>
+
+NOTE: Partials will not be synchonized into the CMS, so changes in a partial file will be effective immediately.
+
+h3. Differences to Velocity
+
+This section will cover some differences between the Velocity PartType and the Handlebars PartType (apart from the obvious difference in templating language syntax), which hopefully will help with migration of implementations.
+
+|_. |_. Velocity |_. Handlebars |
+| Construct setup | The Velocity PartType needs another PartType with keyword +template+ which contains the template to render. | The Handlebars PartType will use its own content as template. |
+| Rendering of objects | Direct references to objects that can be rendered will render them (e.g. +$cms.page.tags.html+ will render the tag +html+). | Direct references will *not* render the object, but will output some textual description. For rendering the "+gtx_render+":#gtx_render (or "+gtx_edit+":#gtx_edit) helper must be used. |
+| Resolving shortcuts | Velocity supports various shortcuts, so e.g. +$cms.tag.partname+ will resolve the part +partname+ in the tag as well as +$cms.tag.parts.partname+ does. | Shortcuts are not supported in the Handlebars PartType, so in order to resolve a specific part of a tag, the +parts+ keyword *must* be used: +{{ cms.tag.parts.partname }}+ |
+| Reusable templates | The Velocity PartType supports both locally defined and globally configured macros | The Handlebars PartType supports "partials":#partials, which must be defined in devtool packages. |
+| Programmatic logic | Velocity supports programmatic logic like defining variables, calling various methods of objects and even instantiation of new objects. | Handlebars is logic-less but supports programmatic logic via "helpers":#helpers (built-in or "custom":#custom-helpers) which guarantees a clean separation between business logic and presentation. |
+| HTML Escaping | Velocity does not escape HTML by default, so for instance the EscapeTool must be used for that purpose. | Handlebars does HTML Escaping when two curly braces are used and omits HTML Escaping upon three curly braces. |

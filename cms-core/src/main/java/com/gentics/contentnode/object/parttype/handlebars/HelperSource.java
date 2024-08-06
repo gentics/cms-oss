@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.datasource.Datasource;
@@ -18,6 +19,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.UnknownPropertyException;
 import com.gentics.api.lib.resolving.PropertyResolver;
+import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -213,21 +215,47 @@ public class HelperSource {
 
 	/**
 	 * I18n helper
+	 * @param object optional context object to resolve from
 	 * @param options options
-	 * @return rendered translation
+	 * @return rendered translation or null
 	 * @throws NodeException
 	 */
-	public static CharSequence gtx_i18n(Options options) throws NodeException {
-		List<String> languages = RenderUtils.getLanguages();
+	public static CharSequence gtx_i18n(Object object, Options options) throws NodeException {
+		List<String> languages = ListUtils.union(RenderUtils.getLanguages(), Collections.singletonList("default"));
+		Resolvable resolvableObject = object instanceof Resolvable ? Resolvable.class.cast(object) : null;
 
 		for (String code : languages) {
-			String translation = options.hash(code, null);
+			String translation = options.hash(code, getRenderedResolved(resolvableObject, code));
 			if (StringUtils.isNotBlank(translation)) {
 				return translation;
 			}
 		}
 
-		return options.hash("default", "");
+		return null;
+	}
+
+	/**
+	 * Get the rendered resolved key from the resolvable or null if the resolvable is null.
+	 * If the resolved value is a {@link Renderable}, it will be rendered.
+	 * @param resolvable resolvable object (may be null)
+	 * @param key resolved key (not null)
+	 * @return rendered resolved value
+	 */
+	protected static String getRenderedResolved(Resolvable resolvable, String key) {
+		if (resolvable == null) {
+			return null;
+		}
+
+		Object resolvedValue = resolvable.get(key);
+		if (resolvedValue instanceof Renderable) {
+			try {
+				return Renderable.class.cast(resolvedValue).render();
+			} catch (NodeException e) {
+				return null;
+			}
+		} else {
+			return ObjectTransformer.getString(resolvedValue, null);
+		}
 	}
 
 	/**

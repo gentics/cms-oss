@@ -5,11 +5,13 @@
  */
 package com.gentics.contentnode.object.parttype;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
@@ -52,6 +54,8 @@ public class CMSResolver implements ResolvableMapWrappable {
 	protected static Map<String, Property> properties = new HashMap<>();
 
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(CMSResolver.class);
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		properties.put("rendermode", new Property() {
@@ -99,6 +103,8 @@ public class CMSResolver implements ResolvableMapWrappable {
 				return cmsResolver.getImpsResolver();
 			}
 		});
+
+		resolvableKeys = SetUtils.difference(properties.keySet(), Collections.singleton("imps"));
 	}
 
 	protected Page page;
@@ -169,7 +175,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 
 	@Override
 	public Set<String> getResolvableKeys() {
-		return properties.keySet();
+		return resolvableKeys;
 	}
 
 	/*

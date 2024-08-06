@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { EditorPermissions, UIMode } from '@editor-ui/app/common/models';
-import { Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
+import { ApplicationStateService } from '@editor-ui/app/state';
+import { Feature, Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
+import { Subscription } from 'rxjs';
 import { ContextMenuOperationsService } from '../../providers/context-menu-operations/context-menu-operations.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
 
@@ -13,7 +15,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     styleUrls: ['./folder-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FolderContextMenuComponent implements OnChanges {
+export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
 
@@ -33,18 +35,35 @@ export class FolderContextMenuComponent implements OnChanges {
     public stagingMap: StagedItemsMap;
 
     isBaseFolder = false;
-    buttons: { [key: string]: boolean };
+    buttons: { [key: string]: boolean } = {};
+    multiChannelingEnabled = false;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private contextMenuOperations: ContextMenuOperationsService,
         private navigationService: NavigationService,
+        private appState: ApplicationStateService,
     ) { }
+
+    ngOnInit(): void {
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+            this.multiChannelingEnabled = enabled;
+            this.buttons = this.determineVisibleButtons();
+            this.changeDetector.markForCheck();
+        }));
+    }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (Object.keys(changes).length > 0) {
             this.isBaseFolder = this.folder ? this.folder.motherId === undefined : false;
             this.buttons = this.determineVisibleButtons();
         }
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     nodePropertiesClicked(): void {
@@ -114,13 +133,13 @@ export class FolderContextMenuComponent implements OnChanges {
         return {
             nodeProperties: this.isBaseFolder,
             properties: true,
-            localize: inherited && userCan.localize,
+            localize: this.multiChannelingEnabled && inherited && userCan.localize,
             move: isMaster && !inherited && userCan.delete,
-            inheritanceSettings: isMaster && !inherited && userCan.inherit,
-            synchronizeChannel: canBeSynchronizedToParentNode,
+            inheritanceSettings: this.multiChannelingEnabled && isMaster && !inherited && userCan.inherit,
+            synchronizeChannel: this.multiChannelingEnabled && canBeSynchronizedToParentNode,
             linkTemplates: userCan.link,
             delete: isMaster && !inherited && userCan.delete,
-            unlocalize: isLocalized && userCan.unlocalize,
+            unlocalize: this.multiChannelingEnabled && isLocalized && userCan.unlocalize,
             staging: userCan.view,
         };
     }

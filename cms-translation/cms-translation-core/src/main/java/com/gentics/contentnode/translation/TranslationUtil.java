@@ -5,6 +5,8 @@ import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.etc.TranslationFeatureService;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
+
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +16,8 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.ServiceConfigurationError;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -112,7 +116,7 @@ public class TranslationUtil {
 	public static Optional<String> getClasspath() {
 		String systemClasspath = System.getProperty("java.class.path");
 
-		return Arrays.stream(systemClasspath.split(":"))
+		return Arrays.stream(systemClasspath.split(Pattern.quote(File.pathSeparator)))
 				.filter(path -> Files.isDirectory(Paths.get(path)))
 				.findFirst();
 	}

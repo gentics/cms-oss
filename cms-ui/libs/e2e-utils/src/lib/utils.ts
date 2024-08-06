@@ -1,12 +1,24 @@
-import { File, Folder, Image, Node, NodeFeature, Page } from '@gentics/cms-models';
+import { File, Folder, Group, Image, Node, NodeFeature, Page, User } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
-import { FileImportData, FolderImportData, ImageImportData, IMPORT_ID, ImportData, NodeImportData, PageImportData } from './common';
+import {
+    FileImportData,
+    FolderImportData,
+    GroupImportData,
+    ImageImportData,
+    IMPORT_ID,
+    ImportData,
+    NodeImportData,
+    PageImportData,
+    UserImportData,
+} from './common';
 
 export function getItem(data: NodeImportData, entities: Record<string, any>): Node | null;
 export function getItem(data: FolderImportData, entities: Record<string, any>): Folder | null;
 export function getItem(data: PageImportData, entities: Record<string, any>): Page | null;
 export function getItem(data: ImageImportData, entities: Record<string, any>): Image | null;
 export function getItem(data: FileImportData, entities: Record<string, any>): File | null;
+export function getItem(data: GroupImportData, entities: Record<string, any>): Group | null;
+export function getItem(data: UserImportData, entities: Record<string, any>): User | null;
 export function getItem(data: ImportData | string, entities: Record<string, any>): any {
     const importId = typeof data === 'string' ? data : data[IMPORT_ID];
     return entities[importId] || null;

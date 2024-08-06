@@ -8,6 +8,7 @@ import {
     Image,
     InheritableItem,
     Node,
+    NodeFeature,
     Page,
     Raw,
 } from '@gentics/cms-models';
@@ -231,10 +232,24 @@ export class DecisionModalsService {
      * and show a list of inherited items which can not be deleted.
      */
     selectItemsToDelete(items: InheritableItem[]): Promise<MultiDeleteResult> {
+
+        // If there's no multichanneling enabled, we don't need any of this. Just simply delete the files
+        if (!this.appState.now.features[Feature.MULTICHANNELLING]) {
+            return this.modalService.fromComponent(MultiDeleteModal, null, {
+                otherItems: items,
+                localizedItems: [],
+                inheritedItems: [],
+                itemLocalizations: {},
+                pageLanguageVariants: this.createPageLanguageVariantsMap(items),
+                formLanguageVariants: this.createFormLanguageVariantsMap(items),
+            }).then(modal => modal.open());
+        }
+
         const inheritedItems = [] as InheritableItem[];
         const localizedItems = [] as InheritableItem[];
         const itemLocalizations = {} as LocalizationMap;
         const otherItems = [] as InheritableItem[];
+
         for (const item of items) {
             if (item.inherited) {
                 inheritedItems.push(item);
@@ -244,6 +259,7 @@ export class DecisionModalsService {
                 otherItems.push(item);
             }
         }
+
         const pageLanguageVariants: PageLanguageVariantMap = this.createPageLanguageVariantsMap([...otherItems, ...localizedItems]);
         const formLanguageVariants: FormLanguageVariantMap = this.createFormLanguageVariantsMap([...otherItems]);
 
@@ -255,7 +271,6 @@ export class DecisionModalsService {
             formLanguageVariants,
             itemLocalizations,
         };
-
 
         return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form')).pipe(
             switchMap((itemLocalizations)  => {

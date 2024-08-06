@@ -1307,7 +1307,11 @@ ins.gtx-diff {
             );
         this.isLocked = this.isLockedByAnother();
 
-        if (state.editorIsOpen && state.itemId) {
+        if (state.editorIsOpen && state.itemId && (
+            this.currentItem == null
+            || this.currentItem.id !== state.itemId
+            || this.currentItem.type !== state.itemType
+        )) {
             const item = this.entityResolver.getEntity(state.itemType, state.itemId);
             // Without the following check, saving a change that results in no update (e.g., deleting a file's extension)
             // would cause the first subsequent change to be restored immediately because of the following assignment.

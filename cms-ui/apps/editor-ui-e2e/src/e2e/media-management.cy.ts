@@ -1,44 +1,30 @@
 import { FileSaveRequest, ImageSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import {
-    EntityMap,
+    EntityImporter,
     ITEM_TYPE_FILE,
     ITEM_TYPE_IMAGE,
-    ImportBootstrapData,
     TestSize,
-    bootstrapSuite,
-    cleanupTest,
-    getItem,
     minimalNode,
-    setupTest,
 } from '@gentics/e2e-utils';
 import { Interception } from 'cypress/types/net-stubbing';
 import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1 } from '../support/app.po';
 
 describe('Media Management', () => {
 
-    let bootstrap: ImportBootstrapData;
-    let entities: EntityMap = {};
+    const IMPORTER = new EntityImporter();
 
-    before(() => {
-        cy.wrap(cleanupTest()
-            .then(() => bootstrapSuite(TestSize.MINIMAL))
-            .then(data => {
-                bootstrap = data;
-            }),
-        );
+    before(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    beforeEach(() => {
-        cy.wrap(cleanupTest()
-            .then(() => setupTest(TestSize.MINIMAL, bootstrap))
-            .then(data => {
-                entities = data;
-            }),
-        ).then(() => {
-            cy.navigateToApp();
-            cy.login(AUTH_ADMIN);
-            cy.selectNode(getItem(minimalNode, entities)!.id);
-        });
+    beforeEach(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.setupTest(TestSize.MINIMAL);
+
+        cy.navigateToApp();
+        cy.login(AUTH_ADMIN);
+        cy.selectNode(IMPORTER.get(minimalNode)!.id);
     });
 
     it('should be possible to create a new file and edit the object-properties', () => {
@@ -62,17 +48,24 @@ describe('Media Management', () => {
                 pathname: '/rest/file/save/**',
             }).as('saveRequest');
 
-            cy.get('content-frame gtx-editor-toolbar .save-button [data-action="primary"]')
-                .click({ force: true });
+            cy.intercept({
+                method: 'GET',
+                pathname: '/rest/folder/getPages/**',
+            }).as('folderLoad');
 
-            cy.get('@saveRequest').then(data => {
-                const req = (data as any as Interception).request.body as FileSaveRequest;
-                const tag = req.file.tags?.[`object.${OBJECT_PROPERTY}`];
-                const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
+            cy.editorSave();
 
-                expect(options).to.have.length(1);
-                expect(options![0].id).to.equal(COLOR_ID);
-            });
+            // Wait for the folder to have reloaded
+            cy.wait('@folderLoad')
+                .then(() => cy.wait<FileSaveRequest>('@saveRequest'))
+                .then(data => {
+                    const req = data.request.body;
+                    const tag = req.file.tags?.[`object.${OBJECT_PROPERTY}`];
+                    const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
+
+                    expect(options).to.have.length(1);
+                    expect(options![0].id).to.equal(COLOR_ID);
+                });
         });
     });
 
@@ -97,11 +90,10 @@ describe('Media Management', () => {
                 pathname: '/rest/image/save/**',
             }).as('saveRequest');
 
-            cy.get('content-frame gtx-editor-toolbar .save-button [data-action="primary"]')
-                .click({ force: true });
+            cy.editorSave();
 
-            cy.get('@saveRequest').then(data => {
-                const req = (data as any as Interception).request.body as ImageSaveRequest;
+            cy.get<Interception<ImageSaveRequest>>('@saveRequest').then(data => {
+                const req = data.request.body;
                 const tag = req.image.tags?.[`object.${OBJECT_PROPERTY}`];
                 const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
 

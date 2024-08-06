@@ -24,6 +24,9 @@ export enum TestSize {
 export type EntityMap = Record<string, any>;
 export type BinaryMap = Record<string, File>;
 
+export const LANGUAGE_EN = 'en';
+export const LANGUAGE_DE = 'de';
+
 export const ITEM_TYPE_FOLDER = 'folder';
 export const ITEM_TYPE_PAGE = 'page';
 export const ITEM_TYPE_FILE = 'file';

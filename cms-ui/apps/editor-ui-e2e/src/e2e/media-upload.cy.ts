@@ -1,18 +1,12 @@
 import {
-    BinaryMap,
-    EntityMap,
+    EntityImporter,
     IMPORT_ID,
     ITEM_TYPE_FILE,
     ITEM_TYPE_IMAGE,
-    ImportBootstrapData,
     TestSize,
-    bootstrapSuite,
-    cleanupTest,
     fileOne,
-    getItem,
     imageOne,
     minimalNode,
-    setupTest,
 } from '@gentics/e2e-utils';
 import {
     AUTH_ADMIN,
@@ -28,37 +22,30 @@ import {
 
 describe('Media Upload', () => {
 
-    let bootstrap: ImportBootstrapData;
-    let entities: EntityMap = {};
+    const IMPORTER = new EntityImporter();
 
-    before(() => {
-        cy.wrap(cleanupTest()
-            .then(() => bootstrapSuite(TestSize.MINIMAL))
-            .then(data => {
-                bootstrap = data;
-            }),
-        );
+    before(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
     beforeEach(() => {
-        cy.wrap(cleanupTest()).then(() => {
+        cy.wrap(IMPORTER.cleanupTest()).then(() => {
             return cy.loadBinaries([
                 FIXTURE_TEST_IMAGE_JPG_1,
                 FIXTURE_TEST_FILE_DOC_1,
             ]);
         }).then(fixtures => {
-            const binMap: BinaryMap = {
+            IMPORTER.binaryMap = {
                 [imageOne[IMPORT_ID]]: fixtures[FIXTURE_TEST_IMAGE_JPG_1],
                 [fileOne[IMPORT_ID]]: fixtures[FIXTURE_TEST_FILE_DOC_1],
             };
-
-            return cy.wrap(setupTest(TestSize.MINIMAL, bootstrap, binMap).then(data => {
-                entities = data;
-            }));
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
         }).then(() => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);
-            cy.selectNode(getItem(minimalNode, entities)!.id);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
         });
     });
 

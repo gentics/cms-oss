@@ -21,6 +21,8 @@ import {
     ITEM_TYPE_FOLDER,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     NodeImportData,
     PageImportData,
     TestSize,
@@ -60,7 +62,7 @@ export const emptyNode: NodeImportData = {
     },
     description: 'empty node',
 
-    languages : [ 'en' ],
+    languages : [LANGUAGE_EN],
     features: [],
     templates: [BASIC_TEMPLATE_ID],
 };
@@ -143,7 +145,7 @@ export const minimalNode: NodeImportData = {
     },
     description: 'minimal test',
 
-    languages : [ 'de', 'en' ],
+    languages : [LANGUAGE_DE, LANGUAGE_EN],
     features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,
@@ -185,7 +187,7 @@ function createPage(
         pageName: `Page Nr. ${id}`,
         fileName: `page-${id.toLowerCase()}`,
         description: `Example Page number ${id}`,
-        language: 'en',
+        language: LANGUAGE_EN,
         priority: 1,
     };
 }
@@ -265,7 +267,7 @@ export const fullNode: NodeImportData = {
     },
     description: 'full test',
 
-    languages : [ 'de', 'en' ],
+    languages : [LANGUAGE_DE, LANGUAGE_EN],
     features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,

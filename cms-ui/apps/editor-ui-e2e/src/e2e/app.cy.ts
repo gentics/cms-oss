@@ -1,50 +1,40 @@
 import {
+    EntityImporter,
     EntityMap,
     IMPORT_TYPE,
-    ImportBootstrapData,
     TestSize,
-    bootstrapSuite,
-    cleanupTest,
     folderA,
     folderB,
-    getItem,
     minimalNode,
-    setupTest,
 } from '@gentics/e2e-utils';
 
 describe('Login', () => {
 
-    let bootstrap: ImportBootstrapData;
-    let entities: EntityMap = {};
+    const IMPORTER = new EntityImporter();
 
-    before(() => {
-        cy.wrap(cleanupTest()
-            .then(() => bootstrapSuite(TestSize.MINIMAL))
-            .then(data => {
-                bootstrap = data;
-            }),
-        );
+    before(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    beforeEach(() => {
-        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap).then(data => {
-            entities = data;
-        }));
+    beforeEach(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.setupTest(TestSize.MINIMAL);
     });
 
     it('should have the minimal node present', () => {
         cy.navigateToApp();
         cy.login('admin');
-        cy.selectNode(getItem(minimalNode, entities)!.id);
+        cy.selectNode(IMPORTER.get(minimalNode)!.id);
         cy.get('folder-contents > .title .title-name')
             .should('exist')
             .should('contain.text', minimalNode.node.name);
         const folders = [folderA, folderB];
         for (const folder of folders) {
-            cy.findItem(folder[IMPORT_TYPE], getItem(folder, entities)!.id).should('exist');
+            cy.findItem(folder[IMPORT_TYPE], IMPORTER.get(folder)!.id).should('exist');
         }
 
-        cy.itemAction(folderA[IMPORT_TYPE], getItem(folderA, entities)!.id, 'properties');
+        cy.itemAction(folderA[IMPORT_TYPE], IMPORTER.get(folderA)!.id, 'properties');
         cy.get('content-frame')
             .should('exist');
     });

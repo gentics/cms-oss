@@ -24,8 +24,13 @@ interface ContentFile {
 }
 
 interface BinaryLoadOptions {
-    asContent?: boolean;
     applyAlias?: boolean;
+}
+
+interface BinaryFileLoadOptions extends BinaryLoadOptions {}
+
+interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
+    asContent: true;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -33,19 +38,20 @@ declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         /** Loads the defined fixtures and returns a map of the loaded binaries as usable map. */
-        loadBinaries(files: (string | ImportBinary)[], options?: BinaryLoadOptions): Chainable<Record<string, ContentFile | File>>;
+        loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
+        loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
         /** Helper to navigate to the application */
-        navigateToApp(path?: string): Chainable<void>;
+        navigateToApp(path?: string): Chainable<null>;
         /** Login with pre-defined user data or with a cypress alias */
-        login(account: string): Chainable<void>;
+        login(account: string): Chainable<null>;
         /** Select a certain node in the editor-ui */
-        selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
+        selectNode(nodeId: number | string): Chainable<null>;
         /** Attempt to find a specified item-type list */
         findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
         /** Attempt to find a specified item of a type in the item-type list (uses `findList`) */
         findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
         /** Click/Perform an action on an item (iE edit, preview, delete, ...) */
-        itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
+        itemAction(type: ItemType, id: number, action: string): Chainable<null>;
         /** Select the provided object-property - Requires the `editProperties` mode to be active for the item already. */
         openObjectPropertyEditor(name: string): Chainable<JQuery<HTMLElement>>;
         /** Finds the tag-editor element(s) which are for controlling the tag value */
@@ -53,7 +59,11 @@ declare namespace Cypress {
         /** Uploads the specified fixture-names as files or images */
         uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
         /** Selects the specified value in the select subject */
-        selectValue(valueId: any): Chainable<void>;
+        selectValue(valueId: any): Chainable<null>;
+        /** Click the save button in the editor-toolbar */
+        editorSave(): Chainable<null>;
+        /** Closes the editor */
+        editorClose(): Chainable<null>;
     }
 }
 
@@ -205,9 +215,10 @@ Cypress.Commands.add('login', (account) => {
 Cypress.Commands.add('selectNode', (nodeId) => {
     cy.get('.node-selector [data-action="select-node"]')
         .click();
-    return cy.get('.node-selector-list')
+    cy.get('.node-selector-list')
         .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`)
         .click();
+    return cy.wrap(null);
 });
 
 Cypress.Commands.add('findList', (type) => {
@@ -226,9 +237,10 @@ Cypress.Commands.add('itemAction', (type, id, action) => {
             cy.findItem(type, id)
                 .find('.context-menu gtx-button[data-action="open-item-context-menu"]')
                 .click({ force: true });
-            return cy.get('.item-context-menu-content')
+            cy.get('.item-context-menu-content')
                 .find(`[data-action="${action}"]`)
                 .click({ force: true });
+            return cy.wrap(null);
     }
 });
 
@@ -324,4 +336,17 @@ Cypress.Commands.add('selectValue', { prevSubject: 'element' }, (subject, valueI
     cy.get('gtx-dropdown-content.select-context')
         .find(`.select-option[data-id="${valueId}"]`)
         .click({ force: true });
+    return cy.wrap(null);
+});
+
+Cypress.Commands.add('editorSave', () => {
+    cy.get('content-frame gtx-editor-toolbar .save-button [data-action="primary"]')
+        .click({ force: true });
+    return cy.wrap(null);
+});
+
+Cypress.Commands.add('editorClose', () => {
+    cy.get('content-frame gtx-editor-toolbar [data-action="close"]')
+        .click({ force: true });
+    return cy.wrap(null);
 });

@@ -1,4 +1,5 @@
-import {AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { coerceToBoolean } from '@gentics/ui-core';
 
 /**
  * Handles autofocus for all ui-core form elements.
@@ -13,29 +14,23 @@ import {AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, Simpl
         gtx-radio-button[autofocus],
         gtx-search-bar[autofocus],
         gtx-select[autofocus],
-        gtx-textarea[autofocus]`
+        gtx-textarea[autofocus]`,
 })
 export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
 
-    @Input() get autofocus(): boolean {
-        return this._autofocus;
-    }
-    set autofocus(value: boolean) {
-        this._autofocus = value != null && value !== false;
-    }
+    @Input()
+    public autofocus = false;
 
-    private _autofocus: boolean = false;
     private inputElement: HTMLButtonElement | HTMLInputElement | HTMLDivElement | HTMLTextAreaElement;
     private timeout: any;
 
-
-    constructor(private element: ElementRef) { }
+    constructor(private element: ElementRef<HTMLElement>) { }
 
     ngAfterViewInit(): void {
         if (this.element && this.element.nativeElement) {
             this.inputElement = this.element.nativeElement.querySelector('input, .select-input, textarea, button');
 
-            if (this._autofocus) {
+            if (this.autofocus) {
                 if (!(this.inputElement instanceof HTMLDivElement)) {
                     this.inputElement.autofocus = true;
                 }
@@ -45,10 +40,10 @@ export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        const change = changes['autofocus'];
-        if (change && this.inputElement) {
-            if (!(this.inputElement instanceof HTMLDivElement)) {
-                this.inputElement.autofocus = this._autofocus;
+        if (changes.autofocus) {
+            this.autofocus = coerceToBoolean(this.autofocus);
+            if (this.inputElement != null && !(this.inputElement instanceof HTMLDivElement)) {
+                this.inputElement.autofocus = this.autofocus;
             }
         }
     }
@@ -63,29 +58,35 @@ export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
     private focusNativeInput(): void {
         this.cleanupTimer();
         this.timeout = setTimeout(() => {
+            // There's already an element which has focus - do not steal the focus!
+            if (document.activeElement != null) {
+                return;
+            }
+
             this.inputElement.focus();
 
-            if (typeof (<any> HTMLInputElement.prototype).scrollIntoViewIfNeeded === 'function') {
+            if (typeof (this.inputElement as any).scrollIntoViewIfNeeded === 'function') {
                 // Chrome only (1/2017)
-                (<any> this.inputElement).scrollIntoViewIfNeeded();
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                (this.inputElement as any).scrollIntoViewIfNeeded();
             } else {
                 // Browser support varies
                 try {
                     this.inputElement.scrollIntoView({
                         behavior: 'smooth',
                         block: 'nearest',
-                        inline: 'nearest'
+                        inline: 'nearest',
                     });
                 } catch (err) {
                     try {
                         this.inputElement.scrollIntoView({
                             behavior: 'smooth',
                             block: 'start',
-                            inline: 'start'
+                            inline: 'start',
                         });
                     } catch (err) {
                         this.inputElement.scrollIntoView({
-                            block: 'start'
+                            block: 'start',
                         });
                     }
                 }

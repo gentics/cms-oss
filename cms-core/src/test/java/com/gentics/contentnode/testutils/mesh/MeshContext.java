@@ -10,7 +10,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
@@ -47,7 +45,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "3.0.0-SNAPSHOT";
+	public final static String TESTED_MESH_VERSION = "3.0.0";
 
 	public static final String MESH_DATABASE_SUFFIX = "_mesh";
 
@@ -129,7 +127,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 		try {
 			ManagerResponse dbConnectionResponse = future.get(DBTestContext.DEFAULT_MAX_WAIT, TimeUnit.SECONDS);
-			addEnv("MESH_JDBC_CONNECTION_URL", "jdbc:mariadb://" + dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort() + "/");
+			addEnv("MESH_DATABASE_ADDRESS", dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort());
 			addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8");
 			addEnv("MESH_JDBC_DATABASE_NAME", dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX);
 			addEnv("MESH_JDBC_CONNECTION_USERNAME", dbConnectionResponse.getUser());
@@ -157,12 +155,8 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	
 		exposedPorts.add(8080);
 		setExposedPorts(exposedPorts);
-		setLogConsumers(Arrays.asList(logConsumer));
+		setLogConsumers(Arrays.asList(logConsumer, logBuffer));
 		setStartupAttempts(1);
-	
-		ArrayList<Consumer<OutputFrame>> consumers = new ArrayList<>(getLogConsumers());
-		consumers.add(logBuffer);
-		setLogConsumers(consumers);
 	}
 
 	@Override

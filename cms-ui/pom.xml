@@ -169,7 +169,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib" />
+                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib --verbose" />
                                 </exec>
                             </target>
                         </configuration>

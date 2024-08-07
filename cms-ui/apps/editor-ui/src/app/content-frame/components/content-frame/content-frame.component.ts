@@ -360,6 +360,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         const editorState$ = this.editorState$ = this.appState.select(state => state.editor).pipe(
+            map(state => {
+                // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+                const { modifiedObjectPropertiesValid, objectPropertiesModified, saving, ...actualState } = state;
+                return actualState;
+            }),
+            distinctUntilChanged(isEqual),
             // If the editor is not open yet, the editorState may still contain the IDs from the last time it was open.
             filter(editorState => editorState.editorIsOpen),
             publishReplay(1),
@@ -1307,11 +1313,7 @@ ins.gtx-diff {
             );
         this.isLocked = this.isLockedByAnother();
 
-        if (state.editorIsOpen && state.itemId && (
-            this.currentItem == null
-            || this.currentItem.id !== state.itemId
-            || this.currentItem.type !== state.itemType
-        )) {
+        if (state.editorIsOpen && state.itemId) {
             const item = this.entityResolver.getEntity(state.itemType, state.itemId);
             // Without the following check, saving a change that results in no update (e.g., deleting a file's extension)
             // would cause the first subsequent change to be restored immediately because of the following assignment.
@@ -1327,7 +1329,10 @@ ins.gtx-diff {
             }
 
             if (this.currentItem !== item && !deepEqual(this.currentItem, item)) {
-                this.currentItem = structuredClone(item);
+                this.currentItem = {
+                    ...this.currentItem,
+                    ...structuredClone(item),
+                } as any;
             }
         }
 

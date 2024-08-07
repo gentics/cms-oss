@@ -59,7 +59,7 @@ export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
         this.cleanupTimer();
         this.timeout = setTimeout(() => {
             // There's already an element which has focus - do not steal the focus!
-            if (document.activeElement != null) {
+            if (document.activeElement != null && document.activeElement !== document.body) {
                 return;
             }
 

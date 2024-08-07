@@ -6,6 +6,7 @@ describe('No Nodes', () => {
     const IMPORTER =  new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest(true);
         await IMPORTER.importData([
             rootGroup,

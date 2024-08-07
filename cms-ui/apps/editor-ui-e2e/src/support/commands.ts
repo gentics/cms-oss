@@ -37,6 +37,7 @@ interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
 declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
+        muteXHR(): Chainable<null>;
         /** Loads the defined fixtures and returns a map of the loaded binaries as usable map. */
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
@@ -144,6 +145,11 @@ function normalizeToImportBinary(fixturePath: string | ImportBinary): Required<I
         type,
     };
 }
+
+Cypress.Commands.add('muteXHR', () => {
+    // Disable logging of XHR/Fetch requests, since they just spam everything
+    return cy.intercept({ resourceType: /xhr|fetch/ }, { log: false });
+});
 
 Cypress.Commands.add('loadBinaries', (files, options) => {
     return cy.wrap(new Promise(resolve => {

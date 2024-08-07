@@ -15,6 +15,7 @@ describe('Page Management', () => {
     const IMPORTER = new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
@@ -56,25 +57,19 @@ describe('Page Management', () => {
             pathname: '/rest/page/create',
         }).as('createRequest');
 
-        cy.intercept({
-            method: 'GET',
-            pathname: '/rest/folder/getPages/**',
-        }).as('folderLoad');
-
         cy.get('@modal')
             .find('.modal-footer [data-action="confirm"]')
             .click({ force: true });
 
         // Wait for the folder to have reloaded
-        cy.wait('@folderLoad')
-            .then(() => cy.editorClose())
-            .then(() => cy.wait<any, PageCreateResponse>('@createRequest'))
-            .then(data => {
-                const page = data.response?.body?.page;
-                expect(page).to.exist;
-                cy.findItem(ITEM_TYPE_PAGE, page!.id)
-                    .should('exist');
-            });
+        cy.wait<any, PageCreateResponse>('@createRequest').then(data => {
+            cy.editorClose();
+
+            const page = data.response?.body?.page;
+            expect(page).to.exist;
+            cy.findItem(ITEM_TYPE_PAGE, page!.id)
+                .should('exist');
+        });
     });
 
     it('should be possible to edit the page properties', () => {
@@ -94,17 +89,19 @@ describe('Page Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/save/**',
-        }).as('pageUpdate');
+        }).as('updateRequest');
 
         // Clear the name and enter the new one
+        // eslint-disable-next-line cypress/unsafe-to-chain-command
         cy.get('@form')
             .find('[formcontrolname="pageName"] input')
-            .type(`{selectall}{del}${CHANGE_PAGE_NAME}`);
+            .clear()
+            .type(CHANGE_PAGE_NAME);
 
         cy.editorSave();
 
         // Wait for the update to be actually handled
-        cy.wait('@pageUpdate').then(() => {
+        cy.wait('@updateRequest').then(() => {
             cy.findItem(ITEM_TYPE_PAGE, PAGE.id)
                 .find('.item-name .item-name-only')
                 .should('have.text', CHANGE_PAGE_NAME);

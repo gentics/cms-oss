@@ -38,6 +38,8 @@
         <ui.skip.report>false</ui.skip.report>
         <!-- If the UI module should skip the publishing to the registry -->
         <ui.skip.publish>false</ui.skip.publish>
+        <!-- Which configuration set should be used for the nx commands -->
+        <ui.nx.configuration>ci</ui.nx.configuration>
     </properties>
 
     <build>
@@ -189,7 +191,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --target=build --configuration=ci --output-style=static" />
+                                    <arg line="run nx -- run-many --target=build --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>
@@ -211,7 +213,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --targets=test --configuration=ci --output-style=static" />
+                                    <arg line="run nx -- run-many --targets=test --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                                 <exec
                                     dir="${npm.workingDirectory}"
@@ -219,7 +221,7 @@
                                     failonerror="true"
                                 >
                                     <!-- Parallel has to be disabled, otherwise it'll break, as the port is already used -->
-                                    <arg line="run nx -- run-many --targets=component-test --configuration=ci --parallel=false --output-style=static" />
+                                    <arg line="run nx -- run-many --targets=component-test --configuration=${ui.nx.configuration} --parallel=false --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>
@@ -241,7 +243,8 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --output-style=static" />
+                                    <!-- Parallel has to be disabled, otherwise it'll break, as the port is already used -->
+                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=${ui.nx.configuration} --parallel=false --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>

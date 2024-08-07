@@ -19,6 +19,7 @@ describe('Folder Management', () => {
     const IMPORTER = new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
@@ -57,18 +58,12 @@ describe('Folder Management', () => {
             pathname: '/rest/folder/create',
         }).as('createRequest');
 
-        cy.intercept({
-            method: 'GET',
-            pathname: '/rest/folder/getPages/**',
-        }).as('folderLoad');
-
         cy.get('@modal')
             .find('.modal-footer [data-action="confirm"]')
             .click({ force: true });
 
         // Wait for the folder to have reloaded
-        cy.wait('@folderLoad')
-            .then(() => cy.wait<any, FolderCreateResponse>('@createRequest'))
+        cy.wait<any, FolderCreateResponse>('@createRequest')
             .then(data => {
                 const folder = data.response?.body?.folder;
                 expect(folder).to.exist;
@@ -94,7 +89,7 @@ describe('Folder Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/save/**',
-        }).as('pageUpdate');
+        }).as('updateRequest');
 
         // Clear the name and enter the new one
         cy.get('@form')
@@ -104,7 +99,7 @@ describe('Folder Management', () => {
         cy.editorSave();
 
         // Wait for the update to be actually handled
-        cy.wait('@pageUpdate').then(() => {
+        cy.wait('@updateRequest').then(() => {
             cy.findItem(ITEM_TYPE_FOLDER, FOLDER.id)
                 .find('.item-name .item-name-only')
                 .should('have.text', CHANGE_FOLDER_NAME);

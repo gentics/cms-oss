@@ -59,7 +59,7 @@ export interface ClientOptions {
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logRequests: false,
-    logImports: true,
+    logImports: false,
 }
 
 export class EntityImporter {

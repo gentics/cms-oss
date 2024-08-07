@@ -1,6 +1,5 @@
 import {
     EntityImporter,
-    EntityMap,
     IMPORT_TYPE,
     TestSize,
     folderA,
@@ -13,6 +12,7 @@ describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });

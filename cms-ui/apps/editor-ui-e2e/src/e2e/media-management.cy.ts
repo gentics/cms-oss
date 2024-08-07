@@ -6,7 +6,6 @@ import {
     TestSize,
     minimalNode,
 } from '@gentics/e2e-utils';
-import { Interception } from 'cypress/types/net-stubbing';
 import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1 } from '../support/app.po';
 
 describe('Media Management', () => {
@@ -14,6 +13,7 @@ describe('Media Management', () => {
     const IMPORTER = new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
@@ -46,18 +46,12 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/file/save/**',
-            }).as('saveRequest');
-
-            cy.intercept({
-                method: 'GET',
-                pathname: '/rest/folder/getPages/**',
-            }).as('folderLoad');
+            }).as('updateRequest');
 
             cy.editorSave();
 
             // Wait for the folder to have reloaded
-            cy.wait('@folderLoad')
-                .then(() => cy.wait<FileSaveRequest>('@saveRequest'))
+            cy.wait<FileSaveRequest>('@updateRequest')
                 .then(data => {
                     const req = data.request.body;
                     const tag = req.file.tags?.[`object.${OBJECT_PROPERTY}`];
@@ -88,11 +82,11 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/image/save/**',
-            }).as('saveRequest');
+            }).as('updateRequest');
 
             cy.editorSave();
 
-            cy.get<Interception<ImageSaveRequest>>('@saveRequest').then(data => {
+            cy.wait<ImageSaveRequest>('@updateRequest').then(data => {
                 const req = data.request.body;
                 const tag = req.image.tags?.[`object.${OBJECT_PROPERTY}`];
                 const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;

@@ -25,6 +25,7 @@ describe('Media Upload', () => {
     const IMPORTER = new EntityImporter();
 
     before(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });

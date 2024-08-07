@@ -1,0 +1,31 @@
+{
+    // General Settings
+    "editor.accessibilityPageSize": 10,
+    "files.eol": "\n",
+    "files.associations": {
+        "*.es": "json",
+        "part.*.html": "velocity",
+        "*.textile": "asciidoc"
+    },
+    // Plugin Settings
+    "eslint.format.enable": true,
+    "redhat.telemetry.enabled": false,
+    // Language Settings
+    "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "typescript.preferences.autoImportFileExcludePatterns": [
+        "@angular/compiler",
+        "hammerjs"
+    ],
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "javascript.preferences.autoImportFileExcludePatterns": [
+        "@angular/compiler",
+        "hammerjs"
+    ],
+    "[xml]": {
+        "editor.defaultFormatter": "redhat.vscode-xml"
+    }
+}

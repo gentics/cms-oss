@@ -1,0 +1,1 @@
+Administrator User Interface: The Logs Module will now show logs between the given start- and endtime only to avoid long running queries.

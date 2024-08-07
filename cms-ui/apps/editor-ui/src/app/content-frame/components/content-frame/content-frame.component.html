@@ -41,7 +41,7 @@
         [class.hidden]="(propertiesTab$ | async) !== 'preview'"
     >
         <file-preview
-            [file]="(currentItem$ | async)"
+            [file]="currentItem"
             (imageLoading)="isImageLoading = $event"
         ></file-preview>
     </div>

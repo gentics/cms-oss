@@ -275,8 +275,8 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * The language context for the pages has been changed.
      */
-    languageChanged(language: Language): void {
-        this.userSettings.setActiveLanguage(language.id);
+    selectLanguage(language: Language): void {
+        this.userSettings.setActiveLanguage(language?.id);
     }
 
     toggleDisplayAllLanguages(): void {

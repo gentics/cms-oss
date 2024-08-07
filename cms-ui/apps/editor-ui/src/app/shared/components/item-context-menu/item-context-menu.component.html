@@ -1,6 +1,6 @@
 <gtx-dropdown-list *ngIf="buttons" align="right">
     <gtx-dropdown-trigger>
-        <gtx-button data-action="context-menu-trigger" icon type="secondary">
+        <gtx-button data-action="open-item-context-menu" icon type="secondary">
             <icon>more_vert</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
@@ -213,6 +213,7 @@
             <gtx-dropdown-item
                 *ngIf="buttons.stage"
                 data-action="stage"
+                [attr.data-active]="stagingMap?.[item.globalId]?.included"
                 (click)="stageClicked(item, StagingMode.REGULAR)"
             >
                 <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'remove' : 'inventory') }}</icon>

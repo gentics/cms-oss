@@ -235,6 +235,7 @@ export class DecisionModalsService {
         const localizedItems = [] as InheritableItem[];
         const itemLocalizations = {} as LocalizationMap;
         const otherItems = [] as InheritableItem[];
+
         for (const item of items) {
             if (item.inherited) {
                 inheritedItems.push(item);
@@ -244,6 +245,7 @@ export class DecisionModalsService {
                 otherItems.push(item);
             }
         }
+
         const pageLanguageVariants: PageLanguageVariantMap = this.createPageLanguageVariantsMap([...otherItems, ...localizedItems]);
         const formLanguageVariants: FormLanguageVariantMap = this.createFormLanguageVariantsMap([...otherItems]);
 
@@ -255,7 +257,6 @@ export class DecisionModalsService {
             formLanguageVariants,
             itemLocalizations,
         };
-
 
         return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form')).pipe(
             switchMap((itemLocalizations)  => {

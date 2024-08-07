@@ -12,6 +12,7 @@
         [class.statePublished]="(currentLanguage$ | async) && (statePublished$(language?.code) | async)"
         [class.multiLang]="isMultiLanguage$ | async"
         [ngClass]="{ 'mode-default': !isModeSelect(), 'mode-select': isModeSelect() }"
+        [attr.data-id]="language?.code"
         (click)="onIconClicked(language)"
     >
         <div [title]="language.name">
@@ -42,10 +43,11 @@
                     <a class="language-code">{{ language?.code | uppercase }}</a>
                 </gtx-dropdown-trigger>
 
-                <gtx-dropdown-content>
+                <gtx-dropdown-content class="page-language-context">
                     <ng-container *ngIf="uiMode === UIMode.EDIT">
                         <gtx-dropdown-item
                             *ngIf="!(isAvailable$(language) | async) && !(currentLanguage$ | async)"
+                            data-action="set-source-language"
                             (click)="languageClicked(language, false, true)"
                         >
                             {{ 'editor.set_as_source_language_label' | i18n:{ language: language?.name } }}
@@ -53,6 +55,7 @@
 
                         <gtx-dropdown-item
                             *ngIf="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
+                            data-action="preview"
                             (click)="languageClicked(language)"
                         >
                             {{ 'editor.preview_in_language_label' | i18n:{ language: language?.name } }}
@@ -60,6 +63,7 @@
 
                         <gtx-dropdown-item
                             *ngIf="(isAvailable$(language) | async) && (item$ | async).contentGroupId !== language.id && !(stateDeleted$(language?.code) | async)"
+                            data-action="compare"
                             (click)="languageClicked(language, true)"
                         >
                             {{ 'editor.compare_languages_label' | i18n:{
@@ -70,6 +74,7 @@
 
                         <gtx-dropdown-item
                             *ngIf="(!(isAvailable$(language) | async) || (stateDeleted$(language?.code) | async)) && (currentLanguage$ | async)"
+                            data-action="translate"
                             (click)="languageClicked(language)"
                         >
                             {{ 'editor.translate_into_label' | i18n:{ language: language?.name } }}
@@ -77,6 +82,7 @@
 
                         <gtx-dropdown-item
                             *ngIf="(stateDeleted$(language?.code) | async) && (item | permissions)?.item?.delete"
+                            data-action="restore"
                             (click)="languageClicked(language, false, false, true)"
                         >
                             <icon left>restore_from_trash</icon>
@@ -88,6 +94,8 @@
                         <ng-container *ngIf="getPageLanguageVariantOfLanguage$(language.code) | async as langPage">
                             <gtx-dropdown-item
                                 *ngIf="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
+                                data-action="stage"
+                                [attr.data-active]="stagingMap?.[langPage?.globalId]?.included"
                                 (click)="onStageLanguageClick(language, langPage, false)"
                             >
                                 <icon left>{{ stagingMap?.[langPage?.globalId]?.included ? 'remove' : 'inventory' }}</icon>

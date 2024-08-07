@@ -360,6 +360,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         const editorState$ = this.editorState$ = this.appState.select(state => state.editor).pipe(
+            map(state => {
+                // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+                const { modifiedObjectPropertiesValid, objectPropertiesModified, saving, ...actualState } = state;
+                return actualState;
+            }),
+            distinctUntilChanged(isEqual),
             // If the editor is not open yet, the editorState may still contain the IDs from the last time it was open.
             filter(editorState => editorState.editorIsOpen),
             publishReplay(1),
@@ -1323,7 +1329,10 @@ ins.gtx-diff {
             }
 
             if (this.currentItem !== item && !deepEqual(this.currentItem, item)) {
-                this.currentItem = structuredClone(item);
+                this.currentItem = {
+                    ...this.currentItem,
+                    ...structuredClone(item),
+                } as any;
             }
         }
 

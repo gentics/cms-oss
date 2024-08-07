@@ -1,4 +1,4 @@
-import { CONTENT_TYPE_FORM, CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
+import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
     GCMSAuthenticationAPI,
@@ -45,6 +45,7 @@ import {
     GCMSUsersnapAPI,
     GCMSValidationAPI,
     RequestMethod,
+    GCMSTranslationAPI,
 } from './models';
 import { parseJSONSafe, stringifyEmbedOptions, stringifyPagingSortOptions, toRelativePath, trimTrailingSlash } from './utils';
 
@@ -830,7 +831,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         unlock: (id) => this.executeMappedJsonRequest(POST, `/template/${id}/unlock`),
         hash: (id) => this.executeMappedJsonRequest(GET, `/template/${id}/hash`),
 
-        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/link`, body),
+        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
         unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),
@@ -877,5 +878,10 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public validation: GCMSValidationAPI = {
 
+    } as const;
+
+    public translation: GCMSTranslationAPI = {
+        translateText: (body) => this.executeMappedJsonRequest(POST, 'translation/text', body),
+        translatePage: (pageId, params) => this.executeMappedJsonRequest(POST, `translation/page/${pageId}/`, null, params),
     } as const;
 }

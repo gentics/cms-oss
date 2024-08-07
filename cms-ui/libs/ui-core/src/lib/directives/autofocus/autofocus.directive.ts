@@ -1,5 +1,5 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { coerceToBoolean } from '@gentics/ui-core';
 
 /**
  * Handles autofocus for all ui-core form elements.

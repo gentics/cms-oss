@@ -1,10 +1,10 @@
 {
   "name": "@gentics/form-generator",
-  "version": "6.1.8",
+  "version": "6.2.0-SNAPSHOT",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-components": "6.1.8",
-    "@gentics/cms-models": "6.1.8",
+    "@gentics/cms-components": "6.2.0-SNAPSHOT",
+    "@gentics/cms-models": "6.2.0-SNAPSHOT",
     "lodash-es": "^4.17.15",
     "uuid": "^9.0.0"
   },

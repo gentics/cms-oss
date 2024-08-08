@@ -2737,7 +2737,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				running = false;
 				StagingErrors stagingErrors = new StagingErrors();
 				stagingErrors.setErrors(errors);
-				try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_ERRORS_FILENAME),
+				try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME),
 						StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
 					mapper.writeValue(os, stagingErrors);
 				} catch (IOException e) {

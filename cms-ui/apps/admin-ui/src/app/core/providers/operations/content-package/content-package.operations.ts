@@ -16,6 +16,8 @@ import { NotificationService, OpenedNotification } from '@gentics/ui-core';
 import { last } from 'lodash-es';
 import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
@@ -30,6 +32,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
         private appState: AppStateService,
         private i18nNotification: I18nNotificationService,
         private notification: NotificationService,
+        private client: GCMSRestClientService,
     ) {
         super(injector, 'contentPackage');
     }
@@ -195,7 +198,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     },
                 });
             }),
-            switchMap(() => this.api.contentStaging.importContentPackage(entityId, options)),
+            switchMap(() => this.client.contentStaging.import(entityId, options)),
             discard(res => {
                 if (startNotif) {
                     startNotif.dismiss();
@@ -214,17 +217,19 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     startNotif.dismiss();
                 }
 
-                if (!(err instanceof ApiError)) {
+                if (!(err instanceof GCMSRestClientRequestError)) {
                     return throwError(err);
                 }
 
-                const res: Response = err.response;
+                const res: Response = err.data;
 
-                this.notification.show({
-                    type: 'alert',
-                    message: last(res.messages)?.message || res.responseInfo.responseMessage,
-                    delay: 10_000,
-                });
+                if(notify) {
+                    this.notification.show({
+                        type: 'alert',
+                        message: last(res.messages)?.message || res.responseInfo.responseMessage,
+                        delay: 10_000,
+                    });
+                }
 
                 return of(null);
             }),

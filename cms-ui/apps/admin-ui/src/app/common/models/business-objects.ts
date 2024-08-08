@@ -35,7 +35,7 @@ import {
     TemplateTag,
     User,
     PackageDependencyEntity,
-    ImportError,
+    ContentPackageImportError,
 
 } from '@gentics/cms-models';
 import { Permission } from '@gentics/mesh-models';
@@ -101,7 +101,7 @@ export type PermissionsSetBO = PermissionsSet & BusinessObject & {
     categorized: IndexByKey<PermissionInfo[]>;
 };
 export type ContentPackageBO = ContentPackage & BusinessObject;
-export type ImportErrorBO = ImportError & BusinessObject;
+export type ImportErrorBO = ContentPackageImportError & BusinessObject;
 export type DirtQueueItemBO = DirtQueueItem & BusinessObject;
 export type ElasticSearchIndexBO = ElasticSearchIndex<Raw> & BusinessObject;
 export type ActionLogEntryBO = ActionLogEntry & BusinessObject;

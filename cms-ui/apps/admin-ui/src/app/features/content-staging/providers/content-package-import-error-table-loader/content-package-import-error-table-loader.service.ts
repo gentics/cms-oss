@@ -2,7 +2,7 @@ import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, ImportError
 import { BaseTableLoaderService, ContentPackageOperations, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ImportError } from '@gentics/cms-models';
+import { ContentPackageImportError } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -13,7 +13,7 @@ export interface ContentStagingImportErrorTableLoaderOptions {
 
 
 @Injectable()
-export class ContentPackageImportErrorTableLoaderService extends BaseTableLoaderService<ImportError, ImportErrorBO> {
+export class ContentPackageImportErrorTableLoaderService extends BaseTableLoaderService<ContentPackageImportError, ImportErrorBO> {
 
     public lastCheckTimestamp$ = new BehaviorSubject<string>('');
 
@@ -44,7 +44,8 @@ export class ContentPackageImportErrorTableLoaderService extends BaseTableLoader
 
         return this.api.contentStaging.getImportErrors(packageName).pipe(
             map(response => {
-                const entities = response.errors.map(error => this.mapToBusinessObject(error));
+                const entities = response.errors.map(error => this.mapToBusinessObject(error))
+                    .sort((a,b) => -a?.path.localeCompare(b?.path));
                 this.checkResultAvailable$.next(true);
                 this.lastCheckTimestamp$.next(new Date(response.timestamp).toLocaleString())
 
@@ -64,7 +65,7 @@ export class ContentPackageImportErrorTableLoaderService extends BaseTableLoader
         );
     }
 
-    public mapToBusinessObject(error: ImportError): ImportErrorBO {
+    public mapToBusinessObject(error: ContentPackageImportError): ImportErrorBO {
         return {
             ...error,
             [BO_ID]: error.globalId,

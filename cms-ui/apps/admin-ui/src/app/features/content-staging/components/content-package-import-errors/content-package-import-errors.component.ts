@@ -100,9 +100,10 @@ ImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>  implem
             },
         });
 
-        this.operations.importFromFileSystem(packageName, {test: true}, false).toPromise().catch(error => {
-            console.log(error)
-        })
+        this.operations.importFromFileSystem(packageName, {test: true}, false).toPromise().then(_success => {
+            this.reload();
+            this.changeDetector.markForCheck();
+        });
     }
 
 

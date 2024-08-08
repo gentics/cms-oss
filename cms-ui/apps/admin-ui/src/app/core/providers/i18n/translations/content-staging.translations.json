@@ -74,5 +74,21 @@
     "start_export_message": {
         "en": "Starting export of Content Package \"{{packageName}}\" ...",
         "de": "Starte export des Inhalt Pakets „{{packageName}}“ ..."
+    },
+    "start_import__check_message": {
+        "en": "Checking the Content Package \"{{packageName}}\" started",
+        "de": "Überprüfung des Inhalt Pakets „{{packageName}}“ gestarted"
+    },
+    "content_package_check_ok": {
+        "en": "No import errors detected!",
+        "de": "Es wurden keine Importfehler gefunden!"
+    },
+    "content_package_check_no_result": {
+        "en": "No package import check performed yet.",
+        "de": "Es wurden noch keine Paketüberprüfung durchgeführt."
+    },
+    "content_package_last_check": {
+        "en": "Last check:",
+        "de": "Letzte Überprüfung am: "
     }
 }

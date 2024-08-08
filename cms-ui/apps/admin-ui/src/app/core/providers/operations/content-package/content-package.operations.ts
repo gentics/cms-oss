@@ -13,8 +13,8 @@ import {
 } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NotificationService, OpenedNotification } from '@gentics/ui-core';
-import { last } from'lodash-es'
-import { from, Observable, of, throwError } from 'rxjs';
+import { last } from 'lodash-es';
+import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';

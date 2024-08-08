@@ -285,6 +285,8 @@ public class ModelBuilder {
 		restFile.setCreator(getUser(nodeFile.getCreator()));
 		restFile.setCdate(nodeFile.getCDate().getIntTimestamp());
 		restFile.setEdate(nodeFile.getEDate().getIntTimestamp());
+		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
+		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
 		restFile.setPath(getFolderPath(nodeFile.getFolder()));
 		restFile.setLiveUrl(renderLiveUrlForObject(File.class, nodeFile, nodeFile.getNode()));
 		restFile.setPublishPath(renderPublishPath(nodeFile));

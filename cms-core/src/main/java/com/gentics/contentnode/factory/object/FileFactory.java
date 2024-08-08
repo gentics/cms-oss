@@ -121,14 +121,16 @@ public class FileFactory extends AbstractFactory {
 	/**
 	 * SQL Statement to insert a new contentfile
 	 */
-	protected final static String INSERT_CONTENTFILE_SQL = "INSERT INTO contentfile (name,nice_url,filetype,folder_id,filesize,creator,cdate,editor,edate,description,sizex,sizey,md5,dpix,dpiy,fpx,fpy,channelset_id,channel_id,is_master,force_online, mc_exclude,disinherit_default,uuid) VALUES "
-			+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_CONTENTFILE_SQL = "INSERT INTO contentfile"
+			+ " (name,nice_url,filetype,folder_id,filesize,creator,cdate,custom_cdate,editor,edate,custom_edate,description,sizex,sizey,md5,dpix,dpiy,fpx,fpy,channelset_id,channel_id,is_master,force_online, mc_exclude,disinherit_default,uuid)"
+			+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	/**
 	 * SQL Statement to update a new contentfile
 	 */
-	protected final static String UPDATE_CONTENTFILE_SQL = "UPDATE contentfile SET name = ?, nice_url = ?, filetype = ? , folder_id = ? , filesize = ? , editor = ? , edate = ? ,description = ? , sizex = ? , sizey = ? , md5 = ? , dpix = ? , dpiy = ?, fpx = ?, fpy = ?, channelset_id = ?, channel_id = ?, force_online = ? "
-			+ "WHERE id = ?";
+	protected final static String UPDATE_CONTENTFILE_SQL = "UPDATE contentfile"
+			+ " SET name = ?, nice_url = ?, filetype = ? , folder_id = ? , filesize = ? , editor = ? , edate = ?, custom_edate = ? ,description = ? , sizex = ? , sizey = ? , md5 = ? , dpix = ? , dpiy = ?, fpx = ?, fpy = ?, channelset_id = ?, channel_id = ?, force_online = ?"
+			+ " WHERE id = ?";
 
 	/**
 	 * SQL Statement to update the delete-flag of a contentfile
@@ -194,7 +196,9 @@ public class FileFactory extends AbstractFactory {
 		protected Integer editorId = 0;
 		protected Integer creatorId = 0;
 		protected ContentNodeDate cDate = new ContentNodeDate(0);
+		protected ContentNodeDate customCDate = new ContentNodeDate(0);
 		protected ContentNodeDate eDate = new ContentNodeDate(0);
+		protected ContentNodeDate customEDate = new ContentNodeDate(0);
 		protected boolean forceOnline;
 
 		/**
@@ -308,8 +312,8 @@ public class FileFactory extends AbstractFactory {
 		 */
 		public FactoryFile(Integer id, NodeObjectInfo info, String name, String niceUrl,
 				String filetype, Integer folderId, int filesize, String description, int sizeX, int sizeY, int dpiX,
-				int dpiY, float fpX, float fpY, String md5, int creatorId, int editorId, ContentNodeDate cDate,
-				ContentNodeDate eDate, Integer channelSetId, Integer channelId, boolean master, boolean forceOnline,
+				int dpiY, float fpX, float fpY, String md5, int creatorId, int editorId, ContentNodeDate cDate, ContentNodeDate customCDate,
+				ContentNodeDate eDate, ContentNodeDate customEDate, Integer channelSetId, Integer channelId, boolean master, boolean forceOnline,
 				boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, int udate, GlobalId globalId) {
 			super(id, info);
 			this.info = new NodeObjectInfoWrapper(info);
@@ -329,7 +333,9 @@ public class FileFactory extends AbstractFactory {
 			this.creatorId = creatorId;
 			this.editorId = editorId;
 			this.cDate = cDate;
+			this.customCDate = customCDate;
 			this.eDate = eDate;
+			this.customEDate = customEDate;
 			this.channelSetId = ObjectTransformer.getInt(channelSetId, 0);
 			this.channelId = ObjectTransformer.getInt(channelId, 0);
 			this.master = master;
@@ -838,12 +844,24 @@ public class FileFactory extends AbstractFactory {
 			return creator;
 		}
 
+		@Override
 		public ContentNodeDate getCDate() {
 			return cDate;
 		}
 
+		@Override
+		public ContentNodeDate getCustomCDate() {
+			return customCDate;
+		}
+
+		@Override
 		public ContentNodeDate getEDate() {
 			return eDate;
+		}
+
+		@Override
+		public ContentNodeDate getCustomEDate() {
+			return customEDate;
 		}
 
 		/* (non-Javadoc)
@@ -1267,7 +1285,8 @@ public class FileFactory extends AbstractFactory {
 		 *         update
 		 */
 		protected EditableFactoryFile(FactoryFile file, NodeObjectInfo info, boolean asNewFile) throws ReadOnlyException, NodeException {
-			super(asNewFile ? null : file.getId(), info, file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.description, file.sizeX,	file.sizeY, file.dpiX, file.dpiY, file.fpX, file.fpY, file.md5, file.creatorId, file.editorId, file.cDate, file.eDate, asNewFile ? 0 : file.channelSetId,
+			super(asNewFile ? null : file.getId(), info, file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.description, file.sizeX,
+					file.sizeY, file.dpiX, file.dpiY, file.fpX, file.fpY, file.md5, file.creatorId, file.editorId, file.cDate, file.customCDate, file.eDate, file.customEDate, asNewFile ? 0 : file.channelSetId,
 					file.channelId, file.master, file.forceOnline, file.excluded, file.disinheritDefault, asNewFile ? 0 : file.deleted, asNewFile ? 0 : file.deletedBy, asNewFile ? -1 : file.getUdate(), asNewFile ? null : file.getGlobalId());
 			if (asNewFile) {
 				// copy the objecttags
@@ -1394,6 +1413,18 @@ public class FileFactory extends AbstractFactory {
 			} else {
 				return this.folderId;
 			}
+		}
+
+		@Override
+		public void setCustomCDate(int timestamp) {
+			modified |= customCDate.getIntTimestamp() != timestamp;
+			customCDate = new ContentNodeDate(timestamp);
+		}
+
+		@Override
+		public void setCustomEDate(int timestamp) {
+			modified |= customEDate.getIntTimestamp() != timestamp;
+			customEDate = new ContentNodeDate(timestamp);
 		}
 
 		/*
@@ -2728,6 +2759,8 @@ public class FileFactory extends AbstractFactory {
 		int editorId = rs.getInt("editor");
 		ContentNodeDate cDate = new ContentNodeDate(rs.getInt("cdate"));
 		ContentNodeDate eDate = new ContentNodeDate(rs.getInt("edate"));
+		ContentNodeDate customCDate = new ContentNodeDate(rs.getInt("custom_cdate"));
+		ContentNodeDate customEDate = new ContentNodeDate(rs.getInt("custom_edate"));
 		Integer channelSetId = new Integer(rs.getInt("channelset_id"));
 		Integer channelId = new Integer(rs.getInt("channel_id"));
 		boolean master = rs.getBoolean("is_master");
@@ -2746,8 +2779,9 @@ public class FileFactory extends AbstractFactory {
 			}
 		}
 
-		return (T) new FactoryFile(id, info, name, niceUrl, filetype, folderId, filesize, description, sizeX, sizeY, dpiX, dpiY, fpX, fpY, md5, creatorId, editorId, cDate,
-				eDate, channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
+		return (T) new FactoryFile(id, info, name, niceUrl, filetype, folderId, filesize, description, 
+				sizeX, sizeY, dpiX, dpiY, fpX, fpY, md5, creatorId, editorId, cDate, customCDate, eDate, customEDate, 
+				channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
 	}
 
 	/*

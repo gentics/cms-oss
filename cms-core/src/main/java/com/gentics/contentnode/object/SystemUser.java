@@ -5,13 +5,17 @@
  */
 package com.gentics.contentnode.object;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.Transaction;
@@ -20,10 +24,6 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * this object represents a systemuser in Gentis Content.Node 
@@ -31,7 +31,7 @@ import java.util.Set;
  *
  */
 @TType(SystemUser.TYPE_SYSTEMUSER)
-public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, NamedNodeObject {
+public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, NamedNodeObject, MetaDateNodeObject {
 	/**
 	 * The ttype of the user administration
 	 */
@@ -200,22 +200,10 @@ public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, Named
 	int getCreator();
 
 	/**
-	 * get the user's creation date as a unix timestamp
-	 * @return unix timestamp of the user's creation date
-	 */
-	ContentNodeDate getCDate();
-
-	/**
 	 * get the user's editor id
 	 * @return id of the last systemuser who edited this user
 	 */
 	int getEditor();
-
-	/**
-	 * get the user's last edit date as a unix timestamp
-	 * @return unix timestamp of the user's last edit date
-	 */
-	ContentNodeDate getEDate();
 
 	/**
 	 * get the user's description

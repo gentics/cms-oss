@@ -214,9 +214,9 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 		resolvableProperties.put("editor", editor);
 		resolvableProperties.put("bearbeiter", editor);
-		Property createtimestamp = new Property(new String[] { "cdate"}) {
+		Property createtimestamp = new Property(new String[] { "cdate", "custom_cdate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getCDate().getTimestamp();
+				return file.getCustomOrDefaultCDate().getTimestamp();
 			}
 		};
 
@@ -224,19 +224,19 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		// this typo (timstamp) is kept for backwards compatibility or maybe
 		// just because it looks so neat?
 		resolvableProperties.put("createtimstamp", createtimestamp);
-		resolvableProperties.put("createdate", new Property(new String[] { "cdate"}) {
+		resolvableProperties.put("createdate", new Property(new String[] { "cdate", "custom_cdate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getCDate();
+				return file.getCustomOrDefaultCDate();
 			}
 		});
-		resolvableProperties.put("edittimestamp", new Property(new String[] { "edate"}) {
+		resolvableProperties.put("edittimestamp", new Property(new String[] { "edate", "custom_edate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getEDate().getTimestamp();
+				return file.getCustomOrDefaultEDate().getTimestamp();
 			}
 		});
-		resolvableProperties.put("editdate", new Property(new String[] { "edate"}) {
+		resolvableProperties.put("editdate", new Property(new String[] { "edate", "custom_edate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getEDate();
+				return file.getCustomOrDefaultEDate();
 			}
 		});
 		resolvableProperties.put("type", new Property(new String[] { "filetype"}) {
@@ -460,6 +460,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		return null;
 	}
 
+	@Override
+	public void setCustomCDate(int timestamp) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setCustomEDate(int timestamp) throws ReadOnlyException {
+		failReadOnly();
+	}
+
 	/**
 	 * get the size of this file in bytes.
 	 * @return the filesize in bytes.
@@ -530,18 +540,6 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-    
-	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	public abstract ContentNodeDate getCDate();
-    
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	public abstract ContentNodeDate getEDate();
     
 	/*
 	 * (non-Javadoc)

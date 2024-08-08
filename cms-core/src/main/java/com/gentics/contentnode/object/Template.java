@@ -29,12 +29,14 @@ import com.gentics.contentnode.factory.object.UpdatePagesResult;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * This is the template object of the object layer.
  */
 @TType(Template.TYPE_TEMPLATE)
-public interface Template extends TagContainer, GCNRenderable, ObjectTagContainer, LocalizableNodeObject<Template>, Resolvable, SynchronizableNodeObject, NamedNodeObject {
+public interface Template extends TagContainer, GCNRenderable, ObjectTagContainer, LocalizableNodeObject<Template>,
+		Resolvable, ResolvableMapWrappable, SynchronizableNodeObject, NamedNodeObject {
 	/**
 	 * the keynames which the template can handle.
 	 */

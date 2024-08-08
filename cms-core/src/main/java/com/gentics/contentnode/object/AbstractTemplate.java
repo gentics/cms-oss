@@ -2,7 +2,11 @@ package com.gentics.contentnode.object;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -34,6 +38,8 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 	 */
 	protected static Map<String, Property> resolvableProperties;
 
+	protected final static Set<String> resolvableKeys;
+
 	static {
 		// TODO check correct dependencies
 		resolvableProperties = new HashMap<String, Property>();
@@ -49,12 +55,7 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 		});
 		resolvableProperties.put("tags", new Property(new String[] { "tags"}) {
 			public Object get(AbstractTemplate tmpl, String key) {
-				try {
-					return new MapResolver(tmpl.getTags());
-				} catch (NodeException e) {
-					tmpl.logger.error("could not create MapResolver from getTags()", e);
-					return null;
-				}
+				return new TagResolvable(tmpl);
 			}
 		});
 		resolvableProperties.put("ml", new Property(new String[] { "ml"}) {
@@ -100,10 +101,17 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 				return tmpl.getEDate().getIntTimestamp();
 			}
 		});
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected AbstractTemplate(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**
@@ -290,6 +298,19 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 			}
 		}
 		return tag;
+	}
+
+	@Override
+	public Set<String> getObjectTagNames(boolean fallback) throws NodeException {
+		Set<String> names = new HashSet<>();
+		names.addAll(getObjectTags().keySet());
+		if (fallback) {
+			Folder folder = getCurrentFolder();
+			if (folder != null) {
+				names.addAll(folder.getObjectTags().keySet());
+			}
+		}
+		return names;
 	}
 
 	/* (non-Javadoc)

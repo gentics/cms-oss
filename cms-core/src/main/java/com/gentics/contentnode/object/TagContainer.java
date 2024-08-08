@@ -9,6 +9,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.resolving.StackResolvable;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The tagcontainer is an interface for all objects which contain tags.
@@ -29,4 +30,13 @@ public interface TagContainer extends StackResolvable {
 	 * @throws NodeException
 	 */
 	Map<String, ? extends Tag> getTags() throws NodeException;
+
+	/**
+	 * Get the set of available tag names
+	 * @return set of available tag names
+	 * @throws NodeException
+	 */
+	default Set<String> getTagNames() throws NodeException {
+		return getTags().keySet();
+	}
 }

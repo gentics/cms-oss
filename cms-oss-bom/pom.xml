@@ -347,6 +347,13 @@
 				<version>${tika.version}</version>
 			</dependency>
 
+			<!-- Handlebars -->
+			<dependency>
+				<groupId>com.github.jknack</groupId>
+				<artifactId>handlebars</artifactId>
+				<version>${handlebars.version}</version>
+			</dependency>
+
 			<!--Test dependencies -->
 			<dependency>
 				<groupId>junit</groupId>

@@ -5,6 +5,11 @@
  */
 package com.gentics.contentnode.object;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -20,10 +25,6 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * this object represents a systemuser in Gentis Content.Node 

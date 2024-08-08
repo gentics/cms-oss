@@ -2,11 +2,11 @@ package com.gentics.contentnode.tests.publish.wrapper;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectPropertyDefinition;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,6 +30,7 @@ import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.publish.wrapper.PublishableTemplate;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -82,7 +83,7 @@ public class PublishablePageSerializationTest {
 
 		PublishablePage deserializedPage = deserialize(data);
 
-		assertThat(deserializedPage).as("Deserialized page").isEqualToComparingFieldByFieldRecursively(publishablePage);
+		assertThat((Page)deserializedPage).as("Deserialized page").isEqualToComparingFieldByFieldRecursively(publishablePage);
 	}
 
 	@Test
@@ -97,7 +98,7 @@ public class PublishablePageSerializationTest {
 
 		PublishableTemplate deserializedTemplate = deserialize(data);
 
-		assertThat(deserializedTemplate).as("Deserialized template").isEqualToComparingFieldByFieldRecursively(publishableTemplate);
+		assertThat((Template)deserializedTemplate).as("Deserialized template").isEqualToComparingFieldByFieldRecursively(publishableTemplate);
 
 	}
 

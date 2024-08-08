@@ -2,11 +2,11 @@ package com.gentics.contentnode.tests.dirting;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectTagDefinition;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.rest.model.ObjectProperty;
 import com.gentics.contentnode.rest.resource.impl.ObjectPropertyResourceImpl;
+import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 

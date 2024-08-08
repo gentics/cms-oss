@@ -61,6 +61,7 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.render.FormDirective;
+import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.TemplateRenderer;
@@ -1078,7 +1079,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return true iff forms feature is active and the start tag is the forms preview tag
 	 */
 	protected static boolean isFormsPreviewTag(String startTag) {
-		return getClasses(startTag).contains(FormDirective.FORMS_PREVIEW_CLASS);
+		return getClasses(startTag).contains(FormRendering.FORMS_PREVIEW_CLASS);
 	}
 
 	/*

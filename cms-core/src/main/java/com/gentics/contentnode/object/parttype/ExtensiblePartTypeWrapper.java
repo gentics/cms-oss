@@ -95,7 +95,7 @@ public class ExtensiblePartTypeWrapper extends AbstractPartType {
 				if (null != tag) {
 					renderType.push(tag);
 				}
-				Object value = ((Resolvable) wrappedPartType).getProperty(key);
+				Object value = ((Resolvable) wrappedPartType).get(key);
 
 				if (value != null) {
 					return value;

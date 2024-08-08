@@ -34,12 +34,13 @@ import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The object for a Node or Domain in content.node.
  */
 @TType(Node.TYPE_NODE)
-public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
+public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, ResolvableMapWrappable {
 
 	/**
 	 * The ttype for the node object.

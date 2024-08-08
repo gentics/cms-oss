@@ -568,6 +568,36 @@ public final class ObjectTransformer {
 	}
 
 	/**
+	 * Get object as instance of the given class
+	 * @param <T> type of the result class
+	 * @param classOfT class
+	 * @param object object
+	 * @return object as instance of the class or null
+	 */
+	public static <T> T get(Class<T> classOfT, Object object) {
+		return get(classOfT, object, null);
+	}
+
+	/**
+	 * Get object as instance of the given class
+	 * @param <T> type of the result class
+	 * @param classOfT class
+	 * @param object object
+	 * @param defaultObject default object
+	 * @return object as instance of the class or the default object
+	 */
+	public static <T> T get(Class<T> classOfT, Object object, T defaultObject) {
+		if (object == null) {
+			return null;
+		}
+		try {
+			return classOfT.cast(object);
+		} catch (ClassCastException e) {
+			return defaultObject;
+		}
+	}
+
+	/**
 	 * Read data coming from the given input stream, using the default charset.
 	 * The input stream is not closed in this function.
 	 * @param inputStream input stream containing data

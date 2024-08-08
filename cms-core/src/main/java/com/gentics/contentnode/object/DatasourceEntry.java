@@ -8,6 +8,9 @@ package com.gentics.contentnode.object;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -110,6 +113,8 @@ public abstract class DatasourceEntry extends AbstractContentObject implements S
 	 */
 	protected static Map<String, Property> resolvableProperties;
 
+	protected final static Set<String> resolvableKeys;
+
 	static {
 		resolvableProperties = new HashMap<String, Property>();
 		resolvableProperties.put("value", new Property(new String[] { "value"}) {
@@ -127,18 +132,25 @@ public abstract class DatasourceEntry extends AbstractContentObject implements S
 		resolvableProperties.put("key", keyProperty);
 		resolvableProperties.put("nr", new Property(new String[] { "sorder"}) {
 			public Object get(DatasourceEntry entry, String key) {
-				return new Integer(entry.getNr());
+				return entry.getNr();
 			}
 		});
 		resolvableProperties.put("dsid", new Property(new String[] { "dsid"}) {
 			public Object get(DatasourceEntry entry, String key) {
-				return new Integer(entry.getDsid());
+				return entry.getDsid();
 			}
-		});    
+		});
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
-    
+
 	protected DatasourceEntry(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**

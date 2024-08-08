@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
@@ -16,6 +17,7 @@ import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * This is a helper class to resolve tags by name using a {@link TagContainer}.
@@ -23,7 +25,7 @@ import com.gentics.lib.log.NodeLogger;
  * resolved using the key 'object'.<br/>
  * Instances of this class represent a snapshot of the tags from the time of their creation.
  */
-public class TagResolvable implements Resolvable, Collection {
+public class TagResolvable implements Resolvable, Collection<Tag>, ResolvableMapWrappable {
 
 	/**
 	 * tag container
@@ -38,7 +40,7 @@ public class TagResolvable implements Resolvable, Collection {
 	/**
 	 * tags
 	 */
-	private Map tags;
+	private Map<String, ? extends Tag> tags;
 
 	/**
 	 * logger
@@ -56,10 +58,10 @@ public class TagResolvable implements Resolvable, Collection {
 				tags = this.container.getTags();
 			} catch (NodeException e) {
 				logger.error("Error while getting tags of {" + container + "}", e);
-				tags = Collections.EMPTY_MAP;
+				tags = Collections.emptyMap();
 			}
 		} else {
-			tags = Collections.EMPTY_MAP;
+			tags = Collections.emptyMap();
 		}
 
 		if (container instanceof ObjectTagContainer) {
@@ -67,6 +69,11 @@ public class TagResolvable implements Resolvable, Collection {
 		} else {
 			objResolver = null;
 		}
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return tags.keySet();
 	}
 
 	/* (non-Javadoc)
@@ -136,7 +143,7 @@ public class TagResolvable implements Resolvable, Collection {
 	/* (non-Javadoc)
 	 * @see java.util.Collection#add(java.lang.Object)
 	 */
-	public boolean add(Object o) {
+	public boolean add(Tag o) {
 		throw new UnsupportedOperationException("This collection is unmodifiable");
 	}
 
@@ -157,71 +164,70 @@ public class TagResolvable implements Resolvable, Collection {
 	/* (non-Javadoc)
 	 * @see java.util.Collection#addAll(java.util.Collection)
 	 */
-	public boolean addAll(Collection c) {
+	public boolean addAll(Collection<? extends Tag> c) {
 		throw new UnsupportedOperationException("This collection is unmodifiable");
 	}
 
 	/* (non-Javadoc)
 	 * @see java.util.Collection#containsAll(java.util.Collection)
 	 */
-	public boolean containsAll(Collection c) {
+	public boolean containsAll(Collection<?> c) {
 		return tags.values().containsAll(c);
 	}
 
 	/* (non-Javadoc)
 	 * @see java.util.Collection#removeAll(java.util.Collection)
 	 */
-	public boolean removeAll(Collection c) {
+	public boolean removeAll(Collection<?> c) {
 		throw new UnsupportedOperationException("This collection is unmodifiable");
 	}
 
 	/* (non-Javadoc)
 	 * @see java.util.Collection#retainAll(java.util.Collection)
 	 */
-	public boolean retainAll(Collection c) {
+	public boolean retainAll(Collection<?> c) {
 		throw new UnsupportedOperationException("This collection is unmodifiable");
 	}
 
 	/* (non-Javadoc)
 	 * @see java.util.Collection#iterator()
 	 */
-	public Iterator iterator() {
+	public Iterator<Tag> iterator() {
 		// wee need to provide a dummy iterator to add dependencies for all accessed tags.
-		final Iterator i = tags.values().iterator();
+		final Iterator<? extends Tag> i = tags.values().iterator();
 
-		return new Iterator() {
-            
+		return new Iterator<>() {
+
 			public boolean hasNext() {
 				return i.hasNext();
 			}
 
-			public Object next() {
-				Object obj = i.next();
+			public Tag next() {
+				Tag tag = i.next();
 
-				if (obj instanceof Tag) {
-					addDependency(((Tag) obj).getName(), obj);
+				if (tag != null) {
+					addDependency(tag.getName(), tag);
 				}
-				return obj;
+				return tag;
 			}
 
 			public void remove() {
 				throw new UnsupportedOperationException("Not modifiable.");
 			}
-            
 		};
 	}
 
 	/* (non-Javadoc)
 	 * @see java.util.Collection#toArray(java.lang.Object[])
 	 */
-	public Object[] toArray(Object[] a) {
+	public <T> T[] toArray(T[] a) {
 		a = tags.values().toArray(a);
-        
+
 		// dependencies are implemented by the iterator, call it for the side-effect
-		for (Iterator i = iterator(); i.hasNext(); i.next()) {
+		for (Iterator<Tag> i = iterator(); i.hasNext(); i.next()) {
 			;
 		}
-        
+
 		return a;
 	}
 

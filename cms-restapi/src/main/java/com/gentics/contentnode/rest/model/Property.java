@@ -52,6 +52,7 @@ public class Property implements Serializable {
 			case 26: // Java Editor
 			case 27: // DHTML Editor
 			case 36: // HTML (custom form)
+			case 43: // Handlebars
 				return RICHTEXT;
 
 			case 4: // URL (page)

@@ -145,25 +145,25 @@ public class CrRenderTagmapTest {
 			fillObjectTag(folder, "Testdata of Other Folder");
 			return page;
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("Testdata of Root Folder");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Testdata of Root Folder");
 		}), new TestCase("node.folder.object." + FOLDER_OE_NAME, page -> {
 			fillObjectTag(node.getFolder(), "Testdata of Root Folder");
 			fillObjectTag(folder, "Testdata of Other Folder");
 			return page;
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("Testdata of Root Folder");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Testdata of Root Folder");
 		}), new TestCase("folder.object." + FOLDER_OE_NAME, page -> {
 			fillObjectTag(node.getFolder(), "Testdata of Root Folder");
 			fillObjectTag(folder, "Testdata of Other Folder");
 			return page;
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("Testdata of Other Folder");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Testdata of Other Folder");
 		}), new TestCase("object." + FOLDER_OE_NAME, page -> {
 			fillObjectTag(node.getFolder(), "Testdata of Root Folder");
 			fillObjectTag(folder, "Testdata of Other Folder");
 			return page;
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("Testdata of Other Folder");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Testdata of Other Folder");
 		}), new TestCase("page.tags.overview", page -> {
 			operate(() -> update(createPage(folder, template, "Online Page"), Page::publish));
 			operate(() -> createPage(folder, template, "Offline Page"));
@@ -181,14 +181,14 @@ public class CrRenderTagmapTest {
 				upd.getContent().getContentTags().put("overview", cTag);
 			});
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("Offline Page (false)\nOnline Page (true)\nTestpage page.tags.overview (true)\n");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Offline Page (false)\nOnline Page (true)\nTestpage page.tags.overview (true)\n");
 		}), new TestCase("page.tags." + TMPL_CONTAINER_TAG, page -> {
 
 			return update(page, upd -> {
 				upd.getContentTag(TAGNAME).getValues().getByKeyname(TAGTYPENAME).setValueText("This comes from the page");
 			});
 		}, res -> {
-			assertThat(res.getProperty(TAGNAME)).as("Property").isEqualTo("This comes from the page");
+			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("This comes from the page");
 		}));
 
 		for (TestCase test : testCases) {

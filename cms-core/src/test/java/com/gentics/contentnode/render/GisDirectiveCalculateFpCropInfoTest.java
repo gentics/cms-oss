@@ -57,13 +57,13 @@ public class GisDirectiveCalculateFpCropInfoTest {
 		 */
 		public CropRectangle calculateFpCropInfo(ImageFile image, int resizeWidth, int resizeHeight) throws NodeException {
 			Map<Object, Object> resizeInfoMap = new HashMap<>();
-			resizeInfoMap.put(WIDTH_ARG, resizeWidth);
-			resizeInfoMap.put(HEIGHT_ARG, resizeHeight);
-			resizeInfoMap.put(MODE_ARG, Mode.fpsmart.toString());
-			resizeInfoMap.put(TYPE_ARG, Type.url.toString());
-			ResizeInfo resizeInfo = new ResizeInfo(resizeInfoMap);
+			resizeInfoMap.put(GisRendering.WIDTH_ARG, resizeWidth);
+			resizeInfoMap.put(GisRendering.HEIGHT_ARG, resizeHeight);
+			resizeInfoMap.put(GisRendering.MODE_ARG, GisRendering.Mode.fpsmart.toString());
+			resizeInfoMap.put(GisRendering.TYPE_ARG, GisRendering.Type.url.toString());
+			GisRendering.ResizeInfo resizeInfo = new GisRendering.ResizeInfo(resizeInfoMap);
 			
-			CropInfo cropInfo = calculateFpCropInfo(image, resizeInfo);
+			GisRendering.CropInfo cropInfo = GisRendering.calculateFpCropInfo(image, resizeInfo);
 			return new CropRectangle(cropInfo.x, cropInfo.y, cropInfo.width, cropInfo.height);
 		}
 	

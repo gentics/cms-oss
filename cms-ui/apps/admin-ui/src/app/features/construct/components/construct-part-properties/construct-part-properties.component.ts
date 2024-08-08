@@ -29,7 +29,7 @@ import {
     TagPartTypePropertyType,
     TagPartValidatorConfigs,
     TagPartValidatorId,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
@@ -96,6 +96,7 @@ export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.SelectSingle,
     TagPartType.SelectMultiple,
     TagPartType.Velocity,
+    TagPartType.Handlebars,
 ];
 
 export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
@@ -326,6 +327,7 @@ export class ConstructPartPropertiesComponent
             case TagPartType.TextHtmlLong:
             case TagPartType.Html:
             case TagPartType.HtmlLong:
+            case TagPartType.Handlebars:
                 defaultPropertyEnabled = true;
                 markupEnabled = true;
 

@@ -1,9 +1,6 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
-import java.util.Set;
-
-import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -11,6 +8,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -23,8 +21,6 @@ public class CmsFormPartType extends AbstractPartType {
 	 */
 	private static final long serialVersionUID = -5891996840774671325L;
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("target");
-
 	/**
 	 * Create instance
 	 * @param value value
@@ -32,11 +28,6 @@ public class CmsFormPartType extends AbstractPartType {
 	 */
 	public CmsFormPartType(Value value) throws NodeException {
 		super(value);
-	}
-
-	@Override
-	public Set<String> getResolvableKeys() {
-		return resolvableKeys;
 	}
 
 	@Override
@@ -88,6 +79,7 @@ public class CmsFormPartType extends AbstractPartType {
 	 * @return target form or null
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public Form getTarget() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		return t.getObject(Form.class, getValueObject().getValueRef());

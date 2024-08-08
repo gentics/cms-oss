@@ -47,17 +47,17 @@ public class HandlebarsPartType extends TextPartType {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		renderType.createCMSResolver();
-		Value value = getValueObject();
-
-		String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
-				.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
-				.orElse("<unknown>");
-		String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
-				.map(Part::getKeyname).orElse("<unknown>");
-		int valueId = Optional.ofNullable(value).map(Value::getId).orElse(0);
-		String templateName = String.format("%s/%s/%d", constructKeyword, partKeyword, valueId);
-
 		try {
+			Value value = getValueObject();
+
+			String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
+					.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
+					.orElse("<unknown>");
+			String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
+					.map(Part::getKeyname).orElse("<unknown>");
+			int valueId = Optional.ofNullable(value).map(Value::getId).orElse(0);
+			String templateName = String.format("%s/%s/%d", constructKeyword, partKeyword, valueId);
+
 			CMSResolver cmsResolver = renderType.getCMSResolver();
 			Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
 			Handlebars handlebars = renderType.getHandlebars(node);

@@ -7,10 +7,8 @@ package com.gentics.contentnode.object.parttype;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -18,6 +16,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 
 /**
@@ -43,8 +42,6 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	 */
 	public static final int REPLACENL_EXTENDEDNL2BR = 2;
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("text");
-
 	protected int replaceNewline;
 
 	private String parsedText;
@@ -67,12 +64,7 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	public TextPartType(Value value) throws NodeException {
 		super(value);
 	}
-
-	@Override
-	public Set<String> getResolvableKeys() {
-		return resolvableKeys;
-	}
-
+	
 	public void setValue(Value value) throws NodeException {
 		super.setValue(value);
 		parsedText = parseText();
@@ -108,15 +100,12 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 			return "".equals(parsedText);
 		}
 	}
-    
-	public Object get(String key) {
-		// TODO: move this to javabean getters
-		if ("text".equals(key)) {
-			return parsedText;
-		}
-		return null;
-	}
 
+	/**
+	 * Get the parsed text
+	 * @return parsed text
+	 */
+	@ResolvableGetter
 	public String getText() {
 		return parsedText;
 	}

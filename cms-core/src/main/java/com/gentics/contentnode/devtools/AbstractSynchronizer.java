@@ -593,7 +593,7 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 	 * @return true iff the filename belongs to a part value
 	 */
 	protected boolean isPartFilename(String filename) {
-		return filename.startsWith("part.") && (filename.endsWith(".txt") || filename.endsWith(".html") || filename.endsWith(".json") || filename.endsWith("hbs"));
+		return filename.startsWith("part.") && (filename.endsWith(".txt") || filename.endsWith(".html") || filename.endsWith(".json") || filename.endsWith(".hbs"));
 	}
 
 	/**

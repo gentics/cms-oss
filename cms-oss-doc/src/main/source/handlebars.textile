@@ -99,7 +99,18 @@ WARNING: Unlike Velocity, the Handlebars Part Type will *only* render objects if
 
 h5. gtx_edit
 
-TODO:
+This helper is a variant of the +gtx_render+ helper, which will render the object in edit mode, if possible.
+
+General usage is:
+
+<shell>
+{{{gtx_edit object}}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +object+ | Object to be rendered | _mandatory_ |
 
 h5. gtx_sort
 
@@ -164,7 +175,7 @@ This helper will either render a Gentics Image Store URL for a resized image, or
 General usage is:
 
 <shell>
-{{gtx_gis image [width=value] [height=value] [mode=value] [type=value] [crop_width=value] [crop_heigth=value] [crop_x=value] [crop_y=value]}}
+{{gtx_gis image [width=value] [height=value] [mode=value] [type=value] [crop_width=value] [crop_height=value] [crop_x=value] [crop_y=value]}}
 </shell>
 
 With the parameters
@@ -172,7 +183,7 @@ With the parameters
 |_. Name |_. Description |_. Default |
 | +image+ | Reference to the image. | _mandatory_ |
 | +width+ | Width of the resized image | *auto* |
-| +heigth+ | Height of the resized image | *auto* |
+| +height+ | Height of the resized image | *auto* |
 | +mode+ | Resizing mode ("prop", "force", "smart", "fpsmart") | *prop* |
 | +type+ | Type of the rendering ("url", "phpwidget") | *url* |
 | +crop_width+ | Cropping width | _mandatory_ |

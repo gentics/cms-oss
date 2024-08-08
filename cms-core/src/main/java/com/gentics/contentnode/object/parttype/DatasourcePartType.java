@@ -9,13 +9,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -32,9 +29,10 @@ import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.TemplateRenderer;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
-import com.gentics.contentnode.rest.model.SelectOption;
 import com.gentics.contentnode.rest.model.Property.Type;
+import com.gentics.contentnode.rest.model.SelectOption;
 import com.gentics.lib.etc.StringUtils;
 
 /**
@@ -64,8 +62,6 @@ public class DatasourcePartType extends AbstractPartType {
 	 */
 	private static final String CONTENT_TAG_RENDERER_KEYNAME = "ds"; 
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("items", "selection", "keys", "values", "key", "value");
-
 	/**
 	 * register our ds ContentTagRenderer at the RendererFactory
 	 */
@@ -85,11 +81,6 @@ public class DatasourcePartType extends AbstractPartType {
 	 */
 	public DatasourcePartType(Value value) throws NodeException {
 		super(value);
-	}
-
-	@Override
-	public Set<String> getResolvableKeys() {
-		return resolvableKeys;
 	}
 
 	/*
@@ -193,6 +184,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return list of all items
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public List<DatasourceEntry> getItems() throws NodeException {
 		Datasource datasource = getDatasource();
 
@@ -208,6 +200,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return list of selected items
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public List<DatasourceEntry> getSelection() throws NodeException {
 		List<DatasourceEntry> items = getItems();
 		List<DatasourceEntry> selection = new ArrayList<DatasourceEntry>(items.size());
@@ -229,6 +222,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return list of selected values
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public List<String> getValues() throws NodeException {
 		List<DatasourceEntry> selection = getSelection();
 		List<String> values = new ArrayList<String>();
@@ -245,6 +239,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return list of selected values
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public List<String> getKeys() throws NodeException {
 		List<DatasourceEntry> selection = getSelection();
 		List<String> keys = new ArrayList<String>();
@@ -261,6 +256,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return value of the first selected object
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public String getValue() throws NodeException {
 		List<DatasourceEntry> selection = getSelection();
 
@@ -276,6 +272,7 @@ public class DatasourcePartType extends AbstractPartType {
 	 * @return key of the first selected object
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public String getKey() throws NodeException {
 		List<DatasourceEntry> selection = getSelection();
 

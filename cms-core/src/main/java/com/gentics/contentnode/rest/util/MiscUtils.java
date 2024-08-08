@@ -2435,6 +2435,14 @@ public class MiscUtils {
 		return output;
 	}
 
+	/**
+	 * Execution the given function with the input and return the result. If the function throws an exception, return null.
+	 * @param <I> type of the input
+	 * @param <O> type of the output
+	 * @param function function to execute
+	 * @param input input data
+	 * @return output
+	 */
 	public static <I, O> O execOrNull(Function<I, O> function, I input) {
 		try {
 			return function.apply(input);

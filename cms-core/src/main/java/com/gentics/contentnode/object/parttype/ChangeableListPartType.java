@@ -8,6 +8,7 @@ package com.gentics.contentnode.object.parttype;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -50,6 +51,7 @@ public class ChangeableListPartType extends ListPartType {
 	 * Check whether the list is ordered
 	 * @return true for ordered, false for unordered
 	 */
+	@ResolvableGetter
 	public boolean isOrdered() {
 		return getValueObject().getInfo() > 0;
 	}

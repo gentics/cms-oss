@@ -2,13 +2,15 @@ package com.gentics.lib.resolving;
 
 import java.util.AbstractList;
 import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.stream.Collectors;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
@@ -72,7 +74,12 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	 */
 	public ResolvableMapWrapper(ResolvableMapWrappable wrapped) {
 		this.wrapped = wrapped;
-		this.entrySet = wrapped.getResolvableKeys().stream().map(key -> new MapEntry(key)).collect(Collectors.toSet());
+		// sort the keys
+		List<String> keys = new ArrayList<>(wrapped.getResolvableKeys());
+		Collections.sort(keys);
+		// entry set is a linked hashset to retain insertion order
+		this.entrySet = new LinkedHashSet<>();
+		keys.forEach(key -> this.entrySet.add(new MapEntry(key)));
 	}
 
 	@Override

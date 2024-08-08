@@ -5,19 +5,26 @@
  */
 package com.gentics.contentnode.object.parttype;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.util.ClassHelper;
 
 /**
  * Abstract implementation of a parttype.
@@ -32,7 +39,34 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 	 * Prefix for the aloha editable ids
 	 */
 	public static final String ALOHA_EDITABLE_ID_PREFIX = "GENTICS_EDITABLE_";
-    
+
+	/**
+	 * Static map holding the maps of resolvable keys and getter methods per PartType implementation class
+	 */
+	protected final static Map<Class<? extends AbstractPartType>, Map<String, Method>> resolvableKeys = new HashMap<>();
+
+	/**
+	 * Method to get the map of resolvable keys and getter methods for a specific PartType implementation class.
+	 * @param partTypeClass part type implementation class
+	 * @return map of keys and read methods
+	 */
+	protected final static Map<String, Method> getResolvableMethods(Class<? extends AbstractPartType> partTypeClass) {
+		return resolvableKeys.computeIfAbsent(partTypeClass, clazz -> {
+			try {
+				final BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+				return Stream.of(beanInfo.getPropertyDescriptors()).filter(desc -> {
+					Method readMethod = desc.getReadMethod();
+					return readMethod != null && readMethod.isAnnotationPresent(ResolvableGetter.class);
+				}).map(desc -> {
+					return Map.entry(desc.getName(), desc.getReadMethod());
+				}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			} catch (IntrospectionException e) {
+				NodeLogger.getNodeLogger(partTypeClass).error(String.format("Error while getting resolvable keys for %s", clazz), e);
+				return Collections.emptyMap();
+			}
+		});
+	}
+
 	/**
 	 * value of the part
 	 */
@@ -59,8 +93,7 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 
 	@Override
 	public Set<String> getResolvableKeys() {
-		// TODO Auto-generated method stub
-		return Collections.emptySet();
+		return getResolvableMethods(getClass()).keySet();
 	}
 
 	/* (non-Javadoc)
@@ -208,9 +241,14 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 	 * @see com.gentics.lib.base.Resolvable#get(java.lang.String)
 	 */
 	public Object get(String key) {
-		// simply call the getter on the object
 		try {
-			return ClassHelper.invokeGetter(this, key);
+			// get the read method and invoke it (if present)
+			Method readMethod = getResolvableMethods(getClass()).get(key);
+			if (readMethod != null) {
+				return readMethod.invoke(this);
+			} else {
+				return null;
+			}
 		} catch (Exception e) {
 			logger.error("Error while getting " + key + " from " + this, e);
 			return null;

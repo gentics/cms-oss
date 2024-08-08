@@ -6,14 +6,12 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
-import java.util.Set;
-
-import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -30,8 +28,6 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 */
 	private static final long serialVersionUID = 6368429370721365947L;
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("checked");
-
 	/**
 	 * flag to mark whether the box is checked
 	 */
@@ -44,11 +40,6 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 */
 	public CheckboxPartType(Value value) throws NodeException {
 		super(value);
-	}
-
-	@Override
-	public Set<String> getResolvableKeys() {
-		return resolvableKeys;
 	}
 
 	/* (non-Javadoc)
@@ -82,6 +73,7 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 * Check whether the checkbox is checked or not
 	 * @return true when the checkbox is checked, false if not
 	 */
+	@ResolvableGetter
 	public boolean isChecked() {
 		return checked;
 	}
@@ -92,13 +84,6 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	public String render(RenderResult result, String template) throws NodeException {
 		super.render(result, template);
 		return checked ? "1" : "0";
-	}
-    
-	public Object get(String key) {
-		if ("checked".equals(key)) {
-			return isChecked();
-		}
-		return null;
 	}
 
 	/**

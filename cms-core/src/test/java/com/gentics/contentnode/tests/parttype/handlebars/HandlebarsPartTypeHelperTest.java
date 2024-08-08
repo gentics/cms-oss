@@ -124,7 +124,7 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 	public void setup() throws NodeException, IOException {
 		Synchronizer.addPackage(TESTPACKAGE_NAME);
 
-		operate(() -> Synchronizer.addPackage(node, "testpackage"));
+		operate(() -> Synchronizer.addPackage(node, TESTPACKAGE_NAME));
 
 		File testPackageRoot = Synchronizer.getPackage(TESTPACKAGE_NAME).getPackagePath().toFile();
 		File hbRoot = new File(testPackageRoot, "handlebars");

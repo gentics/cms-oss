@@ -5,12 +5,12 @@
  */
 package com.gentics.contentnode.object.parttype;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.commons.collections4.SetUtils;
 
@@ -36,12 +36,13 @@ import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.objectsource.ObjectSourceFactory;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.resolving.StackResolvable;
-import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Overview.ListType;
 import com.gentics.contentnode.rest.model.Overview.OrderBy;
 import com.gentics.contentnode.rest.model.Overview.OrderDirection;
 import com.gentics.contentnode.rest.model.Overview.SelectType;
+import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.etc.StringUtils;
@@ -63,7 +64,7 @@ public class OverviewPartType extends AbstractPartType {
 	 */
 	public final static int TYPE_ID = 13;
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("items", "listType", "selectType", "orderDirection", "orderBy", "maxItems", "recursive");
+	private static Set<String> resolvableKeys;
 
 	/**
 	 * overview id
@@ -87,6 +88,9 @@ public class OverviewPartType extends AbstractPartType {
 	 */
 	public OverviewPartType(Value value) throws NodeException {
 		super(value);
+		if (resolvableKeys == null) {
+			resolvableKeys = SetUtils.union(super.getResolvableKeys(), SetUtils.unmodifiableSet("listType", "selectType", "orderDirection", "orderBy", "maxItems", "recursive"));
+		}
 	}
 
 	@Override
@@ -303,6 +307,7 @@ public class OverviewPartType extends AbstractPartType {
 	 * @throws NodeException 
 	 * TODO optimize
 	 */
+	@ResolvableGetter
 	public int getCount() throws NodeException {
 		return getItems().size();
 	}
@@ -312,7 +317,8 @@ public class OverviewPartType extends AbstractPartType {
 	 * @return
 	 * @throws NodeException
 	 */
-	public Collection getItems() throws NodeException {
+	@ResolvableGetter
+	public Collection<? extends NodeObject> getItems() throws NodeException {
 		if (logger.isDebugEnabled()) {
 			logger.debug("get items of " + getValueObject());
 		}
@@ -355,9 +361,9 @@ public class OverviewPartType extends AbstractPartType {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Overview is null, returning empty list");
 			}
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		} else {
-			List result = overview.getSelectedObjects(folder, language);
+			List<? extends NodeObject> result = overview.getSelectedObjects(folder, language);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Returning " + result.size() + " objects");
 			}
@@ -371,10 +377,10 @@ public class OverviewPartType extends AbstractPartType {
 	 * @return List of strings - the separately rendered items of the overview
 	 * @throws Exception
 	 */
-	public Collection getRendereditems() throws NodeException {
-		Collection items = getItems();
-		Iterator iter = items.iterator();
-		Vector result = new Vector();
+	public Collection<String> getRendereditems() throws NodeException {
+		Collection<? extends NodeObject> items = getItems();
+		Iterator<? extends NodeObject> iter = items.iterator();
+		List<String> result = new ArrayList<>();
 		int i = 0;
 
 		while (iter.hasNext()) {

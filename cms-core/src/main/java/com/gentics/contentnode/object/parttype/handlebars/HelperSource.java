@@ -23,6 +23,7 @@ import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.ChannelTrx;
+import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Form;
@@ -32,6 +33,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
+import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.GisRendering;
@@ -142,22 +144,19 @@ public class HelperSource {
 
 	/**
 	 * Channel helper
-	 * @param nodeId node ID
+	 * @param context context
 	 * @param options options
 	 * @return rendered block
 	 * @throws IOException
 	 * @throws NodeException
 	 */
-	public static CharSequence gtx_channel(String nodeId, Options options) throws IOException, NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		if (StringUtils.isBlank(nodeId)) {
-			return options.fn();
+	public static CharSequence gtx_channel(Object context, Options options) throws IOException, NodeException {
+		Node node = null;
+		try (final NoMcTrx nMcTrx = new NoMcTrx()) {
+			node = getObject(context, Node.class, NodePartType.class, NodePartType::getNode);
 		}
-
-		Node node = t.getObject(Node.class, nodeId, false, false);
-
 		if (node == null) {
-			throw new NodeException(String.format("Node with ID {%s} not found", nodeId));
+			return options.fn();
 		}
 
 		try (final ChannelTrx trx = new ChannelTrx(node)) {

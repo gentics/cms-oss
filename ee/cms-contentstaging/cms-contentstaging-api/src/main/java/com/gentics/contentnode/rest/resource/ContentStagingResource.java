@@ -162,6 +162,19 @@ public interface ContentStagingResource {
 	@Consumes("multipart/form-data")
 	ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws Exception;
 
+
+	/**
+	 * Retrieve a list of import errors
+	 *
+	 * @param name package name
+	 * @return response containing the error list
+	 * @throws Exception
+	 */
+	@GET
+	@javax.ws.rs.Path("/package/{name}/import/errors")
+	Response getImportErrors(@PathParam("name") String name) throws Exception;
+
+
 	/**
 	 * Import the entities of a package of given name into CMS.
 	 * 

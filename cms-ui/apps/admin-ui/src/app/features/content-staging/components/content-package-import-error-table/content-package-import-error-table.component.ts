@@ -11,7 +11,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import {
-    ImportError,
+    ContentPackageImportError,
 } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
@@ -21,13 +21,13 @@ import {
 } from '../../providers';
 
 @Component({
-    selector: 'gtx-content-package-import-error',
-    templateUrl: './content-package-import-errors.component.html',
-    styleUrls: ['./content-package-import-errors.component.scss'],
+    selector: 'gtx-content-package-import-error-table',
+    templateUrl: './content-package-import-error-table.component.html',
+    styleUrls: ['./content-package-import-error-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContentPackageImportErrorTableComponent extends BaseEntityTableComponent<
-ImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>  implements OnChanges {
+ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>  implements OnChanges {
 
     @Input()
     public packageName: string;

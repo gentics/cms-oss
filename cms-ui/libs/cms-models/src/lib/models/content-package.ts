@@ -31,3 +31,12 @@ export interface ContentPackageBO<T extends ModelType = DefaultModelType> extend
 }
 
 export type StagableEntityType = 'file' | 'folder' | 'form' | 'image' | 'page';
+
+
+export interface ContentPackageImportError {
+    path: string;
+    error: string;
+    globalId: string;
+    kind: string;
+}
+

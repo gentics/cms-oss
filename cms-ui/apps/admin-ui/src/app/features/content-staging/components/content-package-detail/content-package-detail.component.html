@@ -17,12 +17,11 @@
                 ></gtx-entity-detail-header>
 
                 <div class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
+                    <div class="flex-row">
                         <gtx-content-package-properties
                             [mode]="ContentPackagePropertiesMode.UPDATE"
-                            [formControl]="fgProperties"
-                        ></gtx-content-package-properties>
-                    </div>
+                            [formControl]="fgProperties"/>
+                    </div>    
                 </div>
             </div>
         </gtx-tab>
@@ -39,11 +38,9 @@
                     (cancelClick)="detailsClose()"
                 />
                 <div class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row">
-                        <gtx-content-package-import-error
-                            [packageName]="currentEntity?.name"
-                        />
-                    </div>
+                    <gtx-content-package-import-error-table
+                        [packageName]="currentEntity?.name"
+                    />
                 </div>
             </div>
         </gtx-tab>

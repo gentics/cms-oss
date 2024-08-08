@@ -1,6 +1,6 @@
 import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage } from './content-package';
+import { ContentPackage, ContentPackageImportError } from './content-package';
 import { ContentRepository } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -1438,15 +1438,8 @@ export interface ContentPackageSyncResponse extends Response {
 }
 
 
-export interface ImportError {
-    path: string;
-    error: string;
-    globalId: string;
-    kind: string;
-}
-
 export interface ContentPackageErrorResponse extends Response{
-    errors: ImportError[];
+    errors: ContentPackageImportError[];
     mismatches: string[];
     timestamp: string;
 }

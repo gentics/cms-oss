@@ -3,6 +3,7 @@ package com.gentics.contentnode.translation;
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.db.DBUtils;
@@ -95,7 +96,7 @@ public class TagResolveService {
 
 				final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
 				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
-					throw new NodeException(
+					throw new TranslationException(
 							new CNI18nString("feature.translation.error.markup_invalid").toString());
 				}
 				textProperty.setStringValue(unresolvedAndTranslatedText);

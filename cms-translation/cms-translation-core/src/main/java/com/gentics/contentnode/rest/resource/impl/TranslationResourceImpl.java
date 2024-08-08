@@ -4,6 +4,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
@@ -128,6 +129,8 @@ public class TranslationResourceImpl implements TranslationResource {
 							sourceLanguageCode,
 							targetLanguageCode);
 					pageToTranslate.setName(translatedName);
+				} catch (TranslationException e) {
+					throw e;
 				} catch (Exception e) {
 					throw new NodeException(e);
 				}
@@ -194,42 +197,6 @@ public class TranslationResourceImpl implements TranslationResource {
 				new ResponseInfo(ResponseCode.OK, responseMessage.toString()));
 
 		return pageResponse;
-	}
-
-
-	/**
-	 * Translates the text properties of the given content tags
-	 *
-	 * @param translationService   the service that translates the text
-	 * @param contentTagProperties the tags that should be translated
-	 * @param sourceLanguageCode   the language code of the source text
-	 * @param targetLanguageCode   the language code of the target text
-	 * @throws Exception
-	 */
-	private void translateContentTag(
-			TranslationService translationService,
-			Map<String, Property> contentTagProperties,
-			String sourceLanguageCode,
-			String targetLanguageCode
-	) throws Exception {
-		for (var contentTagProperty : contentTagProperties.entrySet()) {
-			if (contentTagProperty != null && !StringUtils.isBlank(
-					contentTagProperty.getValue().getStringValue())) {
-				Property propertyToTranslate = contentTagProperty.getValue();
-
-				var extractedText = propertyToTranslate.getStringValue();
-				var translatedText = translationService.translate(extractedText, sourceLanguageCode,
-						targetLanguageCode);
-
-				if (!VALIDATOR.test(translatedText)) {
-					throw new NodeException(
-							new CNI18nString("feature.translation.error.markup_invalid").toString());
-				}
-
-				propertyToTranslate.setStringValue(translatedText);
-				contentTagProperties.put(contentTagProperty.getKey(), propertyToTranslate);
-			}
-		}
 	}
 
 	/**

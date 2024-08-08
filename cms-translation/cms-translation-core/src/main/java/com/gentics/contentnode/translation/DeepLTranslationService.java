@@ -1,11 +1,14 @@
 package com.gentics.contentnode.translation;
 
 import com.deepl.api.DeepLException;
+import com.deepl.api.QuotaExceededException;
 import com.deepl.api.TextResult;
 import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.runtime.ConfigurationValue;
+import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +70,9 @@ public class DeepLTranslationService implements TranslationService {
 		try {
 			translatedText = translator.translateText(textToTranslate, sourceLanguage,
 					mappedTargetLanguage);
+		} catch (QuotaExceededException exception) {
+			CNI18nString errorMessage = new CNI18nString("feature.translation.error.quota_exceeded");
+			throw new TranslationException(errorMessage.toString());
 		} catch (DeepLException | InterruptedException e) {
 			throw new NodeException("Error occurred while translating text.", e);
 		}

@@ -22,6 +22,7 @@ export enum ContentRepositoryFragmentDetailTabs {
 
 export enum ContentPackageDetailTabs {
     PROPERTIES = 'properties',
+    IMPORT_ERRORS = 'import-errors',
 }
 
 export enum DataSourceDetailTabs {

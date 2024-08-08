@@ -1,0 +1,26 @@
+@import "variables";
+@import '../../../../shared/components/base-entity-table/base-entity-table.component.scss';
+
+
+.check-ok {
+    position: relative;
+    padding-top: 5px;
+    
+    icon {
+        color: $gtx-color-success;
+        margin-left: 0.5rem;
+        position: absolute;
+        top: 2px;
+    }
+}
+
+.check-time {
+    font-style: italic;
+    margin-left: 1rem;
+    font-size: 14px;
+}
+    
+.trigger-check-btn {
+    margin-bottom: 1rem;
+}
+

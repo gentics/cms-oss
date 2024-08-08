@@ -1,0 +1,52 @@
+<div>
+    <gtx-button
+        *ngIf="!hideActions"
+        class="trigger-check-btn"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="handleCheckButtonClick(packageName)"    
+    >
+        {{ 'package.consistency_check_no_result_button' | i18n }}
+    </gtx-button>
+
+    <span *ngIf="checkResultAvailable" class="check-time">{{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp$ | async }}</span>
+    <span *ngIf="!checkResultAvailable" class="check-time">{{ 'content_staging.content_package_check_no_result' | i18n }}</span>
+</div>
+
+
+<div class="check-ok" *ngIf="totalCount === 0 && checkResultAvailable">
+    <span>{{ 'content_staging.content_package_check_ok' | i18n }}</span>
+    <icon _ngcontent-ng-c4223602231="">check_circle</icon>
+</div>
+
+
+<gtx-table *ngIf="totalCount > 0"
+    class="entity-table"
+
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+/>
+
+

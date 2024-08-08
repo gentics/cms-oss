@@ -6,6 +6,7 @@ import {
     ContentPackage,
     ContentPackageBO,
     ContentPackageCreateRequest,
+    ContentPackageErrorResponse,
     ContentPackageSaveRequest,
     ContentPackageSyncOptions,
     Response,
@@ -229,6 +230,10 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
             }),
             this.catchAndRethrowError(),
         );
+    }
+
+    getImportErrors(entityId: string): Observable<ContentPackageErrorResponse> {
+        return this.api.contentStaging.getImportErrors(entityId);
     }
 
     exportToFileSystem(entityId: string, options?: ContentPackageSyncOptions, notify: boolean = true): Observable<void> {

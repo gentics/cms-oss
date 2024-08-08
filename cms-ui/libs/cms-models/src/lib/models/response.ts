@@ -35,7 +35,7 @@ import { StagedItemsMap, StagingStatus } from './staging-status';
 import { Construct, Tag, TagStatus, TagType } from './tag';
 import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
-import { Raw } from './type-util';
+import { DefaultModelType, ModelType, NormalizableEntity, Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
@@ -1436,6 +1436,21 @@ export interface ContentPackageSyncResponse extends Response {
     running: boolean;
     progress?: ContentPackageSyncProgress;
 }
+
+
+export interface ImportError {
+    path: string;
+    error: string;
+    globalId: string;
+    kind: string;
+}
+
+export interface ContentPackageErrorResponse extends Response{
+    errors: ImportError[];
+    mismatches: string[];
+    timestamp: string;
+}
+
 
 // CLUSTERING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

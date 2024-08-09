@@ -362,8 +362,6 @@ public class NavigationPartType extends AbstractVelocityPartType implements Tran
 		if (tmpCurrentPage instanceof Resolvable) {
 			config.currentPage = (Resolvable) tmpCurrentPage;
 		} else {
-			// logger.error("Current page not found.");
-			// throw new NodeException("Current page not found.");
 			logger.warn("Current page not found.");
 		}
 

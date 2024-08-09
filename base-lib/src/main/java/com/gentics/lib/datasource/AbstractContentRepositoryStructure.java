@@ -75,7 +75,7 @@ public abstract class AbstractContentRepositoryStructure {
 	/**
 	 * The structure definition used to check the repository
 	 */
-	protected ContentRepositoryStructureDefinition structureDefinition;
+	protected final ContentRepositoryStructureDefinition structureDefinition;
 
 	/**
 	 * Get the list of SQL statements to create a table
@@ -127,12 +127,7 @@ public abstract class AbstractContentRepositoryStructure {
 	 * @return a map containing all tables of the content repository
 	 */
 	public Map<String, TableDefinition> getReferenceTables() {
-		if (structureDefinition != null) {
-			return structureDefinition.getReferenceTables();
-		} else {
-			logger.fatal("Could not retrieve reference table structure.");
-			return null;
-		}
+		return structureDefinition.getReferenceTables();
 	}
 
 	/**
@@ -140,12 +135,7 @@ public abstract class AbstractContentRepositoryStructure {
 	 * @return list of reference constraints
 	 */
 	public List<ConstraintDefinition> getReferenceConstraints() {
-		if (structureDefinition != null) {
-			return structureDefinition.getReferenceConstraints();
-		} else {
-			logger.fatal("Could not retrieve reference constraint structure.");
-			return null;
-		}
+		return structureDefinition.getReferenceConstraints();
 	}
 
 	/**

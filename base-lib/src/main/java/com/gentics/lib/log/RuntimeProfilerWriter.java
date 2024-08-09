@@ -42,7 +42,7 @@ public class RuntimeProfilerWriter implements Runnable {
 				markCounts = new HashedMap();
 			}
 		} catch (Exception e) {
-			logger.fatal("Error while trying to create object output stream.", e);
+			logger.error("Error while trying to create object output stream.", e);
 		}
 		fifoQueue = BlockingBuffer.decorate(new UnboundedFifoBuffer());
 	}
@@ -112,7 +112,7 @@ public class RuntimeProfilerWriter implements Runnable {
 				}
 			}
 		} catch (IOException e) {
-			logger.fatal("Error while serializing profiler mark.", e);
+			logger.error("Error while serializing profiler mark.", e);
 		}
 	}
 

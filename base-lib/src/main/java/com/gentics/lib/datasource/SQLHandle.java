@@ -98,7 +98,7 @@ public class SQLHandle extends AbstractDatasourceHandle {
 			try {
 				connectionPool.close();
 			} catch (Exception e) {
-				logger.error("Error while closing connection pool", e);
+				logger.warn("Error while closing connection pool", e);
 			}
 			connectionPool = null;
 		}
@@ -427,7 +427,7 @@ public class SQLHandle extends AbstractDatasourceHandle {
 			try {
 				successSetProperty = parameterBean.setProperty(key, parameters.get(key));
 			} catch (InsufficientPrivilegesException e) {
-				logger.error("error while setting configuration parameter for handle {" + id + "}", e);
+				logger.warn("error while setting configuration parameter for handle {" + id + "}", e);
 			}
 			if (!successSetProperty) {
 				logger.error("Configuration parameter {" + key + "} could not be set for handle {" + id + "}");

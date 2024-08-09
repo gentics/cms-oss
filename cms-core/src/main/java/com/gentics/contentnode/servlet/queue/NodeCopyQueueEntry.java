@@ -164,7 +164,9 @@ public class NodeCopyQueueEntry extends AbstractInvokerQueueEntry {
 			int userId = ObjectTransformer.getInt(getParameter("userid"), -1);
 
 			if (node == null) {
-				logger.fatal("Not starting nodecopy: could not find");
+				logger.warn("Not starting nodecopy: could not find");
+
+				return;
 			}
 
 			logger.info(
@@ -187,7 +189,7 @@ public class NodeCopyQueueEntry extends AbstractInvokerQueueEntry {
 				logger.error("Error during {" + getType() + "} of node {" + nodeId + "}", t);
 			}
 		} catch (NodeException e) {
-			logger.fatal("Error while doing nodecopy:", e);
-		} finally {}
-	}
+			logger.error("Error while doing nodecopy:", e);
+		}
+    }
 }

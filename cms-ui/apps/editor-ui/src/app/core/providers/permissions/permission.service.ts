@@ -802,14 +802,32 @@ export class PermissionService {
             });
 
             result.image = Object.assign(result.image, {
-                create: perm.createitems,
-                delete: perm.deleteitems,
-                edit: perm.updateitems,
-                import: perm.importitems,
-                localize: perm.createitems,
-                upload: perm.createitems,
-                unlocalize: perm.createitems,
-                view: perm.readitems,
+                create:
+                    (!!perm && perm.createitems) ||
+                    (!!role && role.file.createitems),
+
+                delete:
+                    (!!perm && perm.deleteitems) ||
+                    (!!role && role.file.deleteitems),
+
+                edit:
+                    (!!perm && perm.updateitems) ||
+                    (!!role && role.file.updateitems),
+
+                import: !!perm && perm.importitems,
+                localize:
+                    (!!perm && perm.createitems) ||
+                    (!!role && role.file.createitems),
+
+                upload:
+                    (!!perm && perm.createitems) ||
+                    (!!role && role.file.createitems),
+
+                unlocalize:
+                    (!!perm && perm.createitems) ||
+                    (!!role && role.file.createitems),
+
+                view: (!!perm && perm.readitems) || (!!role && role.file.readitems),
             });
 
             /*

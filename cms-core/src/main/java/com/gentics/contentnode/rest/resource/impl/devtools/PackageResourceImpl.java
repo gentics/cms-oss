@@ -3,15 +3,7 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
-import com.gentics.contentnode.utils.JsonSerializer;
-import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
-import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
-import com.gentics.contentnode.rest.model.devtools.dependency.Type;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
-import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean.Filter;
 import java.io.File;
-import com.gentics.contentnode.exception.RestMappedException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -65,11 +57,13 @@ import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.distributed.TrxCallable;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
@@ -80,6 +74,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
+import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.rest.exceptions.CannotModifySubpackageException;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -91,6 +86,9 @@ import com.gentics.contentnode.rest.model.devtools.AutocompleteItem;
 import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
 import com.gentics.contentnode.rest.model.devtools.SyncInfo;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import com.gentics.contentnode.rest.model.response.ConstructLoadResponse;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryFragmentResponse;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
@@ -101,6 +99,7 @@ import com.gentics.contentnode.rest.model.response.ObjectPropertyLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.model.response.devtools.PagedConstructInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryFragmentInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryInPackageListResponse;
@@ -109,6 +108,8 @@ import com.gentics.contentnode.rest.model.response.devtools.PagedObjectPropertyI
 import com.gentics.contentnode.rest.model.response.devtools.PagedTemplateInPackageListResponse;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean.Filter;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
@@ -118,6 +119,7 @@ import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
 import com.gentics.contentnode.rest.util.ResolvableFilter;
+import com.gentics.contentnode.utils.JsonSerializer;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
 
@@ -294,6 +296,12 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}/cms2fs")
 	public GenericResponse synchronizeToFS(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
+			ActionLogger.logCmd(ActionLogger.DEVTOOL_SYNC_START, TypePerms.devtooladmin.type(), null, null,
+					String.format("Package %s: cms -> fs", name));
+			trx.success();
+		}
+
+		try (Trx trx = ContentNodeHelper.trx()) {
 			CNI18nString description = new CNI18nString("devtools_packages.action.cms2fs");
 			description.addParameter(name);
 			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
@@ -308,6 +316,10 @@ public class PackageResourceImpl implements PackageResource {
 				for (Class<? extends SynchronizableNodeObject> clazz : Synchronizer.CLASSES) {
 					message.addParameter(Integer.toString(counts.get(clazz)));
 				}
+
+				ActionLogger.logCmd(ActionLogger.DEVTOOL_SYNC_END, TypePerms.devtooladmin.type(), null, null,
+						String.format("Package %s: cms -> fs", name));
+
 				return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 			}, e -> new WebApplicationException(e.getLocalizedMessage()));
 		}
@@ -317,6 +329,12 @@ public class PackageResourceImpl implements PackageResource {
 	@PUT
 	@Path("/packages/{name}/fs2cms")
 	public GenericResponse synchronizeFromFS(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ActionLogger.logCmd(ActionLogger.DEVTOOL_SYNC_START, TypePerms.devtooladmin.type(), null, null,
+					String.format("Package %s: fs -> cms", name));
+			trx.success();
+		}
+
 		try (Trx trx = ContentNodeHelper.trx()) {
 			CNI18nString description = new CNI18nString("devtools_packages.action.fs2cms");
 			description.addParameter(name);
@@ -332,6 +350,10 @@ public class PackageResourceImpl implements PackageResource {
 				for (Class<? extends SynchronizableNodeObject> clazz : Synchronizer.CLASSES) {
 					message.addParameter(Integer.toString(counts.get(clazz)));
 				}
+
+				ActionLogger.logCmd(ActionLogger.DEVTOOL_SYNC_END, TypePerms.devtooladmin.type(), null, null,
+						String.format("Package %s: fs -> cms", name));
+
 				return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 			}, e -> new WebApplicationException(e.getLocalizedMessage()));
 		}

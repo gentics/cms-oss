@@ -205,6 +205,9 @@ form_reports_csv_generate_started:
 form_reports_csv_generate_finished:
     en: 'Export has been generated'
     de: 'Export wurde erstellt'
+form_reports_download_started:
+    en: 'The download will be started'
+    de: 'Der Download wird gestartet'    
 form_reports_label:
     en: 'Form reports'
     de: 'Formularberichte'

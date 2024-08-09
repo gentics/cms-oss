@@ -111,6 +111,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
     isCollapsed = false;
     wastebinEnabled = false;
+    multiChannelingEnabled = false;
     folderLanguage: Language = null;
     elasticsearchQueryActive = false;
     searchQueryActive = false;
@@ -171,8 +172,13 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.wastebin).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.WASTEBIN]).subscribe(enabled => {
             this.wastebinEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+            this.multiChannelingEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
     }

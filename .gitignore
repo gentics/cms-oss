@@ -41,5 +41,5 @@ cache
 .run
 conf
 keys
-
+.nx/
 !cms-integration-tests/test/resources/cms/conf

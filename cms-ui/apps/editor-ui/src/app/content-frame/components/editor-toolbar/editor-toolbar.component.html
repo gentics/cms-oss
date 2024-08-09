@@ -105,14 +105,12 @@
             <gtx-dropdown-list
                 *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'"
                 class="content-frame-context-menu"
-                [disabled]="currentItem?.type === 'page' && !alohaReady"
             >
                 <gtx-dropdown-trigger>
                     <gtx-button
                         icon
                         type="secondary"
                         data-action="open-content-frame-context"
-                        [disabled]="currentItem?.type === 'page' && !alohaReady"
                     >
                         <icon>more_vert</icon>
                     </gtx-button>

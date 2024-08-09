@@ -328,6 +328,7 @@ public class StagedPage extends StagedLocalizableObject {
 	public void setCustomEdate(Integer customEdate) {
 		this.customEdate = customEdate;
 	}
+
 	@Override
 	@XmlTransient
 	@JsonIgnore

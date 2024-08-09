@@ -129,7 +129,7 @@ public class FileFactory extends AbstractFactory {
 	 * SQL Statement to update a new contentfile
 	 */
 	protected final static String UPDATE_CONTENTFILE_SQL = "UPDATE contentfile"
-			+ " SET name = ?, nice_url = ?, filetype = ? , folder_id = ? , filesize = ? , editor = ? , edate = ?, custom_edate = ? ,description = ? , sizex = ? , sizey = ? , md5 = ? , dpix = ? , dpiy = ?, fpx = ?, fpy = ?, channelset_id = ?, channel_id = ?, force_online = ?"
+			+ " SET name = ?, nice_url = ?, filetype = ? , folder_id = ? , filesize = ? , editor = ? , custom_cdate = ? , edate = ?, custom_edate = ? ,description = ? , sizex = ? , sizey = ? , md5 = ? , dpix = ? , dpiy = ?, fpx = ?, fpy = ?, channelset_id = ?, channel_id = ?, force_online = ?"
 			+ " WHERE id = ?";
 
 	/**
@@ -2120,8 +2120,8 @@ public class FileFactory extends AbstractFactory {
 			// Insert a new record
 			List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTFILE_SQL,
 					new Object[] {
-				file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.creatorId, file.cDate.getIntTimestamp(), file.editorId,
-				file.eDate.getIntTimestamp(), file.description, file.sizeX, file.sizeY, "", file.dpiX, file.dpiY, file.fpX, file.fpY, file.channelSetId, file.channelId, file.master,
+				file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.creatorId, file.cDate.getIntTimestamp(), file.customCDate.getIntTimestamp(), file.editorId,
+				file.eDate.getIntTimestamp(), file.customEDate.getIntTimestamp(), file.description, file.sizeX, file.sizeY, "", file.dpiX, file.dpiY, file.fpX, file.fpY, file.channelSetId, file.channelId, file.master,
 				file.forceOnline, file.excluded, file.disinheritDefault, ObjectTransformer.getString(file.getGlobalId(), "")});
 
 			if (keys.size() == 1) {
@@ -2238,7 +2238,7 @@ public class FileFactory extends AbstractFactory {
 		// Update the contentfile record since some attributes may have changed.
 		DBUtils.executeUpdate(UPDATE_CONTENTFILE_SQL,
 				new Object[] {
-			file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.editorId, file.eDate.getIntTimestamp(), file.description, file.sizeX,
+			file.name, file.niceUrl, file.filetype, file.folderId, file.filesize, file.editorId, file.customCDate.getIntTimestamp(), file.eDate.getIntTimestamp(), file.customEDate.getIntTimestamp(), file.description, file.sizeX,
 			file.sizeY, file.md5, file.dpiX, file.dpiY, file.fpX, file.fpY, file.channelSetId, file.channelId, file.forceOnline, file.getId()});
 
 		// Throw events

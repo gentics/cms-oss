@@ -286,7 +286,7 @@ public class ModelBuilder {
 		restFile.setCdate(nodeFile.getCDate().getIntTimestamp());
 		restFile.setEdate(nodeFile.getEDate().getIntTimestamp());
 		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
-		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
+		restFile.setCustomEdate(nodeFile.getCustomEDate().getIntTimestamp());
 		restFile.setPath(getFolderPath(nodeFile.getFolder()));
 		restFile.setLiveUrl(renderLiveUrlForObject(File.class, nodeFile, nodeFile.getNode()));
 		restFile.setPublishPath(renderPublishPath(nodeFile));
@@ -2619,6 +2619,12 @@ public class ModelBuilder {
 		if (restFile.isForceOnline() != null) {
 			file.setForceOnline(restFile.isForceOnline());
 		}
+		if (restFile.getCustomCdate() != null) {
+			file.setCustomCDate(restFile.getCustomCdate());
+		}
+		if (restFile.getCustomEdate() != null) {
+			file.setCustomEDate(restFile.getCustomEdate());
+		}
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			if (restFile.getNiceUrl() != null) {
 				file.setNiceUrl(restFile.getNiceUrl());
@@ -2689,6 +2695,12 @@ public class ModelBuilder {
 		}
 		if (restImage.isForceOnline() != null) {
 			image.setForceOnline(restImage.isForceOnline());
+		}
+		if (restImage.getCustomCdate() != null) {
+			image.setCustomCDate(restImage.getCustomCdate());
+		}
+		if (restImage.getCustomEdate() != null) {
+			image.setCustomEDate(restImage.getCustomEdate());
 		}
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			if (restImage.getNiceUrl() != null) {

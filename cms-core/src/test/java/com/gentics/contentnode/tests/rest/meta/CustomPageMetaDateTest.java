@@ -1,4 +1,4 @@
-package com.gentics.contentnode.tests.rest.page;
+package com.gentics.contentnode.tests.rest.meta;
 
 import static com.gentics.contentnode.events.DependencyManager.createDependency;
 import static com.gentics.contentnode.events.Events.UPDATE;
@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -42,7 +44,6 @@ import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 
 public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.Page, Page> {
-
 
 	/**
 	 * Test sorting an overview by cdate
@@ -185,6 +186,104 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 		}
 	}
 
+	/**
+	 * Test rendering default cdate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRenderCDate() throws NodeException {
+		int createTime = 86400;
+		Page item = createMetaDated(createTime);
+
+		assertRenderedCDate(item.getId(), createTime);
+	}
+
+	/**
+	 * Test rendering custom cdate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRenderCustomCDate() throws NodeException {
+		int createTime = 86400;
+		int updateTime = 86400 * 3;
+		int customCdate = 86400 * 2;
+		Page item = createMetaDated(createTime);
+
+		item = updateMetaDated(updateTime, item.getId(), Optional.empty(), Optional.empty(), Optional.of(customCdate), Optional.empty());
+
+		assertRenderedCDate(item.getId(), customCdate);
+	}
+
+	/**
+	 * Test rendering default edate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRenderEDate() throws NodeException {
+		int createTime = 86400;
+		Page item = createMetaDated(createTime);
+
+		assertRenderedEDate(item.getId(), createTime);
+	}
+
+	/**
+	 * Test rendering custom edate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRenderCustomEDate() throws NodeException {
+		int createTime = 86400;
+		int updateTime = 86400 * 3;
+		int customEdate = 86400 * 2;
+		Page item = createMetaDated(createTime);
+
+		item = updateMetaDated(updateTime, item.getId(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(customEdate));
+
+		assertRenderedEDate(item.getId(), customEdate);
+	}
+
+	/**
+	 * Assert that the rendered CDate (in all possible variants) is equal to the expected timestamp
+	 * @param itemId item ID
+	 * @param expectedTimestamp expected timestamp
+	 * @throws NodeException
+	 */
+	protected void assertRenderedCDate(int itemId, int expectedTimestamp) throws NodeException {
+		ContentNodeDate date = new ContentNodeDate(expectedTimestamp);
+		for (Map.Entry<String, DateFormat> entry : cDatePropertyMap.entrySet()) {
+			assertThat(render(itemId, entry.getKey())).as("Rendered " + entry.getKey()).isEqualTo(entry.getValue().render(date));
+		}
+	}
+
+	/**
+	 * Assert that the rendered EDate (in all possible variants) is equal to the expected timestamp
+	 * @param itemId item ID
+	 * @param expectedTimestamp expected timestamp
+	 * @throws NodeException
+	 */
+	protected void assertRenderedEDate(int itemId, int expectedTimestamp) throws NodeException {
+		ContentNodeDate date = new ContentNodeDate(expectedTimestamp);
+		for (Map.Entry<String, DateFormat> entry : eDatePropertyMap.entrySet()) {
+			assertThat(render(itemId, entry.getKey())).as("Rendered " + entry.getKey()).isEqualTo(entry.getValue().render(date));
+		}
+	}
+
+	/**
+		* Render the property for the page
+		* @param pageId page ID
+		* @param property page property to rendered
+		* @return rendered property
+		* @throws NodeException
+		*/
+	protected String render(int pageId, String property) throws NodeException {
+		try (Trx trx = new Trx(systemUser)) {
+				PageRenderResponse response = new PageResourceImpl().render(String.valueOf(pageId), 0, String.format("<node page.%s>", property), false, null,
+								LinksType.frontend, false, false, false, 0);
+				assertResponseCodeOk(response);
+				trx.success();
+				return response.getContent();
+		}
+	}
 
 	protected void doDirtingTest(Consumer<Page> dependencyCreator, Consumer<Page> updater, Consumer<Page> dirtChecker) throws NodeException {
 		operate(() -> {

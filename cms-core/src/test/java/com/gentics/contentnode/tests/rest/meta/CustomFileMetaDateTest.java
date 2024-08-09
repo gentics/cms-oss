@@ -1,4 +1,4 @@
-package com.gentics.contentnode.tests.rest.page;
+package com.gentics.contentnode.tests.rest.meta;
 
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
@@ -7,10 +7,12 @@ import java.util.Optional;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
@@ -19,10 +21,18 @@ import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.tests.rest.file.BinaryDataResource;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File> {
 
+	protected static SystemUser user;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		CustomMetaDateTest.setupOnce();
+		user = supply(t -> t.getObject(SystemUser.class, 1));
+	}
 	/**
 	 * REST Application used as binary data provider
 	 */
@@ -33,14 +43,14 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	public File createMetaDated(int createTime) throws NodeException {
 		File file = null;
 
-		try (Trx trx = new Trx()) {
+		try (Trx trx = new Trx(user)) {
 			trx.at(createTime);
 
 			FileCreateRequest request = new FileCreateRequest();
 			request.setFolderId(node.getFolder().getId());
 			request.setSourceURL(appContext.getBaseUri() + "binary");
 
-			FileUploadResponse response = new FileResourceImpl().create(request);
+			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
 			assertResponseCodeOk(response);
 			file = response.getFile();
 
@@ -53,7 +63,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx()) {
+		try (Trx trx = new Trx(user)) {
 			trx.at(updateTime);
 
 			File update = new File();
@@ -71,6 +81,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 
 		return loadFile(String.valueOf(id));
 	}
+
 	/**
 	 * Load the page with ID
 	 * @param pageId global or local ID
@@ -79,7 +90,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 */
 	protected File loadFile(String pageId) throws NodeException {
 		return supply(() -> {
-			FileLoadResponse response = new FileResourceImpl().load(pageId, false, false, 0, null);
+			FileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(pageId, false, false, 0, null);
 			assertResponseCodeOk(response);
 			return response.getFile();
 		});

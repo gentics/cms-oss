@@ -381,11 +381,7 @@ spec:
             
             steps {
                 script {
-                    GenericHelper.triggerMultiBranchPipelineToScanIfJobNotExists('cms', 'cms-ui-integration-tests/' + branchName, 60)
-                }
-
-                script {
-                    def testJob = build job: 'mesh/' + branchName,
+                    def testJob = build job: 'cms-ui-integration-tests/' + branchName,
                         parameters: [
                             choice(name: 'variant', value: 'OSS'),
                             string(name: 'cmsVerison', value: tagName != null ? tagName : branchName),

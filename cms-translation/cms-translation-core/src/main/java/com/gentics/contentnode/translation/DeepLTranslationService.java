@@ -71,7 +71,9 @@ public class DeepLTranslationService implements TranslationService {
 			translatedText = translator.translateText(textToTranslate, sourceLanguage,
 					mappedTargetLanguage);
 		} catch (QuotaExceededException exception) {
-			CNI18nString errorMessage = new CNI18nString("feature.translation.error.quota_exceeded");
+			CNI18nString errorMessage = new CNI18nString("feature.translation.error");
+			CNI18nString errorReason = new CNI18nString("feature.translation.error.reason.quota_exceeded");
+			errorMessage.addParameter(errorReason.toString());
 			throw new TranslationException(errorMessage.toString());
 		} catch (DeepLException | InterruptedException e) {
 			throw new NodeException("Error occurred while translating text.", e);

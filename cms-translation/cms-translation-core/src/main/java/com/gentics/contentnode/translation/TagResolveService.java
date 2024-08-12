@@ -96,8 +96,10 @@ public class TagResolveService {
 
 				final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
 				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
-					throw new TranslationException(
-							new CNI18nString("feature.translation.error.markup_invalid").toString());
+					CNI18nString errorMessage = new CNI18nString("feature.translation.error");
+					CNI18nString errorReason = new CNI18nString("feature.translation.error.reason.markup_invalid");
+					errorMessage.addParameter(errorReason.toString());
+					throw new TranslationException(errorMessage.toString());
 				}
 				textProperty.setStringValue(unresolvedAndTranslatedText);
 			}

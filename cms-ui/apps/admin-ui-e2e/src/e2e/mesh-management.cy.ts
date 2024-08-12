@@ -1,10 +1,12 @@
-import { TestSize, bootstrapSuite } from '@gentics/e2e-utils';
+import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 
 describe('Content Repository', () => {
+
+    const IMPORTER = new EntityImporter();
     const CR_NAME = 'Mesh CR';
 
-    beforeEach(() => {
-        cy.wrap(bootstrapSuite(TestSize.MINIMAL));
+    beforeEach(async () => {
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
 
         cy.navigateToApp();
         cy.login(true);

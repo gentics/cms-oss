@@ -41,13 +41,7 @@ export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
 export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
-
-export const ENV_MESH_CR_ENABLED = 'FEATURE_MESH_CR';
-export const ENV_KEYCLOAK_ENABLED = 'FEATURE_KEYCLOAK';
-export const ENV_MULTI_CHANNELING_ENABLED = 'FEATURE_MULTI_CHANNELING';
-export const ENV_FORMS_ENABLED = 'FEATURE_FORMS';
-export const ENV_CONTENT_STAGING_ENABLED = 'FEATURE_CONTENT_STAGING';
-export const ENV_AUTOMATIC_TRANSLATION_ENABLED = 'FEATURE_AUTOMATIC_TRANSLATION';
+export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 
 export type ItemType = typeof ITEM_TYPE_FOLDER | typeof ITEM_TYPE_PAGE | typeof ITEM_TYPE_FILE | typeof ITEM_TYPE_IMAGE | typeof ITEM_TYPE_FORM;
 export type ImportType = ItemType | typeof IMPORT_TYPE_NODE | typeof IMPORT_TYPE_USER | typeof IMPORT_TYPE_GROUP;
@@ -88,8 +82,6 @@ export interface NodeImportData extends NodeCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
     languages: string[];
-    /** Features which will be assigned */
-    features: NodeFeature[];
     /** Templates which will be assigned */
     templates?: string[];
 }

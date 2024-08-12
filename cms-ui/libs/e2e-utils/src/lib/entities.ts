@@ -28,7 +28,6 @@ import {
     TestSize,
     UserImportData,
 } from './common';
-import { getActiveNodeFeatures } from './utils';
 
 /*
  * REQUIRED SETUP
@@ -63,7 +62,6 @@ export const emptyNode: NodeImportData = {
     description: 'empty node',
 
     languages : [LANGUAGE_EN],
-    features: [],
     templates: [BASIC_TEMPLATE_ID],
 };
 
@@ -146,7 +144,6 @@ export const minimalNode: NodeImportData = {
     description: 'minimal test',
 
     languages : [LANGUAGE_DE, LANGUAGE_EN],
-    features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,
     ],
@@ -268,7 +265,6 @@ export const fullNode: NodeImportData = {
     description: 'full test',
 
     languages : [LANGUAGE_DE, LANGUAGE_EN],
-    features: getActiveNodeFeatures(),
     templates: [
         BASIC_TEMPLATE_ID,
     ],

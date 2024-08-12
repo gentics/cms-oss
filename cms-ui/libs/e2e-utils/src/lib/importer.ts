@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {
+    Feature,
     File,
     FileUploadOptions,
     Folder,
@@ -46,7 +47,7 @@ import {
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
 } from './entities';
-import { getItem } from './utils';
+import { getFeatures, getItem, getNodeFeatures } from './utils';
 
 export interface ImporterOptions {
     logRequests?: boolean;
@@ -156,6 +157,36 @@ export class EntityImporter {
         }
     }
 
+    public async setupFeatures(
+        size: TestSize,
+        features: Partial<Record<Feature | NodeFeature, boolean>>,
+    ): Promise<void> {
+        // Reset to initial config
+        await this.client.admin.reloadConfiguration().send();
+
+        // Get all the required node-ids from the package
+        const nodeIds: number[] = PACKAGE_MAP[size]
+            .map(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE ? (this.get(data as NodeImportData))?.id : null)
+            .filter(id => id != null);
+
+        for (const entry of Object.entries(features || {})) {
+            const [feature, enabled] = entry;
+            if (Feature[feature]) {
+                // TODO: Update the features when the endpoints are available
+                // Don't add the endpoints to the client, as they are ment for testing only.
+                continue;
+            }
+
+            for (const id of nodeIds) {
+                if (enabled) {
+                    await this.client.node.activateFeature(id, feature as NodeFeature).send();
+                } else {
+                    await this.client.node.deactivateFeature(id, feature as NodeFeature).send();
+                }
+            }
+        }
+    }
+
     public get(data: NodeImportData): Node | null;
     public get(data: FolderImportData): Folder | null;
     public get(data: PageImportData): Page | null;
@@ -181,7 +212,6 @@ export class EntityImporter {
         data: NodeImportData,
     ): Promise<Node> {
         const {
-            features,
             languages,
             templates,
             ...req
@@ -194,8 +224,6 @@ export class EntityImporter {
         if (this.options?.logImports) {
             cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
         }
-
-        await this.setNodeFeatures(created.id, features);
 
         for (const lang of languages) {
             await this.client.node.assignLanguage(created.id, this.languages[lang]).send();

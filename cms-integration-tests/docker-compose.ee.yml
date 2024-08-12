@@ -1,0 +1,30 @@
+services:
+  mariadb:
+    extends:
+      file: docker-compose.yml
+      service: mariadb
+
+  mesh:
+    extends:
+      file: docker-compose.yml
+      service: mesh
+
+  cms:
+    extends:
+      file: docker-compose.yml
+      service: cms
+    image: docker.apa-it.at/gentics/cms:${CI_CMS_VERION:-6.1.6}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      mesh:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.2
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_PASSWORD: admin

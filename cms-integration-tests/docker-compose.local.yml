@@ -1,0 +1,29 @@
+services:
+  mariadb:
+    extends:
+      file: docker-compose.yml
+      service: mariadb
+
+  mesh:
+    extends:
+      file: docker-compose.yml
+      service: mesh
+
+  cms:
+    extends:
+      file: docker-compose.yml
+      service: cms
+
+  app:
+    build:
+      dockerfile: ./cms-integration-tests/Dockerfile
+      context: ../
+    volumes:
+      # - ../cms-ui/:/opt/app/
+      - ./integration-test:/opt/app/integration-test
+    environment:
+      CMS_VARIANT: OSS
+    # entrypoint: "integration-test/run-tests.sh"
+    depends_on:
+      cms:
+        condition: service_healthy

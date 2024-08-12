@@ -1,0 +1,89 @@
+services:
+  mariadb:
+    image: mariadb:10
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --log-bin=mysqld-bin
+
+    environment:
+      MYSQL_DATABASE: node_utf8
+      MYSQL_USER: node
+      MYSQL_PASSWORD: node
+      MYSQL_ROOT_PASSWORD: finger
+
+    volumes:
+      - ./integration-test/mariadb/dumps:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mesh:
+    image: docker.apa-it.at/gentics/mesh:${CI_MESH_VERSION:-2.1.0}
+
+    environment:
+      MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
+      MESH_INITIAL_ADMIN_PASSWORD: admin
+      MESH_ELASTICSEARCH_URL: null
+      MESH_ELASTICSEARCH_START_EMBEDDED: false
+      MESH_ELASTICSEARCH_WAIT_FOR_IDLE: false
+      MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS: false
+      MESH_MONITORING_ENABLED: true
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v2/health/ready"]
+      start_period: 120s
+      start_interval: 30s
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  cms:
+    image: docker.apa-it.at/gentics/cms-oss:${CI_CMS_VERION:-6.1.6}
+    ports:
+      - 8080:8080
+
+    environment:
+      # DB Connection
+      NODE_DB_HOST: mariadb
+      NODE_DB_USER: root
+      NODE_DB_PASSWORD: finger
+
+      # Misc settings
+      NODE_USER_PASSWORD: node
+      ELASTICSEARCH_ENABLED: false
+      ELASTICSEARCH_URL:
+      CONF_FILES: cms
+
+      # Mesh CR Settings
+      CR_URL_MESH_CR: http://mesh:8080/example
+      CR_USERNAME_MESH_CR: admin
+      CR_PASSWORD_MESH_CR: admin
+
+      # DB CR Settings
+      CR_URL_MARIADB_CR: jdbc:mariadb://mariadb:3306/cr
+      CR_USERNAME_MARIADB_CR: crtest
+      CR_PASSWORD_MARIADB_CR: crtest
+
+    volumes:
+      - ./integration-test/cms/commands:/cms/scheduler-commands
+      - ./integration-test/cms/conf:/cms/conf/cms
+      - ./integration-test/cms/ui-conf:/cms/ui-conf
+      - ./integration-test/cms/packages:/cms/packages
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]
+      start_period: 120s
+      start_interval: 10s
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      mesh:
+        condition: service_healthy
+
+

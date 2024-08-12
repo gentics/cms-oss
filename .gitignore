@@ -185,7 +185,7 @@ cache
 conf
 
 # Ignore conf directories from local development, except for the integration-tests
-!cms-integration-tests/test/resources/cms/conf
+!cms-ui/integration-test/cms/conf
 
 ### Log Files ###
 gentics.log*

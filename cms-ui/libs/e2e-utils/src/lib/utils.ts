@@ -1,6 +1,7 @@
-import { File, Folder, Group, Image, Node, NodeFeature, Page, User } from '@gentics/cms-models';
+import { File, Folder, Group, Image, Node, Page, User, Variant } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
 import {
+    ENV_CMS_VARIANT,
     FileImportData,
     FolderImportData,
     GroupImportData,
@@ -39,17 +40,10 @@ export function envNone(...vars: string[]): boolean {
     return vars.every(f => !Cypress.env(f));
 }
 
-export function skipableSuite(doExecute: boolean, title: string, fn: (this: Suite) => void): Suite | void {
-    return (doExecute ? describe : describe.skip)(title, fn);
+export function isVariant(variant: Variant): boolean {
+    return Cypress.env(ENV_CMS_VARIANT) === variant;
 }
 
-export function getActiveNodeFeatures(): NodeFeature[] {
-    const activatedNodeFeatures = [];
-    Object.keys(NodeFeature).forEach(feature => {
-        if(envAny(`FEATURE_${feature}`)) {
-            activatedNodeFeatures.push(NodeFeature[feature]);
-        }
-    })
-
-    return activatedNodeFeatures;
+export function skipableSuite(doExecute: boolean, title: string, fn: (this: Suite) => void): Suite | void {
+    return (doExecute ? describe : describe.skip)(title, fn);
 }

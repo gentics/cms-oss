@@ -340,50 +340,6 @@ spec:
             }
 		}
 
-        stage("UI Integration Tests") {
-			when {
-				expression {
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
-				}
-			}
-
-            environment {
-                DOCKER_TAG   = "${branchName}"
-            }
-
-            steps {
-                script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-                    withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                        try {
-                            // prior to starting the tests, start the docker containers with CMS
-                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
-                            sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-
-                            // run the integration tests in the ui-module
-                            sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
-                                // Setup NPM correctly for this run
-                                "-Dnodejs.npm.bin=/opt/node/bin/npm " + 
-                                // And skip all other parts - these had to run before hand or will be executed by the UI repo
-                                "-Dui.skip.install=true -Dui.skip.publish=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report=true -Dui.skip.assembly=true"
-                        } finally {
-                            // finally stop the docker containers
-                            sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                        }
-                    }
-                }
-            }
-
-            post {
-                always {
-                    script {
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: false
-                    }
-                }
-            }
-		}
-
         stage("Docker Push") {
 			when {
 				expression {
@@ -412,6 +368,46 @@ spec:
                             sh "docker push ${imageNameWithTag}"
                         }
                     }
+                }
+            }
+		}
+
+        stage("UI Integration Tests") {
+			when {
+				expression {
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
+				}
+			}
+            
+            steps {
+                script {
+                    GenericHelper.triggerMultiBranchPipelineToScanIfJobNotExists('cms', 'cms-ui-integration-tests/' + branchName, 60)
+                }
+
+                script {
+                    def testJob = build job: 'mesh/' + branchName,
+                        parameters: [
+                            choice(name: 'variant', value: 'OSS'),
+                            string(name: 'cmsVerison', value: tagName != null ? tagName : branchName),
+                            // TODO: Get Mesh Version from POM?
+                            string(name: 'meshVersion', value: '2.1.0')
+                        ],
+                        wait: true
+
+                    if ( testJob.getBuildVariables()["BUILD_SKIPPED"] == "true" ) {
+                        echo "Integration Tests finished with an error"
+                    } else {
+                        echo "Integration Tests finished successfully"
+                    }
+                }
+            }
+
+            post {
+                always {
+                    // Unstash results from the tests
+                    unstash "cms-ui-integration_OSS_${branchName}"
+                    // Add the unstashed results if available
+                    junit  testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                 }
             }
 		}

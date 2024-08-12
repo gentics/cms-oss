@@ -1,9 +1,9 @@
+import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
-    ENV_AUTOMATIC_TRANSLATION_ENABLED,
     EntityImporter,
     ITEM_TYPE_PAGE,
     TestSize,
-    envAll,
+    isVariant,
     minimalNode,
     pageOne,
     skipableSuite,
@@ -23,13 +23,16 @@ describe('Page Translation', () => {
     beforeEach(async () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
+        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+            [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+        });
 
         cy.navigateToApp();
         cy.login(AUTH_ADMIN);
         cy.selectNode(IMPORTER.get(minimalNode)!.id);
     });
 
-    skipableSuite(envAll(ENV_AUTOMATIC_TRANSLATION_ENABLED), 'automatic translations', () => {
+    skipableSuite(isVariant(Variant.ENTERPRISE), 'Automatic Translations', () => {
         it('should be possible to translate a page automatically', () => {
             const page = IMPORTER.get(pageOne)!;
             const NEW_LANG = 'de';
@@ -71,5 +74,5 @@ describe('Page Translation', () => {
             //     .first()
             //     .should('contain', 'Dies ist die Seite');
         });
-    })
+    });
 });

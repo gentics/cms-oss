@@ -37,11 +37,11 @@ ENV MESA_SHADER_CACHE_DISABLE "true"
 
 # Mount the required modules
 RUN mkdir /opt/app
-# VOLUME /opt/app
-COPY ./cms-ui /opt/app
+VOLUME /opt/app
+# COPY ./cms-ui /opt/app
 
 WORKDIR /opt/app
-RUN npm ci
+# RUN npm ci
 
 # Make the image simply execute bash for jenkins to execute the own stuff later on
 CMD /bin/bash

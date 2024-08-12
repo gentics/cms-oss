@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;

@@ -11,7 +11,7 @@ import { ContentPackageImportErrorTableComponent } from './content-package-impor
 
 
 
-fdescribe('ContentPackageImportErrorTableComponent', () => {
+describe('ContentPackageImportErrorTableComponent', () => {
     let component: ContentPackageImportErrorTableComponent;
     let fixture: ComponentFixture<ContentPackageImportErrorTableComponent>;
     let loaderService: jasmine.SpyObj<ContentPackageImportErrorTableLoaderService>;

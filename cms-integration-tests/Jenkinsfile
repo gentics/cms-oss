@@ -69,7 +69,7 @@ spec:
 
     parameters {
         choice(name: 'variant', choices: ['OSS', 'EE'], defaultValue: 'OSS', description: 'Which type of CMS should be tested')
-        string(name: 'cmsVersion': defaultValue: '', description: 'The docker image-version for the CMS which should be tested against')
+        string(name: 'cmsVersion', defaultValue: '', description: 'The docker image-version for the CMS which should be tested against')
         string(name: 'meshVersion', defaultValue: '', description: 'The docker image-version for Mesh which should be tested against')
     }
 

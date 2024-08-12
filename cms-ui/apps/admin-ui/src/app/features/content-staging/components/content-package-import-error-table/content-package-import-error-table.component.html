@@ -11,14 +11,18 @@
         {{ 'package.consistency_check_no_result_button' | i18n }}
     </gtx-button>
 
-    <span *ngIf="checkResultAvailable" class="check-time">{{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp$ | async }}</span>
-    <span *ngIf="!checkResultAvailable" class="check-time">{{ 'content_staging.content_package_check_no_result' | i18n }}</span>
+    <span *ngIf="checkResultAvailable" class="check-time" data-test-id="check-result-available">
+        {{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp$ | async }}
+    </span>
+    <span *ngIf="!checkResultAvailable" class="check-time" data-test-id="check-result-unavailable">
+        {{ 'content_staging.content_package_check_no_result' | i18n }}
+    </span>
 </div>
 
 
 <div class="check-ok" *ngIf="totalCount === 0 && checkResultAvailable">
     <span>{{ 'content_staging.content_package_check_ok' | i18n }}</span>
-    <icon _ngcontent-ng-c4223602231="">check_circle</icon>
+    <icon>check_circle</icon>
 </div>
 
 

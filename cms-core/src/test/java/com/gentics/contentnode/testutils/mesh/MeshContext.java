@@ -72,6 +72,8 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 	private SQLUtils dbUtils = null;
 
+	private boolean useTestContextDatabase = false;
+
 	/**
 	 * Create an instance, using the Mesh version of the MeshRestClient
 	 */
@@ -120,33 +122,35 @@ public class MeshContext extends GenericContainer<MeshContext> {
 		// We don't use ES
 		addEnv(ElasticSearchOptions.MESH_ELASTICSEARCH_URL_ENV, "null");
 
-		CompletableFuture<ManagerResponse> future = new CompletableFuture<>();
-		Executors.newSingleThreadExecutor().submit(() -> {
-			DBTestContext.requestGCNDB(future);
-		});
+		if (useTestContextDatabase) {
+			CompletableFuture<ManagerResponse> future = new CompletableFuture<>();
+			Executors.newSingleThreadExecutor().submit(() -> {
+				DBTestContext.requestGCNDB(future);
+			});
 
-		try {
-			ManagerResponse dbConnectionResponse = future.get(DBTestContext.DEFAULT_MAX_WAIT, TimeUnit.SECONDS);
-			addEnv("MESH_DATABASE_ADDRESS", dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort());
-			addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8");
-			addEnv("MESH_JDBC_DATABASE_NAME", dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX);
-			addEnv("MESH_JDBC_CONNECTION_USERNAME", dbConnectionResponse.getUser());
-			addEnv("MESH_JDBC_CONNECTION_PASSWORD", "");
-			addEnv("MESH_DB_CONNECTOR_CLASSPATH", "/connector");
-			addFileSystemBind(new java.io.File("target/connector").getAbsolutePath(), "/connector", BindMode.READ_ONLY);
+			try {
+				ManagerResponse dbConnectionResponse = future.get(DBTestContext.DEFAULT_MAX_WAIT, TimeUnit.SECONDS);
+				addEnv("MESH_DATABASE_ADDRESS", dbConnectionResponse.getHostname() + ":" + dbConnectionResponse.getPort());
+				addEnv("MESH_JDBC_CONNECTION_URL_EXTRA_PARAMS", "?characterEncoding=UTF8");
+				addEnv("MESH_JDBC_DATABASE_NAME", dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX);
+				addEnv("MESH_JDBC_CONNECTION_USERNAME", dbConnectionResponse.getUser());
+				addEnv("MESH_JDBC_CONNECTION_PASSWORD", "");
+				addEnv("MESH_DB_CONNECTOR_CLASSPATH", "/connector");
+				addFileSystemBind(new java.io.File("target/connector").getAbsolutePath(), "/connector", BindMode.READ_ONLY);
 
-			Properties properties = dbConnectionResponse.toProperties();
-			properties.setProperty("url", properties.getProperty("url") + MESH_DATABASE_SUFFIX);
-			dbUtils = SQLUtilsFactory.getSQLUtils(properties);
-			dbUtils.connectDatabase();
-			//dbUtils.createDatabase();
-			dbUtils.executeQueryManipulation("CREATE DATABASE IF NOT EXISTS `" + dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
-		} catch (TimeoutException e) {
-			throw new IllegalStateException("Waited too long for the connection properties from gcn-testdb-manager");
-		} catch (InterruptedException e) {
-			throw new IllegalStateException("Getting the connection from gcn-testdb-manager has been interrupted");
-		} catch (Throwable e) {
-			throw new IllegalStateException("Getting the connection from gcn-testdb-manager has failed", e);
+				Properties properties = dbConnectionResponse.toProperties();
+				properties.setProperty("url", properties.getProperty("url") + MESH_DATABASE_SUFFIX);
+				dbUtils = SQLUtilsFactory.getSQLUtils(properties);
+				dbUtils.connectDatabase();
+				//dbUtils.createDatabase();
+				dbUtils.executeQueryManipulation("CREATE DATABASE IF NOT EXISTS `" + dbConnectionResponse.getName() + MESH_DATABASE_SUFFIX + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;");
+			} catch (TimeoutException e) {
+				throw new IllegalStateException("Waited too long for the connection properties from gcn-testdb-manager");
+			} catch (InterruptedException e) {
+				throw new IllegalStateException("Getting the connection from gcn-testdb-manager has been interrupted");
+			} catch (Throwable e) {
+				throw new IllegalStateException("Getting the connection from gcn-testdb-manager has failed", e);
+			}
 		}
 
 		addEnv(MeshOptions.MESH_INITIAL_ADMIN_PASSWORD_ENV, "admin");
@@ -225,6 +229,11 @@ public class MeshContext extends GenericContainer<MeshContext> {
 
 	public MeshContext withImageManipulationMode(ImageManipulationMode mode) {
 		this.imageManipulationMode = mode;
+		return this;
+	}
+
+	public MeshContext withTestContextDatabase(boolean useTestContextDatabase) {
+		this.useTestContextDatabase = useTestContextDatabase;
 		return this;
 	}
 

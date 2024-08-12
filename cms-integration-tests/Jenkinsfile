@@ -128,7 +128,7 @@ spec:
             post {
                 always {
                     script {
-                        stash name: "cms-ui-integration_${params.variant}_${params.cmsVersion}" includes: ".reports/**/CYPRESS-e2e-report.xml"
+                        stash name: "cms-ui-integration_${params.variant}_${params.cmsVersion}", includes: ".reports/**/CYPRESS-e2e-report.xml"
                     }
                 }
             }

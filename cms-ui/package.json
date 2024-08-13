@@ -141,7 +141,7 @@
     "@schematics/angular": "18.1.4",
     "@swc-node/register": "1.9.1",
     "@swc/cli": "^0.4.0",
-    "@swc/core": "^1.5.7",
+    "@swc/core": "^1.7.10",
     "@types/dompurify": "^2.0.0",
     "@types/hammerjs": "~2.0.36",
     "@types/jasmine": "~4.3.0",

@@ -14,6 +14,7 @@ import {
     I18nService,
     NodeOperations,
     PermissionsService,
+    TemplateOperations,
     TemplateTableLoaderService,
 } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
@@ -31,9 +32,16 @@ import { CopyTemplateService } from '../../providers/copy-template/copy-template
 import { CreateTemplateModalComponent } from '../create-template-modal/create-template-modal.component';
 
 const NODE_ID_PARAM = 'nodeId';
-const LINK_TO_FOLDER_ACTION = 'linkToFolder';
-const LINK_TO_NODE_ACTION = 'linkToNode';
-const COPY_ACTION = 'copy';
+const OPERATION_FOREGROUND_TIME_MS = 2_0000;
+
+enum Action {
+    LINK_TO_FOLDER = 'linkToFolder',
+    LINK_TO_NODE = 'linkToNode',
+    COPY = 'copy',
+    LOCALIZE = 'localize',
+    UNLOCALIZE = 'unlocalize',
+}
+
 
 @Component({
     selector: 'gtx-template-master',
@@ -58,10 +66,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         protected nodeOperations: NodeOperations,
         protected modalService: ModalService,
         protected loader: TemplateTableLoaderService,
+        protected operations: TemplateOperations,
         protected i18n: I18nService,
         protected notification: I18nNotificationService,
         protected permissions: PermissionsService,
-        protected templateTableLoader: TemplateTableLoaderService,
         protected errorHandler: ErrorHandler,
         protected copyTemplateComponent: CopyTemplateService,
     ) {
@@ -98,7 +106,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         this.actions = [
             {
-                id: COPY_ACTION,
+                id: Action.COPY,
                 icon: 'content_copy',
                 label: this.i18n.instant('shared.copy'),
                 type: 'secondary',
@@ -107,7 +115,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
             {
-                id: LINK_TO_NODE_ACTION,
+                id: Action.LINK_TO_NODE,
                 icon: 'device_hub',
                 label: this.i18n.instant('template.assign_to_nodes'),
                 type: 'primary',
@@ -116,11 +124,29 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
             {
-                id: LINK_TO_FOLDER_ACTION,
+                id: Action.LINK_TO_FOLDER,
                 icon: 'folder',
                 label: this.i18n.instant('template.assign_to_folders'),
                 type: 'secondary',
                 enabled: (template) => template == null || template[BO_PERMISSIONS].includes(GcmsPermission.EDIT),
+                multiple: true,
+                single: true,
+            },
+            {
+                id: Action.LOCALIZE,
+                icon: 'download',
+                label: this.i18n.instant('template.localize'),
+                type: 'secondary',
+                enabled: _template => this.activeNode?.masterNodeId !== this.activeNode?.id,
+                multiple: true,
+                single: true,
+            },
+            {
+                id: Action.UNLOCALIZE,
+                icon: 'upload',
+                label: this.i18n.instant('template.unlocalize'),
+                type: 'secondary',
+                enabled: _template => this.activeNode?.masterNodeId !== this.activeNode?.id,
                 multiple: true,
                 single: true,
             },
@@ -159,17 +185,25 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 .map(template => this.loader.mapToBusinessObject(template));
         }
 
-        switch (event.actionId) {
-            case COPY_ACTION:
+        switch (event.actionId as Action) {
+            case Action.COPY:
                 this.copyTemplate(event.item);
                 return;
 
-            case LINK_TO_FOLDER_ACTION:
+            case Action.LINK_TO_FOLDER:
                 this.linkTemplatesToFolders(getTemplates());
                 return;
 
-            case LINK_TO_NODE_ACTION:
+            case Action.LINK_TO_NODE:
                 this.linkTemplatesToNodes(getTemplates());
+                return;
+
+            case Action.LOCALIZE:
+                this.localizeTemplate(getTemplates());
+                return;
+
+            case Action.UNLOCALIZE:
+                this.unlocalizeTemplate(getTemplates());
                 return;
         }
     }
@@ -209,8 +243,8 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         const created = await this.copyTemplateComponent.createCopy(this.activeNode, loadedTemplate);
 
         if (created) {
-            this.templateTableLoader.reload();
-            this.navigateToEntityDetails({ item: created as any, id: `${created.id}` });
+            this.loader.reload();
+            this.navigateToEntityDetails({ item: created, id: `${created?.id as string}` });
         }
     }
 
@@ -307,4 +341,61 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         await dialog.open();
     }
+
+    protected localizeTemplate(templates: TemplateBO[]): void {
+        if (!this.isChannel()) {
+            return;
+        }
+
+        const channelId = this.activeNode.id;
+        const foregroundTime = 2_0000;
+
+        templates.forEach(template => {
+            this.operations.localizeTemplate(template.id, {
+                channelId,
+                foregroundTime,
+            }).toPromise().then(_success => {
+                this.notification.show({
+                    type: 'success',
+                    message: 'template.localize_success',
+                    translationParams: {
+                        templateName: template.name,
+                    },
+                });
+            })
+        });
+    }
+
+    protected unlocalizeTemplate(templates: TemplateBO[]): void {
+        if (!this.isChannel()) {
+            return;
+        }
+
+        const channelId = this.activeNode.id;
+
+        templates.forEach(template => {
+            this.operations.unlocalizeTemplate(template.id, {
+                channelId,
+                foregroundTime: OPERATION_FOREGROUND_TIME_MS,
+            }).toPromise().then(_success => {
+                this.notification.show({
+                    type: 'success',
+                    message: 'template.unlocalize_success',
+                    translationParams: {
+                        templateName: template.name,
+                    },
+                });
+            })
+        });
+    }
+
+    private isChannel(): boolean {
+        if (this.activeNode?.masterNodeId === this.activeNode?.id) {
+            return false;
+        }
+
+        return true;
+    }
+
+
 }

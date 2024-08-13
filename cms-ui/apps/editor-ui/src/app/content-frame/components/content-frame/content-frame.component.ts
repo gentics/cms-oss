@@ -169,7 +169,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editorState$: Observable<EditorState>;
     propertiesTab$: Observable<EditorTab>;
     openPropertiesTab: PropertiesTab;
-    requesting: boolean;
     alohaReady = false;
     alohaWindowLoaded = false;
     windowLoaded = false;
@@ -341,11 +340,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isInherited$ = this.activeNode$
             .pipe(map(activeNode => activeNode && activeNode.inheritedFromId !== activeNode.id));
 
-        const requestingSubscription = this.iframeManager.requesting$.subscribe(val => {
-            this.requesting = val;
-            this.changeDetector.markForCheck();
-        });
-        this.subscriptions.push(requestingSubscription);
         this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
             this.alohaReady = ready;
             this.changeDetector.markForCheck();

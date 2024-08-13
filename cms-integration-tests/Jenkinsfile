@@ -101,19 +101,15 @@ spec:
 
                 script {
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                        sh "ls -lah"
                         dir(path: 'cms-integration-tests') {
-                            sh "pwd"
-                            sh "ls -lah"
-
                             try {
                                 // prior to starting the tests, start the docker containers with CMS
                                 sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
 
                                 if (params.variant == 'EE') {
-                                    sh "docker compose -f docker-compose.ee.yml up -d --wait"
+                                    sh "docker compose -f docker-compose.ee.yml up -d --wait --quiet-pull"
                                 } else {
-                                    sh "docker compose up -d --wait"
+                                    sh "docker compose up -d --wait --quiet-pull"
                                 }
 
                                 sh "docker compose ps"
@@ -131,10 +127,10 @@ spec:
             post {
                 always {
                     script {
-                        stash name: "cms-ui-integration_${params.variant}_${params.cmsVersion}", includes: ".reports/**/CYPRESS-e2e-report.xml"
+                        stash name: "cms-ui-integration_${CMS_VARIANT}_${CI_CMS_VERSION}", includes: ".reports/**/CYPRESS-e2e-report.xml"
                     }
                 }
             }
-		}
+        }
     }
 }

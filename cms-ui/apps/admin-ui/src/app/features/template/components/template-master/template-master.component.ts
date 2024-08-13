@@ -21,14 +21,14 @@ import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Raw, Template } from '@gentics/cms-models';
+import { AnyModelType, GcmsPermission, LocalizeRequest, Node, NormalizableEntityTypesMap, Raw, Response, Template, UnlocalizeRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService, TableAction, TableActionClickEvent, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 import { AssignTemplatesToNodesModalComponent } from '../assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
-import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
 import { CreateTemplateModalComponent } from '../create-template-modal/create-template-modal.component';
 
 const NODE_ID_PARAM = 'nodeId';
@@ -343,44 +343,34 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     protected localizeTemplate(templates: TemplateBO[]): void {
-        if (!this.isChannel()) {
-            return;
-        }
-
-        const channelId = this.activeNode.id;
-        const foregroundTime = 2_0000;
-
-        templates.forEach(template => {
-            this.operations.localizeTemplate(template.id, {
-                channelId,
-                foregroundTime,
-            }).toPromise().then(_success => {
-                this.notification.show({
-                    type: 'success',
-                    message: 'template.localize_success',
-                    translationParams: {
-                        templateName: template.name,
-                    },
-                });
-            })
-        });
+        this.executeTemplateOperation(templates,
+            (templateId, options) => this.operations.localizeTemplate(templateId, options), 'template.localize_success');
     }
 
     protected unlocalizeTemplate(templates: TemplateBO[]): void {
+        this.executeTemplateOperation(templates,
+            (templateId, options) => this.operations.unlocalizeTemplate(templateId, options), 'template.unlocalize_success');
+    }
+
+
+    private executeTemplateOperation(
+        templates: TemplateBO[],
+        operation: (id: number, options: LocalizeRequest | UnlocalizeRequest) => Observable<Response>,
+        i18nMessage: string,
+    ): void {
         if (!this.isChannel()) {
             return;
         }
-
         const channelId = this.activeNode.id;
 
         templates.forEach(template => {
-            this.operations.unlocalizeTemplate(template.id, {
+            operation(template.id, {
                 channelId,
                 foregroundTime: OPERATION_FOREGROUND_TIME_MS,
             }).toPromise().then(_success => {
                 this.notification.show({
                     type: 'success',
-                    message: 'template.unlocalize_success',
+                    message: i18nMessage,
                     translationParams: {
                         templateName: template.name,
                     },
@@ -388,6 +378,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             })
         });
     }
+
 
     private isChannel(): boolean {
         if (this.activeNode?.masterNodeId === this.activeNode?.id) {

@@ -102,14 +102,19 @@ spec:
                 script {
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
-                            sh "cd cms-integration-tests"
                             // prior to starting the tests, start the docker containers with CMS
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
+
+                            sh "cd cms-integration-tests"
+                            sh "pwd"
+
                             if (params.variant == 'EE') {
                                 sh "docker compose -f docker-compose.ee.yml up -d --wait"
                             } else {
                                 sh "docker compose up -d --wait"
                             }
+
+                            sh "docker compose ps"
 
                             sh "./integration-test/run-tests.sh"
                         } finally {

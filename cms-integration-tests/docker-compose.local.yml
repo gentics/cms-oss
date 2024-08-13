@@ -16,14 +16,15 @@ services:
 
   app:
     build:
-      dockerfile: ./cms-integration-tests/Dockerfile
+      dockerfile: ./cms-integration-tests/local.Dockerfile
       context: ../
-    volumes:
-      # - ../cms-ui/:/opt/app/
-      - ./integration-test:/opt/app/integration-test
+    entrypoint: "npm ci --no-fund --no-audit && npm run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --parallel=false --output-style=static --verbose"
+
     environment:
       CMS_VARIANT: OSS
-    # entrypoint: "integration-test/run-tests.sh"
+
+    network_mode: host
+
     depends_on:
       cms:
         condition: service_healthy

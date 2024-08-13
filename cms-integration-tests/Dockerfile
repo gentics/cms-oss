@@ -27,9 +27,9 @@ RUN apt-get -y install \
 
 # "fake" dbus address to prevent errors
 # https://github.com/SeleniumHQ/docker-selenium/issues/87
-# ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
+ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
 # Set the image as a proper "CI" image for cypress
-# ENV CI=1
+ENV CI=1
 # Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
 ENV XDG_CACHE_HOME "/tmp"
 # Disable mesa cache entirely
@@ -38,10 +38,8 @@ ENV MESA_SHADER_CACHE_DISABLE "true"
 # Mount the required modules
 RUN mkdir /opt/app
 VOLUME /opt/app
-# COPY ./cms-ui /opt/app
 
 WORKDIR /opt/app
-# RUN npm ci
 
 # Make the image simply execute bash for jenkins to execute the own stuff later on
 CMD /bin/bash

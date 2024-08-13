@@ -100,7 +100,7 @@ spec:
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                    sh "cd cms-ui"
+                    sh "cd cms-integration-tests"
 
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
@@ -112,10 +112,6 @@ spec:
                                 sh "docker compose up -d"
                             }
 
-                            // Install the dependencies for the apps/tests
-                            sh "npm ci --no-fund --no-audit"
-
-                            // Execute the tests
                             sh "./integration-test/run-tests.sh"
                         } finally {
                             // finally stop the docker containers

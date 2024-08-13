@@ -101,21 +101,24 @@ spec:
 
                 script {
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                        dir(path: 'cms-integration-tests') {
-                            try {
-                                // prior to starting the tests, start the docker containers with CMS
-                                sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
+                        try {
+                            // prior to starting the tests, start the docker containers with CMS
+                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
 
+                            dir(path: 'cms-integration-tests') {
                                 if (params.variant == 'EE') {
                                     sh "docker compose -f docker-compose.ee.yml up -d --wait --quiet-pull"
                                 } else {
                                     sh "docker compose up -d --wait --quiet-pull"
                                 }
+                            }
 
-                                sh "docker compose ps"
-
-                                sh "./integration-test/run-tests.sh"
-                            } finally {
+                            dir(path: 'cms-ui') {
+                                sh "npm ci --no-fund --no-audit"
+                                sh "npm run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --parallel=false --output-style=static"
+                            }
+                        } finally {
+                            dir(path: 'cms-integration-tests') {
                                 // finally stop the docker containers
                                 sh "docker compose down"
                             }
@@ -127,7 +130,7 @@ spec:
             post {
                 always {
                     script {
-                        stash name: "cms-ui-integration_${CMS_VARIANT}_${CI_CMS_VERSION}", includes: ".reports/**/CYPRESS-e2e-report.xml"
+                        stash name: "cms-ui-integration_${params.variant}_${params.cmsVersion}", includes: ".reports/**/CYPRESS-e2e-report.xml"
                     }
                 }
             }

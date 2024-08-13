@@ -1,0 +1,5 @@
+# Only include the most basic features here.
+# All others should be enabled dynamically from the tests.
+feature:
+  devtools: true
+  mesh_contentrepository: true

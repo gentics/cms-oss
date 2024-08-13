@@ -14,6 +14,7 @@ services:
       file: docker-compose.yml
       service: cms
     image: docker.apa-it.at/gentics/cms:${CI_CMS_VERION:-6.1.6}
+
     depends_on:
       mariadb:
         condition: service_healthy
@@ -24,7 +25,36 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
-    command: start-dev
+    command: start-dev --import-realm
+    ports:
+      - 8180:8080
+
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_PASSWORD: admin
+
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: mariadb
+      KC_DB_URL: jdbc:mariadb://mariadb/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+
+    volumes:
+      - ./integration-test/keycloak:/opt/keycloak/data/import
+    
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    healthcheck:
+      # Really stupid health check because the keycloak image doesn't contain curl nor wget
+      # https://stackoverflow.com/a/78229437
+      test: [
+        "CMD-SHELL",
+        'exec 3<>/dev/tcp/localhost/8080; echo -e "GET /health/ready HTTP/1.1\nhost: localhost:8080\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$?; exec 3<&-; exec 3>&-; exit $ERROR'
+      ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      start_interval: 10s

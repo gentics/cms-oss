@@ -105,7 +105,9 @@ spec:
                             // prior to starting the tests, start the docker containers with CMS
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
 
+                            sh "ls -lah"
                             sh "cd cms-integration-tests"
+                            sh "ls -lah"
                             sh "pwd"
 
                             if (params.variant == 'EE') {

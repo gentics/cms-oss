@@ -375,7 +375,11 @@ spec:
         stage("UI Integration Tests") {
 			when {
 				expression {
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
+					return env.BUILD_SKIPPED != "true"
+                        // Needs built docker images to be deployed (as they are used in another job)
+                        && params.runDockerBuild && (params.deploy || params.deployTesting)
+                        // And only if the tests should be performed as well
+                        && params.integrationTests
 				}
 			}
             

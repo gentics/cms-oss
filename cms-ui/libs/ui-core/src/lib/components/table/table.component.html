@@ -51,7 +51,7 @@
                 [type]="action.type"
                 (click)="handleMultiActionClick(action)"
             >
-                <icon>{{ action.icon }}</icon>
+                <icon [class.hollow]="action.iconHollow">{{ action.icon }}</icon>
             </gtx-button>
         </div>
     </div>
@@ -166,7 +166,7 @@
                 [type]="action.type || 'secondary'"
                 (click)="handleSingleActionClick(action, row)"
             >
-                <icon>{{ action.icon }}</icon>
+                <icon [class.hollow]="action.iconHollow">{{ action.icon }}</icon>
             </gtx-button>
         </div>
     </div>

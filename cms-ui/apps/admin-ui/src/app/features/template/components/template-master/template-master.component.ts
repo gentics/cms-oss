@@ -21,7 +21,18 @@ import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { AnyModelType, GcmsPermission, LocalizeRequest, Node, NormalizableEntityTypesMap, Raw, Response, Template, UnlocalizeRequest } from '@gentics/cms-models';
+import {
+    AnyModelType,
+    Feature,
+    GcmsPermission,
+    LocalizeRequest,
+    Node,
+    NormalizableEntityTypesMap,
+    Raw,
+    Response,
+    Template,
+    UnlocalizeRequest,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService, TableAction, TableActionClickEvent, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
@@ -108,6 +119,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             {
                 id: Action.COPY,
                 icon: 'content_copy',
+                iconHollow: true,
                 label: this.i18n.instant('shared.copy'),
                 type: 'secondary',
                 enabled: (template) => template[BO_PERMISSIONS].includes(GcmsPermission.EDIT),
@@ -132,25 +144,28 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 multiple: true,
                 single: true,
             },
-            {
+        ];
+
+        if (this.appState.now.features.global[Feature.MULTICHANNELLING]) {
+            this.actions.push({
                 id: Action.LOCALIZE,
-                icon: 'download',
+                icon: 'insert_drive_file',
                 label: this.i18n.instant('template.localize'),
                 type: 'secondary',
-                enabled: _template => this.activeNode?.masterNodeId !== this.activeNode?.id,
+                enabled: template => template == null || (template.inherited),
                 multiple: true,
                 single: true,
             },
             {
                 id: Action.UNLOCALIZE,
-                icon: 'upload',
+                icon: 'restore_page',
                 label: this.i18n.instant('template.unlocalize'),
-                type: 'secondary',
-                enabled: _template => this.activeNode?.masterNodeId !== this.activeNode?.id,
+                type: 'warning',
+                enabled: template => template == null || (!template.inherited && !template.master),
                 multiple: true,
                 single: true,
-            },
-        ];
+            })
+        }
     }
 
     public handleNodeSelect(row: TableRow<NodeBO>): void {
@@ -343,12 +358,12 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     protected localizeTemplate(templates: TemplateBO[]): void {
-        this.executeTemplateOperation(templates,
+        this.executeTemplateOperation(templates.filter(template => template.inherited),
             (templateId, options) => this.operations.localizeTemplate(templateId, options), 'template.localize_success');
     }
 
     protected unlocalizeTemplate(templates: TemplateBO[]): void {
-        this.executeTemplateOperation(templates,
+        this.executeTemplateOperation(templates.filter(template => !template.inherited && !template.master),
             (templateId, options) => this.operations.unlocalizeTemplate(templateId, options), 'template.unlocalize_success');
     }
 
@@ -363,19 +378,24 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
         const channelId = this.activeNode.id;
 
-        templates.forEach(template => {
-            operation(template.id, {
-                channelId,
-                foregroundTime: OPERATION_FOREGROUND_TIME_MS,
-            }).toPromise().then(_success => {
-                this.notification.show({
-                    type: 'success',
-                    message: i18nMessage,
-                    translationParams: {
-                        templateName: template.name,
-                    },
-                });
-            })
+        Promise.all(
+            templates.map(template => {
+                return operation(template.id, {
+                    channelId,
+                    foregroundTime: OPERATION_FOREGROUND_TIME_MS,
+                }).toPromise().then(_success => {
+                    this.notification.show({
+                        type: 'success',
+                        message: i18nMessage,
+                        translationParams: {
+                            templateName: template.name,
+                        },
+                    });
+                })
+            }),
+        ).then(_success => {
+            this.selected = [];
+            this.loader.reload();
         });
     }
 

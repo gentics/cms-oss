@@ -383,14 +383,15 @@ spec:
             
             steps {
                 script {
-                    def testJob = build job: 'cms-ui-integration-tests/' + branchName,
+                    def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
                         parameters: [
-                            choice(name: 'variant', value: 'OSS'),
+                            string(name: 'variant', value: 'OSS'),
                             string(name: 'cmsVerison', value: tagName != null ? tagName : branchName),
                             // TODO: Get Mesh Version from POM?
-                            string(name: 'meshVersion', value: '2.1.0')
+                            // stringParam(name: 'meshVersion', value: '2.1.0')
                         ],
                         wait: true
+                    )
 
                     if ( testJob.getBuildVariables()["BUILD_SKIPPED"] == "true" ) {
                         echo "Integration Tests finished with an error"

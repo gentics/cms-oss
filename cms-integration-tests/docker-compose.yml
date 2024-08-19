@@ -69,7 +69,6 @@ services:
     volumes:
       - ./integration-test/cms/commands:/cms/scheduler-commands
       - ./integration-test/cms/conf:/cms/conf/cms
-      - ./integration-test/cms/ui-conf:/cms/ui-conf
       - ./integration-test/cms/packages:/cms/packages
 
     healthcheck:

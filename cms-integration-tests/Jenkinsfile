@@ -91,9 +91,9 @@ spec:
             }
 
             environment {
-                CMS_VARIANT = params.variant
-                CI_CMS_VERSION = params.cmsVersion
-                CI_MESH_VERSION = params.meshVersion
+                CMS_VARIANT = "${params.variant}"
+                CI_CMS_VERSION = "${params.cmsVersion}"
+                CI_MESH_VERSION = "${params.meshVersion}"
             }
 
             steps {

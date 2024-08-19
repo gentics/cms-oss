@@ -180,6 +180,8 @@ async function initKeycloak(keycloak: Keycloak, onLoad: 'check-sso' | 'login-req
             onLoad: onLoad,
             responseMode: 'fragment',
             checkLoginIframe: false,
+            enableLogging: true,
+            useNonce: false,
         });
         console.log('Keycloak login successful', keycloak);
     } catch (error) {

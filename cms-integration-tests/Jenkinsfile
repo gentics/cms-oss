@@ -104,7 +104,7 @@ spec:
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
                         withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
                             withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
-                                withCredentials([ credentialsId: 'cms-ui-integration-tests.licensekey', variable: 'CI_LICENSEKEY' ]) {
+                                withCredentials([ string(credentialsId: 'cms-ui-integration-tests.licensekey', variable: 'CI_LICENSEKEY') ]) {
                                     try {
                                         dir(path: 'cms-integration-tests') {
                                             if (params.variant == 'EE') {

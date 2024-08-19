@@ -4,16 +4,12 @@ import { IndexByKey } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Hotkey, HotkeysService } from 'angular2-hotkeys';
-import * as domSerialize from 'dom-serialize';
 import { Observable, of as observableOf, throwError, zip } from 'rxjs';
-import { catchError, map, take, takeUntil, timeout } from 'rxjs/operators';
-import * as serialize from 'serialize-to-js';
-import * as StackTrace from 'stacktrace-js';
+import { catchError, map, take, timeout } from 'rxjs/operators';
 import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base';
 import { DebugToolModalComponent } from '../../components/debug-tool-modal/debug-tool-modal.component';
 import { ErrorHandler as CMSErrorHandler } from '../error-handler';
 import { I18nService } from '../i18n';
-import { TraceErrorHandler } from '../trace-error-handler/trace-error-handler';
 
 /**
  * This service is responsible for listening to the Debug Tool hotkey, which is CTRL+ALT+G then CTRL+ALT+D.
@@ -43,8 +39,6 @@ export class DebugToolService extends InitializableServiceBase {
     static hotkey = ['ctrl+alt+g'];
 
     private debugDataSnapshot: any = {};
-    private collectedErrors: any = [];
-    private collectedCmsErrors: any = [];
 
     /**
      * Only one Debug Tool modal can be opened at a time, so this object property will return
@@ -69,18 +63,6 @@ export class DebugToolService extends InitializableServiceBase {
      * Initializes the DebugToolService.
      */
     protected onServiceInit(): void {
-        this.cmsErrorHandler.caughtErrors$.pipe(
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(errorList => {
-            this.collectedCmsErrors = errorList;
-        });
-
-        TraceErrorHandler.collectErrors$.pipe(
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(error => {
-            this.collectedErrors.push(error);
-        });
-
         this.hotkeysService.add(new Hotkey(DebugToolService.hotkey, (event: KeyboardEvent): boolean => {
             if (event.preventDefault) {
                 event.preventDefault();
@@ -111,7 +93,7 @@ export class DebugToolService extends InitializableServiceBase {
             localStorage: this.debug_localStorage,
             sessionStorage: this.debug_sessionStorage,
             appState: this.debug_appState,
-            dom: this.debug_dom,
+            dom: null,
             scripts: this.debug_loadedScripts,
             styles: this.debug_loadedStyles,
         };
@@ -195,14 +177,6 @@ export class DebugToolService extends InitializableServiceBase {
         let apiData: any;
         const apiDataPromise = this.requestApiData();
         const traceCmsPromises: Promise<any>[] = [];
-        const tracedCmsErrors: any = [];
-
-        // Build stack from CMS Errors
-        this.collectedCmsErrors.forEach((error: any) => {
-            traceCmsPromises.push(StackTrace.fromError(error, { offline: true }).then((trace) => {
-                tracedCmsErrors.push({error, trace});
-            }));
-        });
 
         // Load API Data
         apiDataPromise.then( result => apiData = result );
@@ -212,8 +186,8 @@ export class DebugToolService extends InitializableServiceBase {
             Promise.resolve({
                 ...this.debugDataSnapshot,
                 apiData,
-                errors: serialize([...this.collectedErrors]),
-                cmsErrors: serialize([...tracedCmsErrors]),
+                errors: [],
+                cmsErrors: [],
             }),
         );
 
@@ -331,10 +305,6 @@ export class DebugToolService extends InitializableServiceBase {
 
     get debug_appState(): any {
         return this.appState.now;
-    }
-
-    get debug_dom(): any {
-        return domSerialize(window.document);
     }
 
     get debug_platform(): any {

@@ -383,13 +383,15 @@ spec:
             
             steps {
                 script {
-                    def integrationCmsVersion = tagName != null ? tagName : branchName;
+                    def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
+                    echo "CMS Version: ${integrationCmsVersion}, tag: ${tagName}, Branch: ${branchName}"
+
                     def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
                         parameters: [
                             string(name: 'variant', value: 'OSS'),
-                            string(name: 'cmsVerison', value: integrationCmsVersion),
+                            string(name: 'cmsVerison', value: branchName),
                             // TODO: Get Mesh Version from POM?
-                            // stringParam(name: 'meshVersion', value: '2.1.0')
+                            // string(name: 'meshVersion', value: '2.1.0')
                         ],
                         wait: true
                     )

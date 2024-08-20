@@ -80,6 +80,7 @@ spec:
         booleanParam(name: 'checkGitCommit',            defaultValue: false, description: 'If set to true, the current git revision is compared with the git revision of the last successful build. If they are equal, the build is skipped and env.BUILD_SKIPPED is set to true')
         booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. Tests will be skipped for MR builds if there are no relevant changes.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
+        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
         booleanParam(name: 'deployTesting',             defaultValue: false, description: "Like deploy, but only the server image will be built and deployed to a different repository")
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
@@ -341,6 +342,46 @@ spec:
                             sh "docker push ${imageNameWithTag}"
                         }
                     }
+                }
+            }
+		}
+
+        stage("UI Integration Tests") {
+			when {
+				expression {
+                    // Needs built docker images to be deployed (as they are used in another job)
+                    // And only if the tests should be performed as well
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && (params.deploy || params.deployTesting) && params.integrationTests
+				}
+			}
+            
+            steps {
+                script {
+                    def integrationCmsVersion = tagName != null ? tagName : branchName;
+                    def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
+                        parameters: [
+                            string(name: 'variant', value: 'EE'),
+                            string(name: 'cmsVerison', value: integrationCmsVersion),
+                            // TODO: Get Mesh Version from POM?
+                            // stringParam(name: 'meshVersion', value: '2.1.0')
+                        ],
+                        wait: true
+                    )
+
+                    if ( testJob.getBuildVariables()["BUILD_SKIPPED"] == "true" ) {
+                        echo "Integration Tests finished with an error"
+                    } else {
+                        echo "Integration Tests finished successfully"
+                    }
+                }
+            }
+
+            post {
+                always {
+                    // Unstash results from the tests
+                    unstash "cms-ui-integration_EE_${integrationCmsVersion}"
+                    // Add the unstashed results if available
+                    junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                 }
             }
 		}

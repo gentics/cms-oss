@@ -5,12 +5,37 @@ describe('Content Repository', () => {
     const IMPORTER = new EntityImporter();
     const CR_NAME = 'Mesh CR';
 
-    beforeEach(async () => {
+    before(async () => {
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    });
+
+    beforeEach(() => {
+        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+        IMPORTER.client = null;
+        cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
 
         cy.navigateToApp();
         cy.login(true);
+
+        cy.intercept({
+            pathname: '/rest/admin/features/*',
+        }).as('featureChecks');
+        cy.intercept({
+            pathname: '/rest/perm/contentadmin',
+        }).as('permChecks');
+        cy.intercept({
+            method: 'GET',
+            pathname: '/rest/contentrepositories',
+        }).as('listLoad');
+
+        // Wait for all features and permissions to load
+        cy.wait('@featureChecks');
+        cy.wait('@permChecks');
+
         cy.get('gtx-dashboard-item[data-id="content-repositories"]').click();
+
+        // Wait for the table to finish loading
+        cy.wait('@listLoad');
     });
 
     it('should have content repositories listed', () => {
@@ -147,7 +172,7 @@ describe('Content Repository', () => {
         });
 
         // TODO: Fix this test, as password change has been changed
-        xit('should be possible to update the CR login information', () => {
+        it.skip('should be possible to update the CR login information', () => {
             cy.fixture('auth.json').then(auth => {
                 cy.get('.cr-login-button').click();
                 cy.get('.management-container').should('exist');

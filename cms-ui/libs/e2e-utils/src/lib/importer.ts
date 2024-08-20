@@ -47,7 +47,7 @@ import {
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
 } from './entities';
-import { getFeatures, getItem, getNodeFeatures } from './utils';
+import { getItem } from './utils';
 
 export interface ImporterOptions {
     logRequests?: boolean;
@@ -110,11 +110,7 @@ export class EntityImporter {
             this.client = await createClient({ log: this.options?.logRequests });
         }
 
-        // First import all dev-tool packages from the FS
-        const devtoolPackages = PACKAGE_IMPORTS[size] || [];
-        for (const devtoolPkg of devtoolPackages) {
-            await this.client.devTools.syncFromFileSystem(devtoolPkg).send();
-        }
+        await this.syncTestPackages(size);
 
         this.templates = await this.getTemplateMapping();
         this.languages = await this.getLanguageMapping();
@@ -157,21 +153,52 @@ export class EntityImporter {
         }
     }
 
+    /** Setup global features */
+    public async setupFeatures(features: Partial<Record<Feature, boolean>>): Promise<void>;
+    /** Setup node features for the nodes in the specified TestSize, and global features */
     public async setupFeatures(
         size: TestSize,
         features: Partial<Record<Feature | NodeFeature, boolean>>,
+    ): Promise<void>;
+    /** Setup global features; or node and global features with a reference to a TestSize. */
+    public async setupFeatures(
+        sizeOrGlobalFeatures: TestSize | Partial<Record<Feature, boolean>>,
+        features?: Partial<Record<Feature | NodeFeature, boolean>>,
     ): Promise<void> {
+        // Safety check
+        if (sizeOrGlobalFeatures == null) {
+            return;
+        }
+
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        let size: TestSize;
+        let nodeIds: number[] = [];
+
+        if (typeof sizeOrGlobalFeatures === 'object') {
+            features = sizeOrGlobalFeatures;
+        }
+
         // Reset to initial config
         await this.client.admin.reloadConfiguration().send();
 
-        // Get all the required node-ids from the package
-        const nodeIds: number[] = PACKAGE_MAP[size]
-            .map(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE ? (this.get(data as NodeImportData))?.id : null)
-            .filter(id => id != null);
+        // Get all the required node-ids from the package, if present
+        if (size) {
+            nodeIds = PACKAGE_MAP[size]
+                .map(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE ? (this.get(data as NodeImportData))?.id : null)
+                .filter(id => id != null);
+        }
 
         for (const entry of Object.entries(features || {})) {
             const [feature, enabled] = entry;
             if (Feature[feature]) {
+                // if (enabled) {
+                //     this.client.executeMappedJsonRequest(RequestMethod.PUT, `/features/${feature}`)
+                // } else {
+                //     this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/features/${feature}`);
+                // }
                 // TODO: Update the features when the endpoints are available
                 // Don't add the endpoints to the client, as they are ment for testing only.
                 continue;
@@ -187,6 +214,26 @@ export class EntityImporter {
         }
     }
 
+    public async syncPackages(size: TestSize): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        await this.syncTestPackages(size);
+    }
+
+    private async syncTestPackages(size: TestSize): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        // First import all dev-tool packages from the FS
+        const devtoolPackages = PACKAGE_IMPORTS[size] || [];
+        for (const devtoolPkg of devtoolPackages) {
+            await this.client.devTools.syncFromFileSystem(devtoolPkg).send();
+        }
+    }
+
     public get(data: NodeImportData): Node | null;
     public get(data: FolderImportData): Folder | null;
     public get(data: PageImportData): Page | null;
@@ -196,15 +243,6 @@ export class EntityImporter {
     public get(data: UserImportData): User | null;
     public get(data: ImportData | string): any {
         return getItem(data as any, this.entityMap);
-    }
-
-    private async setNodeFeatures(
-        nodeId: number | string,
-        features: NodeFeature[],
-    ): Promise<void> {
-        for (const feature of features) {
-            await this.client.node.activateFeature(nodeId, feature).send();
-        }
     }
 
     private async importNode(

@@ -70,24 +70,6 @@ export class CypressDriver implements GCMSClientDriver {
         fn: (fullUrl: string) => Partial<Cypress.RequestOptions>,
         isBinary: boolean,
     ): GCMSRestClientRequest<T> {
-        let fullUrl = request.url;
-        if (request.params) {
-            const q = new URLSearchParams();
-
-            Object.entries(request.params).forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                    value.forEach(v => q.append(key, v));
-                } else {
-                    q.append(key, value);
-                }
-            });
-
-            const params = q.toString();
-            if (params) {
-                fullUrl += `?${params}`;
-            }
-        }
-
         let sentRequest: Promise<T> | null = null;
 
         const sendRequest = () => {
@@ -98,11 +80,12 @@ export class CypressDriver implements GCMSClientDriver {
             sentRequest = new Promise((resolve, reject) => {
                 cy.request({
                     log: this.log,
-                    url: fullUrl,
+                    url: request.url,
+                    qs: request.params,
                     method: request.method,
                     headers: request.headers,
                     failOnStatusCode: false,
-                    ...fn(fullUrl),
+                    ...fn(request.url),
                 }).then(res => {
                     let body = res.body;
                     let valid = res.isOkStatusCode;
@@ -122,7 +105,15 @@ export class CypressDriver implements GCMSClientDriver {
                             body = decoder.decode(body);
                             body = JSON.parse(body);
                         } else if (typeof body === 'string') {
-                            body = JSON.parse(body);
+                            try {
+                                body = JSON.parse(body);
+                            } catch (error) {
+                                valid = false;
+                                const err = createError(request, res);
+                                cy.log('Error while from the response body', error, body, err);
+                                reject(err);
+                                return Promise.resolve(body);
+                            }
                         }
 
                         try {

@@ -3,6 +3,8 @@
 feature:
   devtools: true
   mesh_contentrepository: true
-  keycloak: true
-  keycloak_signout: true
   forms: true
+
+  # Explicitly turn it off
+  keycloak: false
+  keycloak_signout: false

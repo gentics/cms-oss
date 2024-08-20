@@ -1,19 +1,32 @@
-import { Feature } from '@gentics/cms-models';
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 
-describe('Content Repository', () => {
+describe('Mesh Browser', () => {
 
     const CR_NAME = 'Mesh CR';
     const IMPORTER = new EntityImporter();
 
-    beforeEach(async () => {
+    before(async () => {
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [Feature.MESH_CR]: true,
-        });
+    });
+
+    beforeEach(() => {
+        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+        IMPORTER.client = null;
+        cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
 
         cy.navigateToApp();
         cy.login(true);
+
+        cy.intercept({
+            pathname: '/rest/admin/features/*',
+        }).as('featureChecks');
+        cy.intercept({
+            pathname: '/rest/perm/contentrepositoryadmin',
+        }).as('permChecks');
+
+        cy.wait('@featureChecks');
+        cy.wait('@permChecks');
+
         cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
     });
 

@@ -21,16 +21,15 @@ describe('No Nodes', () => {
     });
 
     describe('Display the "no-nodes" route when no nodes are present', () => {
+        const CLASS_ADMIN = 'admin';
+
         it('should display the correct error message for a regular user', () => {
             cy.navigateToApp();
             cy.login(`@${userAlpha[IMPORT_ID]}`);
 
             cy.get('gtx-no-nodes .error-container')
-                .should('exist');
-            cy.get('gtx-no-nodes .error-container .error-title')
-                // TODO: Find a way to get translations from the translations-files instead of copy-pasting them
-                // Makes this quite prone to error when translations change
-                .should('contain.text', 'Fehlende Berechtigungen');
+                .should('exist')
+                .should('not.have.class', CLASS_ADMIN);
         });
 
         it('should display the correct error message for a admin user with the admin-ui button', () => {
@@ -38,9 +37,8 @@ describe('No Nodes', () => {
             cy.login(AUTH_ADMIN);
 
             cy.get('gtx-no-nodes .error-container')
-                .should('exist');
-            cy.get('gtx-no-nodes .error-container .error-title')
-                .should('contain.text', 'Keine Nodes eingestellt');
+                .should('exist')
+                .should('have.class', CLASS_ADMIN);
             cy.get('gtx-no-nodes .admin-button-link')
                 .should('exist')
                 .should('have.attr', 'href');

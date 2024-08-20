@@ -28,6 +28,7 @@ export enum Feature {
      */
     PUB_DIR_SEGMENT = 'pub_dir_segment',
     USERSNAP = 'usersnap',
+    KEYCLOAK = 'keycloak',
     KEYCLOAK_SIGNOUT = 'keycloak_signout',
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
     CONTENT_STAGING = 'content_staging',

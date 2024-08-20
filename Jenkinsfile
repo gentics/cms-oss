@@ -384,8 +384,6 @@ spec:
             steps {
                 script {
                     def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
-                    echo "CMS Version: ${integrationCmsVersion}, tag: ${tagName}, Branch: ${branchName}"
-
                     def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
                         parameters: [
                             string(name: 'variant', value: 'OSS'),
@@ -401,15 +399,6 @@ spec:
                     } else {
                         echo "Integration Tests finished successfully"
                     }
-                }
-            }
-
-            post {
-                always {
-                    // Unstash results from the tests
-                    unstash "cms-ui-integration_OSS_${tagName != null ? tagName : branchName}"
-                    // Add the unstashed results if available
-                    junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                 }
             }
 		}

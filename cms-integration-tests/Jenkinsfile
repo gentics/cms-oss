@@ -130,11 +130,7 @@ spec:
             post {
                 always {
                     script {
-                        stash(
-                            name: "cms-ui-integration_${params.variant}_${params.cmsVersion}",
-                            includes: "cms-ui/.reports/**/CYPRESS-e2e-report.xml",
-                            allowEmpty: true
-                        )
+                        junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                     }
                 }
             }

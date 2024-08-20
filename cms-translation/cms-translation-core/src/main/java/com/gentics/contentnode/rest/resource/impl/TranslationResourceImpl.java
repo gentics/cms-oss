@@ -1,8 +1,6 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 
-import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
@@ -17,7 +15,6 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredFeature;
-import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.Tag.Type;
@@ -37,7 +34,6 @@ import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.i18n.CNI18nString;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -56,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 public class TranslationResourceImpl implements TranslationResource {
 
 	/**
-	 * The translation service used to translate tests
+	 * The translation service used to translate text
 	 */
 	private TranslationService translationService;
 
@@ -130,8 +126,10 @@ public class TranslationResourceImpl implements TranslationResource {
 							targetLanguageCode);
 					pageToTranslate.setName(translatedName);
 				} catch (TranslationException e) {
+					TransactionManager.getCurrentTransaction().rollback(false);
 					throw e;
 				} catch (Exception e) {
+					TransactionManager.getCurrentTransaction().rollback(false);
 					throw new NodeException(e);
 				}
 

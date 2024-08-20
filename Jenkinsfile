@@ -357,11 +357,11 @@ spec:
             
             steps {
                 script {
-                    def integrationCmsVersion = tagName != null ? tagName : branchName;
+                    def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
                     def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
                         parameters: [
                             string(name: 'variant', value: 'EE'),
-                            string(name: 'cmsVerison', value: integrationCmsVersion),
+                            string(name: 'cmsVersion', value: branchName),
                             // TODO: Get Mesh Version from POM?
                             // stringParam(name: 'meshVersion', value: '2.1.0')
                         ],
@@ -373,15 +373,6 @@ spec:
                     } else {
                         echo "Integration Tests finished successfully"
                     }
-                }
-            }
-
-            post {
-                always {
-                    // Unstash results from the tests
-                    unstash "cms-ui-integration_EE_${tagName != null ? tagName : branchName}"
-                    // Add the unstashed results if available
-                    junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                 }
             }
 		}

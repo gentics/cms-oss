@@ -108,12 +108,14 @@ class FormWriteTask extends AbstractWriteTask {
 	 * @param data form data
 	 * @param language language
 	 * @return completable
+	 * @throws NodeException 
 	 */
-	protected Completable publish(String data, String language) {
+	protected Completable publish(String data, String language) throws NodeException {
+		String renderedData = MeshPublisher.renderFormTextUrls(data, language);
 		return publisher.client.post(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), uuid),
-				new JsonObject(data)).toCompletable().doOnSubscribe(disp -> {
+				new JsonObject(renderedData)).toCompletable().doOnSubscribe(disp -> {
 					MeshPublisher.logger
-							.debug(String.format("Saving form %s, language %s, json: %s", uuid, language, data));
+							.debug(String.format("Saving form %s, language %s, json: %s", uuid, language, renderedData));
 				}).doOnComplete(() -> {
 					MeshPublisher.logger
 							.debug(String.format("Saved form %s, language %s", uuid, language));

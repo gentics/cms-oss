@@ -3,8 +3,11 @@ package com.gentics.contentnode.publish.cr;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
+import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
@@ -99,16 +102,27 @@ public class MeshURLRenderer implements TagmapEntryRenderer {
 			BiFunction<TagmapEntryRenderer, Object, Object> linkTransformer) throws NodeException {
 		StackResolvable renderedObject = renderType.getRenderedRootObject();
 
-		// render the URL for pages and files.
-		// do not include the node publish path, because this will be set as branch prefix in Mesh
-		if (renderedObject instanceof Page) {
-			Page page = (Page) renderedObject;
-			return String.format("%s%s", page.getFullPublishPath(true, false), page.getFilename());
-		} else if (renderedObject instanceof File) {
-			File file = (File) renderedObject;
-			return String.format("%s%s", file.getFullPublishPath(true, false), file.getFilename());
+		if (renderedObject instanceof Disinheritable) {
+			return renderDisinheritableUrl((Disinheritable<?>) renderedObject);
 		} else {
 			return "";
+		}
+	}
+
+	/**
+	 * 
+	 * 
+	 * @param renderedObject
+	 * @return
+	 * @throws NodeException
+	 */
+	public static final String renderDisinheritableUrl(Disinheritable<?> renderedObject) throws NodeException {
+		// render the URL for pages and files.
+		// do not include the node publish path, because this will be set as branch prefix in Mesh
+		if (renderedObject instanceof Page || renderedObject instanceof File) {
+			return String.format("%s%s", renderedObject.getFullPublishPath(true, false), renderedObject.getFilename());
+		} else {
+			return StringUtils.EMPTY;
 		}
 	}
 }

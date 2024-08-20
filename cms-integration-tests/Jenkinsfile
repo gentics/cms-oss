@@ -132,7 +132,7 @@ spec:
                     script {
                         stash(
                             name: "cms-ui-integration_${params.variant}_${params.cmsVersion}",
-                            includes: ".reports/**/CYPRESS-e2e-report.xml",
+                            includes: "cms-ui/.reports/**/CYPRESS-e2e-report.xml",
                             allowEmpty: true
                         )
                     }

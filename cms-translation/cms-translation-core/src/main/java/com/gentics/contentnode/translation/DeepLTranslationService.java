@@ -1,5 +1,6 @@
 package com.gentics.contentnode.translation;
 
+import com.deepl.api.AuthorizationException;
 import com.deepl.api.DeepLException;
 import com.deepl.api.QuotaExceededException;
 import com.deepl.api.TextResult;
@@ -70,12 +71,10 @@ public class DeepLTranslationService implements TranslationService {
 		try {
 			translatedText = translator.translateText(textToTranslate, sourceLanguage,
 					mappedTargetLanguage);
-		} catch (QuotaExceededException exception) {
-			CNI18nString errorMessage = new CNI18nString("feature.translation.error");
-			CNI18nString errorReason = new CNI18nString("feature.translation.error.reason.quota_exceeded");
-			errorMessage.addParameter(errorReason.toString());
+		} catch (DeepLException exception) {
+			var errorMessage = this.getErrorMessage(exception);
 			throw new TranslationException(errorMessage.toString());
-		} catch (DeepLException | InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new NodeException("Error occurred while translating text.", e);
 		}
 
@@ -84,6 +83,27 @@ public class DeepLTranslationService implements TranslationService {
 		}
 
 		return translatedText.getText();
+	}
+
+
+	/**
+	 * Generates an error message based on the type of DeepLException encountered.
+	 *
+	 * @param exception the DeepLException that was thrown
+	 * @return a CNI18nString containing the error message with a specific reason
+	 */
+	private CNI18nString getErrorMessage(DeepLException exception) {
+		var errorMessage = new CNI18nString("feature.translation.error");
+		CNI18nString errorReason = new CNI18nString("feature.translation.error.reason_generic");
+
+		if (exception instanceof QuotaExceededException) {
+			errorReason = new CNI18nString("feature.translation.error.reason.quota_exceeded");
+		} else if (exception instanceof AuthorizationException) {
+			errorReason = new CNI18nString("feature.translation.error.reason.auth_failure");
+		}
+		errorMessage.addParameter(errorReason.toString());
+
+		return errorMessage;
 	}
 
 	/**

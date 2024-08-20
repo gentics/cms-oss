@@ -116,7 +116,7 @@ public class TranslationResourceImplTest {
 					true, 0, 0);
 
 			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
-			final var expectedMessage = "Translated markup is invalid";
+			final var expectedMessage = "The page could not be translated because the markup of the translated page is invalid";
 			final var actualMessage = response.getResponseInfo().getResponseMessage();
 
 			assertThat(actualMessage).contains(expectedMessage);

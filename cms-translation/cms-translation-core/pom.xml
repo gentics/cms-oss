@@ -26,6 +26,13 @@
         <scope>import</scope>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>26.1.3</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -49,6 +56,10 @@
       <groupId>com.deepl.api</groupId>
       <artifactId>deepl-java</artifactId>
       <version>1.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-translate</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jsoup</groupId>

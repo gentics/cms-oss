@@ -1,4 +1,5 @@
 <gtx-contents-list-item
+    *ngIf="item != null"
     class="item-row icon-checkbox-trigger"
     [class.selected]="selected"
     [class.deleted]="isDeleted(item)"

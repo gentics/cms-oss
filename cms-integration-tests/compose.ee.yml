@@ -1,19 +1,19 @@
 services:
   mariadb:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: mariadb
 
   mesh:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: mesh
     environment:
       LICENSEKEY: "${CI_LICENSEKEY}"
 
   cms:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: cms
     image: docker.apa-it.at/gentics/cms:${CI_CMS_VERSION:-6.1.6}
 

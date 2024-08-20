@@ -1,17 +1,17 @@
 services:
   mariadb:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: mariadb
 
   mesh:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: mesh
 
   cms:
     extends:
-      file: docker-compose.yml
+      file: compose.yml
       service: cms
 
   app:

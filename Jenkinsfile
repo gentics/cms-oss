@@ -405,7 +405,7 @@ spec:
             post {
                 always {
                     // Unstash results from the tests
-                    unstash "cms-ui-integration_OSS_${integrationCmsVersion}"
+                    unstash "cms-ui-integration_OSS_${tagName != null ? tagName : branchName}"
                     // Add the unstashed results if available
                     junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
                 }

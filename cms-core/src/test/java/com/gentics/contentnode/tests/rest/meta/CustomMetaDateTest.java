@@ -253,12 +253,12 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 	 * Test sorting an overview by edate
 	 * @throws NodeException
 	 */
-	public void testSortOverviewByEDate(Class<T> classOfT, String expected) throws NodeException {
+	protected void testSortOverviewByEDate(Class<T> classOfT, String expected) throws NodeException {
 		List<R> restObjects = new ArrayList<>();
 		for (int time : Arrays.asList(100, 200, 300, 400)) {
-			R file = createMetaDated(time, Optional.of(req -> updateName(req, "EDate " + classOfT.getSimpleName() + " " + time)));
-			updateMetaDated(time, file.getId(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.ofNullable(time % 200 != 0 ? (1000 - time) : null));
-			restObjects.add(file);
+			R restObject = createMetaDated(time, Optional.of(req -> updateName(req, "EDate " + classOfT.getSimpleName() + " " + time)));
+			updateMetaDated(time, restObject.getId(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.ofNullable(time % 200 != 0 ? (1000 - time) : null));
+			restObjects.add(restObject);
 		}
 
 		Page overviewPage = createPage(1, null);
@@ -271,6 +271,40 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 				tagName.set(tag.getName());
 				fillOverview(tag, "ds", "[<node " + restObjects.get(0).getType().toString() + ".name>, <node " + restObjects.get(0).getType().toString() + ".edittimestamp>]", 
 						classOfT, Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_EDATE, Overview.ORDERWAY_ASC, false, nodeObjects);
+			});
+		}, overviewPage.getId());
+
+		String renderedOverview = execute(systemUser, id -> {
+			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
+					LinksType.frontend, false, false, false, 0);
+			assertResponseCodeOk(response);
+			return response.getContent();
+		}, overviewPage.getId());
+		assertThat(renderedOverview).as("Rendered Overview").isEqualTo(expected);
+	}
+
+	/**
+	 * Test sorting an overview by cdate
+	 * @throws NodeException
+	 */
+	protected void testSortOverviewByCDate(Class<T> classOfT, String expected) throws NodeException {
+		List<R> restObjects = new ArrayList<>();
+		for (int time : Arrays.asList(100, 200, 300, 400)) {
+			R restObject = createMetaDated(time, Optional.of(req -> updateName(req, "CDate " + classOfT.getSimpleName() + " " + time)));
+			updateMetaDated(time, restObject.getId(), Optional.empty(), Optional.empty(), Optional.ofNullable(time % 200 == 0 ? (1000 - time) : null), Optional.empty());
+			restObjects.add(restObject);
+		}
+
+		Page overviewPage = createPage(1, null);
+		AtomicReference<String> tagName = new AtomicReference<>();
+		consume(id -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			List<T> nodeObjects = t.getObjects(classOfT, restObjects.stream().map(ContentNodeItem::getId).collect(Collectors.toList()));
+			update(t.getObject(com.gentics.contentnode.object.Page.class, id), update -> {
+				ContentTag tag = update.getContent().addContentTag(overviewConstructId);
+				tagName.set(tag.getName());
+				fillOverview(tag, "ds", "[<node " + restObjects.get(0).getType().toString() + ".name>, <node " + restObjects.get(0).getType().toString() + ".creationtimestamp>]", classOfT, Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_CDATE,
+						Overview.ORDERWAY_ASC, false, nodeObjects);
 			});
 		}, overviewPage.getId());
 

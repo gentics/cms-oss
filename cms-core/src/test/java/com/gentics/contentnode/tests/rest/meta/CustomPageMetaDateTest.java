@@ -2,24 +2,14 @@ package com.gentics.contentnode.tests.rest.meta;
 
 import static com.gentics.contentnode.events.DependencyManager.createDependency;
 import static com.gentics.contentnode.events.Events.UPDATE;
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.publish.PublishQueue.getDirtedObjectIds;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.fillOverview;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -30,9 +20,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
@@ -51,41 +39,7 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 */
 	@Test
 	public void testSortOverviewByCDate() throws NodeException {
-		Set<Page> pages = new HashSet<>();
-		for (int time : Arrays.asList(100, 200, 300, 400)) {
-			Page page = createPage(time, req -> {
-				req.setPageName("CDate Page " + time);
-			});
-			updatePage(time, page.getId(), req -> {
-				if (time % 200 == 0) {
-					req.getPage().setCustomCdate((1000 - time));
-				}
-			});
-			publishPage(page.getId());
-			pages.add(page);
-		}
-
-		Page overviewPage = createPage(1, null);
-		AtomicReference<String> tagName = new AtomicReference<>();
-		consume(id -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			List<com.gentics.contentnode.object.Page> nodePages = t.getObjects(com.gentics.contentnode.object.Page.class,
-					pages.stream().map(Page::getId).collect(Collectors.toList()));
-			update(t.getObject(com.gentics.contentnode.object.Page.class, id), update -> {
-				ContentTag tag = update.getContent().addContentTag(overviewConstructId);
-				tagName.set(tag.getName());
-				fillOverview(tag, "ds", "[<node page.name>, <node page.creationtimestamp>]", com.gentics.contentnode.object.Page.class, Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_CDATE,
-						Overview.ORDERWAY_ASC, false, nodePages);
-			});
-		}, overviewPage.getId());
-
-		String renderedOverview = execute(systemUser, id -> {
-			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
-					LinksType.frontend, false, false, false, 0);
-			assertResponseCodeOk(response);
-			return response.getContent();
-		}, overviewPage.getId());
-		assertThat(renderedOverview).as("Rendered Overview").isEqualTo("[CDate Page 100, 100][CDate Page 300, 300][CDate Page 400, 600][CDate Page 200, 800]");
+		testSortOverviewByCDate(com.gentics.contentnode.object.Page.class, "[CDate Page 100, 100][CDate Page 300, 300][CDate Page 400, 600][CDate Page 200, 800]");
 	}
 
 	/**

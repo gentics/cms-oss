@@ -62,6 +62,14 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 		return file;
 	}
 
+	/**
+	 * Test sorting an overview by cdate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSortOverviewByCDate() throws NodeException {
+		testSortOverviewByCDate(com.gentics.contentnode.object.ImageFile.class, "[CDate-ImageFile-100.jpeg, 100][CDate-ImageFile-300.jpeg, 300][CDate-ImageFile-400.jpeg, 600][CDate-ImageFile-200.jpeg, 800]");
+	}
 
 	/**
 	 * Test sorting an overview by edate
@@ -69,7 +77,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	 */
 	@Test
 	public void testSortOverviewByEDate() throws NodeException {
-		testSortOverviewByEDate(com.gentics.contentnode.object.ImageFile.class, "[EDate-ImageFile-200.plain, 200][EDate-ImageFile-400.plain, 400][EDate-ImageFile-300.plain, 700][EDate-ImageFile-100.plain, 900]");
+		testSortOverviewByEDate(com.gentics.contentnode.object.ImageFile.class, "[EDate-ImageFile-200.jpeg, 200][EDate-ImageFile-400.jpeg, 400][EDate-ImageFile-300.jpeg, 700][EDate-ImageFile-100.jpeg, 900]");
 	}
 
 	@Override

@@ -79,6 +79,15 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	}
 
 	/**
+	 * Test sorting an overview by cdate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSortOverviewByCDate() throws NodeException {
+		testSortOverviewByCDate(com.gentics.contentnode.object.File.class, "[CDate-File-100.plain, 100][CDate-File-300.plain, 300][CDate-File-400.plain, 600][CDate-File-200.plain, 800]");
+	}
+
+	/**
 	 * Test sorting an overview by edate
 	 * @throws NodeException
 	 */

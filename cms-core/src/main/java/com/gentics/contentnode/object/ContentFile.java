@@ -221,6 +221,7 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		};
 
 		resolvableProperties.put("createtimestamp", createtimestamp);
+		resolvableProperties.put("creationtimestamp", createtimestamp);
 		// this typo (timstamp) is kept for backwards compatibility or maybe
 		// just because it looks so neat?
 		resolvableProperties.put("createtimstamp", createtimestamp);

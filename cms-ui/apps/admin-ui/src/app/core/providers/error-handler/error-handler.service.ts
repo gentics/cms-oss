@@ -102,6 +102,7 @@ export class ErrorHandler extends ServiceBase {
                     }
 
                 // eslint-disable-next-line no-fallthrough
+                case 'invalid_data':
                 case 'permissions':
                     returnValue = error.message || error.toString();
                     if (showNotification && !isInvalidSid) {

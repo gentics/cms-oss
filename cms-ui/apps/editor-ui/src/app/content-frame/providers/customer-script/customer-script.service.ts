@@ -162,7 +162,7 @@ export class CustomerScriptService implements OnDestroy {
 
         const executePreLoadScript = () => {
             if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(iFrameWindow, document, scriptHost);
+                this.runPreLoadScript(iFrameWindow, document);
                 preLoadScriptExecuted = true;
             }
         };
@@ -296,9 +296,9 @@ export class CustomerScriptService implements OnDestroy {
     }
 
     /** Runs the pre-load script */
-    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
+    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument): void {
         try {
-            const script = new PreLoadScript(window, document, scriptHost);
+            const script = new PreLoadScript(window, document);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });

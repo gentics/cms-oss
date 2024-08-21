@@ -8,8 +8,10 @@ import java.util.Optional;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.junit.ClassRule;
+import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
@@ -22,7 +24,7 @@ import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
-public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.ImageFile, Image> {
+public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.ImageFile, Image, FileCreateRequest> {
 
 	/**
 	 * REST Application used as binary data provider
@@ -31,7 +33,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	public static RESTAppContext appContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryDataImageResource.class).build()));
 
 	@Override
-	public Image createMetaDated(int createTime) throws NodeException {
+	public Image createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
 		Image file = null;
 		GenericResponse response;
 		try (Trx trx = new Trx(systemUser)) {
@@ -41,6 +43,9 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 			request.setFolderId(node.getFolder().getId());
 			request.setName(BinaryDataImageResource.FILENAME);
 			request.setSourceURL(appContext.getBaseUri() + "binary");
+			if (maybeInflater.isPresent()) {
+				maybeInflater.get().accept(request);
+			}
 
 			response = ContentNodeRESTUtils.getFileResource().create(request);
 			assertResponseCodeOk(response);
@@ -55,6 +60,16 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 		}
 
 		return file;
+	}
+
+
+	/**
+	 * Test sorting an overview by edate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSortOverviewByEDate() throws NodeException {
+		testSortOverviewByEDate(com.gentics.contentnode.object.ImageFile.class, "[EDate-ImageFile-200.plain, 200][EDate-ImageFile-400.plain, 400][EDate-ImageFile-300.plain, 700][EDate-ImageFile-100.plain, 900]");
 	}
 
 	@Override
@@ -91,5 +106,11 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 			assertResponseCodeOk(response);
 			return response.getImage();
 		});
+	}
+
+
+	@Override
+	protected void updateName(FileCreateRequest model, String name) {
+		model.setName(name);
 	}
 }

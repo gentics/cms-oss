@@ -43,7 +43,7 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 
-public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.Page, Page> {
+public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.Page, Page, PageCreateRequest> {
 
 	/**
 	 * Test sorting an overview by cdate
@@ -94,57 +94,25 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 */
 	@Test
 	public void testSortOverviewByEDate() throws NodeException {
-		Set<Page> pages = new HashSet<>();
-		for (int time : Arrays.asList(100, 200, 300, 400)) {
-			Page page = createPage(time, req -> {
-				req.setPageName("EDate Page " + time);
-			});
-			updatePage(time, page.getId(), req -> {
-				if (time % 200 != 0) {
-					req.getPage().setCustomEdate((1000 - time));
-				}
-			});
-			publishPage(page.getId());
-			pages.add(page);
-		}
-
-		Page overviewPage = createPage(1, null);
-		AtomicReference<String> tagName = new AtomicReference<>();
-		consume(id -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			List<com.gentics.contentnode.object.Page> nodePages = t.getObjects(com.gentics.contentnode.object.Page.class,
-					pages.stream().map(Page::getId).collect(Collectors.toList()));
-			update(t.getObject(com.gentics.contentnode.object.Page.class, id), update -> {
-				ContentTag tag = update.getContent().addContentTag(overviewConstructId);
-				tagName.set(tag.getName());
-				fillOverview(tag, "ds", "[<node page.name>, <node page.edittimestamp>]", com.gentics.contentnode.object.Page.class, Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_EDATE,
-						Overview.ORDERWAY_ASC, false, nodePages);
-			});
-		}, overviewPage.getId());
-
-		String renderedOverview = execute(systemUser, id -> {
-			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
-					LinksType.frontend, false, false, false, 0);
-			assertResponseCodeOk(response);
-			return response.getContent();
-		}, overviewPage.getId());
-		assertThat(renderedOverview).as("Rendered Overview").isEqualTo("[EDate Page 200, 200][EDate Page 400, 400][EDate Page 300, 700][EDate Page 100, 900]");
+		testSortOverviewByEDate(com.gentics.contentnode.object.Page.class, "[EDate Page 200, 200][EDate Page 400, 400][EDate Page 300, 700][EDate Page 100, 900]");
 	}
 
 	@Override
-	public Page createMetaDated(int createTime) throws NodeException {
-		return createPage(createTime, null);
+	public Page createMetaDated(int createTime, Optional<Consumer<PageCreateRequest>> maybeInflater) throws NodeException {
+		return createPage(createTime, maybeInflater.orElse(null));
 	}
 
 	@Override
 	public Page updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		return updatePage(updateTime, id, request -> {
+		Page page = updatePage(updateTime, id, request -> {
 			maybeDate.ifPresent(cdate -> request.getPage().setCdate(cdate));
 			maybeEDate.ifPresent(edate -> request.getPage().setEdate(edate));
 			maybeCustomCDate.ifPresent(cdate -> request.getPage().setCustomCdate(cdate));
 			maybeCustomEDate.ifPresent(edate -> request.getPage().setCustomEdate(edate));
 		});
+		publishPage(page.getId());
+		return page;
 	}
 	/**
 	 * Test dirting when custom cdate is changed
@@ -342,37 +310,6 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	}
 
 	/**
-	 * Create new page
-	 * @param timestamp timestamp of the transaction
-	 * @param creator optional consumer that can modify the create request
-	 * @return page
-	 * @throws NodeException
-	 */
-	protected Page createPage(int timestamp, Consumer<PageCreateRequest> creator) throws NodeException {
-		Page page = null;
-
-		try (Trx trx = new Trx()) {
-			trx.at(timestamp);
-
-			PageCreateRequest request = new PageCreateRequest();
-			request.setFolderId(String.valueOf(node.getFolder().getId()));
-			request.setTemplateId(template.getId());
-
-			if (creator != null) {
-				creator.accept(request);
-			}
-
-			PageLoadResponse response = new PageResourceImpl().create(request);
-			assertResponseCodeOk(response);
-			page = response.getPage();
-
-			trx.success();
-		}
-
-		return page;
-	}
-
-	/**
 	 * Update the page
 	 * @param timestamp transaction timestamp
 	 * @param pageId page ID
@@ -422,15 +359,8 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 		});
 	}
 
-	/**
-	 * Publish the page
-	 * @param pageId page ID
-	 * @throws NodeException
-	 */
-	protected void publishPage(int pageId) throws NodeException {
-		operate(() -> {
-			GenericResponse response = new PageResourceImpl().publish(Integer.toString(pageId), null, new PagePublishRequest());
-			assertResponseCodeOk(response);
-		});
+	@Override
+	protected void updateName(PageCreateRequest model, String name) {
+		model.setPageName(name);
 	}
 }

@@ -8,8 +8,10 @@ import java.util.Optional;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.junit.ClassRule;
+import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
@@ -22,34 +24,13 @@ import com.gentics.contentnode.tests.rest.file.BinaryDataResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
-public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File> {
+public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File, FileCreateRequest> {
 
 	/**
 	 * REST Application used as binary data provider
 	 */
 	@ClassRule
 	public static RESTAppContext appContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryDataResource.class).build()));
-
-	@Override
-	public File createMetaDated(int createTime) throws NodeException {
-		File file = null;
-
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(createTime);
-
-			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(node.getFolder().getId());
-			request.setSourceURL(appContext.getBaseUri() + "binary");
-
-			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
-			assertResponseCodeOk(response);
-			file = response.getFile();
-
-			trx.success();
-		}
-
-		return file;
-	}
 
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
@@ -73,6 +54,39 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 		return loadFile(String.valueOf(id));
 	}
 
+	@Override
+	public File createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
+		File file = null;
+
+		try (Trx trx = new Trx(systemUser)) {
+			trx.at(createTime);
+
+			FileCreateRequest request = new FileCreateRequest();
+			request.setFolderId(node.getFolder().getId());
+			request.setSourceURL(appContext.getBaseUri() + "binary");
+
+			if (maybeInflater.isPresent()) {
+				maybeInflater.get().accept(request);
+			}
+			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
+			assertResponseCodeOk(response);
+			file = response.getFile();
+
+			trx.success();
+		}
+
+		return file;
+	}
+
+	/**
+	 * Test sorting an overview by edate
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSortOverviewByEDate() throws NodeException {
+		testSortOverviewByEDate(com.gentics.contentnode.object.File.class, "[EDate-File-200.plain, 200][EDate-File-400.plain, 400][EDate-File-300.plain, 700][EDate-File-100.plain, 900]");
+	}
+
 	/**
 	 * Load the page with ID
 	 * @param pageId global or local ID
@@ -85,5 +99,10 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 			assertResponseCodeOk(response);
 			return response.getFile();
 		});
+	}
+
+	@Override
+	protected void updateName(FileCreateRequest model, String name) {
+		model.setName(name);
 	}
 }

@@ -6,6 +6,7 @@ import {
     folderB,
     minimalNode,
 } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/app.po';
 
 describe('Login', () => {
 
@@ -20,12 +21,13 @@ describe('Login', () => {
     beforeEach(async () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
+
+        cy.navigateToApp();
+        cy.login(AUTH_ADMIN);
+        cy.selectNode(IMPORTER.get(minimalNode)!.id);
     });
 
     it('should have the minimal node present', () => {
-        cy.navigateToApp();
-        cy.login('admin');
-        cy.selectNode(IMPORTER.get(minimalNode)!.id);
         cy.get('folder-contents > .title .title-name')
             .should('exist')
             .should('contain.text', minimalNode.node.name);

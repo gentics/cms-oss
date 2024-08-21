@@ -42,9 +42,9 @@ declare namespace Cypress {
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
         /** Helper to navigate to the application */
-        navigateToApp(path?: string): Chainable<null>;
+        navigateToApp(path?: string, raw?: boolean): Chainable<void>;
         /** Login with pre-defined user data or with a cypress alias */
-        login(account: string): Chainable<null>;
+        login(account: string, keycloak?: boolean): Chainable<null>;
         /** Select a certain node in the editor-ui */
         selectNode(nodeId: number | string): Chainable<null>;
         /** Attempt to find a specified item-type list */
@@ -193,17 +193,17 @@ Cypress.Commands.add('loadBinaries', (files, options) => {
     }));
 });
 
-Cypress.Commands.add('navigateToApp', (path) => {
+Cypress.Commands.add('navigateToApp', (path, raw) => {
     /*
      * The baseUrl is always properly configured via NX.
      * When using the CI however, we use the served UI from the CMS directly.
      * Therefore we also have to use the correct path for it.
      */
     const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/';
-    cy.visit(`${appBasePath}${path || ''}`);
+    cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
 });
 
-Cypress.Commands.add('login', (account) => {
+Cypress.Commands.add('login', (account, keycloak) => {
     return cy.fixture('auth.json').then(auth => {
         const data = auth[account];
         if (data) {
@@ -214,7 +214,7 @@ Cypress.Commands.add('login', (account) => {
         cy.get('input[type="text"]').type(data.username);
         cy.get('input[type="password"]').type(data.password);
 
-        cy.get('button[type="submit"]').click();
+        cy.get(`${keycloak ? 'input' : 'button'}[type="submit"]`).click();
     });
 });
 

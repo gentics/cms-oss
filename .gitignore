@@ -184,9 +184,6 @@ keys
 cache
 conf
 
-# Ignore conf directories from local development, except for the integration-tests
-!**/integration-test/cms/conf
-
 ### Log Files ###
 gentics.log*
 velocity.log

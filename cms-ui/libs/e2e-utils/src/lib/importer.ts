@@ -49,12 +49,29 @@ import {
 } from './entities';
 import { getItem } from './utils';
 
+/**
+ * Options to configure the behaviour of the importer
+ */
 export interface ImporterOptions {
+    /**
+     * If it sohuld log all requests from the `CypressDriver`.
+     * @see ClientOptions.log
+     */
     logRequests?: boolean;
+    /**
+     * If it should log out when a entity is getting imported and what the result of it is.
+     * Useful for debugging the test-data import, as usually error messages/stack traces
+     * are quite bad from cypress.
+     */
     logImports?: boolean;
 }
 
 export interface ClientOptions {
+    /**
+     * If it sohuld log all requests from the `CypressDriver`.
+     * Passes it along to `cy.request` -> `{ log: options.logRequests }`
+     * @see https://docs.cypress.io/api/commands/request#Arguments
+     */
     log?: boolean;
 }
 
@@ -63,15 +80,39 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
 }
 
+/**
+ * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
+ * instance, by using a dedicated GCMS REST Client.
+ * The client uses the [`cypress-driver`](./cypress-driver.ts), as requests are being sent from the
+ * cypress `node` process in the background, rather than the page where the e2e tests are executed.
+ *
+ * All imported or resolved entities are stored in this entity importer and can be accessed for tests.
+ *
+ * Usage:
+ * 1. `before`/`beforeEach`: Cleanup the environment via `cleanupTest`.
+ * 2. `before`: Bootstrap the Importer/CMS with `bootstrapSuite`.
+ * 3. `beforeEach`: Optional - Prepare fixtures/binaries and put them into the `binaryMap`.
+ * 4. `beforeEach`: Optional - Import CMS entities via `setupTest`.
+ */
 export class EntityImporter {
 
+    /** The client which is used to interact with the REST API. */
     public client: GCMSRestClient | null = null;
+    /** Map of imported entities `{ [IMPORT_ID]: Item }` */
     public entityMap: EntityMap = {};
+    /**
+     * Map of binaries which should be applied when importing a file/image.
+     * If not provided, the file/image will not be imported/skipped.
+     * `{ [IMPORT_ID]: File }`
+     */
     public binaryMap: BinaryMap = {};
+    /** The ID of the dummy-node, if present/checked. */
     public dummyNode: number | null = null;
+    /** Mapping of language-code to language-id. */
     public languages: Record<string, number> = {};
+    /** Mapping of template global-id to template instance. */
     public templates: Record<string, Template> = {};
-
+    /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
 
     constructor(
@@ -83,6 +124,12 @@ export class EntityImporter {
         };
     }
 
+    /**
+     * Imports the provided entities in order and stores all results in the local entity map,
+     * which is also returned as result.
+     * @param importList The entities to import. Respects the order they are defined.
+     * @returns Reference to the local entity-map.
+     */
     public async importData(
         importList: ImportData[],
     ): Promise<EntityMap> {
@@ -105,6 +152,10 @@ export class EntityImporter {
         return this.entityMap;
     }
 
+    /**
+     * Bootstraps the CMS and this importer with the basic infos for further imports.
+     * @param size Which size to import/bootstrap
+     */
     public async bootstrapSuite(size: TestSize): Promise<void> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests });
@@ -119,6 +170,11 @@ export class EntityImporter {
         this.bootstrapped = true;
     }
 
+    /**
+     * Imports all entities from the size package in order, and returns the local entity-map.
+     * @param size The size to import content from.
+     * @returns The local entity-map reference.
+     */
     public async setupTest(size: TestSize): Promise<EntityMap> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests });
@@ -129,6 +185,11 @@ export class EntityImporter {
         return map;
     }
 
+    /**
+     * Clears all CMS Nodes and therefore all CMS entities which can not be restored via
+     * devtool imports.
+     * @param completeClean If it should also remove the `dummyNode` to completely clear the CMS out.
+     */
     public async cleanupTest(completeClean: boolean = false): Promise<void> {
         // For cleanups, we always create a new client
         this.client = await createClient({ log: this.options?.logRequests });
@@ -153,14 +214,14 @@ export class EntityImporter {
         }
     }
 
-    /** Setup global features */
+    /** Apply global features to the CMS */
     public async setupFeatures(features: Partial<Record<Feature, boolean>>): Promise<void>;
-    /** Setup node features for the nodes in the specified TestSize, and global features */
+    /** Apply node features for the nodes in the specified TestSize, and global features */
     public async setupFeatures(
         size: TestSize,
         features: Partial<Record<Feature | NodeFeature, boolean>>,
     ): Promise<void>;
-    /** Setup global features; or node and global features with a reference to a TestSize. */
+    /** Apply global features; or node and global features with a reference to a TestSize. */
     public async setupFeatures(
         sizeOrGlobalFeatures: TestSize | Partial<Record<Feature, boolean>>,
         features?: Partial<Record<Feature | NodeFeature, boolean>>,
@@ -241,6 +302,10 @@ export class EntityImporter {
     public get(data: FileImportData): File | null;
     public get(data: GroupImportData): Group | null;
     public get(data: UserImportData): User | null;
+    /**
+     * Gets the resolved/imported entity based on the Import-ID.
+     * Overloads are to get the correct CMS item type based on the import-data type.
+     */
     public get(data: ImportData | string): any {
         return getItem(data as any, this.entityMap);
     }

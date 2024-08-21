@@ -13,13 +13,11 @@ declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         navigateToApp(path?: string, raw?: boolean): Chainable<void>;
-        login(cmsLogin: boolean): Chainable<void>;
+        login(account: string, keycloak?: boolean): Chainable<void>;
         editEntity(type: string, identifier: string): Chainable<JQuery<HTMLElement>> | Chainable<null>;
     }
 }
 
-//
-// -- This is a parent command --
 Cypress.Commands.add('navigateToApp', (path, raw) => {
     /*
      * The baseUrl is always properly configured via NX.
@@ -30,17 +28,18 @@ Cypress.Commands.add('navigateToApp', (path, raw) => {
     cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
 });
 
-Cypress.Commands.add('login', (cmsLogin) => {
+Cypress.Commands.add('login', (account, keycloak) => {
     return cy.fixture('auth.json').then(auth => {
-        const cred = cmsLogin ? auth.cms : auth.keycloak;
-
-        cy.get('input[type="text"]').type(cred.username);
-        cy.get('input[type="password"]').type(cred.password);
-        if (cmsLogin) {
-            cy.get('button[type="submit"]').click();
-        } else {
-            cy.get('input[type="submit"]').click();
+        const data = auth[account];
+        if (data) {
+            return data;
         }
+        return cy.get(account);
+    }).then(data => {
+        cy.get('input[type="text"]').type(data.username);
+        cy.get('input[type="password"]').type(data.password);
+
+        cy.get(`${keycloak ? 'input' : 'button'}[type="submit"]`).click();
     });
 });
 
@@ -67,15 +66,3 @@ Cypress.Commands.add('editEntity', (type, identifier) => {
 
     return cy.get(properties);
 });
-
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })

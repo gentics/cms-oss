@@ -1,4 +1,5 @@
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/app.po';
 
 describe('Mesh Browser', () => {
 
@@ -15,7 +16,7 @@ describe('Mesh Browser', () => {
         cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
 
         cy.navigateToApp();
-        cy.login(true);
+        cy.login(AUTH_ADMIN);
 
         cy.intercept({
             pathname: '/rest/admin/features/*',

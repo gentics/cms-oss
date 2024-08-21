@@ -12,3 +12,4 @@ export const FIXTURE_TEST_FILE_DOC_1 = 'test-document.docx';
 export const FIXTURE_TEST_FILE_PDF_1 = 'test-print.pdf';
 
 export const AUTH_ADMIN = 'admin';
+export const AUTH_KEYCLOAK = 'keycloak';

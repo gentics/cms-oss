@@ -1,5 +1,5 @@
 import { Feature, Variant } from '@gentics/cms-models';
-import { EntityImporter, isVariant, skipableSuite } from '@gentics/e2e-utils';
+import { EntityImporter, isVariant, skipableSuite, TestSize } from '@gentics/e2e-utils';
 import { AUTH_ADMIN, AUTH_KEYCLOAK } from '../support/app.po';
 
 describe('Login', () => {
@@ -9,15 +9,23 @@ describe('Login', () => {
     describe('Without keycloak feature enabled', () => {
         // Make sure to have keycloak disabled for these tests
         before(async () => {
+            // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+            IMPORTER.client = null;
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: false,
             });
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
+
+        beforeEach(async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
         });
 
         it('should be able to login', () => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);
-            cy.get('gtx-dashboard').should('exist');
+            cy.get('project-editor').should('exist');
         });
     });
 
@@ -25,22 +33,37 @@ describe('Login', () => {
     skipableSuite(isVariant(Variant.ENTERPRISE), 'With keycloak feature enabled', () => {
         // Make sure to have keycloak enabled for these tests
         before(async () => {
+            // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+            IMPORTER.client = null;
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: true,
             });
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
+
+        beforeEach(async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
         });
 
         it('should be able to login (skip-sso)', () => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);
-            cy.get('gtx-dashboard').should('exist');
+            cy.get('project-editor').should('exist');
         });
 
         // TODO: Temporarly skipped, because we can't change the features at runtime currently
         it.skip('should be able to login (default without skip-sso)', () => {
             cy.navigateToApp('', true);
             cy.login(AUTH_KEYCLOAK, true);
-            cy.get('gtx-dashboard').should('exist');
+
+            // Wait for login to be finished
+            cy.intercept({
+                pathname: '/rest/auth/ssologin',
+            }).as('ssoLogin');
+            cy.wait('@ssoLogin', { timeout: 60_000 });
+
+            cy.get('project-editor').should('exist');
         });
     });
 });

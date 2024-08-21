@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: finger
 
     volumes:
-      - ./integration-test/mariadb/dumps:/docker-entrypoint-initdb.d
+      - ./mariadb/dumps:/docker-entrypoint-initdb.d
 
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
@@ -33,7 +33,7 @@ services:
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/api/v2/health/ready"]
-      start_period: 120s
+      start_period: 300s
       # start_interval: 30s
       interval: 60s
       timeout: 10s
@@ -67,9 +67,9 @@ services:
       CR_PASSWORD_MARIADB_CR: crtest
 
     volumes:
-      - ./integration-test/cms/commands:/cms/scheduler-commands
-      - ./integration-test/cms/conf:/cms/conf/cms
-      - ./integration-test/cms/packages:/cms/packages
+      - ./cms/commands:/cms/scheduler-commands
+      - ./cms/conf:/cms/conf/cms
+      - ./cms/packages:/cms/packages
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

@@ -7,12 +7,10 @@ import java.util.Optional;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
@@ -26,13 +24,6 @@ import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.ImageFile, Image> {
 
-	protected static SystemUser user;
-
-	@BeforeClass
-	public static void setupOnce() throws NodeException {
-		CustomMetaDateTest.setupOnce();
-		user = supply(t -> t.getObject(SystemUser.class, 1));
-	}
 	/**
 	 * REST Application used as binary data provider
 	 */
@@ -43,7 +34,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	public Image createMetaDated(int createTime) throws NodeException {
 		Image file = null;
 		GenericResponse response;
-		try (Trx trx = new Trx(user)) {
+		try (Trx trx = new Trx(systemUser)) {
 			trx.at(createTime);
 
 			FileCreateRequest request = new FileCreateRequest();
@@ -55,7 +46,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 			assertResponseCodeOk(response);
 			trx.success();
 		}
-		try (Trx trx = new Trx(user)) {
+		try (Trx trx = new Trx(systemUser)) {
 			response = ContentNodeRESTUtils.getImageResource().load(String.valueOf(((FileUploadResponse) response).getFile().getId()), false, false, null, null);
 			assertResponseCodeOk(response);
 			file = ((ImageLoadResponse) response).getImage();
@@ -69,7 +60,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	@Override
 	public Image updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx(user)) {
+		try (Trx trx = new Trx(systemUser)) {
 			trx.at(updateTime);
 
 			Image update = new Image();

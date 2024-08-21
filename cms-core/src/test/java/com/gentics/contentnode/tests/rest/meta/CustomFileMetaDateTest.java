@@ -7,12 +7,10 @@ import java.util.Optional;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
@@ -26,13 +24,6 @@ import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File> {
 
-	protected static SystemUser user;
-
-	@BeforeClass
-	public static void setupOnce() throws NodeException {
-		CustomMetaDateTest.setupOnce();
-		user = supply(t -> t.getObject(SystemUser.class, 1));
-	}
 	/**
 	 * REST Application used as binary data provider
 	 */
@@ -43,7 +34,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	public File createMetaDated(int createTime) throws NodeException {
 		File file = null;
 
-		try (Trx trx = new Trx(user)) {
+		try (Trx trx = new Trx(systemUser)) {
 			trx.at(createTime);
 
 			FileCreateRequest request = new FileCreateRequest();
@@ -63,7 +54,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx(user)) {
+		try (Trx trx = new Trx(systemUser)) {
 			trx.at(updateTime);
 
 			File update = new File();

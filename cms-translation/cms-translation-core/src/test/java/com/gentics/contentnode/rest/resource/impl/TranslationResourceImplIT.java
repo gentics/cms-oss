@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;

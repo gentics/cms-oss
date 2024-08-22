@@ -1,6 +1,8 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 
+import static com.gentics.contentnode.factory.Trx.supply;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
@@ -167,8 +169,10 @@ public class TranslationResourceImpl implements TranslationResource {
 		if(translatedNodePage == null) {
 			return;
 		}
-		var response = new PageResourceImpl().delete(translatedNodePage.getId().toString(),
-				translatedNodePage.getNode().getId(), true);
+
+		var response = supply(()-> new PageResourceImpl().delete(translatedNodePage.getId().toString(),
+				translatedNodePage.getNode().getId(), true));
+
 		if(response.getResponseInfo().getResponseCode() != ResponseCode.OK) {
 			logger.info(String.format("Page Language Variant with id '%s' deleted successfully",
 					translatedNodePage.getNode().getId()));

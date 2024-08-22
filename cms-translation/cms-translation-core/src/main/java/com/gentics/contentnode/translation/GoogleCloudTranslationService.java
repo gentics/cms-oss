@@ -1,16 +1,18 @@
 package com.gentics.contentnode.translation;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
-import com.gentics.contentnode.runtime.ConfigurationValue;
+import com.gentics.contentnode.etc.TranslationConfigUtil;
+import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.google.cloud.translate.Translate;
+import com.google.cloud.translate.TranslateException;
 import com.google.cloud.translate.TranslateOptions;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 
 /**
- * Translation service for the DeepL translator.
+ * Translation service for the Basic Google Cloud Translator.
  */
 public class GoogleCloudTranslationService implements TranslationService {
 
@@ -23,40 +25,38 @@ public class GoogleCloudTranslationService implements TranslationService {
 	 */
 	private final Translate translator;
 
+
 	public GoogleCloudTranslationService() throws NodeException {
-		final var authToken = getAuthTokenFromConfig();
+		final var authToken = TranslationConfigUtil.getAuthTokenFromConfig(getClass().getSimpleName());
 		translator = TranslateOptions.newBuilder()
 				.setApiKey(authToken)
 				.build()
 				.getService();
 	}
 
-	/**
-	 * Reads the authentication token from the configuration.
-	 *
-	 * @return The token used to authenticate the deepL client.
-	 * @throws NodeException if the token cannot be read or is empty.
-	 */
-	private String getAuthTokenFromConfig() throws NodeException {
-		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
-
-		if (StringUtils.isBlank(authToken)) {
-			throw new NodeException(
-					"Invalid authentication token provided for: " + getClass().getSimpleName());
-		}
-
-		return authToken;
-	}
-
 	@Override
 	public String translate(String textToTranslate, @Nullable String sourceLanguage,
-			String targetLanguage) {
-		var translationResponse = translator.translate(textToTranslate, Translate.TranslateOption.sourceLanguage(sourceLanguage),
-				Translate.TranslateOption.targetLanguage(targetLanguage));
+			String targetLanguage) throws NodeException {
+		try {
+			var translationResponse = translator.translate(textToTranslate,
+					Translate.TranslateOption.sourceLanguage(sourceLanguage),
+					Translate.TranslateOption.targetLanguage(targetLanguage));
 
-		return translationResponse.getTranslatedText();
+			return translationResponse.getTranslatedText();
+		} catch (TranslateException e) {
+			var errorMessage = new CNI18nString("feature.translation.error");
+			CNI18nString errorReason = new CNI18nString("feature.translation.error.reason_generic");
+
+			if (400 <= e.getCode() && e.getCode() < 500) {
+				errorReason = new CNI18nString("feature.translation.error.reason_generic_client");
+			}
+			errorMessage.addParameter(errorReason.toString());
+
+			this.logger.error("Error occurred while translating text", e);
+			throw new TranslationException(errorMessage.toString());
+		} catch (Exception e) {
+			throw new NodeException("Error occurred while translating text.", e);
+		}
 	}
-
-
 
 }

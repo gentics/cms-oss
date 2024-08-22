@@ -6,6 +6,7 @@ import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
 import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.factory.Transaction;
@@ -30,8 +31,8 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.translation.LanguageVariantService;
 import com.gentics.contentnode.translation.TagResolveService;
-import com.gentics.contentnode.translation.TranslationUtil;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -52,9 +53,12 @@ import org.apache.commons.lang3.StringUtils;
 public class TranslationResourceImpl implements TranslationResource {
 
 	/**
-	 * The translation service used to translate text
+	 * The translation service used to translate
 	 */
 	private TranslationService translationService;
+
+	private static final NodeLogger logger = NodeLogger.getNodeLogger(
+			TranslationResourceImpl.class);
 
 	@Override
 	@POST
@@ -117,19 +121,20 @@ public class TranslationResourceImpl implements TranslationResource {
 					var contentTags = this.getContentTags(pageToTranslate);
 					final var tagResolveService = new TagResolveService(loadedPage.getOwningNode());
 
-					tagResolveService.resolveAndTranslateContentTags(contentTags, getTranslationService(), sourceLanguageCode,
+					var translationService = getTranslationService();
+					tagResolveService.resolveAndTranslateContentTags(contentTags, translationService, sourceLanguageCode,
 							targetLanguageCode);
 
 					final var sourceName = pageToTranslate.getName();
-					final var translatedName = getTranslationService().translate(sourceName,
+					final var translatedName = translationService.translate(sourceName,
 							sourceLanguageCode,
 							targetLanguageCode);
 					pageToTranslate.setName(translatedName);
 				} catch (TranslationException e) {
-					TransactionManager.getCurrentTransaction().rollback(false);
+					TransactionManager.getCurrentTransaction().rollback(true);
 					throw e;
 				} catch (Exception e) {
-					TransactionManager.getCurrentTransaction().rollback(false);
+					TransactionManager.getCurrentTransaction().rollback(true);
 					throw new NodeException(e);
 				}
 
@@ -228,10 +233,10 @@ public class TranslationResourceImpl implements TranslationResource {
 	 */
 	public TranslationService getTranslationService() throws NodeException {
 		if (this.translationService == null) {
-			return TranslationUtil.getTranslationService().orElseThrow(() -> new NodeException(
+			this.translationService = TranslationServiceLoaderUtil.getTranslationService().orElseThrow(() -> new NodeException(
 					"Translation service not available"));
 		}
-
+		logger.info(String.format("Translation service currently in use: '%s'", this.translationService.getClass()));
 		return this.translationService;
 	}
 

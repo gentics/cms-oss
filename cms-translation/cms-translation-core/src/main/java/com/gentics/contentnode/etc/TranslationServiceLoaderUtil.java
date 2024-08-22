@@ -1,11 +1,8 @@
-package com.gentics.contentnode.translation;
+package com.gentics.contentnode.etc;
 
 import com.gentics.contentnode.api.translation.TranslationService;
-import com.gentics.contentnode.etc.ServiceLoaderUtil;
-import com.gentics.contentnode.etc.TranslationFeatureService;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,13 +14,12 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utility class, which acts as bridge to the optional translation module
  */
-public class TranslationUtil {
+public class TranslationServiceLoaderUtil {
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(
 			TranslationFeatureService.class);
@@ -70,10 +66,11 @@ public class TranslationUtil {
 				String.format("%s/META-INF/services/%s", classpath, INTERFACE_FQDN));
 
 		try {
-			if (serviceDefinitionRequireUpdate(implementationClassFromConfig, serviceDefinitionFilePath)) {
+			if (serviceDefinitionRequireUpdate(implementationClassFromConfig,
+					serviceDefinitionFilePath)) {
 				Files.createDirectories(serviceDefinitionFilePath.getParent());
 				Files.write(serviceDefinitionFilePath, implementationClassFromConfig.getBytes(),
-						StandardOpenOption.CREATE);
+						StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 				logger.info(String.format("Service definition file for class '%s' successfully created.",
 						implementationClassFromConfig));
 			}
@@ -124,7 +121,8 @@ public class TranslationUtil {
 	/**
 	 * This method retrieves the implementation class name from the configuration.
 	 *
-	 * @return An optional String representing the implementation class name or the reference implementation.
+	 * @return An optional String representing the implementation class name or the reference
+	 * implementation.
 	 */
 	private static Optional<String> getImplementationClass() {
 		var className = ConfigurationValue.TRANSLATION_SERVICE_IMPLEMENTATION.get();
@@ -134,6 +132,11 @@ public class TranslationUtil {
 		return Optional.empty();
 	}
 
+	/**
+	 * Reloads the service.
+	 *
+	 * @return true if reload was successfully
+	 */
 	public static boolean reloadService() {
 		try {
 			loader = ServiceLoaderUtil.load(TranslationService.class);

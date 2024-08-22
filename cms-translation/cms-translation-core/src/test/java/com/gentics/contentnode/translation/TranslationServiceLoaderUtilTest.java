@@ -3,6 +3,7 @@ package com.gentics.contentnode.translation;
 import static com.gentics.contentnode.translation.ConfigurationTestUtils.mockTranslationConfig;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-class TranslationUtilTest {
+class TranslationServiceLoaderUtilTest {
 
 	private final static String TRANSLATION_IMPLEMENTATION = "com.gentics.contentnode.translation.DeepLTranslationService";
 	private static final String INTERFACE_FQDN = "com.gentics.contentnode.api.translation.TranslationService";
@@ -28,7 +29,7 @@ class TranslationUtilTest {
 
 	@AfterEach
 	void tearDown() throws IOException {
-		var serviceFileLocation = TranslationUtil.getClasspath().get();
+		var serviceFileLocation = TranslationServiceLoaderUtil.getClasspath().get();
 		Files.deleteIfExists(
 				Paths.get(String.format("%s/META-INF/services/%s", serviceFileLocation, INTERFACE_FQDN)));
 
@@ -38,8 +39,8 @@ class TranslationUtilTest {
 	@Test
 	void givenNoServiceDefinitionFileExists_expectToCreateServiceFileAndLoadService()
 			throws IOException {
-		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
-		var isLoaded = TranslationUtil.reloadService();
+		var isCreated = TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
+		var isLoaded = TranslationServiceLoaderUtil.reloadService();
 
 		assertThat(isCreated).isTrue();
 		assertThat(isLoaded).isTrue();
@@ -48,8 +49,8 @@ class TranslationUtilTest {
 	@Test
 	void givenImplementationIsUpdated_expectToUpdateServiceFileAndReloadService()
 			throws IOException {
-		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
-		var isLoaded = TranslationUtil.reloadService();
+		var isCreated = TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
+		var isLoaded = TranslationServiceLoaderUtil.reloadService();
 
 		assertThat(isCreated).isTrue();
 
@@ -58,7 +59,7 @@ class TranslationUtilTest {
 						"com.gentics.contentnode.api.translation.BetterDeepLTranslationService",
 						"<api-token>"));
 
-		var isCreatedWithNewImplementation = TranslationUtil.createOrUpdateServiceDefinitionFile();
+		var isCreatedWithNewImplementation = TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
 		assertThat(isCreatedWithNewImplementation).isTrue();
 	}
 
@@ -70,8 +71,8 @@ class TranslationUtilTest {
 						"com.gentics.contentnode.api.translation.BetterDeepLTranslationService",
 						"<api-token>"));
 
-		var isCreated = TranslationUtil.createOrUpdateServiceDefinitionFile();
-		var isLoaded = TranslationUtil.reloadService();
+		var isCreated = TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
+		var isLoaded = TranslationServiceLoaderUtil.reloadService();
 
 		assertThat(isCreated).isTrue();
 		assertThat(isLoaded).isFalse();

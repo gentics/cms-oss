@@ -8,6 +8,7 @@ import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
+import com.gentics.contentnode.etc.TranslationConfigUtil;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
@@ -38,7 +39,7 @@ public class DeepLTranslationService implements TranslationService {
 
 
 	public DeepLTranslationService() throws NodeException {
-		final var authToken = getAuthTokenFromConfig();
+		final var authToken = TranslationConfigUtil.getAuthTokenFromConfig(getClass().getSimpleName());
 		languagePreferences = getLanguageSettingFromConfig();
 		translator = new Translator(authToken);
 	}
@@ -104,23 +105,6 @@ public class DeepLTranslationService implements TranslationService {
 		errorMessage.addParameter(errorReason.toString());
 
 		return errorMessage;
-	}
-
-	/**
-	 * Reads the authentication token from the configuration.
-	 *
-	 * @return The token used to authenticate the deepL client.
-	 * @throws NodeException if the token cannot be read or is empty.
-	 */
-	private String getAuthTokenFromConfig() throws NodeException {
-		var authToken = ConfigurationValue.TRANSLATION_AUTH_TOKEN.get();
-
-		if (StringUtils.isBlank(authToken)) {
-			throw new NodeException(
-					"Invalid authentication token provided for: " + getClass().getSimpleName());
-		}
-
-		return authToken;
 	}
 
 	/**

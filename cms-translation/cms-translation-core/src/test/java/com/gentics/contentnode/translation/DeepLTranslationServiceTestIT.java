@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.JsoupValidator;
+import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
 import com.gentics.contentnode.etc.Validator;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import org.junit.jupiter.api.Disabled;
@@ -40,9 +41,9 @@ class DeepLTranslationServiceTestIT {
 	}
 
 	private TranslationService getTranslationService() {
-		TranslationUtil.createOrUpdateServiceDefinitionFile();
-		TranslationUtil.reloadService();
-		return TranslationUtil.getTranslationService().get();
+		TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
+		TranslationServiceLoaderUtil.reloadService();
+		return TranslationServiceLoaderUtil.getTranslationService().get();
 	}
 
 }

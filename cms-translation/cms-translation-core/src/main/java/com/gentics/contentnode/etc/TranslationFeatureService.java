@@ -2,7 +2,6 @@ package com.gentics.contentnode.etc;
 
 import com.gentics.contentnode.LicenseService;
 import com.gentics.contentnode.LicensedFeature;
-import com.gentics.contentnode.translation.TranslationUtil;
 
 /**
  * Implementation of {@link FeatureService} which provides the
@@ -18,12 +17,12 @@ public class TranslationFeatureService implements FeatureService {
 		if (!isActivatedAndLicensed) {
 			return false;
 		}
-		var isCreatedOrUpdated = TranslationUtil.createOrUpdateServiceDefinitionFile();
+		var isCreatedOrUpdated = TranslationServiceLoaderUtil.createOrUpdateServiceDefinitionFile();
 		if (!isCreatedOrUpdated) {
 			return false;
 		}
 
-		return TranslationUtil.reloadService();
+		return TranslationServiceLoaderUtil.reloadService();
 	}
 
 }

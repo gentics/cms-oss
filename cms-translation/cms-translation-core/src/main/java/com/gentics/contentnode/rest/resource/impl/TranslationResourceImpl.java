@@ -131,10 +131,10 @@ public class TranslationResourceImpl implements TranslationResource {
 							targetLanguageCode);
 					pageToTranslate.setName(translatedName);
 				} catch (TranslationException e) {
-					TransactionManager.getCurrentTransaction().rollback(true);
+					this.deletePage(translatedNodePage);
 					throw e;
 				} catch (Exception e) {
-					TransactionManager.getCurrentTransaction().rollback(true);
+					this.deletePage(translatedNodePage);
 					throw new NodeException(e);
 				}
 
@@ -156,6 +156,25 @@ public class TranslationResourceImpl implements TranslationResource {
 				return response;
 			});
 		}
+	}
+
+	/**
+	 * Deletes language variant
+	 * @param translatedNodePage the page to delete
+	 * @throws NodeException
+	 */
+	private void deletePage(Page translatedNodePage) throws NodeException {
+		if(translatedNodePage == null) {
+			return;
+		}
+		var response = new PageResourceImpl().delete(translatedNodePage.getId().toString(),
+				translatedNodePage.getNode().getId(), true);
+		if(response.getResponseInfo().getResponseCode() != ResponseCode.OK) {
+			logger.info(String.format("Page Language Variant with id '%s' deleted successfully",
+					translatedNodePage.getNode().getId()));
+			return;
+		}
+		logger.error(response.getResponseInfo().getResponseMessage());
 	}
 
 
@@ -236,7 +255,7 @@ public class TranslationResourceImpl implements TranslationResource {
 			this.translationService = TranslationServiceLoaderUtil.getTranslationService().orElseThrow(() -> new NodeException(
 					"Translation service not available"));
 		}
-		logger.info(String.format("Translation service currently in use: '%s'", this.translationService.getClass()));
+		logger.info(String.format("Translation service successfully requested. Translation service currently in use: '%s'", this.translationService.getClass()));
 		return this.translationService;
 	}
 

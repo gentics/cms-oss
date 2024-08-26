@@ -2,13 +2,13 @@ import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-u
 import { GroupOperations, I18nService, PermissionsService, UserOperations, UserTableLoaderOptions, UserTableLoaderService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { NormalizableEntityType, Raw, User } from '@gentics/cms-models';
+import { Group, NormalizableEntityType, Raw, User } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { AssignGroupToUsersModal } from '../assign-group-to-users-modal/assign-group-to-users-modal.component';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
-import { ConfirmRemoveUserFromGroupModalComponent } from '../confirm-remove-user-from-group-modal/confirm-remove-user-from-group-modal.component';
 import { CreateUserModalComponent } from '../create-user-modal/create-user-modal.component';
 
 const ASSIGN_TO_GROUP_ACTION = 'assignToGroup';
@@ -26,7 +26,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
     public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
-    public groupId: number;
+    public group: Group;
 
     @Input()
     public linkGroups = true;
@@ -117,7 +117,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                     },
                 ];
 
-                if (this.groupId) {
+                if (this.group) {
                     actions.push({
                         id: REMOVE_FROM_GROUP_ACTION,
                         icon: 'clear',
@@ -146,7 +146,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
 
     protected override createAdditionalLoadOptions(): UserTableLoaderOptions {
         return {
-            groupId: this.groupId,
+            groupId: this.group?.id,
         };
     }
 
@@ -156,6 +156,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                 this.changeUserGroups(this.getAffectedEntityIds(event).map(id => Number(id)))
                     .then(() => {
                         if (event.selection) {
+                            this.selected = [];
                             this.selectedChange.emit([]);
                         }
                         this.loader.reload();
@@ -163,9 +164,18 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                 return;
 
             case REMOVE_FROM_GROUP_ACTION:
-                this.removeUsersFromGroup(this.groupId, this.getAffectedEntityIds(event).map(id => Number(id)))
-                    .then(() => {
+                if (!this.group) {
+                    return;
+                }
+
+                this.removeUsersFromGroup(this.group.id, this.getAffectedEntityIds(event).map(id => Number(id)))
+                    .then(didChange => {
+                        if (!didChange) {
+                            return;
+                        }
+
                         if (event.selection) {
+                            this.selected = [];
                             this.selectedChange.emit([]);
                         }
                         this.loader.reload();
@@ -177,11 +187,22 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
     }
 
     public override handleCreateButton(): void {
-        if (this.groupId) {
-            this.createUser([this.groupId]);
+        if (this.group?.id) {
+            this.createUser([this.group.id]);
         } else {
             this.createUser();
         }
+    }
+
+    public async handleAssignUsersButton(): Promise<void> {
+        const dialog = await this.modalService.fromComponent(
+            AssignGroupToUsersModal,
+            { closeOnOverlayClick: false, width: '50%' },
+            { group: this.group },
+        );
+        await dialog.open();
+
+        this.loader.reload();
     }
 
     protected async createUser(groupIds: number[] = []): Promise<void> {
@@ -203,28 +224,45 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         return this.contextMenu.changeGroupsOfUsersModalOpen(userIds);
     }
 
-    protected async removeUsersFromGroup(groupId: number, userIds: number[]): Promise<void> {
+    protected async removeUsersFromGroup(groupId: number, userIds: number[]): Promise<boolean> {
         const groupName = this.appState.now.entity.group[groupId].name;
         const userNames = this.loader.getEntitiesByIds(userIds).map(user => user.login);
 
-        // open modal
-        const dialog = await this.modalService.fromComponent(
-            ConfirmRemoveUserFromGroupModalComponent,
-            { closeOnOverlayClick: false, width: '50%' },
-            {
-                groupName,
-                userNames,
-            },
-        );
+        const dialog = await this.modalService.dialog({
+            title: this.i18n.instant('modal.confirm_remove_user_from_group_title'),
+            body: `${this.i18n.instant('modal.confirm_remove_user_from_group_message', { groupName: groupName })}:
+            <br>
+            <ul class="browser-default">
+                <li><b>${userNames.join('</b></li><li><b>')}</b></li>
+            </ul>
+            `,
+            buttons: [
+                {
+                    label: this.i18n.instant('modal.confirm_remove_users_button', { userAmount: userNames?.length }),
+                    returnValue: true,
+                    type: 'alert',
+                },
+                {
+                    label: this.i18n.instant('common.cancel_button'),
+                    returnValue: false,
+                    flat: true,
+                    type: 'secondary',
+                },
+            ],
+        }, {
+            closeOnOverlayClick: false,
+        });
 
         const confirmedRemoval = await dialog.open();
 
         if (!confirmedRemoval) {
-            return;
+            return false;
         }
 
         for (const id of userIds) {
             await this.groupOps.removeUserFromGroup(groupId, id).toPromise();
         }
+
+        return true;
     }
 }

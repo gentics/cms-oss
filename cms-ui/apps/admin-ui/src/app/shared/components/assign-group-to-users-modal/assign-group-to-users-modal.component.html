@@ -1,32 +1,34 @@
-<div class="gtx-modal-datagrid">
-    <div class="modal-title">
-        <h5>{{ 'shared.assign_user_to_groups' | i18n }}</h5>
-    </div>
+<div class="modal-title">
+    <h5>{{ 'shared.assign_group_to_users_title' | i18n: { entityName: group.name } }}</h5>
+</div>
 
-    <div class="modal-content">
-        <gtx-user-table
-            [showSearch]="true"
-            [hideActions]="true"
-            [selectable]="true"
-            [(selected)]="userIds"
-        ></gtx-user-table>
-    </div>
+<div class="modal-content">
+    <gtx-progress-bar *ngIf="loading"></gtx-progress-bar>
+    <gtx-user-table
+        [showSearch]="true"
+        [hideActions]="true"
+        [selectable]="true"
+        [(selected)]="selected"
+        [disabled]="loading"
+    ></gtx-user-table>
+</div>
 
-    <div class="modal-footer">
-        <gtx-button
-            type="primary"
-            (click)="buttonAssignGroupToUsersClicked()"
-            gtxActionAllowed="group.userassignment"
-        >
-            {{ 'shared.assign_user_to_groups' | i18n }}
-        </gtx-button>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="loading"
+        (click)="handleConfirm()"
+        gtxActionAllowed="group.userassignment"
+    >
+        {{ 'shared.assign_group_to_users_button' | i18n }}
+    </gtx-button>
 
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="cancelFn()"
-        >
-            {{ 'common.cancel_button' | i18n }}
-        </gtx-button>
-    </div>
+    <gtx-button
+        type="secondary"
+        flat
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
 </div>

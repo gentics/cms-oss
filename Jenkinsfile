@@ -299,6 +299,7 @@ spec:
                                 junit  testResults: "cms-forms/cms-forms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit  testResults: "cms-multichannelling/cms-multichannelling-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit  testResults: "cms-license/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit  testResults: "cms-translation/cms-translation-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
                         }
                     }

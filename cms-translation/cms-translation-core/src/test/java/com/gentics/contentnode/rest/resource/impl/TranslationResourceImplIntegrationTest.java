@@ -19,6 +19,7 @@ import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.MultiTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.TagCreateRequest;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -27,25 +28,32 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
-
+@RunWith(value = Parameterized.class)
 @GCNFeature(set = {Feature.AUTOMATIC_TRANSLATION})
-public class TranslationResourceImplIT {
+public class TranslationResourceImplIntegrationTest {
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 	public final static Integer FOLDER_ID = 28;
 	static final String textKeyword = "key";
 	static int textConstructId;
-	static int linkConstructId ;
+	static int linkConstructId;
 	static SystemUser user;
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
-
+	@Parameter(0)
+	public String contentFileName;
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
@@ -64,6 +72,26 @@ public class TranslationResourceImplIT {
 		changeSessionLanguage();
 	}
 
+	private static void changeSessionLanguage() throws NodeException {
+		operate(user, t -> {
+			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?",
+					getLanguage("en").getId(),
+					t.getSession().getSessionId());
+		});
+	}
+
+	/**
+	 * Get test variation data
+	 * @return variation data
+	 */
+	@Parameters(name = "{index}: contentFileName {0}")
+	public static Collection<Object[]> data() {
+		final var basePath = "translate";
+		Collection<Object[]> data = new ArrayList<>();
+		data.add(new Object[] {basePath + "/simple-website.txt"});
+		data.add(new Object[] {basePath + "/content-tag.txt"});
+		return data;
+	}
 
 	@Test
 	public void givenPageInSourceLanguage_shouldBeTranslatedIntoTargetLanguage()
@@ -73,14 +101,17 @@ public class TranslationResourceImplIT {
 
 		try (Trx trx = new Trx(user)) {
 			var pageToTranslate = createPage(sourceLanguage);
-			createTags(pageToTranslate);
+			createTags(pageToTranslate, contentFileName);
 
-			var pageTranslateResponse = (PageLoadResponse) translationResource.translate(pageToTranslate.getId(),
+			var response = (GenericResponse) translationResource.translate(
+					pageToTranslate.getId(),
 					targetLanguage,
 					true, 0, 0);
 
-			assertThat(pageTranslateResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(
+					ResponseCode.OK);
 
+			PageLoadResponse pageTranslateResponse = (PageLoadResponse) response;
 			var translatedPage = pageTranslateResponse.getPage();
 			var pageTags = translatedPage.getTags();
 
@@ -92,18 +123,19 @@ public class TranslationResourceImplIT {
 	/**
 	 * Helper method to create page tags via REST API
 	 *
-	 * @param page page to add the tags
+	 * @param page            page to add the tags
+	 * @param contentFileName
 	 */
-	private void createTags(Page page) throws IOException {
+	private void createTags(Page page, String contentFileName) throws IOException {
 		PageResourceImpl pageResource = new PageResourceImpl();
 
 		var createTagsRequest = new MultiTagCreateRequest();
 		var create = new HashMap<String, TagCreateRequest>();
 		addTagCreateRequest(create, "content1", null, textKeyword,
-				readContentFromFile("partial-to-translate.txt"));
+				readContentFromFile(this.contentFileName));
 		addTagCreateRequest(create, "content2", null, textKeyword,
 				"Auch andere Inhalte sollen übersetzt werden.");
-		addTagCreateRequest(create, "link1", linkConstructId , null, "Das ist der Link Text");
+		addTagCreateRequest(create, "link1", linkConstructId, null, "Das ist der Link Text");
 
 		createTagsRequest.setCreate(create);
 
@@ -150,13 +182,6 @@ public class TranslationResourceImplIT {
 			assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
 			return loadResponse.getPage();
 		}
-	}
-
-	private static void changeSessionLanguage() throws NodeException {
-		operate(user, t -> {
-			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", getLanguage("en").getId(),
-					t.getSession().getSessionId());
-		});
 	}
 
 }

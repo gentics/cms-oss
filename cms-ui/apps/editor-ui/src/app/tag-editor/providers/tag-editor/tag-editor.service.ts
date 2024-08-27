@@ -25,6 +25,7 @@ import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
@@ -80,6 +81,7 @@ export class TagEditorService {
         private userAgentRef: UserAgentRef,
         private modals: ModalService,
         private apiBase: ApiBase,
+        private client: GCMSRestClientService,
     ) {}
 
     /**
@@ -184,6 +186,7 @@ export class TagEditorService {
                     },
                 ).then(dialog => dialog.open());
             },
+            restClient: this.client.getClient(),
             restRequestGET: (endpoint: string, params: any): Promise<object> =>
                 this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise(),
             restRequestPOST: (endpoint: string, data: object, params?: object): Promise<object> =>

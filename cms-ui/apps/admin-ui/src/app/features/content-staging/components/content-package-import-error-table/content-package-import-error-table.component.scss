@@ -14,6 +14,14 @@
     }
 }
 
+icon.help {
+    cursor: help;
+    color: #0096DC;
+    transform: rotate(180deg);
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+}
+
 .check-time {
     font-style: italic;
     margin-left: 1rem;
@@ -24,3 +32,6 @@
     margin-bottom: 1rem;
 }
 
+.error-recommendation {
+    white-space: pre-wrap;
+}

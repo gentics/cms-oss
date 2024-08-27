@@ -38,5 +38,6 @@ export interface ContentPackageImportError {
     error: string;
     globalId: string;
     kind: string;
+    recommendation: string;
 }
 

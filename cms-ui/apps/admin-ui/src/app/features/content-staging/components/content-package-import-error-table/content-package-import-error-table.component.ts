@@ -50,6 +50,11 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
             fieldPath: 'error',
         },
         {
+            id: 'recommendation',
+            label: 'shared.empty',
+            fieldPath: 'recommendation',
+        },
+        {
             id: 'kind',
             label: 'shared.type',
             fieldPath: 'kind',

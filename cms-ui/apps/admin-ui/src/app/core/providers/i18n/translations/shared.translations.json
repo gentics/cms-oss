@@ -647,6 +647,10 @@
         "en": "delete",
         "de": "löschen"
     },
+    "empty": {
+        "en": "",
+        "de": ""
+    },
     "no_row_selected_warning": {
         "en": "No row selected",
         "de": "Keine Zeile ausgewählt"

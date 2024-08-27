@@ -37,29 +37,74 @@ interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
 declare namespace Cypress {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
+        /**
+         * Prevents the logging of XHR/Fetch requests (unless intercepted/aliased).
+         * Useful to reduce amount of cypress logs to only show relevant ones, as the UIs
+         * request a lot.
+         */
         muteXHR(): Chainable<null>;
-        /** Loads the defined fixtures and returns a map of the loaded binaries as usable map. */
+        /**
+         * Loads the defined fixtures and returns a map of the loaded binaries as usable map.
+         * @param files The fixture paths or import-binaries to load.
+         * @param options The options to use when loading the fixtures/binaries and how to process them.
+         */
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
-        /** Helper to navigate to the application */
+        /**
+         * Helper to navigate to the application.
+         * @param path The route/path in the application to navigate to. Usually leave this empty, unless you need to
+         * test the routing of the application.
+         * @param raw If the navigation should happen without adding a `skip-sso` to prevent unwilling sso logins.
+         */
         navigateToApp(path?: string, raw?: boolean): Chainable<void>;
-        /** Login with pre-defined user data or with a cypress alias */
+        /**
+         * Login with pre-defined user data or with a cypress alias.
+         * @param account The account name in the `auth.json` fixture, or an alias to a credentials object.
+         * @param keycloak If this is a keycloak login.
+         */
         login(account: string, keycloak?: boolean): Chainable<null>;
-        /** Select a certain node in the editor-ui */
+        /**
+         * Select the specified node in the editor-ui, to display it's content.
+         * @param nodeId The node to select
+         */
         selectNode(nodeId: number | string): Chainable<null>;
-        /** Attempt to find a specified item-type list */
+        /**
+         * Attempt to find a specified item-type list.
+         * @param type The type of list that should be found/searched for.
+         */
         findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
-        /** Attempt to find a specified item of a type in the item-type list (uses `findList`) */
-        findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
-        /** Click/Perform an action on an item (iE edit, preview, delete, ...) */
-        itemAction(type: ItemType, id: number, action: string): Chainable<null>;
-        /** Select the provided object-property - Requires the `editProperties` mode to be active for the item already. */
+        /**
+         * Attempt to find a specified item in a list.
+         * @param id The id of the element that should be found/searched for.
+         */
+        findItem(id: string | number): Chainable<JQuery<HTMLElement>>;
+        /**
+         * Click/Perform an action on an item (iE edit, preview, delete, ...)
+         * @param action The action id to click/perform for an item.
+         */
+        itemAction(action: string): Chainable<null>;
+        /**
+         * Select the provided object-property - Requires the `editProperties` mode to be active for the item already.
+         * @param name The tag-name of the object-property, without the `object.` prefix.
+         */
         openObjectPropertyEditor(name: string): Chainable<JQuery<HTMLElement>>;
-        /** Finds the tag-editor element(s) which are for controlling the tag value */
+        /**
+         * Finds the tag-editor element(s) which are for controlling the tag value.
+         * @param type The part-type of the tag-editor, i.E. 'SELECT' to get the select property inputs.
+         */
         findTagEditorElement(type: string): Chainable<JQuery<HTMLElement>>;
-        /** Uploads the specified fixture-names as files or images */
+        /**
+         * Uploads the specified fixture-names as files or images.
+         * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
+         * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
+         * @param dragNDrop If the upload should be done via the drag-n-drop functionality.
+         */
         uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
-        /** Selects the specified value in the select subject */
+        /**
+         * Requires the subject to be a `gtx-select`.
+         * Will select the option with the corresponding `valueId`.
+         * @param valueId The value/option to select.
+         */
         selectValue(valueId: any): Chainable<null>;
         /** Click the save button in the editor-toolbar */
         editorSave(): Chainable<null>;
@@ -193,7 +238,7 @@ Cypress.Commands.add('loadBinaries', (files, options) => {
     }));
 });
 
-Cypress.Commands.add('navigateToApp', (path, raw) => {
+Cypress.Commands.add('navigateToApp', { prevSubject: false }, (path, raw) => {
     /*
      * The baseUrl is always properly configured via NX.
      * When using the CI however, we use the served UI from the CMS directly.
@@ -203,7 +248,7 @@ Cypress.Commands.add('navigateToApp', (path, raw) => {
     cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
 });
 
-Cypress.Commands.add('login', (account, keycloak) => {
+Cypress.Commands.add('login', { prevSubject: false }, (account, keycloak) => {
     return cy.fixture('auth.json').then(auth => {
         const data = auth[account];
         if (data) {
@@ -218,39 +263,41 @@ Cypress.Commands.add('login', (account, keycloak) => {
     });
 });
 
-Cypress.Commands.add('selectNode', (nodeId) => {
-    cy.get('.node-selector [data-action="select-node"]')
+Cypress.Commands.add('selectNode', { prevSubject: 'optional' }, (subject, nodeId) => {
+    const root = subject ? cy.wrap(subject) : cy.get('folder-contents');
+    root.find('node-selector [data-action="select-node"]')
         .click();
-    cy.get('.node-selector-list')
+    cy.get('gtx-app-root .node-selector-list')
         .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`)
         .click();
     return cy.wrap(null);
 });
 
-Cypress.Commands.add('findList', (type) => {
-    return cy.get(`item-list .content-list[data-item-type="${type}"]`);
+Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type) => {
+    const root = subject ? cy.wrap(subject) : cy.get('folder-contents');
+    return root.find(`item-list .content-list[data-item-type="${type}"]`);
 });
 
-Cypress.Commands.add('findItem', (type, id) => {
-    return cy.findList(type)
+Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id) => {
+    return cy.wrap(subject)
         .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 });
 
-Cypress.Commands.add('itemAction', (type, id, action) => {
+Cypress.Commands.add('itemAction', { prevSubject: 'element' }, (subject, action) => {
     switch (action) {
         // For other actions such as selecting or similar
         default:
-            cy.findItem(type, id)
+            cy.wrap(subject)
                 .find('.context-menu gtx-button[data-action="open-item-context-menu"]')
                 .click({ force: true });
-            cy.get('.item-context-menu-content')
+            cy.get('gtx-app-root .item-context-menu-content')
                 .find(`[data-action="${action}"]`)
                 .click({ force: true });
             return cy.wrap(null);
     }
 });
 
-Cypress.Commands.add('openObjectPropertyEditor', (name) => {
+Cypress.Commands.add('openObjectPropertyEditor', { prevSubject: false }, (name) => {
     cy.get(`content-frame combined-properties-editor .tab-link[data-id="object.${name}"]`)
         .click({ force: true });
     return cy.get('content-frame combined-properties-editor .properties-content .tag-editor tag-editor-host');
@@ -268,7 +315,7 @@ Cypress.Commands.add('findTagEditorElement', { prevSubject: 'element' }, (subjec
     }
 });
 
-Cypress.Commands.add('uploadFiles', (type, fixtureNames, dragNDrop) => {
+Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames, dragNDrop) => {
     cy.intercept({
         method: 'POST',
         pathname: '/rest/file/create',
@@ -307,7 +354,7 @@ Cypress.Commands.add('uploadFiles', (type, fixtureNames, dragNDrop) => {
             const transfer = new DataTransfer();
             // Put the binaries/Files into the transfer
             Object.values(binaries).forEach(file => {
-                transfer.items.add(file as File);
+                transfer.items.add(file);
             });
 
             main = cy.get('folder-contents > [data-action="file-drop"]').trigger('drop', {
@@ -345,13 +392,13 @@ Cypress.Commands.add('selectValue', { prevSubject: 'element' }, (subject, valueI
     return cy.wrap(null);
 });
 
-Cypress.Commands.add('editorSave', () => {
+Cypress.Commands.add('editorSave', { prevSubject: false }, () => {
     cy.get('content-frame gtx-editor-toolbar .save-button [data-action="primary"]')
         .click({ force: true });
     return cy.wrap(null);
 });
 
-Cypress.Commands.add('editorClose', () => {
+Cypress.Commands.add('editorClose', { prevSubject: false }, () => {
     cy.get('content-frame gtx-editor-toolbar [data-action="close"]')
         .click({ force: true });
     return cy.wrap(null);

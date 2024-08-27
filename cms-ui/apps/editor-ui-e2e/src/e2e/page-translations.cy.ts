@@ -37,7 +37,8 @@ describe('Page Translation', () => {
             const page = IMPORTER.get(pageOne)!;
             const NEW_LANG = 'de';
 
-            cy.findItem(ITEM_TYPE_PAGE, page.id)
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(page.id)
                 .find('page-language-indicator')
                 .find(`.language-icon[data-id="${NEW_LANG}"]`)
                 .click({ force: true });

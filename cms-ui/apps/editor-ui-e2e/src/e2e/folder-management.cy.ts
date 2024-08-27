@@ -67,7 +67,8 @@ describe('Folder Management', () => {
             .then(data => {
                 const folder = data.response?.body?.folder;
                 expect(folder).to.exist;
-                cy.findItem(ITEM_TYPE_FOLDER, folder!.id)
+                cy.findList(ITEM_TYPE_FOLDER)
+                    .findItem(folder!.id)
                     .should('exist');
             });
     });
@@ -77,13 +78,14 @@ describe('Folder Management', () => {
         const CHANGE_FOLDER_NAME = 'Foo bar change';
 
         // Confirm that the original name is correct
-        cy.findItem(ITEM_TYPE_FOLDER, FOLDER.id)
-            .should('exist');
-        cy.findItem(ITEM_TYPE_FOLDER, FOLDER.id)
+        cy.findList(ITEM_TYPE_FOLDER)
+            .findItem(FOLDER.id)
             .find('.item-name .item-name-only')
             .should('have.text', FOLDER.name);
 
-        cy.itemAction(ITEM_TYPE_FOLDER, FOLDER.id, 'properties');
+        cy.findList(ITEM_TYPE_FOLDER)
+            .findItem(FOLDER.id)
+            .itemAction('properties');
         cy.get('content-frame combined-properties-editor .properties-content folder-properties-form').as('form');
 
         cy.intercept({
@@ -100,7 +102,8 @@ describe('Folder Management', () => {
 
         // Wait for the update to be actually handled
         cy.wait('@updateRequest').then(() => {
-            cy.findItem(ITEM_TYPE_FOLDER, FOLDER.id)
+            cy.findList(ITEM_TYPE_FOLDER)
+                .findItem(FOLDER.id)
                 .find('.item-name .item-name-only')
                 .should('have.text', CHANGE_FOLDER_NAME);
         });
@@ -111,7 +114,9 @@ describe('Folder Management', () => {
         const COLOR_ID = 2;
         const FOLDER = IMPORTER.get(folderA)!;
 
-        cy.itemAction(ITEM_TYPE_FOLDER, FOLDER.id, 'properties');
+        cy.findList(ITEM_TYPE_FOLDER)
+            .findItem(FOLDER.id)
+            .itemAction('properties');
         cy.openObjectPropertyEditor(OBJECT_PROPERTY)
             .findTagEditorElement(TagPropertyType.SELECT)
             .selectValue(COLOR_ID);

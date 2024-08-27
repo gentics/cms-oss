@@ -33,10 +33,14 @@ describe('Login', () => {
             .should('contain.text', minimalNode.node.name);
         const folders = [folderA, folderB];
         for (const folder of folders) {
-            cy.findItem(folder[IMPORT_TYPE], IMPORTER.get(folder)!.id).should('exist');
+            cy.findList(folder[IMPORT_TYPE])
+                .findItem(IMPORTER.get(folder)!.id)
+                .should('exist');
         }
 
-        cy.itemAction(folderA[IMPORT_TYPE], IMPORTER.get(folderA)!.id, 'properties');
+        cy.findList(folderA[IMPORT_TYPE])
+            .findItem(IMPORTER.get(folderA)!.id)
+            .itemAction('properties');
         cy.get('content-frame')
             .should('exist');
     });

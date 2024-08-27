@@ -35,7 +35,9 @@ describe('Media Management', () => {
 
             /* Open the Folder Properties and select a Object-Property to edit
              * ---------------------------- */
-            cy.itemAction(ITEM_TYPE_FILE, FILE.id, 'properties');
+            cy.findList(ITEM_TYPE_FILE)
+                .findItem(FILE.id)
+                .itemAction('properties');
 
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)
@@ -71,7 +73,9 @@ describe('Media Management', () => {
 
             /* Open the Folder Properties and select a Object-Property to edit
              * ---------------------------- */
-            cy.itemAction(ITEM_TYPE_IMAGE, IMAGE.id, 'properties');
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(IMAGE.id)
+                .itemAction('properties');
 
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)

@@ -52,7 +52,8 @@ describe('Media Upload', () => {
 
     it('should be possible to upload a regular text file', () => {
         cy.uploadFiles(ITEM_TYPE_FILE, [FIXTURE_TEST_FILE_TXT_1]).then(allFiles => {
-            cy.findItem(ITEM_TYPE_FILE, allFiles[FIXTURE_TEST_FILE_TXT_1].id)
+            cy.findList(ITEM_TYPE_FILE)
+                .findItem(allFiles[FIXTURE_TEST_FILE_TXT_1].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_FILE)
                 .find('.list-body item-list-row')
@@ -62,7 +63,8 @@ describe('Media Upload', () => {
 
     it('should be possible to upload a image file', () => {
         cy.uploadFiles(ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2]).then(allFiles => {
-            cy.findItem(ITEM_TYPE_IMAGE, allFiles[FIXTURE_TEST_IMAGE_JPG_2].id)
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(allFiles[FIXTURE_TEST_IMAGE_JPG_2].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_IMAGE)
                 .find('.list-body masonry-item')
@@ -72,7 +74,8 @@ describe('Media Upload', () => {
 
     it('should be possible to upload a regular text file with drag-n-drop', () => {
         cy.uploadFiles(ITEM_TYPE_FILE, [FIXTURE_TEST_FILE_TXT_1], true).then(allFiles => {
-            cy.findItem(ITEM_TYPE_FILE, allFiles[FIXTURE_TEST_FILE_TXT_1].id)
+            cy.findList(ITEM_TYPE_FILE)
+                .findItem(allFiles[FIXTURE_TEST_FILE_TXT_1].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_FILE)
                 .find('.list-body item-list-row')
@@ -82,7 +85,8 @@ describe('Media Upload', () => {
 
     it('should be possible to upload a image file with drag-n-drop', () => {
         cy.uploadFiles(ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2], true).then(allFiles => {
-            cy.findItem(ITEM_TYPE_IMAGE, allFiles[FIXTURE_TEST_IMAGE_JPG_2].id)
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(allFiles[FIXTURE_TEST_IMAGE_JPG_2].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_IMAGE)
                 .find('.list-body masonry-item')
@@ -95,9 +99,11 @@ describe('Media Upload', () => {
             FIXTURE_TEST_FILE_TXT_2,
             FIXTURE_TEST_FILE_PDF_1,
         ]).then(allFiles => {
-            cy.findItem(ITEM_TYPE_FILE, allFiles[FIXTURE_TEST_FILE_TXT_2].id)
+            cy.findList(ITEM_TYPE_FILE)
+                .findItem(allFiles[FIXTURE_TEST_FILE_TXT_2].id)
                 .should('exist');
-            cy.findItem(ITEM_TYPE_FILE, allFiles[FIXTURE_TEST_FILE_PDF_1].id)
+            cy.findList(ITEM_TYPE_FILE)
+                .findItem(allFiles[FIXTURE_TEST_FILE_PDF_1].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_FILE)
                 .find('.list-body item-list-row')
@@ -110,9 +116,11 @@ describe('Media Upload', () => {
             FIXTURE_TEST_IMAGE_PNG_1,
             FIXTURE_TEST_IMAGE_PNG_2,
         ]).then(allFiles => {
-            cy.findItem(ITEM_TYPE_IMAGE, allFiles[FIXTURE_TEST_IMAGE_PNG_1].id)
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(allFiles[FIXTURE_TEST_IMAGE_PNG_1].id)
                 .should('exist');
-            cy.findItem(ITEM_TYPE_IMAGE, allFiles[FIXTURE_TEST_IMAGE_PNG_2].id)
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(allFiles[FIXTURE_TEST_IMAGE_PNG_2].id)
                 .should('exist');
             cy.findList(ITEM_TYPE_IMAGE)
                 .find('.list-body masonry-item')

@@ -67,7 +67,8 @@ describe('Page Management', () => {
 
             const page = data.response?.body?.page;
             expect(page).to.exist;
-            cy.findItem(ITEM_TYPE_PAGE, page!.id)
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(page!.id)
                 .should('exist');
         });
     });
@@ -77,13 +78,17 @@ describe('Page Management', () => {
         const CHANGE_PAGE_NAME = 'Foo bar change';
 
         // Confirm that the original name is correct
-        cy.findItem(ITEM_TYPE_PAGE, PAGE.id)
+        cy.findList(ITEM_TYPE_PAGE)
+            .findItem(PAGE.id)
             .should('exist');
-        cy.findItem(ITEM_TYPE_PAGE, PAGE.id)
+        cy.findList(ITEM_TYPE_PAGE)
+            .findItem(PAGE.id)
             .find('.item-name .item-name-only')
             .should('have.text', PAGE.name);
 
-        cy.itemAction(ITEM_TYPE_PAGE, PAGE.id, 'properties');
+        cy.findList(ITEM_TYPE_PAGE)
+            .findItem(PAGE.id)
+            .itemAction('properties');
         cy.get('content-frame combined-properties-editor .properties-content page-properties-form').as('form');
 
         cy.intercept({
@@ -102,7 +107,8 @@ describe('Page Management', () => {
 
         // Wait for the update to be actually handled
         cy.wait('@updateRequest').then(() => {
-            cy.findItem(ITEM_TYPE_PAGE, PAGE.id)
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(PAGE.id)
                 .find('.item-name .item-name-only')
                 .should('have.text', CHANGE_PAGE_NAME);
         });
@@ -113,7 +119,9 @@ describe('Page Management', () => {
         const COLOR_ID = 2;
         const PAGE = IMPORTER.get(pageOne)!;
 
-        cy.itemAction(ITEM_TYPE_PAGE, PAGE.id, 'properties');
+        cy.findList(ITEM_TYPE_PAGE)
+            .findItem(PAGE.id)
+            .itemAction('properties');
         cy.openObjectPropertyEditor(OBJECT_PROPERTY)
             .findTagEditorElement(TagPropertyType.SELECT)
             .selectValue(COLOR_ID);

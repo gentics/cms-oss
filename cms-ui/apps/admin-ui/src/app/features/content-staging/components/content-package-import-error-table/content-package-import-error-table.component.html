@@ -40,6 +40,10 @@
     [active]="activeEntity"
     [totalCount]="totalCount"
 
+    [renderers]="{
+        recommendation: descriptionRenderer,
+    }"
+
     [page]="page"
     [perPage]="perPage"
     [sortBy]="sortBy"
@@ -54,3 +58,23 @@
 />
 
 
+<ng-template #descriptionRenderer let-value="value">
+    <gtx-tooltip
+        [type]="'light'"
+        [position]="'right'"
+        [align]="'top'"
+    >
+        <div class="gtx-form-section-title">
+            <icon class="help"
+                gtx-tooltip-trigger
+            >error_outline</icon>
+        </div>
+
+        <div
+            gtx-tooltip-content
+            class="error-recommendation"
+        >
+            {{ value }}
+        </div>
+    </gtx-tooltip>
+</ng-template>

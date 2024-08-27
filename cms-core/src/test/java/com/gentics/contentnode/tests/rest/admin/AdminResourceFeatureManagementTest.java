@@ -1,6 +1,6 @@
 package com.gentics.contentnode.tests.rest.admin;
 
-import static com.gentics.contentnode.factory.Trx.*;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,10 +14,8 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.impl.AdminResourceImpl;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -67,33 +65,6 @@ public class AdminResourceFeatureManagementTest {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 			return prefs.getFeature(Feature.TAG_IMAGE_RESIZER.getName());
-		});
-		assertThat(enabled).isTrue();
-	}
-
-	@Test
-	public void testFeatureWebpConversion() throws NodeException {
-//		operate(() -> {
-//			Transaction t = TransactionManager.getCurrentTransaction();
-//			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-//			prefs.setFeature(Feature.WEBP_CONVERSION, false);
-//		});
-		int nodeId = supply(() -> ContentNodeTestDataUtils.createNode(Feature.WEBP_CONVERSION).getId());
-		GenericResponse response = supply(() -> new AdminResourceImpl().setFeature(Feature.WEBP_CONVERSION.getName(), false, nodeId));
-		assertResponseOK(response);
-		boolean enabled = supply(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-			return prefs.getFeature(Feature.WEBP_CONVERSION.getName(), t.getObject(Node.class, nodeId));
-		});
-		assertThat(enabled).isFalse();
-
-		response = supply(() -> new AdminResourceImpl().setFeature(Feature.WEBP_CONVERSION.getName(), true, nodeId));
-		assertResponseOK(response);
-		enabled = supply(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-			return prefs.getFeature(Feature.WEBP_CONVERSION.getName(), t.getObject(Node.class, nodeId));
 		});
 		assertThat(enabled).isTrue();
 	}

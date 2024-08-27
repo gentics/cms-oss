@@ -778,43 +778,22 @@ public class AdminResourceImpl implements AdminResource {
 	@POST
 	@Path("/feature/{feature}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
-	public GenericResponse setFeature(@PathParam("feature") String featureName, @QueryParam("enabled") Boolean enable, @QueryParam("node") Integer nodeId) throws NodeException {
+	public GenericResponse setFeature(@PathParam("feature") String featureName, @QueryParam("enabled") Boolean enable) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response = new GenericResponse();
 			ResponseInfo responseInfo = new ResponseInfo();
 			Feature feature = Feature.getByName(featureName);
 			if (feature != null) {
 				if (feature.isAvailable()) {
-					if (feature.isPerNode()) {
-						if (nodeId != null) {
-							Node node = trx.getTransaction().getObject(Node.class, nodeId);
-							if (node != null) {
-								if (feature.isActivated(node) && !enable) {
-									node.deactivateFeature(feature);
-									responseInfo.setResponseCode(ResponseCode.OK);
-								} else if (!feature.isActivated(node) && enable) {
-									node.activateFeature(feature);
-									responseInfo.setResponseCode(ResponseCode.OK);
-								} else {
-									responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-								}
-								responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (ResponseCode.OK == responseInfo.getResponseCode() ? "" : "already ") + (enable ? "activated": "deactivated") + " for the Node with id #" + nodeId);
-							} else {
-								responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-								responseInfo.setResponseMessage("Node with id #" + nodeId + " not found");
-							}
-						}
+					if (feature.isActivated() && enable) {
+						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
+					} else if (!feature.isActivated() && !enable) {
+						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
 					} else {
-						if (feature.isActivated() && enable) {
-							responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-						} else if (!feature.isActivated() && !enable) {
-							responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-						} else {
-							NodeConfigRuntimeConfiguration.getPreferences().setFeature(feature, enable);
-							responseInfo.setResponseCode(ResponseCode.OK);
-						}
-						responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (ResponseCode.OK == responseInfo.getResponseCode() ? "" : "already ") + (enable ? "activated": "deactivated"));
+						NodeConfigRuntimeConfiguration.getPreferences().setFeature(feature, enable);
+						responseInfo.setResponseCode(ResponseCode.OK);
 					}
+					responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (ResponseCode.OK == responseInfo.getResponseCode() ? "" : "already ") + (enable ? "activated": "deactivated"));
 				} else {
 					responseInfo.setResponseCode(ResponseCode.NOTLICENSED);
 					responseInfo.setResponseMessage("Feature #" + featureName + " is not licensed");

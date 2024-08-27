@@ -278,6 +278,8 @@ public class DBTestContext extends TestWatcher {
 			throw new NodeException("Waited too long for the connection properties from gcn-testdb-manager");
 		}
 
+		connectionProperties.setProperty("username", "root");
+		connectionProperties.setProperty("passwd", "finger");
 		setupGCN(gcnBasePath, connectionProperties);
 
 		if (startDirtQueueWorker) {

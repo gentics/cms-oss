@@ -14,12 +14,16 @@
     }
 }
 
-icon.help {
-    cursor: help;
-    color: #0096DC;
-    transform: rotate(180deg);
-    font-size: 1.2rem;
-    margin-top: 0.5rem;
+
+gtx-tooltip {
+    margin: auto 0;
+
+    icon.help {
+        cursor: help;
+        color: #0096DC;
+        transform: rotate(180deg);
+        font-size: 1.2rem;
+    }
 }
 
 .check-time {

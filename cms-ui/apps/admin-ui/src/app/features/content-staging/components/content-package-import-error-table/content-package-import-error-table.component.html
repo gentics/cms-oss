@@ -41,7 +41,7 @@
     [totalCount]="totalCount"
 
     [renderers]="{
-        recommendation: descriptionRenderer,
+        recommendation: recommendationRenderer,
     }"
 
     [page]="page"
@@ -58,9 +58,8 @@
 />
 
 
-<ng-template #descriptionRenderer let-value="value">
-    <gtx-tooltip
-        [type]="'light'"
+<ng-template #recommendationRenderer let-value="value">
+    <gtx-tooltip [type]="'light'"
         [position]="'right'"
         [align]="'top'"
     >
@@ -70,10 +69,7 @@
             >error_outline</icon>
         </div>
 
-        <div
-            gtx-tooltip-content
-            class="error-recommendation"
-        >
+        <div gtx-tooltip-content class="error-recommendation">
             {{ value }}
         </div>
     </gtx-tooltip>

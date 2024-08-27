@@ -108,8 +108,10 @@ public class TranslationResourceImplIntegrationTest {
 					targetLanguage,
 					true, 0, 0);
 
-			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(
-					ResponseCode.OK);
+			var responseInfo = response.getResponseInfo();
+			assertThat(responseInfo.getResponseCode())
+					.withFailMessage("Expected OK but was %s", responseInfo.getResponseMessage())
+					.isEqualTo(ResponseCode.OK);
 
 			PageLoadResponse pageTranslateResponse = (PageLoadResponse) response;
 			var translatedPage = pageTranslateResponse.getPage();

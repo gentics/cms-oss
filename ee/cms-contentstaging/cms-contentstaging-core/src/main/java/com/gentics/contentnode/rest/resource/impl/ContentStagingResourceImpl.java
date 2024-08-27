@@ -4,6 +4,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.require;
 import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
 import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
+import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -37,7 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -1001,7 +1001,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
 								items.add(storedFile);
 								if (!file.getParent().resolve(makeBinaryFilename(storedFile)).toFile().exists()) {
-									errors.add(new StagingError(storedFile.getId(), file.toString(), null, StagingErrorKind.no_binary));
+									var stagingError = new StagingError(storedFile.getId(), file.toString(), null, StagingErrorKind.NO_BINARY);
+									stagingError.setRecommendation(StagingErrorRecommendation.NOT_FOUND.toString());
+									errors.add(stagingError);
 								}
 							}
 						}, 
@@ -1010,7 +1012,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
 								items.add(storedImage);
 								if (!image.getParent().resolve(makeBinaryFilename(storedImage)).toFile().exists()) {
-									errors.add(new StagingError(storedImage.getId(), image.toString(), null, StagingErrorKind.no_binary));
+									var stagingError = new StagingError(storedImage.getId(), image.toString(), null, StagingErrorKind.NO_BINARY);
+									stagingError.setRecommendation(StagingErrorRecommendation.NOT_FOUND.toString());
+									errors.add(stagingError);
 								}
 							}
 						}, 
@@ -1044,9 +1048,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						}, 
 						(dup, orig, id) -> {
 							logger.warn(String.format("Duplicated file for id [%s] in the content package [%s]: orig: %s, dup: %s", id, cpackage.getName(), orig.toString(), dup.toString()));
-							errors.add(new StagingError(id, dup.toString(), "Duplication of " + orig.toString(), StagingErrorKind.duplication));
-							errors.add(new StagingError(id, orig.toString(), "Duplication of " + dup.toString(), StagingErrorKind.duplication));
-						}, 
+							var stagingErrorDub = new StagingError(id, dup.toString(), "Duplication of " + orig.toString(), StagingErrorKind.DUPLICATION);
+							stagingErrorDub.setRecommendation(StagingErrorRecommendation.DUPLICATION.toString());
+							errors.add(stagingErrorDub);
+
+							var stagingError = new StagingError(id, orig.toString(), "Duplication of " + dup.toString(), StagingErrorKind.DUPLICATION);
+							stagingError.setRecommendation(StagingErrorRecommendation.DUPLICATION.toString());
+							errors.add(stagingError);
+						},
 						exception -> {
 							logger.error(String.format("Could not process the content package [%s]", cpackage.getName()));
 							if (exception instanceof NodeException) {

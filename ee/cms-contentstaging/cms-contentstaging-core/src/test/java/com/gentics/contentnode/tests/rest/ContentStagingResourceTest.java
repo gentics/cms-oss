@@ -841,7 +841,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 		// List mismatches only
 		cplResponse = supply(() -> {
-			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.exception.toString());
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.EXCEPTION.toString());
 		});
 		assertResponseOK(cplResponse);
 		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
@@ -850,7 +850,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 		// List something else
 		cplResponse = supply(() -> {
-			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.no_binary.toString());
+			return new ContentStagingResourceImpl().folderList(packageName, UriComponent.decodePath(folder1.getName(), true), StagingErrorKind.NO_BINARY.toString());
 		});
 		assertResponseOK(cplResponse);
 		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.rest.util;
 
+import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -664,9 +665,11 @@ public class StagingModelBuilder {
 			var objectDescription = String.format("%s '%s' (%s, %d)", I18NHelper.get(table), I18NHelper.getName(referenced),
 					referenced.getGlobalId().toString(), referenced.getId());
 			 var errorMessage = I18NHelper.get("content.staging.import.object_error", objectDescription);
-			mismatches.add(new StagingError(ownerId, ownerPath.toString(), errorMessage , StagingErrorKind.mismatch));
+			 var stagingError = new StagingError(ownerId, ownerPath.toString(), errorMessage , StagingErrorKind.MISMATCH);
+			 stagingError.setRecommendation(StagingErrorRecommendation.MISMATCH.toString());
+			 mismatches.add(stagingError);
 
-			consumer.accept(referenced.getId());
+			 consumer.accept(referenced.getId());
 		} else {
 			consumer.accept(referenced.getId());
 		}

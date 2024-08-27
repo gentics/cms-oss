@@ -7,14 +7,13 @@ import java.util.Arrays;
  * Kind of an error
  */
 public enum StagingErrorKind implements Serializable {
+	EXCEPTION,
+	MISMATCH,
+	DUPLICATION,
+	NO_BINARY,
+	OTHER;
 
-	exception,
-	mismatch,
-	duplication,
-	no_binary,
-	other;
-
-	public static final StagingErrorKind fromValue(String value) {
+	public static StagingErrorKind fromValue(String value) {
 		if (value == null) {
 			return null;
 		}

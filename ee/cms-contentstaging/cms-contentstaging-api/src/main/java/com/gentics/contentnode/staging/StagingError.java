@@ -1,5 +1,7 @@
 package com.gentics.contentnode.staging;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import java.io.Serializable;
 import java.nio.file.Path;
 
@@ -22,11 +24,12 @@ public class StagingError implements Serializable {
 	private String error;
 	private String globalId;
 	private StagingErrorKind kind;
+	private String recommendation;
 
 	/**
 	 * Reflection ctor.
 	 */
-	public StagingError() {		
+	public StagingError() {
 	}
 
 	/**
@@ -40,43 +43,67 @@ public class StagingError implements Serializable {
 		this.error = error;
 		this.globalId = globalId;
 		this.kind = kind;
+		this.setRecommendation(StagingErrorRecommendation.OTHER.toString());
 	}
 
 	/**
 	 * Adapter method.
-	 * 
+	 *
 	 * @param path
-	 * @param t
+	 * @param throwable
 	 * @return
 	 */
 	@XmlTransient
 	@JsonIgnore
-    public static final StagingError fromThrowable(String globalId, Path path, Throwable t) {
-		return new StagingError(globalId, path.toString(), t.getMessage(), StagingErrorKind.exception);
+	public static final StagingError fromThrowable(String globalId, Path path, Throwable throwable) {
+		var errorMessage = throwable.getMessage();
+
+		if (throwable instanceof NodeException) {
+				errorMessage = ((NodeException) throwable).getLocalizedMessage();
+		}
+		var stagingError = new StagingError(globalId, path.toString(), errorMessage, StagingErrorKind.EXCEPTION);
+		stagingError.setRecommendation(StagingErrorRecommendation.fromThrowable(throwable).toString());
+
+		return stagingError;
 	}
 
 	public String getPath() {
 		return path;
 	}
+
 	public void setPath(String path) {
 		this.path = path;
 	}
+
 	public String getError() {
 		return error;
 	}
+
 	public void setError(String error) {
 		this.error = error;
 	}
+
 	public String getGlobalId() {
 		return globalId;
 	}
+
 	public void setGlobalId(String globalId) {
 		this.globalId = globalId;
 	}
+
 	public StagingErrorKind getKind() {
 		return kind;
 	}
+
 	public void setKind(StagingErrorKind kind) {
 		this.kind = kind;
+	}
+
+	public String getRecommendation() {
+		return recommendation;
+	}
+
+	public void setRecommendation(String recommendation) {
+		this.recommendation = recommendation;
 	}
 }

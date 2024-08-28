@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, WindowRef } from '@gentics/cms-components';
 import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     I18nLanguage,
@@ -35,7 +35,6 @@ import {
     takeWhile,
     tap,
 } from 'rxjs/operators';
-import { KeycloakService } from 'libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { GtxChipSearchConfig, UIState } from './common/models';
 import {
     ChangePasswordModal,

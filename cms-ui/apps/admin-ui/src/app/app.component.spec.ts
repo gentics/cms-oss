@@ -3,7 +3,7 @@ import { Component, EventEmitter, Injectable, NO_ERRORS_SCHEMA, Pipe, PipeTransf
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule } from '@gentics/cms-components';
+import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -12,7 +12,6 @@ import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
 import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 import { componentTest } from '../testing';
-import { KeycloakService } from '../../../../libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
 import { InterfaceOf } from './common/utils/util-types/util-types';
@@ -211,10 +210,10 @@ describe('AppComponent', () => {
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },
                 MessageService,
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
+                { provide: KeycloakService },
                 { provide: UsersnapService, useClass: MockUsersnapService },
                 { provide: AdminOperations, useClass: MockAdminOperations },
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
-                { provide: KeycloakService },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
                 { provide: MarkupLanguageOperations, useClass: MockMarkupLanguageOperations },

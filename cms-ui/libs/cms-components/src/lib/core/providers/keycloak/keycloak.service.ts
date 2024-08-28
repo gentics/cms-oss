@@ -1,22 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-use-before-define */
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { CUSTOMER_CONFIG_PATH } from '../../../../../../../apps/admin-ui/src/app/common/config/config';
-import { API_BASE_URL } from '../../../../../../../apps/admin-ui/src/app/common/utils/base-urls/base-urls';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+
 
 /** The Keycloak global is exposed when loading the keycloak.js script from the Keycloak server */
 let keycloak: Keycloak;
-
 let showSSOButton: boolean;
 
 const NO_CONFIG_FOUND = 'Keycloak config file not found';
 const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
+const CUSTOMER_CONFIG_PATH = './../ui-conf/';
+export const KEYCLOAK_ERROR_KEY = 'keycloakError'
 
 /**
  * Enum for the ready state to not have magic numbers.
@@ -34,10 +31,13 @@ enum XMLHttpRequestState {
 export class KeycloakService {
 
     /** Keycloak support will be triggered if there is a keycloak.json file in the /config folder of the UI root. */
-    static keycloakConfigFile = CUSTOMER_CONFIG_PATH + 'keycloak.json';
+    static readonly keycloakConfigFile = CUSTOMER_CONFIG_PATH + 'keycloak.json';
 
     /** The app will not trigger redirect to Keycloak if ui-overrides.json has showSSOButton: true */
-    static uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
+    static readonly uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
+
+
+    constructor(private client: GCMSRestClientService, private router: Router) {}
 
     /**
      * Initializes Keycloak.
@@ -45,7 +45,7 @@ export class KeycloakService {
      * This static method should be invoked prior to bootstrapping the app, since it will trigger redirects which will
      * cause multiple app reloads/bootstraps and will also break routing.
      */
-    static checkKeycloakAuth(router: Router): Promise<any> {
+    checkKeycloakAuth(): Promise<any> {
         if (checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME)) {
             // same value provided as via .catch when config was not found
             return Promise.resolve(undefined);
@@ -55,15 +55,15 @@ export class KeycloakService {
                 console.info('UI-Overrides config found');
                 if (uiOverrides.showSSOButton && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME)) {
                     showSSOButton = true;
-                    return checkKeycloakAuthOnLoad('check-sso', router);
+                    return this.checkKeycloakAuthOnLoad('check-sso');
                 } else {
                     showSSOButton = false;
-                    return checkKeycloakAuthOnLoad('login-required', router);
+                    return this.checkKeycloakAuthOnLoad('login-required');
                 }
             })
             .catch(() => {
                 showSSOButton = false;
-                return checkKeycloakAuthOnLoad('login-required', router);
+                return this.checkKeycloakAuthOnLoad('login-required');
             });
     }
 
@@ -74,8 +74,6 @@ export class KeycloakService {
     get showSSOButton(): boolean {
         return !!showSSOButton;
     }
-
-    constructor(private http: HttpClient) {}
 
     /**
      * If Keycloak has been detected and successfully used prior to bootstrapping the app,
@@ -116,11 +114,7 @@ export class KeycloakService {
      */
     attemptCmsLogin(): Observable<string> {
         if (this.keycloakEnabled && keycloak.token) {
-            const headers = new HttpHeaders({
-                // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/restrict-template-expressions
-                Authorization: `Bearer ${keycloak.token}`,
-            });
-            return this.http.get(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`, { headers, responseType: 'text' });
+            return this.client.auth.ssoLogin(keycloak.token);
         } else {
             return throwError('Keycloak has not been set up. Cannot attempt SSO login.');
         }
@@ -142,46 +136,37 @@ export class KeycloakService {
             throw error;
         }
     }
-}
 
-/**
- * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
- */
-async function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required', router: Router): Promise<any> {
-    try {
-        const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
-        console.info('Keycloak config found');
+    /**
+     * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
+     */
+    async checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): Promise<any> {
+        try {
+            const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
+            console.info('Keycloak config found');
 
-        // Load the keycloak scripts from the keycloak instance.
-        // Has to be done this way, sadly
-        const keycloakUrl: string = keycloakConfig['auth-server-url'];
-        await loadScripts([
-            `${keycloakUrl}/js/keycloak.js`,
-            `${keycloakUrl}/js/keycloak-authz.js`,
-        ]);
+            // Load the keycloak scripts from the keycloak instance.
+            // Has to be done this way, sadly
+            const keycloakUrl: string = keycloakConfig['auth-server-url'];
+            await loadScripts([
+                `${keycloakUrl}/js/keycloak.js`,
+                `${keycloakUrl}/js/keycloak-authz.js`,
+            ]);
 
-        keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
-        return initKeycloak(keycloak, onLoad);
-    } catch (error) {
-        showSSOButton = false;
+            keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
+            return initKeycloak(keycloak, onLoad);
+        } catch (error) {
+            showSSOButton = false;
 
-        if (error !== NO_CONFIG_FOUND) {
-            console.error(error)
-
-            router.navigate(['/login'], { state: {
-                keycloakError: 'shared.keycloak_not_available',
-            }});
-        } else {
-            // keycloak is not configured, thus we can continue without SSO
-            router.navigate(['/login'], {
-                queryParams: {
-                    'skip-sso': 'true',
-                },
-            });
-
+            if (error !== NO_CONFIG_FOUND) {
+                this.router.navigate(['/login'], { state: {
+                    [KEYCLOAK_ERROR_KEY]: 'shared.keycloak_not_available',
+                }});
+            }
             console.log(error);
         }
     }
+
 }
 
 

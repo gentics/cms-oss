@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { KeycloakService } from 'libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
+import { KeycloakService } from '@gentics/cms-components';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';

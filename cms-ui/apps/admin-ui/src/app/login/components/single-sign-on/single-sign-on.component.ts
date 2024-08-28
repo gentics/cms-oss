@@ -8,7 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
-import { KeycloakService } from '../../providers/keycloak/keycloak.service';
+import { KeycloakService } from '../../../../../../../libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 
 @Component({
     selector: 'gtx-single-sign-on',

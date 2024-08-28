@@ -10,4 +10,8 @@
         </div>
         <gtx-single-sign-on></gtx-single-sign-on>
     </div>
+
+    <div *ngIf="keycloakError" class="keycloak-error">
+        {{ keycloakError | i18n }}
+    </div>
 </div>

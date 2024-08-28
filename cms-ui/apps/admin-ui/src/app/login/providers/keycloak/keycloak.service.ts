@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { Observable, throwError } from 'rxjs';
+import { Router } from '@angular/router';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { API_BASE_URL } from '../../../common/utils/base-urls/base-urls';
 
@@ -44,7 +45,7 @@ export class KeycloakService {
      * This static method should be invoked prior to bootstrapping the app, since it will trigger redirects which will
      * cause multiple app reloads/bootstraps and will also break routing.
      */
-    static checkKeycloakAuth(): Promise<any> {
+    static checkKeycloakAuth(router: Router): Promise<any> {
         if (checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME)) {
             // same value provided as via .catch when config was not found
             return Promise.resolve(undefined);
@@ -54,15 +55,15 @@ export class KeycloakService {
                 console.info('UI-Overrides config found');
                 if (uiOverrides.showSSOButton && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME)) {
                     showSSOButton = true;
-                    return checkKeycloakAuthOnLoad('check-sso');
+                    return checkKeycloakAuthOnLoad('check-sso', router);
                 } else {
                     showSSOButton = false;
-                    return checkKeycloakAuthOnLoad('login-required');
+                    return checkKeycloakAuthOnLoad('login-required', router);
                 }
             })
             .catch(() => {
                 showSSOButton = false;
-                return checkKeycloakAuthOnLoad('login-required');
+                return checkKeycloakAuthOnLoad('login-required', router);
             });
     }
 
@@ -146,7 +147,7 @@ export class KeycloakService {
 /**
  * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
  */
-async function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): Promise<any> {
+async function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required', router: Router): Promise<any> {
     try {
         const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
         console.info('Keycloak config found');
@@ -162,10 +163,23 @@ async function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): 
         keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
         return initKeycloak(keycloak, onLoad);
     } catch (error) {
-        // Since it is quite usual for no Keycloak.json file to be found in most installations,
-        // we swallow this error. All other errors will be re-thrown.
+        showSSOButton = false;
+
         if (error !== NO_CONFIG_FOUND) {
-            throw error;
+            console.error(error)
+
+            router.navigate(['/login'], { state: {
+                keycloakError: 'shared.keycloak_not_available',
+            }});
+        } else {
+            // keycloak is not configured, thus we can continue without SSO
+            router.navigate(['/login'], {
+                queryParams: {
+                    'skip-sso': 'true',
+                },
+            });
+
+            console.log(error);
         }
     }
 }
@@ -246,7 +260,7 @@ function loadScript(src: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.onload = () => resolve();
-        script.onerror = () => reject();
+        script.onerror = (error) => reject(error);
         script.src = src;
 
         document.head.appendChild(script);

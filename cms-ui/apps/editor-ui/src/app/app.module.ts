@@ -2,10 +2,10 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule } from '@angular/router';
+import { KeycloakService } from 'libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { AppComponent } from './app.component';
 import { APP_ROUTES } from './app.routes';
 import { CoreModule } from './core/core.module';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 
 const PROVIDERS: any[] = [
     { provide: LocationStrategy, useClass: HashLocationStrategy },

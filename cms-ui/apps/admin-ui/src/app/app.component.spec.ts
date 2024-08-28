@@ -10,7 +10,9 @@ import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
+import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 import { componentTest } from '../testing';
+import { KeycloakService } from '../../../../libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
 import { InterfaceOf } from './common/utils/util-types/util-types';
@@ -43,13 +45,11 @@ import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cle
 import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './core/providers/operations/admin/admin.operations';
 import { AuthOperations } from './core/providers/operations/auth';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-checkbox.component';
 import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
 import { AppStateService } from './state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from './state/utils/test-app-state';
-import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 
 class MockApiBase {
     get: any = jasmine.createSpy('ApiBase.get').and.returnValue(NEVER);
@@ -156,7 +156,7 @@ class MockI18nPipe implements PipeTransform {
 }
 
 @Component({
-    template: `<gtx-app-root></gtx-app-root>`,
+    template: '<gtx-app-root></gtx-app-root>',
 })
 class TestComponent { }
 

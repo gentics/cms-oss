@@ -1,28 +1,29 @@
 import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
-import { ApplicationStateService, STATE_MODULES } from '../../../state';
-import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { Store } from '@ngxs/store';
+import { AppStateService } from '../../../../../../../apps/admin-ui/src/app/state';
+import { TestAppState } from '../../../../../../../apps/admin-ui/src/app/state/utils/test-app-state';
+import { MockStore } from '../../../../../../../apps/admin-ui/src/app/state/utils/test-app-state/test-store.mock';
 import { KeycloakService } from './keycloak.service';
 
 class MockHttpClient {}
 
 describe('KeycloakService', () => {
 
-    let appState: TestApplicationState;
+    let appState: TestAppState;
     let keycloakService: KeycloakService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 KeycloakService,
-                { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: AppStateService, useClass: TestAppState },
                 { provide: HttpClient, useClass: MockHttpClient },
+                { provide: Store, useClass: MockStore },
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.get(AppStateService);
         keycloakService = TestBed.get(KeycloakService);
     });
 

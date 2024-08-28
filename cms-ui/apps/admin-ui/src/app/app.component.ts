@@ -32,8 +32,8 @@ import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
+import { KeycloakService } from '../../../../libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { AdminUIModuleRoutes } from './common';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { SetBackendLanguage } from './state/ui/ui.actions';
 
 @Component({

@@ -35,6 +35,7 @@ import {
     takeWhile,
     tap,
 } from 'rxjs/operators';
+import { KeycloakService } from 'libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { GtxChipSearchConfig, UIState } from './common/models';
 import {
     ChangePasswordModal,
@@ -51,7 +52,6 @@ import { PermissionService } from './core/providers/permissions/permission.servi
 import { UserSettingsService } from './core/providers/user-settings/user-settings.service';
 import { UsersnapService } from './core/providers/usersnap/usersnap.service';
 import { EmbeddedToolsService } from './embedded-tools/providers/embedded-tools/embedded-tools.service';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { ChipSearchBarConfigService } from './shared/providers/chip-search-bar-config/chip-search-bar-config.service';
 import { UIOverridesService } from './shared/providers/ui-overrides/ui-overrides.service';
 import {
@@ -276,7 +276,7 @@ export class AppComponent implements OnInit {
                     this.navigationService.list(node.id, node.folderId).navigate();
                 }
             },
-                error => this.errorHandler.catch(error));
+            error => this.errorHandler.catch(error));
 
         // Whenever the active node or editor node changes, load that node's features if necessary.
         merge(

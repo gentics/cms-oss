@@ -7,7 +7,6 @@ import {
     LocalTranslateLoader,
     LoggingHelperService,
 } from '@admin-ui/core';
-import { KeycloakService } from '@admin-ui/login/providers/keycloak/keycloak.service';
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
@@ -22,6 +21,7 @@ import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HotkeyModule } from 'angular2-hotkeys';
+import { KeycloakService } from 'libs/cms-components/src/lib/core/providers/keycloak/keycloak.service';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';

@@ -6,8 +6,8 @@ import { Injectable } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
-import { API_BASE_URL } from '../../../common/utils/base-urls/base-urls';
+import { CUSTOMER_CONFIG_PATH } from '../../../../../../../apps/admin-ui/src/app/common/config/config';
+import { API_BASE_URL } from '../../../../../../../apps/admin-ui/src/app/common/utils/base-urls/base-urls';
 
 /** The Keycloak global is exposed when loading the keycloak.js script from the Keycloak server */
 let keycloak: Keycloak;

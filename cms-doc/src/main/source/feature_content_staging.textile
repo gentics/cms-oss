@@ -159,12 +159,12 @@ h5. NOT_FOUND and EXCEPTION
 
 Make sure that the object is available in the CMS and then synchronize the package again in the file system.
 
-Tag types
+*Tag types*
   # import all implementation packages (DevTool packages) whose objects are used in the content package into the target system first.
   # use the consistency check to ensure that the implementation packages are complete.
   # now perform the package check again.
 
-Images & files
+*Images & files*
   # make sure that the referenced file exists in the source system.
   # make sure that the file has been added to the content package of the source system.
   # synchronize the content package from the source system to the file system.
@@ -187,4 +187,5 @@ h5. DUPLICATION
 Delete one of the two objects that caused the conflict.
 
 h5. OTHER
+
 No recommendation can be given for this error. Please take a look at the error description.

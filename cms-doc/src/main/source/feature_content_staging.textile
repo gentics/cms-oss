@@ -188,4 +188,3 @@ Delete one of the two objects that caused the conflict.
 
 h5. OTHER
 No recommendation can be given for this error. Please take a look at the error description.
-You can find more information on troubleshooting in our guides.

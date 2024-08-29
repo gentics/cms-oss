@@ -222,6 +222,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         login: (data, params) => this.executeMappedJsonRequest(POST, '/auth/login', data, params),
         logout: (sid) => this.executeMappedJsonRequest(POST, `/auth/logout/${sid}`),
         validate: (sid) => this.executeMappedJsonRequest(GET, `/auth/validate/${sid}`),
+        ssoLogin: (bearerToken) => this.executeRawRequest(GET, '/auth/ssologin', {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Authorization: `Bearer ${bearerToken}`,
+        }),
     } as const;
 
     public cluster: GCMSClusterAPI = {

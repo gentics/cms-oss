@@ -137,3 +137,55 @@ Importing will only be possible, if
 If at least one implementation entity does not match, the import will fail (nothing will be changed in the target CMS) and a list of all mismatching entities is shown to the user.
 
 It is advisable to use devtool packages for transport of the implementation entities between source and target systems to make sure that the implementation is identical.
+
+
+h4. Import Errors
+
+To better solve import errors, a import check can be performed in the content staging module of the administrator user interface.
+
+h5. Error Types
+
+All errors that would occurs when doing the actual import are listed and can be inspected. The errors are categorized in different error classes.
+
+|_. Error Type  |_. Description |
+| MISMATCH      | The implementations used in the content package have changed. |
+| EXCEPTION     | General error. Occurs when, for example, tag types are not available in the target system. |
+| DUPLICATION   | The object is already present multiple times in the target system. |
+| NOT_FOUND     | When objects referenced in the content package, such as images, are not found. |
+| OTHER         | Catch-all category for all other errors. |
+
+
+h5. NOT_FOUND and EXCEPTION
+
+Make sure that the object is available in the CMS and then synchronize the package again in the file system.
+
+Tag types
+  # import all implementation packages (DevTool packages) whose objects are used in the content package into the target system first.
+  # use the consistency check to ensure that the implementation packages are complete.
+  # now perform the package check again.
+
+Images & files
+  # make sure that the referenced file exists in the source system.
+  # make sure that the file has been added to the content package of the source system.
+  # synchronize the content package from the source system to the file system.
+  # replace the customized content package in the file system of the target system.
+  # now perform the package check again.
+You can find more information on troubleshooting in our guides.
+
+h5. MISMATCH
+
+Make sure that the content package uses the current implementations.
+
+  # synchronize all implementation packages (DevTool packages) whose objects are used in the content package from the source system to the file system first.
+  # transfer them to the file system of the target system.
+  # synchronize the new implementation packages from the file system to the target system.
+  # thereafter synchronize the content package from the source system to the file system and import it into the target system.
+  # now perform the package check again.
+
+h5. DUPLICATION
+
+Delete one of the two objects that caused the conflict.
+
+h5. OTHER
+No recommendation can be given for this error. Please take a look at the error description.
+You can find more information on troubleshooting in our guides.

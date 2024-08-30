@@ -25,6 +25,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -762,6 +763,46 @@ public class AdminResourceImpl implements AdminResource {
 			}
 
 			MaintenanceResponse response = MaintenanceMode.TRANSFORM2REST.apply(MaintenanceMode.get());
+			trx.success();
+			return response;
+		}
+	}
+
+	/**
+	 * Manage existing features in runtime.
+	 * 
+	 * @param request
+	 * @return
+	 * @throws NodeException
+	 */
+	@POST
+	@Path("/feature/{feature}")
+	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
+	public GenericResponse setFeature(@PathParam("feature") String featureName, @QueryParam("enabled") Boolean enable) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			GenericResponse response = new GenericResponse();
+			ResponseInfo responseInfo = new ResponseInfo();
+			Feature feature = Feature.getByName(featureName);
+			if (feature != null) {
+				if (feature.isAvailable()) {
+					if (feature.isActivated() && enable) {
+						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
+					} else if (!feature.isActivated() && !enable) {
+						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
+					} else {
+						NodeConfigRuntimeConfiguration.getPreferences().setFeature(feature, enable);
+						responseInfo.setResponseCode(ResponseCode.OK);
+					}
+					responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (ResponseCode.OK == responseInfo.getResponseCode() ? "" : "already ") + (enable ? "activated": "deactivated"));
+				} else {
+					responseInfo.setResponseCode(ResponseCode.NOTLICENSED);
+					responseInfo.setResponseMessage("Feature #" + featureName + " is not licensed");
+				}				
+			} else {
+				responseInfo.setResponseCode(ResponseCode.NOTFOUND);
+				responseInfo.setResponseMessage("Feature #" + featureName + " is not found");
+			}
+			response.setResponseInfo(responseInfo);
 			trx.success();
 			return response;
 		}

@@ -50,7 +50,7 @@ public class AdminResourceFeatureManagementTest {
 
 	@Test
 	public void testFeatureTagImageResizer() throws NodeException {
-		GenericResponse response = supply(() -> new AdminResourceImpl().setFeature(Feature.TAG_IMAGE_RESIZER.getName(), false, null));
+		GenericResponse response = supply(() -> new AdminResourceImpl().setFeature(Feature.TAG_IMAGE_RESIZER.getName(), false));
 		assertResponseOK(response);
 		boolean enabled = supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -59,7 +59,7 @@ public class AdminResourceFeatureManagementTest {
 		});
 		assertThat(enabled).isFalse();
 
-		response = supply(() -> new AdminResourceImpl().setFeature(Feature.TAG_IMAGE_RESIZER.getName(), true, null));
+		response = supply(() -> new AdminResourceImpl().setFeature(Feature.TAG_IMAGE_RESIZER.getName(), true));
 		assertResponseOK(response);
 		enabled = supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();

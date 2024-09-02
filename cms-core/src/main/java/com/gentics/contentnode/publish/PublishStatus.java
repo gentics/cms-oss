@@ -1,7 +1,7 @@
 /*
  * @author Stefan Hepp
  * @date 23.1.2006
- * @version $Id: PublishStatus.java,v 1.2 2006-02-05 18:16:44 stefan Exp $
+ * @version $Id: PublishState.java,v 1.2 2006-02-05 18:16:44 stefan Exp $
  */
 package com.gentics.contentnode.publish;
 

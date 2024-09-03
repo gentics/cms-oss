@@ -8,7 +8,7 @@ import {
     pageOne,
     skipableSuite,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN } from '../support/app.po';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('Page Translation', () => {
 

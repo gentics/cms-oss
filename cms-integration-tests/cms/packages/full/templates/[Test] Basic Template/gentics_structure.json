@@ -3,7 +3,28 @@
   "name" : "[Test] Basic Template",
   "description" : "Basic Template",
   "type" : "HTML",
-  "templateTags" : [ ],
+  "templateTags" : [ {
+    "globalId" : "9d1e.eb455646-647b-11ef-87e8-0242ac150003",
+    "name" : "header",
+    "active" : true,
+    "constructId" : "3821.37c733c5-3244-11ef-872a-0242ac110002",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "9d1e.f00ff456-647b-11ef-87e8-0242ac150003",
+    "name" : "content",
+    "active" : true,
+    "constructId" : "A547.75403",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "9d1e.f4b0817b-647b-11ef-87e8-0242ac150003",
+    "name" : "footer",
+    "active" : true,
+    "constructId" : "3821.45da0ed4-3244-11ef-872a-0242ac110002",
+    "editableInPage" : false,
+    "mandatory" : false
+  } ],
   "objectTags" : [ {
     "globalId" : "57a5.5db580d4-3224-11ef-862c-0242ac110002",
     "name" : "object.templateName",

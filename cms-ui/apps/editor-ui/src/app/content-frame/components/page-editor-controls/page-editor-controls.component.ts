@@ -144,7 +144,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
                 }
 
                 const elem = activeEditable.obj[0];
-                const editables = settings.plugins?.gcn?.editables || {};
+                const editables = settings?.plugins?.gcn?.editables || {};
                 const whitelist = (Object.entries(editables).find(([selector]) => {
                     return elem.matches(selector);
                 })?.[1] as any)?.tagtypeWhitelist;

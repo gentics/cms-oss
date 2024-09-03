@@ -8,11 +8,16 @@ import {
     pageOne,
     TestSize,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN } from '../support/app.po';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('Page Management', () => {
 
     const IMPORTER = new EntityImporter();
+
+    const ALIAS_MODAL = '@modal';
+    const ALIAS_FORM = '@form';
+    const ALIAS_CREATE_REQ = '@createRequest';
+    const ALIAS_UPDATE_REQ = '@updateRequest';
 
     before(async () => {
         cy.muteXHR();
@@ -38,31 +43,31 @@ describe('Page Management', () => {
         cy.findList(ITEM_TYPE_PAGE)
             .find('.header-controls [data-action="create-new-item"]')
             .click({ force: true });
-        cy.get('create-page-modal').as('modal');
-        cy.get('@modal').find('page-properties-form').as('form');
+        cy.get('create-page-modal').as(ALIAS_MODAL);
+        cy.get(ALIAS_MODAL).find('page-properties-form').as(ALIAS_FORM);
 
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="pageName"] input')
             .type(NEW_PAGE_NAME);
 
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="suggestedOrRequestedFileName"] input')
             .type(NEW_PAGE_PATH)
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="language"] .select-input')
             .selectValue(LANGUAGE_EN);
 
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/create',
-        }).as('createRequest');
+        }).as(ALIAS_CREATE_REQ);
 
-        cy.get('@modal')
+        cy.get(ALIAS_MODAL)
             .find('.modal-footer [data-action="confirm"]')
             .click({ force: true });
 
         // Wait for the folder to have reloaded
-        cy.wait<any, PageCreateResponse>('@createRequest').then(data => {
+        cy.wait<any, PageCreateResponse>(ALIAS_CREATE_REQ).then(data => {
             cy.editorClose();
 
             const page = data.response?.body?.page;
@@ -89,16 +94,16 @@ describe('Page Management', () => {
         cy.findList(ITEM_TYPE_PAGE)
             .findItem(PAGE.id)
             .itemAction('properties');
-        cy.get('content-frame combined-properties-editor .properties-content page-properties-form').as('form');
+        cy.get('content-frame combined-properties-editor .properties-content page-properties-form').as(ALIAS_FORM);
 
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/save/**',
-        }).as('updateRequest');
+        }).as(ALIAS_UPDATE_REQ);
 
         // Clear the name and enter the new one
         // eslint-disable-next-line cypress/unsafe-to-chain-command
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="pageName"] input')
             .clear()
             .type(CHANGE_PAGE_NAME);
@@ -106,7 +111,7 @@ describe('Page Management', () => {
         cy.editorSave();
 
         // Wait for the update to be actually handled
-        cy.wait('@updateRequest').then(() => {
+        cy.wait(ALIAS_UPDATE_REQ).then(() => {
             cy.findList(ITEM_TYPE_PAGE)
                 .findItem(PAGE.id)
                 .find('.item-name .item-name-only')
@@ -131,11 +136,11 @@ describe('Page Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/save/**',
-        }).as('saveRequest');
+        }).as(ALIAS_UPDATE_REQ);
 
         cy.editorSave();
 
-        cy.wait<PageSaveRequest>('@saveRequest').then(data => {
+        cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(data => {
             const req = data.request.body;
             const tag = req.page.tags?.[`object.${OBJECT_PROPERTY}`];
             const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;

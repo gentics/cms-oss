@@ -40,7 +40,7 @@ services:
       retries: 3
 
   cms:
-    image: docker.apa-it.at/gentics/cms-oss:${CI_CMS_VERSION:-6.1.6}
+    image: docker.apa-it.at/gentics/cms-oss:${CI_CMS_VERSION:-6.1.10}
     ports:
       - 8080:8080
 

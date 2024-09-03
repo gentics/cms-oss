@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AlohaToggleButtonComponent } from '@gentics/aloha-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { cancelEvent, generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -46,7 +46,8 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
         }
     }
 
-    public handleClick(): void {
+    public handleClick(event: MouseEvent): void {
+        cancelEvent(event);
         if (!this.settings) {
             this.aloha.restoreSelection();
             return;

@@ -6,11 +6,13 @@ import {
     TestSize,
     minimalNode,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1 } from '../support/app.po';
+import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1 } from '../support/common';
 
 describe('Media Management', () => {
 
     const IMPORTER = new EntityImporter();
+
+    const ALIAS_UPDATE_REQUEST = '@updateRequest';
 
     before(async () => {
         cy.muteXHR();
@@ -48,12 +50,12 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/file/save/**',
-            }).as('updateRequest');
+            }).as(ALIAS_UPDATE_REQUEST);
 
             cy.editorSave();
 
             // Wait for the folder to have reloaded
-            cy.wait<FileSaveRequest>('@updateRequest')
+            cy.wait<FileSaveRequest>(ALIAS_UPDATE_REQUEST)
                 .then(data => {
                     const req = data.request.body;
                     const tag = req.file.tags?.[`object.${OBJECT_PROPERTY}`];
@@ -86,11 +88,11 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/image/save/**',
-            }).as('updateRequest');
+            }).as(ALIAS_UPDATE_REQUEST);
 
             cy.editorSave();
 
-            cy.wait<ImageSaveRequest>('@updateRequest').then(data => {
+            cy.wait<ImageSaveRequest>(ALIAS_UPDATE_REQUEST).then(data => {
                 const req = data.request.body;
                 const tag = req.image.tags?.[`object.${OBJECT_PROPERTY}`];
                 const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;

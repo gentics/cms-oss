@@ -1,5 +1,5 @@
 import { EntityImporter, IMPORT_ID, rootGroup, userAlpha, userBeta } from '@gentics/e2e-utils';
-import { AUTH_ADMIN } from '../support/app.po';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('No Nodes', () => {
 

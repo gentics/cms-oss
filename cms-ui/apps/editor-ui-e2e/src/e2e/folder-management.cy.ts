@@ -12,11 +12,16 @@ import {
     folderA,
     minimalNode,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN } from '../support/app.po';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('Folder Management', () => {
 
     const IMPORTER = new EntityImporter();
+
+    const ALIAS_FORM = '@form';
+    const ALIAS_MODAL = '@modal';
+    const ALIAS_CREATE_REQ = '@createRequest';
+    const ALIAS_UPDATE_REQ = '@updateRequest';
 
     before(async () => {
         cy.muteXHR();
@@ -42,28 +47,28 @@ describe('Folder Management', () => {
         cy.findList(ITEM_TYPE_FOLDER)
             .find('.header-controls [data-action="create-new-item"]')
             .click({ force: true });
-        cy.get('create-folder-modal').as('modal');
-        cy.get('@modal').find('folder-properties-form').as('form');
+        cy.get('create-folder-modal').as(ALIAS_MODAL);
+        cy.get(ALIAS_MODAL).find('folder-properties-form').as(ALIAS_FORM);
 
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="name"] input')
             .type(NEW_FOLDER_NAME);
 
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="directory"] input')
             .type(NEW_FOLDER_PATH);
 
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/create',
-        }).as('createRequest');
+        }).as(ALIAS_CREATE_REQ);
 
-        cy.get('@modal')
+        cy.get(ALIAS_MODAL)
             .find('.modal-footer [data-action="confirm"]')
             .click({ force: true });
 
         // Wait for the folder to have reloaded
-        cy.wait<any, FolderCreateResponse>('@createRequest')
+        cy.wait<any, FolderCreateResponse>(ALIAS_CREATE_REQ)
             .then(data => {
                 const folder = data.response?.body?.folder;
                 expect(folder).to.exist;
@@ -86,22 +91,22 @@ describe('Folder Management', () => {
         cy.findList(ITEM_TYPE_FOLDER)
             .findItem(FOLDER.id)
             .itemAction('properties');
-        cy.get('content-frame combined-properties-editor .properties-content folder-properties-form').as('form');
+        cy.get('content-frame combined-properties-editor .properties-content folder-properties-form').as(ALIAS_FORM);
 
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/save/**',
-        }).as('updateRequest');
+        }).as(ALIAS_UPDATE_REQ);
 
         // Clear the name and enter the new one
-        cy.get('@form')
+        cy.get(ALIAS_FORM)
             .find('[formcontrolname="name"] input')
             .type(`{selectall}{del}${CHANGE_FOLDER_NAME}`);
 
         cy.editorSave();
 
         // Wait for the update to be actually handled
-        cy.wait('@updateRequest').then(() => {
+        cy.wait(ALIAS_UPDATE_REQ).then(() => {
             cy.findList(ITEM_TYPE_FOLDER)
                 .findItem(FOLDER.id)
                 .find('.item-name .item-name-only')
@@ -126,11 +131,11 @@ describe('Folder Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/save/**',
-        }).as('saveRequest');
+        }).as(ALIAS_UPDATE_REQ);
 
         cy.editorSave();
 
-        cy.wait<FolderSaveRequest>('@saveRequest').then(data => {
+        cy.wait<FolderSaveRequest>(ALIAS_UPDATE_REQ).then(data => {
             const req = data.request.body;
             const tag = req.folder.tags?.[`object.${OBJECT_PROPERTY}`];
             const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;

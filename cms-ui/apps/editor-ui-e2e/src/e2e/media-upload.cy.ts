@@ -18,7 +18,7 @@ import {
     FIXTURE_TEST_IMAGE_JPG_2,
     FIXTURE_TEST_IMAGE_PNG_1,
     FIXTURE_TEST_IMAGE_PNG_2,
-} from '../support/app.po';
+} from '../support/common';
 
 describe('Media Upload', () => {
 

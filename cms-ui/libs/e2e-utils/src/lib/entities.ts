@@ -197,14 +197,24 @@ export const pageOne: PageImportData = {
     tags: {
         content: {
             id: null,
-            constructId: 2,
+            constructId: 7,
             name: 'content',
             active: true,
             type: 'CONTENTTAG',
             properties: {
                 text: {
                     type: TagPropertyType.RICHTEXT,
-                    stringValue: 'This is the page',
+                    stringValue: `
+Lorem ipsum odor amet, consectetuer adipiscing elit. Tortor consectetur cras aliquam ipsum commodo gravida.
+Duis id ut elit suscipit, litora feugiat sollicitudin gravida. Ex at venenatis congue lacinia at orci eu primis.
+Faucibus netus lobortis porta vulputate lorem molestie porttitor magnis feugiat. Facilisi maximus sollicitudin diam, neque nam per.
+Nisl interdum convallis arcu blandit orci integer parturient. Aliquet eleifend risus ullamcorper consectetur elementum posuere nisl.
+<br>
+<br>
+Neque ullamcorper euismod magnis nec; cubilia magnis vulputate molestie. Vitae ligula scelerisque porttitor quam orci penatibus tortor taciti.
+Aliquam porttitor in volutpat ante semper ad. Lacinia blandit duis egestas metus aliquet mus suscipit potenti.
+Finibus maximus habitant proin facilisi ligula vulputate. Netus sed accumsan parturient sit torquent finibus tempor adipiscing.
+Feugiat ac integer viverra fermentum auctor ipsum tristique rutrum.`,
                 },
             },
         },

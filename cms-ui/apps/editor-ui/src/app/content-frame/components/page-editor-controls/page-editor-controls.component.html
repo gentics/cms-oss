@@ -37,7 +37,7 @@
                             <gtx-aloha-component-renderer
                                 class="dynamic-component gtx-menu-element"
                                 [class.hidden]="!slot.visible"
-                                [attr.slot]="slot.name"
+                                [attr.data-slot]="slot.name"
                                 [slot]="slot.name"
                                 [component]="components[slot.name]"
                                 [disabled]="tagEditorOpen"

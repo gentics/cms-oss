@@ -8,188 +8,32 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-type ItemType = 'folder' | 'page' | 'image' | 'file' | 'form';
-interface ImportBinary {
-    /** The path to the fixture file to load. */
-    fixturePath: string;
-    /** The File name. If left empty, it'll be determined from the fixture-path. */
-    name?: string;
-    /** The mime-type of the binary, because cypress doesn't provide it. */
-    type: string;
-}
-interface ContentFile {
-    contents: string | Buffer;
-    fileName: string;
-    mimeType: string;
-}
+import { createRange, normalizeToImportBinary, resolveFixtures, updateAlohaRange } from '@gentics/e2e-utils';
 
-interface BinaryLoadOptions {
-    applyAlias?: boolean;
-}
+/*
+ * Override of the original `as` query, which allows the prefix `@` to be provided/ignored.
+ * This is to make it possible to use constants for aliases easier like this:
+ * @example
+```ts
+    const ALIAS_FOO = '@test';
 
-interface BinaryFileLoadOptions extends BinaryLoadOptions {}
-
-interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
-    asContent: true;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-        /**
-         * Prevents the logging of XHR/Fetch requests (unless intercepted/aliased).
-         * Useful to reduce amount of cypress logs to only show relevant ones, as the UIs
-         * request a lot.
-         */
-        muteXHR(): Chainable<null>;
-        /**
-         * Loads the defined fixtures and returns a map of the loaded binaries as usable map.
-         * @param files The fixture paths or import-binaries to load.
-         * @param options The options to use when loading the fixtures/binaries and how to process them.
-         */
-        loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
-        loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
-        /**
-         * Helper to navigate to the application.
-         * @param path The route/path in the application to navigate to. Usually leave this empty, unless you need to
-         * test the routing of the application.
-         * @param raw If the navigation should happen without adding a `skip-sso` to prevent unwilling sso logins.
-         */
-        navigateToApp(path?: string, raw?: boolean): Chainable<void>;
-        /**
-         * Login with pre-defined user data or with a cypress alias.
-         * @param account The account name in the `auth.json` fixture, or an alias to a credentials object.
-         * @param keycloak If this is a keycloak login.
-         */
-        login(account: string, keycloak?: boolean): Chainable<null>;
-        /**
-         * Select the specified node in the editor-ui, to display it's content.
-         * @param nodeId The node to select
-         */
-        selectNode(nodeId: number | string): Chainable<null>;
-        /**
-         * Attempt to find a specified item-type list.
-         * @param type The type of list that should be found/searched for.
-         */
-        findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Attempt to find a specified item in a list.
-         * @param id The id of the element that should be found/searched for.
-         */
-        findItem(id: string | number): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Click/Perform an action on an item (iE edit, preview, delete, ...)
-         * @param action The action id to click/perform for an item.
-         */
-        itemAction(action: string): Chainable<null>;
-        /**
-         * Select the provided object-property - Requires the `editProperties` mode to be active for the item already.
-         * @param name The tag-name of the object-property, without the `object.` prefix.
-         */
-        openObjectPropertyEditor(name: string): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Finds the tag-editor element(s) which are for controlling the tag value.
-         * @param type The part-type of the tag-editor, i.E. 'SELECT' to get the select property inputs.
-         */
-        findTagEditorElement(type: string): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Uploads the specified fixture-names as files or images.
-         * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
-         * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
-         * @param dragNDrop If the upload should be done via the drag-n-drop functionality.
-         */
-        uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
-        /**
-         * Requires the subject to be a `gtx-select`.
-         * Will select the option with the corresponding `valueId`.
-         * @param valueId The value/option to select.
-         */
-        selectValue(valueId: any): Chainable<null>;
-        /** Click the save button in the editor-toolbar */
-        editorSave(): Chainable<null>;
-        /** Closes the editor */
-        editorClose(): Chainable<null>;
-    }
-}
-
-/**
- * Gets the base-name of the file: `folder1/folder2/myFile.txt` -> `myFile.txt`
+    cy.get('.something .foo-bar').as(ALIAS_FOO);
+    cy.get(ALIAS_FOO).then($doStuff => {
+        // ...
+    });
+```
+ * Here we can use the constant `ALIAS_FOO` for both setting and accessing the alias, instead of having to either
+ * cut it off or add the `@` before every `cy.get` call, which is just very verbose and unintuitive.
  */
-function toBaseName(fixture: string): string {
-    return /((?:^[^/]$|(?:[^/]*$)))/g.exec(fixture)?.[1] || '';
-}
-
-function getExtension(fileName: string): string {
-    return /\.(\w+)$/g.exec(fileName)?.[1] || fileName;
-}
-
-// Partial list from https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-// Should be removed with the mime-type checks/agnostics, which are done in the `upload-conflict.service`,
-// as mime-types are inherently unreliable and just cause testing overhead here.
-const EXT_MIME_MAP: Record<string, string> = {
-    apng: 'image/apng',
-    avi: 'video/x-msvideo',
-    bin: 'application/octet-stream',
-    bmp: 'image/bmp',
-    bz: 'application/x-bzip',
-    bz2: 'application/x-bzip2',
-    css: 'text/css',
-    csv: 'text/csv',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    gz: 'application/gzip',
-    gif: 'image/gif',
-    htm: 'text/html',
-    html: 'text/html',
-    ico: 'image/vnd.microsoft.icon',
-    jpeg: 'image/jpeg',
-    jpg: 'image/jpeg',
-    json: 'application/json',
-    mp3: 'audio/mpeg',
-    mp4: 'video/mp4',
-    mpeg: 'video/mpeg',
-    ogg: 'audio/ogg',
-    ogv: 'video/ogg',
-    png: 'image/png',
-    pdf: 'application/pdf',
-    ppt: 'application/vnd.ms-powerpoint',
-    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    rar: 'application/vnd.rar',
-    rtf: 'application/rtf',
-    svg: 'image/svg+xml',
-    tar: 'application/x-tar',
-    tif: 'image/tiff',
-    tiff: 'image/tiff',
-    txt: 'text/plain',
-    wav: 'audio/wav',
-    weba: 'audio/webm',
-    webm: 'video/webm',
-    webp: 'image/webp',
-    xls: 'application/vnd.ms-excel',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    xml: 'application/xml',
-    zip: 'application/zip',
-    '7z': 'application/x-7x-compressed',
-};
-
-function normalizeToImportBinary(fixturePath: string | ImportBinary): Required<ImportBinary> {
-    if (typeof fixturePath !== 'string') {
-        if (!fixturePath.name) {
-            fixturePath.name = toBaseName(fixturePath.fixturePath);
-        }
-        return fixturePath as Required<ImportBinary>;
+Cypress.Commands.overwriteQuery('as', function (originalFn, alias, options) {
+    if (alias.startsWith('@')) {
+        alias = alias.substring(1);
     }
+    const fn = originalFn.apply(this, [alias, options]);
 
-    const name = toBaseName(fixturePath);
-    const type = EXT_MIME_MAP[getExtension(name)] || 'unknown/unknown';
-
-    return {
-        fixturePath,
-        name,
-        type,
-    };
-}
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return (subject) => fn(subject);
+});
 
 Cypress.Commands.add('muteXHR', () => {
     // Disable logging of XHR/Fetch requests, since they just spam everything
@@ -197,45 +41,7 @@ Cypress.Commands.add('muteXHR', () => {
 });
 
 Cypress.Commands.add('loadBinaries', (files, options) => {
-    return cy.wrap(new Promise(resolve => {
-        let counter = files.length;
-        const map: Record<string, File | ContentFile> = {};
-
-        for (const entry of files) {
-            const data = normalizeToImportBinary(entry);
-            // eslint-disable-next-line cypress/no-assigning-return-values
-            let chain = cy.fixture(data.fixturePath, null);
-
-            if (options?.applyAlias) {
-                // Check if it is defined before attempting to save it again
-                if (this[data.fixturePath] == null) {
-                    chain = chain.as(data.fixturePath);
-                }
-            }
-
-            chain.then((bin: Buffer) => {
-                if (options?.asContent) {
-                    map[data.fixturePath] = {
-                        contents: bin.buffer,
-                        fileName: data.name,
-                        mimeType: data.type,
-                    } as ContentFile;
-                } else {
-                    const blob = new Blob([bin], { type: data.type });
-                    // Create the file with the binary data, and the correct name, and type.
-                    map[data.fixturePath] = new File([blob], data.name, { type: data.type });
-                }
-
-                // Cypress is stupid, and doesn't chain the commands in the correct order.
-                // It'd resolve with an empty map, and then execute this `then` block.
-                // Therefore this hacky promise to wait for all fixtures to be properly loaded.
-                counter--;
-                if (counter === 0) {
-                    resolve(map);
-                }
-            });
-        }
-    }));
+    return resolveFixtures(files, options);
 });
 
 Cypress.Commands.add('navigateToApp', { prevSubject: false }, (path, raw) => {
@@ -264,13 +70,13 @@ Cypress.Commands.add('login', { prevSubject: false }, (account, keycloak) => {
 });
 
 Cypress.Commands.add('selectNode', { prevSubject: 'optional' }, (subject, nodeId) => {
-    const root = subject ? cy.wrap(subject) : cy.get('folder-contents');
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('folder-contents');
     root.find('node-selector [data-action="select-node"]')
         .click();
     cy.get('gtx-app-root .node-selector-list')
         .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`)
         .click();
-    return cy.wrap(null);
+    return cy.wrap(null, { log: false });
 });
 
 Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type) => {
@@ -279,7 +85,7 @@ Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type) =>
 });
 
 Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id) => {
-    return cy.wrap(subject)
+    return cy.wrap(subject, { log: false })
         .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 });
 
@@ -287,9 +93,9 @@ Cypress.Commands.add('itemAction', { prevSubject: 'element' }, (subject, action)
     switch (action) {
         // For other actions such as selecting or similar
         default:
-            cy.wrap(subject)
+            cy.wrap(subject, { log: false })
                 .find('.context-menu gtx-button[data-action="open-item-context-menu"]')
-                .click({ force: true });
+                .btnClick();
             cy.get('gtx-app-root .item-context-menu-content')
                 .find(`[data-action="${action}"]`)
                 .click({ force: true });
@@ -379,27 +185,112 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
                 });
             }
 
-            return cy.wait('@folderLoad').then(() => cy.wrap(output));
+            return cy.wait('@folderLoad').then(() => cy.wrap(output, { log: false }));
         })
     });
 });
 
 Cypress.Commands.add('selectValue', { prevSubject: 'element' }, (subject, valueId) => {
-    cy.wrap(subject).click({ force: true });
+    cy.wrap(subject, { log: false }).click({ force: true });
     cy.get('gtx-dropdown-content.select-context')
         .find(`.select-option[data-id="${valueId}"]`)
         .click({ force: true });
-    return cy.wrap(null);
+    return cy.wrap(null, { log: false });
 });
 
 Cypress.Commands.add('editorSave', { prevSubject: false }, () => {
-    cy.get('content-frame gtx-editor-toolbar .save-button [data-action="primary"]')
-        .click({ force: true });
-    return cy.wrap(null);
+    cy.get('content-frame gtx-editor-toolbar .save-button').btnClick();
+    return cy.wrap(null, { log: false });
 });
 
 Cypress.Commands.add('editorClose', { prevSubject: false }, () => {
-    cy.get('content-frame gtx-editor-toolbar [data-action="close"]')
-        .click({ force: true });
-    return cy.wrap(null);
+    cy.get('content-frame gtx-editor-toolbar [data-action="close"]').btnClick();
+    return cy.wrap(null, { log: false });
+});
+
+const GTX_BUTTONS: string[] = [
+    'gtx-button',
+    ...[
+        'attribute',
+        'attribute-toggle',
+        '', // will be correct in assembly
+        'context',
+        'context-toggle',
+        'split',
+        'toggle',
+        'toggle-split',
+    ].map(name => `gtx-aloha-${name}${name !== '' ? '-' : ''}button-renderer`),
+];
+
+Cypress.Commands.add('btn', { prevSubject: 'element' }, (subject, options) => {
+    const action = options?.action ?? 'primary';
+    const actionBtn = `button[data-action="${action}"]`;
+
+    let $elem = subject.find(GTX_BUTTONS.map(tagName => `${tagName} ${actionBtn}`).join(', '));
+    if (!$elem || $elem.length === 0) {
+        $elem = subject.find(actionBtn);
+    }
+    if (!$elem || $elem.length === 0) {
+        return cy.wrap(subject, { log: false });
+    }
+    return cy.wrap($elem, { log: false });
+});
+
+Cypress.Commands.add('btnClick', { prevSubject: 'element' }, (subject, options) => {
+    // eslint-disable-next-line prefer-const
+    let { action, ...cyOptions } = options ?? {};
+    return cy.wrap(subject, { log: false }).btn({ action }).click(cyOptions);
+});
+
+Cypress.Commands.add('rangeSelection', { prevSubject: 'element' }, (subject, start, end, aloha) => {
+    const doc = subject[0].ownerDocument;
+    const win = doc.defaultView;
+
+    // create the new selection
+    const range = createRange(subject[0], start, end);
+    if (!range) {
+        return;
+    }
+    // apply the range
+    win?.getSelection()?.removeAllRanges();
+    win?.getSelection()?.addRange(range);
+
+    if (aloha) {
+        // Update the range in aloha
+        updateAlohaRange(win as any, range);
+    }
+
+    return cy.wrap(subject, { log: false });
+});
+
+Cypress.Commands.add('textSelection', { prevSubject: 'element' }, (subject, text, aloha) => {
+    const doc = subject[0].ownerDocument;
+    const win = doc.defaultView;
+    const idx = subject[0].textContent?.indexOf(text);
+
+    if (!idx || idx === -1) {
+        return cy.wrap(subject, { log: false });
+    }
+
+    // create the new selection
+    const range = createRange(subject[0], idx, idx + text.length);
+    if (!range) {
+        return;
+    }
+    // apply the range
+    win?.getSelection()?.removeAllRanges();
+    win?.getSelection()?.addRange(range);
+
+
+    if (aloha) {
+        // Update the range in aloha
+        updateAlohaRange(win as any, range);
+    }
+
+    return cy.wrap(subject, { log: false });
+});
+
+Cypress.Commands.add('toolbarFindControl', { prevSubject: 'optional' }, (subject, slot) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('project-editor content-frame');
+    return root.find(`gtx-page-editor-controls gtx-aloha-component-renderer[data-slot="${slot}"] > *`)
 });

@@ -18,6 +18,7 @@ import {
 import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import {
     BinaryMap,
+    CORE_CONSTRUCTS,
     EntityMap,
     ENV_CMS_PASSWORD,
     ENV_CMS_REST_PATH,
@@ -328,8 +329,14 @@ export class EntityImporter {
             cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
         }
 
+        // Assign all the languages it has defined in the import data
         for (const lang of languages) {
             await this.client.node.assignLanguage(created.id, this.languages[lang]).send();
+        }
+
+        // Assign all core constructs, so that implementations properly work
+        for (const construct of CORE_CONSTRUCTS) {
+            await this.client.node.assignConstruct(created.id, construct).send();
         }
 
         // Assigns all Dev-Tool package elements to the node

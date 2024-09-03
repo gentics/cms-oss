@@ -14,4 +14,6 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
+import './index';
 import './commands';
+import './assertions';

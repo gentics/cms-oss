@@ -37,6 +37,7 @@ import {
 } from './pipes';
 import {
     I18nService,
+    KeycloakService,
     LocalTranslateLoader,
     WindowRef,
 } from './providers';
@@ -91,6 +92,7 @@ const PROVIDERS: any[] = [
         deps: [ I18nService ],
     },
     WindowRef,
+    KeycloakService,
     ...PIPES,
 ];
 

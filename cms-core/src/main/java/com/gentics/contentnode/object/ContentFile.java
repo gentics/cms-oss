@@ -11,9 +11,13 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -69,6 +73,8 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		resolvableProperties = new HashMap<String, Property>();
@@ -397,10 +403,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 			}
 		});
 
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected ContentFile(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**
@@ -676,6 +688,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 	public ObjectTag getObjectTag(String name) throws NodeException {
 		return (ObjectTag) getObjectTags().get(name);
+	}
+
+	@Override
+	public Set<String> getObjectTagNames(boolean fallback) throws NodeException {
+		Set<String> names = new HashSet<>();
+		names.addAll(getObjectTags().keySet());
+		if (fallback) {
+			names.addAll(getFolder().getObjectTags().keySet());
+		}
+		return names;
 	}
 
 	/**

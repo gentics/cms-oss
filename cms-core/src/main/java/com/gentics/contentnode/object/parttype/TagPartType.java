@@ -6,8 +6,10 @@
 package com.gentics.contentnode.object.parttype;
 
 import java.util.Objects;
+import java.util.Set;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
+import org.apache.commons.collections4.SetUtils;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.DependencyManager;
@@ -21,7 +23,6 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.TagContainer;
-import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
@@ -40,6 +41,8 @@ public abstract class TagPartType extends AbstractPartType {
 
 	public static final int TYPE_PAGE = 2;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("id", "page_id", "tag", "container");
+
 	private int type;
 
 	private Class<? extends Tag> tagClass;
@@ -50,6 +53,11 @@ public abstract class TagPartType extends AbstractPartType {
 		super(value);
 		this.type = type;
 		reloadValue();
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**
@@ -69,7 +77,7 @@ public abstract class TagPartType extends AbstractPartType {
     
 	private void reloadValue() throws NodeException {
 
-		tagId = new Integer(getValueObject().getValueRef());
+		tagId = getValueObject().getValueRef();
 
 		if (type == TYPE_PAGE) {
 			tagClass = "t".equals(getValueObject().getValueText()) ? TemplateTag.class : ContentTag.class;
@@ -79,7 +87,7 @@ public abstract class TagPartType extends AbstractPartType {
 	}
 
 	public Integer getPageId() throws NodeException {
-		return new Integer(getValueObject().getInfo());
+		return getValueObject().getInfo();
 	}
 
 	public boolean hasTemplate() throws NodeException {

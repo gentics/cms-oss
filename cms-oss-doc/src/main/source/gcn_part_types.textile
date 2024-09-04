@@ -21,6 +21,7 @@ h3. Overview
 | 33        | Velocity                | The velocity part type can be used to evaluate all previously generated text using the velocity markup parser. |
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
 | 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
+| 43        | Handlebars              | The Handlebars part type renders its content with the Handlebars rendering engine. See "Rendering with Handlebars":handlebars.html for details. |
 
 NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type @HTML@.
 

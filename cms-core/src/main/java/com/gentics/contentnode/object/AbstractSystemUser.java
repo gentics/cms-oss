@@ -3,7 +3,10 @@ package com.gentics.contentnode.object;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -22,6 +25,8 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		// TODO check correct dependencies
@@ -48,17 +53,17 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 		});
 		resolvableProperties.put("bonus", new Property(new String[] { "bonus"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Integer(user.getBonus());
+				return user.getBonus();
 			}
 		});
 		resolvableProperties.put("active", new Property(new String[] { "active"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Integer(user.getActive());
+				return user.getActive();
 			}
 		});
 		resolvableProperties.put("creator", new Property(new String[] { "creator"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Integer(user.getCreator());
+				return user.getCreator();
 			}
 		});
 		Property cdate = new Property(new String[] { "cdate"}) {
@@ -76,7 +81,7 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 		});
 		resolvableProperties.put("editor", new Property(new String[] { "editor"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Integer(user.getEditor());
+				return user.getEditor();
 			}
 		});
 		Property edate = new Property(new String[] { "edate"}) {
@@ -99,18 +104,25 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 		});
 		resolvableProperties.put("isldapuser", new Property(new String[] { "isldapuser"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Integer(user.getIsLDAPUser());
+				return user.getIsLDAPUser();
 			}
 		});
 		resolvableProperties.put("inboxtoemail", new Property(new String[] { "inboxtoemail"}) {
 			public Object get(AbstractSystemUser user, String key) {
-				return new Boolean(user.isInboxToEmail());
+				return user.isInboxToEmail();
 			}
 		});
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected AbstractSystemUser(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**

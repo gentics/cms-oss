@@ -25,6 +25,8 @@ Devtools will handle the following object types:
 * _ContentRepositories_
 * Static files (like JavaScript, CSS, images, ...)
 * Internal static files (used only be the CMS, but not in the frontend)
+* Handlebars helpers (as JavaScript files)
+* Handlebars partials
 
 The _datasources_, _tagtypes_, _object properties_ and _templates_ are still managed by the CMS and can be created, updated, deleted and used as always.
 Additionally, with the Devtools it is possible to synchronize selected objects into the filesystem of the CMS, where the objects can be edited and the
@@ -412,6 +414,14 @@ The URL must be constructed like @/internal/[package]/files/...@.
 The CMS will automatically serve the internal static files from the packages under those URLs.
 
 WARNING: Internal files should not be made available in the frontend.
+
+h4. Handlebars Helpers
+
+Every +.js+ file located in the directory @/cms/packages/[package]/handlebars/helpers/@ is interpreted as a handlebars helper. See "Handlebars Custom Helpers":handlebars.html#custom-helpers for details.
+
+h4. Handlebars Partials
+
+Every +.hbs+ file located in the directory @/cms/packages/[package]/handlebars/helpers/@ is interpreted as a handlebars partial. See "Handlebars Partials":handlebars.html#partials for details.
 
 h4. Restrictions
 

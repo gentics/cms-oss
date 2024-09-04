@@ -132,6 +132,8 @@ export enum TagPartType {
      * NOTE: Parts of this type can only be used in the new Editor User Interface.
      */
     CmsForm = 42,
+
+    Handlebars = 43,
 }
 
 /** Pairs must be set correctly. */
@@ -166,6 +168,7 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.Node]: TagPropertyType.NODE,
     [TagPartType.Form]: TagPropertyType.FORM,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
+    [TagPartType.Handlebars]: TagPropertyType.RICHTEXT,
 } as const;
 
 /**

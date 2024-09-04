@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -43,12 +44,13 @@ import com.gentics.contentnode.render.RenderableResolvable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The AbstractContentObject defines some generic methods and properties for all
  * objects of the objectlayer of Content.Node.
  */
-public abstract class AbstractContentObject implements NodeObject, Resolvable {
+public abstract class AbstractContentObject implements NodeObject, Resolvable, ResolvableMapWrappable {
 	/**
 	 * Serial Version UID
 	 */
@@ -72,6 +74,8 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 	 * map of resolvable properties
 	 */
 	private static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		resolvableProperties = new HashMap<String, Property>();
@@ -115,11 +119,18 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 				return Boolean.valueOf(object.isTag());
 			}
 		});
+
+		resolvableKeys = resolvableProperties.keySet();
 	}
 
 	protected AbstractContentObject(Integer id, NodeObjectInfo info) {
 		this.id = id;
 		this.info = info;
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	protected transient NodeLogger logger = NodeLogger.getNodeLogger(getClass());
@@ -131,11 +142,11 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 	public Integer getTType() {
 		// disable handling dependencies
 		try (HandleDependenciesTrx noDeps = new HandleDependenciesTrx(false)) {
-		return ObjectTransformer.getInteger(this.getProperty("ttype"), null);
+		return ObjectTransformer.getInteger(this.get("ttype"), null);
 		} catch (NodeException e) {
 			// exception is thrown, if no current transaction found (to disable handling dependencies),
 			// we can ignore the exception, because when no transaction is found, there is no handling of dependencies either
-			return ObjectTransformer.getInteger(this.getProperty("ttype"), null);
+			return ObjectTransformer.getInteger(this.get("ttype"), null);
 		}
 	}
 

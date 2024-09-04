@@ -2,6 +2,9 @@ package com.gentics.contentnode.object;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.ReadOnlyException;
 
@@ -12,6 +15,8 @@ public abstract class AbstractContentLanguage extends AbstractContentObject impl
 	private static final long serialVersionUID = -5638163014580381220L;
 
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		resolvableProperties = new HashMap<String, Property>();
@@ -25,10 +30,17 @@ public abstract class AbstractContentLanguage extends AbstractContentObject impl
 				return lang.getCode();
 			}
 		});
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected AbstractContentLanguage(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	@Override

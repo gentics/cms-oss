@@ -8,6 +8,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.PublishableNodeObject;
+import com.gentics.contentnode.object.SystemUser;
 
 /**
  * Builder for creating/updating NodeObjects
@@ -34,6 +35,8 @@ public class Builder<T extends NodeObject> {
 	protected int takeOfflineAt = 0;
 
 	protected boolean unlock = false;
+
+	protected SystemUser user;
 
 	/**
 	 * Create an object of given type
@@ -79,6 +82,16 @@ public class Builder<T extends NodeObject> {
 	 */
 	public Builder<T> at(int timestamp) {
 		this.timestamp = timestamp;
+		return this;
+	}
+
+	/**
+	 * Set a user to the transaction
+	 * @param user user
+	 * @return fluent API
+	 */
+	public Builder<T> as(SystemUser user) {
+		this.user = user;
 		return this;
 	}
 
@@ -166,7 +179,7 @@ public class Builder<T extends NodeObject> {
 		T modifiedObject = null;
 		Transaction t = TransactionManager.getCurrentTransactionOrNull();
 		if (t == null) {
-			try (Trx trx = new Trx()) {
+			try (Trx trx = user != null ? new Trx(user) : new Trx()) {
 				if (timestamp > 0) {
 					trx.at(timestamp);
 				}

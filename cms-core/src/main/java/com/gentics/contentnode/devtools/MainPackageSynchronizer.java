@@ -38,7 +38,7 @@ public class MainPackageSynchronizer extends PackageSynchronizer {
 	 * List containing invalid subpackage directory names
 	 */
 	public final static List<String> INVALID_SUBPACKAGE_NAMES = Arrays.asList(CONSTRUCTS_DIR, DATASOURCES_DIR, OBJECTPROPERTIES_DIR, TEMPLATES_DIR, FILES_DIR,
-			CR_FRAGMENTS_DIR, CONTENTREPOSITORIES_DIR);
+			CR_FRAGMENTS_DIR, CONTENTREPOSITORIES_DIR, HANDLEBARS_DIR);
 
 	/**
 	 * Lambda that generates the rest model for a package

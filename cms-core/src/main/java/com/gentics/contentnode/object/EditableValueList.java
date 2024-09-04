@@ -16,8 +16,11 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import org.apache.commons.collections4.SetUtils;
 
 /**
  * This is an implementation of a ValueList, where values can be added using the {@link #addValue(Value)} method.
@@ -166,6 +169,11 @@ public class EditableValueList implements ValueList {
 				addValue(valueCopy);
 			}
 		}
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return SetUtils.union(keynames.keySet(), SetUtils.hashSet("unique_tag_id"));
 	}
 
 	/**

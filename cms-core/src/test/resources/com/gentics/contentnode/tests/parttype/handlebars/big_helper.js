@@ -1,0 +1,3 @@
+function resolve(context) {
+	return "";
+}

@@ -11,6 +11,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -72,6 +73,7 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	 * Check whether the checkbox is checked or not
 	 * @return true when the checkbox is checked, false if not
 	 */
+	@ResolvableGetter
 	public boolean isChecked() {
 		return checked;
 	}
@@ -82,13 +84,6 @@ public class CheckboxPartType extends AbstractPartType implements PartType {
 	public String render(RenderResult result, String template) throws NodeException {
 		super.render(result, template);
 		return checked ? "1" : "0";
-	}
-    
-	public Object get(String key) {
-		if ("checked".equals(key)) {
-			return new Boolean(isChecked());
-		}
-		return null;
 	}
 
 	/**

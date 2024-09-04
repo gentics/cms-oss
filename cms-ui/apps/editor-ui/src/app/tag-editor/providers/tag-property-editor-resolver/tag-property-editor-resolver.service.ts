@@ -57,6 +57,7 @@ DEFAULT_EDITORS.set(TagPartType.TextHtmlLong, TextTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.TextShort, TextTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.Html, TextTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.HtmlLong, TextTagPropertyEditor);
+DEFAULT_EDITORS.set(TagPartType.Handlebars, TextTagPropertyEditor);
 
 /**
  * Looks up the ComponentFactory for the TagPropertyEditor that is configured for

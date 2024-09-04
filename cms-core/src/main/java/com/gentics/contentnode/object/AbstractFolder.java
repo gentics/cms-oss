@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.logging.log4j.Level;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -46,6 +47,8 @@ public abstract class AbstractFolder extends AbstractContentObject implements Fo
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	/**
 	 * Properties, that must create dependencies on the master folders
@@ -222,10 +225,17 @@ public abstract class AbstractFolder extends AbstractContentObject implements Fo
 				return folder.isInherited();
 			}
 		});
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected AbstractFolder(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/* (non-Javadoc)
@@ -577,6 +587,14 @@ public abstract class AbstractFolder extends AbstractContentObject implements Fo
 		}
 
 		return tag;
+	}
+
+	@Override
+	public Set<String> getObjectTagNames(boolean fallback) throws NodeException {
+		Set<String> names = new HashSet<>();
+		names.addAll(getObjectTags().keySet());
+		// TODO do fallback
+		return names;
 	}
 
 	public Object get(String key) {

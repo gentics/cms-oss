@@ -62,6 +62,7 @@ public class SubPackageContainerTest {
 		subPackageDirNames.put(PackageSynchronizer.OBJECTPROPERTIES_DIR, false);
 		subPackageDirNames.put(PackageSynchronizer.TEMPLATES_DIR, false);
 		subPackageDirNames.put(PackageSynchronizer.FILES_DIR, false);
+		subPackageDirNames.put(PackageSynchronizer.HANDLEBARS_DIR, false);
 		subPackageDirNames.put("node_modules", true);
 		subPackageDirNames.put("subpackages", true);
 	}

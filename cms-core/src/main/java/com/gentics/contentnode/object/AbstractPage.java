@@ -6,12 +6,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -48,6 +51,7 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 public abstract class AbstractPage extends AbstractContentObject implements Page, ExtensiblePublishableObject<Page> {
 
@@ -57,6 +61,8 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	/**
 	 * languageset of this page (provides access to all language variants of this page)
@@ -77,7 +83,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		resolvableProperties.put("page", page);        
 		resolvableProperties.put("ispage", new Property(null) {
 			public Object get(AbstractPage page, String key) {
-				return new Boolean(true);
+				return true;
 			}
 		});
 		resolvableProperties.put("url", new Property(null) {
@@ -159,7 +165,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		resolvableProperties.put("beschreibung", descriptionProp);
 		resolvableProperties.put("priority", new Property(new String[] { "priority"}) {
 			public Object get(AbstractPage page, String key) {
-				return new Integer(page.getPriority());
+				return page.getPriority();
 			}
 		});
 		resolvableProperties.put("folder_id", new Property(new String[] { "folder_id"}) {
@@ -513,10 +519,17 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 			}
 		});
 		// end of non documented properties
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected AbstractPage(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	@Override
@@ -817,7 +830,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	}
 
 	protected String getDate(int timestamp) {
-		long microtime = ObjectTransformer.getLong(new Integer(timestamp), 0L);
+		long microtime = ObjectTransformer.getLong(Integer.valueOf(timestamp), 0L);
 		SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");
 
 		return df.format(new Date(microtime));
@@ -869,6 +882,17 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	@Override
 	public ObjectTag getObjectTag(String name) throws NodeException {
 		return (ObjectTag) getObjectTags().get(name);
+	}
+
+	@Override
+	public Set<String> getObjectTagNames(boolean fallback) throws NodeException {
+		Set<String> names = new HashSet<>();
+		names.addAll(getObjectTags().keySet());
+		if (fallback) {
+			names.addAll(getTemplate().getObjectTags().keySet());
+			names.addAll(getFolder().getObjectTags().keySet());
+		}
+		return names;
 	}
 
 	@Override
@@ -1496,7 +1520,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	 * creates a resolvable collection of pages
 	 * @author clemens
 	 */
-	class PageLanguages implements Collection<Page>, Resolvable {
+	class PageLanguages implements Collection<Page>, Resolvable, ResolvableMapWrappable {
 		private Map<String, Page> pages;
 
 		/**
@@ -1506,7 +1530,12 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		public PageLanguages(Map<String, Page> pages) {
 			this.pages = pages; 
 		}
-        
+
+		@Override
+		public Set<String> getResolvableKeys() {
+			return pages.keySet();
+		}
+
 		public int size() {
 			return pages.size();
 		}
@@ -1588,9 +1617,9 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	 * this inner class is used to detain page.template from being rendered as
 	 * the template itself when used inside a page
 	 */
-	protected class PageTemplate implements Resolvable {
+	protected class PageTemplate implements Resolvable, ResolvableMapWrappable {
 		private Template template;
-        
+
 		/**
 		 * create a new PageTemplate
 		 * @param template to be created from
@@ -1598,7 +1627,12 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		public PageTemplate(Template template) {
 			this.template = template;
 		}
-        
+
+		@Override
+		public Set<String> getResolvableKeys() {
+			return template.getResolvableKeys();
+		}
+
 		public Object getProperty(String key) {
 			return get(key);
 		}
@@ -1620,12 +1654,19 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	 * Inner class representing the languageset of a page (the languageset
 	 * contains all language variants of the page)
 	 */
-	public class LanguageSet extends ResolvableBean {
+	public class LanguageSet extends ResolvableBean implements ResolvableMapWrappable {
 
 		/**
 		 * Serial Version UID
 		 */
 		private static final long serialVersionUID = 3151476465698652085L;
+
+		protected final static Set<String> resolvableKeys = SetUtils.hashSet("id", "pages");
+
+		@Override
+		public Set<String> getResolvableKeys() {
+			return resolvableKeys;
+		}
 
 		/**
 		 * Get the id of the languageset (= contentset_id)
@@ -1640,7 +1681,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		 * @return language variants
 		 * @throws NodeException
 		 */
-		public Collection<Page> getPages() throws NodeException {
+		public Map<String, Page> getPages() throws NodeException {
 			List<Page> langVariants = getLanguageVariants(true);
 			Map<String, Page> languages = new LinkedHashMap<String, Page>(langVariants.size());
 			ContentLanguage cl;
@@ -1655,7 +1696,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 					languages.put(cl.getCode(), page);
 				}
 			}
-			return new PageLanguages(languages);
+			return languages;
 		}
 
 		/* (non-Javadoc)

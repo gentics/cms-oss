@@ -7,6 +7,9 @@ package com.gentics.contentnode.object;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.etc.BiFunction;
@@ -30,6 +33,8 @@ public abstract class MarkupLanguage extends AbstractContentObject implements Na
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, NodeObjectProperty<MarkupLanguage>> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	/**
 	 * Consumer that transforms the node model into the given rest model
@@ -61,10 +66,17 @@ public abstract class MarkupLanguage extends AbstractContentObject implements Na
 		resolvableProperties.put("contenttype", new NodeObjectProperty<>((o, key) -> o.getContentType(), "filetype"));
 		resolvableProperties.put("feature", new NodeObjectProperty<>((o, key) -> o.getFeature(), "feature"));
 		resolvableProperties.put("excludeFromPublishing", new NodeObjectProperty<>((o, key) -> o.isExcludeFromPublishing(), "excludeFromPublishing"));
+
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected MarkupLanguage(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**

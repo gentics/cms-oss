@@ -15,6 +15,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 
 /**
@@ -138,6 +139,7 @@ public abstract class ListPartType extends AbstractPartType {
 	 * Get the number of lines in the list
 	 * @return number of lines
 	 */
+	@ResolvableGetter
 	public int getCount() {
 		return lines.length;
 	}
@@ -146,6 +148,7 @@ public abstract class ListPartType extends AbstractPartType {
 	 * Get the lines in the list
 	 * @return lines in the list
 	 */
+	@ResolvableGetter
 	public String[] getLines() {
 		return lines;
 	}

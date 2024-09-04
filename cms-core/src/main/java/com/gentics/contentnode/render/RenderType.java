@@ -102,6 +102,8 @@ public class RenderType implements RenderInfo {
 	 */
 	private final static String LANGUAGE_PARAM = "language";
 
+	private static String defaultHandlebarsHelpers = null;
+
 	private Stack<RenderInfo> infoStack;
 	private StackResolver stack;
 
@@ -1437,40 +1439,40 @@ public class RenderType implements RenderInfo {
 				}
 			}
 
-			try (ResourcePath resourcePath = new ResourcePath("/packages/DefaultElements/handlebars/helpers")) {
-				System.out.println("Loading default handlebars helpers");
-				Path path = resourcePath.getPath();
+			if (defaultHandlebarsHelpers == null) {
+				try (ResourcePath resourcePath = new ResourcePath("/packages/DefaultElements/handlebars/helpers")) {
+					Path path = resourcePath.getPath();
 
-				if (path == null) {
-					System.out.println("No Handlebars helpers found for DefaultElements");
-					logger.info("No Handlebars helpers found for DefaultElements");
-				} else {
-					StringBuilder helpers = new StringBuilder();
-					File helpersDir = path.toFile();
-					File[] files = helpersDir.listFiles((dir, filename) -> filename.endsWith(".js"));
-					int helperCount = 0;
+					if (path == null) {
+						logger.info("No Handlebars helpers found for DefaultElements");
+					} else {
+						StringBuilder helpers = new StringBuilder();
+						File helpersDir = path.toFile();
+						File[] files = helpersDir.listFiles((dir, filename) -> filename.endsWith(".js"));
+						int helperCount = 0;
 
-					if (files != null) {
-						helperCount = files.length;
+						if (files != null) {
+							helperCount = files.length;
 
-						for (File helperFile : files) {
-							String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
-							String helperName = String.format("default.%s", helperNameShort);
-							String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
-							String helper = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
+							for (File helperFile : files) {
+								String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+								String helperName = String.format("%s", helperNameShort);
+								String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
+								String helper = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
 
-							helpers.append(helper).append("\n");
+								helpers.append(helper).append("\n");
+							}
+
+							defaultHandlebarsHelpers = helpers.toString();
 						}
 
-						if (!helpers.isEmpty()) {
-							handlebars.registerHelpers("default", helpers.toString());
-						}
-
+						logger.info(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
 					}
-
-					System.out.println(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
-					logger.info(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
 				}
+			}
+
+			if (StringUtils.isNotBlank(defaultHandlebarsHelpers)) {
+				handlebars.registerHelpers("default", defaultHandlebarsHelpers);
 			}
 
 			if (!templateLoaders.isEmpty()) {

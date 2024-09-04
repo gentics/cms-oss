@@ -2,6 +2,9 @@ package com.gentics.contentnode.render;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EmptyStackException;
@@ -11,6 +14,9 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 
+import com.gentics.contentnode.utils.ResourcePath;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -1428,6 +1434,42 @@ public class RenderType implements RenderInfo {
 					if (partialsDirectory.isDirectory()) {
 						templateLoaders.add(new PackageTemplateLoader(packageName, partialsDirectory));
 					}
+				}
+			}
+
+			try (ResourcePath resourcePath = new ResourcePath("/packages/DefaultElements/handlebars/helpers")) {
+				System.out.println("Loading default handlebars helpers");
+				Path path = resourcePath.getPath();
+
+				if (path == null) {
+					System.out.println("No Handlebars helpers found for DefaultElements");
+					logger.info("No Handlebars helpers found for DefaultElements");
+				} else {
+					StringBuilder helpers = new StringBuilder();
+					File helpersDir = path.toFile();
+					File[] files = helpersDir.listFiles((dir, filename) -> filename.endsWith(".js"));
+					int helperCount = 0;
+
+					if (files != null) {
+						helperCount = files.length;
+
+						for (File helperFile : files) {
+							String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+							String helperName = String.format("default.%s", helperNameShort);
+							String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
+							String helper = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
+
+							helpers.append(helper).append("\n");
+						}
+
+						if (!helpers.isEmpty()) {
+							handlebars.registerHelpers("default", helpers.toString());
+						}
+
+					}
+
+					System.out.println(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
+					logger.info(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
 				}
 			}
 

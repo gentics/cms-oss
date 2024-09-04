@@ -12,7 +12,7 @@
     "useInferencePlugins": false,
     "defaultBase": "dev",
     "release": {
-        "projectsRelationship": "fixed",
+        "projectsRelationship": "independent",
         "projects": ["tag:lib"]
     },
     "plugins": [

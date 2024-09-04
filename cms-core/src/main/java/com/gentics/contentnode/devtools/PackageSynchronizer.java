@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -515,14 +516,17 @@ public abstract class PackageSynchronizer {
 
 			if (helpersDirectory.isDirectory()) {
 				StringBuilder registerHelpers = new StringBuilder();
+				File[] files = helpersDirectory.listFiles((dir, name) -> StringUtils.endsWith(name, ".js"));
 
-				for (File helperFile : helpersDirectory.listFiles((dir, name) -> StringUtils.endsWith(name, ".js"))) {
-					String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
-					String helperName = String.format("%s.%s", packageName, helperNameShort);
-					String helperFileContents = FileUtils.readFileToString(helperFile, Charset.forName("UTF-8"));
-					String register = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
+				if (files != null) {
+					for (File helperFile : files) {
+						String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+						String helperName = String.format("%s.%s", packageName, helperNameShort);
+						String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
+						String register = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
 
-					registerHelpers.append(register).append("\n");
+						registerHelpers.append(register).append("\n");
+					}
 				}
 
 				handlebarsHelpers = registerHelpers.toString();

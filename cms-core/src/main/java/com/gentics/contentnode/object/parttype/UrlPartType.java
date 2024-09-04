@@ -42,7 +42,7 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 	public static final int TARGET_FILE = 3;
 	public static final int TARGET_FOLDER = 4;
 
-	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("internal", "target", "url", "node", "nodeId");
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("internal", "externalurl", "target", "url", "node", "nodeId");
 
 	private int target;
 	private boolean encoded;
@@ -184,6 +184,10 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 			} else {
 				return Boolean.TRUE;
 			}
+		}
+
+		if ("externalurl".equals(key)) {
+			return getInternal()  == 1 ? null : getValueObject().getValueText();
 		}
 
 		if ("nodeId".equals(key)) {

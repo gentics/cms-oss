@@ -131,7 +131,9 @@ export class TagEditorService {
      * Force Closes the opened tag editor
      */
     forceCloseTagEditor(): void {
-        this.tagEditorOverlayHost.forceCloseTagEditor();
+        if (this.tagEditorOverlayHost != null) {
+            this.tagEditorOverlayHost.forceCloseTagEditor();
+        }
     }
 
     /**

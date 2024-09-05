@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -12,8 +13,10 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.publish.protocol.PublishLogEntry;
 import com.gentics.contentnode.publish.protocol.PublishProtocolService;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.PublishLogDto;
 import com.gentics.contentnode.rest.model.response.GenericItemList;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PublishProtocolResource;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.util.ListBuilder;
@@ -24,8 +27,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response.Status;
 
-
+@Authenticated
 @Produces({MediaType.APPLICATION_JSON})
 @Path("/publish/state")
 public class PublishProtocolResourceImpl implements PublishProtocolResource {
@@ -51,7 +55,9 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 			var publishLogEntry = this.publishProtocolService.getPublishLogEntryByObjectId(objId);
 
 			if (!canView(publishLogEntry, trx.getTransaction())) {
-				throw new NodeException(I18NHelper.get("rest.permission.required"));
+				throw new RestMappedException(I18NHelper.get("rest.permission.required"))
+						.setResponseCode(ResponseCode.PERMISSION)
+						.setStatus(Status.FORBIDDEN);
 			}
 
 			return MAP2REST.apply(publishLogEntry);

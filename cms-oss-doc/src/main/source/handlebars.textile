@@ -287,6 +287,42 @@ will be available as helper +implementation_package.get_name+ and can be used li
 {{implementation_package.get_name cms.page}}
 </shell>
 
+If an additional @options@ parameter is added at the end of the argument list, Handlebars will automatically fill this parameter with an object giving access to the "hash arguments":https://handlebarsjs.com/guide/block-helpers.html#hash-arguments as well as the @options.fn()@ and @options.reverse()@ function. Calling @options.fn(ctx)@ will render the contents of the helper with the given context @ctx@, and @options.reverse(ctx)@ will render the @else@ block. The name of the @options@ parameter can be chosen freely, but it must be the last parameter in the list. The following example assumes that the given tag has two text parts @short_desc@ and @long_desc@ as well as a checkbox part @inline@. The helper is supposed to render the tag with the content-block if @inline@ is checked and with the else-block otherwise. To include hash arguments, it will also generate the string containing a @title@ attribute if present:
+
+<shell filename="/cms/packages/implementation_package/handlebars/helpers/render_tag.js">
+function render_tag(tag, options) {
+    let ctx = {};
+
+    if (options.hash.title) {
+        ctx['title'] = ' title="' + encodeURIComponent(options.hash.title) + '"';
+    }
+
+    if (tag.parts.inline.checked) {
+        ctx['message'] = tag.parts.short_desc.text;
+
+        return options.fn(ctx);
+    }
+
+    ctx['message'] = tag.parts.long_desc.text;
+
+    return options.fn(ctx);
+}
+</shell>
+
+Usage of the helper:
+
+<shell>
+{{#implementation_package.render_tag cms.tag title='Tag title'}}
+    <span{{title}}>{{message}}</span>
+{{else}}
+    <p{{title}}>{{message}}</p>
+{{/implementation_package.render_tag}}
+</shell>
+
+h5. Default package helpers
+
+Currently the only tagtype in the default package that uses Handlebars is the "Aloha Page Link Tag":https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html which uses the @gtx_alohalink@ helper also contained in the default package. Since helpers must always be prefixed with their respective package names, a custom implementation of the Aloha Page Link Tag requires adding the tag to a custom package, then adding a custom helper for use in the Handlebars part and calling that helper with the package prefix (see the "Aloha Page Link Tag":https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html#customizing-the-aloha-editor-page-link-tag guide).
+
 NOTE: Helpers defined in devtool packages will only be available, if the devtool package is assigned to the Node for which the object is currently rendered!
 
 NOTE: Helpers will not be synchonized into the CMS, so changes in a helper file will be effective immediately.

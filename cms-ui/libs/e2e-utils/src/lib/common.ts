@@ -1,3 +1,4 @@
+import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import {
     AccessControlledType,
     EditableFileProps,
@@ -5,7 +6,6 @@ import {
     GroupCreateRequest,
     GroupUserCreateRequest,
     NodeCreateRequest,
-    NodeFeature,
     Page,
     PageCreateRequest,
     PermissionInfo,
@@ -62,6 +62,8 @@ export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
+
+export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
 
 export type ItemType = typeof ITEM_TYPE_FOLDER | typeof ITEM_TYPE_PAGE | typeof ITEM_TYPE_FILE | typeof ITEM_TYPE_IMAGE | typeof ITEM_TYPE_FORM;
 export type ImportType = ItemType | typeof IMPORT_TYPE_NODE | typeof IMPORT_TYPE_USER | typeof IMPORT_TYPE_GROUP;
@@ -194,6 +196,31 @@ export const FORMATTING_NODES = new Set([
     'u',
     'var',
 ]);
+
+export const RENDERABLE_ALOHA_COMPONENTS: Record<string, string> = [
+    AlohaCoreComponentNames.ATTRIBUTE_BUTTON,
+    AlohaCoreComponentNames.ATTRIBUTE_TOGGLE_BUTTON,
+    AlohaCoreComponentNames.BUTTON,
+    AlohaCoreComponentNames.CHECKBOX,
+    AlohaCoreComponentNames.COLOR_PICKER,
+    AlohaCoreComponentNames.CONTEXT_BUTTON,
+    AlohaCoreComponentNames.CONTEXT_TOGGLE_BUTTON,
+    AlohaCoreComponentNames.DATE_TIME_PICKER,
+    AlohaCoreComponentNames.IFRAME,
+    AlohaCoreComponentNames.INPUT,
+    AlohaCoreComponentNames.LINK_TARGET,
+    AlohaCoreComponentNames.SELECT,
+    AlohaCoreComponentNames.SELECT_MENU,
+    AlohaCoreComponentNames.SPLIT_BUTTON,
+    AlohaCoreComponentNames.SYMBOL_GRID,
+    AlohaCoreComponentNames.SYMBOL_SEARCH_GRID,
+    AlohaCoreComponentNames.TABLE_SIZE_SELECT,
+    AlohaCoreComponentNames.TOGGLE_BUTTON,
+    AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON,
+].reduce((acc, name) => {
+    acc[name] = `gtx-aloha-${name}-renderer`;
+    return acc;
+}, {});
 
 export interface FormattedText {
     text: string;

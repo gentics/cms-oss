@@ -219,10 +219,11 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
             this.manualConfirm.emit();
         }));
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         if (this.createInstanceType === AlohaCoreComponentNames.SELECT_MENU) {
-            (this.instanceRef.instance as AlohaSelectMenuRendererComponent).multiStepActivation.subscribe(stepId => {
+            this.subscriptions.push((this.instanceRef.instance as AlohaSelectMenuRendererComponent).multiStepActivation.subscribe(stepId => {
                 this.hideHeader.emit(stepId != null);
-            });
+            }));
         }
     }
 

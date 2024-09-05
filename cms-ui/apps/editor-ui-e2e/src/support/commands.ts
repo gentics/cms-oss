@@ -8,7 +8,7 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-import { createRange, normalizeToImportBinary, resolveFixtures, updateAlohaRange } from '@gentics/e2e-utils';
+import { createRange, normalizeToImportBinary, RENDERABLE_ALOHA_COMPONENTS, resolveFixtures, updateAlohaRange } from '@gentics/e2e-utils';
 
 /*
  * Override of the original `as` query, which allows the prefix `@` to be provided/ignored.
@@ -87,6 +87,25 @@ Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type) =>
 Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id) => {
     return cy.wrap(subject, { log: false })
         .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
+});
+
+Cypress.Commands.add('findAlohaComponent', { prevSubject: 'optional' }, (subject, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('project-editor content-frame gtx-page-editor-controls');
+    const slotSelector = options?.slot ? `[data-slot="${options.slot}"]` : '';
+    const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
+    return root.find(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`);
+});
+
+Cypress.Commands.add('findDynamicFormModal', { prevSubject: 'optional' }, (subject, ref) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('gtx-app-root');
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return root.find(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+});
+
+Cypress.Commands.add('findDynamicDropdown', { prevSubject: 'optional' }, (subject, ref) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('gtx-app-root');
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return root.find(`gtx-dynamic-dropdown .gtx-context-menu${refSelector}`);
 });
 
 Cypress.Commands.add('itemAction', { prevSubject: 'element' }, (subject, action) => {
@@ -288,9 +307,4 @@ Cypress.Commands.add('textSelection', { prevSubject: 'element' }, (subject, text
     }
 
     return cy.wrap(subject, { log: false });
-});
-
-Cypress.Commands.add('toolbarFindControl', { prevSubject: 'optional' }, (subject, slot) => {
-    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('project-editor content-frame');
-    return root.find(`gtx-page-editor-controls gtx-aloha-component-renderer[data-slot="${slot}"] > *`)
 });

@@ -21,8 +21,11 @@ export const ACTION_FORMAT_STRIKETHROUGH = 'strikethrough';
 export const ACTION_FORMAT_SUBSCRIPT = 'subscript';
 export const ACTION_FORMAT_SUPERSCRIPT = 'superscript';
 export const ACTION_FORMAT_CODE = 'code';
+export const ACTION_FORMAT_QUOTE = 'quote';
 export const ACTION_FORMAT_CITE = 'cite';
-export const ACTION_FORMAT_REMOVE = 'removeFormat';
+export const ACTION_FORMAT_ABBR = 'formatAbbr';
+
+export const ACTION_REMOVE_FORMAT = 'removeFormat';
 
 export const FORMAT_BOLD = 'b';
 export const FORMAT_ITALIC = 'i';
@@ -31,9 +34,12 @@ export const FORMAT_STRIKETHROUGH = 's';
 export const FORMAT_SUBSCRIPT = 'sub';
 export const FORMAT_SUPERSCRIPT = 'sup';
 export const FORMAT_CODE = 'code';
+export const FORMAT_QUOTE = 'q';
 export const FORMAT_CITE = 'cite';
+export const FORMAT_BLOCK_QUOTE = 'blockquote';
+export const FORMAT_ABBR = 'abbr';
 
-export const ACTION_FORMAT_MAPPING: Record<string, string> = {
+export const ACTION_SIMPLE_FORMAT_MAPPING: Record<string, string> = {
     [ACTION_FORMAT_BOLD]: FORMAT_BOLD,
     [ACTION_FORMAT_ITALIC]: FORMAT_ITALIC,
     [ACTION_FORMAT_UNDERLINE]: FORMAT_UNDERLINE,
@@ -43,4 +49,4 @@ export const ACTION_FORMAT_MAPPING: Record<string, string> = {
     [ACTION_FORMAT_CODE]: FORMAT_CODE,
     [ACTION_FORMAT_CITE]: FORMAT_CITE,
 };
-export const ACTION_FORMAT_KEYS = Object.keys(ACTION_FORMAT_MAPPING);
+export const ACTION_SIMPLE_FORMAT_KEYS = Object.keys(ACTION_SIMPLE_FORMAT_MAPPING);

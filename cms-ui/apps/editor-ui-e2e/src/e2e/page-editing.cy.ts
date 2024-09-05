@@ -2,9 +2,13 @@
 import { PageSaveRequest, StringTagPartProperty } from '@gentics/cms-models';
 import {
     EntityImporter,
+    ENV_ALOHA_PLUGIN_CITE,
+    envAll,
+    envNone,
     ITEM_TYPE_PAGE,
     minimalNode,
     pageOne,
+    skipableSuite,
     TestSize,
     trimAlohaEmpty,
 } from '@gentics/e2e-utils';
@@ -13,17 +17,20 @@ import {
     ACTION_FORMAT_CITE,
     ACTION_FORMAT_CODE,
     ACTION_FORMAT_ITALIC,
-    ACTION_FORMAT_KEYS,
-    ACTION_FORMAT_MAPPING,
-    ACTION_FORMAT_REMOVE,
+    ACTION_SIMPLE_FORMAT_KEYS,
+    ACTION_SIMPLE_FORMAT_MAPPING,
+    ACTION_REMOVE_FORMAT,
     ACTION_FORMAT_STRIKETHROUGH,
     ACTION_FORMAT_SUBSCRIPT,
     ACTION_FORMAT_SUPERSCRIPT,
     ACTION_FORMAT_UNDERLINE,
     AUTH_ADMIN,
+    ACTION_FORMAT_ABBR,
+    FORMAT_ABBR,
+    ACTION_FORMAT_QUOTE,
 } from '../support/common';
 
-describe('Page Management', () => {
+describe('Page Editing', () => {
 
     const IMPORTER = new EntityImporter();
 
@@ -33,6 +40,7 @@ describe('Page Management', () => {
     const ALIAS_CONTENT = '@content';
     const ALIAS_CONTROL_BUTTON = '@ctlBtn';
     const ALIAS_SAVE = '@save';
+    const ALIAS_CONTROLS = '@controls';
 
     before(async () => {
         cy.muteXHR();
@@ -58,6 +66,9 @@ describe('Page Management', () => {
             // Additional wait, for aloha to initialze all the blocks
             .find('main [contenteditable="true"]', { timeout: 60_000 })
             .as(ALIAS_CONTENT)
+
+        cy.get('project-editor content-frame gtx-page-editor-controls')
+            .as(ALIAS_CONTROLS);
     });
 
     it('should be able to add new text to the content-editable', () => {
@@ -93,47 +104,59 @@ describe('Page Management', () => {
         });
     });
 
-    it('should be able to add and remove basic formats', () => {
+    describe('add and remove basic formats', () => {
         const TEXT_CONTENT = 'test content';
 
-        for (const action of ACTION_FORMAT_KEYS) {
-            // eslint-disable-next-line cypress/unsafe-to-chain-command
-            cy.get(ALIAS_CONTENT)
-                // Clear the content first
-                .clear()
-                // Replace default text with the test content
-                .type(TEXT_CONTENT)
-                .rangeSelection(0, null, true);
+        // If the cite plugin is not enabled, then the quote button is a regular simple
+        // format, which can be easily tested here.
+        const FORMATS_TO_TEST = ACTION_SIMPLE_FORMAT_KEYS.slice(0);
+        if (envNone(ENV_ALOHA_PLUGIN_CITE)) {
+            FORMATS_TO_TEST.push(ACTION_FORMAT_QUOTE);
+        }
 
-            cy.toolbarFindControl(action).btn().as(ALIAS_CONTROL_BUTTON);
-            // button should not be marked as active yet
-            cy.get(ALIAS_CONTROL_BUTTON)
-                .should('not.have.class', CLASS_ACTIVE)
-                .click();
+        for (const action of FORMATS_TO_TEST) {
+            it(`should format "${action}" correctly`, () => {
+                // eslint-disable-next-line cypress/unsafe-to-chain-command
+                cy.get(ALIAS_CONTENT)
+                    // Clear the content first
+                    .clear()
+                    // Replace default text with the test content
+                    .type(TEXT_CONTENT)
+                    .rangeSelection(0, null, true);
 
-            cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, [ACTION_FORMAT_MAPPING[action]]);
+                cy.get(ALIAS_CONTROLS)
+                    .findAlohaComponent({ slot: action })
+                    .btn()
+                    .as(ALIAS_CONTROL_BUTTON);
+                // button should not be marked as active yet
+                cy.get(ALIAS_CONTROL_BUTTON)
+                    .should('not.have.class', CLASS_ACTIVE)
+                    .click();
 
-            // button should be marked as active now
-            cy.get(ALIAS_CONTROL_BUTTON)
-                .should('have.class', CLASS_ACTIVE);
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', TEXT_CONTENT, [ACTION_SIMPLE_FORMAT_MAPPING[action]]);
 
-            // Now we select the text again, and remove the formatting again
-            cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
+                // button should be marked as active now
+                cy.get(ALIAS_CONTROL_BUTTON)
+                    .should('have.class', CLASS_ACTIVE);
 
-            // Should remove the formatting with this
-            cy.get(ALIAS_CONTROL_BUTTON).click();
+                // Now we select the text again, and remove the formatting again
+                cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
 
-            cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, []);
+                // Should remove the formatting with this
+                cy.get(ALIAS_CONTROL_BUTTON).click();
 
-            // button should be marked as inactive now
-            cy.get(ALIAS_CONTROL_BUTTON)
-                .should('not.have.class', CLASS_ACTIVE);
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', TEXT_CONTENT, []);
+
+                // button should be marked as inactive now
+                cy.get(ALIAS_CONTROL_BUTTON)
+                    .should('not.have.class', CLASS_ACTIVE);
+            });
         }
     });
 
-    it('should be possible to format a range with multiple formats', () => {
+    describe('format a range with multiple formats', () => {
         const TEXT_CONTENT = 'test content';
 
         /*
@@ -159,24 +182,28 @@ describe('Page Management', () => {
         ];
 
         for (const group of FORMATS) {
-            // eslint-disable-next-line cypress/unsafe-to-chain-command
-            cy.get(ALIAS_CONTENT)
-                // Clear the content first
-                .clear()
-                // Replace default text with the test content
-                .type(TEXT_CONTENT)
-                .rangeSelection(0, null, true);
+            it(`should handle formats ["${group.join('", "')}"] correctly`, () => {
+                // eslint-disable-next-line cypress/unsafe-to-chain-command
+                cy.get(ALIAS_CONTENT)
+                    // Clear the content first
+                    .clear()
+                    // Replace default text with the test content
+                    .type(TEXT_CONTENT)
+                    .rangeSelection(0, null, true);
 
-            for (const action of group) {
-                cy.toolbarFindControl(action).btnClick();
-            }
+                for (const action of group) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action })
+                        .btnClick();
+                }
 
-            cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, group.map(key => ACTION_FORMAT_MAPPING[key]));
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', TEXT_CONTENT, group.map(key => ACTION_SIMPLE_FORMAT_MAPPING[key]));
+            });
         }
     });
 
-    it('should remove formatting in nested formats correctly', () => {
+    describe('remove formatting in nested formats correctly', () => {
         const FULL_CONTENT = 'foo bar hello world test content this is a test text';
         const TEXT_CONTENT = 'test content';
 
@@ -204,66 +231,204 @@ describe('Page Management', () => {
         ];
 
         for (const ctl of CONTROLS) {
-            // eslint-disable-next-line cypress/unsafe-to-chain-command
-            cy.get(ALIAS_CONTENT)
-                .clear()
-                .type(FULL_CONTENT)
-                .textSelection(TEXT_CONTENT, true);
+            it(`should apply ["${ctl.apply.join('", "')}"] and remove ["${ctl.remove.join('", "')}"] correctly`, () => {
+                // eslint-disable-next-line cypress/unsafe-to-chain-command
+                cy.get(ALIAS_CONTENT)
+                    .clear()
+                    .type(FULL_CONTENT)
+                    .textSelection(TEXT_CONTENT, true);
 
-            // Make sure the buttons are properly reset
-            for (const action of ACTION_FORMAT_KEYS) {
-                cy.toolbarFindControl(action)
-                    .btn()
-                    .should('not.have.class', CLASS_ACTIVE);
-            }
+                // Make sure the buttons are properly reset
+                for (const action of ACTION_SIMPLE_FORMAT_KEYS) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action })
+                        .btn()
+                        .should('not.have.class', CLASS_ACTIVE);
+                }
 
-            for (const action of ctl.apply) {
-                cy.toolbarFindControl(action).btnClick();
-            }
+                for (const action of ctl.apply) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action }).btnClick();
+                }
 
-            cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, ctl.apply.map(key => ACTION_FORMAT_MAPPING[key]));
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', TEXT_CONTENT, ctl.apply.map(key => ACTION_SIMPLE_FORMAT_MAPPING[key]));
 
-            for (const action of ctl.remove) {
-                cy.toolbarFindControl(action).btnClick();
-            }
+                for (const action of ctl.remove) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action }).btnClick();
+                }
 
-            cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, ctl.apply
-                    .filter(key => !ctl.remove.includes(key))
-                    .map(key => ACTION_FORMAT_MAPPING[key]));
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', TEXT_CONTENT, ctl.apply
+                        .filter(key => !ctl.remove.includes(key))
+                        .map(key => ACTION_SIMPLE_FORMAT_MAPPING[key]),
+                    );
+            });
         }
     });
 
-    it('should be able to remove formatting the removeFormatting button', () => {
+    describe('remove formatting with the removeFormatting button', () => {
         const FULL_CONTENT = 'foo bar hello world test content this is a test text';
         const TEXT_CONTENT = 'test content';
 
         // const FORMATS = combinationMatrix(ACTION_FORMAT_KEYS);
-        const FORMATS = [ACTION_FORMAT_KEYS];
+        const FORMATS = [ACTION_SIMPLE_FORMAT_KEYS];
 
         for (const group of FORMATS) {
+            it(`should be able to clear formats ["${group.join('", "')}]`, () => {
+                // eslint-disable-next-line cypress/unsafe-to-chain-command
+                cy.get(ALIAS_CONTENT)
+                    .clear()
+                    .type(FULL_CONTENT)
+                    .textSelection(TEXT_CONTENT, true);
+
+                for (const action of group) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action })
+                        .btnClick();
+                }
+
+                cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
+                cy.get(ALIAS_CONTROLS)
+                    .findAlohaComponent({ slot: ACTION_REMOVE_FORMAT })
+                    .btnClick();
+
+                cy.get(ALIAS_CONTENT)
+                    .should('have.formatting', FULL_CONTENT, []);
+
+                for (const action of ACTION_SIMPLE_FORMAT_KEYS) {
+                    cy.get(ALIAS_CONTROLS)
+                        .findAlohaComponent({ slot: action })
+                        .btn()
+                        .should('not.have.class', CLASS_ACTIVE);
+                }
+            });
+        }
+    });
+
+    it('should format and manage abbreviations correctly', () => {
+        const FULL_CONTENT = 'foo bar hello world test content this is a test text';
+        const TEXT_CONTENT = 'test content';
+        const TITLE_CONTENT = 'something fancy';
+
+        const CLASS_INPUT_ACTIVE = 'input-active';
+        const ATTR_TITLE = 'title';
+
+        const ALIAS_WRAPPER = '@btnWrapper';
+        const ALIAS_BUTTON = '@btnPrimary';
+        const ALIAS_SECONDARY_BUTTON = '@btnSecondary';
+
+        // eslint-disable-next-line cypress/unsafe-to-chain-command
+        cy.get(ALIAS_CONTENT)
+            .clear()
+            .type(FULL_CONTENT)
+            .textSelection(TEXT_CONTENT, true);
+
+        // Format it as abbr
+        cy.get(ALIAS_CONTROLS)
+            .findAlohaComponent({ slot: ACTION_FORMAT_ABBR })
+            .find('.gtx-editor-toggle-split-button')
+            .as(ALIAS_WRAPPER)
+            .btn()
+            .as(ALIAS_BUTTON)
+            .click();
+
+        // Verify formatting worked
+        cy.get(ALIAS_CONTENT)
+            .should('have.formatting', TEXT_CONTENT, ['abbr']);
+
+        // Verify no title has been set yet
+        cy.get(ALIAS_CONTENT)
+            .find(FORMAT_ABBR)
+            .then($elem => {
+                expect($elem.attr(ATTR_TITLE)).to.equal('');
+            });
+
+        // Verify button state, and click it
+        cy.get(ALIAS_WRAPPER)
+            .should('have.class', CLASS_ACTIVE)
+            .should('have.class', CLASS_INPUT_ACTIVE)
+            .btn({ action: 'secondary' })
+            .as(ALIAS_SECONDARY_BUTTON)
+            .should('be.visible')
+            .click();
+
+        // Enter the title in the dropdown
+        cy.findDynamicDropdown(ACTION_FORMAT_ABBR)
+            .find('gtx-aloha-input-renderer input')
+            .type(`${TITLE_CONTENT}{enter}`);
+
+        // Verify the title has been updated
+        cy.get(ALIAS_CONTENT)
+            .find(FORMAT_ABBR)
+            .then($elem => {
+                expect($elem.attr(ATTR_TITLE)).to.equal(TITLE_CONTENT);
+            });
+
+        // Remove the formatting again
+        cy.get(ALIAS_BUTTON).click();
+
+        // Verify formatting has been removed
+        cy.get(ALIAS_CONTENT)
+            .should('have.formatting', FULL_CONTENT, []);
+    });
+
+    /*
+     * TODO: This test only works, because we have the `extra/cite` plugin enabled.
+     * Otherwise, the quote formatting would work differently.
+     * We should make it possible to test different aloha configs, but not sure how just yet.
+     * Additionally, the `note` feature is not really working in the context of the CMS,
+     * which is why we have the entire test skipped and the plugin disabled so far.
+     */
+    skipableSuite(envAll(ENV_ALOHA_PLUGIN_CITE), 'With "extra/cite" aloha plugin active', () => {
+        it('should format and manage a inline quote correctly', () => {
+            const TEXT_CONTENT = 'test content';
+            const SOURCE_CONTENT = 'https://gentics.com';
+            const NOTE_CONTENT = 'something something, this is a note from 2024';
+
+            const SLOT_SOURCE = 'source';
+            const SLOT_NOTE = 'note';
+            const ATTR_CITE = 'cite';
+            const ATTR_CITE_ID = 'data-cite-id';
+
+            const ALIAS_MODAL = '@modal';
+
             // eslint-disable-next-line cypress/unsafe-to-chain-command
             cy.get(ALIAS_CONTENT)
                 .clear()
-                .type(FULL_CONTENT)
-                .textSelection(TEXT_CONTENT, true);
+                .type(TEXT_CONTENT)
+                .rangeSelection(0, -2, true);
 
-            for (const action of group) {
-                cy.toolbarFindControl(action).btnClick();
-            }
+            cy.findAlohaComponent({ slot: ACTION_FORMAT_QUOTE })
+                .btnClick();
 
-            cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
-            cy.toolbarFindControl(ACTION_FORMAT_REMOVE).btnClick();
+            cy.findDynamicFormModal(ACTION_FORMAT_QUOTE)
+                .as(ALIAS_MODAL);
+
+            cy.get(ALIAS_MODAL)
+                .findAlohaComponent({ slot: SLOT_SOURCE, type: 'input' })
+                .find('input')
+                .type(SOURCE_CONTENT);
+
+            cy.get(ALIAS_MODAL)
+                .findAlohaComponent({ slot: SLOT_NOTE, type: 'input' })
+                .find('input')
+                .type(NOTE_CONTENT);
+
+            cy.get(ALIAS_MODAL)
+                .find('.modal-footer gtx-button[data-action="confirm"]')
+                .btnClick();
 
             cy.get(ALIAS_CONTENT)
-                .should('have.formatting', FULL_CONTENT, []);
-
-            for (const action of ACTION_FORMAT_KEYS) {
-                cy.toolbarFindControl(action)
-                    .btn()
-                    .should('not.have.class', CLASS_ACTIVE);
-            }
-        }
+                .should('have.formatting', TEXT_CONTENT, ['q'])
+                .find('q')
+                .then($quote => {
+                    expect($quote.attr(ATTR_CITE)).to.equal(SOURCE_CONTENT);
+                    const id = $quote.attr(ATTR_CITE_ID);
+                    cy.find(`#cite-note-${id}`)
+                        .should('have.text', NOTE_CONTENT);
+                });
+        });
     });
 });

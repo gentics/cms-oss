@@ -100,7 +100,11 @@ export class AlohaAttributeButtonRendererComponent
         const initialValue: string = (this.settings.targetElement as JQuery).attr(this.settings.targetAttribute) as any || '';
 
         this.overlay.openDynamicDropdown({
+            openerReference: this.settings?.name,
             type: 'input',
+            options: {
+                label: this.settings?.inputLabel,
+            },
             initialValue: initialValue,
         }, this.slot)
             .then(ctl => {

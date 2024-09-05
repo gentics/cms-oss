@@ -33,6 +33,18 @@ interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
     asContent: true;
 }
 
+type RenderableAlohaComponentType =
+    'attribute-button' | 'attribute-toggle-button' | 'button'
+    | 'checkbox' | 'color-picker' | 'context-button' | 'context-toggle-button'
+    | 'date-time-picker' | 'iframe' | 'input' | 'link-target' | 'select' | 'select-menu'
+    | 'split-button' | 'symbol-grid' | 'symbol-search-grid' | 'table-size-select'
+    | 'toggle-button' | 'toggle-split-button';
+
+interface FindAlohaRendererOptions {
+    slot?: string;
+    type?: RenderableAlohaComponentType;
+}
+
 declare module Chai {
     interface Assertion {
         /**
@@ -189,6 +201,23 @@ declare namespace Cypress {
          */
         findTagEditorElement(type: string): Chainable<JQuery<HTMLElement>>;
         /**
+         * Attempts to find a control based on the specified slot.
+         * @param options The options for finding the component.
+         */
+        findAlohaComponent(options?: FindAlohaRendererOptions): Chainable<HTMLElement>;
+        /**
+         * Attempts to find a dynamic form-modal element.
+         * When a ref is provided, it'll try to find the one with the corresponding ref.
+         * @param ref The reference data, if any.
+         */
+        findDynamicFormModal(ref?: string): Chainable<HTMLElement>;
+        /**
+         * Attempts to find a dynamic dropdown element.
+         * When a ref is provided, it'll try to find the one with the corresponding ref.
+         * @param ref The reference data, if any.
+         */
+        findDynamicDropdown(ref?: string): Chainable<HTMLElement>;
+        /**
          * Uploads the specified fixture-names as files or images.
          * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
          * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
@@ -225,10 +254,5 @@ declare namespace Cypress {
          * @param aloha If it should apply the range to aloha as well.
          */
         textSelection(text: string, aloha?: boolean): Chainable<HTMLElement>;
-        /**
-         * Attempts to find a control based on the specified slot.
-         * @param slot The slot of the component to find.
-         */
-        toolbarFindControl(slot: string): Chainable<HTMLElement>;
     }
 }

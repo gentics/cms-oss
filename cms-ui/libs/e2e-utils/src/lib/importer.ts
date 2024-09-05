@@ -15,7 +15,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
     BinaryMap,
     CORE_CONSTRUCTS,
@@ -256,13 +256,17 @@ export class EntityImporter {
         for (const entry of Object.entries(features || {})) {
             const [feature, enabled] = entry;
             if (Feature[feature]) {
-                // if (enabled) {
-                //     this.client.executeMappedJsonRequest(RequestMethod.PUT, `/features/${feature}`)
-                // } else {
-                //     this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/features/${feature}`);
-                // }
-                // TODO: Update the features when the endpoints are available
-                // Don't add the endpoints to the client, as they are ment for testing only.
+                try {
+                    await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/features/${feature}`, null, {
+                        enabled,
+                    }).send();
+                } catch (err) {
+                    // If it's a 404, then we ignore it, as this feature/endpoint doesn't exist.
+                    // TODO: Remove this handling once everything is merged - currently this endpoint is "optional"
+                    if (!(err instanceof GCMSRestClientRequestError) || err.responseCode !== 404) {
+                        throw err;
+                    }
+                }
                 continue;
             }
 

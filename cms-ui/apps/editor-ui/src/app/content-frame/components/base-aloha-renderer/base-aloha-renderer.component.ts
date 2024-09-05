@@ -4,7 +4,9 @@ import { BaseFormElementComponent } from '@gentics/ui-core';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 
 @Component({ template: '' })
-export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, OnDestroy {
+export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
+    extends BaseFormElementComponent<T>
+    implements OnInit, OnChanges, OnDestroy {
 
     @Input()
     public slot?: string;
@@ -62,7 +64,7 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
     }
 
     protected unregisterAsRendered(): void {
-        if (!this.slot && !this.settings.name) {
+        if (!this.slot && !this.settings?.name) {
             return;
         }
         delete this.aloha.renderedComponents[this.slot || this.settings.name];

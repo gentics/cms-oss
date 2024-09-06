@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import {
     FormBrowseBoxComponent,
     I18nCheckboxComponent,
@@ -36,6 +37,7 @@ import {
 } from './pipes';
 import {
     I18nService,
+    KeycloakService,
     LocalTranslateLoader,
     WindowRef,
 } from './providers';
@@ -90,6 +92,7 @@ const PROVIDERS: any[] = [
         deps: [ I18nService ],
     },
     WindowRef,
+    KeycloakService,
     ...PIPES,
 ];
 
@@ -99,6 +102,7 @@ const PROVIDERS: any[] = [
         CommonModule,
         ReactiveFormsModule,
         GenticsUICoreModule,
+        GCMSRestClientModule,
     ],
     exports: [
         ...DECLARATIONS,

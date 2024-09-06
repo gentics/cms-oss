@@ -3165,7 +3165,7 @@ export class FolderActionsService {
                             online: false,
                         };
                     }
-                    this.appState.dispatch(new UpdateEntitiesAction(pageUpdates));
+                    this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
                     const takenOffline: Page[] = [];
                     const queued: Page[] = [];
                     let message: string;
@@ -3654,7 +3654,7 @@ export class FolderActionsService {
                             online: false,
                         };
                     }
-                    this.appState.dispatch(new UpdateEntitiesAction(formUpdates));
+                    this.appState.dispatch(new UpdateEntitiesAction({ form: formUpdates }));
                     const takenOffline: Form[] = [];
                     const queued: Form[] = [];
                     let message: string;

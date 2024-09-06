@@ -41,3 +41,10 @@
         }
     }
 }
+
+.keycloak-error {
+    border-left: 5px solid $gtx-color-warning;     
+    margin-top: 1rem;
+    padding: 0.5rem;
+    max-width: 405px;
+}

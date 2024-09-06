@@ -6,6 +6,7 @@ export default defineConfig({
     component: {
         ...nxComponentTestingPreset(__filename),
         indexHtmlFile: './cypress/support/component-index.html',
+        video: false,
     },
     ...createComponentReporterOptions('libs', 'form-generator', false),
 });

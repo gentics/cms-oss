@@ -1,6 +1,7 @@
 <div class="content-frame-container">
 
     <gtx-editor-toolbar
+        *ngIf="currentItem && currentNode"
         [nodeInherited]="isInherited$ | async"
         [currentNode]="currentNode"
         [currentItem]="currentItem"
@@ -41,7 +42,7 @@
         [class.hidden]="(propertiesTab$ | async) !== 'preview'"
     >
         <file-preview
-            [file]="(currentItem$ | async)"
+            [file]="currentItem"
             (imageLoading)="isImageLoading = $event"
         ></file-preview>
     </div>

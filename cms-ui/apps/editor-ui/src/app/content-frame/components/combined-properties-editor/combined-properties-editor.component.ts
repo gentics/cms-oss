@@ -54,6 +54,7 @@ import {
     EditableObjectTag,
     EditablePageProps,
     EditableTag,
+    Feature,
     Folder,
     FolderItemOrTemplateType,
     FolderSaveRequestOptions,
@@ -76,6 +77,11 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     GroupedTabsComponent,
     ModalService,
+    TableAction,
+    TableActionClickEvent,
+    TableColumn,
+    TableRow,
+    TableSelectAllType,
     TooltipComponent,
 } from '@gentics/ui-core';
 import { cloneDeep, isEqual, merge } from 'lodash-es';
@@ -99,6 +105,7 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators';
+import { generateContentTagList } from '../../utils';
 
 /** Allows to define additional options for saving. */
 export interface SaveChangesOptions {
@@ -112,6 +119,9 @@ export interface ObjectPropertiesCategory {
 }
 
 const OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label';
+const ACTION_DELETE = 'delete';
+const ACTION_ACTIVATE = 'activate';
+const ACTION_DEACTIVATE = 'deactivate';
 
 /**
  * Displays vertical tabs, which contain one tab for the item's properties (PropertiesEditor component)
@@ -124,6 +134,8 @@ const OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+
+    public readonly TableSelectAllType = TableSelectAllType;
 
     /** The item, whose properties should be edited. */
     @Input()
@@ -141,11 +153,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     pointObjProp: any;
     position: string;
 
-    tagfillLightState$: Observable<boolean>;
+    public contentTagRows: TableRow<Tag>[] = [];
+    public contentTagColumns: TableColumn<Tag>[] = [];
+    public contentTagActions: TableAction<Tag>[] = [];
+    public contentTagSelection: string[] = [];
 
     activeTabId$: Observable<string>;
     itemWithObjectProperties$: Observable<{ item: ItemWithObjectTags | Node, objProperties: EditableObjectTag[] }>;
-    itemWithContentTags$: Observable<any>;
     objectPropertiesGrouped$: Observable<ObjectPropertiesCategory[]>;
     objectPropertiesGroupedDelayed$: Observable<ObjectPropertiesCategory[]>;
     activeTabObjectProperty$: Observable<{ item: ItemWithObjectTags, tag: EditableObjectTag }>;
@@ -183,6 +197,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private subscriptions: Subscription[] = [];
     private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
     private latestPropChanges: EditableProperties;
+    private tagFillLightEnabled = true;
 
     expandedState$: Observable<string[]>;
 
@@ -208,7 +223,28 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     ngOnInit(): void {
         const editorState$ = this.appState.select(state => state.editor);
 
-        this.tagfillLightState$ = this.appState.select(state => state.features.tagfill_light);
+        this.contentTagColumns = [
+            {
+                id: 'name',
+                fieldPath: 'name',
+                label: this.i18n.translate('editor.tagname_label'),
+                clickable: true,
+            },
+            {
+                id: 'type',
+                fieldPath: 'construct.name',
+                label: this.i18n.translate('editor.tagtype_label'),
+                clickable: true,
+            },
+            {
+                id: 'active',
+                fieldPath: 'active',
+                label: this.i18n.translate('editor.obj_prop_active_label'),
+                align: 'center',
+                clickable: true,
+            },
+        ];
+        this.rebuildContentTagActions();
 
         this.expandedState$ = editorState$.pipe(
             map(value => value.openObjectPropertyGroups),
@@ -233,11 +269,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             refCount(),
         );
 
-        this.itemWithContentTags$ = this.item$.pipe(
-            map(item => ({ item, properties: this.generateContentTagList(item as Page) })),
-            publishReplay(1),
-            refCount(),
-        );
+        this.subscriptions.push(this.item$.subscribe(item => {
+            const tags = generateContentTagList(item as Page);
+            this.contentTagRows = tags.map(tag => {
+                return {
+                    id: `${tag.id}`,
+                    item: tag,
+                };
+            });
+            this.changeDetector.markForCheck();
+        }));
 
         this.objectPropertiesGrouped$ = this.itemWithObjectProperties$.pipe(
             map(itemWithObjProps => itemWithObjProps.objProperties),
@@ -310,10 +351,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             refCount(),
         );
 
-        const currNodeSub = currNodeId$.subscribe(nodeId => {
-            this.currentNode = this.entityResolver.getNode(nodeId)
-        });
-        this.subscriptions.push(currNodeSub);
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.TAGFILL_LIGHT]).subscribe(enabled => {
+            this.tagFillLightEnabled = enabled;
+            this.rebuildContentTagActions();
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(currNodeId$.subscribe(nodeId => {
+            this.currentNode = this.entityResolver.getNode(nodeId);
+            this.changeDetector.markForCheck();
+        }));
 
         if (this.nodeId) {
             this.currentNode = this.entityResolver.getNode(this.nodeId);
@@ -401,38 +448,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         ).subscribe(() => this.scrollToRight());
     }
 
-    toggleAllContentTagSelected(tags: Tag[]): void {
-        if (this.selectedContentTags$.value.length === tags.length) {
-            this.selectedContentTags$.next([]);
-        } else {
-            this.selectedContentTags$.next(tags.map(tag => tag.id));
-        }
-    }
-
-    isContentTagSelectedAll(tags: Tag[]): boolean {
-        if (this.selectedContentTags$.value.length === tags.length) {
-            return true;
-        }
-        return false;
-    }
-
-    isContentTagSelected(tagElement: Tag): boolean {
-        return this.selectedContentTags$.value.includes(tagElement.id);
-    }
-
-    toggleSelectContentTag(tagElement: Tag, selected: boolean): void {
-        let newSelection: number[];
-
-        if (selected === true) {
-            newSelection = this.selectedContentTags$.value.concat([tagElement.id]);
-        } else {
-            newSelection = this.selectedContentTags$.value.slice();
-            newSelection.splice(newSelection.indexOf(tagElement.id), 1);
-        }
-
-        this.selectedContentTags$.next(newSelection);
-    }
-
     openContentTag(item: ItemWithContentTags, tagElement: Tag): void {
         this.tagEditorService.openTagEditor(tagElement, tagElement.construct, item).then(
             (result) => {
@@ -447,28 +462,124 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         });
     }
 
-    deleteSelectedContentTags(item: ItemWithContentTags, tagElements: Tag[]): void {
-        const selectedTagElements = tagElements.filter(tagElement => this.selectedContentTags$.value.includes(tagElement.id));
-        this.deleteContentTag(item, selectedTagElements);
+    rebuildContentTagActions(): void {
+        this.contentTagActions = [
+            {
+                id: ACTION_DELETE,
+                enabled: true,
+                icon: 'delete',
+                label: this.i18n.translate('editor.tagtype_delete_label'),
+                type: 'alert',
+                single: true,
+                multiple: true,
+            },
+        ];
+
+        if (!this.tagFillLightEnabled) {
+            this.contentTagActions.unshift({
+                id: ACTION_ACTIVATE,
+                enabled: (item) => item == null || !item.active,
+                icon: 'check_circle',
+                label: this.i18n.translate('editor.tagtype_activate_label'),
+                type: 'success',
+                single: true,
+                multiple: true,
+            }, {
+                id: ACTION_DEACTIVATE,
+                enabled: (item) => item == null || item.active,
+                icon: 'cancel',
+                label: this.i18n.translate('editor.tagtype_deactivate_label'),
+                type: 'warning',
+                single: true,
+                multiple: true,
+            });
+        }
     }
 
-    deleteContentTag(item: ItemWithContentTags, tagElements: Tag[] | Tag): void {
-        if (!Array.isArray(tagElements)) {
-            tagElements = [tagElements];
+    handleContentTagClick(tag: Tag): void {
+        this.openContentTag(this.item as ItemWithContentTags, tag);
+    }
+
+    handleContentTagAction(event: TableActionClickEvent<Tag>): void {
+        let names: string[] = [];
+        if (!event.selection) {
+            names = [event.item.name];
+        } else {
+            names = this.contentTagSelection
+                .map(id => this.contentTagRows.find(row => row.id === id)?.item?.name)
+                .filter(name => name != null);
         }
 
+        switch (event.actionId) {
+            case ACTION_DELETE:
+                this.deleteContentTag(this.item as ItemWithContentTags, names);
+                break;
+
+            case ACTION_ACTIVATE:
+                this.setContentTagActiveState(this.item as ItemWithContentTags, names, true);
+                break;
+
+            case ACTION_DEACTIVATE:
+                this.setContentTagActiveState(this.item as ItemWithContentTags, names, false);
+                break;
+        }
+    }
+
+    async setContentTagActiveState(item: ItemWithContentTags, tagNames: string[], active: boolean): Promise<void> {
+        const tags = tagNames.reduce((acc, name) => {
+            acc[name] = {
+                name: name,
+                active,
+            } as any;
+            return acc;
+        }, {} as Tags);
+
+        try {
+            const updatedItem = await this.folderActions.updateItemObjectProperties(
+                item.type,
+                item.id,
+                tags,
+                { showNotification: true, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true },
+                {},
+            );
+
+            this.item = updatedItem;
+            this.item$.next(this.item);
+            this.contentTagSelection = [];
+            this.changeDetector.markForCheck();
+        } catch (err) {
+            // Nothing to do, error is already properly handled in update method
+        }
+    }
+
+    deleteContentTag(item: ItemWithContentTags, tagNames: string[]): void {
         const options = {
-            delete: [ ...tagElements.map(tag => tag.name) ],
+            delete: tagNames,
         };
 
-        const count = tagElements.length;
+        const count = tagNames.length;
+        const translateType = count > 1 ? 'plural' : 'singular';
 
         this.modalService.dialog({
-            title: this.i18n.translate('modal.confirmation_tag_delete_title'),
-            body: this.i18n.translate('modal.delete_tag_confirm_' + (count > 1 ? 'plural' : 'singular') , { count: count }),
+            title: this.i18n.translate(`modal.confirmation_tag_delete_${translateType}_title`),
+            body: this.i18n.translate(`modal.delete_tag_confirm_${translateType}` , {
+                count: count,
+                names: `<ul class="browser-default"><li>${tagNames.join('</li><li>')}</li></ul>`,
+                name: tagNames[0],
+            }),
             buttons: [
-                { label: this.i18n.translate('common.cancel_button'), type: 'secondary' as const, flat: true, returnValue: false, shouldReject: true },
-                { label: this.i18n.translate('common.delete_button'), type: 'alert' as const, returnValue: true },
+                {
+                    label: this.i18n.translate('common.cancel_button'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                    shouldReject: true,
+                },
+                {
+                    label: this.i18n.translate('common.delete_button'),
+                    type: 'alert',
+                    returnValue: true,
+                },
             ],
         })
             .then(dialog => dialog.open())
@@ -480,9 +591,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 options,
             ).then(updatedItem => {
                 this.item = updatedItem;
-                this.changeDetector.markForCheck();
                 this.item$.next(this.item);
-                this.selectedContentTags$.next([]);
+                this.contentTagSelection = [];
+                this.changeDetector.markForCheck();
             }));
     }
 
@@ -561,21 +672,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         }
         objectProperties.sort((a, b) => a.sortOrder - b.sortOrder);
         return objectProperties;
-    }
-
-    private generateContentTagList(item: ItemWithContentTags | Node): Tag[] {
-        const contentTagList: Tag[] = [];
-        if (item && item.type === 'page' && (item ).tags) {
-            const itemWithTags = item ;
-            for (const key of Object.keys(itemWithTags.tags)) {
-                const tag = itemWithTags.tags[key];
-                if (tag.type === 'CONTENTTAG') {
-                    contentTagList.push(tag );
-                }
-            }
-        }
-
-        return contentTagList;
     }
 
     private groupObjectPropertiesByCategory(objectProperties: EditableObjectTag[]): ObjectPropertiesCategory[] {
@@ -818,7 +914,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private editObjectProperty(objProp: EditableObjectTag, item: ItemWithObjectTags, tagEditorHost: TagEditorHostComponent): void {
         objProp = cloneDeep(objProp);
         const isReadOnly = this.checkIfReadOnly(objProp);
-        if (this.appState.now.features.tagfill_light) {
+        if (this.tagFillLightEnabled) {
             objProp.active = true;
         }
         this.editedObjectProperty = objProp;

@@ -134,11 +134,21 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
 
     onDeleteClick(): void {
         this.modalService.dialog({
-            title: this.i18n.translate('modal.confirmation_tag_delete_title'),
-            body: this.i18n.translate('modal.delete_tag_confirm_singular'),
+            title: this.i18n.translate('modal.confirmation_tag_delete_singular_title'),
+            body: this.i18n.translate('modal.delete_tag_confirm_singular', { name: this.originalTag.name }),
             buttons: [
-                { label: this.i18n.translate('common.cancel_button'), type: 'secondary' as const, flat: true, returnValue: false, shouldReject: true },
-                { label: this.i18n.translate('common.delete_button'), type: 'alert' as const, returnValue: true },
+                {
+                    label: this.i18n.translate('common.cancel_button'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                    shouldReject: true,
+                },
+                {
+                    label: this.i18n.translate('common.delete_button'),
+                    type: 'alert',
+                    returnValue: true,
+                },
             ],
         })
             .then(modal => modal.open())

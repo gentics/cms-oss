@@ -120,7 +120,9 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         super.ngOnChanges(changes);
 
         if (changes.actions) {
-            this.hasActions = Array.isArray(this.actions) && this.actions.length > 0;
+            // Actions have to be defined and enabled for either single or multiple elements to be shown.
+            this.hasActions = Array.isArray(this.actions)
+                && (this.actions.filter(action => action.single || action.multiple)).length > 0;
             this.rebuildActions();
         }
 

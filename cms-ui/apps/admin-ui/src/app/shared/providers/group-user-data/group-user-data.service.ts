@@ -1,5 +1,12 @@
 import { detailLoading, discard } from '@admin-ui/common';
-import { EntityManagerService, GroupOperations, I18nNotificationService, I18nService, PermissionsService, UserOperations } from '@admin-ui/core';
+import {
+    EntityManagerService,
+    GroupOperations,
+    I18nNotificationService,
+    I18nService,
+    PermissionsService,
+    UserOperations,
+} from '@admin-ui/core';
 import { AppStateService, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import {
@@ -134,34 +141,21 @@ export class GroupUserDataService extends UserDataService {
         nodeIdsToRestrict: number[],
         nodesCurrentlyRestricted: number[] = [],
     ): Observable<UserGroupNodeRestrictionsResponse> {
-        return this.state.select(state => state.entity.node).pipe(
-            // get node ids as array
-            map(nodesIndexed => Object.values(nodesIndexed).map(node => node.id)),
-            // restrict desired nodes and unrestrict unwanted nodes
-            switchMap((allNodeIds: number[]) => {
-                // calculate minimal amount of requests required
-                const nodesShallBeRestricted = nodeIdsToRestrict;
-                const nodesShallNotBeRestricted = allNodeIds.filter((id: number) => !nodesShallBeRestricted.includes(id));
+        const toAssignIds = nodeIdsToRestrict.filter(id => !nodesCurrentlyRestricted.includes(id));
+        const toRemoveIds = nodesCurrentlyRestricted.filter(id => !nodeIdsToRestrict.includes(id));
 
-                const nodesCurrentlyNotRestricted = allNodeIds.filter((id: number) => !nodesCurrentlyRestricted.includes(id));
+        const assignWorker = toAssignIds.length === 0 ? of() : forkJoin(
+            toAssignIds.map(id => this.entityOperations.addUserNodeRestrictions(userId, groupId, id)),
+        );
+        const removeWorker = toRemoveIds.length === 0 ? of() : forkJoin(
+            toRemoveIds.map(id => this.entityOperations.removeUserNodeRestrictions(userId, groupId, id)),
+        );
 
-                const nodesToRestrict = nodesShallBeRestricted.filter(id => !nodesCurrentlyRestricted.includes(id));
-                const nodesToUnrestrict = nodesShallNotBeRestricted.filter(id => !nodesCurrentlyNotRestricted.includes(id));
-
-                const restrictRequests: Observable<UserGroupNodeRestrictionsResponse>[]
-                    = nodesToRestrict.map(nodeId => this.entityOperations.addUserNodeRestrictions(userId, groupId, nodeId));
-                const unrestrictRequests: Observable<UserGroupNodeRestrictionsResponse>[]
-                    = nodesToUnrestrict.map(nodeId => this.entityOperations.removeUserNodeRestrictions(userId, groupId, nodeId));
-
-                // request restrict changes before unrestrict changes
-                return forkJoin([ ...restrictRequests, ...unrestrictRequests ]).pipe(
-                    catchError(() => of(this.displayNotificationError('shared.restrict_group_to_users_error', userId.toString()))),
-                ).pipe(
-                    // return final state
-                    switchMap(() => this.entityOperations.getUserNodeRestrictions(userId, groupId)),
-                );
-            }),
+        return assignWorker.pipe(
+            switchMap(() => removeWorker),
             tap(() => this.displayNotificationSuccess('shared.restrict_group_to_users_success')),
+            catchError(() => of(this.displayNotificationError('shared.restrict_group_to_users_error', userId.toString()))),
+            switchMap(() => this.entityOperations.getUserNodeRestrictions(userId, groupId)),
         );
     }
 

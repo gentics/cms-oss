@@ -1,5 +1,13 @@
 import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
-import { GroupOperations, I18nService, PermissionsService, UserOperations, UserTableLoaderOptions, UserTableLoaderService } from '@admin-ui/core';
+import {
+    ErrorHandler,
+    GroupOperations,
+    I18nService,
+    PermissionsService,
+    UserOperations,
+    UserTableLoaderOptions,
+    UserTableLoaderService,
+} from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { Group, NormalizableEntityType, Raw, User } from '@gentics/cms-models';
@@ -77,6 +85,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         protected operations: UserOperations,
         protected contextMenu: ContextMenuService,
         protected groupOps: GroupOperations,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -259,10 +268,16 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
             return false;
         }
 
+        let didChange = false;
         for (const id of userIds) {
-            await this.groupOps.removeUserFromGroup(groupId, id).toPromise();
+            try {
+                await this.groupOps.removeUserFromGroup(groupId, id).toPromise();
+                didChange = true;
+            } catch (err) {
+                this.errorHandler.catch(err, { notification: true });
+            }
         }
 
-        return true;
+        return didChange;
     }
 }

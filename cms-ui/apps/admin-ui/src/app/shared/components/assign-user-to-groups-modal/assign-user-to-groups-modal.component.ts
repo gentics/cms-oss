@@ -7,6 +7,7 @@ import { BaseModal, ModalService, TableAction, TableActionClickEvent } from '@ge
 import { Subscription } from 'rxjs';
 import { UserDataService } from '../../providers/user-data/user-data.service';
 import { AssignNodeRestrictionsToUsersModalComponent } from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 
 const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
 
@@ -110,9 +111,13 @@ export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> im
                 { userId: this.userIds[0], groupId },
             );
             await dialog.open();
+
+            this.loading = false;
+            this.changeDetector.markForCheck();
         } catch (err) {
-            this.errorHandler.catch(err);
-        } finally {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                this.errorHandler.catch(err);
+            }
             this.loading = false;
             this.changeDetector.markForCheck();
         }

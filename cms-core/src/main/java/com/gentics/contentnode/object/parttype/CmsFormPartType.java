@@ -8,6 +8,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -78,6 +79,7 @@ public class CmsFormPartType extends AbstractPartType {
 	 * @return target form or null
 	 * @throws NodeException
 	 */
+	@ResolvableGetter
 	public Form getTarget() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		return t.getObject(Form.class, getValueObject().getValueRef());

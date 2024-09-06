@@ -46,6 +46,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
+import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -149,7 +150,7 @@ public class ConstructSyncTest {
 
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
-			Assertions.assertThat(afterSync).as("Construct after sync").isNotNull().hasFieldOrPropertyWithValue("externalEditorUrl", "/external/url.html");
+			GCNAssertions.assertThat(afterSync).as("Construct after sync").isNotNull().hasFieldOrPropertyWithValue("externalEditorUrl", "/external/url.html");
 		});
 	}
 
@@ -177,7 +178,7 @@ public class ConstructSyncTest {
 
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
-			Assertions.assertThat(afterSync)
+			GCNAssertions.assertThat(afterSync)
 				.as("Construct after sync")
 				.isNotNull()
 				.hasFieldOrPropertyWithValue("editOnInsert", true);
@@ -208,7 +209,7 @@ public class ConstructSyncTest {
 
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
-			Assertions.assertThat(afterSync)
+			GCNAssertions.assertThat(afterSync)
 				.as("Construct after sync")
 				.isNotNull()
 				.hasFieldOrPropertyWithValue("editorControlStyle", EditorControlStyle.CLICK);
@@ -239,7 +240,7 @@ public class ConstructSyncTest {
 
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
-			Assertions.assertThat(afterSync)
+			GCNAssertions.assertThat(afterSync)
 				.as("Construct after sync")
 				.isNotNull()
 				.hasFieldOrPropertyWithValue("editorControlInside", true);
@@ -276,7 +277,7 @@ public class ConstructSyncTest {
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
 			assertThat(afterSync).as("Construct after sync").isNotNull();
-			Assertions.assertThat(afterSync.getParts().get(0)).as("Part after sync").hasFieldOrPropertyWithValue("hideInEditor", true);
+			GCNAssertions.assertThat(afterSync.getParts().get(0)).as("Part after sync").hasFieldOrPropertyWithValue("hideInEditor", true);
 		});
 	}
 
@@ -310,7 +311,7 @@ public class ConstructSyncTest {
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
 			assertThat(afterSync).as("Construct after sync").isNotNull();
-			Assertions.assertThat(afterSync.getParts().get(0)).as("Part after sync").hasFieldOrPropertyWithValue("externalEditorUrl", "/external/url.html");
+			GCNAssertions.assertThat(afterSync.getParts().get(0)).as("Part after sync").hasFieldOrPropertyWithValue("externalEditorUrl", "/external/url.html");
 		});
 	}
 

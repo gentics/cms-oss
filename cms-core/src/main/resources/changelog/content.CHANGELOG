@@ -806,3 +806,4 @@
 2024-03-27  CH-1715 NOP SQL ALTER TABLE construct DROP COLUMN hopedithook;
 2024-03-29  CH-1716 NOP SQL ALTER TABLE construct DROP COLUMN icon;
 2024-07-04  CH-1718 NOP SQL ALTER TABLE node ADD COLUMN mesh_project_name VARCHAR(255) NOT NULL DEFAULT '';
+2024-07-11  CH-1719 NOP SQL INSERT INTO type (id, name, description, auto, javaclass) VALUES (43, 'Handlebars', 'Render Handlebars Template', 0, 'com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType'); ## Add new part type for rendering Handlebars template

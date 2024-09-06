@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,9 +22,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.tautua.markdownpapers.Markdown;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -88,6 +93,11 @@ public abstract class PackageSynchronizer {
 	public final static String CHANNELS_DIR = "channels";
 
 	/**
+	 * Name of the subdirectory containing handlebars helpers and partials
+	 */
+	public final static String HANDLEBARS_DIR = "handlebars";
+
+	/**
 	 * Directory map for object class
 	 */
 	public final static Map<Class<? extends SynchronizableNodeObject>, String> directoryMap = new HashMap<>(4);
@@ -123,9 +133,19 @@ public abstract class PackageSynchronizer {
 	protected Map<Class<? extends SynchronizableNodeObject>, AbstractSynchronizer<? extends SynchronizableNodeObject, ? extends AbstractModel>> synchronizersPerClass = new HashMap<>();
 
 	/**
+	 * Map of handlers for changes in paths (if they are not handled by a synchronizer)
+	 */
+	protected Map<Path, Consumer<Path>> pathHandlers = new HashMap<>();
+
+	/**
 	 * Package name
 	 */
 	protected String packageName;
+
+	/**
+	 * Cached handlebars helpers
+	 */
+	protected String handlebarsHelpers;
 
 	/**
 	 * Create an instance with the given path
@@ -161,6 +181,11 @@ public abstract class PackageSynchronizer {
 			addSynchronizer(contentrepositoriesPath, new ContentRepositorySynchronizer(this, contentrepositoriesPath));
 			trx.success();
 		}
+		// add a handler for changes in the handlebars directory
+		pathHandlers.put(new File(packagePath.toFile(), HANDLEBARS_DIR).toPath(), changedPath -> {
+			// clean the cached handlebars helpers
+			handlebarsHelpers = null;
+		});
 		if (registerWatchers) {
 			try {
 				Synchronizer.registerAll(packagePath);
@@ -208,6 +233,8 @@ public abstract class PackageSynchronizer {
 			AbstractSynchronizer<? extends SynchronizableNodeObject, ? extends AbstractModel> synchronizer = null;
 
 			while (synchronizer == null && syncPath != null) {
+				Optional.ofNullable(pathHandlers.get(syncPath.getParent())).ifPresent(handler -> handler.accept(path));
+
 				synchronizer = synchronizersPerPath.get(syncPath.getParent());
 				if (synchronizer == null) {
 					syncPath = syncPath.getParent();
@@ -435,6 +462,7 @@ public abstract class PackageSynchronizer {
 	 */
 	public void clearCache() {
 		synchronizersPerPath.values().forEach(AbstractSynchronizer::clearCache);
+		handlebarsHelpers = null;
 	}
 
 	/**
@@ -474,6 +502,49 @@ public abstract class PackageSynchronizer {
 	 */
 	public Path getPackagePath() {
 		return packagePath;
+	}
+
+	/**
+	 * Get the handlebars helpers in this package.
+	 * @return handlebars helpers
+	 * @throws IOException
+	 */
+	public String getHandlebarsHelpers() throws IOException {
+		if (handlebarsHelpers == null) {
+			File handlebarsDirectory = new File(this.packagePath.toFile(), HANDLEBARS_DIR);
+			File helpersDirectory = new File(handlebarsDirectory, "helpers");
+
+			if (helpersDirectory.isDirectory()) {
+				StringBuilder registerHelpers = new StringBuilder();
+				File[] files = helpersDirectory.listFiles((dir, name) -> StringUtils.endsWith(name, ".js"));
+
+				if (files != null) {
+					for (File helperFile : files) {
+						String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+						String helperName = String.format("%s.%s", packageName, helperNameShort);
+						String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
+						String register = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
+
+						registerHelpers.append(register).append("\n");
+					}
+				}
+
+				handlebarsHelpers = registerHelpers.toString();
+			} else {
+				handlebarsHelpers = "";
+			}
+		}
+
+		return handlebarsHelpers;
+	}
+
+	/**
+	 * Get the handlebars partial directory (regardless of whether it exists or not)
+	 * @return handlebars partial directory
+	 */
+	public File getHandlebarsPartialsDirectory() {
+		File handlebarsDirectory = new File(this.packagePath.toFile(), HANDLEBARS_DIR);
+		return new File(handlebarsDirectory, "partials");
 	}
 
 	/**

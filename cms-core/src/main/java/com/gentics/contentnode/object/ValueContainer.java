@@ -6,6 +6,9 @@
 package com.gentics.contentnode.object;
 
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
@@ -24,8 +27,15 @@ public abstract class ValueContainer extends AbstractContentObject implements St
 
 	public static final String[] RENDER_KEYS = new String[] { "tag"};
 
+	protected final static Set<String> resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, SetUtils.hashSet("values", "parts", "count"));
+
 	public ValueContainer(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**
@@ -65,12 +75,12 @@ public abstract class ValueContainer extends AbstractContentObject implements St
 
 		ValueList myValues = getValues();
 
-		List parts = getConstruct().getParts();
+		List<Part> parts = getConstruct().getParts();
 
 		EditableValueList myTagValues = new EditableValueList(getId() + "-" + super.get("ttype"));
 
 		for (int i = 0; i < parts.size(); i++) {
-			Part part = (Part) parts.get(i);
+			Part part = parts.get(i);
 
 			Value value = myValues.getByPartId(part.getId());
 			PartType partType = null;

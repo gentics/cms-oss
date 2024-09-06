@@ -62,6 +62,10 @@ image_resizer_jpeg_quality: "1.0"
 
 h3. Gentics CMS
 
+h4. Handlebars Helper
+
+See "gtx_gis Helper":handlebars.html#gtx_gis for details of how to include a resized image into a handlebars tag.
+
 h4. Render Directive
 
 To include a resized image into a velocity tag, this should be done with the directive +#gtx_gis+.

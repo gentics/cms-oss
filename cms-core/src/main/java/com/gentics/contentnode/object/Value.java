@@ -5,16 +5,15 @@
  */
 package com.gentics.contentnode.object;
 
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
-import com.gentics.contentnode.rest.model.Property;
+import java.util.Collections;
+import java.util.Set;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.devtools.model.DefaultValueModel;
 import com.gentics.contentnode.devtools.model.OverviewModel;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.etc.ContentNodeHelper;
-import com.gentics.contentnode.etc.LiveEditorHelper;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
 import com.gentics.contentnode.factory.TType;
@@ -28,7 +27,8 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.TemplateRenderer;
 import com.gentics.contentnode.resolving.StackResolvable;
-import com.gentics.lib.etc.StringUtils;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.Property;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
 
@@ -88,6 +88,15 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 	protected Value(Integer id, NodeObjectInfo info) {
 		super(id, info);
 		partType = null;
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		try {
+			return getPartType().getResolvableKeys();
+		} catch (NodeException e) {
+			return Collections.emptySet();
+		}
 	}
 
 	/**

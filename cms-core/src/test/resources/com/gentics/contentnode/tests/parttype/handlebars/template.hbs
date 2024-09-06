@@ -1,0 +1,23 @@
+<div class="row">
+  <div class="grid">
+    {{#gt cms.tag.parts.folders.items.size 0}}
+        {{#each cms.tag.parts.folders.items}}
+            {{#neq (gtx_render this.object.overviewhidden) "1"}}
+                <div class="break">
+                    {{>test.render_heading this}}
+                </div>
+            {{/neq}}
+            {{>test.render_folder this}}
+        {{/each}}
+    {{else}}
+        {{#each cms.page.folder.folders}}
+            {{#neq (gtx_render this.object.overviewhidden) "1"}}
+                <div class="break">
+                    {{>test.render_heading this}}
+                </div>
+            {{/neq}}
+            {{>test.render_folder this}}
+        {{/each}}
+    {{/gt}}
+  </div>  
+</div>

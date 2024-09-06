@@ -8,6 +8,9 @@ package com.gentics.contentnode.object.parttype;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -39,6 +42,8 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 	public static final int TARGET_FILE = 3;
 	public static final int TARGET_FOLDER = 4;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("internal", "externalurl", "target", "url", "node", "nodeId");
+
 	private int target;
 	private boolean encoded;
 	private Class<? extends NodeObject> targetClass;
@@ -59,6 +64,11 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 		super(value);
 		this.encoded = false;
 		setTarget(target);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	public boolean hasTemplate() throws NodeException {
@@ -176,6 +186,10 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 			}
 		}
 
+		if ("externalurl".equals(key)) {
+			return getInternal()  == 1 ? null : getValueObject().getValueText();
+		}
+
 		if ("nodeId".equals(key)) {
 			return getNodeId();
 		}
@@ -199,7 +213,7 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 			logger.error("Error while getting property resolver", e);
 			return null;
 		}
-		if (prop != null && prop.canResolve()) {
+		if (prop != null) {
 			return prop.get(key);
 		}
 

@@ -409,6 +409,12 @@
 			<version>1.2.4</version>
 		</dependency>
 
+		<!-- Handlebars -->
+		<dependency>
+			<groupId>com.github.jknack</groupId>
+			<artifactId>handlebars</artifactId>
+		</dependency>
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>

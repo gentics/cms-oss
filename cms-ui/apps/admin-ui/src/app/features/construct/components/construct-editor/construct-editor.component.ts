@@ -21,7 +21,7 @@ function normalizeTagPart(rawPart: TagPart<Raw>): TagPart<Raw> {
         };
     }
 
-    if (part.typeId === TagPartType.HtmlLong) {
+    if (part.typeId === TagPartType.HtmlLong || part.typeId === TagPartType.Handlebars) {
         return {
             ...part,
             defaultProperty: part.defaultProperty || null,

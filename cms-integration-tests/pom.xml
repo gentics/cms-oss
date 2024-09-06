@@ -22,10 +22,10 @@
 		<integrationTest.mariadb.image>mariadb</integrationTest.mariadb.image>
 		<integrationTest.mariadb.version>10.7</integrationTest.mariadb.version>
 
-		<integrationTest.cms.image>docker.apa-it.at/gentics/cms-oss</integrationTest.cms.image>
+		<integrationTest.cms.image>docker.gentics.com/gentics/cms-oss</integrationTest.cms.image>
 		<integrationTest.cms.version>${project.version}</integrationTest.cms.version>
 
-		<integrationTest.mesh.image>docker.apa-it.at/gentics/mesh</integrationTest.mesh.image>
+		<integrationTest.mesh.image>docker.gentics.com/gentics/mesh</integrationTest.mesh.image>
 		<integrationTest.mesh.version>${mesh.version}</integrationTest.mesh.version>
 	</properties>
 

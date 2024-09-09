@@ -135,6 +135,10 @@ const ACTION_DEACTIVATE = 'deactivate';
 })
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 
+    /* Constants for the Template */
+    public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
+    public readonly ITEM_REPORTS_TAB = ITEM_REPORTS_TAB;
+    public readonly ITEM_TAG_LIST_TAB = ITEM_TAG_LIST_TAB;
     public readonly TableSelectAllType = TableSelectAllType;
 
     /** The item, whose properties should be edited. */
@@ -170,10 +174,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }>;
     currentNode: Node;
 
-    /** The constant for the tab with the item's (non object-) properties. */
-    readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    readonly ITEM_REPORTS_TAB = ITEM_REPORTS_TAB;
-    readonly ITEM_TAG_LIST_TAB = ITEM_TAG_LIST_TAB;
 
     @ViewChild(GroupedTabsComponent, { static: false })
     propertiesTabs: GroupedTabsComponent;
@@ -197,7 +197,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private subscriptions: Subscription[] = [];
     private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
     private latestPropChanges: EditableProperties;
-    private tagFillLightEnabled = true;
+    public tagFillLightEnabled = true;
 
     expandedState$: Observable<string[]>;
 

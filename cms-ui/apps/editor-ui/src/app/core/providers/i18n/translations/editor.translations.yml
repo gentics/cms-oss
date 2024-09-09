@@ -716,7 +716,7 @@ tagtype_name_label:
     en: Tagtype Name
     de: Tagtyp Name
 tagtype_delete_label:
-    en: Delte Tag
+    en: Delete Tag
     de: Tag löschen
 tagtype_activate_label:
     en: Activate Tag

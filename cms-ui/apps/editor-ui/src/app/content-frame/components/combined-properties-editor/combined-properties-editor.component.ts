@@ -496,8 +496,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         }
     }
 
-    handleContentTagClick(tag: Tag): void {
-        this.openContentTag(this.item as ItemWithContentTags, tag);
+    handleContentTagClick(row: TableRow<Tag>): void {
+        this.openContentTag(this.item as ItemWithContentTags, row.item);
     }
 
     handleContentTagAction(event: TableActionClickEvent<Tag>): void {

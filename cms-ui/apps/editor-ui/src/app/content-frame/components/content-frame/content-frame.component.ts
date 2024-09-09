@@ -19,6 +19,7 @@ import {
     SaveBehaviour,
     noItemPermissions,
 } from '@editor-ui/app/common/models';
+import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
@@ -40,7 +41,7 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
-import { debounce as _debounce, isEqual } from 'lodash-es';
+import { debounce, isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
@@ -52,7 +53,6 @@ import {
 } from 'rxjs';
 import {
     catchError,
-    delay,
     distinctUntilChanged,
     filter,
     map,
@@ -65,8 +65,6 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
-import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -124,7 +122,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      * It is stored as a static property to allow overriding in unit tests.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    static _debounce = _debounce;
+    static _debounce = debounce;
 
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly CMS_FORM_TYPE = CmsFormType;
@@ -198,7 +196,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private childFrameInitTimer: any;
     private childFrameInitialized = false;
 
-    // eslint-disable-next-line no-underscore-dangle
+    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
@@ -269,12 +267,18 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         let prevItemID: number = null;
         let prevItemType: FolderItemType = null;
         this.subscriptions.push(onLogin$.pipe(
-            switchMapTo(this.route.params),
+            switchMap(state => this.route.params),
             switchMap((params: EditorStateUrlParams) => {
                 // We always fetch the item to make sure that we have the current state,
                 // except if the item is already open in the content-frame and we have not switched to edit mode.
                 const reqItemId = Number(params.itemId);
                 const reqNodeId = Number(params.nodeId);
+
+                // IDs are invalid, skip
+                if (!Number.isInteger(reqItemId) || !Number.isInteger(reqNodeId)) {
+                    return of(false);
+                }
+
                 const requireLoadForUpdate = (params.type as FolderItemOrNodeType) !== 'node' &&
                     (prevEditMode !== params.editMode || prevItemID !== reqItemId || prevItemType !== params.type) &&
                     (params.editMode === EditMode.EDIT || params.editMode === EditMode.EDIT_PROPERTIES);
@@ -288,7 +292,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     && reqItemId === this.currentItem.id
                     && ((params.type as FolderItemOrNodeType) !== 'node' || (this.currentNode && reqNodeId === this.currentNode.id))
                 ) {
-                    return [params];
+                    return of(params);
                 }
 
                 const options = { nodeId: params.nodeId };
@@ -304,6 +308,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
+                    this.cancelEditingDebounced(this.currentItem);
                     this.currentItem = item as any;
                     this.onItemUpdate();
                     this.changeDetector.markForCheck();
@@ -330,7 +335,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                             .then(itemLoaded);
                     });
             }),
-        ).subscribe(params => params && this.updateEditorState(params)));
+        ).subscribe(params => {
+            if (typeof params !== 'boolean') {
+                this.updateEditorState(params);
+            }
+        }));
 
         this.activeNode$ = combineLatest([
             this.appState.select(state => state.editor.nodeId),
@@ -668,7 +677,7 @@ ins.gtx-diff {
                 this.imageResizedOrCropped = false;
             }
             this.markContentAsModifiedInState(modified);
-            this.runChangeDetection();
+            this.changeDetector.markForCheck();
         }
     }
 
@@ -940,20 +949,6 @@ ins.gtx-diff {
             default:
                 throw new Error(`Undefined entity type "${this.currentItem.type}" with ID ${this.currentItem.id}.`);
         }
-    }
-
-    /**
-     * Show an error message toast from GCMS UI code running form inside the iframe
-     */
-    showErrorMessage(message: string, duration: number = 10000): void {
-        this.ngZone.runGuarded(() => {
-            this.notification.show({
-                message,
-                type: 'alert',
-                delay: duration,
-            });
-            this.errorHandler.catch(new Error(message), { notification: false });
-        });
     }
 
     navigateToParentFolder(): Promise<boolean> {

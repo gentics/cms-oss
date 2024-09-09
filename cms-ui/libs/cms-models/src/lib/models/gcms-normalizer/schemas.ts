@@ -13,6 +13,7 @@ export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, 
     readonly construct = new schema.Entity('construct', {}, { processStrategy: normalizrPreProcessEntity });
     readonly constructCategory = new schema.Entity('constructCategory', {}, { processStrategy: normalizrPreProcessEntity });
     readonly contentPackage = new schema.Entity('contentPackage', {}, { processStrategy: normalizrPreProcessEntity });
+    readonly contentPackageImport = new schema.Entity('contentPackageImport', {}, { processStrategy: normalizrPreProcessEntity });
     readonly contentRepository = new schema.Entity('contentRepository', {}, { processStrategy: normalizrPreProcessEntity });
     readonly contentRepositoryFragment = new schema.Entity('contentRepositoryFragment', {}, { processStrategy: normalizrPreProcessEntity });
     readonly dataSource = new schema.Entity('dataSource', {}, { processStrategy: normalizrPreProcessEntity });

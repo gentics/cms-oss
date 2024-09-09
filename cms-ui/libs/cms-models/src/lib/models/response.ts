@@ -1,6 +1,6 @@
 import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage } from './content-package';
+import { ContentPackage, ContentPackageImportError } from './content-package';
 import { ContentRepository } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -35,7 +35,7 @@ import { StagedItemsMap, StagingStatus } from './staging-status';
 import { Construct, Tag, TagStatus, TagType } from './tag';
 import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
-import { Raw } from './type-util';
+import { DefaultModelType, ModelType, NormalizableEntity, Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
@@ -1436,6 +1436,14 @@ export interface ContentPackageSyncResponse extends Response {
     running: boolean;
     progress?: ContentPackageSyncProgress;
 }
+
+
+export interface ContentPackageErrorResponse extends Response{
+    errors: ContentPackageImportError[];
+    mismatches: string[];
+    timestamp: string;
+}
+
 
 // CLUSTERING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

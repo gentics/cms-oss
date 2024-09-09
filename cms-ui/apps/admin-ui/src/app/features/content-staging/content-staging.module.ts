@@ -3,13 +3,14 @@ import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
     ContentPackageDetailComponent,
+    ContentPackageImportErrorTableComponent,
     ContentPackageMasterComponent,
     ContentPackagePropertiesComponent,
     ContentPackageTableComponent,
     CreateContentPackageModalComponent,
     UploadContentPackageModalComponent,
 } from './components';
-import { CanActivateContentPackageGuard, ContentPackageTableLoaderService } from './providers';
+import { CanActivateContentPackageGuard, ContentPackageImportErrorTableLoaderService, ContentPackageTableLoaderService } from './providers';
 import { CONTENT_STAGING_ROUTES } from './content-staging.routes';
 
 @NgModule({
@@ -17,6 +18,7 @@ import { CONTENT_STAGING_ROUTES } from './content-staging.routes';
         ContentPackageDetailComponent,
         ContentPackageMasterComponent,
         ContentPackagePropertiesComponent,
+        ContentPackageImportErrorTableComponent,
         ContentPackageTableComponent,
         CreateContentPackageModalComponent,
         UploadContentPackageModalComponent,
@@ -24,6 +26,7 @@ import { CONTENT_STAGING_ROUTES } from './content-staging.routes';
     providers: [
         CanActivateContentPackageGuard,
         ContentPackageTableLoaderService,
+        ContentPackageImportErrorTableLoaderService,
     ],
     imports: [
         SharedModule,

@@ -19,6 +19,7 @@ export interface TableLoadOptions {
 export interface TableLoadResponse<T> {
     rows: TableRow<T>[];
     totalCount: number;
+    hasError?: boolean;
 }
 
 export interface TableLoadStartEvent<A = never> {

@@ -19,6 +19,7 @@ import {
     SaveBehaviour,
     noItemPermissions,
 } from '@editor-ui/app/common/models';
+import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
@@ -37,10 +38,11 @@ import {
     Normalized,
     Page,
     Raw,
+    User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
-import { debounce as _debounce, isEqual } from 'lodash-es';
+import { debounce, isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
@@ -52,7 +54,6 @@ import {
 } from 'rxjs';
 import {
     catchError,
-    delay,
     distinctUntilChanged,
     filter,
     map,
@@ -65,8 +66,6 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
-import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -124,7 +123,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      * It is stored as a static property to allow overriding in unit tests.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    static _debounce = _debounce;
+    static _debounce = debounce;
 
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly CMS_FORM_TYPE = CmsFormType;
@@ -174,7 +173,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     windowLoaded = false;
 
     currentItemPath = '';
-    currentItem$: Observable<ItemNormalized | undefined>;
 
     activeUiLanguageCode$: Observable<string>;
     activeFormLanguageCode$: Observable<string>;
@@ -199,7 +197,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private childFrameInitTimer: any;
     private childFrameInitialized = false;
 
-    // eslint-disable-next-line no-underscore-dangle
+    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
@@ -270,12 +268,18 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         let prevItemID: number = null;
         let prevItemType: FolderItemType = null;
         this.subscriptions.push(onLogin$.pipe(
-            switchMapTo(this.route.params),
+            switchMap(state => this.route.params),
             switchMap((params: EditorStateUrlParams) => {
                 // We always fetch the item to make sure that we have the current state,
                 // except if the item is already open in the content-frame and we have not switched to edit mode.
                 const reqItemId = Number(params.itemId);
                 const reqNodeId = Number(params.nodeId);
+
+                // IDs are invalid, skip
+                if (!Number.isInteger(reqItemId) || !Number.isInteger(reqNodeId)) {
+                    return of(false);
+                }
+
                 const requireLoadForUpdate = (params.type as FolderItemOrNodeType) !== 'node' &&
                     (prevEditMode !== params.editMode || prevItemID !== reqItemId || prevItemType !== params.type) &&
                     (params.editMode === EditMode.EDIT || params.editMode === EditMode.EDIT_PROPERTIES);
@@ -289,7 +293,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     && reqItemId === this.currentItem.id
                     && ((params.type as FolderItemOrNodeType) !== 'node' || (this.currentNode && reqNodeId === this.currentNode.id))
                 ) {
-                    return [params];
+                    return of(params);
                 }
 
                 const options = { nodeId: params.nodeId };
@@ -305,6 +309,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
+                    this.cancelEditingDebounced(this.currentItem);
+                    this.currentItem = item as any;
+                    this.onItemUpdate();
+                    this.changeDetector.markForCheck();
+
                     if (item) {
                         return params;
                     } else {
@@ -327,7 +336,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                             .then(itemLoaded);
                     });
             }),
-        ).subscribe(params => params && this.updateEditorState(params)));
+        ).subscribe(params => {
+            if (typeof params !== 'boolean') {
+                this.updateEditorState(params);
+            }
+        }));
 
         this.activeNode$ = combineLatest([
             this.appState.select(state => state.editor.nodeId),
@@ -365,44 +378,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             distinctUntilChanged(isEqual),
         );
 
-        this.currentItem$ = editorState$.pipe(
-            distinctUntilChanged((a, b) =>
-                a.itemId === b.itemId &&
-                a.itemType === b.itemType &&
-                a.nodeId === b.nodeId,
-            ),
-            switchMap(editorState => this.forceItemRefresh$.pipe(
-                map(() => editorState),
-            )),
-            switchMap(({ itemId, itemType }) => {
-                // forceItemRefresh$ and copying of the item in the subsequent map() is necessary
-                // to force the UI to reset if a saveRequest resulted in an unchanged item.
-                let forceRefresh = true;
-                const item$ = (itemId && itemType) ? this.appState.select(state => state.entities[itemType][itemId]) : of(undefined);
-                return item$.pipe(
-                    distinctUntilChanged(isEqual),
-                    map(item => {
-                        if (forceRefresh) {
-                            item = { ...item };
-                            forceRefresh = false;
-                        }
-                        return item;
-                    }),
-                );
-            }),
-            publishReplay(1),
-            refCount(),
-        );
-
-        const itemSub = this.currentItem$.pipe(
-            delay(0),
-        ).subscribe((item) => {
-            this.tagEditorService.forceCloseTagEditor();
-            this.currentItemPath = this.getItemPath(item);
-            this.changeDetector.detectChanges();
-        });
-        this.subscriptions.push(itemSub);
-
         const localStateSubscription = editorState$.pipe(
             switchMap(state => {
                 if (!state.editorIsOpen || !state.itemId) {
@@ -429,10 +404,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
                 if (!node) {
                     fetchEntities.push(
-                        this.appState.select(state => state.entities.node).pipe(
-                            filter(node => !!node[state.nodeId]),
-                            take(1),
-                        ),
+                        this.folderActions.getNode(state.nodeId),
                     );
                 }
                 if (0 < fetchEntities.length) {
@@ -573,7 +545,15 @@ ins.gtx-diff {
 
     formChange(form: Form): void {
         this.currentItem = form;
+        this.onItemUpdate();
         this.setContentModified(true, false);
+    }
+
+    onItemUpdate(): void {
+        this.tagEditorService.forceCloseTagEditor();
+        this.isLocked = this.isLockedByAnother();
+        this.currentItemPath = this.getItemPath(this.currentItem);
+        this.changeDetector.detectChanges();
     }
 
     getItemPath(item: Page | FileModel | Folder | Form | Image | Node): string {
@@ -657,17 +637,7 @@ ins.gtx-diff {
      * by the time the promise resolves.
      */
     getCurrentItem(): Promise<Page | FileModel | Folder | Form | Image | Node> {
-        if (this.currentItem) {
-            return Promise.resolve(this.currentItem);
-        }
-
-        const editorState = this.appState.now.editor;
-        return this.currentItem$.pipe(
-            filter(item => item &&
-                item.id === editorState.itemId &&
-                item.type === editorState.itemType),
-            take(1),
-        ).toPromise();
+        return Promise.resolve(this.currentItem);
     }
 
     /**
@@ -706,7 +676,7 @@ ins.gtx-diff {
                 this.imageResizedOrCropped = false;
             }
             this.markContentAsModifiedInState(modified);
-            this.runChangeDetection();
+            this.changeDetector.markForCheck();
         }
     }
 
@@ -818,14 +788,22 @@ ins.gtx-diff {
      * If this is the case, the item should not be editable.
      */
     isLockedByAnother(): boolean {
-        const currentUserId = this.appState.now.auth.currentUserId;
-        if (this.currentItem && (this.currentItem.type === 'page' || this.currentItem.type === 'form')) {
-            const item = this.currentItem as Page | Form;
-            if (item.locked && item.lockedBy !== currentUserId) {
-                return true;
-            }
+        // Invalid item/type
+        if (!this.currentItem || (this.currentItem.type !== 'page' && this.currentItem.type !== 'form')) {
+            return false;
         }
-        return false;
+
+        const item = this.currentItem as Page | Form;
+
+        if (!item.locked || item.lockedBy == null) {
+            return false;
+        }
+
+        const currentUserId = this.appState.now.auth.currentUserId;
+
+        return typeof item.lockedBy === 'number'
+            ? item.lockedBy !== currentUserId
+            : (item.lockedBy as User)?.id !== currentUserId;
     }
 
     public handleItemSave(behaviour: SaveBehaviour): Promise<void> | undefined {
@@ -978,20 +956,6 @@ ins.gtx-diff {
             default:
                 throw new Error(`Undefined entity type "${this.currentItem.type}" with ID ${this.currentItem.id}.`);
         }
-    }
-
-    /**
-     * Show an error message toast from GCMS UI code running form inside the iframe
-     */
-    showErrorMessage(message: string, duration: number = 10000): void {
-        this.ngZone.runGuarded(() => {
-            this.notification.show({
-                message,
-                type: 'alert',
-                delay: duration,
-            });
-            this.errorHandler.catch(new Error(message), { notification: false });
-        });
     }
 
     navigateToParentFolder(): Promise<boolean> {
@@ -1299,28 +1263,8 @@ ins.gtx-diff {
                 && state.openTab === 'properties'
                 && state.openPropertiesTab !== ITEM_TAG_LIST_TAB
             );
+
         this.isLocked = this.isLockedByAnother();
-
-        if (state.editorIsOpen && state.itemId) {
-            const item = this.entityResolver.getEntity(state.itemType, state.itemId);
-            // Without the following check, saving a change that results in no update (e.g., deleting a file's extension)
-            // would cause the first subsequent change to be restored immediately because of the following assignment.
-
-            // Specific logic for Form entity
-            // In 'edit' mode we do not update the form properties, just in 'editProperties' mode.
-            if (
-                this.currentItem && this.currentItem.id === state.itemId &&
-                // ( this.contentModified || this.editorIsOpen ) &&
-                this.currentItem.type === 'form' && state.editMode === EditMode.EDIT
-            ) {
-                return;
-            }
-
-            if (this.currentItem !== item && !deepEqual(this.currentItem, item)) {
-                this.currentItem = structuredClone(item);
-            }
-        }
-
         this.changeDetector.markForCheck();
     }
 

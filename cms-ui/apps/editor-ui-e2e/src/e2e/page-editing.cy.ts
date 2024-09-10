@@ -13,21 +13,22 @@ import {
     trimAlohaEmpty,
 } from '@gentics/e2e-utils';
 import {
+    ACTION_FORMAT_ABBR,
     ACTION_FORMAT_BOLD,
     ACTION_FORMAT_CITE,
     ACTION_FORMAT_CODE,
     ACTION_FORMAT_ITALIC,
-    ACTION_SIMPLE_FORMAT_KEYS,
-    ACTION_SIMPLE_FORMAT_MAPPING,
-    ACTION_REMOVE_FORMAT,
+    ACTION_FORMAT_QUOTE,
     ACTION_FORMAT_STRIKETHROUGH,
     ACTION_FORMAT_SUBSCRIPT,
     ACTION_FORMAT_SUPERSCRIPT,
     ACTION_FORMAT_UNDERLINE,
+    ACTION_REMOVE_FORMAT,
+    ACTION_SIMPLE_FORMAT_KEYS,
+    ACTION_SIMPLE_FORMAT_MAPPING,
     AUTH_ADMIN,
-    ACTION_FORMAT_ABBR,
     FORMAT_ABBR,
-    ACTION_FORMAT_QUOTE,
+    FORMAT_QUOTE,
 } from '../support/common';
 
 describe('Page Editing', () => {
@@ -128,6 +129,7 @@ describe('Page Editing', () => {
                     .findAlohaComponent({ slot: action })
                     .btn()
                     .as(ALIAS_CONTROL_BUTTON);
+
                 // button should not be marked as active yet
                 cy.get(ALIAS_CONTROL_BUTTON)
                     .should('not.have.class', CLASS_ACTIVE)
@@ -141,7 +143,8 @@ describe('Page Editing', () => {
                     .should('have.class', CLASS_ACTIVE);
 
                 // Now we select the text again, and remove the formatting again
-                cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
+                cy.get(ALIAS_CONTENT)
+                    .rangeSelection(0, null, true);
 
                 // Should remove the formatting with this
                 cy.get(ALIAS_CONTROL_BUTTON).click();
@@ -248,7 +251,8 @@ describe('Page Editing', () => {
 
                 for (const action of ctl.apply) {
                     cy.get(ALIAS_CONTROLS)
-                        .findAlohaComponent({ slot: action }).btnClick();
+                        .findAlohaComponent({ slot: action })
+                        .btnClick();
                 }
 
                 cy.get(ALIAS_CONTENT)
@@ -256,7 +260,8 @@ describe('Page Editing', () => {
 
                 for (const action of ctl.remove) {
                     cy.get(ALIAS_CONTROLS)
-                        .findAlohaComponent({ slot: action }).btnClick();
+                        .findAlohaComponent({ slot: action })
+                        .btnClick();
                 }
 
                 cy.get(ALIAS_CONTENT)
@@ -421,8 +426,8 @@ describe('Page Editing', () => {
                 .btnClick();
 
             cy.get(ALIAS_CONTENT)
-                .should('have.formatting', TEXT_CONTENT, ['q'])
-                .find('q')
+                .should('have.formatting', TEXT_CONTENT, [FORMAT_QUOTE])
+                .find(FORMAT_QUOTE)
                 .then($quote => {
                     expect($quote.attr(ATTR_CITE)).to.equal(SOURCE_CONTENT);
                     const id = $quote.attr(ATTR_CITE_ID);

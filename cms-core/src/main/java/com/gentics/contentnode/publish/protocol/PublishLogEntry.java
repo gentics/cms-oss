@@ -100,21 +100,20 @@ public class PublishLogEntry {
 	/**
 	 * Loads a publish log entry by a specified field and value.
 	 *
-	 * @param fieldName the name of the field
-	 * @param value the value of the field
+	 * @param type the type of object
+	 * @param objId the id of the object
 	 * @return an Optional containing the publish log entry if found, otherwise empty
 	 * @throws NodeException if an error occurs during the load operation
 	 */
-	public Optional<PublishLogEntry> loadByField(String fieldName, int value) throws NodeException {
-		var query = String.format("SELECT * FROM publish_protocol WHERE %s = %s ORDER BY id DESC", fieldName, value);
+	public Optional<PublishLogEntry> loadByTypeAndId(String type, int objId) throws NodeException {
+		var query = String.format("SELECT * FROM publish_protocol WHERE type = '%s' AND obj_id = %s ORDER BY id DESC", type, objId);
 		return DBUtils.select(query, resultSet -> {
 			if (resultSet.next()) {
-				var objId = resultSet.getInt("obj_id");
-				var type = resultSet.getString("type");
+				var id = resultSet.getInt("id");
 				var state = resultSet.getBoolean("state") ? 1 : 0;
 				var user = resultSet.getInt("user");
 				var timestamp = resultSet.getTimestamp("date");
-				LocalDateTime dateTime = timestamp.toLocalDateTime();
+				var dateTime = timestamp.toLocalDateTime();
 
 				return Optional.of(new PublishLogEntry(id, objId, type, state, user, dateTime));
 			}
@@ -147,50 +146,110 @@ public class PublishLogEntry {
 	}
 
 
+	/**
+	 * Gets the ID of the publish log entry.
+	 *
+	 * @return the ID of the publish log entry
+	 */
 	public int getId() {
 		return id;
 	}
 
+	/**
+	 * Sets the ID of the publish log entry.
+	 *
+	 * @param id the ID to set
+	 */
 	public void setId(int id) {
 		this.id = id;
 	}
 
+	/**
+	 * Gets the object ID associated with the publish log entry.
+	 *
+	 * @return the object ID
+	 */
 	public int getObjId() {
 		return objId;
 	}
 
+	/**
+	 * Sets the object ID associated with the publish log entry.
+	 *
+	 * @param objId the object ID to set
+	 */
 	public void setObjId(int objId) {
 		this.objId = objId;
 	}
 
+	/**
+	 * Gets the type of the object being published.
+	 *
+	 * @return the type of the object
+	 */
 	public String getType() {
 		return type;
 	}
 
+	/**
+	 * Sets the type of the object being published.
+	 *
+	 * @param type the type to set
+	 */
 	public void setType(String type) {
 		this.type = type;
 	}
 
+	/**
+	 * Gets the state of the publish operation.
+	 *
+	 * @return the state of the publish operation
+	 */
 	public int getState() {
 		return state;
 	}
 
+	/**
+	 * Sets the state of the publish operation.
+	 *
+	 * @param state the state to set
+	 */
 	public void setState(int state) {
 		this.state = state;
 	}
 
+	/**
+	 * Gets the user who performed the publish operation.
+	 *
+	 * @return the user who performed the publish operation
+	 */
 	public int getUser() {
 		return user;
 	}
 
+	/**
+	 * Sets the user who performed the publish operation.
+	 *
+	 * @param user the user to set
+	 */
 	public void setUser(int user) {
 		this.user = user;
 	}
 
+	/**
+	 * Gets the date and time when the publish log entry was created.
+	 *
+	 * @return the date and time of the publish log entry
+	 */
 	public LocalDateTime getDate() {
 		return date;
 	}
 
+	/**
+	 * Sets the date and time when the publish log entry was created.
+	 *
+	 * @param date the date and time to set
+	 */
 	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}

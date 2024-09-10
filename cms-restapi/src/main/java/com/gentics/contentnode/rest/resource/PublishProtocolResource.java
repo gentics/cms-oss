@@ -26,13 +26,13 @@ public interface PublishProtocolResource {
 	 * @throws Exception if an error occurs during retrieval
 	 */
 	@GET
-	@Path("/{objId}")
+	@Path("/{type}/{objId}")
 	@StatusCodes({
 			@ResponseCode(code = 200, condition = "Publish protocol entry is returned."),
 			@ResponseCode(code = 404, condition = "Not found")
 
 	})
-	PublishLogDto get(@PathParam("objId") Integer objId) throws Exception;
+	PublishLogDto get(@PathParam("type") String type, @PathParam("objId") Integer objId) throws Exception;
 
 	/**
 	 * Retrieves a list of publish protocol entries with pagination.

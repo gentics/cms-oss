@@ -2,7 +2,7 @@ package com.gentics.contentnode.factory.object;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.PublishableNodeObject;
-import com.gentics.contentnode.publish.protocol.PublishProtocolService;
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
 import com.gentics.contentnode.publish.protocol.PublishState;
 import java.util.List;
 
@@ -15,8 +15,6 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 	@Override
 	List<? extends ExtensiblePublishableObjectService<T>> getServices();
 
-	PublishProtocolService publishProtocolService = new PublishProtocolService();
-
 	/**
 	 * Called when the object is published.
 	 * The default implementation (which should not be overwritten) forwards the call to all services
@@ -28,7 +26,7 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 	default void onPublish(T object, boolean wasOnline, int userId) throws NodeException {
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onPublish(object, wasOnline, userId);
-			publishProtocolService.logPublishState(object, PublishState.ONLINE.getValue(), userId);
+			PublishProtocolUtil.logPublishState(object, PublishState.ONLINE.getValue(), userId);
 		}
 	}
 
@@ -43,7 +41,7 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 	default void onTakeOffline(T object, boolean wasOnline, int userId) throws NodeException {
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onTakeOffline(object, wasOnline, userId);
-			publishProtocolService.logPublishState(object, PublishState.OFFLINE.getValue(), userId);
+			PublishProtocolUtil.logPublishState(object, PublishState.OFFLINE.getValue(), userId);
 		}
 	}
 }

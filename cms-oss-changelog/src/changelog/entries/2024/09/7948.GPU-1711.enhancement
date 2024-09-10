@@ -1,5 +1,5 @@
 Page Expire Date: After unpublishing/taking a page in the CMS offline, the information of when it went offline is now available to the user.
 Two new endpoints have been introduced to obtain this information
 
-* GET /publish/state/{objId}
-* GET publish/state/
+* @GET /publish/state/{type}/{objId}@
+* @GET /publish/state/@

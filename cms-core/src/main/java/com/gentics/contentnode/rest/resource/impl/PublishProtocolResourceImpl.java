@@ -12,7 +12,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.publish.protocol.PublishLogEntry;
-import com.gentics.contentnode.publish.protocol.PublishProtocolService;
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.PublishLogDto;
 import com.gentics.contentnode.rest.model.response.GenericItemList;
@@ -37,7 +37,6 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(
 			PublishProtocolResourceImpl.class);
 
-	private final PublishProtocolService publishProtocolService = new PublishProtocolService();
 
 	private final Function<PublishLogEntry, PublishLogDto> MAP2REST = (publishLogEntry) -> new PublishLogDto(
 			publishLogEntry.getObjId(),
@@ -49,10 +48,10 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 
 	@Override
 	@GET
-	@Path("/{objId}")
-	public PublishLogDto get(@PathParam("objId") Integer objId) throws NodeException {
+	@Path("/{type}/{objId}")
+	public PublishLogDto get(@PathParam("type") String type, @PathParam("objId") Integer objId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			var publishLogEntry = this.publishProtocolService.getPublishLogEntryByObjectId(objId);
+			var publishLogEntry = PublishProtocolUtil.getPublishLogEntryByObjectId(type, objId);
 
 			if (!canView(publishLogEntry, trx.getTransaction())) {
 				throw new RestMappedException(I18NHelper.get("rest.permission.required"))
@@ -70,7 +69,7 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	public GenericItemList<PublishLogDto> list(
 			@BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			var publishLogEntries = publishProtocolService.getPublishLogEntries();
+			var publishLogEntries = PublishProtocolUtil.getPublishLogEntries();
 
 			publishLogEntries = publishLogEntries.stream()
 					.filter(entry -> canView(entry, trx.getTransaction())).toList();
@@ -82,10 +81,17 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	}
 
 
+	/**
+	 * Checks if the current user can view the specified publish log entry.
+	 *
+	 * @param publishLogEntry the publish log entry to check
+	 * @param transaction the current transaction
+	 * @return {@code true} if the user can view the publish log entry, {@code false} otherwise
+	 */
 	private boolean canView(PublishLogEntry publishLogEntry, Transaction transaction) {
 		NodeObject nodeObject;
 		try {
-			switch (publishLogEntry.getType()) {
+			switch (publishLogEntry.getType().toUpperCase()) {
 				case "PAGE" -> nodeObject = transaction.getObject(Page.class, publishLogEntry.getObjId());
 				case "FORM" -> nodeObject = transaction.getObject(Form.class, publishLogEntry.getObjId());
 				default -> {

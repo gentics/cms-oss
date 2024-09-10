@@ -14,9 +14,9 @@ import java.util.List;
 /**
  * Service for managing publish protocol entries.
  */
-public class PublishProtocolService {
+public class PublishProtocolUtil {
 
-	private static final NodeLogger logger = NodeLogger.getNodeLogger(PublishProtocolService.class);
+	private static final NodeLogger logger = NodeLogger.getNodeLogger(PublishProtocolUtil.class);
 
 	/**
 	 * Logs the publish state of a given object.
@@ -27,7 +27,7 @@ public class PublishProtocolService {
 	 * @param user   the user performing the operation
 	 * @throws NodeException if an error occurs during logging
 	 */
-	public <T extends PublishableNodeObject> void logPublishState(T object, int status, int user)
+	public static <T extends PublishableNodeObject> void logPublishState(T object, int status, int user)
 			throws NodeException {
 		var publishLogEntry = new PublishLogEntry(object.getId(), getType(object.getTType()), status,
 				user);
@@ -46,10 +46,10 @@ public class PublishProtocolService {
 	 * @throws NodeException           if an error occurs during retrieval
 	 * @throws EntityNotFoundException if the entry is not found
 	 */
-	public PublishLogEntry getPublishLogEntryByObjectId(int objId) throws NodeException {
-		return new PublishLogEntry().loadByField("obj_id", objId).orElseThrow(
+	public static PublishLogEntry getPublishLogEntryByObjectId(String type, int objId) throws NodeException {
+		return new PublishLogEntry().loadByTypeAndId(type, objId).orElseThrow(
 				() -> new EntityNotFoundException(I18NHelper.get("publish_protocol.entry_not_found",
-						String.valueOf(objId))));
+						String.valueOf(type), String.valueOf(objId))));
 	}
 
 
@@ -57,9 +57,8 @@ public class PublishProtocolService {
 	 * Retrieves all publish log entries.
 	 *
 	 * @return a list of publish log entries
-	 * @throws NodeException if an error occurs during retrieval
 	 */
-	public List<PublishLogEntry> getPublishLogEntries() throws NodeException {
+	public static List<PublishLogEntry> getPublishLogEntries() {
 		try {
 			return new PublishLogEntry().loadAll();
 		} catch (Exception e) {
@@ -75,7 +74,7 @@ public class PublishProtocolService {
 	 * @param ttype the type code of the publishable node object
 	 * @return the type as a string
 	 */
-	private String getType(int ttype) {
+	private static String getType(int ttype) {
 		return switch (ttype) {
 			case TYPE_PAGE -> PublishType.PAGE.toString();
 			case TYPE_FORM -> PublishType.FORM.toString();

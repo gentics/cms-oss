@@ -28,6 +28,11 @@
 			<username>${env.repoUsername}</username>
 			<password>${env.repoPassword}</password>
 		</server>
+		<server>
+			<id>gentics.nexus.thirdparty</id>
+			<username>${env.repoUsername}</username>
+			<password>${env.repoPassword}</password>
+		</server>
 	</servers>
 
 	<profiles>

@@ -373,6 +373,17 @@
 			<url>https://repository.mulesoft.org/nexus/content/groups/public</url>
 		</pluginRepository>
 		<pluginRepository>
+			<id>gentics.nexus.releases</id>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
 			<id>gentics.nexus.releases-oss</id>
 			<name>Gentics Nexus OSS Maven Repository</name>
 			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>

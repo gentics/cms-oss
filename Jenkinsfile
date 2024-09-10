@@ -219,7 +219,7 @@ spec:
                     // Add private repository credentials and scopes
                     sh "echo @gentics:registry=https://repo.gentics.com/repository/npm/> ~/.npmrc"
                     withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.gentics.com/repository/npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+                        sh "echo //repo.gentics.com/repository/npm/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images

@@ -7,12 +7,12 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 Authenticate:
 ```bash
-npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
+npm adduser --registry=https://repo.gentics.com/repository/npm/ --always-auth
 ```
 
-Setup @gentics scope to the APA IT repository:
+Setup @gentics scope to the Gentics repository:
 ```bash
-npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
+npm config set @gentics:registry https://repo.gentics.com/repository/npm/
 ```
 
 ## Commands

@@ -5,8 +5,6 @@
 JobContext.set(this)
 
 
-final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-oss"
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
@@ -94,7 +92,7 @@ spec:
     }
 
     options {
-        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
         gitLabConnection('git.gentics.com')
         gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
@@ -197,7 +195,6 @@ spec:
                             echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
                         }
 
-                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix)
                         mvnGoal = "deploy"
                     } else {
                         // for now, do not build modules in parallel
@@ -220,18 +217,16 @@ spec:
                     }
 
                     // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ > ~/.npmrc"
-                    withCredentials([string(credentialsId: 'artifactory-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.apa-it.at/artifactory/api/npm/gtx-npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm/> ~/.npmrc"
+                    withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                        sh "echo //repo.gentics.com/repository/npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
-                    // Login to docker.apa-it.at, so that the tests can pull all Mesh images
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
-                        withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
-                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
-                                    " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
-                            }
+                    // Login to docker.gentics.com so that the tests can pull all Mesh images
+                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
+                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                            sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
+                                " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                         }
                     }
 
@@ -249,11 +244,6 @@ spec:
                         if (params.tagRelease) {
                             tagName = version
                             GitHelper.addTag(tagName, releaseMessage)
-                        }
-
-                        // It can't hurt to let Artifactory recalculate some meta data
-                        for (mavenName in ['cms']) {
-                            GenericHelper.recalculateArtifactoryMetadata(mavenRepositoryBase, repoUsername, repoPassword, '/lan.releases/com/gentics/' + mavenName)
                         }
                     }
                 }
@@ -295,13 +285,10 @@ spec:
 
             steps {
                 script {
-                    def imageHost = "gtx-docker-products.docker.apa-it.at"
-                    // if (params.deployTesting) {
-                    //     imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
-                    // }
-                    def imageName = "${imageHost}/gentics/cms-oss"
+                    def imageHost = "push.docker.gentics.com"
+                    def imageName = "${imageHost}/docker-products/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://${imageHost}/v2" ]) {
+                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://${imageHost}/v2" ]) {
                         sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
                         if (tagName != null) {
@@ -327,12 +314,12 @@ spec:
 
             steps {
                 script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageName = "docker.gentics.com/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
                             // prior to starting the tests, start the docker containers with CMS
-                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
+                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.gentics.com"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
 
                             // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
@@ -371,9 +358,9 @@ spec:
 
             steps {
                 script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageName = "push.docker.gentics.com/docker-products/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
+                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
 
                         // Push released image
                         if (tagName != null) {

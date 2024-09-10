@@ -10,6 +10,6 @@
     "@angular/core": "^16.0.0"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm/"
   }
 }

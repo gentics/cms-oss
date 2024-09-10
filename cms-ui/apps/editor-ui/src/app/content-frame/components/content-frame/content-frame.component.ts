@@ -38,6 +38,7 @@ import {
     Normalized,
     Page,
     Raw,
+    User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
@@ -403,10 +404,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
                 if (!node) {
                     fetchEntities.push(
-                        this.appState.select(state => state.entities.node).pipe(
-                            filter(node => !!node[state.nodeId]),
-                            take(1),
-                        ),
+                        this.folderActions.getNode(state.nodeId),
                     );
                 }
                 if (0 < fetchEntities.length) {
@@ -553,6 +551,7 @@ ins.gtx-diff {
 
     onItemUpdate(): void {
         this.tagEditorService.forceCloseTagEditor();
+        this.isLocked = this.isLockedByAnother();
         this.currentItemPath = this.getItemPath(this.currentItem);
         this.changeDetector.detectChanges();
     }
@@ -789,14 +788,22 @@ ins.gtx-diff {
      * If this is the case, the item should not be editable.
      */
     isLockedByAnother(): boolean {
-        const currentUserId = this.appState.now.auth.currentUserId;
-        if (this.currentItem && (this.currentItem.type === 'page' || this.currentItem.type === 'form')) {
-            const item = this.currentItem as Page | Form;
-            if (item.locked && item.lockedBy !== currentUserId) {
-                return true;
-            }
+        // Invalid item/type
+        if (!this.currentItem || (this.currentItem.type !== 'page' && this.currentItem.type !== 'form')) {
+            return false;
         }
-        return false;
+
+        const item = this.currentItem as Page | Form;
+
+        if (!item.locked || item.lockedBy == null) {
+            return false;
+        }
+
+        const currentUserId = this.appState.now.auth.currentUserId;
+
+        return typeof item.lockedBy === 'number'
+            ? item.lockedBy !== currentUserId
+            : (item.lockedBy as User)?.id !== currentUserId;
     }
 
     public handleItemSave(behaviour: SaveBehaviour): Promise<void> | undefined {

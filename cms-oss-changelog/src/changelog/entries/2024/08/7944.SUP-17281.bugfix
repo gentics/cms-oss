@@ -1,0 +1,1 @@
+Editor User Interface & Administrator User Interface: When Keycloak is configured but unavailable, redirect to login screen and show appropriate error message.

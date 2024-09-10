@@ -1,9 +1,10 @@
+import { discard } from '@admin-ui/common';
 import { EntityManagerService, I18nNotificationService, I18nService, PermissionsService, UserOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { AccessControlledType, Group, Normalized, Raw, User, UserListOptions } from '@gentics/cms-models';
+import { AccessControlledType, Normalized, Raw, User, UserListOptions } from '@gentics/cms-models';
 import { Observable, OperatorFunction, forkJoin, of } from 'rxjs';
-import { catchError, first, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { masterLoading } from '../../../common/utils/rxjs-loading-operators/master-loading.operator';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 import { GroupDataService } from '../group-data/group-data.service';
@@ -68,21 +69,29 @@ export class UserDataService extends ExtendedEntityDataServiceBase<'user', UserO
         let worker: Observable<void>;
 
         if (replace) {
-            worker = forkJoin([
-                this.entityManager.getEntity('user', userId).pipe(
-                    first(),
-                ),
-                this.groupData.getRawEntitiesFromState().pipe(
-                    first(),
-                ),
-            ]).pipe(
-                // assign desired groups and unassign unwanted groups
-                switchMap(([user, allGroups]) => this.replaceGroupsOfUser(user, groupIds, allGroups)),
+            worker = this.entityOperations.groups(userId).pipe(
+                switchMap(assignedGroups => {
+                    const assignedIds = assignedGroups.map(group => group.id);
+                    const toAssignIds = Array.from(new Set(groupIds.filter(id => !assignedIds.includes(id))));
+                    const toRemoveIds = Array.from(new Set(assignedIds.filter(id => !groupIds.includes(id))));
+
+                    const assignWork = toAssignIds.length === 0 ? of([]) : forkJoin(toAssignIds.map(id => this.entityOperations.addToGroup(userId, id)));
+                    const removeWork = toRemoveIds.length === 0 ? of([]) : forkJoin(toRemoveIds.map(id => this.entityOperations.removeFromGroup(userId, id)));
+
+                    /*
+                     * Not using a forkJoin here on purpose.
+                     * First we want to assign all new groups, before we remove some.
+                     * This is to prevent an edge case, where we could potentially try to remove
+                     * all groups from a user before assigning new ones.
+                     * This would cause an error, because we can't unassign the last group of a user.
+                     */
+                    return assignWork.pipe(switchMap(() => removeWork));
+                }),
+                discard(),
             );
         } else {
-            worker = this.entityManager.getEntity('user', userId).pipe(
-                first(),
-                switchMap(user => this.appendGroupsToUser(user, groupIds)),
+            worker = forkJoin(groupIds.map(id => this.entityOperations.addToGroup(userId, id))).pipe(
+                discard(),
             );
         }
 
@@ -91,47 +100,6 @@ export class UserDataService extends ExtendedEntityDataServiceBase<'user', UserO
             switchMap(() => this.entityOperations.get(userId)),
             tap((user: User<Raw>) => this.displayNotificationSuccess('shared.assign_users_to_groups_success', user && user.login)),
         );
-    }
-
-    /**
-     * Helper function which replaces the current groups of a user with the newly provided ones.
-     * It'll determine which groups are already present, and skip these.
-     * Groups which are assigned to the user, but aren't listed in `groupIds` will be removed from the user.
-     * Groups which are not yet assigned to the user, will be added.
-     *
-     * @param user the user of which the groups need to be updated
-     * @param groupIds the new group ids which will be set
-     * @param allGroups all available groups from the cms
-     * @returns an observable which completes once all groups have been assigned/removed properly
-     */
-    replaceGroupsOfUser(user: User<Normalized>, groupIds: number[], allGroups: Group<Raw>[]): Observable<void> {
-        // calculate minimal amount of requests required
-        const groupsShallBeLinked = groupIds;
-        const groupsShallNotBeLinked = allGroups.filter((group: Group<Raw>) => !groupsShallBeLinked.includes(group.id));
-        const groupsCurrentlyLinked = user.groups;
-        const groupsCurrentlyNotLinked = allGroups.filter((group: Group<Raw>) => !groupsCurrentlyLinked.includes(group.id));
-
-        const groupsToLink = groupsShallBeLinked.filter(id => !groupsCurrentlyLinked.includes(id));
-        const groupsToUnlink = groupsShallNotBeLinked.filter(id => !groupsCurrentlyNotLinked.includes(id));
-
-        const assignRequests: Observable<Group<Raw>>[] = groupsToLink.map(groupId => this.entityOperations.addToGroup(user.id, groupId));
-        const unassignRequests: Observable<void>[] = groupsToUnlink.map((group: Group<Raw>) => this.entityOperations.removeFromGroup(user.id, group.id));
-
-        const requestChanges = (requests: Observable<void | Group<Raw>>[]) => {
-            if (requests.length === 0) {
-                // complete Observable
-                return of(undefined);
-            }
-
-            return forkJoin(requests).pipe(
-                // return assigned groups
-                map((responses: Array<Group<Raw> | void>) => responses.filter((response: Group<Raw> | void) => response instanceof Object)),
-                catchError(() => of(this.displayNotificationError('shared.assign_users_to_groups_error', user && user.login))),
-            );
-        };
-
-        // request assign changes before unassign changes to avoid that a user has no group
-        return requestChanges(assignRequests).pipe(switchMap(() => requestChanges(unassignRequests)));
     }
 
     /**
@@ -155,7 +123,7 @@ export class UserDataService extends ExtendedEntityDataServiceBase<'user', UserO
         return forkJoin(Array.from(toAdd)
             .map(groupToAdd => this.entityOperations.addToGroup(user.id, groupToAdd)),
         ).pipe(
-            map(() => { }),
+            discard(),
         );
     }
 

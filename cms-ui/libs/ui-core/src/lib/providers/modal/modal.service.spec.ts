@@ -2,6 +2,7 @@ import { Component, ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { IDialogConfig, IModalDialog } from '../../common';
 import { ButtonComponent } from '../../components/button/button.component';
 import { DynamicModal } from '../../components/dynamic-modal/dynamic-modal.component';
@@ -12,11 +13,10 @@ import { OverlayHostService } from '../overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../user-agent/user-agent-ref';
 import { ModalService } from './modal.service';
-import { ModalCloseError } from '@gentics/cms-integration-api-models';
 
 let modalService: ModalService;
 
-describe('ModalService:', () => {
+describe('ModalService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -440,13 +440,13 @@ describe('ModalService:', () => {
                 })
                     .then(
                         result => { expect(result).toBe('some result'); },
-                        () => { fail('Promise should resolve but rejected'); },
+                        () => { fail('Promise should resolve, but rejected'); },
                     );
                 tick();
             }),
         );
 
-        it('does not resolve or reject the returned promise when the modal is cancelled',
+        it('rejects the returned promise when the modal is cancelled, with the correct reason',
             componentTest(() => TestComponent, fixture => {
                 fixture.detectChanges();
 
@@ -465,8 +465,11 @@ describe('ModalService:', () => {
                         return promise;
                     })
                     .then(
-                        () => { fail('Promise should not resolve but did'); },
-                        () => { fail('Promise should not reject but did'); },
+                        () => { fail('Promise should not resolve, but did'); },
+                        (err: ModalCloseError) => {
+                            expect(err).toBeInstanceOf(ModalCloseError);
+                            expect(err.reason).toEqual(ModalClosingReason.CANCEL);
+                        },
                     );
 
                 tick(500);

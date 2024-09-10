@@ -15,7 +15,10 @@ const PROVIDERS: any[] = [
 @NgModule({
     imports: [
         CoreModule,
-        RouterModule.forRoot(APP_ROUTES, { preloadingStrategy: PreloadAllModules }),
+        RouterModule.forRoot(APP_ROUTES, {
+            preloadingStrategy: PreloadAllModules,
+            enableTracing: false,
+        }),
     ],
     declarations: [AppComponent],
     providers: PROVIDERS,

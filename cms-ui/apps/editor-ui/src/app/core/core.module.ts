@@ -43,7 +43,7 @@ import {
     MessageList,
     MessageModal,
     NoNodesComponent,
-    ProjectEditor,
+    ProjectEditorComponent,
     PublishQueueList,
     PublishQueueModal,
     SearchLabel,
@@ -112,7 +112,7 @@ const COMPONENTS = [
     MessageBody,
     MessageInboxComponent,
     MessageList,
-    ProjectEditor,
+    ProjectEditorComponent,
     PublishQueueList,
     TagEditorRouteComponent,
 

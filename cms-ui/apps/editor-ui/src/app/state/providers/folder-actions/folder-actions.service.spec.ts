@@ -36,6 +36,7 @@ import { SetDisplayDeletedAction, STATE_MODULES } from '../../modules';
 import { MockAppState, TestApplicationState } from '../../test-application-state.mock';
 import { ApplicationStateService } from '../application-state/application-state.service';
 import { FolderActionsService } from './folder-actions.service';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 const ACTIVE_NODE_ID = 1;
 const RESPONSE_ITEM_LIST = [{}, {}, {}];
@@ -60,6 +61,17 @@ class MockPermissionService {
     normalizeAPIResponse = jasmine.createSpy('normalizeAPIResponse');
 }
 class MockI18nService {}
+class MockLocalStorage implements Partial<LocalStorage> {
+    private store = {};
+
+    setForUser(userId: number, key: string, value: any): void {
+        this.store[`${userId}_${key}`] = value;
+    }
+
+    getForUser(userId: number, key: string) {
+        return this.store[`${userId}_${key}`];
+    }
+}
 
 let uidCounter = 1;
 const uidCache: Record<string, any> = {};
@@ -135,6 +147,7 @@ describe('FolderActionsService', () => {
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
                 { provide: ModalService, useClass: MockModalService },
+                { provide: LocalStorage, useClass: MockLocalStorage },
             ],
         });
 

@@ -198,6 +198,7 @@ export class ModalService {
                     componentRef.changeDetectorRef.markForCheck();
                 }
                 this.checkModalDialogInterface(dialog);
+
                 return {
                     instance: dialog as any,
                     element: componentRef.location.nativeElement,

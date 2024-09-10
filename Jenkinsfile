@@ -1,5 +1,5 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
-@Library('jenkins-pipeline-library') import com.gentics.*
+@Library('jenkins-pipeline-library@nexus') import com.gentics.*
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)

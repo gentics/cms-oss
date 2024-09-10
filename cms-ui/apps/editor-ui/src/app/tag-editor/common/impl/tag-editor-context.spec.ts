@@ -50,6 +50,12 @@ describe('TagEditorContextImpl', () => {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
             openImageEditor: jasmine.createSpy('openImageEditor'),
             openUploadModal: jasmine.createSpy('openUploadModal'),
+            restClient: jasmine.createSpyObj('restClient', [
+                'executeMappedJsonRequest',
+                'executeMappedFormRequest',
+                'executeRawRequest',
+                'executeBlobRequest',
+            ]),
             restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
             restRequestGET: jasmine.createSpy('restRequestGET'),
             restRequestPOST: jasmine.createSpy('restRequestPOST'),

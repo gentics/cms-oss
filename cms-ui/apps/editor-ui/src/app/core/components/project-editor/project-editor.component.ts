@@ -5,9 +5,6 @@ import { Subscription } from 'rxjs';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { PresentationService } from '../../../shared/providers/presentation/presentation.service';
 import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../../../state';
-import { ErrorHandler } from '../../providers/error-handler/error-handler.service';
-import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
-import { NavigationService } from '../../providers/navigation/navigation.service';
 
 @Component({
     selector: 'project-editor',
@@ -33,9 +30,6 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private presentation: PresentationService,
-        private errorHandler: ErrorHandler,
-        private entityResolver: EntityResolver,
-        private navigationService: NavigationService,
     ) {}
 
     ngOnInit(): void {
@@ -59,17 +53,6 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
             this.headerHeight = height;
             this.changeDetector.markForCheck();
         }));
-
-        // this.subscriptions.push(this.appState.select(state => state.folder.activeNode).pipe(
-        //     filter(activeNode => activeNode != null),
-        // ).subscribe(activeNode => {
-        //     const node = this.entityResolver.getNode(activeNode);
-        //     if (node) {
-        //         this.navigationService.list(node.id, node.folderId).navigate();
-        //     }
-        // },
-        // error => this.errorHandler.catch(error),
-        // ));
     }
 
     ngOnDestroy(): void {

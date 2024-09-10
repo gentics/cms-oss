@@ -406,7 +406,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
             edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
-            lockedEdit: (isPage || isForm) && this.locked && userCan.edit,
+            lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,
             publish: (editing || previewing || propertiesTab) && canPublish && userCan.edit && !isInherited,
             saveAsCopy: editing && type === 'image' && userCan.edit,

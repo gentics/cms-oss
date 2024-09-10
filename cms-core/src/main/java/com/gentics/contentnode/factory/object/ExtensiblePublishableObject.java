@@ -24,9 +24,10 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 	 * @throws NodeException when publishing has to fail
 	 */
 	default void onPublish(T object, boolean wasOnline, int userId) throws NodeException {
+		PublishProtocolUtil.logPublishState(object, PublishState.ONLINE.getValue(), userId);
+
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onPublish(object, wasOnline, userId);
-			PublishProtocolUtil.logPublishState(object, PublishState.ONLINE.getValue(), userId);
 		}
 	}
 
@@ -39,9 +40,10 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 	 * @throws NodeException when taking offline has to fail
 	 */
 	default void onTakeOffline(T object, boolean wasOnline, int userId) throws NodeException {
+		PublishProtocolUtil.logPublishState(object, PublishState.OFFLINE.getValue(), userId);
+
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onTakeOffline(object, wasOnline, userId);
-			PublishProtocolUtil.logPublishState(object, PublishState.OFFLINE.getValue(), userId);
 		}
 	}
 }

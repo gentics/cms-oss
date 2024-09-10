@@ -20,6 +20,9 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRes
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishState;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Function;
@@ -318,6 +321,68 @@ public class MeshPublishTest {
 		}
 
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", page);
+	}
+
+
+	@Test
+	public void testPublishedPageShouldAddPublishLogEntryWithOnlineState() throws Exception {
+		var page = publishPage();
+
+		var pagePublishLogEntry = Trx.supply(()->  PublishProtocolUtil.getPublishLogEntryByObjectId(PublishType.PAGE.toString(), page.getId()));
+
+		assertThat(pagePublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.PAGE.toString());
+		assertThat(pagePublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.ONLINE.getValue());
+	}
+
+	@Test
+	public void testUnpublishedPageShouldAddPublishLogEntryWithOfflineState() throws Exception {
+		var page = publishPage();
+		Trx.operate(() -> page.takeOffline());
+
+		var pagePublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(PublishType.PAGE.toString(), page.getId()));
+		var pagePublishLogEntries = Trx.supply(PublishProtocolUtil::getPublishLogEntries);
+		pagePublishLogEntries = pagePublishLogEntries.stream()
+				.filter(entry -> entry.getType().equals(PublishType.PAGE.toString()))
+				.toList();
+
+
+		assertThat(pagePublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.PAGE.toString());
+		assertThat(pagePublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.OFFLINE.getValue());
+		assertThat(pagePublishLogEntries.size()).isGreaterThanOrEqualTo(2);
+	}
+
+
+
+	private Page publishPage() throws Exception {
+		Folder folder = Trx.supply(() -> create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+		}));
+
+		Page page = Trx.supply(() -> create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(folder.getId());
+			p.setName("Page");
+		}));
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Trx.operate(t -> t.getObject(page, true).publish());
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		return page;
 	}
 
 	/**

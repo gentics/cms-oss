@@ -36,11 +36,13 @@
             (changes)="simplePropertiesChanged($event)"
         ></page-properties-form>
     </div>
-    <div class="form-container active" *ngIf="item.type === 'file' || item.type === 'image'">
+    <div *ngIf="item.type === 'file' || item.type === 'image'" class="form-container active">
         <file-properties-form
-            [properties]="properties"
-            [disabled]="!(editPermission$ | async)"
-            (changes)="simplePropertiesChanged($event)"
+            [value]="properties"
+            [initialValue]="itemClean"
+            [formControl]="propertiesCtl"
+            (valueChange)="simplePropertiesChanged($event)"
+            (initialValueChange)="forwardItemCleanChange($event)"
         ></file-properties-form>
     </div>
     <div class="form-container active" *ngIf="item.type === 'node' || item.type === 'channel'">

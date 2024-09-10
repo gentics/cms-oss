@@ -43,7 +43,7 @@ import {
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
-    PropertiesEditor,
+    PropertiesEditorComponent,
     SimpleDeleteModalComponent,
     SymbolGridComponent,
     TableSizeInputComponent,
@@ -97,7 +97,7 @@ const COMPONENTS = [
     PageEditorTabsComponent,
     ImagePropertiesModalComponent,
 
-    PropertiesEditor,
+    PropertiesEditorComponent,
     SimpleDeleteModalComponent,
     SymbolGridComponent,
     TableSizeInputComponent,

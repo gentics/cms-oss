@@ -4,10 +4,12 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
+    Output,
     QueryList,
     SimpleChange,
     ViewChild,
@@ -152,7 +154,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     useRouter = true;
 
     @Input()
+    itemClean: boolean;
+
+    @Input()
     nodeId: number;
+
+    @Output()
+    itemCleanChange = new EventEmitter<boolean>();
 
     pointObjProp: any;
     position: string;
@@ -595,6 +603,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 this.contentTagSelection = [];
                 this.changeDetector.markForCheck();
             }));
+    }
+
+    forwardItemCleanChange(value: boolean): void {
+        this.itemCleanChange.emit(value);
     }
 
     toggleDisplayContent(): void {

@@ -84,7 +84,9 @@
                 [nodeId]="currentNode?.id"
                 [templates]="itemProps.templates"
                 [languages]="itemProps.languages"
+                [itemClean]="itemClean"
                 (valueChange)="handlePropChanges($event)"
+                (itemCleanChange)="forwardItemCleanChange($event)"
             ></properties-editor>
         </div>
 

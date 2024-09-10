@@ -1,6 +1,20 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    Output,
+    SimpleChange,
+} from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { EditableProperties } from '@editor-ui/app/common/models';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import {
     CmsFormData,
     EditableFileProps,
@@ -15,8 +29,9 @@ import {
     Page,
     Template,
 } from '@gentics/cms-models';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { setEnabled } from '@gentics/ui-core';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 
 @Component({
@@ -25,7 +40,7 @@ import { PermissionService } from '../../../core/providers/permissions/permissio
     styleUrls: ['./properties-editor.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
+export class PropertiesEditorComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
 
     @Input()
     item: InheritableItem | Node;
@@ -39,13 +54,14 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
     @Input()
     languages: Language[];
 
+    @Input()
+    itemClean: boolean;
+
     @Output()
     valueChange = new EventEmitter<EditableProperties>();
 
-    /**
-     * All changes from the child forms are merged into this single stream.
-     */
-    changes: BehaviorSubject<EditableProperties> = new BehaviorSubject(undefined);
+    @Output()
+    itemCleanChange = new EventEmitter<boolean>();
 
     /** Behaviour to call whenever a new permission check needs to occur */
     permissionCheck = new BehaviorSubject<void>(undefined);
@@ -56,36 +72,43 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
     /** The properties of the editor/form */
     properties: EditableProperties;
 
-    /**
-     * Gets the current `item` as a folder to allow accessing folder-specific properties in the template.
-     * Note that this getter does not validate if the item is actually a folder.
-     */
-    get itemAsFolder(): Folder {
-        return this.item as Folder;
-    }
-
-    /**
-     * Gets the current `item` as a page to allow accessing page-specific properties in the template.
-     * Note that this getter does not validate if the item is actually a page.
-     */
-    get itemAsPage(): Page {
-        return this.item as Page;
-    }
+    propertiesCtl: FormControl<EditableProperties>;
 
     private viewInitialized = false;
 
+    private subscriptions: Subscription[] = [];
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
+        private appState: ApplicationStateService,
         public permissions: PermissionService,
     ) { }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
         if (changes.item || changes.nodeId) {
             this.properties = this.getItemProperties(this.item);
+            if (this.propertiesCtl != null) {
+                this.propertiesCtl.setValue(this.properties);
+            }
             this.permissionCheck.next();
         }
     }
 
     ngOnInit(): void {
+        this.propertiesCtl = new FormControl(this.properties);
+
+        /*
+         * TODO: When all forms have been migrated to the base-properties, we can move the modified marker here,
+         * to prevent code duplication and have it solved cleanly in one place, rather then 5 or 6.
+         */
+
+        // this.subscriptions.push(combineLatest([
+        //     this.propertiesCtl.valueChanges,
+        //     this.propertiesCtl.statusChanges,
+        // ]).subscribe(() => {
+        //     this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.propertiesCtl.dirty, this.propertiesCtl.valid));
+        // }));
+
         this.editPermission$ = this.permissionCheck.pipe(
             switchMap(() => {
                 if (this.item.type === 'folder') {
@@ -102,6 +125,10 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                     }),
                 );
             }),
+            tap(enabled => {
+                setEnabled(this.propertiesCtl, enabled);
+                this.changeDetector.markForCheck();
+            }),
         );
     }
 
@@ -111,11 +138,18 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
         this.viewInitialized = true;
     }
 
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
     simplePropertiesChanged(changes: EditableProperties): void {
         if (this.viewInitialized) {
             this.valueChange.emit(changes);
-            this.changes.next(changes);
         }
+    }
+
+    forwardItemCleanChange(value: boolean): void {
+        this.itemCleanChange.emit(value);
     }
 
     private getItemProperties(item: InheritableItem | Node): EditableProperties {

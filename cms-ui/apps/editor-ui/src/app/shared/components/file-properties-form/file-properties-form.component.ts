@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ApplicationStateService, FeaturesActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
 import { EditableFileProps, Feature, NodeFeature } from '@gentics/cms-models';
-import { createMultiValuePatternValidator } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
+import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { filter, map, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -11,102 +11,66 @@ import { filter, map, switchMap } from 'rxjs/operators';
     templateUrl: './file-properties-form.tpl.html',
     styleUrls: ['./file-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        generateFormProvider(FilePropertiesFormComponent),
+        generateValidatorProvider(FilePropertiesFormComponent),
+    ],
 })
-export class FilePropertiesForm {
+export class FilePropertiesFormComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
 
-    @Input()
-    properties: EditableFileProps = {};
-
-    @Input()
-    disabled = false;
-
-    @Output()
-    changes = new EventEmitter<EditableFileProps>();
-
-    form: UntypedFormGroup;
-    changeSub: Subscription;
-    contentAutoOfflineActive$: Observable<boolean>;
-
-    // Note from Norbert -> This is configurable in the backend and might need to be updated
-    // or checked async via an async-validator.
-    urlPattern = '[\\w\\._\\-\\/]+';
-    niceUrlsActivated = false;
-    niceUrlsChecked = false;
-    origFileName: string;
+    contentAutoOfflineEnabled = false;
+    niceUrlsEnabled = false;
 
     constructor(
-        private changeDetector: ChangeDetectorRef,
+        changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
-        private featuresActions: FeaturesActionsService,
-    ) { }
+    ) {
+        super(changeDetector);
+    }
 
-    ngOnInit(): void {
-        this.contentAutoOfflineActive$ = this.appState.select(state => state.editor.nodeId).pipe(
+    public override ngOnInit(): void {
+        super.ngOnInit();
+
+        this.subscriptions.push(this.form.valueChanges.subscribe(() => {
+            // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
+            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.form.dirty, this.form.valid));
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.editor.nodeId).pipe(
             switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
             filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.findIndex(value => value === NodeFeature.CONTENT_AUTO_OFFLINE) !== -1),
-        );
+            map(nodeFeatures => nodeFeatures.includes(NodeFeature.CONTENT_AUTO_OFFLINE)),
+        ).subscribe(enabled => {
+            this.contentAutoOfflineEnabled = enabled;
+            this.configureForm(this.form.value, true);
+            this.changeDetector.markForCheck();
+        }));
 
-        this.form = new UntypedFormGroup({
-            name: new UntypedFormControl(this.properties.name || '', Validators.required),
-            description: new UntypedFormControl(this.properties.description || ''),
-            forceOnline: new UntypedFormControl(this.properties.forceOnline),
-            niceUrl: new UntypedFormControl(this.properties.niceUrl || '', createMultiValuePatternValidator(this.urlPattern)),
-            alternateUrls: new UntypedFormControl(this.properties.alternateUrls || [], createMultiValuePatternValidator(this.urlPattern)),
-        });
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.NICE_URLS]).subscribe(enabled => {
+            this.niceUrlsEnabled = enabled;
+            this.configureForm(this.form.value, true);
+            this.changeDetector.markForCheck();
+        }));
+    }
 
-        this.form.get('niceUrl').disable({ emitEvent: false });
-        this.form.get('alternateUrls').disable({ emitEvent: false });
-
-        this.featuresActions.checkFeature(Feature.NICE_URLS)
-            .then(active => {
-                if (active) {
-                    this.form.get('niceUrl').enable({ emitEvent: false });
-                    this.form.get('alternateUrls').enable({ emitEvent: false });
-                    this.niceUrlsActivated = true;
-                }
-                this.niceUrlsChecked = true;
-                this.changeDetector.markForCheck();
-            });
-
-        this.changeSub = this.form.valueChanges.subscribe(changes => {
-            this.changes.emit(changes);
-
-            // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
-            const isValid = this.form.valid;
-            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(true, isValid));
+    protected createForm(): FormGroup {
+        return new FormGroup<FormProperties<EditableFileProps>>({
+            name: new FormControl(this.value?.name, Validators.required),
+            description: new FormControl(this.value?.description),
+            niceUrl: new FormControl(this.value?.niceUrl),
+            forceOnline: new FormControl(this.value?.forceOnline),
+            online: new FormControl(this.value?.online),
+            alternateUrls: new FormControl(this.value?.alternateUrls),
         });
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes['properties']) {
-            this.updateForm(this.properties);
-        }
+    protected configureForm(value: EditableFileProps, loud?: boolean): void {
+        const options = { emitEvent: loud };
+        setControlsEnabled(this.form, ['forceOnline'], this.contentAutoOfflineEnabled, options);
+        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlsEnabled, options);
     }
 
-    ngOnDestroy(): void {
-        if (this.changeSub) {
-            this.changeSub.unsubscribe();
-        }
-    }
-
-    priorityRangeChanged(value: number | Event): void {
-        if (typeof value === 'number') {
-            this.form.get('priority').setValue(value);
-        }
-    }
-
-    updateForm(properties: EditableFileProps): void {
-        if (!this.form) {
-            return;
-        }
-        this.origFileName = this.properties.name;
-        this.form.patchValue({
-            name: properties.name,
-            description: properties.description,
-            forceOnline: properties.forceOnline,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-        }, { emitEvent: false });
+    protected assembleValue(value: EditableFileProps): EditableFileProps {
+        return value;
     }
 }

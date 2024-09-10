@@ -46,13 +46,13 @@ public class PublishLogEntry {
 	}
 
 	/**
-	 * Constructs a new PublishLogEntry with the specified object ID, type, status, and user.
-	 * Used to persist entity to database. The id and date fields are auto generated.
+	 * Constructs a new PublishLogEntry with the specified object ID, type, status, and user. Used to
+	 * persist entity to database. The id and date fields are auto generated.
 	 *
-	 * @param objId the object ID
-	 * @param type the type of the object
+	 * @param objId  the object ID
+	 * @param type   the type of the object
 	 * @param status the status of the publish operation
-	 * @param user the user performing the operation
+	 * @param user   the user performing the operation
 	 */
 	public PublishLogEntry(int objId, String type, int status, int user) {
 		this.objId = objId;
@@ -62,14 +62,15 @@ public class PublishLogEntry {
 	}
 
 	/**
-	 * Constructs a new PublishLogEntry with the specified ID, object ID, type, status, user, and date.
+	 * Constructs a new PublishLogEntry with the specified ID, object ID, type, status, user, and
+	 * date.
 	 *
-	 * @param id the ID of the log entry
-	 * @param objId the object ID
-	 * @param type the type of the object
+	 * @param id     the ID of the log entry
+	 * @param objId  the object ID
+	 * @param type   the type of the object
 	 * @param status the status of the publish operation
-	 * @param user the user performing the operation
-	 * @param date the date of the log entry
+	 * @param user   the user performing the operation
+	 * @param date   the date of the log entry
 	 */
 	public PublishLogEntry(int id, int objId, String type, int status, int user, LocalDateTime date) {
 		this.id = id;
@@ -100,14 +101,17 @@ public class PublishLogEntry {
 	/**
 	 * Loads a publish log entry by a specified field and value.
 	 *
-	 * @param type the type of object
+	 * @param type  the type of object
 	 * @param objId the id of the object
 	 * @return an Optional containing the publish log entry if found, otherwise empty
 	 * @throws NodeException if an error occurs during the load operation
 	 */
 	public Optional<PublishLogEntry> loadByTypeAndId(String type, int objId) throws NodeException {
-		var query = String.format("SELECT * FROM publish_protocol WHERE type = '%s' AND obj_id = %s ORDER BY id DESC", type, objId);
-		return DBUtils.select(query, resultSet -> {
+		var query = "SELECT * FROM publish_protocol WHERE type = ? AND obj_id = ? ORDER BY id DESC";
+		return DBUtils.select(query, stmt -> {
+			stmt.setString(1, type);
+			stmt.setInt(2, objId);
+		}, resultSet -> {
 			if (resultSet.next()) {
 				var id = resultSet.getInt("id");
 				var state = resultSet.getBoolean("state") ? 1 : 0;
@@ -128,7 +132,7 @@ public class PublishLogEntry {
 	 * @throws NodeException if an error occurs during the load operation
 	 */
 	public List<PublishLogEntry> loadAll() throws NodeException {
-		return DBUtils.select("SELECT * FROM publish_protocol", resultSet -> {
+		return DBUtils.select("SELECT * FROM publish_protocol ORDER BY ID DESC", resultSet -> {
 			List<PublishLogEntry> entries = new ArrayList<>();
 			while (resultSet.next()) {
 				var id = resultSet.getInt("id");

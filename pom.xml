@@ -431,8 +431,8 @@
 		</repository>
 		<repository>
 			<id>gentics.nexus.releases</id>
-			<name>Gentics Nexus OSS Maven Repository</name>
-			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>

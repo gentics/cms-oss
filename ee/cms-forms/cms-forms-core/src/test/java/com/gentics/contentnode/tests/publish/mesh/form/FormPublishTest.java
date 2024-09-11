@@ -17,20 +17,6 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.FormRESTUtils.getFormResource;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -51,6 +37,9 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.publish.mesh.FormsPluginStatusResponse;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishState;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
@@ -63,6 +52,18 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarge
 import com.gentics.contentnode.tests.utils.Expected;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.GCNFeature;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test cases for publishing forms into Mesh.
@@ -229,6 +230,66 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			}
 		});
 	}
+
+
+	@Test
+	public void testPublishedFormShouldAddLogEntryWithOnlineState() throws Exception {
+		var form = publishForm();
+
+		var formPublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(
+				PublishType.FORM.toString(), form.getId()));
+
+		assertThat(formPublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.FORM.toString());
+		assertThat(formPublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.ONLINE.getValue());
+	}
+
+	@Test
+	public void testUnpublishedFormShouldAddLogEntryWithOfflineState() throws Exception {
+		var form = publishForm();
+		Trx.operate(()-> form.takeOffline());
+
+		var formPublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(
+				PublishType.FORM.toString(), form.getId()));
+		var formPublishLogEntries = Trx.supply(PublishProtocolUtil::getPublishLogEntries);
+		formPublishLogEntries = formPublishLogEntries.stream()
+				.filter(entry -> entry.getType().equals(PublishType.FORM.toString()))
+				.toList();
+
+
+		assertThat(formPublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.FORM.toString());
+		assertThat(formPublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.OFFLINE.getValue());
+		Assertions.assertThat(formPublishLogEntries.size()).isGreaterThanOrEqualTo(2);
+
+	}
+
+
+	private Form publishForm() throws Exception {
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setName("Test Form");
+			f.setLanguages(Arrays.asList("de", "en"));
+			f.setFolderId(node.getFolder().getId());
+
+			try {
+				f.setData(mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		}));
+		consume(Form::publish, form);
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		return form;
+	}
+
 
 	/**
 	 * Test creating a channel, after forms have been published to the node.

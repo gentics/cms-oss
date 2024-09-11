@@ -1,12 +1,10 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
-@Library('jenkins-pipeline-library') import com.gentics.*
+@Library('jenkins-pipeline-library@nexus') import com.gentics.*
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)
 
 
-final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms"
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
@@ -21,6 +19,8 @@ def runJUnitTests              = true
 def qaDeploy                   = false
 def qaDeployBranchList         = ["dev"] as String[]
 
+def imageHost                  = "push.docker.gentics.com"
+def imageRepo                  = "docker-snapshots"
 
 pipeline {
     agent {
@@ -92,7 +92,7 @@ spec:
     }
 
     options {
-        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
         gitLabConnection('git.gentics.com')
         gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
@@ -200,7 +200,6 @@ spec:
                             echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
                         }
 
-                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix)
                         mvnGoal = "deploy"
                     } else {
                         // for now, do not build modules in parallel
@@ -219,14 +218,14 @@ spec:
                     }
 
                     // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.apa-it.at/api/npm/gtx-npm/ > ~/.npmrc"
-                    withCredentials([string(credentialsId: 'artifactory-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.apa-it.at/api/npm/gtx-npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm/> ~/.npmrc"
+                    withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                        sh "echo //repo.gentics.com/repository/npm/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
-                    // Login to docker.apa-it.at, so that the tests can pull all Mesh images
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
-                        withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
+                    // Login to docker.gentics.com, so that the tests can pull all Mesh images
+                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
+                        withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://push.docker.gentics.com/v2" ]) {
                             // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                             // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
                             withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
@@ -250,11 +249,6 @@ spec:
                         if (params.tagRelease) {
                             tagName = version
                             GitHelper.addTag(tagName, releaseMessage)
-                        }
-
-                        // It can't hurt to let Artifactory recalculate some meta data
-                        for (mavenName in ['cms']) {
-                            GenericHelper.recalculateArtifactoryMetadata(mavenRepositoryBase, repoUsername, repoPassword, '/lan.releases/com/gentics/' + mavenName)
                         }
                     }
                 }
@@ -296,25 +290,26 @@ spec:
 
             steps {
                 script {
-                    def imageHost = "gtx-docker-products.docker.apa-it.at"
-                    // if (params.deployTesting) {
-                    //     imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
-                    // }
-                    def imageName = "${imageHost}/gentics/cms"
+                    if (params.runReleaseBuild) {
+                        imageRepo = "docker-products"
+                    }
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://${imageHost}/v2" ]) {
-                        sh "docker --version"
-                        sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                        // Push released image
-                        if (tagName != null) {
-                            String dockerImageVersionTag = imageName + ":" + tagName
-                            sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
-                            sh "docker push " + dockerImageVersionTag
-                        } else if (params.deploy || params.deployTesting) {
-                            // push snapshot build image
-                            sh "docker push ${imageNameWithTag}"
-                        }
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+
+                    sh "docker --version"
+                    sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
+
+                    // Push released image
+                    if (tagName != null) {
+                        String dockerImageVersionTag = imageName + ":" + tagName
+                        sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                        sh "docker push " + dockerImageVersionTag
+                    } else if (params.deploy || params.deployTesting) {
+                        // push snapshot build image
+                        sh "docker push ${imageNameWithTag}"
                     }
                 }
             }

@@ -224,15 +224,13 @@ spec:
                     }
 
                     // Login to docker.gentics.com, so that the tests can pull all Mesh images
-                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
-                        withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://push.docker.gentics.com/v2" ]) {
-                            // NX_NON_NATIVE_HASHER temp fix for incompatible installations
-                            // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
-                                    " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
-                            }
-                        }
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    // NX_NON_NATIVE_HASHER temp fix for incompatible installations
+                    // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
+                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                        sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
+                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                     }
 
                     if (params.runReleaseBuild) {
@@ -293,7 +291,7 @@ spec:
                     if (params.runReleaseBuild) {
                         imageRepo = "docker-products"
                     }
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")

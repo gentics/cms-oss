@@ -252,7 +252,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 		var formPublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(
 				PublishType.FORM.toString(), form.getId()));
-		var formPublishLogEntries = Trx.supply(PublishProtocolUtil::getLastUnpublishedEntriesForType);
+		var formPublishLogEntries = Trx.supply(PublishProtocolUtil::getPublishLogEntries);
 		formPublishLogEntries = formPublishLogEntries.stream()
 				.filter(entry -> entry.getType().equals(PublishType.FORM.toString()))
 				.toList();

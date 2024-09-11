@@ -5,6 +5,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -241,6 +243,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				.to(new FormListResponse());
 			response.setStagingStatus(StagingUtil.checkStagingStatus(forms, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 			trx.success();
+
+			if (publishable.unpublishedInfo) {
+				PublishProtocolUtil.addUnpublishedInformation(response.getItems(), PublishType.FORM.toString());
+			}
 
 			return response;
 		}

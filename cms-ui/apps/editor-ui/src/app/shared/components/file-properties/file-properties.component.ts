@@ -7,16 +7,16 @@ import { generateFormProvider, generateValidatorProvider, setControlsEnabled } f
 import { filter, map, switchMap } from 'rxjs/operators';
 
 @Component({
-    selector: 'file-properties-form',
-    templateUrl: './file-properties-form.tpl.html',
-    styleUrls: ['./file-properties-form.scss'],
+    selector: 'gtx-file-properties',
+    templateUrl: './file-properties.component.html',
+    styleUrls: ['./file-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [
-        generateFormProvider(FilePropertiesFormComponent),
-        generateValidatorProvider(FilePropertiesFormComponent),
+        generateFormProvider(FilePropertiesComponent),
+        generateValidatorProvider(FilePropertiesComponent),
     ],
 })
-export class FilePropertiesFormComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
+export class FilePropertiesComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
 
     contentAutoOfflineEnabled = false;
     niceUrlsEnabled = false;
@@ -31,10 +31,10 @@ export class FilePropertiesFormComponent extends BasePropertiesComponent<Editabl
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.form.valueChanges.subscribe(() => {
-            // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
-            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.form.dirty, this.form.valid));
-        }));
+        // this.subscriptions.push(this.form.valueChanges.subscribe(() => {
+        //     // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
+        //     this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.form.dirty, this.form.valid));
+        // }));
 
         this.subscriptions.push(this.appState.select(state => state.editor.nodeId).pipe(
             switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),

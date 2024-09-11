@@ -40,6 +40,7 @@ import {
     FileReplaceOptions,
     FileUploadResponse,
     Folder,
+    FolderCreateRequest,
     FolderItemOrNodeSaveOptionsMap,
     FolderItemOrTemplateType,
     FolderItemSaveOptionsMap,
@@ -1400,29 +1401,11 @@ export class FolderActionsService {
     /**
      * Create a new folder
      */
-    async createNewFolder(
-        folder: {
-            name: string,
-            directory: string,
-            description: string,
-            parentFolderId: number,
-            nodeId: number,
-            failOnDuplicate?: boolean,
-        },
-    ): Promise<Folder<Raw> | void> {
+    async createNewFolder(req: FolderCreateRequest): Promise<Folder<Raw> | void> {
         await this.appState.dispatch(new StartListCreatingAction('folder')).toPromise();
 
-        const newFolder = {
-            name: folder.name,
-            publishDir: folder.directory,
-            description: folder.description,
-            nodeId: folder.nodeId,
-            motherId: folder.parentFolderId,
-            failOnDuplicate: folder.failOnDuplicate,
-        };
-
         try {
-            const res = await this.client.folder.create(newFolder).toPromise()
+            const res = await this.client.folder.create(req).toPromise()
             await this.appState.dispatch(new CreateItemSuccessAction('folder', [res.folder], false)).toPromise();
             return res.folder;
         } catch (error) {
@@ -1651,16 +1634,12 @@ export class FolderActionsService {
     /**
      * Update the editable properties of a folder.
      */
-    updateFolderProperties(folderId: number, properties: EditableFolderProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Folder<Raw> | void> {
-        const folderProps = {
-            name: properties.name,
-            description: properties.description,
-            publishDir: properties.directory,
-            nameI18n: properties.nameI18n,
-            descriptionI18n: properties.descriptionI18n,
-            publishDirI18n: properties.publishDirI18n,
-        };
-        return this.updateItem('folder', folderId, folderProps, {}, postUpdateBehavior);
+    updateFolderProperties(
+        folderId: number,
+        properties: EditableFolderProps,
+        postUpdateBehavior?: PostUpdateBehavior,
+    ): Promise<Folder<Raw> | void> {
+        return this.updateItem('folder', folderId, properties, {}, postUpdateBehavior);
     }
 
     /**
@@ -3077,7 +3056,7 @@ export class FolderActionsService {
 
         const requests = pageIds.map(id =>
             this.client.page.takeOffline(id, { at: 0, alllang: false }).pipe(
-                map(response => ({ id, response, failed: response.responseInfo.responseCode !== 'OK' })),
+                map(response => ({ id, response, failed: response.responseInfo.responseCode !== ResponseCode.OK })),
                 catchError((error: ApiError) => {
                     const errorMsg = error && error.message || `Error on taking page offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('page', errorMsg));
@@ -3577,7 +3556,7 @@ export class FolderActionsService {
                     return of(error.response);
                 }),
                 map(response =>
-                    ({ id, response, failed: response.responseInfo.responseCode !== 'OK' }),
+                    ({ id, response, failed: response.responseInfo.responseCode !== ResponseCode.OK }),
                 ),
             ),
         );

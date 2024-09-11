@@ -42,7 +42,7 @@ import { PermissionService } from '../../../core/providers/permissions/permissio
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
-import { FolderPropertiesForm } from '../../../shared/components/folder-properties-form/folder-properties-form.component';
+import { FolderPropertiesComponent } from '../../../shared/components/folder-properties/folder-properties.component';
 import { InheritedLocalizedIcon } from '../../../shared/components/inherited-localized-icon/inherited-localized-icon.component';
 import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
@@ -55,7 +55,7 @@ import { CustomScriptHostService } from '../../providers/custom-script-host/cust
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesFormComponent } from '../node-properties/node-properties-form.component
 import { ContentFrameComponent } from './content-frame.component';
 
 let appState: TestApplicationState;
@@ -517,7 +517,7 @@ describe('ContentFrame', () => {
             declarations: [
                 ContentFrameComponent,
                 DynamicDisableDirective,
-                FolderPropertiesForm,
+                FolderPropertiesComponent,
                 InheritedLocalizedIcon,
                 ItemIsLocalizedPipe,
                 MockCombinedPropertiesEditor,

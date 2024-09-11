@@ -1,118 +1,106 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
     OnChanges,
-    OnDestroy,
     OnInit,
     Output,
     SimpleChange,
 } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, Validators } from '@angular/forms';
 import { EditableProperties } from '@editor-ui/app/common/models';
-import { ApplicationStateService } from '@editor-ui/app/state';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
-    CmsFormData,
-    EditableFileProps,
-    EditableFolderProps,
-    EditablePageProps,
-    FileOrImage,
-    Folder,
-    Form,
     InheritableItem,
     Language,
     Node,
-    Page,
     Template,
 } from '@gentics/cms-models';
-import { setEnabled } from '@gentics/ui-core';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { BaseFormElementComponent, generateFormProvider, setEnabled } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { NodePropertiesMode } from '../node-properties/node-properties.component';
 
 @Component({
-    selector: 'properties-editor',
+    selector: 'gtx-properties-editor',
     templateUrl: './properties-editor.component.html',
-    styleUrls: ['./properties-editor.scss'],
+    styleUrls: ['./properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(PropertiesEditorComponent)],
 })
-export class PropertiesEditorComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
+export class PropertiesEditorComponent
+    extends BaseFormElementComponent<EditableProperties>
+    implements OnInit, OnChanges {
 
-    @Input()
-    item: InheritableItem | Node;
+    public readonly NodePropertiesMode = NodePropertiesMode;
 
-    @Input()
-    nodeId: number;
+    @Input({ required: true })
+    public item: InheritableItem | Node;
 
-    @Input()
-    templates: Template[];
+    @Input({ required: true })
+    public nodeId: number;
 
-    @Input()
-    languages: Language[];
+    @Input({ required: true })
+    public templates: Template[] = [];
 
-    @Input()
-    itemClean: boolean;
+    @Input({ required: true })
+    public languages: Language[] = [];
+
+    @Input({ required: true })
+    public itemClean = true;
 
     @Output()
-    valueChange = new EventEmitter<EditableProperties>();
-
-    @Output()
-    itemCleanChange = new EventEmitter<boolean>();
+    public itemCleanChange = new EventEmitter<boolean>();
 
     /** Behaviour to call whenever a new permission check needs to occur */
-    permissionCheck = new BehaviorSubject<void>(undefined);
+    private permissionCheck = new BehaviorSubject<void>(undefined);
 
-    /** Observable which streams the permission to edit the properties */
-    editPermission$: Observable<boolean>;
-
-    /** The properties of the editor/form */
-    properties: EditableProperties;
-
-    propertiesCtl: FormControl<EditableProperties>;
-
-    private viewInitialized = false;
-
-    private subscriptions: Subscription[] = [];
+    public control: FormControl<EditableProperties>;
 
     constructor(
-        private changeDetector: ChangeDetectorRef,
+        changeDetector: ChangeDetectorRef,
+        private permissions: PermissionService,
         private appState: ApplicationStateService,
-        public permissions: PermissionService,
-    ) { }
-
-    ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
-        if (changes.item || changes.nodeId) {
-            this.properties = this.getItemProperties(this.item);
-            if (this.propertiesCtl != null) {
-                this.propertiesCtl.setValue(this.properties);
-            }
-            this.permissionCheck.next();
-        }
+    ) {
+        super(changeDetector);
     }
 
     ngOnInit(): void {
-        this.propertiesCtl = new FormControl(this.properties);
+        this.control = new FormControl({ value: this.value, disabled: true }, Validators.required);
 
-        /*
-         * TODO: When all forms have been migrated to the base-properties, we can move the modified marker here,
-         * to prevent code duplication and have it solved cleanly in one place, rather then 5 or 6.
-         */
+        this.subscriptions.push(this.control.valueChanges.subscribe(value => {
+            this.triggerChange(value);
+        }));
 
-        // this.subscriptions.push(combineLatest([
-        //     this.propertiesCtl.valueChanges,
-        //     this.propertiesCtl.statusChanges,
-        // ]).subscribe(() => {
-        //     this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.propertiesCtl.dirty, this.propertiesCtl.valid));
-        // }));
+        this.subscriptions.push(combineLatest([
+            this.control.valueChanges,
+            this.control.statusChanges,
+        ]).subscribe(() => {
+            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.control.dirty, this.control.valid));
+        }));
 
-        this.editPermission$ = this.permissionCheck.pipe(
+        this.subscriptions.push(this.permissionCheck.pipe(
+            // Set the control disabled until we know the permissions
+            tap(() => {
+                setEnabled(this.control, false);
+                this.changeDetector.markForCheck();
+            }),
+            // Just in case it's getting spammed
+            debounceTime(50),
             switchMap(() => {
                 if (this.item.type === 'folder') {
                     return this.permissions.forFolder(this.item.id, this.nodeId).pipe(
+                        map(permission => {
+                            return permission.folder.edit;
+                        }),
+                    );
+                } else if (this.item.type === 'node' || this.item.type === 'channel') {
+                    return this.permissions.forFolder(this.item.folderId, this.item.id).pipe(
                         map(permission => {
                             return permission.folder.edit;
                         }),
@@ -125,110 +113,35 @@ export class PropertiesEditorComponent implements OnInit, OnChanges, OnDestroy, 
                     }),
                 );
             }),
-            tap(enabled => {
-                setEnabled(this.propertiesCtl, enabled);
-                this.changeDetector.markForCheck();
-            }),
-        );
+        ).subscribe(enabled => {
+            setEnabled(this.control, enabled);
+            this.changeDetector.markForCheck();
+        }));
     }
 
-    ngAfterViewInit(): void {
-        // As the child forms are populated, they will emit change events which we want to ignore since we are
-        // only interested in user-created changes, which only occur after the view has initialized.
-        this.viewInitialized = true;
+    override ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
+        super.ngOnChanges(changes);
+
+        if (changes.item || changes.nodeId) {
+            this.permissionCheck.next();
+        }
+
+        if (changes.itemClean && !changes.itemClean.firstChange && this.itemClean && this.control) {
+            this.control.markAsPristine();
+        }
     }
 
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+    protected onValueChange(): void {
+        if (this.control && !isEqual(this.value, this.control.value)) {
+            this.control.setValue(this.value);
+        }
     }
 
     simplePropertiesChanged(changes: EditableProperties): void {
-        if (this.viewInitialized) {
-            this.valueChange.emit(changes);
-        }
+        this.triggerChange(changes);
     }
 
     forwardItemCleanChange(value: boolean): void {
         this.itemCleanChange.emit(value);
     }
-
-    private getItemProperties(item: InheritableItem | Node): EditableProperties {
-        // an item with type "node" or "channel" may be the base folder of a node. If it has
-        // a folder-only property, then we can assume it is the base folder.
-        if ((item.type === 'node' || item.type === 'channel') && item.hasOwnProperty('hasSubfolders')) {
-            (item as any).type = 'folder';
-        }
-
-        switch (item.type) {
-            case 'folder':
-                return {
-                    name: item.name,
-                    description: (item as Folder).description,
-                    directory: (item as any).directory ?? (item as Folder).publishDir,
-                    descriptionI18n: (item as Folder).descriptionI18n,
-                    nameI18n: (item as Folder).nameI18n,
-                    publishDirI18n: (item as Folder).publishDirI18n,
-                } as EditableFolderProps;
-
-            case 'form':{
-                let dataProperties: Partial<CmsFormData> = {};
-                if ((item as Form).data) {
-                    dataProperties = {
-                        email: (item as Form).data.email,
-                        successurl_i18n: (item as Form).data.successurl_i18n,
-                        successurl: (item as Form).data.successurl,
-                        mailsubject_i18n: (item as Form).data.mailsubject_i18n,
-                        mailtemp_i18n: (item as Form).data.mailtemp_i18n,
-                        mailsource_pageid: (item as Form).data.mailsource_pageid,
-                        mailsource_nodeid: (item as Form).data.mailsource_nodeid,
-                        templateContext: (item as Form).data.templateContext,
-                        type: (item as Form).data.type,
-                        elements: (item as Form).data.elements,
-                    }
-                }
-
-                return {
-                    name: item.name,
-                    description: (item as Form).description,
-                    languages: (item as Form).languages,
-                    successPageId: (item as Form).successPageId,
-                    successNodeId: (item as Form).successNodeId,
-                    data: dataProperties,
-                };
-            }
-
-            case 'page':
-                return {
-                    pageName: (item as any).pageName ?? item.name,
-                    fileName: (item as Page).fileName,
-                    description: (item as Page).description,
-                    niceUrl: (item as Page).niceUrl,
-                    alternateUrls: (item as Page).alternateUrls,
-                    templateId: (item as Page).templateId,
-                    language: (item as Page).language,
-                    customCdate: (item as Page).customCdate,
-                    customEdate: (item as Page).customEdate,
-                    priority: (item as Page).priority,
-                } as EditablePageProps;
-
-            case 'file':
-            case 'image':
-                return {
-                    name: item.name,
-                    description: (item as FileOrImage).description,
-                    forceOnline: (item as FileOrImage).forceOnline,
-                    niceUrl: (item as FileOrImage).niceUrl,
-                    alternateUrls: (item as FileOrImage).alternateUrls,
-                } as EditableFileProps;
-
-            case 'node':
-            case 'channel':
-                return item;
-
-            default:
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                throw new Error(`getItemProperties: ${(item as any).type} is not handled.`);
-        }
-    }
-
 }

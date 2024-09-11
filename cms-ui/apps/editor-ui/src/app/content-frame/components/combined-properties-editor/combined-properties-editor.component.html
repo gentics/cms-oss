@@ -78,16 +78,17 @@
         <div class="item-properties" *ngIf="activeTabId === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item">
             <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | i18n }}</h2>
 
-            <properties-editor
+            <gtx-properties-editor
                 *ngIf="(itemProperties$ | async) as itemProps"
                 [item]="item"
                 [nodeId]="currentNode?.id"
+                [value]="editingProperties"
                 [templates]="itemProps.templates"
                 [languages]="itemProps.languages"
                 [itemClean]="itemClean"
                 (valueChange)="handlePropChanges($event)"
                 (itemCleanChange)="forwardItemCleanChange($event)"
-            ></properties-editor>
+            ></gtx-properties-editor>
         </div>
 
         <div class="form-reports" *ngIf="activeTabId === ITEM_REPORTS_TAB">

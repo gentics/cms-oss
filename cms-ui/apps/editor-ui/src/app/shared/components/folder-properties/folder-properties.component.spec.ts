@@ -20,7 +20,7 @@ import { Api } from '../../../core/providers/api/api.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
-import { FolderPropertiesForm } from './folder-properties-form.component';
+import { FolderPropertiesComponent } from './folder-properties.component';
 
 function getInput<T>(fixture: ComponentFixture<TestComponent>, controlName: string): AbstractControl {
     const comp = fixture.componentInstance.form;
@@ -135,7 +135,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
 })
 class TestComponent {
     @ViewChild('form')
-    form: FolderPropertiesForm;
+    form: FolderPropertiesComponent;
 
     nodeId: number;
     folderId: number;
@@ -208,7 +208,7 @@ describe('FolderPropertiesForm', () => {
             ],
             declarations: [
                 DynamicDisableDirective,
-                FolderPropertiesForm,
+                FolderPropertiesComponent,
                 TestComponent,
             ],
             providers: [

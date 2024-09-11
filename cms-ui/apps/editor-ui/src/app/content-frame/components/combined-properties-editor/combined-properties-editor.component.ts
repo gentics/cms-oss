@@ -107,7 +107,7 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators';
-import { generateContentTagList } from '../../utils';
+import { generateContentTagList, getItemProperties } from '../../utils';
 
 /** Allows to define additional options for saving. */
 export interface SaveChangesOptions {
@@ -162,6 +162,12 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     @Output()
     itemCleanChange = new EventEmitter<boolean>();
 
+    @ViewChild(GroupedTabsComponent, { static: false })
+    propertiesTabs: GroupedTabsComponent;
+
+    @ViewChildren(TagEditorHostComponent)
+    tagEditorHostList: QueryList<TagEditorHostComponent>;
+
     pointObjProp: any;
     position: string;
 
@@ -169,6 +175,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     public contentTagColumns: TableColumn<Tag>[] = [];
     public contentTagActions: TableAction<Tag>[] = [];
     public contentTagSelection: string[] = [];
+
+    /** The current properties of the item which are being edited. */
+    public editingProperties: EditableProperties;
 
     activeTabId$: Observable<string>;
     itemWithObjectProperties$: Observable<{ item: ItemWithObjectTags | Node, objProperties: EditableObjectTag[] }>;
@@ -181,13 +190,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         templates: Template[]
     }>;
     currentNode: Node;
-
-
-    @ViewChild(GroupedTabsComponent, { static: false })
-    propertiesTabs: GroupedTabsComponent;
-
-    @ViewChildren(TagEditorHostComponent)
-    tagEditorHostList: QueryList<TagEditorHostComponent>;
 
     get canSave(): boolean {
         return this.hasUpdatePermission !== false;
@@ -422,18 +424,17 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
-        if (changes.item && !this.appState.now.editor.objectPropertiesModified) {
-            this.item$.next(changes.item.currentValue);
+        if (changes.item) {
+            this.editingProperties = getItemProperties(this.item);
+            if (!this.appState.now.editor.objectPropertiesModified) {
+                this.item$.next(this.item as any);
+            }
         }
     }
 
     handlePropChanges(changes: EditableProperties): void {
-        this.latestPropChanges = changes;
-        this.item = {
-            ...this.item,
-            ...changes,
-        } as any;
-        this.item$.next(this.item as any);
+        this.latestPropChanges = structuredClone(changes);
+        this.editingProperties = changes;
     }
 
     onTabChange(newTabId: string, readOnly: boolean = false): void {
@@ -728,7 +729,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     public saveItemProperties(
         postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
     ): Promise<ItemWithObjectTags | Form | Node | void> {
-        // const formValue = this.item as any;
         const formValue = this.latestPropChanges;
         if (!formValue) {
             return Promise.resolve(null);

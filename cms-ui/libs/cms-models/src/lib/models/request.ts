@@ -11,7 +11,7 @@ import { ElasticSearchIndex } from './elastic-search-index';
 import { ExternalLink } from './external-link';
 import { NodeFeatureModel } from './feature';
 import { File } from './file';
-import { Folder } from './folder';
+import { EditableFolderProps, Folder } from './folder';
 import { EntityIdType } from './gcms-normalizer/gcms-normalizer-types';
 import { Group } from './group';
 import { Image } from './image';
@@ -972,12 +972,15 @@ export enum ContentMaintenanceType {
 /** * Request object used to configure the behaviour of the
  * `folder/create` endpoint.
  */
-export interface FolderCreateRequest {
+export interface FolderCreateRequest extends EditableFolderProps {
     nodeId: number;
     motherId: number;
-    publishDir: string;
-    description: string;
-    name: string;
+
+    /**
+     * True if saving the folder with a duplicate filename will fail.
+     * If false (default) the filename will be made unique before saving
+     */
+    failOnDuplicate?: boolean;
 }
 
 /**

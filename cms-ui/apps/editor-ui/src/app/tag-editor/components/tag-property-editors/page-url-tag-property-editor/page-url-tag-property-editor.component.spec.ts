@@ -17,7 +17,7 @@ import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
-import { FilePropertiesForm } from '../../../../shared/components/file-properties-form/file-properties-form.component';
+import { FilePropertiesForm } from '../../../../shared/components/file-properties/file-properties.component';
 import { DynamicDisableDirective } from '../../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { FileSizePipe } from '../../../../shared/pipes/file-size/file-size.pipe';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';

@@ -41,12 +41,12 @@
     </div>
 </gtx-file-drop-area>
 
-<file-properties-form
+<gtx-file-properties
     *ngIf="fileToUpload || selectionToUpload"
     [disabled]="uploadInProgress"
     [value]="fileProperties"
     (valueChange)="filePropertiesChanged($event)">
-</file-properties-form>
+</gtx-file-properties>
 
 <browse-box
     *ngIf="allowFolderSelection"

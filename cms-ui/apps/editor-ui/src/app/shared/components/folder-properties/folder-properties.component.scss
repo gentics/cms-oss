@@ -1,17 +1,11 @@
 @import 'variables';
 
-// Hide the button without using `display: none` or `visibility: hidden` otherwise IE does not
-// register the form submit event.
-.hidden-submit-button {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    padding: 0;
-    border: 0;
-}
-
 hr {
     margin: 20px 0;
+}
+
+.validation-element-container {
+    position: relative;
 }
 
 .properties-editor-i18n {

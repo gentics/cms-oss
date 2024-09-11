@@ -38,7 +38,7 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 			PublishProtocolResourceImpl.class);
 
 
-	private final Function<PublishLogEntry, PublishLogDto> MAP2REST = (publishLogEntry) -> new PublishLogDto(
+	public final static Function<PublishLogEntry, PublishLogDto> MAP2REST = (publishLogEntry) -> new PublishLogDto(
 			publishLogEntry.getObjId(),
 			publishLogEntry.getType(),
 			publishLogEntry.getState() == 1 ? "ONLINE" : "OFFLINE",
@@ -69,7 +69,7 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	public GenericItemList<PublishLogDto> list(
 			@BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			var publishLogEntries = PublishProtocolUtil.getPublishLogEntries();
+			var publishLogEntries = PublishProtocolUtil.getLastUnpublishedEntriesForType();
 
 			publishLogEntries = publishLogEntries.stream()
 					.filter(entry -> canView(entry, trx.getTransaction())).toList();

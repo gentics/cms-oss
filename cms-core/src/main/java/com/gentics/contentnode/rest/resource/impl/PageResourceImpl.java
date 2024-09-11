@@ -11,6 +11,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLan
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -455,6 +456,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						.sort(comparator)
 						.page(pagingParams)
 						.to(new PageListResponse());
+
+					if (pageListParams.unpublishedInfo) {
+						PublishProtocolUtil.addUnpublishedInformation(response.getItems());
+					}
 
 					response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
 					return response;

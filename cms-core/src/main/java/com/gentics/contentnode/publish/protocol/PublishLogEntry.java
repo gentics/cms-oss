@@ -2,6 +2,10 @@ package com.gentics.contentnode.publish.protocol;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.lib.db.SQLExecutor;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,19 +138,60 @@ public class PublishLogEntry {
 	public List<PublishLogEntry> loadAll() throws NodeException {
 		return DBUtils.select("SELECT * FROM publish_protocol ORDER BY ID DESC", resultSet -> {
 			List<PublishLogEntry> entries = new ArrayList<>();
-			while (resultSet.next()) {
-				var id = resultSet.getInt("id");
-				var objId = resultSet.getInt("obj_id");
-				var type = resultSet.getString("type");
-				var state = resultSet.getInt("state");
-				var user = resultSet.getInt("user");
-				var timestamp = resultSet.getTimestamp("date");
-				LocalDateTime dateTime = timestamp.toLocalDateTime();
-
-				entries.add(new PublishLogEntry(id, objId, type, state, user, dateTime));
-			}
+			populateEntries(resultSet, entries);
 			return entries;
 		});
+	}
+
+	/**
+	 * Loads multiple PublishLogEntry objects based on the specified type, state, and object IDs.
+	 *
+	 * @param type   the type of the publish log entries to load
+	 * @param state  the state of the publish log entries to load
+	 * @param objIds the list of object IDs to filter the publish log entries
+	 * @return a list of PublishLogEntry objects matching the specified criteria
+	 * @throws NodeException if an error occurs while loading the publish log entries
+	 */
+ 	public List<PublishLogEntry> loadManyByType(String type, String state, List<Integer> objIds) throws NodeException {
+		List<PublishLogEntry> entries = new ArrayList<>();
+
+		DBUtils.executeMassStatement("SELECT * FROM publish_protocol WHERE type = ? AND state = ? AND obj_id IN", objIds, 3, new SQLExecutor() {
+
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				stmt.setString(1, type);
+				stmt.setString(2, state);
+			}
+
+			@Override
+			public void handleResultSet(ResultSet resultSet) throws SQLException, NodeException {
+				populateEntries(resultSet, entries);
+			}
+		});
+
+		return entries;
+	}
+
+	/**
+	 * Populates the list of PublishLogEntry objects from the given ResultSet.
+	 *
+	 * @param resultSet the ResultSet containing the publish log entries data
+	 * @param entries   the list to populate with PublishLogEntry objects
+	 * @throws SQLException if an error occurs while accessing the ResultSet
+	 */
+	private void populateEntries(ResultSet resultSet, List<PublishLogEntry> entries)
+			throws SQLException {
+		while (resultSet.next()) {
+			var id = resultSet.getInt("id");
+			var objId = resultSet.getInt("obj_id");
+			var type = resultSet.getString("type");
+			var state = resultSet.getInt("state");
+			var user = resultSet.getInt("user");
+			var timestamp = resultSet.getTimestamp("date");
+			var dateTime = timestamp.toLocalDateTime();
+
+			entries.add(new PublishLogEntry(id, objId, type, state, user, dateTime));
+		}
 	}
 
 

@@ -8,6 +8,7 @@ import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.lib.log.NodeLogger;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class PublishProtocolUtil {
 	 *
 	 * @return a list of publish log entries
 	 */
-	public static List<PublishLogEntry> getPublishLogEntries() {
+	public static List<PublishLogEntry> getLastUnpublishedEntriesForType() {
 		try {
 			return new PublishLogEntry().loadAll();
 		} catch (Exception e) {
@@ -67,6 +68,30 @@ public class PublishProtocolUtil {
 		}
 	}
 
+
+	public static List<PublishLogEntry> getLastUnpublishedEntriesForType(String type, List<Integer> objIds) {
+		try {
+			return new PublishLogEntry().loadManyByType(type, PublishState.OFFLINE.toString() ,objIds);
+		} catch (Exception e) {
+			logger.error("Something went wrong while retrieving the publish protocol", e);
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Adds unpublished information to the provided list of Page objects.
+	 *
+	 * @param restPages the list of Page objects to which unpublished information will be added
+	 */
+	public static void addUnpublishedInformation(List<com.gentics.contentnode.rest.model.Page> restPages) {
+		var pageIds = restPages.stream().map(page -> page.getId()).toList();
+		var logEntries = getLastUnpublishedEntriesForType(PublishType.PAGE.toString(), pageIds);
+		logEntries.forEach(publishLogEntry ->
+				restPages.stream().filter(page -> page.getId() == publishLogEntry.getObjId())
+						.findAny().ifPresent(page -> page.setUnpublishedDate((int)publishLogEntry.getDate().toEpochSecond(
+								ZoneOffset.UTC))));
+
+	}
 
 	/**
 	 * Gets the type of the publishable node object.

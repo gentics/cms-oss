@@ -9,11 +9,19 @@
     <div *ngFor="let field of fields">
         <div [ngSwitch]="field">
             <ng-container *ngSwitchCase="'pdate'">
-                <detail-chip *ngIf="item.type === 'page' && item.pdate && item.pdate > 0">
+                <detail-chip *ngIf="(item.type === 'page' || item.type === 'form') && item.pdate && item.pdate > 0">
                     {{ 'editor.published_label' | i18n:{
                         publisher: (item.publisher | userFullName),
                         date: (item.pdate | i18nDate),
                         time: (item.pdate | i18nDate:'time')
+                    } }}
+                </detail-chip>
+            </ng-container>
+            <ng-container *ngSwitchCase="'unpublishedDate'">
+                <detail-chip *ngIf="(item.type === 'page' || item.type === 'form') && item.unpublishedDate && item.unpublishedDate > 0">
+                    {{ 'editor.unpublished_label' | i18n:{
+                        date: (item.unpublishedDate | i18nDate),
+                        time: (item.unpublishedDate | i18nDate:'time')
                     } }}
                 </detail-chip>
             </ng-container>

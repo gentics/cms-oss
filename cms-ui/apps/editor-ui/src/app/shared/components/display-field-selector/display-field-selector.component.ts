@@ -13,11 +13,12 @@ const COMMON_FIELDS = [
     { name: 'edate', label: 'common.date_edited_label' },
     { name: 'editor', label: 'common.editor_label' },
     { name: 'id', label: 'common.id_label' },
-    { name: 'globalId', label: 'editor.item_global_id_label' }
+    { name: 'globalId', label: 'editor.item_global_id_label' },
 ];
 
 const PAGE_FIELDS = [
     { name: 'pdate', label: 'common.date_published_label' },
+    { name: 'unpublishedDate', label: 'editor.unpublished_field_label' },
     { name: 'customCdate', label: 'common.date_custom_created_label' },
     { name: 'customEdate', label: 'common.date_custom_edited_label' },
     { name: 'priority', label: 'common.priority_label' },
@@ -43,6 +44,7 @@ const FOLDER_FIELDS = [
 
 const FORM_FIELDS = [
     { name: 'pdate', label: 'common.date_published_label' },
+    { name: 'unpublishedDate', label: 'editor.unpublished_field_label' },
     { name: 'usage', label: 'common.usage_label' },
 ];
 

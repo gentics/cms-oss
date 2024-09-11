@@ -19,6 +19,8 @@ def runJUnitTests              = true
 def qaDeploy                   = false
 def qaDeployBranchList         = ["dev"] as String[]
 
+def imageHost                  = "push.docker.gentics.com"
+def imageRepo                  = "docker-snapshots"
 
 pipeline {
     agent {
@@ -223,11 +225,11 @@ spec:
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images
-                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
-                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                            sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
-                                " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
-                        }
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                        sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
+                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                     }
 
                     if (params.runReleaseBuild) {
@@ -285,17 +287,20 @@ spec:
 
             steps {
                 script {
-                    def imageHost = "push.docker.gentics.com"
-                    def imageName = "${imageHost}/docker-products/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://${imageHost}/v2" ]) {
-                        sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
-
-                        if (tagName != null) {
-                            String dockerImageVersionTag = imageName + ":" + tagName
-                            sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
-                        } 
+                    if (params.runReleaseBuild) {
+                        imageRepo = "docker-products"
                     }
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
+                    def imageNameWithTag = "${imageName}:${branchName}"
+
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
+
+                    if (tagName != null) {
+                        String dockerImageVersionTag = imageName + ":" + tagName
+                        sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                    } 
                 }
             }
 		}
@@ -314,7 +319,7 @@ spec:
 
             steps {
                 script {
-                    def imageName = "docker.gentics.com/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
                     withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
@@ -358,18 +363,19 @@ spec:
 
             steps {
                 script {
-                    def imageName = "push.docker.gentics.com/docker-products/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "docker.gentics.com", url: "https://docker.gentics.com/v2" ]) {
 
-                        // Push released image
-                        if (tagName != null) {
-                            String dockerImageVersionTag = imageName + ":" + tagName
-                            sh "docker push " + dockerImageVersionTag
-                        } else if (params.deploy || params.deployTesting) {
-                            // push snapshot build image
-                            sh "docker push ${imageNameWithTag}"
-                        }
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+
+                    // Push released image
+                    if (tagName != null) {
+                        String dockerImageVersionTag = imageName + ":" + tagName
+                        sh "docker push " + dockerImageVersionTag
+                    } else if (params.deploy || params.deployTesting) {
+                        // push snapshot build image
+                        sh "docker push ${imageNameWithTag}"
                     }
                 }
             }

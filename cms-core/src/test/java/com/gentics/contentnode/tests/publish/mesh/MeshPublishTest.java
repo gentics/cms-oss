@@ -342,7 +342,7 @@ public class MeshPublishTest {
 		Trx.operate(() -> page.takeOffline());
 
 		var pagePublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(PublishType.PAGE.toString(), page.getId()));
-		var pagePublishLogEntries = Trx.supply(PublishProtocolUtil::getLastUnpublishedEntriesForType);
+		var pagePublishLogEntries = Trx.supply(PublishProtocolUtil::getPublishLogEntries);
 		pagePublishLogEntries = pagePublishLogEntries.stream()
 				.filter(entry -> entry.getType().equals(PublishType.PAGE.toString()))
 				.toList();

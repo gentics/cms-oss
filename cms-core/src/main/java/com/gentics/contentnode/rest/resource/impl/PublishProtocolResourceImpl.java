@@ -69,7 +69,7 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	public GenericItemList<PublishLogDto> list(
 			@BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			var publishLogEntries = PublishProtocolUtil.getLastUnpublishedEntriesForType();
+			var publishLogEntries = PublishProtocolUtil.getPublishLogEntries();
 
 			publishLogEntries = publishLogEntries.stream()
 					.filter(entry -> canView(entry, trx.getTransaction())).toList();

@@ -83,6 +83,11 @@ public abstract class ContentNodeItem implements Serializable {
 	private DeleteInfo folderDeleted;
 
 	/**
+	 * The date when a page was unpublished
+	 */
+	private Integer unpublishedDate;
+
+	/**
 	 * Default constructor needed by JAXB
 	 */
 	public ContentNodeItem() {}
@@ -264,5 +269,24 @@ public abstract class ContentNodeItem implements Serializable {
 	 */
 	public void setFolderDeleted(DeleteInfo folderDeleted) {
 		this.folderDeleted = folderDeleted;
+	}
+
+
+	/**
+	 * Gets the unpublished date.
+	 *
+	 * @return the unpublished date as an Integer
+	 */
+	public Integer getUnpublishedDate() {
+		return unpublishedDate;
+	}
+
+	/**
+	 * Sets the unpublished date.
+	 *
+	 * @param unpublishedDate the unpublished date to set
+	 */
+	public void setUnpublishedDate(Integer unpublishedDate) {
+		this.unpublishedDate = unpublishedDate;
 	}
 }

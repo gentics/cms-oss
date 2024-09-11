@@ -6,6 +6,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
 import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -962,7 +963,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 					}
 
 					if (pageListParams.unpublishedInfo) {
-						PublishProtocolUtil.addUnpublishedInformation(restPages);
+						PublishProtocolUtil.addUnpublishedInformation(restPages, PublishType.PAGE.toString());
 					}
 
 					response.setPages(restPages);

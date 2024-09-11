@@ -7,6 +7,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.model.ContentNodeItem;
 import com.gentics.lib.log.NodeLogger;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class PublishProtocolUtil {
 	 *
 	 * @return a list of publish log entries
 	 */
-	public static List<PublishLogEntry> getLastUnpublishedEntriesForType() {
+	public static List<PublishLogEntry> getPublishLogEntries() {
 		try {
 			return new PublishLogEntry().loadAll();
 		} catch (Exception e) {
@@ -69,6 +70,14 @@ public class PublishProtocolUtil {
 	}
 
 
+
+	/**
+	 * Retrieves the last unpublished entries for a given type.
+	 *
+	 * @param type the type of entries to retrieve
+	 * @param objIds the list of object IDs to filter the entries
+	 * @return a list of PublishLogEntry objects that are the last unpublished entries for the specified type
+	 */
 	public static List<PublishLogEntry> getLastUnpublishedEntriesForType(String type, List<Integer> objIds) {
 		try {
 			return new PublishLogEntry().loadManyByType(type, PublishState.OFFLINE.toString() ,objIds);
@@ -81,16 +90,16 @@ public class PublishProtocolUtil {
 	/**
 	 * Adds unpublished information to the provided list of Page objects.
 	 *
-	 * @param restPages the list of Page objects to which unpublished information will be added
+	 * @param restModel the list of ContentNodeItem objects to which unpublished information will be added
+	 * @param publishType the publish type e.g.: Page, Form, etc.
 	 */
-	public static void addUnpublishedInformation(List<com.gentics.contentnode.rest.model.Page> restPages) {
-		var pageIds = restPages.stream().map(page -> page.getId()).toList();
-		var logEntries = getLastUnpublishedEntriesForType(PublishType.PAGE.toString(), pageIds);
+	public static <T extends ContentNodeItem> void addUnpublishedInformation(List<T> restModel, String publishType) {
+		var modelIds = restModel.stream().map(ContentNodeItem::getId).toList();
+		var logEntries = getLastUnpublishedEntriesForType(publishType, modelIds);
 		logEntries.forEach(publishLogEntry ->
-				restPages.stream().filter(page -> page.getId() == publishLogEntry.getObjId())
-						.findAny().ifPresent(page -> page.setUnpublishedDate((int)publishLogEntry.getDate().toEpochSecond(
+				restModel.stream().filter(model -> model.getId() == publishLogEntry.getObjId())
+						.findAny().ifPresent(model -> model.setUnpublishedDate((int)publishLogEntry.getDate().toEpochSecond(
 								ZoneOffset.UTC))));
-
 	}
 
 	/**

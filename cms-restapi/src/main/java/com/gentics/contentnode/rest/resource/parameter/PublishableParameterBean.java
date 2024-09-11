@@ -54,6 +54,14 @@ public class PublishableParameterBean extends EditableParameterBean {
 	@QueryParam("online")
 	public Boolean online;
 
+
+	/**
+	 * Flag to indicate if the unpublish information should be included
+	 */
+	@QueryParam("unpublishedInfo")
+	@DefaultValue("true")
+	public Boolean unpublishedInfo = false;
+
 	public PublishableParameterBean setPublisher(boolean publisher) {
 		isPublisher = publisher;
 		return this;
@@ -86,6 +94,15 @@ public class PublishableParameterBean extends EditableParameterBean {
 
 	public PublishableParameterBean setOnline(Boolean online) {
 		this.online = online;
+		return this;
+	}
+
+	public Boolean getUnpublishedInfo() {
+		return unpublishedInfo;
+	}
+
+	public PublishableParameterBean setUnpublishedInfo(Boolean unpublishedInfo) {
+		this.unpublishedInfo = unpublishedInfo;
 		return this;
 	}
 }

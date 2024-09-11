@@ -55,7 +55,7 @@ const FORM_FIELDS = [
 @Component({
     selector: 'display-field-selector',
     templateUrl: './display-field-selector.component.tpl.html',
-    styleUrls: ['./display-field-selector.scss']
+    styleUrls: ['./display-field-selector.scss'],
 })
 export class DisplayFieldSelector implements IModalDialog, OnInit {
     type: ItemType;
@@ -98,7 +98,7 @@ export class DisplayFieldSelector implements IModalDialog, OnInit {
             this.fields = [];
         }
 
-        let orderedFields = this.fields.filter(isValidFieldName).map(nameToFieldObject);
+        const orderedFields = this.fields.filter(isValidFieldName).map(nameToFieldObject);
         fieldsByType.forEach(f => {
             if (orderedFields.map(j => j.name).indexOf(f.name) === -1) {
                 orderedFields.push(f);
@@ -122,7 +122,7 @@ export class DisplayFieldSelector implements IModalDialog, OnInit {
      * new selection.
      */
     updateAndClose(): void {
-        let selection = this.availableFields
+        const selection = this.availableFields
             .map(f => f.name)
             .filter(name => !!this.selected[name]);
 

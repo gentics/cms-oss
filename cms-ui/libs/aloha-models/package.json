@@ -7,6 +7,6 @@
   },
   "peerDependencies": {},
   "publishConfig": {
-    "registry": "https://repo.gentics.com/repository/npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

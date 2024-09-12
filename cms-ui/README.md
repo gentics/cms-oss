@@ -7,12 +7,12 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 Authenticate:
 ```bash
-npm adduser --registry=https://repo.gentics.com/repository/npm/ --always-auth
+npm adduser --registry=https://repo.gentics.com/repository/npm-products/ --always-auth
 ```
 
 Setup @gentics scope to the Gentics repository:
 ```bash
-npm config set @gentics:registry https://repo.gentics.com/repository/npm/
+npm config set @gentics:registry https://repo.gentics.com/repository/npm-products/
 ```
 
 ## Commands

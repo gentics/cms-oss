@@ -219,9 +219,9 @@ spec:
                     }
 
                     // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/> ~/.npmrc"
+                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm-products/> ~/.npmrc"
                     withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.apa-it.at/artifactory/api/npm/gtx-npm/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
+                        sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images

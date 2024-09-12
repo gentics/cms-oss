@@ -186,12 +186,6 @@ public class PageListParameterBean {
 	@QueryParam("excludeMlId")
 	public List<Integer> excludeMlIds = Collections.emptyList();
 
-	/**
-	 * Flag to indicate if the unpublish information should be included
-	 */
-	@QueryParam("unpublishedInfo")
-	@DefaultValue("true")
-	public Boolean unpublishedInfo = false;
 
 	public PageListParameterBean setNodeId(Integer nodeId) {
 		this.nodeId = nodeId;
@@ -311,14 +305,6 @@ public class PageListParameterBean {
 	public PageListParameterBean setExcludeMlIds(List<Integer> excludeMlIds) {
 		this.excludeMlIds = excludeMlIds;
 		return this;
-	}
-
-	public Boolean getUnpublishedInfo() {
-		return unpublishedInfo;
-	}
-
-	public void setUnpublishedInfo(Boolean unpublishedInfo) {
-		this.unpublishedInfo = unpublishedInfo;
 	}
 
 	/**

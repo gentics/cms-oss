@@ -265,6 +265,7 @@ public class PageFactory extends AbstractFactory {
 		protected ContentNodeDate eDate = new ContentNodeDate(0);
 		protected ContentNodeDate customEDate = new ContentNodeDate(0);
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
+		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
 		protected Integer creatorId = 0;
 		protected Integer editorId = 0;
 		protected Integer publisherId = 0;
@@ -744,6 +745,19 @@ public class PageFactory extends AbstractFactory {
 			return publisher;
 		}
 
+		public SystemUser getUnpublisher() throws NodeException {
+			return DBUtils.select("SELECT unpublisher FROM page WHERE id = ?", stmt -> {
+						stmt.setInt(1, getId());
+					}, resultSet -> {
+						if (resultSet.next()) {
+							int unpublisherId = resultSet.getInt("unpublisher");
+							return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
+						}
+						return null;
+					}
+			);
+		}
+
 		public List<Page> getLanguageVariants(boolean considerNodeLanguages) throws NodeException {
 			return loadLanguageVariants(considerNodeLanguages);
 		}
@@ -1127,6 +1141,27 @@ public class PageFactory extends AbstractFactory {
 				}
 			}
 		}
+
+		public ContentNodeDate getUnpublishedDate() {
+			try {
+				return DBUtils.select("SELECT unpublished_date FROM page WHERE id = ?", stmt -> {
+							stmt.setInt(1, getId());
+						}, resultSet -> {
+							if (resultSet.next()) {
+								int unpublishedDate = resultSet.getInt("unpublished_date");
+								this.unpublishedDate = new ContentNodeDate(unpublishedDate);
+							}
+							return this.unpublishedDate;
+						}
+				);
+			} catch (NodeException e) {
+				logger.error("Unable to get unpublished date from page with id: "+ getId(), e);
+			}
+
+			return this.unpublishedDate;
+		}
+
+
 
 		/**
 		 * Get the pdate of the page. If a value is stored as transaction attribute, it will modify the current pdate.
@@ -2591,6 +2626,7 @@ public class PageFactory extends AbstractFactory {
 				// set the planned offline time and clear queue for planned offline time
 				Transaction t = TransactionManager.getCurrentTransaction();
 				DBUtils.update("UPDATE page SET time_off = ?, off_queue = ?, time_off_queue = ? WHERE id = ?", timestamp, 0, 0, getId());
+
 				timeOff = new ContentNodeDate(timestamp);
 				offQueueUserId = 0;
 				timeOffQueue = new ContentNodeDate(0);
@@ -2599,6 +2635,9 @@ public class PageFactory extends AbstractFactory {
 				// we need to sent the NOTIFY event for the page in order to allow indexing (for feature ELASTICSEARCH)
 				t.addTransactional(new TransactionalTriggerEvent(Page.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
 			}
+			Transaction t = TransactionManager.getCurrentTransaction();
+			int unpublishedAt = timestamp == 0 ? TransactionManager.getCurrentTransaction().getUnixTimestamp() : timestamp;
+			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?", unpublishedAt, t.getUserId(), getId());
 		}
 
 		@Override

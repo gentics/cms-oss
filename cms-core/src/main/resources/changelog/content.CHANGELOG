@@ -805,3 +805,5 @@
 2024-03-27  CH-1714 NOP SQL ALTER TABLE construct DROP COLUMN new_editor;
 2024-03-27  CH-1715 NOP SQL ALTER TABLE construct DROP COLUMN hopedithook;
 2024-03-29  CH-1716 NOP SQL ALTER TABLE construct DROP COLUMN icon;
+2024-09-12  CH-1726 GO  SQL ALTER TABLE page ADD unpublished_date INT, ADD unpublisher INT;
+2024-09-12  CH-1727 GO  SQL ALTER TABLE form ADD unpublished_date INT, ADD unpublisher INT;

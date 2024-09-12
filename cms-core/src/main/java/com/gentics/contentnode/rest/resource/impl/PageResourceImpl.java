@@ -458,10 +458,6 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						.page(pagingParams)
 						.to(new PageListResponse());
 
-					if (pageListParams.unpublishedInfo) {
-						PublishProtocolUtil.addUnpublishedInformation(response.getItems(), PublishType.PAGE.toString());
-					}
-
 					response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
 					return response;
 				}

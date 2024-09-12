@@ -962,9 +962,6 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 						}
 					}
 
-					if (pageListParams.unpublishedInfo) {
-						PublishProtocolUtil.addUnpublishedInformation(restPages, PublishType.PAGE.toString());
-					}
 
 					response.setPages(restPages);
 					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));

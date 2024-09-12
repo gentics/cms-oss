@@ -87,6 +87,12 @@ public abstract class ContentNodeItem implements Serializable {
 	 */
 	private Integer unpublishedDate;
 
+
+	/**
+	 * The user that took the content item offline
+	 */
+	private User unpublisher;
+
 	/**
 	 * Default constructor needed by JAXB
 	 */
@@ -289,4 +295,23 @@ public abstract class ContentNodeItem implements Serializable {
 	public void setUnpublishedDate(Integer unpublishedDate) {
 		this.unpublishedDate = unpublishedDate;
 	}
+
+	/**
+	 * Gets the unpublisher.
+	 *
+	 * @return the unpublisher
+	 */
+	public User getUnpublisher() {
+		return unpublisher;
+	}
+
+	/**
+	 * Sets the unpublisher.
+	 *
+	 * @param unpublisher the unpublisher to set
+	 */
+	public void setUnpublisher(User unpublisher) {
+		this.unpublisher = unpublisher;
+	}
+
 }

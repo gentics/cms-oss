@@ -20,6 +20,7 @@
             <ng-container *ngSwitchCase="'unpublishedDate'">
                 <detail-chip *ngIf="(item.type === 'page' || item.type === 'form') && item.unpublishedDate && item.unpublishedDate > 0">
                     {{ 'editor.unpublished_label' | i18n:{
+                        unpublisher: (item.unpublisher | userFullName),
                         date: (item.unpublishedDate | i18nDate),
                         time: (item.unpublishedDate | i18nDate:'time')
                     } }}

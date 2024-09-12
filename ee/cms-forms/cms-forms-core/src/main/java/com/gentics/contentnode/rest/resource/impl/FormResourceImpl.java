@@ -142,6 +142,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			model.setPublisher(ModelBuilder.getUser(publisher));
 		}
 
+		model.setUnpublishedDate(form.getUnpublishedDate().getIntTimestamp());
+		SystemUser unpublisher = form.getUnpublisher();
+		if (unpublisher != null) {
+			model.setUnpublisher(ModelBuilder.getUser(unpublisher));
+		}
+
 		model.setDeleted(ModelBuilder.getDeleteInfo(form));
 
 		model.setModified(form.isModified());
@@ -243,10 +249,6 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				.to(new FormListResponse());
 			response.setStagingStatus(StagingUtil.checkStagingStatus(forms, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 			trx.success();
-
-			if (publishable.unpublishedInfo) {
-				PublishProtocolUtil.addUnpublishedInformation(response.getItems(), PublishType.FORM.toString());
-			}
 
 			return response;
 		}

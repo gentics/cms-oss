@@ -3,6 +3,7 @@
         #inputElement
 
         class="input-element"
+        [value]="value"
         [attr.autocomplete]="autocomplete || null"
         [attr.id]="id"
         [attr.max]="max"
@@ -20,10 +21,11 @@
         [required]="required"
         [type]="type"
 
+        (keydown)="handleKeyDown($event)"
         (blur)="onBlur($event)"
         (change)="onBlur($event)"
         (focus)="onFocus($event)"
-        (input)="onInput($event)"
+        (input)="handleInputChange($event)"
     />
 
     <gtx-button

@@ -18,7 +18,7 @@ import { ItemInNode } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../core';
+import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../providers';
 
 export type ItemWithNode = { id: number; nodeId: number; } | null;
 @Component({

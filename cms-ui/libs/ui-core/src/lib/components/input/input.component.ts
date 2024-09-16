@@ -1,20 +1,13 @@
 import {
-    AfterViewInit,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     EventEmitter,
-    HostListener,
     Input,
-    OnChanges,
     OnInit,
     Output,
-    Renderer2,
-    SimpleChanges,
-    ViewChild,
 } from '@angular/core';
-import { ControlValueAccessor } from '@angular/forms';
-import { generateFormProvider } from '../../utils';
+import { cancelEvent, generateFormProvider } from '../../utils';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 /**
  * E-mail validator regex from Angular 8
@@ -42,8 +35,6 @@ const TEL_REGEXP = '^([()\\- x+]*d[()\\- x+]*){4,16}$';
  */
 const URL_REGEXP = '(^|\\s)((https?:\\/\\/)?[\\w-]+(\\.[\\w-]+)+\\.?(:\\d+)?(\\/\\S*)?)';
 
-const ACTIVE_CLASS = 'active';
-
 /**
  * The InputField wraps the native `<input>` form element but should only be used for
  * text, number, password, tel, email or url types. Other types (date, range, file) should have dedicated components.
@@ -64,71 +55,63 @@ const ACTIVE_CLASS = 'active';
     styleUrls: ['./input.component.scss'],
     providers: [generateFormProvider(InputComponent)],
 })
-export class InputComponent implements AfterViewInit, ControlValueAccessor, OnInit, OnChanges {
+export class InputComponent extends BaseFormElementComponent<string | number> implements OnInit {
+
     /**
      * Sets autocomplete attribute on the input field
      */
     @Input()
-    autocomplete: string;
+    public autocomplete: string;
+
     /**
      * Sets the input field to be auto-focused. Handled by `AutofocusDirective`.
      */
     @Input()
-    autofocus = false;
-
-    /**
-     * Sets the disabled state
-     */
-    @Input()
-    disabled = false;
+    public autofocus = false;
 
     /**
      * Input field id
      */
     @Input()
-    id: string;
-
-    /**
-     * A label for the input
-     */
-    @Input()
-    label = '';
+    public id?: string;
 
     /**
      * Max allowed value (applies when type = "number")
      */
     @Input()
-    max: number;
+    public max?: number;
 
     /**
      * Min allowed value (applies when type = "number")
      */
     @Input()
-    min: number;
+    public min?: number;
 
     /**
      * Max allowed length in characters
      */
     @Input()
-    maxlength: number;
+    public maxlength?: number;
 
     /**
      * Input field name
      */
     @Input()
-    name: string;
+    public name?: string;
 
     /**
      * Regex pattern for complex validation
+     * @deprecated For proper validation, the Angular Forms API and a dedicated Validator
+     * should be used instead.
      */
     @Input()
-    pattern: string;
+    public pattern?: string;
 
     /**
      * Placeholder text to display when the field is empty
      */
     @Input()
-    placeholder: string;
+    public placeholder: string;
 
     /**
      * Wether the element should be clearable or not
@@ -136,72 +119,61 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     @Input()
     public clearable = false;
 
-
     /**
      * Sets the readonly state of the input
      */
     @Input()
-    readonly = false;
+    public readonly = false;
 
     /**
-     * Sets the required state of the input
+     * Increment step (applies when type is `'number'`)
      */
     @Input()
-    required = false;
-
-    /**
-     * Increment step (applies when type = "number")
-     */
-    @Input()
-    step: number;
+    public step?: number;
 
     /**
      * Can be "text", "number", "password", "tel", "email" or "url".
      */
     @Input()
-    type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
-
-    /**
-     * Sets the value of the input.
-     */
-    @Input()
-    value: string | number = '';
+    public type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
 
     /**
      * Fires when the input loses focus.
+     * @deprecated Will be removed in next major version, and therefore a bubbled `blur` event from the
+     * browser may occur instead, which has a different value.
      */
     @Output()
-    blur = new EventEmitter<string | number>();
+    public blur = new EventEmitter<string | number>();
 
     /**
      * Fires when the input gains focus.
+     * @deprecated Will be removed in next major version, and therefore a bubbled `focus` event from the
+     * browser may occur instead, which has a different value.
      */
     @Output()
-    focus = new EventEmitter<string | number>();
+    public focus = new EventEmitter<string | number>();
 
     /**
      * Fires whenever a char is entered into the field.
+     * @deprecated Use `valueChange` instead.
      */
     @Output()
-    change = new EventEmitter<string | number>();
+    public change = new EventEmitter<string | number>();
 
+    /**
+     * Fires when the value has been cleared via the `clearable` button.
+     */
     @Output()
-    valueCleared = new EventEmitter<void>();
-
-    @ViewChild('inputElement', { static: true })
-    public inputElement: ElementRef<HTMLInputElement>;
-
-    @ViewChild('labelElement', { static: true })
-    private labelElement: ElementRef<HTMLLabelElement>;
-
-    private currentValue: string | number;
+    public valueCleared = new EventEmitter<void>();
 
     constructor(
-        private renderer: Renderer2,
-        private changeDetector: ChangeDetectorRef,
-    ) { }
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+        this.booleanInputs.push('clearable', 'readonly');
+    }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         /**
          * Set default regex patterns for specific field types if not set
          */
@@ -221,111 +193,63 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
         }
     }
 
-    /**
-     * The Materialize input includes a dynamic label that changes position depending on the state of the input.
-     * When the label has the "active" class, it moves above the input, otherwise it resides inside the input
-     * itself.
-     *
-     * The Materialize "forms.js" script normally takes care of adding/removing the active class on page load,
-     * but this does not work in a SPA setting where new views with inputs can be created without a page load
-     * event to trigger the `Materialize.updateTextFields()` method. Therefore we need to handle it ourselves
-     * when the input component is created.
-     */
-    ngAfterViewInit(): void {
-        const input: HTMLInputElement = this.inputElement.nativeElement;
-        const label: HTMLLabelElement = this.labelElement.nativeElement;
-
-        if (input && label) {
-            if (String(this.value).length > 0 || this.placeholder) {
-                this.renderer.addClass(label, ACTIVE_CLASS);
-            } else {
-                this.renderer.removeClass(label, ACTIVE_CLASS);
-            }
-        }
+    protected onValueChange(): void {
+        // No op
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        const valueChange = changes['value'];
-        if (valueChange) {
-            this.writeValue(valueChange.currentValue);
-        }
-    }
-
-    @HostListener('keydown', ['$event'])
-    public onKeyDown(event) {
+    public handleKeyDown(event: KeyboardEvent): void {
+        // Why?
         if (this.type === 'number') {
-            const keyboardEvent = event as KeyboardEvent;
-            if ((keyboardEvent.key === '-' && event.target.value) || keyboardEvent.key === '+') {
-                keyboardEvent.preventDefault();
-            } else if (keyboardEvent.key === '-' && !event.target.value) {
-                event.target.value = '-';
+            if ((event.key === '-' && this.value) || event.key === '+') {
+                event.preventDefault();
+            } else if (event.key === '-' && !this.value) {
+                this.value = '-';
             }
         }
     }
 
-    onBlur(e: Event): void {
-        e.stopPropagation();
-        const target = e.target as HTMLInputElement;
-        this.blur.emit(this.normalizeValue(target.value));
-        this.onTouched();
-    }
+    public handleInputChange(event: InputEvent): void {
+        cancelEvent(event);
 
-    onFocus(e: Event): void {
-        const target = e.target as HTMLInputElement;
-        this.focus.emit(this.normalizeValue(target.value));
-    }
+        this.triggerTouch();
+        const value = (event.target as HTMLInputElement).value || '';
 
-    onInput(e: Event): void {
-        const target = e.target as HTMLInputElement;
-        this.updateValue(target);
-        const value = this.currentValue = this.normalizeValue(target.value);
-        this.onChange(value);
-        this.change.emit(value);
-    }
-
-
-
-    writeValue(valueToWrite: any): void {
-        const value = this.normalizeValue(valueToWrite);
-        if (value !== this.currentValue) {
-            this.renderer.setProperty(this.inputElement.nativeElement, 'value', this.currentValue = value);
+        if (this.type !== 'number') {
+            this.triggerChange(value);
+            return;
         }
+
+        let parsed = parseFloat(value);
+        if (!isFinite(parsed) || isNaN(parsed)) {
+            // Invalid value, but ignore for now.
+            // If we update the value, we get wonky user behaviour, and triggering a non-sensical
+            // change is also not worth it.
+            return;
+        }
+
+        // Clamp the value if neccessary
+        if (this.max != null && parsed > this.max) {
+            parsed = this.max;
+        }
+        if (this.min != null && parsed < this.min) {
+            parsed = this.min;
+        }
+
+        this.triggerChange(parsed);
     }
 
-    clear(): void {
-        this.writeValue('');
+    public onBlur(e: Event): void {
+        cancelEvent(e);
+        this.triggerTouch();
+        this.blur.emit(this.value);
+    }
+
+    public onFocus(e: Event): void {
+        this.focus.emit(this.value);
+    }
+
+    public clear(): void {
+        this.triggerChange(this.type === 'number' ? null : '');
         this.valueCleared.emit();
-    }
-
-    // ValueAccessor members
-    registerOnChange(fn: (newValue: string | number) => void): void {
-        this.onChange = fn;
-    }
-    registerOnTouched(fn: () => void): void {
-        this.onTouched = fn;
-    }
-    setDisabledState(disabled: boolean): void {
-        this.disabled = disabled;
-        this.changeDetector.markForCheck();
-    }
-    private onChange = (newValue: string | number): void => { };
-    private onTouched = (): void => { };
-
-    private normalizeValue(val: any): string | number {
-        if (this.type === 'number') {
-            return val == null ? 0 : Number(val);
-        } else {
-            return val == null ? '' : String(val);
-        }
-    }
-
-    private updateValue(target: HTMLInputElement): void {
-        if (this.type === 'number') {
-            if (this.max && Number(target.value) > this.max) {
-                target.value = String(this.max);
-            } else if (this.min && Number(target.value) < this.min) {
-                target.value = String(this.min);
-            }
-        }
     }
 }

@@ -1,11 +1,14 @@
 <gtx-input
-    [formControl]="i18nInput"
+    [value]="value?.[language] || ''"
     [label]="label"
     [type]="type"
-    [required]="requiredInCurrentLanguage && requiredInCurrentLanguage"
+    [required]="requiredInCurrentLanguage"
     [class.untranslated]="!isTranslated"
-    (blur)="triggerTouch($event)"
+    [disabled]="disabled"
+    (valueChange)="handleInputChange($event)"
+    (blur)="triggerTouch()"
 ></gtx-input>
+
 <div *ngIf="!isTranslated && requiredInCurrentLanguage" class="translation-suggestions">
     <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>
     <div class="translation-suggestions__values">

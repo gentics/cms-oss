@@ -2,21 +2,18 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
-import {
-    FormBrowseBoxComponent,
-    I18nCheckboxComponent,
-    I18nInputComponent,
-    I18nSelectComponent,
-    KeyI18nValueListInputComponent,
-} from '../form-controls';
 import {
     BasePropertiesComponent,
     BrowseBoxComponent,
+    FormBrowseBoxComponent,
     GtxAppVersionLabelComponent,
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
     GtxUserMenuToggleComponent,
+    I18nCheckboxComponent,
+    I18nInputComponent,
+    I18nSelectComponent,
+    KeyI18nValueListInputComponent,
     PasswordConfirmInputComponent,
     StringListComponent,
     VersionModalComponent,

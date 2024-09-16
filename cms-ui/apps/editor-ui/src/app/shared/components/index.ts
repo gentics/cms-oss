@@ -36,7 +36,7 @@ export * from './node-selector/node-selector.component';
 export * from './page-language-indicator-current/page-language-indicator-current.component';
 export * from './page-language-indicator/page-language-indicator.component';
 export * from './page-language-selector/page-language-selector.component';
-export * from './page-properties-form/page-properties-form.component';
+export * from './page-properties/page-properties.component';
 export * from './page-size-selector/page-size-selector.component';
 export * from './page-versions-modal/page-versions-modal.component';
 export * from './paging-controls/paging-controls.component';

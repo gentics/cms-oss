@@ -18,9 +18,36 @@
 
     <gtx-checkbox
         *ngIf="form.controls.forceOnline.enabled"
+        class="checkbox-input"
         [label]="'editor.forcePublish_label' | i18n"
         formControlName="forceOnline"
     ></gtx-checkbox>
+
+    <div *ngIf="item" class="custom-date-row">
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_creation_date_label' | i18n"
+                formControlName="customCdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_date_created_label' | i18n  }}: {{ item.cdate | i18nDate:'dateTime' }}</span>
+        </div>
+
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_edit_date_label' | i18n"
+                formControlName="customEdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_edited_on_label' | i18n  }}: {{ item.edate | i18nDate:'dateTime' }}</span>
+        </div>
+    </div>
 
     <div *ngIf="niceUrlsEnabled">
         <gtx-input

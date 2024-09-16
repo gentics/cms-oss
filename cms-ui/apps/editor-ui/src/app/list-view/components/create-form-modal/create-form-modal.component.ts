@@ -97,7 +97,7 @@ export class CreateFormModalComponent implements IModalDialog, OnInit {
                 }
 
                 const form = {
-                    ...this.formPropertiesForm.formGroup.value,
+                    ...this.formPropertiesForm.form.value,
                     folderId: this.folderId,
                     nodeId: this.nodeId,
                 };

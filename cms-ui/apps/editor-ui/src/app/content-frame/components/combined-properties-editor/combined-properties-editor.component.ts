@@ -206,7 +206,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private activeTabId: PropertiesTab;
     private subscriptions: Subscription[] = [];
     private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
-    private latestPropChanges: EditableProperties;
     public tagFillLightEnabled = true;
 
     expandedState$: Observable<string[]>;
@@ -433,7 +432,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     handlePropChanges(changes: EditableProperties): void {
-        this.latestPropChanges = structuredClone(changes);
         this.editingProperties = changes;
     }
 
@@ -729,7 +727,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     public saveItemProperties(
         postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
     ): Promise<ItemWithObjectTags | Form | Node | void> {
-        const formValue = this.latestPropChanges;
+        const formValue = this.editingProperties;
         if (!formValue) {
             return Promise.resolve(null);
         }

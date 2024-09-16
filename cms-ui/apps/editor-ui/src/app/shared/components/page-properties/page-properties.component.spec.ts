@@ -23,7 +23,7 @@ import { ErrorHandler } from '../../../core/providers/error-handler/error-handle
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { PagePropertiesForm } from './page-properties-form.component';
+import { PagePropertiesComponent } from './page-properties.component';
 
 const testDataNodeId = 4;
 const testDataFolderId = 1;
@@ -75,7 +75,7 @@ describe('PagePropertiesForm', () => {
             ],
             declarations: [
                 TestComponent,
-                PagePropertiesForm,
+                PagePropertiesComponent,
                 ...mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
@@ -558,15 +558,17 @@ describe('PagePropertiesForm', () => {
 
 @Component({
     template: `
-        <page-properties-form #propertiesForm
-                              [page]="page"
-                              [enableFileNameSuggestion]="true"
-                              [folderId]="folderId"
-                              [nodeId]="nodeId"
-                              [properties]="properties"
-                              [templates]="templates"
-                              [languages]="languages"
-                              (changes)="onChange($event)"></page-properties-form>
+        <gtx-page-properties
+            #propertiesForm
+            [page]="page"
+            [enableFileNameSuggestion]="true"
+            [folderId]="folderId"
+            [nodeId]="nodeId"
+            [value]="properties"
+            [templates]="templates"
+            [languages]="languages"
+            (valueChange)="onChange($event)"
+        ></gtxpage-properties>
     `,
 })
 class TestComponent {
@@ -577,7 +579,7 @@ class TestComponent {
     folderId = testDataFolderId;
     nodeId = testDataNodeId;
     properties: EditablePageProps = {
-        pageName: 'pageName',
+        name: 'pageName',
         fileName: '',
         description: 'description',
         niceUrl: 'niceUrl',

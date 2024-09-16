@@ -1666,21 +1666,7 @@ export class FolderActionsService {
      * Update the editable properties of a page.
      */
     updatePageProperties(pageId: number, properties: EditablePageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Page<Raw> | void> {
-        const pageProps: Partial<Page<Raw>> = {
-            name: properties.pageName,
-            fileName: properties.fileName,
-            description: properties.description,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-            templateId: properties.templateId,
-            customCdate: properties.customCdate,
-            customEdate: properties.customEdate,
-            priority: properties.priority,
-        };
-        if (properties.language) {
-            pageProps.language = properties.language;
-        }
-        return this.updateItem('page', pageId, pageProps, {}, postUpdateBehavior);
+        return this.updateItem('page', pageId, properties, {}, postUpdateBehavior);
     }
 
     /**
@@ -1727,30 +1713,14 @@ export class FolderActionsService {
      * Update the editable properties of a file.
      */
     updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<File<Raw> | void> {
-        const fileProps = {
-            name: properties.name,
-            description: properties.description,
-            forceOnline: properties.forceOnline,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-        };
-        return this.updateItem('file', fileId, fileProps, {}, postUpdateBehavior);
+        return this.updateItem('file', fileId, properties, {}, postUpdateBehavior);
     }
 
     /**
      * Update the editable properties of an image.
      */
     updateImageProperties(imageId: number, properties: EditableImageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Image<Raw> | void> {
-        const imageProps = {
-            name: properties.name,
-            description: properties.description,
-            forceOnline: properties.forceOnline,
-            fpX: properties.fpX,
-            fpY: properties.fpY,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-        };
-        return this.updateItem('image', imageId, imageProps, {}, postUpdateBehavior);
+        return this.updateItem('image', imageId, properties, {}, postUpdateBehavior);
     }
 
     updateNodeProperties(nodeId: number, properties: EditableNodeProps): Promise<Node<Raw> | void> {

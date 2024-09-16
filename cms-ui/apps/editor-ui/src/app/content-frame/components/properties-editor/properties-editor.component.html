@@ -15,31 +15,36 @@
 
     <ng-container *ngSwitchCase="'form'">
         <form-properties-form
-            [form]="item"
+            [item]="item"
             [nodeId]="nodeId"
             [folderId]="item.motherId"
             [languages]="languages"
             [disableLanguageSelect]="true"
-            [properties]="properties"
-            [disabled]="!(editPermission$ | async)"
             [showDetailProperties]="true"
-            (changes)="simplePropertiesChanged($event)"
+
+            [initialValue]="itemClean"
+            [formControl]="control"
+            (valueChange)="simplePropertiesChanged($event)"
+            (initialValueChange)="forwardItemCleanChange($event)"
         ></form-properties-form>
     </ng-container>
 
     <ng-container *ngSwitchCase="'page'">
-        <page-properties-form
-            [page]="item"
+        <gtx-page-properties
+            [item]="item"
             [enableFileNameSuggestion]="false"
             [folderId]="item.folderId"
             [nodeId]="nodeId"
-            [properties]="properties"
+            [value]="properties"
             [templates]="templates"
             [languages]="languages"
             [disableLanguageSelect]="true"
-            [disabled]="!(editPermission$ | async)"
-            (changes)="simplePropertiesChanged($event)"
-        ></page-properties-form>
+
+            [initialValue]="itemClean"
+            [formControl]="control"
+            (valueChange)="simplePropertiesChanged($event)"
+            (initialValueChange)="forwardItemCleanChange($event)"
+        ></gtx-page-properties>
     </ng-container>
 
     <ng-container *ngSwitchCase="'file'">
@@ -61,6 +66,7 @@
 
 <ng-template #fileProperties>
     <gtx-file-properties
+        [item]="item"
         [initialValue]="itemClean"
         [formControl]="control"
         (valueChange)="simplePropertiesChanged($event)"

@@ -67,7 +67,7 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
         case 'page':{
             const p = item as Page;
             const props: EditablePageProps = {
-                pageName: (item as any).pageName ?? p.name,
+                name: p.name,
                 fileName: p.fileName,
                 description: p.description,
                 niceUrl: p.niceUrl,
@@ -90,6 +90,8 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
                 forceOnline: f.forceOnline,
                 niceUrl: f.niceUrl,
                 alternateUrls: f.alternateUrls,
+                customCdate: f.customCdate,
+                customEdate: f.customEdate,
             };
             return props;
         }

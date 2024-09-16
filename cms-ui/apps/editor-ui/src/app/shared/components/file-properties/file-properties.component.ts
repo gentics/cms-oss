@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
-import { EditableFileProps, Feature, NodeFeature } from '@gentics/cms-models';
+import { EditableFileProps, Feature, NodeFeature, FileOrImage } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { filter, map, switchMap } from 'rxjs/operators';
 
@@ -18,8 +18,11 @@ import { filter, map, switchMap } from 'rxjs/operators';
 })
 export class FilePropertiesComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
 
-    contentAutoOfflineEnabled = false;
-    niceUrlsEnabled = false;
+    @Input()
+    public item: FileOrImage;
+
+    public contentAutoOfflineEnabled = false;
+    public niceUrlsEnabled = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -30,11 +33,6 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
 
     public override ngOnInit(): void {
         super.ngOnInit();
-
-        // this.subscriptions.push(this.form.valueChanges.subscribe(() => {
-        //     // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
-        //     this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.form.dirty, this.form.valid));
-        // }));
 
         this.subscriptions.push(this.appState.select(state => state.editor.nodeId).pipe(
             switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
@@ -59,8 +57,9 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
             description: new FormControl(this.value?.description),
             niceUrl: new FormControl(this.value?.niceUrl),
             forceOnline: new FormControl(this.value?.forceOnline),
-            online: new FormControl(this.value?.online),
             alternateUrls: new FormControl(this.value?.alternateUrls),
+            customCdate: new FormControl(this.value?.customCdate),
+            customEdate: new FormControl(this.value?.customEdate),
         });
     }
 
@@ -71,6 +70,29 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
     }
 
     protected assembleValue(value: EditableFileProps): EditableFileProps {
-        return value;
+        return {
+            ...value,
+            customCdate: value?.customCdate || 0,
+            customEdate: value?.customEdate || 0,
+        };
+    }
+
+    protected override onValueChange(): void {
+        if (this.form) {
+            const tmpObj = {};
+            Object.keys(this.form.controls).forEach((controlName: keyof EditableFileProps) => {
+                if (this.value != null && this.value.hasOwnProperty(controlName)) {
+                    // Edge case for custom dates - The API requires them to be not-null to not be ignored during updates.
+                    // However, a `0` would still be a valid timestamp, so we check it here explicitly and mark it as null.
+                    if ((controlName === 'customCdate' || controlName === 'customEdate')
+                        && (this.value[controlName] === 0 || this.value[controlName] == null)) {
+                        tmpObj[controlName] = null;
+                    } else {
+                        tmpObj[controlName] = this.value[controlName];
+                    }
+                }
+            });
+            this.form.patchValue(tmpObj);
+        }
     }
 }

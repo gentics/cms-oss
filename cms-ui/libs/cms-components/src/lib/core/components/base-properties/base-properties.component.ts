@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, Validator } from '@angular/forms';
-import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
+import { BaseFormElementComponent, FormProperties, setEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
@@ -208,7 +208,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * Basic implementation which will simply put the value into the form.
      */
-    protected onValueChange(): void {
+    protected override onValueChange(): void {
         if (this.form) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
@@ -218,6 +218,12 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             });
             this.form.patchValue(tmpObj);
         }
+    }
+
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
+
+        setEnabled(this.form, !this.disabled);
     }
 
     public override setDisabledState(isDisabled: boolean): void {

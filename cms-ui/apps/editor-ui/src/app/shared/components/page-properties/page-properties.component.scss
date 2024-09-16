@@ -1,14 +1,18 @@
 @import "variables";
 
-.error-message {
+.no-templates {
     color: $gtx-color-alert;
-    margin-bottom: 13px;
-    margin-top: -18px;
+    margin-bottom: 1rem;
+    margin-top: 0;
 }
 
-.checkbox-input {
-    margin-bottom: 1rem;
-    display: block;
+.template-select {
+    margin: 0;
+
+    & + a {
+        display: block;
+        margin-bottom: 1rem;
+    }
 }
 
 .custom-date-row {
@@ -30,4 +34,10 @@
         font-size: 0.8rem;
         color: $gtx-color-dark-gray;
     }
+}
+
+.error-message {
+    color: $gtx-color-alert;
+    margin-bottom: 13px;
+    margin-top: -18px;
 }

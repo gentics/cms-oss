@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core';
-import { EditableNodeProps, UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
+import { EditableNodeProps, SETTING_LAST_NODE_ID, UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
 import { ImagePropertiesModalComponent } from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
 import { ApiError } from '@editor-ui/app/core/providers/api';
@@ -187,6 +187,7 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -242,6 +243,7 @@ export class FolderActionsService {
         private queryAssemblerElasticSearch: QueryAssemblerElasticSearchService,
         private queryAssemblerGCMSSearchService: QueryAssemblerGCMSSearchService,
         private modalService: ModalService,
+        private localStore: LocalStorage,
     ) { }
 
     /**
@@ -355,6 +357,14 @@ export class FolderActionsService {
         const nodes = this.appState.now.folder.nodes.list
             .map(nodeId => this.entityResolver.getNode(nodeId))
             .filter(node => node != null);
+        const lastUsedNodeId = Number(this.localStore.getForUser(this.appState.now.auth.currentUserId, SETTING_LAST_NODE_ID));
+        if (Number.isInteger(lastUsedNodeId)) {
+            const foundNode = nodes.find(node => node.id === lastUsedNodeId);
+            if (foundNode) {
+                return foundNode;
+            }
+        }
+
         const defaultNode = getDefaultNode(nodes);
 
         return defaultNode;

@@ -207,7 +207,7 @@ form_reports_csv_generate_finished:
     de: 'Export wurde erstellt'
 form_reports_download_started:
     en: 'The download will be started'
-    de: 'Der Download wird gestartet'    
+    de: 'Der Download wird gestartet'
 form_reports_label:
     en: 'Form reports'
     de: 'Formularberichte'
@@ -715,6 +715,15 @@ tagtype_label:
 tagtype_name_label:
     en: Tagtype Name
     de: Tagtyp Name
+tagtype_delete_label:
+    en: Delete Tag
+    de: Tag löschen
+tagtype_activate_label:
+    en: Activate Tag
+    de: Tag aktivieren
+tagtype_deactivate_label:
+    en: Deactivate Tag
+    de: Tag deaktivieren
 time_ago_second:
     en: '{{elapsed}} second ago'
     de: 'vor {{elapsed}} Sekunde'

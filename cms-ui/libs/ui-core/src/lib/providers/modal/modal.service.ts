@@ -198,6 +198,7 @@ export class ModalService {
                     componentRef.changeDetectorRef.markForCheck();
                 }
                 this.checkModalDialogInterface(dialog);
+
                 return {
                     instance: dialog as any,
                     element: componentRef.location.nativeElement,
@@ -206,7 +207,7 @@ export class ModalService {
                         this.openModals.push(componentRef);
                         componentRef.onDestroy(() => {
                             const index = this.openModals.indexOf(componentRef);
-                            if (-1 < index) {
+                            if (index !== -1) {
                                 this.openModals.splice(index, 1);
                             }
                         });
@@ -267,11 +268,10 @@ export class ModalService {
                 resolve(value);
             });
 
-            dialog.registerCancelFn((val, reason) => {
-                modalWrapper.dismissFn(reason ?? ModalClosingReason.CANCEL);
-                if (reason) {
-                    reject(new ModalCloseError(reason));
-                }
+            dialog.registerCancelFn((_val, reason) => {
+                reason ??= ModalClosingReason.CANCEL;
+                modalWrapper.dismissFn(reason);
+                reject(new ModalCloseError(reason));
             });
 
             if (dialog.registerErrorFn) {

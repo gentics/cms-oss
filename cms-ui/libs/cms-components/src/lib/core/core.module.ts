@@ -102,7 +102,6 @@ const PROVIDERS: any[] = [
         CommonModule,
         ReactiveFormsModule,
         GenticsUICoreModule,
-        GCMSRestClientModule,
     ],
     exports: [
         ...DECLARATIONS,

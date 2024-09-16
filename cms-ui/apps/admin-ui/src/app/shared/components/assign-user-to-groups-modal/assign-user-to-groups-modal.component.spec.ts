@@ -36,7 +36,7 @@ import {
     UserDataService,
 } from '../../providers';
 import { GroupTrableComponent } from '../group-trable/group-trable.component';
-import { AssignUserToGroupsModalComponent } from './assign-user-to-groups-modal.component';
+import { AssignUserToGroupsModal } from './assign-user-to-groups-modal.component';
 
 const PARENT_NODE_ID = 2;
 const FIRST_PARENT_NODE_ID = 4;
@@ -150,7 +150,7 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
             ],
             declarations: [
                 ActionAllowedDirective,
-                AssignUserToGroupsModalComponent,
+                AssignUserToGroupsModal,
                 GroupTrableComponent,
                 MockI18nPipe,
                 TestComponent,

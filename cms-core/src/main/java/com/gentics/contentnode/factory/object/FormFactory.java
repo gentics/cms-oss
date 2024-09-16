@@ -182,7 +182,7 @@ public class FormFactory extends AbstractFactory {
 		@Unversioned
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
 
-		@DataField("unpublishedDate")
+		@DataField("unpublished_date")
 		@Updateable
 		@Unversioned
 		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
@@ -341,21 +341,6 @@ public class FormFactory extends AbstractFactory {
 
 		@Override
 		public ContentNodeDate getUnpublishedDate() {
-			try {
-				return DBUtils.select("SELECT unpublished_date FROM form WHERE id = ?", stmt -> {
-							stmt.setInt(1, getId());
-						}, resultSet -> {
-							if (resultSet.next()) {
-								int unpublishedDate = resultSet.getInt("unpublished_date");
-								this.unpublishedDate = new ContentNodeDate(unpublishedDate);
-							}
-							return this.unpublishedDate;
-						}
-				);
-			} catch (NodeException e) {
-				logger.error("Unable to get unpublished date from form with id: "+ getId(), e);
-			}
-
 			return this.unpublishedDate;
 		}
 
@@ -368,16 +353,7 @@ public class FormFactory extends AbstractFactory {
 
 		@Override
 		public SystemUser getUnpublisher() throws NodeException {
-			return DBUtils.select("SELECT unpublisher FROM form WHERE id = ?", stmt -> {
-						stmt.setInt(1, getId());
-					}, resultSet -> {
-						if (resultSet.next()) {
-							int unpublisherId = resultSet.getInt("unpublisher");
-							return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
-						}
-						return null;
-					}
-			);
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisher);
 		}
 
 		@Override

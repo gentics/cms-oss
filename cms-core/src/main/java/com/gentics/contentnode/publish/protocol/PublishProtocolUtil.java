@@ -8,6 +8,7 @@ import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.ContentNodeItem;
+import com.gentics.contentnode.rest.model.PublishableContentItem;
 import com.gentics.lib.log.NodeLogger;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -93,7 +94,7 @@ public class PublishProtocolUtil {
 	 * @param restModel the list of ContentNodeItem objects to which unpublished information will be added
 	 * @param publishType the publish type e.g.: Page, Form, etc.
 	 */
-	public static <T extends ContentNodeItem> void addUnpublishedInformation(List<T> restModel, String publishType) {
+	public static <T extends PublishableContentItem> void addUnpublishedInformation(List<T> restModel, String publishType) {
 		var modelIds = restModel.stream().map(ContentNodeItem::getId).toList();
 		var logEntries = getLastUnpublishedEntriesForType(publishType, modelIds);
 		logEntries.forEach(publishLogEntry ->

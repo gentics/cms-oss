@@ -74,8 +74,6 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     ) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', false]);
-        // Set the value to this flag. Used to ignore changes until intial value has been provided.
-        this.value = null;
     }
 
     public ngOnInit(): void {
@@ -223,15 +221,39 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     protected override onDisabledChange(): void {
         super.onDisabledChange();
 
-        setEnabled(this.form, !this.disabled);
-    }
-
-    public override setDisabledState(isDisabled: boolean): void {
-        super.setDisabledState(isDisabled);
-
-        if (this.form) {
-            this.form.updateValueAndValidity();
+        if (!this.form) {
+            return;
         }
+
+        /*
+         * Special disabled handling, because angular forms are inconsistent.
+         * Accoding to the documentation, angular form-groups itself should have it's own status
+         * and should be able to be dis-/enabled without affecting their child elements.
+         * This is not the case, and the option `onlySelf` is apparenly a lie, as it doesn't do anything.
+         * Updating the state affects the form and all it's controls - however, only when *disabling* them.
+         * When enabling the form, only the form is now enabled and the controls are still disabled.
+         * Therefore, we do it manually here and fix this mess by doing it ourself.
+         */
+
+        // No change has to be applied
+        if ((this.form.enabled && !this.disabled) || (this.form.disabled && this.disabled)) {
+            return;
+        }
+
+        if (this.disabled) {
+            this.form.enable({ emitEvent: false });
+            Object.values(this.form.controls).forEach(ctrl => {
+                ctrl.enable({ emitEvent: false });
+            });
+        } else {
+            this.form.enable({ emitEvent: false });
+            Object.values(this.form.controls).forEach(ctrl => {
+                ctrl.enable({ emitEvent: false });
+            });
+        }
+
+        this.configureForm(this.form.value as any, true);
+        this.form.updateValueAndValidity();
     }
 
     /**

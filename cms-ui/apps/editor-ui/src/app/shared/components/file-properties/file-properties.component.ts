@@ -84,8 +84,10 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
                 if (this.value != null && this.value.hasOwnProperty(controlName)) {
                     // Edge case for custom dates - The API requires them to be not-null to not be ignored during updates.
                     // However, a `0` would still be a valid timestamp, so we check it here explicitly and mark it as null.
-                    if ((controlName === 'customCdate' || controlName === 'customEdate')
-                        && (this.value[controlName] === 0 || this.value[controlName] == null)) {
+                    if (
+                        (controlName === 'customCdate' || controlName === 'customEdate')
+                        && (this.value[controlName] === 0 || this.value[controlName] == null)
+                    ) {
                         tmpObj[controlName] = null;
                     } else {
                         tmpObj[controlName] = this.value[controlName];

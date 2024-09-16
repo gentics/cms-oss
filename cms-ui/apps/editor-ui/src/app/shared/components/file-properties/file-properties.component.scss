@@ -14,12 +14,12 @@
 .custom-date-row {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1rem;
 
     .custom-date-col {
-        flex: 1 1 50%;
+        flex: 1 1 auto;
     }
 
     .custom-date-picker::ng-deep .input-element {

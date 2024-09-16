@@ -2,6 +2,7 @@
 import type { AbstractControl, Validators } from '@angular/forms';
 import { FormGroup, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import {
+    FormChangePropagation,
     FormProperties,
     JSON_VALUE_INVALID,
     JsonValidationErrorModel,
@@ -14,7 +15,7 @@ import {
     VALIDATOR_REGEX_ERROR_PROPERTY,
 } from '../common';
 
-export function setEnabled(ctl: AbstractControl, enabled: boolean, options?: { emitEvent?: boolean, onlySelf?: boolean }): void {
+export function setEnabled(ctl: AbstractControl, enabled: boolean, options?: FormChangePropagation): void {
     if (ctl == null) {
         return;
     }
@@ -35,7 +36,7 @@ export function setControlsEnabled<T = any>(
     group: FormGroup<FormProperties<T>>,
     controls: (keyof T)[],
     enabled: boolean,
-    options?: { emitEvent?: boolean, onlySelf?: boolean },
+    options?: FormChangePropagation,
 ): void {
     for (const ctlName of controls) {
         setEnabled(group.controls[ctlName], enabled, options);

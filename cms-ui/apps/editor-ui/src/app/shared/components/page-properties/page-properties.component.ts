@@ -25,10 +25,10 @@ import {
     generateFormProvider,
     generateValidatorProvider,
     setControlsEnabled,
-    setEnabled,
 } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { forkJoin } from 'rxjs';
-import { debounceTime, filter, map, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
 import { numberBetween } from '../../../common/utils/custom-validators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -93,19 +93,6 @@ export class PagePropertiesComponent
     // or checked async via an async-validator.
     urlPattern = '[\\w\\._\\-\\/]+';
 
-    /**
-     * This input field will be shown to the user. As long it is pristine, file name suggestions will be put into it.
-     * However, this is not the input field that is read by code that use this PagePropertiesForm.
-     * There can be situations, where a user wishes to use a file name suggestion, but clicks save before it is updated
-     * and thus uses an outdated suggestion. Since the backend generates the same file name when a file is saved without a file name
-     * as would have been suggested, we only add a file name to the request, when it was entered by the user (and not suggested).
-     * So while suggestedOrRequestedFileName contains both, suggestions and explicitly chosen file names, fileName only contains those
-     * that are explicitly chosen.
-     * Code that uses PagePropertiesForm reads only fileName and thus get an empty string in case a file name suggestion should be used.
-     * This avoids the problem described above.
-     */
-    public suggestedFileName: FormControl<string>;
-
     constructor(
         changeDetector: ChangeDetectorRef,
         private client: GCMSRestClientService,
@@ -120,8 +107,6 @@ export class PagePropertiesComponent
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.suggestedFileName = new FormControl(this.value?.fileName);
-
         this.subscriptions.push(this.appState.select(state => state.features[Feature.NICE_URLS]).subscribe(enabled => {
             this.niceUrlEnabled = enabled;
 
@@ -132,27 +117,34 @@ export class PagePropertiesComponent
             this.changeDetector.markForCheck();
         }));
 
-        if (this.value?.fileName) {
-            this.suggestedFileName.markAsDirty();
-        } else {
-            this.subscriptions.push(this.form.controls.name.valueChanges.pipe(
-                debounceTime(400),
-                filter(() => this.enableFileNameSuggestion && this.suggestedFileName.pristine),
-                switchMap(name => this.client.page.suggestFileName({
-                    pageName: name,
-                    fileName: this.suggestedFileName.value,
-                    language: this.form.value.language,
-                    templateId: this.form.value.templateId,
-                    folderId: this.folderId,
-                    nodeId: this.nodeId,
-                })),
-            ).subscribe(res => {
-                if (res.fileName && this.suggestedFileName.pristine) {
-                    this.suggestedFileName.setValue(res.fileName);
-                    this.changeDetector.markForCheck();
-                }
-            }));
+        if (this.item?.fileName) {
+            this.form.controls.fileName.markAsDirty();
         }
+
+        this.subscriptions.push(this.form.valueChanges.pipe(
+            filter(value => this.enableFileNameSuggestion
+                && this.form.controls.fileName.pristine
+                // Make sure we have the required properties at least set before we attempt to request
+                && value?.name && value?.language && value?.templateId != null,
+            ),
+            debounceTime(100),
+            map(value => ({
+                folderId: this.folderId,
+                nodeId: this.nodeId,
+
+                pageName: value.name,
+                fileName: this.form.controls.fileName.pristine ? '' : value.fileName || '',
+                language: value.language,
+                templateId: value.templateId,
+            })),
+            distinctUntilChanged(isEqual),
+            switchMap(req => this.client.page.suggestFileName(req)),
+        ).subscribe(res => {
+            if (res.fileName && this.form.controls.fileName.pristine) {
+                this.form.controls.fileName.setValue(res.fileName);
+                this.changeDetector.markForCheck();
+            }
+        }));
 
         this.subscriptions.push(forkJoin([
             // Here we don't need to load any template, we just need to know if any are available.
@@ -170,10 +162,15 @@ export class PagePropertiesComponent
             this.templates = templates || [];
 
             const ctrl = this.form.controls.templateId;
-            const found = this.templates.find(t => t?.id === ctrl.value);
 
-            if (!found) {
-                ctrl.setValue(null);
+            if (ctrl.value != null) {
+                const found = this.templates.find(t => t?.id === ctrl.value);
+
+                if (!found) {
+                    ctrl.setValue(null);
+                }
+            } else if (templates.length > 0) {
+                ctrl.setValue(templates[0].id);
             }
 
             this.changeDetector.markForCheck();
@@ -188,6 +185,14 @@ export class PagePropertiesComponent
         }
     }
 
+    protected override onValueReset(): void {
+        super.onValueReset();
+
+        if (this.form && this.item?.fileName) {
+            this.form.controls.fileName.markAsDirty();
+        }
+    }
+
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<EditablePageProps>>({
             name: new FormControl(this.value?.name || '', Validators.required),
@@ -196,7 +201,7 @@ export class PagePropertiesComponent
             templateId: new FormControl(this.value?.templateId || null, Validators.required),
             niceUrl: new FormControl(this.value?.niceUrl || '', createMultiValuePatternValidator(this.urlPattern)),
             alternateUrls: new FormControl(this.value?.alternateUrls || [], createMultiValuePatternValidator(this.urlPattern)),
-            language: new FormControl(this.value?.language || null, Validators.required),
+            language: new FormControl(this.value?.language ?? this.languages?.[0]?.code, Validators.required),
             customCdate: new FormControl(this.value?.customCdate),
             customEdate: new FormControl(this.value?.customEdate),
             priority: new FormControl(this.value?.priority || 1, [Validators.required, numberBetween(1, 100)]),
@@ -204,34 +209,35 @@ export class PagePropertiesComponent
     }
 
     protected configureForm(value: EditablePageProps, loud?: boolean): void {
-        const options = { onlySelf: loud, emitEvent: loud };
+        const options = { onlySelf: true, emitEvent: loud };
         setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlEnabled, options);
         setControlsEnabled(this.form, ['language'], !this.disableLanguageSelect, options);
     }
 
     protected assembleValue(value: EditablePageProps): EditablePageProps {
-        return {
-            ...value,
-            // Either the fileName if present, the suggestedFileName if the control is pristine, or empty
-            fileName: value.fileName || (this.suggestedFileName.pristine && this.suggestedFileName.value) || '',
-            customCdate: value?.customCdate || 0,
-            customEdate: value?.customEdate || 0,
-        };
-    }
-
-    protected override onDisabledChange(): void {
-        if (this.suggestedFileName) {
-            setEnabled(this.suggestedFileName, !this.disabled);
+        if (this.mode === PagePropertiesMode.EDIT) {
+            return {
+                ...value,
+                // Either the fileName if present, or empty
+                fileName: value.fileName || '',
+                customCdate: value?.customCdate || 0,
+                customEdate: value?.customEdate || 0,
+            };
+        } else {
+            // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+            const { customCdate, customEdate, ...tmp } = value;
+            return {
+                ...tmp,
+                // Either the fileName if present, or empty
+                fileName: tmp.fileName || '',
+            };
         }
-
-        super.onDisabledChange();
     }
 
     public priorityRangeChanged(priority: number | Event): void {
         if (typeof priority === 'number') {
             const numberInput = this.form.controls.priority;
-            numberInput.setValue(priority, { emitEvent: false });
-            numberInput.updateValueAndValidity();
+            numberInput.setValue(priority);
         }
     }
 
@@ -242,8 +248,10 @@ export class PagePropertiesComponent
                 if (this.value != null && this.value.hasOwnProperty(controlName)) {
                     // Edge case for custom dates - The API requires them to be not-null to not be ignored during updates.
                     // However, a `0` would still be a valid timestamp, so we check it here explicitly and mark it as null.
-                    if ((controlName === 'customCdate' || controlName === 'customEdate')
-                        && (this.value[controlName] === 0 || this.value[controlName] == null)) {
+                    if (
+                        (controlName === 'customCdate' || controlName === 'customEdate')
+                        && (this.value[controlName] === 0 || this.value[controlName] == null)
+                    ) {
                         tmpObj[controlName] = null;
                     } else {
                         tmpObj[controlName] = this.value[controlName];

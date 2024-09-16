@@ -7,7 +7,7 @@
 
     <gtx-input
         [label]="'editor.item_filename_label' | i18n"
-        [formControl]="suggestedFileName"
+        formControlName="fileName"
     ></gtx-input>
 
     <gtx-input
@@ -19,6 +19,7 @@
         <div class="columns small-12" [class.medium-5]="languages?.length > 0">
             <gtx-select
                 class="template-select"
+                [required]="true"
                 [label]="('editor.item_template_label' | i18n) + '*'"
                 formControlName="templateId"
             >
@@ -48,9 +49,9 @@
         <div class="columns small-12 medium-5 medium-push-2">
             <gtx-select
                 *ngIf="languages?.length > 0"
+                [required]="true"
                 [label]="('editor.item_language_label' | i18n) + '*'"
                 formControlName="language"
-                (change)="suggestPageFileName()"
             >
                 <gtx-option
                     *ngFor="let language of languages"

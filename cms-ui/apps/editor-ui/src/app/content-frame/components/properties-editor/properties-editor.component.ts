@@ -114,7 +114,7 @@ export class PropertiesEditorComponent
                 );
             }),
         ).subscribe(enabled => {
-            setEnabled(this.control, enabled);
+            setEnabled(this.control, enabled, { onlySelf: true });
             this.changeDetector.markForCheck();
         }));
     }

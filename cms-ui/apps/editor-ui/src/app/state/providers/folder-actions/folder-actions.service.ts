@@ -2644,12 +2644,11 @@ export class FolderActionsService {
                 const completed = responses.filter(res => res.successfull);
 
                 if (failed.length > 0) {
-                // If the server provides an error message, show it to the user.
+                    // If the server provides an error message, show it to the user.
                     const fileErrors = failed.map(res => {
                         const fileError = (res.error.data?.messages?.[0]?.message || res.error.message || '')
                             .replace(/\.$/, '');
-                        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                        return res[2].name + (fileError ? ' - ' + fileError : '');
+                        return `${res.error?.name}${fileError ? ' - ' + fileError : ''}`;
                     });
 
                     this.notification.show({
@@ -3374,7 +3373,7 @@ export class FolderActionsService {
     async pageTimeManagementClear(pageId: number, payload: QueuedActionRequestClear): Promise<void> {
         try {
             const pageVersionPlanned = await this.getPageVersionPlanned(pageId);
-            await this.client.page.update(pageId, payload).toPromise();
+            await this.client.page.update(pageId, payload as any).toPromise();
 
             if (payload.clearPublishAt) {
                 this.notification.show({

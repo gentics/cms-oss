@@ -14,7 +14,7 @@
     </ng-container>
 
     <ng-container *ngSwitchCase="'form'">
-        <form-properties-form
+        <gtx-form-properties
             [item]="item"
             [nodeId]="nodeId"
             [folderId]="item.motherId"
@@ -26,7 +26,7 @@
             [formControl]="control"
             (valueChange)="simplePropertiesChanged($event)"
             (initialValueChange)="forwardItemCleanChange($event)"
-        ></form-properties-form>
+        ></gtx-form-properties>
     </ng-container>
 
     <ng-container *ngSwitchCase="'page'">

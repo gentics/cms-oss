@@ -10,7 +10,7 @@ export * from './folder-properties/folder-properties.component';
 export * from './form-language-indicator-current/form-language-indicator-current.component';
 export * from './form-language-indicator/form-language-indicator.component';
 export * from './form-language-selector/form-language-selector.component';
-export * from './form-properties-form/form-properties-form.component';
+export * from './form-properties/form-properties.component';
 export * from './icon-checkbox/icon-checkbox.component';
 export * from './image-thumbnail-tooltip/image-thumbnail-tooltip.component';
 export * from './image-thumbnail/image-thumbnail.component';

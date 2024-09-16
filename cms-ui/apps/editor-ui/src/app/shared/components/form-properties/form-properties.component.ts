@@ -46,12 +46,12 @@ export enum FormPropertiesMode {
 }
 
 @Component({
-    selector: 'form-properties-form',
-    templateUrl: './form-properties-form.tpl.html',
-    styleUrls: ['./form-properties-form.scss'],
+    selector: 'gtx-form-properties',
+    templateUrl: './form-properties.component.html',
+    styleUrls: ['./form-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FormPropertiesFormComponent
+export class FormPropertiesComponent
     extends BasePropertiesComponent<EditableFormProps>
     implements OnInit, OnChanges {
 

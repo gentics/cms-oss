@@ -182,6 +182,16 @@ public class FormFactory extends AbstractFactory {
 		@Unversioned
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
 
+		@DataField("unpublished_date")
+		@Updateable
+		@Unversioned
+		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
+
+		@DataField("unpublisher")
+		@Updateable
+		@Unversioned
+		protected int unpublisher = 0;
+
 		@DataField("publisher")
 		@Updateable
 		@Unversioned
@@ -330,10 +340,20 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public ContentNodeDate getUnpublishedDate() {
+			return this.unpublishedDate;
+		}
+
+		@Override
 		public SystemUser getPublisher() throws NodeException {
 			SystemUser publisher = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, publisherId);
 			assertNodeObjectNotNull(publisher, publisherId, "Publisher", true);
 			return publisher;
+		}
+
+		@Override
+		public SystemUser getUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisher);
 		}
 
 		@Override
@@ -463,6 +483,9 @@ public class FormFactory extends AbstractFactory {
 
 			// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
 			t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
+
+			int unpublishedAt = at == 0 ? TransactionManager.getCurrentTransaction().getUnixTimestamp() : at;
+			DBUtils.update("UPDATE form SET unpublished_date = ?, unpublisher = ? WHERE id = ?", unpublishedAt, t.getUserId(), getId());
 		}
 
 		@Override

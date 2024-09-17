@@ -265,9 +265,11 @@ public class PageFactory extends AbstractFactory {
 		protected ContentNodeDate eDate = new ContentNodeDate(0);
 		protected ContentNodeDate customEDate = new ContentNodeDate(0);
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
+		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
 		protected Integer creatorId = 0;
 		protected Integer editorId = 0;
 		protected Integer publisherId = 0;
+		protected Integer unpublisherId = 0;
 
 		/**
 		 * page ids of the language variants per channel
@@ -414,7 +416,7 @@ public class PageFactory extends AbstractFactory {
 				ContentNodeDate cDate, ContentNodeDate customCDate, ContentNodeDate eDate, ContentNodeDate customEDate, ContentNodeDate pDate, int creatorId, int editorId, int publisherId, ContentNodeDate timePub,
 				Integer timePubVersion, int pubQueueUserId, ContentNodeDate timePubQueue, Integer timePubVersionQueue, ContentNodeDate timeOff,
 				int offQueueUserId, ContentNodeDate timeOffQueue, Integer channelSetId, Integer channelId, int syncPageId, ContentNodeDate syncTimestamp,
-				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId) {
+				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId, int unpublisherId, ContentNodeDate unpublishedDate) {
 			super(id, info);
 			this.name = name;
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
@@ -441,9 +443,9 @@ public class PageFactory extends AbstractFactory {
 			this.eDate = eDate;
 			this.customEDate = customEDate;
 			this.pDate = pDate;
-			this.creatorId = new Integer(creatorId);
-			this.editorId = new Integer(editorId);
-			this.publisherId = new Integer(publisherId);
+			this.creatorId = creatorId;
+			this.editorId = editorId;
+			this.publisherId = publisherId;
 			this.timePub = timePub;
 			this.timePubVersion = timePubVersion;
 			this.pubQueueUserId = pubQueueUserId;
@@ -464,6 +466,8 @@ public class PageFactory extends AbstractFactory {
 			this.pageModified = pageModified;
 			this.udate = udate;
 			this.globalId = globalId;
+			this.unpublisherId = unpublisherId;
+			this.unpublishedDate = unpublishedDate;
 		}
 
 		/**
@@ -680,7 +684,7 @@ public class PageFactory extends AbstractFactory {
 
 		@Override
 		public Integer getFolderId() throws NodeException {
-			if (!super.getObjectInfo().isCurrentVersion() && new Integer(-1).equals(folderId)) {
+			if (!super.getObjectInfo().isCurrentVersion() && -1 == folderId) {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				Page currentPage = t.getCurrentObject(Page.class, getId());
 
@@ -721,7 +725,7 @@ public class PageFactory extends AbstractFactory {
 		}
 
 		public SystemUser getCreator() throws NodeException {
-			SystemUser creator = (SystemUser) TransactionManager.getCurrentTransaction().getObject(SystemUser.class, creatorId);
+			SystemUser creator = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, creatorId);
 
 			// check for data consistency
 			assertNodeObjectNotNull(creator, creatorId, "SystemUser");
@@ -729,7 +733,7 @@ public class PageFactory extends AbstractFactory {
 		}
 
 		public SystemUser getEditor() throws NodeException {
-			SystemUser editor = (SystemUser) TransactionManager.getCurrentTransaction().getObject(SystemUser.class, editorId);
+			SystemUser editor = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, editorId);
 
 			// check for data consistency
 			assertNodeObjectNotNull(editor, editorId, "SystemUser");
@@ -737,11 +741,15 @@ public class PageFactory extends AbstractFactory {
 		}
 
 		public SystemUser getPublisher() throws NodeException {
-			SystemUser publisher = (SystemUser) TransactionManager.getCurrentTransaction().getObject(SystemUser.class, publisherId);
+			SystemUser publisher = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, publisherId);
 
 			// check for data consistency (empty publisher is allowed, if the page is not yet published)
 			assertNodeObjectNotNull(publisher, publisherId, "SystemUser", true);
 			return publisher;
+		}
+
+		public SystemUser getUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
 		}
 
 		public List<Page> getLanguageVariants(boolean considerNodeLanguages) throws NodeException {
@@ -939,7 +947,7 @@ public class PageFactory extends AbstractFactory {
 				} else {
 					// just collect the ids
 					while (rs.next()) {
-						ids.add(new Integer(rs.getInt("id")));
+						ids.add(rs.getInt("id"));
 					}
 				}
 
@@ -1127,6 +1135,11 @@ public class PageFactory extends AbstractFactory {
 				}
 			}
 		}
+
+		public ContentNodeDate getUnpublishedDate() {
+			return this.unpublishedDate;
+		}
+
 
 		/**
 		 * Get the pdate of the page. If a value is stored as transaction attribute, it will modify the current pdate.
@@ -2591,6 +2604,7 @@ public class PageFactory extends AbstractFactory {
 				// set the planned offline time and clear queue for planned offline time
 				Transaction t = TransactionManager.getCurrentTransaction();
 				DBUtils.update("UPDATE page SET time_off = ?, off_queue = ?, time_off_queue = ? WHERE id = ?", timestamp, 0, 0, getId());
+
 				timeOff = new ContentNodeDate(timestamp);
 				offQueueUserId = 0;
 				timeOffQueue = new ContentNodeDate(0);
@@ -2599,6 +2613,10 @@ public class PageFactory extends AbstractFactory {
 				// we need to sent the NOTIFY event for the page in order to allow indexing (for feature ELASTICSEARCH)
 				t.addTransactional(new TransactionalTriggerEvent(Page.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
 			}
+
+			Transaction t = TransactionManager.getCurrentTransaction();
+			int unpublishedAt = timestamp == 0 ? TransactionManager.getCurrentTransaction().getUnixTimestamp() : timestamp;
+			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?", unpublishedAt, t.getUserId(), getId());
 		}
 
 		@Override
@@ -2944,7 +2962,7 @@ public class PageFactory extends AbstractFactory {
 					page.pubQueueUserId, page.timePubQueue, asNewPage ? null : page.timePubVersionQueue, page.timeOff, page.offQueueUserId, page.timeOffQueue, asNewPage ? 0 : page.channelSetId, page.channelId,
 					asNewPage ? 0 : page.syncPageId, asNewPage ? new ContentNodeDate(0) : page.syncTimestamp, asNewPage ? true : page.master, page.excluded,
 					page.disinheritDefault, asNewPage ? 0 : page.deleted, asNewPage ? 0 : page.deletedBy, asNewPage ? true : page.pageModified, asNewPage ? -1 : page.getUdate(),
-					asNewPage ? null : page.getGlobalId());
+					asNewPage ? null : page.getGlobalId(), page.unpublisherId, page.unpublishedDate);
 
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
@@ -4677,14 +4695,14 @@ public class PageFactory extends AbstractFactory {
 			DBUtils.executeStatement("SELECT id FROM part WHERE type_id = 4", new SQLExecutor() {
 				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 					while (rs.next()) {
-						urlPartIds.add(new Integer(rs.getInt("id")));
+						urlPartIds.add(rs.getInt("id"));
 					}
 				}
 			});
 			DBUtils.executeStatement("SELECT id FROM part WHERE type_id = 11", new SQLExecutor() {
 				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 					while (rs.next()) {
-						tagPartIds.add(new Integer(rs.getInt("id")));
+						tagPartIds.add(rs.getInt("id"));
 					}
 				}
 			});
@@ -5268,15 +5286,16 @@ public class PageFactory extends AbstractFactory {
 		String niceUrl = rs.getString("nice_url");
 		String description = rs.getString("description");
 		String filename = rs.getString("filename");
-		Integer templateId = new Integer(rs.getInt("template_id"));
-		Integer folderId = info.isCurrentVersion() ? new Integer(rs.getInt("folder_id")) : -1;
-		Integer contentId = new Integer(rs.getInt("content_id"));
+		Integer templateId = rs.getInt("template_id");
+		Integer folderId = info.isCurrentVersion() ? rs.getInt("folder_id") : -1;
+		Integer contentId = rs.getInt("content_id");
 		int priority = rs.getInt("priority");
-		Integer contentSetId = new Integer(rs.getInt("contentset_id"));
-		Integer languageId = new Integer(rs.getInt("contentgroup_id"));
+		Integer contentSetId = rs.getInt("contentset_id");
+		Integer languageId = rs.getInt("contentgroup_id");
 		ContentNodeDate cDate = new ContentNodeDate(rs.getInt("cdate"));
 		ContentNodeDate eDate = new ContentNodeDate(rs.getInt("edate"));
 		ContentNodeDate pDate = new ContentNodeDate(rs.getInt("pdate"));
+		ContentNodeDate unpublishedDate = new ContentNodeDate(rs.getInt("unpublished_date"));
 		ContentNodeDate timePub = new ContentNodeDate(rs.getInt("time_pub"));
 		Integer timePubVersion = rs.getInteger("time_pub_version");
 		int pubQueueUserId = rs.getInt("pub_queue");
@@ -5288,11 +5307,12 @@ public class PageFactory extends AbstractFactory {
 		int creatorId = rs.getInt("creator");
 		int editorId = rs.getInt("editor");
 		int publisherId = rs.getInt("publisher");
+		int unpublisher = rs.getInt("unpublisher");
 		boolean exclude = rs.getBoolean("mc_exclude");
 		boolean disinheritDefault = rs.getBoolean("disinherit_default");
 		List<Integer> tagIds = idLists != null ? idLists[0] : null;
-		Integer channelSetId = new Integer(rs.getInt("channelset_id"));
-		Integer channelId = new Integer(rs.getInt("channel_id"));
+		Integer channelSetId = rs.getInt("channelset_id");
+		Integer channelId = rs.getInt("channel_id");
 		int syncPageId = rs.getInt("sync_page_id");
 		ContentNodeDate syncTimestamp = new ContentNodeDate(rs.getInt("sync_timestamp"));
 		boolean master = rs.getBoolean("is_master");
@@ -5301,7 +5321,7 @@ public class PageFactory extends AbstractFactory {
 				cDate, new ContentNodeDate(rs.getInt("custom_cdate")), eDate, new ContentNodeDate(rs.getInt("custom_edate")), pDate, creatorId, editorId,
 				publisherId, timePub, timePubVersion, pubQueueUserId, timePubQueue, timePubVersionQueue, timeOff, offQueueUserId, timeOffQueue, channelSetId,
 				channelId, syncPageId, syncTimestamp, master, exclude, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"),
-				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs));
+				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs), unpublisher, unpublishedDate);
 	}
 
 	private Content loadContentObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {
@@ -6217,7 +6237,7 @@ public class PageFactory extends AbstractFactory {
 					int userId = rs.getInt("user_id");
 
 					pageVersionList.add(
-							new NodeObjectVersion(rs.getInt("id"), rs.getString("nodeversion"), (SystemUser) t.getObject(SystemUser.class, new Integer(userId)),
+							new NodeObjectVersion(rs.getInt("id"), rs.getString("nodeversion"), (SystemUser) t.getObject(SystemUser.class, userId),
 							new ContentNodeDate(rs.getInt("timestamp")), rs.isLast(), rs.getBoolean("published")));
 				}
 			}
@@ -6377,7 +6397,7 @@ public class PageFactory extends AbstractFactory {
 			if (res.next()) {
 				boolean value = res.getInt("delay_publish") == 1;
 
-				TransactionManager.getCurrentTransaction().putIntoLevel2Cache(page, DELAY_PUBLISH_CACHE_KEY, new Boolean(value));
+				TransactionManager.getCurrentTransaction().putIntoLevel2Cache(page, DELAY_PUBLISH_CACHE_KEY, value);
 				return value;
 			} else {
 				throw new NodeException("Could not get delay_publish for {" + page + "}: page not found in db!");

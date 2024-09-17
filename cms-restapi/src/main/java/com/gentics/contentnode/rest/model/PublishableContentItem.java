@@ -1,0 +1,117 @@
+package com.gentics.contentnode.rest.model;
+
+import java.io.Serializable;
+
+/**
+ * Base class for publishable objects
+ */
+public abstract class PublishableContentItem extends ContentNodeItem implements Serializable {
+
+	private static final long serialVersionUID = 57907188582401112L;
+
+
+	/**
+	 * Last publisher of this page
+	 */
+	private User publisher;
+
+
+	/**
+	 * Date when this page was published the last time
+	 */
+	private int pdate;
+
+	/**
+	 * The date when a page was unpublished
+	 */
+	private Integer unpublishedDate;
+
+
+	/**
+	 * The user that took the content item offline
+	 */
+	private User unpublisher;
+
+
+	public PublishableContentItem() {
+	}
+
+
+	public PublishableContentItem(ItemType itemType) {
+		setType(itemType);
+	}
+
+
+	/**
+	 * Publisher
+	 *
+	 * @return the publisher
+	 */
+	public User getPublisher() {
+		return this.publisher;
+	}
+
+
+	/**
+	 * @param publisher the publisher to set
+	 */
+	public void setPublisher(User publisher) {
+		this.publisher = publisher;
+	}
+
+
+	/**
+	 * Publish Date
+	 *
+	 * @return the pdate
+	 */
+	public int getPdate() {
+		return this.pdate;
+	}
+
+
+	/**
+	 * @param pdate the pdate to set
+	 */
+	public void setPdate(int pdate) {
+		this.pdate = pdate;
+	}
+
+
+	/**
+	 * Gets the unpublished date.
+	 *
+	 * @return the unpublished date as an Integer
+	 */
+	public Integer getUnpublishedDate() {
+		return unpublishedDate;
+	}
+
+	/**
+	 * Sets the unpublished date.
+	 *
+	 * @param unpublishedDate the unpublished date to set
+	 */
+	public void setUnpublishedDate(Integer unpublishedDate) {
+		this.unpublishedDate = unpublishedDate;
+	}
+
+	/**
+	 * Gets the unpublisher.
+	 *
+	 * @return the unpublisher
+	 */
+	public User getUnpublisher() {
+		return unpublisher;
+	}
+
+	/**
+	 * Sets the unpublisher.
+	 *
+	 * @param unpublisher the unpublisher to set
+	 */
+	public void setUnpublisher(User unpublisher) {
+		this.unpublisher = unpublisher;
+	}
+
+}

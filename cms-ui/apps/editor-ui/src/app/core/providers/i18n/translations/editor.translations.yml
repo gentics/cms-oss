@@ -616,6 +616,12 @@ published_label:
 not_published_label:
     en: 'Not published'
     de: 'Nicht veröffentlicht'
+unpublished_label:
+    en: 'Unpublished by {{unpublisher}} at {{date}}, {{time}}'
+    de: 'Offline genommen von {{unpublisher}} am {{date}} um {{time}}'
+unpublished_field_label:
+    en: 'Unpublished at'
+    de: 'Offline am'
 read_only:
     en: Write permission
     de: Schreibrechte

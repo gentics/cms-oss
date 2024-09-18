@@ -44,6 +44,11 @@
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "image-editor-demo:build"
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
             }
         },
         "nx-release-publish": {

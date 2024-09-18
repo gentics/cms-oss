@@ -3,7 +3,7 @@
         #inputElement
 
         class="input-element"
-        [value]="value"
+        [value]="value || ''"
         [attr.autocomplete]="autocomplete || null"
         [attr.id]="id"
         [attr.max]="max"
@@ -23,7 +23,6 @@
 
         (keydown)="handleKeyDown($event)"
         (blur)="onBlur($event)"
-        (change)="onBlur($event)"
         (focus)="onFocus($event)"
         (input)="handleInputChange($event)"
     />
@@ -40,4 +39,8 @@
     </gtx-button>
 </div>
 
-<label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>
+<label
+    *ngIf="label"
+    [attr.for]="id"
+    (click)="inputElement.focus()"
+>{{ label }}</label>

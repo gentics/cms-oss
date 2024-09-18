@@ -197,6 +197,11 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
         // No op
     }
 
+    public override triggerChange(value: string | number): void {
+        super.triggerChange(value);
+        this.change.emit(this.getFinalValue());
+    }
+
     public handleKeyDown(event: KeyboardEvent): void {
         // Why?
         if (this.type === 'number') {

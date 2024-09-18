@@ -277,7 +277,9 @@ export class IFrameManager {
                 case EditMode.PREVIEW:
                 case EditMode.EDIT:
                     if (editorState.itemType === 'page') {
-                        if (editorState.editMode === 'preview') {
+                        if (editorState.compareWithId) {
+                            url = this.resourceUrlBuilder.comparePageLanguages(nodeId, itemId, editorState.compareWithId);
+                        } else if (editorState.editMode === 'preview') {
                             url = this.resourceUrlBuilder.pagePreview(itemId, nodeId);
                         } else {
                             url = this.resourceUrlBuilder.pageEditor(itemId, nodeId);

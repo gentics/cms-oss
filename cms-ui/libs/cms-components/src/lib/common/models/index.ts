@@ -1,4 +1,4 @@
 export * from './form';
-export * from './link-extraction';
+export * from './rich-content';
 export * from './permissions';
 export * from './permissionset-with-group';

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { ExtractedLink } from '../models';
+import { RichContentLink } from '../models';
 
 /* eslint-disable quote-props */
 const ESCAPE_MAPPING: Record<string, string> = {
@@ -22,10 +22,10 @@ const REVERSE_MAPPING: Record<string, string> = Object.entries(ESCAPE_MAPPING).r
     return acc;
 }, {});
 
-export function extractLinks(text: string): (string | ExtractedLink)[] {
-    const EXTRACT_PATTERN = /{{[\s]*(LINK)[\s]*[|][\s]*(?<type>(PAGE|FILE))[:](?<nodeId>[a-zA-Z0-9-.]+)[:](?<pageId>[a-zA-Z0-9-.]+)(?:[:](?<langCode>[a-zA-Z]{2}))?[\s]*[|][\s]*(?<displayText>[^|]*)[\s]*(?:[|][\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\s]*}}/g;
+export function extractRichContentLinks(text: string): (string | RichContentLink)[] {
+    const EXTRACT_PATTERN = /{{[\s]*(LINK)[\s]*[|][\s]*(?<linkType>(PAGE|FILE|URL))[:](?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)(?<nodeId>[a-zA-Z0-9-.]+)[:](?<itemId>[a-zA-Z0-9-.]+)(?:[:](?<langCode>[a-zA-Z]{2}))?)[\s]*[|][\s]*(?<displayText>[^|]*)[\s]*(?:[|][\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\s]*}}/g;
 
-    const out: (string | ExtractedLink)[] = [];
+    const out: (string | RichContentLink)[] = [];
 
     let res: RegExpExecArray | null = null;
     let lastStart = 0;
@@ -36,16 +36,16 @@ export function extractLinks(text: string): (string | ExtractedLink)[] {
             out.push(before);
         }
 
-        const link: ExtractedLink = res.groups as any;
+        const link: RichContentLink = res.groups as any;
 
         // Try to parse numbers
         const nodeId = Number(link.nodeId);
         if (!isNaN(nodeId) && isFinite(nodeId)) {
             link.nodeId = nodeId;
         }
-        const pageId = Number(link.pageId);
-        if (!isNaN(pageId) && isFinite(pageId)) {
-            link.pageId = pageId;
+        const itemId = Number(link.itemId);
+        if (!isNaN(itemId) && isFinite(itemId)) {
+            link.itemId = itemId;
         }
 
         // If optional values aren't present (i.E. ''), then set them explicitly to `null`.
@@ -56,7 +56,7 @@ export function extractLinks(text: string): (string | ExtractedLink)[] {
             link.target = null;
         }
 
-        link.displayText = decodeLinkText(link.displayText);
+        link.displayText = decodeRichContentLinkText(link.displayText);
 
         out.push(link);
         lastStart = EXTRACT_PATTERN.lastIndex;
@@ -70,7 +70,7 @@ export function extractLinks(text: string): (string | ExtractedLink)[] {
     return out;
 }
 
-export function encodeLinkText(text: string): string {
+export function encodeRichContentLinkText(text: string): string {
     let current = text;
     Object.entries(ESCAPE_MAPPING).forEach(([search, replace]) => {
         current = current.replaceAll(search === '&' ? /(&(?!\w+;))/g : search, `&${replace};`);
@@ -78,7 +78,7 @@ export function encodeLinkText(text: string): string {
     return current;
 }
 
-export function decodeLinkText(text: string): string {
+export function decodeRichContentLinkText(text: string): string {
     let current = text;
     Object.entries(REVERSE_MAPPING).forEach(([search, replace]) => {
         current = current.replaceAll(`&${search};`, replace);
@@ -86,12 +86,12 @@ export function decodeLinkText(text: string): string {
     return current;
 }
 
-export function toLinkTemplate(link: ExtractedLink): string {
-    let buffer = `{{LINK|${link.type}:${link.nodeId}:${link.pageId}`;
+export function toRichContentLinkTemplate(link: RichContentLink): string {
+    let buffer = `{{LINK|${link.linkType}:${link.nodeId}:${link.itemId}`;
     if (link.langCode) {
         buffer += `:${link.langCode}`;
     }
-    buffer += `|${encodeLinkText(link.displayText)}`;
+    buffer += `|${encodeRichContentLinkText(link.displayText)}`;
     if (link.target) {
         buffer += `|${link.target}`;
     }

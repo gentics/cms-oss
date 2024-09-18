@@ -30,6 +30,7 @@ import {
     GtxI18nPipe,
     GtxI18nRelativeDatePipe,
     GtxI18nRelativeDateService,
+    StripRichContentPipe,
     SafePipe,
     ValuesPipe,
 } from './pipes';
@@ -55,6 +56,7 @@ const COMPONENTS: any[] = [
     VersionModalComponent,
     BrowseBoxComponent,
     PasswordConfirmInputComponent,
+    RichContentEditorComponent,
 ];
 
 const ENTRY_COMPONENTS = [
@@ -71,7 +73,7 @@ const PIPES: any[] = [
     GtxI18nDatePipe,
     GtxI18nPipe,
     GtxI18nRelativeDatePipe,
-    RichContentEditorComponent,
+    StripRichContentPipe,
     SafePipe,
     ValuesPipe,
 ];

@@ -1,11 +1,23 @@
-<div class="content-wrapper">
-    <label *ngIf="label">{{ label }}</label>
-
+<label *ngIf="label">{{ label }}</label>
+<div class="content-wrapper" (focusin)="handleFocus()" (focusout)="handleBlur()">
     <div
+        #container
         class="text-container"
         contenteditable="true"
-        [attr.disabled]="disabled"
         [innerHTML]="rawHtml"
-        (input)="handleContentChange($event)"
+        (input)="handleContentChange()"
     ></div>
+
+    <div
+        #toolbar
+        class="content-toolbar"
+        [class.active]="activeElement != null"
+    >
+        <ng-container [ngSwitch]="activeType">
+            <div *ngSwitchCase="RichContentType.LINK" class="link-toolbar">
+                <gtx-input [(value)]="activeLink.target" placeholder="target"></gtx-input>
+            </div>
+        </ng-container>
+    </div>
 </div>
+

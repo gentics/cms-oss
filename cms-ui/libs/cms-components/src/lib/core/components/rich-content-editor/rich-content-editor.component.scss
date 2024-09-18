@@ -1,0 +1,15 @@
+@import 'variables';
+
+.text-container {
+    @include input-base;
+    margin: 0px;
+
+    /*
+     * ng-deep is needed here, because these HTML elements aren't created by angular,
+     * and therefore lack the encapsulation attributes, which make these styles not apply then.
+     */
+    ::ng-deep .item-link {
+        color: $gtx-color-primary;
+        text-decoration: underline;
+    }
+}

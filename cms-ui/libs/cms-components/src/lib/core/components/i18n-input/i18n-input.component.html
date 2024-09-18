@@ -6,17 +6,18 @@
     (valueChange)="handleInputChange($event)"
 ></gtx-rich-content-editor>
 
-<gtx-input
-    #defaultInput
-    [value]="value?.[language] || ''"
-    [label]="label"
-    [type]="type"
-    [required]="requiredInCurrentLanguage"
-    [class.untranslated]="!isTranslated"
-    [disabled]="disabled"
-    (valueChange)="handleInputChange($event)"
-    (blur)="triggerTouch()"
-></gtx-input>
+<ng-template #defaultInput>
+    <gtx-input
+        [value]="value?.[language] || ''"
+        [label]="label"
+        [type]="type"
+        [required]="requiredInCurrentLanguage"
+        [class.untranslated]="!isTranslated"
+        [disabled]="disabled"
+        (valueChange)="handleInputChange($event)"
+        (blur)="triggerTouch()"
+    ></gtx-input>
+</ng-template>
 
 <div *ngIf="!isTranslated && requiredInCurrentLanguage" class="translation-suggestions">
     <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>

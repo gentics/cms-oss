@@ -93,6 +93,7 @@
 		<assertj.version>3.4.1</assertj.version>
 		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
+		<logback.version>1.2.13</logback.version>
 
 		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>

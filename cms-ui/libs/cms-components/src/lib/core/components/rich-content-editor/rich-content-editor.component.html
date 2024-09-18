@@ -1,0 +1,11 @@
+<div class="content-wrapper">
+    <label *ngIf="label">{{ label }}</label>
+
+    <div
+        class="text-container"
+        contenteditable="true"
+        [attr.disabled]="disabled"
+        [innerHTML]="rawHtml"
+        (input)="handleContentChange($event)"
+    ></div>
+</div>

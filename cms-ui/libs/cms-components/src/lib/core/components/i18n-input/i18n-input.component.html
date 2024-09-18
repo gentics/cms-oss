@@ -1,4 +1,13 @@
+<gtx-rich-content-editor
+    *ngIf="useRichEditor; else defaultInput"
+    [value]="value?.[language] || ''"
+    [label]="label"
+    [disabled]="disabled"
+    (valueChange)="handleInputChange($event)"
+></gtx-rich-content-editor>
+
 <gtx-input
+    #defaultInput
     [value]="value?.[language] || ''"
     [label]="label"
     [type]="type"

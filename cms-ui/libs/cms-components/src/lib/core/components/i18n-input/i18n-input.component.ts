@@ -43,6 +43,9 @@ export class I18nInputComponent
     @Input()
     public availableLanguages: string[];
 
+    @Input()
+    public useRichEditor = false;
+
     private validatorChange: () => void = () => { /* no op until assigned */ };
 
     public isTranslated = true;

@@ -36,6 +36,7 @@
             <gtx-i18n-input
                 [attr.data-cy]="'string-input'"
                 [formControlName]="property.name"
+                [useRichEditor]="true"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [requiredInCurrentLanguage]="property.required"
                 [language]="formEditorService.activeContentLanguageCode$ | async"

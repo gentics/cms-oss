@@ -9,6 +9,7 @@ export * from './i18n-select/i18n-select.component';
 export * from './key-i18n-value-list-input/key-i18n-value-list-input.component';
 export * from './link-to-manual/link-to-manual.component';
 export * from './password-confirm-input/password-confirm-input.component';
+export * from './rich-content-editor/rich-content-editor.component';
 export * from './string-list/string-list.component';
 export * from './user-menu-toggle/user-menu-toggle.component';
 export * from './user-menu/user-menu.component';

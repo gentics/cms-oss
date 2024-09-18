@@ -6,6 +6,7 @@ import {
     BasePropertiesComponent,
     BrowseBoxComponent,
     FormBrowseBoxComponent,
+    RichContentEditorComponent,
     GtxAppVersionLabelComponent,
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
@@ -70,6 +71,7 @@ const PIPES: any[] = [
     GtxI18nDatePipe,
     GtxI18nPipe,
     GtxI18nRelativeDatePipe,
+    RichContentEditorComponent,
     SafePipe,
     ValuesPipe,
 ];

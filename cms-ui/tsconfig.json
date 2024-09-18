@@ -31,10 +31,7 @@
             "@admin-ui/testing/*": ["apps/admin-ui/src/testing/*"],
             "@editor-ui": ["apps/editor-ui/src"],
             "@editor-ui/*": ["apps/editor-ui/src/*"],
-            "@gentics/aloha-models": [
-                "dist/libs/aloha-models/src/public-api",
-                "libs/aloha-models/src/public-api"
-            ],
+            "@gentics/aloha-models": ["libs/aloha-models/src/public-api"],
             "@gentics/cms-components": ["libs/cms-components/src/public-api"],
             "@gentics/cms-integration-api-models": [
                 "libs/cms-integration-api-models/src/public-api"

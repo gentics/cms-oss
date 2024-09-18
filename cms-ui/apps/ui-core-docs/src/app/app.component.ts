@@ -9,7 +9,6 @@ import { IPageInfo, kebabToPascal, PAGES, PageType } from './common/page-list';
 // Exposed globally by the Webpack DefinePlugin
 // (see webpack config)
 declare const VERSION: string; /* eslint-disable-line @typescript-eslint/naming-convention */
-declare const LATESTBRANCH: boolean; /* eslint-disable-line @typescript-eslint/naming-convention */
 
 interface ContentItem {
     title: string;
@@ -31,7 +30,6 @@ export class App implements OnInit, OnDestroy {
     splitViewContainer: SplitViewContainerComponent;
 
     version: string;
-    latestBranch: boolean;
     changelogBranch = 'master';
     contentItems: ContentItem[] = PAGES.map((page: IPageInfo) => {
         return {
@@ -55,11 +53,6 @@ export class App implements OnInit, OnDestroy {
         this.filteredContentItems = this.contentItems.slice(0);
         titleService.setTitle(`Gentics UI Core Docs v${VERSION}`);
         this.version = VERSION;
-        this.latestBranch = LATESTBRANCH;
-
-        if (!this.latestBranch) {
-            this.changelogBranch = `v${VERSION}`;
-        }
     }
 
     ngOnInit(): void {

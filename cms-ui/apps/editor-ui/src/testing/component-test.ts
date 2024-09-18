@@ -1,3 +1,4 @@
+import { provideZoneChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, getTestBed, tick } from '@angular/core/testing';
 
 /**
@@ -40,14 +41,14 @@ export function componentTest<T>(
 ): () => void;
 
 export function componentTest<T>(componentFn: () => ComponentType<T>, second: any, third?: any): () => void {
-    let args = Array.from(arguments);
+    const args = Array.from(arguments);
     return function wrappedComponentTest(): void {
         // Parse possible combination of arguments
-        let {template, overwritesFn, testFn} = parseOverloadArguments(args);
+        const {template, overwritesFn, testFn} = parseOverloadArguments(args);
 
-        let fakeAsyncTest = fakeAsync(async () => {
+        const fakeAsyncTest = fakeAsync(async () => {
             let testBed: TestBed = getTestBed();
-            let componentType: ComponentType<T> = componentFn();
+            const componentType: ComponentType<T> = componentFn();
 
             if (overwritesFn) {
                 testBed = overwritesFn(testBed) || testBed;
@@ -55,7 +56,7 @@ export function componentTest<T>(componentFn: () => ComponentType<T>, second: an
                 testBed.overrideComponent(componentType, { set: { template } });
             }
 
-            let fixture = testBed.createComponent(componentType);
+            const fixture = testBed.createComponent(componentType);
             if (!fixture || !fixture.componentInstance) {
                 throw new Error(`Component ${componentType.name} can not be created.`);
             }

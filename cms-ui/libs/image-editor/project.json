@@ -7,7 +7,7 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
             "options": {
                 "tsConfig": "libs/image-editor/tsconfig.lib.json",
                 "project": "libs/image-editor/ng-package.json"

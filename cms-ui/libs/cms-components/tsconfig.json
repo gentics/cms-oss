@@ -23,6 +23,7 @@
         "strictMetadataEmit": true,
         "strictTemplates": false,
         "strictInjectionParameters": true,
-        "enableResourceInlining": false
+        "enableResourceInlining": false,
+        "compilationMode": "partial"
     }
 }

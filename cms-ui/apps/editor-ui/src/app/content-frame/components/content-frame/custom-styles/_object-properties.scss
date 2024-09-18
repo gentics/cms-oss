@@ -1,0 +1,116 @@
+@import "content-frame-variables";
+
+/**
+ * Overrides of the object properties page styles
+ */
+form[name="objprop_new"] {
+
+    p, body, td, span, div, input {
+       @include gcms-font;
+    }
+
+    strong {
+        color: $gtx-color-mid-gray;
+    }
+
+    @include custom-checkbox();
+    @include custom-radio-button();
+
+    .listTools {
+        display: none !important;
+    }
+
+    .dialog {
+        padding: 0 10px;
+
+        > h1, .actions {
+            display: none;
+        }
+    }
+
+    // item list
+    table.itemlist3 {
+        margin: 0 !important;
+        width: auto !important;
+        table-layout: auto !important;
+
+        a {
+            color: $gtx-color-primary !important;
+        }
+        // hide the table header
+        tr.gentics_itemlist_main {
+            display: none;
+        }
+        // style the expandable sections link
+        th {
+            padding-bottom: 5px !important;
+            padding-left: 15px !important;
+            font-size: $gtx-font-size-regular;
+            img {
+                margin-right: 12px;
+                margin-bottom: 2px;
+            }
+            a {
+                font-weight: normal !important;
+            }
+        }
+        // hide some other random rows which don't seem to do anything except add vertical whitespace
+        tr:not(.gentics_itemlist_evenrow):not(.gentics_itemlist_oddrow):not(.gentics_itemlist_highlight) {
+            td:empty {
+                display: none;
+            }
+        }
+        td.gtx_itemlist_header > div.gtx_itemlist_resizable {
+            height: auto !important;
+        }
+        .gentics_itemlist_main {
+            .itemNoSep, .item {
+                border: none !important;
+            }
+        }
+        tr.gentics_itemlist_highlight {
+            background-color: $gtx-color-off-white !important;
+        }
+        .gentics_itemlist_evenrow,
+        .gentics_itemlist_oddrow,
+        .gentics_itemlist_highlight {
+            // hide the useless checkboxes on each row
+            td:first-child {
+                padding-left: 10px !important;
+                > input[type='checkbox'] {
+                    display: none;
+                }
+            }
+            td {
+                padding: 5px 0 !important;
+            }
+            background-color: white !important;
+            border-bottom: 1px dotted $gtx-color-very-light-gray;
+        }
+
+        .custom-object-properties-context-menu-button, .custom-object-properties-info-button {
+            cursor: pointer;
+            margin: 0 5px;
+            svg {
+                fill: $gtx-color-mid-gray;
+                transition: fill 0.3s;
+            }
+            &:hover {
+                text-decoration: none !important;
+            }
+            &:hover svg {
+                fill: $gtx-color-light-gray;
+            }
+        }
+
+        .custom-object-properties-info-button {
+            margin-left: 15px;
+        }
+    }
+}
+
+.object-property-info-tooltip {
+    padding: 10px;
+    background-color: white;
+    box-shadow: $box-shadow;
+}

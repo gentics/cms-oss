@@ -118,6 +118,10 @@ export interface GcmsUiBridge {
     // General purpose
     // --------------------------------------------
 
+    /**
+     * The URL of the styles of the GCMS UI.
+     */
+    gcmsUiStylesUrl: string;
     /** An object containing useful information about the current state of the UI */
     appState: ExposedPartialState;
     /** Paths to various endpoints in use by the UI */

@@ -90,6 +90,17 @@ export class ResourceUrlBuilder {
     }
 
     /**
+     * Returns the URL of the split-screen language comparison page.
+     */
+    comparePageLanguages(nodeId: number, pageId: number, languageVariantId: number): string {
+        const params = this.createParamsString({
+            otherPageId: languageVariantId,
+            nodeId: nodeId,
+        });
+        return `${API_BASE_URL}/page/diff/${pageId}?${params}`;
+    }
+
+    /**
      * Returns the URL of the live page preview of a specific version.
      */
     previewPageVersion(nodeId: number, pageId: number, versionTimestamp: number): string {

@@ -1,0 +1,311 @@
+@import "variables";
+@import "content-frame-variables";
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default {
+    box-shadow: 4px 0px 5px -3px rgba( 0, 0, 0, 0.5 );
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-11"] {
+    z-index: 1;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-10"] {
+    z-index: 2;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-9"] {
+    z-index: 3;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-8"] {
+    z-index: 4;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-7"] {
+    z-index: 5;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-6"] {
+    z-index: 6;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-5"] {
+    z-index: 7;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-4"] {
+    z-index: 8;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-3"] {
+    z-index: 9;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-2"] {
+    z-index: 10;
+}
+
+.aloha .aloha-ui-toolbar .ui-tabs li.ui-state-default[aria-labelledby="ui-id-1"] {
+    z-index: 11;
+}
+
+.aloha .aloha-ui-toolbar .aloha-ui-menubutton-menu.ui-menu {
+    z-index: 12;
+}
+
+/**
+ * Styling of the text style menu (p, H1, H2 etc.). In the default toolbar impl, these use rather large tiles
+ * with background images, and thus take up a lot of room and look a bit inconsistent with the UI style.
+ */
+@mixin multisplit-text-style-icons {
+    $text-style-icon-dimension: 25px;
+    $menu-width-small: 75px;
+    $menu-width-tiny: 42px;
+
+    .aloha-multisplit {
+        width: 125px;
+        height: auto !important;
+
+        @media screen and (max-width: 400px) {
+            width: $menu-width-small;
+        }
+        @media screen and (max-width: 370px) {
+            width: $menu-width-tiny
+        }
+
+        .aloha-multisplit-toggle {
+            height: 11px;
+            right: auto;
+            left: 0;
+        }
+
+        .aloha-ui-multisplit-fullwidth {
+            display: none !important;
+            position: absolute;
+            width: auto;
+            white-space: nowrap;
+            top: 11px;
+            left: 0;
+        }
+
+        // if "Remove formatting" is toggled visible
+        &.aloha-multisplit-open {
+            .aloha-ui-multisplit-fullwidth {
+                display: block !important;
+            }
+        }
+
+        .ui-button-icon-only {
+            &.aloha-multisplit-active {
+                background-color: $gtx-color-secondary;
+            }
+        }
+    }
+    .aloha-multisplit-open .aloha-multisplit-content {
+        background-color: $gtx-color-very-light-gray;
+        box-shadow: 0 5px 8px -4px rgba(0,0,0,0.25);
+    }
+
+    // icon style
+    .aloha-multisplit-content {
+        width: 125px;
+        @media screen and (max-width: 400px) {
+            width: $menu-width-small;
+        }
+        @media screen and (max-width: 370px) {
+            width: $menu-width-tiny
+        }
+        .aloha-large-button {
+            height: $text-style-icon-dimension !important;
+            width: $text-style-icon-dimension !important;
+            opacity: 1;
+            margin: 0 2px 2px 0;
+
+            &:first-child {
+                margin-left: 16px !important;
+            }
+
+            .aloha-large-icon, .aloha-large-icon.aloha-cite-block-button {
+                background: none !important;
+                padding: 0;
+                margin: 0 !important;
+                left: 0;
+                top: 0;
+                text-indent: 0;
+                width: $text-style-icon-dimension !important;
+                height: $text-style-icon-dimension !important;
+
+                &:after {
+                    width: $text-style-icon-dimension;
+                    height: $text-style-icon-dimension;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+            }
+        }
+        .aloha-large-icon-p:after {
+            content: "P";
+        }
+        .aloha-large-icon-h1:after {
+            content: "H1";
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-h2:after {
+            content: "H2";
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-h3:after {
+            content: "H3";
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-h4:after {
+            content: "H4";
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-h5:after {
+            content: "H5";
+            font-size: 8px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-h6:after {
+            content: "H6";
+            font-size: 8px;
+            font-weight: bold;
+        }
+        .aloha-large-icon-pre:after {
+            content: "pre";
+            font-family: Monaco, "Lucida Console", monospace;
+            font-size: 10px;
+        }
+        .aloha-cite-block-button:after {
+            content: "“";
+            align-items: initial !important;
+            font-family: Georgia, "Times New Roman", Serif, serif;
+            font-size: 32px;
+        }
+    }
+}
+
+/**
+ * Override the default styles of the Aloha Toolbar
+ */
+.aloha .aloha-ui-toolbar {
+    z-index: 10001;
+    box-shadow: $box-shadow;
+
+    &.responsive .ui-widget-header, &.aloha-ui-hover.responsive .ui-widget-header,
+    .ui-widget-header, &.aloha-ui-hover .ui-widget-header {
+        background: rgba(255, 255, 255, 1) none !important;
+        padding: 0;
+    }
+
+    // Toolbar tabs
+    .ui-tabs {
+        font-family: "Roboto", sans-serif;
+        border: 1px solid $gtx-color-light-gray;
+
+        ul.ui-tabs-nav {
+            display: flex;
+        }
+
+        li.ui-state-active, li.ui-state-default {
+            background: white none;
+            cursor: pointer;
+            border: none;
+            margin: 0;
+            border-bottom: 3px solid transparent !important;
+            font-size: 12px;
+            overflow: hidden;
+
+            a.ui-tabs-anchor {
+                border: none;
+                border-radius: 0;
+                padding: 6px 10px 2px;
+                background: white none;
+                color: $gtx-color-dark-gray !important;
+                text-transform: uppercase;
+                font-weight: normal !important;
+                text-overflow: ellipsis;
+                max-width: 100%;
+                overflow: hidden;
+                display: block;
+                white-space: nowrap;
+            }
+
+            a.ui-tabs-anchor:hover {
+                cursor: pointer;
+                text-decoration: none !important;
+                color: $gtx-tabs-active-color !important;
+            }
+
+            a:focus {
+                outline: none;
+            }
+        }
+
+        li.ui-state-active {
+            border-bottom-color: $gcms-color-highlight !important;
+            a.ui-tabs-anchor {
+                color: $gtx-tabs-active-color !important;
+            }
+        }
+    }
+
+    .ui-tabs-panel {
+        border: none;
+        border-top: 1px solid $gtx-color-light-gray;
+        box-shadow: none;
+        background-color: $gtx-color-off-white;
+    }
+
+    .aloha-ui-component-group {
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    // Buttons
+    .ui-button-icon-only:hover {
+        border-color: $gtx-color-light-gray;
+        background: $gtx-color-very-light-gray none;
+    }
+    .ui-button-icon-only:focus {
+        box-shadow: none;
+    }
+    .aloha-ui-menubutton-container {
+        border-radius: 2px;
+        &:hover {
+            border-color: $gtx-color-mid-gray;
+            .ui-button {
+                background: $gtx-color-very-light-gray none;
+            }
+        }
+    }
+
+    // Multisplit (paragraph style selector)
+    @include multisplit-text-style-icons;
+
+    // Other style overrides
+    .ui-autocomplete-input {
+        border: 1px solid $gtx-color-mid-gray;
+    }
+}
+
+
+// Table creation
+.aloha-table-createdialog table {
+    tr {
+        background-color: transparent;
+    }
+    tr:nth-child(2n) {
+        background-color: rgba(200, 200, 200, 0.1);
+    }
+    td.hover {
+        background-color: transparentize($gtx-color-primary, 0.7);
+    }
+}
+

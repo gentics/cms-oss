@@ -1,0 +1,201 @@
+@import "content-frame-variables";
+@import "tag-fill-video-dialog";
+
+#pp_full_res {
+    box-shadow: $box-shadow;
+    background-color: white;
+}
+
+div.pp_overlay {
+    background: rgba(0, 0, 0, 0.5) !important;
+    opacity: 1 !important;
+}
+
+[data-gcms-custom-styles] > div.pp_pic_holder {
+    z-index: 1000000001;
+
+    & + .pp_overlay {
+        z-index: 1000000000;
+        position: fixed;
+    }
+}
+
+// this is targeting the "step 1 of n" header in certain tag fill dialogs.
+h2.multipage_progress_header {
+    margin: 20px;
+    color: $gtx-color-mid-gray;
+}
+
+html[data-gcms-dynamic-frame] {
+    body {
+        position: relative;
+
+        // Dynamic frame correct sizing, for long pages, therefore the buttons will be
+        // at the right place.
+        min-height: calc(100% - 37px);
+        height: auto;
+        padding-bottom: 37px;
+        box-sizing: border-box;
+
+        // This hides these old containers, which not should be used in the new ui
+        > .gentics_submenu {
+            display: none;
+        }
+
+    }
+}
+
+/**
+ * Overrides of the tag fill dialog styles
+ */
+form[name="tagfill"],
+form[name="dsdef"],
+form[name="ds_sel"]
+{
+    padding: 11px 0 10px 20px;
+    background-color: white;
+    margin-bottom: 0;
+
+    html:not([data-gcms-dynamic-frame]) & {
+        // not in a dynamic frame
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    html[data-gcms-dynamic-frame] & {
+        // loaded into a dynamic frame, i.e. Tag Fill dialog.
+        box-shadow: none;
+    }
+
+    p, body, td, span, div, input {
+        @include gcms-font;
+    }
+
+    td[width="350"], td[width="20%"] {
+        width: auto;
+    }
+
+    strong {
+        color: $gtx-strong-fields-color;
+    }
+
+    @include custom-checkbox();
+    @include custom-radio-button();
+
+    // This is the dropdown of operations to perform on selected list items section
+    // at the head of a table of items.
+    .listTools {
+        // display: none !important;
+        .icons a:hover {
+            background-color: lighten($gtx-color-primary, 40%);
+            border: 1px solid $gtx-color-primary;
+        }
+    }
+
+    // This is the drop-down list of actions provided by the .listTools.
+    .gentics_submenu {
+        @include context-menu;
+        opacity: 1;
+        .gentics_submenu_highlight {
+            background: $gtx-color-very-light-gray none;
+            color: $gtx-color-primary !important;
+        }
+    }
+
+    .autosize .dialog {
+        padding: 0;
+        h1 {
+            padding-bottom: 8px !important;
+        }
+        h1:empty {
+            display: none;
+        }
+        // video selector dialog
+        @include video-dialog;
+    }
+
+    .custom-object-properties-cancel-button {
+        float: right;
+        cursor: pointer;
+        svg {
+            fill: $gtx-color-dark-gray;
+            transition: fill 0.3s;
+        }
+        &:hover svg {
+            fill: $gtx-color-mid-gray;
+        }
+    }
+
+    hr {
+        height: 0;
+        background-color: transparent;
+        margin: 10px 0;
+        border: 1px solid $gtx-color-very-light-gray;
+    }
+
+    input[type="text"] {
+        @include tagfill-form-input;
+    }
+
+    textarea {
+        @include tagfill-form-input;
+        height: auto;
+    }
+
+    select {
+        @include tagfill-form-input;
+        &[multiple] {
+            height: auto;
+        }
+    }
+
+    input[type="image"][name="factionok"] {
+        display: none;
+    }
+
+    input[type="image"][name="factioncancel"]:not(.no-hide) {
+        display: none;
+    }
+
+    .itemlist3 {
+        margin-top: 5px;
+    }
+
+    h1 a:not([href]):not([onclick]) {
+        text-decoration: inherit;
+    }
+}
+
+.gcms-custom-button-wrapper {
+
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    text-align: right;
+    width: 100%;
+    padding-bottom: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
+
+    .gcms-custom-tagfill-button {
+       @include secondary-button;
+    }
+
+    .gcms-custom-tagfill-button.role-ok,
+    .gcms-custom-tagfill-button.role-next:last-child {
+      @include primary-button;
+    }
+
+    .disabled {
+        opacity: 0.5;
+        background-color: #DFDFDF;
+        color: #9F9F9F;
+        cursor: default;
+    }
+}
+
+// tag fill dialog box
+div.light_square .pp_left, div.light_square .pp_middle, div.light_square .pp_right, div.light_square .pp_content {
+    background: transparent !important;
+}

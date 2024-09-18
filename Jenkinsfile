@@ -297,6 +297,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
+                    scanImage image: imageNameWithTag, exitCode: 1
                     if (tagName != null) {
                         String dockerImageVersionTag = imageName + ":" + tagName
                         sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag

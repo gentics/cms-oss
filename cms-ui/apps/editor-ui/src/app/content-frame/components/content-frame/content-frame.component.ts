@@ -61,8 +61,6 @@ import {
     publishReplay,
     refCount,
     switchMap,
-    switchMapTo,
-    take,
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
@@ -106,6 +104,7 @@ import { CombinedPropertiesEditorComponent } from '../combined-properties-editor
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
 
+
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
  * the content of the frame.
@@ -124,7 +123,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
     static _debounce = debounce;
-
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;

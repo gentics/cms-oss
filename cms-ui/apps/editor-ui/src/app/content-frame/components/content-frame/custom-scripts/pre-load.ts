@@ -19,8 +19,17 @@ export class PreLoadScript {
     ) { }
 
     run(): void {
+        this.applyGcmsUiStyles();
         this.bindExternalDebugHotkey();
         this.removeAlohaUnloadLogic();
+    }
+
+    /** Applies the GCMS UI styles to the IFrame. */
+    applyGcmsUiStyles(): void {
+        const link = this.iFrameDocument.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = this.iFrameWindow.GCMSUI.gcmsUiStylesUrl;
+        this.iFrameDocument.body.appendChild(link);
     }
 
     /** Add Debug Tool hotkey access to iframe */

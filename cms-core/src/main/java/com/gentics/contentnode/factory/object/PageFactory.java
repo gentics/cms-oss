@@ -2613,10 +2613,6 @@ public class PageFactory extends AbstractFactory {
 				// we need to sent the NOTIFY event for the page in order to allow indexing (for feature ELASTICSEARCH)
 				t.addTransactional(new TransactionalTriggerEvent(Page.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
 			}
-
-			Transaction t = TransactionManager.getCurrentTransaction();
-			int unpublishedAt = timestamp == 0 ? TransactionManager.getCurrentTransaction().getUnixTimestamp() : timestamp;
-			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?", unpublishedAt, t.getUserId(), getId());
 		}
 
 		@Override

@@ -483,9 +483,6 @@ public class FormFactory extends AbstractFactory {
 
 			// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
 			t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
-
-			int unpublishedAt = at == 0 ? TransactionManager.getCurrentTransaction().getUnixTimestamp() : at;
-			DBUtils.update("UPDATE form SET unpublished_date = ?, unpublisher = ? WHERE id = ?", unpublishedAt, t.getUserId(), getId());
 		}
 
 		@Override

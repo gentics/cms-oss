@@ -4,6 +4,9 @@ import static com.gentics.contentnode.object.Form.TYPE_FORM;
 import static com.gentics.contentnode.object.Page.TYPE_PAGE;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -35,10 +38,39 @@ public class PublishProtocolUtil {
 		var publishLogEntry = new PublishLogEntry(object.getId(), getType(object.getTType()), status,
 				user);
 
+		updatePublishStateOfNodeObject(object, status, user);
+
 		logger.info(
 				String.format("Storing publish state information of '%s' with id '%s' with state '%s'.",
 						publishLogEntry.getType(), publishLogEntry.getObjId(), publishLogEntry.getState()));
 		publishLogEntry.save();
+	}
+
+
+	/**
+	 * Updates the publish state of the given PublishableNodeObject.
+	 *
+	 * @param object the PublishableNodeObject whose publish state is to be updated
+	 * @param status the new status to set for the object
+	 * @param user   the ID of the user performing the update
+	 * @throws NodeException if an error occurs while updating the publish state
+	 */
+	private static void updatePublishStateOfNodeObject(PublishableNodeObject object, int status,
+			int user)
+			throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		int timestamp = TransactionManager.getCurrentTransaction().getUnixTimestamp();
+
+		if (PublishState.ONLINE.getValue() == status) {
+			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
+					object.getId());
+			DBUtils.update("UPDATE page SET pdate = ?, publisher = ? WHERE id = ?", timestamp, user,
+					object.getId());
+		} else if (PublishState.OFFLINE.getValue() == status) {
+			DBUtils.update("UPDATE page SET pdate = ?, publisher = ? WHERE id = ?", 0, 0, object.getId());
+			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?",
+					timestamp, user, object.getId());
+		}
 	}
 
 	/**
@@ -49,7 +81,8 @@ public class PublishProtocolUtil {
 	 * @throws NodeException           if an error occurs during retrieval
 	 * @throws EntityNotFoundException if the entry is not found
 	 */
-	public static PublishLogEntry getPublishLogEntryByObjectId(String type, int objId) throws NodeException {
+	public static PublishLogEntry getPublishLogEntryByObjectId(String type, int objId)
+			throws NodeException {
 		return new PublishLogEntry().loadByTypeAndId(type, objId).orElseThrow(
 				() -> new EntityNotFoundException(I18NHelper.get("publish_protocol.entry_not_found",
 						String.valueOf(type), String.valueOf(objId))));
@@ -71,17 +104,18 @@ public class PublishProtocolUtil {
 	}
 
 
-
 	/**
 	 * Retrieves the last unpublished entries for a given type.
 	 *
-	 * @param type the type of entries to retrieve
+	 * @param type   the type of entries to retrieve
 	 * @param objIds the list of object IDs to filter the entries
-	 * @return a list of PublishLogEntry objects that are the last unpublished entries for the specified type
+	 * @return a list of PublishLogEntry objects that are the last unpublished entries for the
+	 * specified type
 	 */
-	public static List<PublishLogEntry> getLastUnpublishedEntriesForType(String type, List<Integer> objIds) {
+	public static List<PublishLogEntry> getLastUnpublishedEntriesForType(String type,
+			List<Integer> objIds) {
 		try {
-			return new PublishLogEntry().loadManyByType(type, PublishState.OFFLINE.toString() ,objIds);
+			return new PublishLogEntry().loadManyByType(type, PublishState.OFFLINE.toString(), objIds);
 		} catch (Exception e) {
 			logger.error("Something went wrong while retrieving the publish protocol", e);
 			return new ArrayList<>();
@@ -91,7 +125,7 @@ public class PublishProtocolUtil {
 	/**
 	 * Adds unpublished information to the provided list of Page objects.
 	 *
-	 * @param restModel the list of ContentNodeItem objects to which unpublished information will be added
+	 * @param restModel   the list of ContentNodeItem objects to which unpublished information will be added
 	 * @param publishType the publish type e.g.: Page, Form, etc.
 	 */
 	public static <T extends PublishableContentItem> void addUnpublishedInformation(List<T> restModel, String publishType) {
@@ -99,8 +133,9 @@ public class PublishProtocolUtil {
 		var logEntries = getLastUnpublishedEntriesForType(publishType, modelIds);
 		logEntries.forEach(publishLogEntry ->
 				restModel.stream().filter(model -> model.getId() == publishLogEntry.getObjId())
-						.findAny().ifPresent(model -> model.setUnpublishedDate((int)publishLogEntry.getDate().toEpochSecond(
-								ZoneOffset.UTC))));
+						.findAny().ifPresent(
+								model -> model.setUnpublishedDate((int) publishLogEntry.getDate().toEpochSecond(
+										ZoneOffset.UTC))));
 	}
 
 	/**

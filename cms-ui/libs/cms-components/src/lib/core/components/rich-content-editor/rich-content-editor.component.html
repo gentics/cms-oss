@@ -1,23 +1,55 @@
 <label *ngIf="label">{{ label }}</label>
-<div class="content-wrapper" (focusin)="handleFocus()" (focusout)="handleBlur()">
-    <div
-        #container
-        class="text-container"
-        contenteditable="true"
-        [innerHTML]="rawHtml"
-        (input)="handleContentChange()"
-    ></div>
 
+<div
+    class="content-wrapper"
+    [class.focused]="focused"
+    (focusin)="handleFocus()"
+    (focusout)="handleBlur()"
+>
     <div
-        #toolbar
         class="content-toolbar"
         [class.active]="activeElement != null"
     >
-        <ng-container [ngSwitch]="activeType">
-            <div *ngSwitchCase="RichContentType.LINK" class="link-toolbar">
-                <gtx-input [(value)]="activeLink.target" placeholder="target"></gtx-input>
-            </div>
-        </ng-container>
+        <gtx-button
+            *ngIf="!activeContent"
+            class="action-button"
+            type="success"
+            size="small"
+            [disabled]="disabled"
+            (mousedown)="addNewContent(RichContentType.LINK, $event)"
+        >
+            <icon>add</icon>
+        </gtx-button>
+
+        <gtx-button
+            *ngIf="activeContent"
+            class="action-button"
+            type="primary"
+            size="small"
+            [disabled]="disabled"
+            (mousedown)="editCurrentContent($event)"
+        >
+            <icon>edit</icon>
+        </gtx-button>
+
+        <gtx-button
+            *ngIf="activeContent"
+            class="action-button"
+            type="alert"
+            size="small"
+            [disabled]="disabled"
+            (mousedown)="deleteCurrentContent($event)"
+        >
+            <icon>delete</icon>
+        </gtx-button>
     </div>
+
+    <div
+        #container
+        class="text-container"
+        [attr.contenteditable]="!disabled"
+        [innerHTML]="rawHtml"
+        (input)="handleContentChange()"
+    ></div>
 </div>
 

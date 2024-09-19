@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { extractRichContentLinks } from '../../../common/utils/rich-content';
+import { extractRichContent, getDisplayTextFromContent } from '../../../common/utils/rich-content';
 
 /**
  * Pipe which will take in any potential rich-content text, parse it's rich-content,
@@ -13,8 +13,8 @@ import { extractRichContentLinks } from '../../../common/utils/rich-content';
 export class StripRichContentPipe implements PipeTransform {
 
     public transform(value: string): string {
-        return extractRichContentLinks(value || '').map(part => {
-            return typeof part === 'string' ? part : part.displayText;
+        return extractRichContent(value || '').map(part => {
+            return typeof part === 'string' ? part : getDisplayTextFromContent(part);
         }).join('');
     }
 }

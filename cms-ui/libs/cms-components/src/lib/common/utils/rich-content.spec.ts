@@ -1,5 +1,5 @@
 import { RichContentLink, RichContentLinkType, RichContentType } from '../models';
-import { extractRichContentLinks, toRichContentLinkTemplate } from './rich-content';
+import { extractRichContent, toRichContentTemplate } from './rich-content';
 
 const LINK_ONE_PARSED: RichContentLink = {
     type: RichContentType.LINK,
@@ -42,26 +42,26 @@ const LINK_FOUR_PARSED: RichContentLink = {
 };
 const LINK_FOUR_TEXT = '{{LINK|PAGE:1:1|Command &amp; Conquer is a &lcub;RTS&rcub; Game. Maths shouldn&apos;t be used, neither &vert; special chars}}';
 
-describe('toLinkTemplate', () => {
+describe('toRichContentTemplate', () => {
 
     it('should convert full links to correct strings', () => {
-        expect(toRichContentLinkTemplate(LINK_ONE_PARSED)).toEqual(LINK_ONE_TEXT);
-        expect(toRichContentLinkTemplate(LINK_TWO_PARSED)).toEqual(LINK_TWO_TEXT);
+        expect(toRichContentTemplate(LINK_ONE_PARSED)).toEqual(LINK_ONE_TEXT);
+        expect(toRichContentTemplate(LINK_TWO_PARSED)).toEqual(LINK_TWO_TEXT);
     });
 
     it('should not include optional values to the template', () => {
-        expect(toRichContentLinkTemplate(LINK_THREE_PARSED)).toEqual(LINK_THREE_TEXT);
+        expect(toRichContentTemplate(LINK_THREE_PARSED)).toEqual(LINK_THREE_TEXT);
     });
 
     it('should escape the display text correctly', () => {
-        expect(toRichContentLinkTemplate(LINK_FOUR_PARSED)).toEqual(LINK_FOUR_TEXT);
+        expect(toRichContentTemplate(LINK_FOUR_PARSED)).toEqual(LINK_FOUR_TEXT);
     });
 });
 
-describe('extractLinks', () => {
+describe('extractRichContent', () => {
 
     it('should extract links in the middle correctly', () => {
-        expect(extractRichContentLinks(`Foo bar before ${LINK_ONE_TEXT}text directly after`))
+        expect(extractRichContent(`Foo bar before ${LINK_ONE_TEXT}text directly after`))
             .toEqual([
                 'Foo bar before ',
                 LINK_ONE_PARSED,
@@ -70,7 +70,7 @@ describe('extractLinks', () => {
     });
 
     it('should extract links in the beginning correctly', () => {
-        expect(extractRichContentLinks(`${LINK_ONE_TEXT}text directly after`))
+        expect(extractRichContent(`${LINK_ONE_TEXT}text directly after`))
             .toEqual([
                 LINK_ONE_PARSED,
                 'text directly after',
@@ -78,7 +78,7 @@ describe('extractLinks', () => {
     });
 
     it('should extract links at the end correctly', () => {
-        expect(extractRichContentLinks(`Foo bar before ${LINK_ONE_TEXT}`))
+        expect(extractRichContent(`Foo bar before ${LINK_ONE_TEXT}`))
             .toEqual([
                 'Foo bar before ',
                 LINK_ONE_PARSED,
@@ -86,7 +86,7 @@ describe('extractLinks', () => {
     });
 
     it('should extract multiple links correctly', () => {
-        expect(extractRichContentLinks(`HELLO ${LINK_ONE_TEXT} WORLD ${LINK_TWO_TEXT} FOO BAR`))
+        expect(extractRichContent(`HELLO ${LINK_ONE_TEXT} WORLD ${LINK_TWO_TEXT} FOO BAR`))
             .toEqual([
                 'HELLO ',
                 LINK_ONE_PARSED,
@@ -97,10 +97,10 @@ describe('extractLinks', () => {
     });
 
     it('should have `null` as value for optional values', () => {
-        expect(extractRichContentLinks(LINK_THREE_TEXT)).toEqual([LINK_THREE_PARSED]);
+        expect(extractRichContent(LINK_THREE_TEXT)).toEqual([LINK_THREE_PARSED]);
     });
 
     it('should decode the escaped display text correctly', () => {
-        expect(extractRichContentLinks(LINK_FOUR_TEXT)).toEqual([LINK_FOUR_PARSED]);
+        expect(extractRichContent(LINK_FOUR_TEXT)).toEqual([LINK_FOUR_PARSED]);
     });
 });

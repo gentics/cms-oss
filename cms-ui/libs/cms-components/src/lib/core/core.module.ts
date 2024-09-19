@@ -18,6 +18,8 @@ import {
     PasswordConfirmInputComponent,
     StringListComponent,
     VersionModalComponent,
+    RichContentModal,
+    RichContentLinkPropertiesComponent,
 } from './components';
 import {
     ClickOutsideDirective,
@@ -57,6 +59,8 @@ const COMPONENTS: any[] = [
     BrowseBoxComponent,
     PasswordConfirmInputComponent,
     RichContentEditorComponent,
+    RichContentModal,
+    RichContentLinkPropertiesComponent,
 ];
 
 const ENTRY_COMPONENTS = [

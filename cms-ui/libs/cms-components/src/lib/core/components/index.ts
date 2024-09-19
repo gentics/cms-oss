@@ -10,6 +10,8 @@ export * from './key-i18n-value-list-input/key-i18n-value-list-input.component';
 export * from './link-to-manual/link-to-manual.component';
 export * from './password-confirm-input/password-confirm-input.component';
 export * from './rich-content-editor/rich-content-editor.component';
+export * from './rich-content-modal/rich-content-modal.component';
+export * from './rich-content-link-properties/rich-content-link-properties.component';
 export * from './string-list/string-list.component';
 export * from './user-menu-toggle/user-menu-toggle.component';
 export * from './user-menu/user-menu.component';

@@ -320,16 +320,6 @@ describe('IFrameManager', () => {
             });
         }));
 
-        it('compare page languages', waitForAsync(() => {
-            const spy = spyOn(resourceUrlBuilder, 'comparePageLanguages');
-            editorState.nodeId = 1;
-            editorState.itemType = 'page';
-            editorState.editMode = EditMode.PREVIEW;
-            editorState.compareWithId = 4;
-            iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id, editorState.compareWithId);
-            });
-        }));
 
         it('edit item-properties', waitForAsync(() => {
             editorState.nodeId = 1;

@@ -61,8 +61,6 @@ import {
     publishReplay,
     refCount,
     switchMap,
-    switchMapTo,
-    take,
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
@@ -108,16 +106,6 @@ import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navi
 
 
 /**
- * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
- * CSS (see the /custom-styles folder). However, this may have the unwanted effect of overwriting user implementations
- * (e.g. custom-styled tag fill dialogs). Therefore we will use the value of this constant to control whether or not
- * our custom styles are being applied or not.
- *
- * TODO: actual implementation of styles toggle still needs to be done. This flag is just there in case it is needed.
- */
-const APPLY_CUSTOM_STYLES = true;
-
-/**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
  * the content of the frame.
  */
@@ -136,7 +124,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     static _debounce = debounce;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly APPLY_CUSTOM_STYLES = APPLY_CUSTOM_STYLES;
     public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;
 

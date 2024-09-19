@@ -120,6 +120,8 @@ export interface GcmsUiBridge {
 
     /**
      * The URL of the styles of the GCMS UI.
+     * @deprecated The styles should be placed in the respective projects and loaded
+     * from there instead from this url.
      */
     gcmsUiStylesUrl: string;
     /** An object containing useful information about the current state of the UI */

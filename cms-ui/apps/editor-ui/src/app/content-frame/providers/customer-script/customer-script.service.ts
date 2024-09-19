@@ -41,7 +41,6 @@ import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
 import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 
-const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -90,7 +89,7 @@ export class CustomerScriptService implements OnDestroy {
             },
         });
 
-        const iFrameStylesStr = IFRAME_STYLES && IFRAME_STYLES.default ? IFRAME_STYLES.default : IFRAME_STYLES;
+        const iFrameStylesStr = '';
         this.gcmsUiStylesForIFrameBlob = new Blob([iFrameStylesStr], { type: 'text/css' });
         this.gcmsUiStylesForIFrameBlobUrl = window.URL.createObjectURL(this.gcmsUiStylesForIFrameBlob);
     }

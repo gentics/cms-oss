@@ -82,15 +82,26 @@
             [longerMessage]="'editor.loading_takes_more_time' | i18n"
         ></gtx-loading-spinner>
 
-        <iframe
-            #iframe
-            class="master-frame"
-            [attr.data-item-type]="(editorState$ | async)?.itemType"
-            [attr.data-edit-mode]="(editorState$ | async)?.editMode"
-            [attr.data-gcms-custom-styles]="APPLY_CUSTOM_STYLES"
-            name="master-frame"
-            aria-hidden="false"
-        ></iframe>
+        <div class="frame-language-container" [class.hidden]="!comparePageId">
+            <iframe
+                #diffFrame
+                class="frame diff-frame"
+                name="diff-frame"
+            ></iframe>
+            <div class="frame-language-indicator">{{ pageComparisonLanguage?.name }}</div>
+        </div>
+
+        <div class="frame-language-container">
+            <iframe
+                #iframe
+                class="frame master-frame"
+                [attr.data-item-type]="currentItem?.type"
+                [attr.data-edit-mode]="editMode"
+                name="master-frame"
+                aria-hidden="false"
+            ></iframe>
+            <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
+        </div>
 
         <tag-editor-overlay-host></tag-editor-overlay-host>
     </div>

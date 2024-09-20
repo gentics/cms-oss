@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { BaseModal } from '@gentics/ui-core';
-import { RichContent, RichContentLinkType, RichContentType } from '../../../common/models';
+import { RichContent, RichContentType } from '../../../common/models';
 
 @Component({
     selector: 'gtx-rich-content-modal',
@@ -26,13 +26,6 @@ export class RichContentModal extends BaseModal<RichContent> implements OnInit {
     }
 
     public closeWithValue(): void {
-        this.closeFn({
-            ...this.content,
-            type: this.type,
-            linkType: RichContentLinkType.PAGE,
-            nodeId: 1337,
-            itemId: 420,
-        });
-        // this.closeFn(this.control.value);
+        this.closeFn(this.control.value);
     }
 }

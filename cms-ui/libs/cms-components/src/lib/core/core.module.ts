@@ -6,7 +6,6 @@ import {
     BasePropertiesComponent,
     BrowseBoxComponent,
     FormBrowseBoxComponent,
-    RichContentEditorComponent,
     GtxAppVersionLabelComponent,
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
@@ -16,10 +15,11 @@ import {
     I18nSelectComponent,
     KeyI18nValueListInputComponent,
     PasswordConfirmInputComponent,
+    RichContentEditorComponent,
+    RichContentLinkPropertiesComponent,
+    RichContentModal,
     StringListComponent,
     VersionModalComponent,
-    RichContentModal,
-    RichContentLinkPropertiesComponent,
 } from './components';
 import {
     ClickOutsideDirective,
@@ -32,8 +32,8 @@ import {
     GtxI18nPipe,
     GtxI18nRelativeDatePipe,
     GtxI18nRelativeDateService,
-    StripRichContentPipe,
     SafePipe,
+    StripRichContentPipe,
     ValuesPipe,
 } from './pipes';
 import {
@@ -63,9 +63,6 @@ const COMPONENTS: any[] = [
     RichContentLinkPropertiesComponent,
 ];
 
-const ENTRY_COMPONENTS = [
-];
-
 const DIRECTIVES = [
     ClickOutsideDirective,
 ];
@@ -84,7 +81,6 @@ const PIPES: any[] = [
 
 const DECLARATIONS: any[] = [
     ...COMPONENTS,
-    ...ENTRY_COMPONENTS,
     ...DIRECTIVES,
     ...PIPES,
 ];

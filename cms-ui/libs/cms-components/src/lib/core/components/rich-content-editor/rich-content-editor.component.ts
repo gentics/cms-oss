@@ -50,6 +50,8 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     public activeContent: RichContent | null = null;
 
     public focused = false;
+    /** Internal flag to not check for seleciton changes for a while */
+    protected ignoreSelectionChanges = false;
     /**
      * Value updates only occur when the element is not focused/on blur.
      * This is to prevent jittering when the user is editing the content,
@@ -69,6 +71,10 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     public ngAfterViewInit(): void {
         this.zone.runOutsideAngular(() => {
             this.containerRef.nativeElement.ownerDocument.addEventListener('selectionchange', () => {
+                if (this.ignoreSelectionChanges) {
+                    return;
+                }
+
                 if (this.updateActiveElementFromSelection()) {
                     this.changeDetector.markForCheck();
                 }
@@ -159,7 +165,9 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public handleFocus(): void {
         this.focused = true;
-        this.updateActiveElementFromSelection();
+        if (!this.ignoreSelectionChanges) {
+            this.updateActiveElementFromSelection();
+        }
     }
 
     public handleBlur(): void {
@@ -186,6 +194,10 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     }
 
     protected async manageContentElement(type: RichContentType, content?: RichContent): Promise<RichContent> {
+        this.ignoreSelectionChanges = true;
+        const doc = this.containerRef.nativeElement.ownerDocument;
+        const range = doc.getSelection().getRangeAt(0).cloneRange();
+
         const modal = await this.modals.fromComponent(RichContentModal, {
             closeOnEscape: false,
             closeOnOverlayClick: false,
@@ -196,8 +208,21 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
         try {
             const content = await modal.open();
+
+            // Restore selection
+            this.containerRef.nativeElement.focus();
+            doc.getSelection().removeAllRanges();
+            doc.getSelection().addRange(range);
+            this.ignoreSelectionChanges = false;
+
             return content;
         } catch (err) {
+            // Restore selection
+            this.containerRef.nativeElement.focus();
+            doc.getSelection().removeAllRanges();
+            doc.getSelection().addRange(range);
+            this.ignoreSelectionChanges = false;
+
             // Simple modal close, ignore
             if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
                 return null;
@@ -225,17 +250,20 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         template.innerHTML = richContentToHtml(content);
         range.surroundContents(template.content.firstElementChild);
         container.focus();
+        this.updateValueFromDom();
     }
 
     public async editCurrentContent(event?: Event): Promise<void> {
         cancelEvent(event);
 
+        const element = this.activeElement;
         const content = await this.manageContentElement(this.activeContent.type, this.activeContent);
         if (content == null) {
             return;
         }
 
-        updateElementWithContent(this.activeElement, content);
+        updateElementWithContent(element, content);
+        this.updateValueFromDom();
     }
 
     public deleteCurrentContent(event?: Event): void {

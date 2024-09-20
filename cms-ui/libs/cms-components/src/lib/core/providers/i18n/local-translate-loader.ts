@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core';
 
 import * as COMMON_TRANSLATIONS from './translations/common.translations.json';
 import * as USER_TRANSLATIONS from './translations/user.translations.json';
+import * as RICH_CONTENT_TRANSLATIONS from './translations/rich-content.translations.json';
 
 function getTranslations(jsonModule: any): any {
     return jsonModule.default;
@@ -14,6 +15,7 @@ function getTranslations(jsonModule: any): any {
 const ALL_TRANSLATIONS = {
     common: getTranslations(COMMON_TRANSLATIONS),
     user: getTranslations(USER_TRANSLATIONS),
+    richContent: getTranslations(RICH_CONTENT_TRANSLATIONS),
 };
 
 /** Translations for a single language. */

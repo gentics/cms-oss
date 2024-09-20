@@ -18,9 +18,10 @@ import { ItemInNode } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { ItemWithNode } from '../../../common/models';
 import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../providers';
 
-export type ItemWithNode = { id: number; nodeId: number; } | null;
+// TODO: This component is an absolute mess. Needs a rework.
 @Component({
     selector: 'gtx-form-browse-box',
     templateUrl: './form-browse-box.component.html',
@@ -34,12 +35,20 @@ export type ItemWithNode = { id: number; nodeId: number; } | null;
 })
 export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
 
-    @Input() label: string;
-    @Input() required: boolean;
-    @Input() activeContentLanguage: string;
-    @Input() options: RepositoryBrowserOptions;
+    @Input()
+    public label: string;
 
-    @Output() blur: EventEmitter<FocusEvent> = new EventEmitter<FocusEvent>();
+    @Input()
+    public required: boolean;
+
+    @Input()
+    public activeContentLanguage: string;
+
+    @Input()
+    public options: RepositoryBrowserOptions;
+
+    @Output()
+    public blur: EventEmitter<FocusEvent> = new EventEmitter<FocusEvent>();
 
     itemControl = new UntypedFormControl();
 

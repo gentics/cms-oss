@@ -10,3 +10,5 @@ export interface MultiValueValidityState {
         [index: number]: ValidityState;
     };
 }
+
+export type ItemWithNode = { id: number; nodeId: number; } | null;

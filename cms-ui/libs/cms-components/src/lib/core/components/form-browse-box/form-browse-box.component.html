@@ -1,10 +1,11 @@
 <browse-box
-        class="form-browse-box__browse-box"
-        [label]="label"
-        [displayValue]="itemDisplayValue$ | async"
-        (browse)="openRepositoryBrowser(options)"
-        (clear)="setValue(null)">
-</browse-box>
+    class="form-browse-box__browse-box"
+    [label]="label"
+    [displayValue]="itemDisplayValue$ | async"
+    [disabled]="itemControl.disabled"
+    (browse)="openRepositoryBrowser(options)"
+    (clear)="setValue(null)"
+></browse-box>
 
 <div class="form-browse-box__browse-box__breadcrumbs" *ngIf="selectedItemBreadCrumbs">
 {{ 'tag_editor.selected_folder' | i18n }}: {{ selectedItemBreadCrumbs }}

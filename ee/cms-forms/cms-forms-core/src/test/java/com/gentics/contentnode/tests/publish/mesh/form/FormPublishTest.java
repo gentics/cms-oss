@@ -124,6 +124,87 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	}
 
 	@Test
+	public void testForeignLinkPublish() throws Exception {
+		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+		ContentNodeRESTUtils.assertResponseOK(response);
+		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setName("Test Form");
+			f.setLanguages(Arrays.asList("de", "en"));
+			f.setFolderId(node.getFolder().getId());
+
+			try {
+				f.setData(mapper.readValue(String.format(
+						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
+						StringUtils.EMPTY, 
+						StringUtils.EMPTY
+					), ObjectNode.class));
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		}));
+
+		consume(Form::publish, form);
+
+		// publish
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	@Test
+	public void testForeignLinkPreview() throws Exception {
+		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+		ContentNodeRESTUtils.assertResponseOK(response);
+		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setName("Test Form");
+			f.setLanguages(Arrays.asList("de", "en"));
+			f.setFolderId(node.getFolder().getId());
+
+			try {
+				f.setData(mapper.readValue(String.format(
+						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
+						StringUtils.EMPTY, 
+						StringUtils.EMPTY
+					), ObjectNode.class));
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		}));
+		String formId = Integer.toString(form.getId());
+		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+
+		FormModel previewModel = new FormModel();
+		operate(() -> {
+			try {
+				previewModel.setData(mapper.readValue(String.format(
+						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
+						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
+						StringUtils.EMPTY, 
+						StringUtils.EMPTY
+					), ObjectNode.class));
+			} catch (Throwable e) {
+				throw new NodeException(e);
+			}
+		});
+
+		for (String language : Arrays.asList("de", "en")) {
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			StringWriter writer = new StringWriter();
+			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
+			String expected = String.format(writer.toString(), 
+					meshUuid, "", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;");
+			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+		}
+	}
+
+	@Test
 	public void testMultipleTextLinksPreview() throws Exception {
 		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
 		ContentNodeRESTUtils.assertResponseOK(response);

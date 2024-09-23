@@ -1,10 +1,10 @@
 {
   "name": "@gentics/ui-core",
-  "version": "6.1.9",
+  "version": "6.1.11",
   "license": "Apache-2.0",
   "dependencies": {
     "@bevacqua/rome": "^3.0.4",
-    "@gentics/cms-integration-api-models": "6.1.9",
+    "@gentics/cms-integration-api-models": "6.1.11",
     "@types/sortablejs": "^1.15.8",
     "foundation-sites": "~6.5.3",
     "hammerjs": "^2.0.8",
@@ -26,6 +26,6 @@
     "tslib": "^2.5.0"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

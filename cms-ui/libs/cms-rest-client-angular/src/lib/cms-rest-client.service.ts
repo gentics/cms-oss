@@ -101,7 +101,7 @@ function asAngularAPI<T extends BasicAPI>(api: OriginalAPI<T>): AngularAPI<T> {
     }, {}) as any;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GCMSRestClientService implements APIDefinition {
 
     protected driver: GCMSClientDriver;

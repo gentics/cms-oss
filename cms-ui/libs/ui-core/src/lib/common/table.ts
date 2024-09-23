@@ -94,6 +94,8 @@ export interface TableAction<T> {
     label: string;
     /** The Icon that will be displayed. */
     icon: string;
+    /** Specifies if the icon is filled. */
+    iconHollow?: boolean;
     /** The type of button styling to use. */
     type?: ColorThemes;
     /** If this action can be used for single items */

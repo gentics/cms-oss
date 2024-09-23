@@ -1,17 +1,17 @@
 {
   "name": "@gentics/cms-integration-api-models",
-  "version": "6.1.9",
+  "version": "6.1.11",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/aloha-models": "6.1.9",
-    "@gentics/cms-models": "6.1.9",
-    "@gentics/cms-rest-client": "6.1.9",
+    "@gentics/aloha-models": "6.1.11",
+    "@gentics/cms-models": "6.1.11",
+    "@gentics/cms-rest-client": "6.1.11",
     "@types/jquery": "^3.5.19"
   },
   "peerDependencies": {
     "rxjs": "^6.6.0"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

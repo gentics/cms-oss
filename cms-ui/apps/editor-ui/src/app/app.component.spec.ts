@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, WindowRef } from '@gentics/cms-components';
+import { CmsComponentsModule, KeycloakService, WindowRef } from '@gentics/cms-components';
 import { NodeFeature } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -24,7 +24,6 @@ import { PermissionService } from './core/providers/permissions/permission.servi
 import { UserSettingsService } from './core/providers/user-settings/user-settings.service';
 import { UsersnapService } from './core/providers/usersnap/usersnap.service';
 import { EmbeddedToolsService } from './embedded-tools/providers/embedded-tools/embedded-tools.service';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { ChipSearchBarConfigService } from './shared/providers/chip-search-bar-config/chip-search-bar-config.service';
 import { UIOverridesService } from './shared/providers/ui-overrides/ui-overrides.service';
 import {

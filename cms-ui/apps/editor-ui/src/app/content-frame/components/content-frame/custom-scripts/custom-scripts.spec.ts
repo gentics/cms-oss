@@ -304,7 +304,6 @@ class CustomScriptsTestFixture {
         const script = new PreLoadScript(
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
-            this.scriptHost as any as CustomScriptHostService,
         );
         script.run();
     }

@@ -389,6 +389,7 @@ export interface AbstractAuthenticationAPI extends BasicAPI {
     login: (data: LoginRequest, params?: LoginOptions) => LoginResponse;
     logout: (sid: string | number) => Response;
     validate: (sid: string | number) => ValidateSidResponse;
+    ssoLogin: (bearerToken: string) => string;
 }
 
 export interface AbstractClusterAPI extends BasicAPI {

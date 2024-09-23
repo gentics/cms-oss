@@ -21,24 +21,9 @@
     "test": "nx test",
     "e2e": "nx e2e",
     "component-test": "nx component-test",
-    "report:list": "npm list --prod --json > target/dependencies.json",
+    "report:list": "npm list --omit=dev --json > target/dependencies.json",
     "report:outdated": "npm outdated --json --long > target/outdated.json || true",
     "publish": "nx release publish"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "node ./node_modules/lint-staged/bin/lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
-    ],
-    "*.ts": [
-      "eslint --fix",
-      "git add"
-    ]
   },
   "author": "Gentics PSC",
   "contributors": [
@@ -182,7 +167,6 @@
     "eslint-plugin-jsdoc": "^46.2.4",
     "git-revision-webpack-plugin": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",
-    "husky": "^4.3.8",
     "jasmine-core": "4.2.0",
     "jasmine-spec-reporter": "7.0.0",
     "jest": "^29.6.4",
@@ -199,7 +183,6 @@
     "karma-junit-reporter": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
     "keycloak-js": "^22.0.1",
-    "lint-staged": "^9.5.0",
     "mocha-junit-reporter": "^2.2.1",
     "ng-packagr": "18.0.0",
     "npm": "^8.11.0",

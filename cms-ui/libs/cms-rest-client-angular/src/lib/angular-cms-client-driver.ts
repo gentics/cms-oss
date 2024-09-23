@@ -3,10 +3,9 @@ import { Injectable } from '@angular/core';
 import { Response as GCMSResponse } from '@gentics/cms-models';
 import {
     GCMSClientDriver,
-    GCMSRestClientRequest,
+    GCMSRestClientRequestData,
     GCMSRestClientRequestError,
     validateResponseObject,
-    GCMSRestClientRequestData,
 } from '@gentics/cms-rest-client';
 import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';

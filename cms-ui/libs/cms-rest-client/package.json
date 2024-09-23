@@ -1,12 +1,12 @@
 {
   "name": "@gentics/cms-rest-client",
-  "version": "6.1.9",
+  "version": "6.1.11",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.9",
+    "@gentics/cms-models": "6.1.11",
     "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

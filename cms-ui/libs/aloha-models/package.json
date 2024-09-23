@@ -1,12 +1,12 @@
 {
   "name": "@gentics/aloha-models",
-  "version": "6.1.9",
+  "version": "6.1.11",
   "license": "Apache-2.0",
   "dependencies": {
     "@types/jquery": "^3.5.19"
   },
   "peerDependencies": {},
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

@@ -3208,15 +3208,16 @@ public class MeshPublisher implements AutoCloseable {
 		String linkPattern = "\\{\\{"
 				+ "[\\s]*(LINK)[\\s]*"
 				+ "[|]"
-				+ "[\\s]*(?<type>(PAGE|FILE))"
-				+ "[:]"
-				+ "(?<nodeId>[a-zA-Z0-9\\-]+)"
-				+ "[:]"
-				+ "(?<pageId>[a-zA-Z0-9\\-]+)"
-				+ "([:](?<langCode>[a-zA-Z]{2}))?"
-				+ "[\\s]*[|][\\s]*"
+				+ "[\\s]*(?<linkType>(PAGE|FILE|URL))"
+				+ "[:]("
+					+ "?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)"
+					+ "(?<nodeId>[a-zA-Z0-9\\-\\.]+)"
+					+ "[:]"
+					+ "(?<itemId>[a-zA-Z0-9\\-\\.]+)"
+					+ "(?:[:](?<langCode>[a-zA-Z]{2}))?"
+				+ ")[\\s]*[|][\\s]*"
 				+ "(?<displayText>[^|]*)"
-				+ "([\\s]*[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
+				+ "[\\s]*(?:[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
 				+ "\\}\\}";
 		Pattern pattern = Pattern.compile(linkPattern);
 		Matcher matcher = pattern.matcher(form);
@@ -3224,36 +3225,60 @@ public class MeshPublisher implements AutoCloseable {
 			Deque<String> matches = new ArrayDeque<>(1);
 			Transaction t = trx.getTransaction();
 			while (matcher.find()) {
-				String ltype = matcher.group("type");
+				String linkType = matcher.group("linkType");
 				String nodeId = matcher.group("nodeId");
-				String pageId = matcher.group("pageId");
+				String itemId = matcher.group("itemId");
 				String displayText = matcher.group("displayText");
+				Optional<String> maybeUrl = Optional.ofNullable(matcher.group("url"));
 				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
 				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
 				Node channelOrNode = t.getObject(Node.class, nodeId);
-				Disinheritable<?> renderedObject;
-				if ("FILE".equals(ltype)) {
-					renderedObject = t.getObject(File.class, pageId);
-					if (renderedObject == null) {
-						renderedObject = t.getObject(ImageFile.class, pageId);
+				Optional<Disinheritable<?>> maybeRenderedObject = Optional.empty();
+				if ("FILE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(File.class, itemId));
+					if (maybeRenderedObject.isEmpty()) {
+						maybeRenderedObject = Optional.ofNullable(t.getObject(ImageFile.class, itemId));
 					}
-				} else {
-					renderedObject = t.getObject(Page.class, pageId);
+				} else if ("PAGE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
 					if (maybeLangCode.isPresent()) {
-						Page localizedObject = ((Page)renderedObject).getLanguageVariant(maybeLangCode.get(), channelOrNode.getId());
-						if (localizedObject != null) {
-							renderedObject = localizedObject;
-						} else {
-							logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), renderedObject));
+						try {
+							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
+								try {
+									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
+								} catch (NodeException e) {
+									throw new IllegalStateException(e);
+								}
+							});
+							if (maybeLocPage.isPresent()) {
+								maybeRenderedObject = maybeLocPage;
+							} else {
+								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
+							}
+						} catch (Throwable e) {
+							if (e.getCause() instanceof NodeException) {
+								throw (NodeException) e.getCause();
+							} else {
+								throw e;
+							}
 						}
 					}
+				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
+					throw new NodeException("No URL provided for " + matcher.toString());
 				}
-				if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
-						&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
-					// TODO more meaningful error / logging
-					throw new NodeException("Wrong node / channel for " + matcher.toString());
+				String url;
+				if ("URL".equals(linkType)) {
+					url = maybeUrl.get();
+				} else {
+					Disinheritable<?> renderedObject = maybeRenderedObject.get();
+					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
+							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
+						// TODO more meaningful error / logging
+						throw new NodeException("Wrong node / channel for " + matcher.toString());
+					}
+					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
 				}
-				matches.addLast(String.format("<a href='%s' %s>%s</a>", MeshURLRenderer.renderDisinheritableUrl(renderedObject), maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), displayText));
+				matches.addLast(String.format("<a href='%s' %s>%s</a>", url, maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), displayText));
 			}
 			String link;
 			while ((link = matches.poll()) != null) {

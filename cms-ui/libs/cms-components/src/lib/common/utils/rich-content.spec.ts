@@ -6,41 +6,50 @@ const LINK_ONE_PARSED: RichContentLink = {
     linkType: RichContentLinkType.PAGE,
     nodeId: 1,
     itemId: 42,
-    langCode: 'en',
     displayText: 'Link Text hello world!',
     target: '_top',
 };
-const LINK_ONE_TEXT = `{{LINK|${LINK_ONE_PARSED.type}:${LINK_ONE_PARSED.nodeId}:${LINK_ONE_PARSED.itemId}:${LINK_ONE_PARSED.langCode}|${LINK_ONE_PARSED.displayText}|${LINK_ONE_PARSED.target}}}`;
+const LINK_ONE_TEXT = `{{LINK|${LINK_ONE_PARSED.type}:${LINK_ONE_PARSED.nodeId}:${LINK_ONE_PARSED.itemId}|${LINK_ONE_PARSED.displayText}|${LINK_ONE_PARSED.target}}}`;
 const LINK_TWO_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.PAGE,
     nodeId: '0416.f3be4afb-6109-11ed-b808-024281b40002',
     itemId: 'AF54.b0ae171a-8241-11ed-9a49-0242ac18ff05',
-    langCode: 'de',
     displayText: 'Grüße in die Welt!',
     target: '_blank',
+    url: null,
 };
-const LINK_TWO_TEXT = `{{LINK|${LINK_TWO_PARSED.type}:${LINK_TWO_PARSED.nodeId}:${LINK_TWO_PARSED.itemId}:${LINK_TWO_PARSED.langCode}|${LINK_TWO_PARSED.displayText}|${LINK_TWO_PARSED.target}}}`;
+const LINK_TWO_TEXT = `{{LINK|${LINK_TWO_PARSED.type}:${LINK_TWO_PARSED.nodeId}:${LINK_TWO_PARSED.itemId}|${LINK_TWO_PARSED.displayText}|${LINK_TWO_PARSED.target}}}`;
 const LINK_THREE_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.PAGE,
     nodeId: 9,
     itemId: 343,
     displayText: 'minimal',
-    langCode: null,
     target: null,
+    url: null,
 };
 const LINK_THREE_TEXT = `{{LINK|${LINK_THREE_PARSED.type}:${LINK_THREE_PARSED.nodeId}:${LINK_THREE_PARSED.itemId}|${LINK_THREE_PARSED.displayText}}}`;
 const LINK_FOUR_PARSED: RichContentLink = {
     type: RichContentType.LINK,
-    linkType: RichContentLinkType.PAGE,
+    linkType: RichContentLinkType.FILE,
     nodeId: 1,
     itemId: 1,
-    langCode: null,
     displayText: 'Command & Conquer is a {RTS} Game. Maths shouldn\'t be used, neither | special chars',
     target: null,
+    url: null,
 };
 const LINK_FOUR_TEXT = '{{LINK|PAGE:1:1|Command &amp; Conquer is a &lcub;RTS&rcub; Game. Maths shouldn&apos;t be used, neither &vert; special chars}}';
+const LINK_FIVE_PARSED: RichContentLink = {
+    type: RichContentType.LINK,
+    linkType: RichContentLinkType.URL,
+    url: 'https://somewhere.com/example-page.html',
+    displayText: 'Foo bar',
+    target: '_top',
+    itemId: null,
+    nodeId: null,
+};
+const LINK_FIVE_TEXT = '{{LINK|URL:http&col;//somewhere.com/example-page.html|_top}}';
 
 describe('toRichContentTemplate', () => {
 
@@ -102,5 +111,9 @@ describe('extractRichContent', () => {
 
     it('should decode the escaped display text correctly', () => {
         expect(extractRichContent(LINK_FOUR_TEXT)).toEqual([LINK_FOUR_PARSED]);
+    });
+
+    it('should decode the url correctly', () => {
+        expect(extractRichContent(LINK_FIVE_TEXT)).toEqual([LINK_FIVE_PARSED]);
     });
 });

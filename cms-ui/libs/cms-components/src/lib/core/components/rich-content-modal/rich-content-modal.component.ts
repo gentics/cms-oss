@@ -13,11 +13,14 @@ export class RichContentModal extends BaseModal<RichContent> implements OnInit {
 
     public readonly RichContentType = RichContentType;
 
-    @Input()
+    @Input({ required: true })
     public type: RichContentType;
 
-    @Input()
+    @Input({ required: true})
     public content: RichContent;
+
+    @Input()
+    public enterLinkDisplayText = false;
 
     public control: FormControl<RichContent>;
 
@@ -26,6 +29,10 @@ export class RichContentModal extends BaseModal<RichContent> implements OnInit {
     }
 
     public closeWithValue(): void {
+        if (!this.control?.valid) {
+            return;
+        }
+
         this.closeFn(this.control.value);
     }
 }

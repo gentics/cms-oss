@@ -4,7 +4,7 @@ import { AllowedSelectionType, File, ItemInNode, Node, Page } from '@gentics/cms
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { map, switchMap } from 'rxjs/operators';
-import { RichContentLink, RichContentLinkType, RichContentType } from '../../../common/models';
+import { LINK_DEFAULT_DISPLAY_VALUE, RichContentLink, RichContentLinkType, RichContentType } from '../../../common/models';
 import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
 import { BasePropertiesComponent } from '../base-properties/base-properties.component';
 
@@ -54,6 +54,7 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
      */
     protected loadedItem: File | Page;
     protected loadedNode: Node;
+    protected loadedItemType: RichContentLinkType.FILE | RichContentLinkType.PAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -73,11 +74,10 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
         return new FormGroup<FormProperties<RichContentLink>>({
             type: new FormControl(RichContentType.LINK),
             linkType: new FormControl(this.value?.linkType ?? RichContentLinkType.URL, Validators.required),
-            displayText: new FormControl(this.value?.displayText || ''),
+            displayText: new FormControl(this.value?.displayText || LINK_DEFAULT_DISPLAY_VALUE, Validators.required),
             url: new FormControl(this.value?.url || '', Validators.required),
             nodeId: new FormControl(this.value?.nodeId, Validators.required),
             itemId: new FormControl(this.value?.itemId, Validators.required),
-            langCode: new FormControl(this.value?.langCode || ''),
             target: new FormControl(this.value?.target || '_top'),
         });
     }
@@ -85,9 +85,20 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
     protected configureForm(value: RichContentLink, loud?: boolean): void {
         const options = { emitEvent: loud, onlySelf: loud };
 
+        // If the item type changes, we have to clear the values from this instance and from the form
+        if (value?.linkType != null && this.loadedItemType != null && value.linkType !== this.loadedItemType) {
+            this.loadedItem = null;
+            this.loadedNode = null;
+            this.loadedItemType = null;
+            this.itemDisplayValue = null;
+            this.form.patchValue({
+                itemId: null,
+                nodeId: null,
+            }, options);
+        }
+
         setControlsEnabled(this.form, ['url'], value?.linkType === RichContentLinkType.URL, options);
         setControlsEnabled(this.form, ['nodeId', 'itemId'], value?.linkType !== RichContentLinkType.URL);
-        setControlsEnabled(this.form, ['langCode'], value?.linkType === RichContentLinkType.PAGE);
     }
 
     protected assembleValue(value: RichContentLink): RichContentLink {
@@ -146,6 +157,7 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
             this.loadedNode = node as Node;
             this.loadedItem = item as Page | File;
             this.itemDisplayValue = item.name;
+            this.loadedItemType = item.type === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
             this.changeDetector.markForCheck();
         }));
     }
@@ -166,6 +178,7 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
             this.loadedNode = (await this.client.node.get(picked.nodeId).toPromise()).node;
             this.loadedItem = picked as any;
             this.itemDisplayValue = this.loadedItem.name;
+            this.loadedItemType = picked.type === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
 
             this.form.patchValue({
                 itemId: this.pickWithLocalIds ? this.loadedItem.id : this.loadedItem.globalId,

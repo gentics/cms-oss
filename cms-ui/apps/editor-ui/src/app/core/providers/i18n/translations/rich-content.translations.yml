@@ -1,0 +1,39 @@
+manage_link_title:
+    en: "Manage link"
+    de: "Link verwalten"
+display_text:
+    en: "Display text"
+    de: "Anzeige text"
+link_type:
+    en: "Link Type"
+    de: "Link typ"
+link_type_URL:
+    en: "URL"
+    de: "URL"
+link_type_PAGE:
+    en: "Page"
+    de: "Seite"
+link_type_FILE:
+    en: "File"
+    de: "Datei"
+link_url:
+    en: "Target URL"
+    de: "Ziel URL"
+link_item:
+    en: "Link Target"
+    de: "Ziel Element"
+link_item_PAGE:
+    en: "Target Page"
+    de: "Zielseite"
+link_item_FILE:
+    en: "Target File"
+    de: "Zieldatei"
+link_target:
+    en: "Open link in"
+    de: "Link öffnen in"
+link_target_current_tab:
+    en: "Current Tab"
+    de: "Vorhandenen Tab"
+link_target_new_tab:
+    en: "New Tab"
+    de: "Neuen Tab"

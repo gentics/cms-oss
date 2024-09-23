@@ -2,7 +2,7 @@ import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, E
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { BaseFormElementComponent, cancelEvent, generateFormProvider, ModalService } from '@gentics/ui-core';
-import { CLASS_RICH_ELEMENT, RichContent, RichContentType } from '../../../common/models';
+import { CLASS_RICH_ELEMENT, LINK_DEFAULT_DISPLAY_VALUE, RichContent, RichContentType } from '../../../common/models';
 import {
     elementToRichContentString,
     extractRichContent,
@@ -41,7 +41,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public readonly RichContentType = RichContentType;
 
-    @ViewChild('container')
+    @ViewChild('container', { static: true })
     public containerRef: ElementRef<HTMLDivElement>;
 
     public rawHtml: SafeHtml;
@@ -98,6 +98,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         });
 
         this.rawHtml = this.sanitizer.bypassSecurityTrustHtml(html.join(''));
+        this.queuedUpdate = UpdateQueue.NONE;
     }
 
     protected updateValueFromDom(): void {
@@ -117,6 +118,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         }
 
         this.triggerChange(str);
+        this.queuedUpdate = UpdateQueue.NONE;
     }
 
     /**
@@ -193,7 +195,11 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         this.queuedUpdate = UpdateQueue.FROM_DOM;
     }
 
-    protected async manageContentElement(type: RichContentType, content?: RichContent): Promise<RichContent> {
+    protected async manageContentElement(
+        type: RichContentType,
+        content?: RichContent,
+        enterDisplayText: boolean = false,
+    ): Promise<RichContent> {
         this.ignoreSelectionChanges = true;
         const doc = this.containerRef.nativeElement.ownerDocument;
         const range = doc.getSelection().getRangeAt(0).cloneRange();
@@ -204,6 +210,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         }, {
             type,
             content,
+            enterLinkDisplayText: enterDisplayText,
         });
 
         try {
@@ -241,9 +248,14 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         const doc = container.ownerDocument;
         const range = doc.getSelection().getRangeAt(0).cloneRange();
 
-        const content = await this.manageContentElement(type);
+        const content = await this.manageContentElement(type, null, true);
         if (content == null) {
             return;
+        }
+
+        // Default the link content to something, otherwise an empty link element can't be properly edited.
+        if (!content.displayText) {
+            content.displayText = LINK_DEFAULT_DISPLAY_VALUE;
         }
 
         const template = doc.createElement('template');
@@ -271,5 +283,12 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
         const content = this.activeElement.textContent;
         this.activeElement.replaceWith(content);
+        this.updateValueFromDom();
+    }
+
+    public logEvent(name: string, event: Event): void {
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        console.log(name, event);
     }
 }

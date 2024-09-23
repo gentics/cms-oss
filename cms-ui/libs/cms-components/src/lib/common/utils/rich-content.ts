@@ -2,7 +2,6 @@
 import {
     ATTR_CONTENT_TYPE,
     ATTR_ITEM_ID,
-    ATTR_LANG_CODE,
     ATTR_LINK_TYPE,
     ATTR_NODE_ID,
     ATTR_TARGET,
@@ -28,6 +27,8 @@ const ESCAPE_MAPPING: Record<string, string> = {
     '>':    'gt',
     '{':    'lcub',
     '}':    'rcub',
+    '=':    'equals',
+    '\\':   'bsol',
 };
 /* eslint-enable quote-props */
 const REVERSE_MAPPING: Record<string, string> = Object.entries(ESCAPE_MAPPING).reverse().reduce((acc, entry) => {
@@ -172,14 +173,13 @@ export function extractRichContentLinks(text: string): (string | RichContentLink
         }
 
         // If optional values aren't present (i.E. ''), then set them explicitly to `null`.
-        if (!link.langCode) {
-            link.langCode = null;
-        }
         if (!link.target) {
             link.target = null;
         }
         if (!link.url) {
             link.url = null;
+        } else {
+            link.url = decodeRichContentText(link.url);
         }
 
         link.displayText = decodeRichContentText(link.displayText);
@@ -198,9 +198,6 @@ export function extractRichContentLinks(text: string): (string | RichContentLink
 
 export function toRichContentLinkTemplate(link: RichContentLink): string {
     let buffer = `{{LINK|${link.linkType}:${link.nodeId}:${link.itemId}`;
-    if (link.langCode) {
-        buffer += `:${link.langCode}`;
-    }
     buffer += `|${encodeRichContentText(link.displayText)}`;
     if (link.target) {
         buffer += `|${link.target}`;
@@ -217,7 +214,6 @@ export function richContentLinkToHtml(link: RichContentLink): string {
         ${ATTR_LINK_TYPE}="${link.linkType}"
         ${ATTR_NODE_ID}="${link.nodeId}"
         ${ATTR_ITEM_ID}="${link.itemId}"
-        ${ATTR_LANG_CODE}="${link.langCode || ''}"
         ${ATTR_URL}="${link.url}"
         ${ATTR_TARGET}="${link.target || ''}"
     >${link.displayText}</span>`;
@@ -229,7 +225,6 @@ export function extractLinkDataFromElement(element: HTMLElement): RichContentLin
         linkType: element.getAttribute(ATTR_LINK_TYPE) as any,
         nodeId: element.getAttribute(ATTR_NODE_ID),
         itemId: element.getAttribute(ATTR_ITEM_ID),
-        langCode: element.getAttribute(ATTR_LANG_CODE),
         url: element.getAttribute(ATTR_URL),
         target: element.getAttribute(ATTR_TARGET),
         displayText: element.textContent,
@@ -244,7 +239,6 @@ export function updateElementWithLinkContent(element: HTMLElement, link: RichCon
     element.setAttribute(ATTR_LINK_TYPE, link.linkType);
     element.setAttribute(ATTR_NODE_ID, `${link.nodeId || ''}`);
     element.setAttribute(ATTR_ITEM_ID, `${link.itemId || ''}`);
-    element.setAttribute(ATTR_LANG_CODE, link.langCode);
     element.setAttribute(ATTR_URL, link.url);
     element.setAttribute(ATTR_TARGET, link.target);
 }

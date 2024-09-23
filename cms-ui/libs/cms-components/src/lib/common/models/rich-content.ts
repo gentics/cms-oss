@@ -24,7 +24,6 @@ export interface RichContentLink extends RichContentElement {
     linkType: RichContentLinkType;
     nodeId?: string | number;
     itemId?: string | number;
-    langCode?: string;
     url?: string;
     displayText: string;
     target?: string;
@@ -32,10 +31,12 @@ export interface RichContentLink extends RichContentElement {
 
 export const CLASS_RICH_ELEMENT = 'rich-element';
 export const CLASS_ITEM_LINK = 'item-link';
+
 export const ATTR_CONTENT_TYPE = 'data-rich-content-type';
 export const ATTR_LINK_TYPE = 'data-link-type';
 export const ATTR_NODE_ID = 'data-node-id';
 export const ATTR_ITEM_ID = 'data-item-id';
-export const ATTR_LANG_CODE = 'data-lang-code';
 export const ATTR_URL = 'data-url';
 export const ATTR_TARGET = 'data-link-target';
+
+export const LINK_DEFAULT_DISPLAY_VALUE = 'Link';

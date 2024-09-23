@@ -7,6 +7,8 @@
         <gtx-rich-content-link-properties
             *ngSwitchCase="RichContentType.LINK"
             [formControl]="control"
+            [enterDisplayText]="enterLinkDisplayText"
+            (submit)="closeWithValue()"
         ></gtx-rich-content-link-properties>
     </ng-container>
 </div>
@@ -22,6 +24,7 @@
 
     <gtx-button
         type="primary"
+        [disabled]="!control?.valid"
         (click)="closeWithValue()"
     >
         {{ 'common.okay_button' | i18n }}

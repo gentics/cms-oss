@@ -16,8 +16,7 @@
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async)"
                 [language]="formEditorService.activeContentLanguageCode$ | async"
                 [availableLanguages]="formEditorService.formLanguages$ | async"
-            >
-            </gtx-i18n-checkbox>
+            >            </gtx-i18n-checkbox>
         </ng-container>
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.NUMBER">

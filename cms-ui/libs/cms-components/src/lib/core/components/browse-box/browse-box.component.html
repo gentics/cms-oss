@@ -1,26 +1,33 @@
 <gtx-input
+    class="value-display"
     [readonly]="true"
     [value]="displayValue"
-    [label]="label">
-</gtx-input>
-<gtx-button *ngIf="clearable"
+    [label]="label"
+></gtx-input>
+
+<gtx-button
+    *ngIf="clearable"
     icon
     class="browse-box__button browse-box__button--clear"
     type="secondary"
     [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | i18n"
     [disabled]="disabled"
-    (click)="clear.emit()">
+    (click)="clear.emit()"
+>
     <icon>clear</icon>
 </gtx-button>
+
 <gtx-button
     icon
     class="browse-box__button browse-box__button--browse"
     type="secondary"
     [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | i18n"
     [disabled]="disabled"
-    (click)="browse.emit()">
+    (click)="browse.emit()"
+>
     <icon>folder_open</icon>
 </gtx-button>
+
 <gtx-button
     *ngIf="canUpload"
     icon
@@ -28,6 +35,7 @@
     type="secondary"
     [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | i18n"
     [disabled]="disabled"
-    (click)="upload.emit()">
+    (click)="upload.emit()"
+>
     <icon>cloud_upload</icon>
 </gtx-button>

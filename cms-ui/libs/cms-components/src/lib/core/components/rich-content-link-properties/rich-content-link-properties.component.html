@@ -3,7 +3,7 @@
     <div class="input-container small-12 columns">
         <gtx-input
             *ngIf="enterDisplayText"
-            [label]="'richContent.display_text' | i18n"
+            [label]="('richContent.display_text' | i18n) + '*'"
             formControlName="displayText"
         ></gtx-input>
 
@@ -30,7 +30,7 @@
         <browse-box
             *ngIf="form.controls.itemId.enabled"
             class="item-browser"
-            [label]="'richContent.link_item' | i18n"
+            [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | i18n) + '*'"
             [disabled]="disabled"
             [displayValue]="itemDisplayValue"
             [clearable]="false"
@@ -39,7 +39,7 @@
 
         <gtx-input
             *ngIf="form.controls.url.enabled"
-            [label]="'richContent.link_url' | i18n"
+            [label]="('richContent.link_url' | i18n) + '*'"
             formControlName="url"
         ></gtx-input>
     </div>

@@ -24,7 +24,7 @@ export interface ContextMenuButtonsMap {
     properties: boolean;
     copy: boolean;
     createVariation: boolean;
-    pageVersions: boolean;
+    isViewablePage: boolean;
     setAsStartpage: boolean;
     localize: boolean;
     editInParent: boolean;
@@ -148,6 +148,10 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
     versionsClicked(page: Page): void {
         this.contextMenuOperations.listPageVersions(page, this.activeNode.id);
+    }
+
+    publishProtocolClicked(page: Page): void {
+        this.contextMenuOperations.openPublishProtocol(page, this.activeNode.id);
     }
 
     setAsStartpageClicked(page: Page): void {
@@ -339,7 +343,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             properties: !this.isDeleted,
             copy: !this.isDeleted && (isPage || isFile || isImage || isForm),
             createVariation: isPage && !this.isDeleted && userCan.create,
-            pageVersions: isPage && !this.isDeleted && userCan.view,
+            isViewablePage: isPage && !this.isDeleted && userCan.view,
             setAsStartpage: isPage && !this.isDeleted && isPage && !this.isFolderStartPage && this.permissions.folder.edit,
             localize: this.multiChannelingEnabled && !isForm && !this.isDeleted && inherited && userCan.localize,
             editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),

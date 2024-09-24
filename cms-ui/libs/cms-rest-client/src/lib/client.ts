@@ -1,3 +1,4 @@
+import { BaseListOptionsWithPaging, PublishLogEntry } from '@gentics/cms-models';
 import { CONTENT_TYPE_FORM, CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
@@ -45,6 +46,7 @@ import {
     GCMSUsersnapAPI,
     GCMSValidationAPI,
     RequestMethod,
+    GCMSPublishProtocolAPI,
 } from './models';
 import { parseJSONSafe, stringifyEmbedOptions, stringifyPagingSortOptions, toRelativePath, trimTrailingSlash } from './utils';
 
@@ -776,6 +778,11 @@ export class GCMSRestClient implements GCMSRootAPI {
     public policyMap: GCMSPolicyMapAPI = {
         policy: (options) => this.executeMappedJsonRequest(GET, '/policyMap/policy', null, options),
         policyGroup: (type) => this.executeMappedJsonRequest(GET, `/policyMap/partType/${type}/policyGroup`),
+    } as const;
+
+    public publishProtocol: GCMSPublishProtocolAPI = {
+        get: (type, objId: number) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null, null),
+        list: (options: BaseListOptionsWithPaging<PublishLogEntry>) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
     } as const;
 
     public role: GCMSRoleAPI = {

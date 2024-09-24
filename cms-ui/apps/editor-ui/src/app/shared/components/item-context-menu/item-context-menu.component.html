@@ -27,9 +27,14 @@
                 {{ 'editor.properties_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item *ngIf="buttons.pageVersions" (click)="versionsClicked(item)">
+            <gtx-dropdown-item *ngIf="buttons.isViewablePage" (click)="versionsClicked(item)">
                 <icon left>history</icon>
                 {{ 'editor.version_history_label' | i18n }}
+            </gtx-dropdown-item>
+
+            <gtx-dropdown-item *ngIf="buttons.isViewablePage" (click)="publishProtocolClicked(item)">
+                <icon left>news</icon>
+                {{ 'editor.published_protocol_label' | i18n }}
             </gtx-dropdown-item>
 
             <gtx-dropdown-item *ngIf="buttons.setAsStartpage" (click)="setAsStartpageClicked(item)">

@@ -790,6 +790,9 @@ publish_queue_btn_approve:
 version_history_label:
     en: Version History
     de: Versionen
+published_protocol_label:
+    en: Publish protocol
+    de: Publizierungs Protokol
 wastebin_label:
     en: Wastebin
     de: Papierkorb

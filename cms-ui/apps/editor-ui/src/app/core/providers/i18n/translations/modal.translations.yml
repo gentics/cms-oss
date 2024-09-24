@@ -576,6 +576,9 @@ page_versions_title_suffix:
 page_versions_title_suffix_no_languages:
     en: '":'
     de: '":'
+publish_protocol_title_prefix:
+    en: 'Publish Protocol of "'
+    de: 'Veröffentlichungs Protokoll von "'
 page_versions_tooltip_already_current_version:
     en: 'This is already the current version'
     de: 'Das ist bereits die aktuelle Version'

@@ -33,8 +33,8 @@ import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
+import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.assertj.MeshAssertions;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
 
@@ -232,5 +232,29 @@ public class MeshPublishChannelVersionTest {
 		assertObject("Check channel folder in Version 2.0", mesh.client(), nodeName, MeshPublisher.getBranchName(channel, "2.0"), localizedFolder, true, meshFolder -> {
 			MeshAssertions.assertThat(meshFolder).hasStringField("name", "Version 1.0 Channel");
 		});
+	}
+
+	@Test
+	public void testSetVersionCheckAndRepair() throws Exception {
+		// run publish process (no version set)
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// set CR version
+		Trx.operate(t -> {
+			update(t.getObject(ContentRepository.class, crId), cr -> {
+				cr.setVersion("1.0");
+			});
+		});
+
+		// check CR consistency (will fail, this is expected)
+		boolean consistencyCheckResult = Trx.supply(t -> t.getObject(ContentRepository.class, crId).checkStructure(false));
+		assertThat(consistencyCheckResult).as("Structure consistency check result").isTrue();
+
+		// repair CR consistency (should succeed)
+		boolean consistencyRepairResult = Trx.supply(t -> t.getObject(ContentRepository.class, crId).checkStructure(true));
+		assertThat(consistencyRepairResult).as("Structure consistency repair result").isTrue();
 	}
 }

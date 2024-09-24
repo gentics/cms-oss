@@ -63,7 +63,7 @@
 		<mockito.version>5.0.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
-		<jsonpath.version>2.6.0</jsonpath.version>
+		<jsonpath.version>2.9.0</jsonpath.version>
 		<log4j.version>2.23.1</log4j.version>
 		<xerces.version>2.12.2</xerces.version>
 		<xalan.version>2.7.3</xalan.version>

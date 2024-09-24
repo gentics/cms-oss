@@ -5,9 +5,12 @@ import {
     Input,
     OnInit,
 } from '@angular/core';
-import { Page, PublishLogEntry, ResponseCode } from '@gentics/cms-models';
+import { Page, PublishLogEntry, PublishLogListOption, PublishType, ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { IModalDialog } from '@gentics/ui-core';
+
+
+const PAGE_SIZE = 10;
 
 @Component({
     selector: 'gtx-page-publish-protocol-modal',
@@ -16,15 +19,13 @@ import { IModalDialog } from '@gentics/ui-core';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
+    @Input()
+    public page: Page;
 
-    @Input() page: Page;
-    @Input() nodeId: number;
-
-    loading = false;
-    backgroundActivity = false;
-    selectedPageVariant: Page;
-    languageVariants: Page[];
-    publishLogEntries: PublishLogEntry[];
+    public loading = false;
+    public backgroundActivity = false;
+    public languageVariants: Page[];
+    public publishLogEntries: PublishLogEntry[];
 
     constructor(
         private api: GCMSRestClientService,
@@ -33,10 +34,12 @@ export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
 
 
     ngOnInit(): void {
-        Promise.resolve([
+        this.loading = true;
+        Promise.all([
             this.fetchLogEntries(this.page.id),
             this.fetchLanguageVariant(this.page.id),
         ]).then(()=> {
+            this.loading = false;
             this.changeDetector.markForCheck();
         })
     }
@@ -57,8 +60,10 @@ export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
     private async fetchLogEntries(pageId: number): Promise<void>{
         this.loading = true;
 
-        const options = {
+        const options: PublishLogListOption = {
             objId: pageId,
+            type:  PublishType.PAGE,
+            pageSize: PAGE_SIZE,
         }
         const response = await this.api.publishProtocol.list(options).toPromise();
 

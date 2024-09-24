@@ -4,7 +4,7 @@
 <div class="modal-title">
     <h5>
         <span>{{ 'modal.publish_protocol_title_prefix' | i18n }}</span>
-        <span class="page-name" title="(selectedPageVariant || page).name">{{ (selectedPageVariant || page).name }}"</span>
+        <span class="page-name" title="page.name">{{ page.name }}"</span>
 
         <span *ngIf="languageVariants?.length > 1">
             <gtx-dropdown-list align="right">
@@ -31,17 +31,26 @@
 
     <div *ngIf="publishLogEntries?.length === 0">
         <gtx-contents-list-item>
-            <div class="item-icon"><i class="material-icons" [attr.translate]="'no'">not_interested</i></div>
-            <div class="item-primary">{{ 'modal.page_versions_empty_label' | i18n }}</div>
+            <icon>not_interested</icon>
+            <div class="item-primary">{{ 'modal.page_publish_log_empty_label' | i18n }}</div>
         </gtx-contents-list-item>
     </div>
 
     <div *ngIf="publishLogEntries?.length > 0">
         <gtx-contents-list-item *ngFor="let entry of publishLogEntries">
             <div class="publish-entry">
-                <span class="state" [class]="entry.state.toString().toLocaleLowerCase()"  >{{ entry.state }}</span>
-                <span class="date">since {{ entry.date }}</span>
-                <span class="editor">by {{ entry.user }}</span>
+                <span class="state" [class]="entry.state.toString().toLocaleLowerCase()">{{ entry.state }}</span>
+                <span class="date">{{ 
+                    'modal.page_published_date' | i18n: {
+                        date: entry.date
+                    }
+                }}</span>
+                <span *ngIf="entry.user && entry.user.lastName" class="editor">
+                    {{ 'modal.page_versions_editor_label' | i18n: { 
+                            name: entry.user?.firstName + ' ' + entry.user?.lastName 
+                        }
+                    }}
+                </span>
             </div>
         </gtx-contents-list-item>
     </div>

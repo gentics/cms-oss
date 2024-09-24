@@ -593,8 +593,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .catch(err => {});
     }
 
-    openPublishProtocol(page: Page, activeNodeId: number): void {
-        const options = { page, nodeId: activeNodeId };
+    openPublishProtocol(page: Page): void {
+        const options = { page };
         this.modalService.fromComponent(PagePublishProtocolModalComponent, null, options)
             .then(modal => modal.open())
             .catch(err => {});

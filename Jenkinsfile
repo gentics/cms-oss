@@ -326,6 +326,7 @@ spec:
                     sh "docker --version"
                     sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
+                    scanImage image: imageNameWithTag, exitCode: 1
                     // Push released image
                     if (tagName != null) {
                         String dockerImageVersionTag = imageName + ":" + tagName

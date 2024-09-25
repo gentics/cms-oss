@@ -41,7 +41,7 @@ describe('I18nInputComponent', () => {
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-        await fixture.whenStable();
+        await fixture.whenRenderingDone();
         await fixture.whenRenderingDone();
         inputElement = (fixture.nativeElement as HTMLElement).querySelector('input');
     });

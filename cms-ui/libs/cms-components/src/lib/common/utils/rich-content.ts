@@ -10,6 +10,7 @@ import {
     CLASS_RICH_ELEMENT,
     RichContent,
     RichContentLink,
+    RichContentLinkType,
     RichContentType,
 } from '../models';
 
@@ -35,6 +36,16 @@ const REVERSE_MAPPING: Record<string, string> = Object.entries(ESCAPE_MAPPING).r
     acc[entry[1]] = entry[0];
     return acc;
 }, {});
+
+const REGEX_NEWLINES = /(\r?\n|<br\s*\/?>)+/g;
+
+export function removeNewLines(content: string): string {
+    return content.replaceAll(REGEX_NEWLINES, ' ');
+}
+
+export function normalizeWhitespaces(content: string): string {
+    return content.replaceAll(String.fromCodePoint(160), ' ');
+}
 
 export function elementToRichContentString(element: HTMLElement): string {
     const content = extractRichContentFromElement(element);
@@ -136,7 +147,7 @@ export function updateElementWithContent(element: HTMLElement, content: RichCont
 /* RICH CONTENT LINK UTIL FUNCTIONS */
 
 export function extractRichContentLinks(text: string): (string | RichContentLink)[] {
-    const EXTRACT_PATTERN = /{{[\s]*(LINK)[\s]*[|][\s]*(?<linkType>(PAGE|FILE|URL))[:](?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)(?<nodeId>[a-zA-Z0-9-.]+)[:](?<itemId>[a-zA-Z0-9-.]+)(?:[:](?<langCode>[a-zA-Z]{2}))?)[\s]*[|][\s]*(?<displayText>[^|]*)[\s]*(?:[|][\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\s]*}}/g;
+    const EXTRACT_PATTERN = /{{[\s]*(?<type>LINK)[\s]*[|][\s]*(?<linkType>PAGE|FILE|URL)[:](?:(?<=URL:)(?<url>[^|]*)|(?<=PAGE:|FILE:)(?<nodeId>[a-zA-Z0-9-.]+)[:](?<itemId>[a-zA-Z0-9-.]+))[\s]*[|][\s]*(?<displayText>[^|]*)[\s]*(?:[|][\s]*(?<target>_blank|_self|_top|_unfencedTop|_parent))?[\s]*}}/g;
 
     const out: (string | RichContentLink)[] = [];
 
@@ -197,7 +208,19 @@ export function extractRichContentLinks(text: string): (string | RichContentLink
 }
 
 export function toRichContentLinkTemplate(link: RichContentLink): string {
-    let buffer = `{{LINK|${link.linkType}:${link.nodeId}:${link.itemId}`;
+    let buffer = `{{LINK|${link.linkType}:`;
+
+    switch (link.linkType) {
+        case RichContentLinkType.FILE:
+        case RichContentLinkType.PAGE:
+            buffer += `${link.nodeId}:${link.itemId}`;
+            break;
+
+        case RichContentLinkType.URL:
+            buffer += encodeRichContentText(link.url);
+            break;
+    }
+
     buffer += `|${encodeRichContentText(link.displayText)}`;
     if (link.target) {
         buffer += `|${link.target}`;
@@ -220,15 +243,30 @@ export function richContentLinkToHtml(link: RichContentLink): string {
 }
 
 export function extractLinkDataFromElement(element: HTMLElement): RichContentLink {
-    return {
+    const link = {
         type: RichContentType.LINK,
         linkType: element.getAttribute(ATTR_LINK_TYPE) as any,
         nodeId: element.getAttribute(ATTR_NODE_ID),
         itemId: element.getAttribute(ATTR_ITEM_ID),
         url: element.getAttribute(ATTR_URL),
         target: element.getAttribute(ATTR_TARGET),
-        displayText: element.textContent,
+        displayText: element.textContent || '',
     };
+
+    if (!link.nodeId) {
+        link.nodeId = null;
+    }
+    if (!link.itemId) {
+        link.itemId = null;
+    }
+    if (!link.target) {
+        link.target = null;
+    }
+    if (!link.url) {
+        link.url = null;
+    }
+
+    return link;
 }
 
 export function updateElementWithLinkContent(element: HTMLElement, link: RichContentLink): void {

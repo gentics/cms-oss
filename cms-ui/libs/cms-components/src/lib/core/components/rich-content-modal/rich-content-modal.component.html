@@ -17,6 +17,7 @@
     <gtx-button
         type="secondary"
         flat
+        action="cancel"
         (click)="cancelFn()"
     >
         {{ 'common.cancel_button' | i18n }}
@@ -24,6 +25,7 @@
 
     <gtx-button
         type="primary"
+        action="confirm"
         [disabled]="!control?.valid"
         (click)="closeWithValue()"
     >

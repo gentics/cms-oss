@@ -11,33 +11,33 @@
         [class.active]="activeElement != null"
     >
         <gtx-button
-            *ngIf="!activeContent"
             class="action-button"
             type="success"
             size="small"
-            [disabled]="disabled"
+            action="add"
+            [disabled]="!focused || activeContent || disabled"
             (mousedown)="addNewContent(RichContentType.LINK, $event)"
         >
             <icon>add</icon>
         </gtx-button>
 
         <gtx-button
-            *ngIf="activeContent"
             class="action-button"
             type="primary"
             size="small"
-            [disabled]="disabled"
+            action="edit"
+            [disabled]="!focused || !activeContent || disabled"
             (mousedown)="editCurrentContent($event)"
         >
             <icon>edit</icon>
         </gtx-button>
 
         <gtx-button
-            *ngIf="activeContent"
             class="action-button"
             type="alert"
             size="small"
-            [disabled]="disabled"
+            action="delete"
+            [disabled]="!focused || !activeContent || disabled"
             (mousedown)="deleteCurrentContent($event)"
         >
             <icon>delete</icon>
@@ -49,6 +49,7 @@
         class="text-container"
         [attr.contenteditable]="!disabled"
         [innerHTML]="rawHtml"
+        (keydown)="handleKeyDown($event)"
     ></div>
 </div>
 

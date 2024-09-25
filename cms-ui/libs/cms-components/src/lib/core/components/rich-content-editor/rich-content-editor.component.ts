@@ -1,13 +1,15 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, NgZone, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { BaseFormElementComponent, cancelEvent, generateFormProvider, ModalService } from '@gentics/ui-core';
-import { CLASS_RICH_ELEMENT, LINK_DEFAULT_DISPLAY_VALUE, RichContent, RichContentType } from '../../../common/models';
+import { ATTR_CONTENT_TYPE, LINK_DEFAULT_DISPLAY_VALUE, RichContent, RichContentType } from '../../../common/models';
 import {
     elementToRichContentString,
     extractRichContent,
     extractRichContentFromElement,
     findParentRichElement,
+    normalizeWhitespaces,
+    removeNewLines,
     richContentToHtml,
     updateElementWithContent,
 } from '../../../common/utils/rich-content';
@@ -41,6 +43,9 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public readonly RichContentType = RichContentType;
 
+    @Input()
+    public allowMultiLine = false;
+
     @ViewChild('container', { static: true })
     public containerRef: ElementRef<HTMLDivElement>;
 
@@ -66,6 +71,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         private modals: ModalService,
     ) {
         super(changeDetector);
+        this.booleanInputs.push('allowMultiLine');
     }
 
     public ngAfterViewInit(): void {
@@ -93,11 +99,15 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     protected updateHtmlFromValue(): void {
         const extracted = extractRichContent(this.value || '');
-        const html = extracted.map(elem => {
+        let html = extracted.map(elem => {
             return typeof elem === 'string' ? elem : richContentToHtml(elem);
-        });
+        }).join('');
 
-        this.rawHtml = this.sanitizer.bypassSecurityTrustHtml(html.join(''));
+        if (!this.allowMultiLine) {
+            html = removeNewLines(html);
+        }
+
+        this.rawHtml = this.sanitizer.bypassSecurityTrustHtml(html);
         this.queuedUpdate = UpdateQueue.NONE;
     }
 
@@ -108,13 +118,24 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         for (const node of children) {
             if (
                 node.nodeType !== Node.ELEMENT_NODE
-                || !(node as HTMLElement).classList.contains(CLASS_RICH_ELEMENT)
+                || !(node as HTMLElement).hasAttribute(ATTR_CONTENT_TYPE)
             ) {
                 str += node.textContent;
                 continue;
             }
 
             str += elementToRichContentString(node as HTMLElement);
+        }
+
+        // Edge-Case: Sometimes the editor/browser will use non-breaking space instead of a regular
+        // space, to make relations between nodes more apparent.
+        // This breaks tests and is quite unhelpful in 99% of cases, which is why we replace it with
+        // regular spaces here.
+        str = normalizeWhitespaces(str);
+
+        // And if there's no multi-lines allowed, we replace line-breaks and <br> elements with a whitespace instead.
+        if (!this.allowMultiLine) {
+            str = removeNewLines(str);
         }
 
         this.triggerChange(str);
@@ -191,6 +212,18 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         }
     }
 
+    public handleKeyDown(event: KeyboardEvent): void {
+        if (this.allowMultiLine) {
+            return;
+        }
+        // Prevent creating a new line with enter.
+        // When using the ctrl key however, it's a request to submit the form (if available),
+        // which should still be allowed.
+        if (event.key === 'Enter' && !event.ctrlKey) {
+            cancelEvent(event);
+        }
+    }
+
     public handleContentChange(): void {
         this.queuedUpdate = UpdateQueue.FROM_DOM;
     }
@@ -260,13 +293,21 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
         const template = doc.createElement('template');
         template.innerHTML = richContentToHtml(content);
-        range.surroundContents(template.content.firstElementChild);
+        if (range.collapsed) {
+            range.insertNode(template.content.firstElementChild);
+        } else {
+            range.surroundContents(template.content.firstElementChild);
+        }
         container.focus();
         this.updateValueFromDom();
     }
 
     public async editCurrentContent(event?: Event): Promise<void> {
         cancelEvent(event);
+
+        if (!this.activeContent || !this.activeElement) {
+            return;
+        }
 
         const element = this.activeElement;
         const content = await this.manageContentElement(this.activeContent.type, this.activeContent);
@@ -281,14 +322,12 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     public deleteCurrentContent(event?: Event): void {
         cancelEvent(event);
 
+        if (!this.activeContent || !this.activeElement) {
+            return;
+        }
+
         const content = this.activeElement.textContent;
         this.activeElement.replaceWith(content);
         this.updateValueFromDom();
-    }
-
-    public logEvent(name: string, event: Event): void {
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-        console.log(name, event);
     }
 }

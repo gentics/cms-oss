@@ -1,14 +1,20 @@
-<form *ngIf="form" [formGroup]="form" class="gtx-form row small-12 medium-12">
-
+<form
+    *ngIf="form"
+    class="gtx-form row small-12 medium-12"
+    [formGroup]="form"
+    (submit)="triggerSubmit()"
+>
     <div class="input-container small-12 columns">
         <gtx-input
             *ngIf="enterDisplayText"
+            property-name="displayText"
             [label]="('richContent.display_text' | i18n) + '*'"
             formControlName="displayText"
         ></gtx-input>
 
         <gtx-select
             [label]="('richContent.link_type' | i18n) + '*'"
+            property-name="linkType"
             formControlName="linkType"
         >
             <gtx-option
@@ -19,6 +25,7 @@
 
         <gtx-select
             [label]="'richContent.link_target' | i18n"
+            property-name="target"
             formControlName="target"
         >
             <gtx-option
@@ -30,6 +37,7 @@
         <browse-box
             *ngIf="form.controls.itemId.enabled"
             class="item-browser"
+            property-name="item"
             [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | i18n) + '*'"
             [disabled]="disabled"
             [displayValue]="itemDisplayValue"
@@ -39,6 +47,7 @@
 
         <gtx-input
             *ngIf="form.controls.url.enabled"
+            property-name="url"
             [label]="('richContent.link_url' | i18n) + '*'"
             formControlName="url"
         ></gtx-input>

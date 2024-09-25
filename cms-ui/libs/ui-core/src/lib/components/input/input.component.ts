@@ -1,4 +1,5 @@
 import {
+    ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
     EventEmitter,
@@ -53,6 +54,7 @@ const URL_REGEXP = '(^|\\s)((https?:\\/\\/)?[\\w-]+(\\.[\\w-]+)+\\.?(:\\d+)?(\\/
     selector: 'gtx-input',
     templateUrl: './input.component.html',
     styleUrls: ['./input.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(InputComponent)],
 })
 export class InputComponent extends BaseFormElementComponent<string | number> implements OnInit {

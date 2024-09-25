@@ -2,6 +2,10 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputComponent } from './input.component';
 
+// NOTE: The `cy.wrap(null)` calls are there, to make assertions/executions happen in the correct
+// order, as `cy` calls are actually queued and with direct `expect` calls, these would be out of
+// order and simply not work correctly.
+
 describe('InputComponent', () => {
 
     const ATTR_ID = 'id';
@@ -72,7 +76,7 @@ describe('InputComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).then(async mounted => {
             mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
+            await mounted.fixture.whenRenderingDone();
 
             cy.get(QUERY_INPUT)
                 .then($input => expect($input[0].getAttribute(ATTR_ID)).to.equal(ID_VALUE));
@@ -90,7 +94,7 @@ describe('InputComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).then(async mounted => {
             mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
+            await mounted.fixture.whenRenderingDone();
 
             cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
                 expect($input[0].autocomplete).to.equal('');
@@ -154,7 +158,7 @@ describe('InputComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).then(async mounted => {
             mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
+            await mounted.fixture.whenRenderingDone();
 
             cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
                 expect($input[0].autocomplete).to.equal(AUTO_COMPLETE_VALUE);
@@ -189,13 +193,10 @@ describe('InputComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).then(async mounted => {
             mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
+            await mounted.fixture.whenRenderingDone();
 
-            cy.get<HTMLInputElement>(QUERY_INPUT)
-                .then($input => {
-                    expect($input[0].value).to.equal(`${VALUE_START_VALUE}`);
-                    return $input;
-                })
+            cy.get(QUERY_INPUT)
+                .should('have.value', VALUE_START_VALUE)
                 .type(VALUE_ADD);
 
             cy.get(OUTPUT_VALUE_CHANGE)
@@ -211,26 +212,36 @@ describe('InputComponent', () => {
             public value = INITIAL_VALUE;
         }
 
+        const INBETWEEN_VALUE = 'value from parent';
+        const NEW_VALUE = 'hello world!';
+
         cy.mount(Test2WayBindingComponent, {
             declarations: [InputComponent],
             imports: [FormsModule, ReactiveFormsModule],
             schemas: [NO_ERRORS_SCHEMA],
         }).then(async mounted => {
             mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
+            await mounted.fixture.whenRenderingDone();
 
-            const NEW_VALUE = 'hello world!';
+            cy.get(QUERY_INPUT)
+                .should('have.value', INITIAL_VALUE);
 
-            expect(mounted.component.value).to.equal(INITIAL_VALUE);
+            cy.wrap(null).then(async () => {
+                mounted.component.value = INBETWEEN_VALUE;
+                mounted.fixture.detectChanges();
+                await mounted.fixture.whenRenderingDone();
+            });
+
+            cy.get(QUERY_INPUT)
+                .should('have.value', INBETWEEN_VALUE);
 
             cy.get(QUERY_INPUT)
                 .clear()
                 .type(NEW_VALUE);
 
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenStable();
-
-            expect(mounted.component.value).to.equal(NEW_VALUE);
+            cy.wrap(null).then(() => {
+                expect(mounted.component.value).to.equal(NEW_VALUE);
+            });
         });
     });
 
@@ -249,7 +260,7 @@ describe('InputComponent', () => {
                 schemas: [NO_ERRORS_SCHEMA],
             }).then(async mounted => {
                 mounted.fixture.detectChanges();
-                await mounted.fixture.whenStable();
+                await mounted.fixture.whenRenderingDone();
 
                 const TEMPORARY_VALUE = 'something inbetween?';
                 const NEW_VALUE = 'hello world!';
@@ -261,22 +272,23 @@ describe('InputComponent', () => {
                 mounted.component.control.setValue(TEMPORARY_VALUE);
 
                 mounted.fixture.detectChanges();
-                await mounted.fixture.whenStable();
+                await mounted.fixture.whenRenderingDone();
 
-                cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                    expect($input[0].value).to.equal(TEMPORARY_VALUE);
-                });
+                cy.get(QUERY_INPUT)
+                    .should('have.value', TEMPORARY_VALUE);
 
                 cy.get(QUERY_INPUT)
                     .clear()
                     .type(NEW_VALUE);
 
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenStable();
+                cy.wrap(null).then(async () => {
+                    mounted.fixture.detectChanges();
+                    await mounted.fixture.whenRenderingDone();
 
-                expect(mounted.component.control.value).to.equal(NEW_VALUE);
-                expect(mounted.component.control.touched).to.equal(true);
-                expect(mounted.component.control.dirty).to.equal(true);
+                    expect(mounted.component.control.value).to.equal(NEW_VALUE);
+                    expect(mounted.component.control.touched).to.equal(true);
+                    expect(mounted.component.control.dirty).to.equal(true);
+                });
             });
         });
 
@@ -286,28 +298,34 @@ describe('InputComponent', () => {
                 imports: [FormsModule, ReactiveFormsModule],
                 schemas: [NO_ERRORS_SCHEMA],
             }).then(async mounted => {
-                expect(mounted.component.control.disabled).to.equal(false);
-                cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                    expect($input[0].disabled).to.equal(false);
-                });
-
-                mounted.component.control.disable();
                 mounted.fixture.detectChanges();
-                await mounted.fixture.whenStable();
-
-                expect(mounted.component.control.disabled).to.equal(true);
-                cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                    expect($input[0].disabled).to.equal(true);
-                });
-
-                mounted.component.control.enable();
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenStable();
+                await mounted.fixture.whenRenderingDone();
 
                 expect(mounted.component.control.disabled).to.equal(false);
-                cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                    expect($input[0].disabled).to.equal(false);
+                cy.get<HTMLInputElement>(QUERY_INPUT)
+                    .should('not.be.disabled');
+
+                cy.wrap(null).then(async () => {
+                    mounted.component.control.disable();
+                    mounted.fixture.detectChanges();
+                    await mounted.fixture.whenRenderingDone();
+
+                    expect(mounted.component.control.disabled).to.equal(true);
                 });
+
+                cy.get(QUERY_INPUT)
+                    .should('be.disabled');
+
+                cy.wrap(null).then(async () => {
+                    mounted.component.control.enable();
+                    mounted.fixture.detectChanges();
+                    await mounted.fixture.whenRenderingDone();
+
+                    expect(mounted.component.control.disabled).to.equal(false);
+                });
+
+                cy.get(QUERY_INPUT)
+                    .should('not.be.disabled');
             });
         });
     });

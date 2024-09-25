@@ -8,8 +8,10 @@ const LINK_ONE_PARSED: RichContentLink = {
     itemId: 42,
     displayText: 'Link Text hello world!',
     target: '_top',
+    url: null,
 };
-const LINK_ONE_TEXT = `{{LINK|${LINK_ONE_PARSED.type}:${LINK_ONE_PARSED.nodeId}:${LINK_ONE_PARSED.itemId}|${LINK_ONE_PARSED.displayText}|${LINK_ONE_PARSED.target}}}`;
+const LINK_ONE_TEXT = `{{LINK|${LINK_ONE_PARSED.linkType}:${LINK_ONE_PARSED.nodeId}:${LINK_ONE_PARSED.itemId}|${LINK_ONE_PARSED.displayText}|${LINK_ONE_PARSED.target}}}`;
+
 const LINK_TWO_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.PAGE,
@@ -19,7 +21,8 @@ const LINK_TWO_PARSED: RichContentLink = {
     target: '_blank',
     url: null,
 };
-const LINK_TWO_TEXT = `{{LINK|${LINK_TWO_PARSED.type}:${LINK_TWO_PARSED.nodeId}:${LINK_TWO_PARSED.itemId}|${LINK_TWO_PARSED.displayText}|${LINK_TWO_PARSED.target}}}`;
+const LINK_TWO_TEXT = `{{LINK|${LINK_TWO_PARSED.linkType}:${LINK_TWO_PARSED.nodeId}:${LINK_TWO_PARSED.itemId}|${LINK_TWO_PARSED.displayText}|${LINK_TWO_PARSED.target}}}`;
+
 const LINK_THREE_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.PAGE,
@@ -29,7 +32,8 @@ const LINK_THREE_PARSED: RichContentLink = {
     target: null,
     url: null,
 };
-const LINK_THREE_TEXT = `{{LINK|${LINK_THREE_PARSED.type}:${LINK_THREE_PARSED.nodeId}:${LINK_THREE_PARSED.itemId}|${LINK_THREE_PARSED.displayText}}}`;
+const LINK_THREE_TEXT = `{{LINK|${LINK_THREE_PARSED.linkType}:${LINK_THREE_PARSED.nodeId}:${LINK_THREE_PARSED.itemId}|${LINK_THREE_PARSED.displayText}}}`;
+
 const LINK_FOUR_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.FILE,
@@ -39,7 +43,8 @@ const LINK_FOUR_PARSED: RichContentLink = {
     target: null,
     url: null,
 };
-const LINK_FOUR_TEXT = '{{LINK|PAGE:1:1|Command &amp; Conquer is a &lcub;RTS&rcub; Game. Maths shouldn&apos;t be used, neither &vert; special chars}}';
+const LINK_FOUR_TEXT = '{{LINK|FILE:1:1|Command &amp; Conquer is a &lcub;RTS&rcub; Game. Maths shouldn&apos;t be used, neither &vert; special chars}}';
+
 const LINK_FIVE_PARSED: RichContentLink = {
     type: RichContentType.LINK,
     linkType: RichContentLinkType.URL,
@@ -49,7 +54,7 @@ const LINK_FIVE_PARSED: RichContentLink = {
     itemId: null,
     nodeId: null,
 };
-const LINK_FIVE_TEXT = '{{LINK|URL:http&col;//somewhere.com/example-page.html|_top}}';
+const LINK_FIVE_TEXT = '{{LINK|URL:https&col;//somewhere.com/example-page.html|Foo bar|_top}}';
 
 describe('toRichContentTemplate', () => {
 
@@ -64,6 +69,10 @@ describe('toRichContentTemplate', () => {
 
     it('should escape the display text correctly', () => {
         expect(toRichContentTemplate(LINK_FOUR_PARSED)).toEqual(LINK_FOUR_TEXT);
+    });
+
+    it('should escape the url correctly', () => {
+        expect(toRichContentTemplate(LINK_FIVE_PARSED)).toEqual(LINK_FIVE_TEXT);
     });
 });
 

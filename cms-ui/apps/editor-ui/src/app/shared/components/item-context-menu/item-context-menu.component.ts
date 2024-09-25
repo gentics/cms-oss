@@ -24,7 +24,8 @@ export interface ContextMenuButtonsMap {
     properties: boolean;
     copy: boolean;
     createVariation: boolean;
-    isViewablePage: boolean;
+    pageVersions: boolean;
+    publishProtocol: boolean;
     setAsStartpage: boolean;
     localize: boolean;
     editInParent: boolean;
@@ -343,7 +344,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             properties: !this.isDeleted,
             copy: !this.isDeleted && (isPage || isFile || isImage || isForm),
             createVariation: isPage && !this.isDeleted && userCan.create,
-            isViewablePage: isPage && !this.isDeleted && userCan.view,
+            pageVersions: isPage && !this.isDeleted && userCan.view,
+            publishProtocol: isPage || isForm && !this.isDeleted && userCan.view,
             setAsStartpage: isPage && !this.isDeleted && isPage && !this.isFolderStartPage && this.permissions.folder.edit,
             localize: this.multiChannelingEnabled && !isForm && !this.isDeleted && inherited && userCan.localize,
             editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),

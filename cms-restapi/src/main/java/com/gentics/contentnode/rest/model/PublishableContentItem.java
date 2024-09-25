@@ -15,6 +15,11 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 	 */
 	private User publisher;
 
+	/**
+	 * Future (i.e. timemanagment) publisher of this page
+	 */
+	private User futurePublisher;
+
 
 	/**
 	 * Date when this page was published the last time
@@ -32,6 +37,11 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 	 */
 	private User unpublisher;
 
+		/**y
+	 * The user that planned the takeOffline action
+	 */
+	private User futureUnpublisher;
+
 
 	public PublishableContentItem() {
 	}
@@ -40,7 +50,6 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 	public PublishableContentItem(ItemType itemType) {
 		setType(itemType);
 	}
-
 
 	/**
 	 * Publisher
@@ -51,12 +60,27 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 		return this.publisher;
 	}
 
-
 	/**
 	 * @param publisher the publisher to set
 	 */
 	public void setPublisher(User publisher) {
 		this.publisher = publisher;
+	}
+
+	/**
+	 * Future Publisher
+	 *
+	 * @return the future publisher
+	 */
+	public User getFuturePublisher() {
+		return this.futurePublisher;
+	}
+
+	/**
+	 * @param futurePublisher the future publisher to set
+	 */
+	public void setFuturePublisher(User futurePublisher) {
+		this.futurePublisher = futurePublisher;
 	}
 
 
@@ -113,5 +137,17 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 	public void setUnpublisher(User unpublisher) {
 		this.unpublisher = unpublisher;
 	}
+
+	/**
+	 * Gets the user that set the unpublish action.
+	 *
+	 * @return the future unpublisher
+	 */
+	public User getFutureUnpublisher() {
+		return futureUnpublisher;
+	}
+
+
+
 
 }

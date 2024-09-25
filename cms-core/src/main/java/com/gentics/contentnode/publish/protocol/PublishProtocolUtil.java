@@ -5,7 +5,6 @@ import static com.gentics.contentnode.object.Page.TYPE_PAGE;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.PublishableNodeObject;
@@ -38,11 +37,12 @@ public class PublishProtocolUtil {
 		var publishLogEntry = new PublishLogEntry(object.getId(), getType(object.getTType()), status,
 				user);
 
-		updatePublishStateOfNodeObject(object, status, user);
+		updatePublishStateOfNodeObject(object, publishLogEntry, user);
 
 		logger.info(
 				String.format("Storing publish state information of '%s' with id '%s' with state '%s'.",
 						publishLogEntry.getType(), publishLogEntry.getObjId(), publishLogEntry.getState()));
+
 		publishLogEntry.save();
 	}
 
@@ -51,25 +51,30 @@ public class PublishProtocolUtil {
 	 * Updates the publish state of the given PublishableNodeObject.
 	 *
 	 * @param object the PublishableNodeObject whose publish state is to be updated
-	 * @param status the new status to set for the object
-	 * @param user   the ID of the user performing the update
+	 * @param userId   the ID of the user performing the update (is 0 when called with timemanagement)
 	 * @throws NodeException if an error occurs while updating the publish state
 	 */
-	private static void updatePublishStateOfNodeObject(PublishableNodeObject object, int status,
-			int user)
-			throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
+	private static void updatePublishStateOfNodeObject(
+			PublishableNodeObject object, PublishLogEntry logEntry, int userId) throws NodeException {
 		int timestamp = TransactionManager.getCurrentTransaction().getUnixTimestamp();
 
-		if (PublishState.ONLINE.getValue() == status) {
-			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
+		var tableName = getType(object.getTType()).toLowerCase();
+
+		if (PublishState.ONLINE.getValue() == logEntry.getState()) {
+			var publisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
+			logEntry.setUser(publisherId);
+
+			DBUtils.update("UPDATE "+tableName+" SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
 					object.getId());
-			DBUtils.update("UPDATE page SET pdate = ?, publisher = ? WHERE id = ?", timestamp, user,
+			DBUtils.update("UPDATE "+tableName+" SET pdate = ?, publisher = ? WHERE id = ?", timestamp, publisherId,
 					object.getId());
-		} else if (PublishState.OFFLINE.getValue() == status) {
-			DBUtils.update("UPDATE page SET pdate = ?, publisher = ? WHERE id = ?", 0, 0, object.getId());
-			DBUtils.update("UPDATE page SET unpublished_date = ?, unpublisher = ? WHERE id = ?",
-					timestamp, user, object.getId());
+		} else if (PublishState.OFFLINE.getValue() == logEntry.getState()) {
+			var unpublisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
+			logEntry.setUser(unpublisherId);
+
+			DBUtils.update("UPDATE "+tableName+" SET pdate = ?, publisher = ? WHERE id = ?", 0, 0, object.getId());
+			DBUtils.update("UPDATE "+tableName+" SET unpublished_date = ?, unpublisher = ? WHERE id = ?",
+					timestamp, unpublisherId, object.getId());
 		}
 	}
 

@@ -643,10 +643,19 @@ public class PublishablePage extends AbstractPage {
 	}
 
 	@Override
-	public SystemUser getUnpublisher() throws NodeException {
-		return null;
+	public SystemUser getFuturePublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getFuturePublisher());
 	}
 
+	@Override
+	public SystemUser getUnpublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getUnpublisher ());
+	}
+
+	@Override
+	public SystemUser getFutureUnpublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getFutureUnpublisher());
+	}
 
 	/**
 	 * Get the given user as SystemUser

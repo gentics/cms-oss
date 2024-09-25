@@ -270,6 +270,8 @@ public class PageFactory extends AbstractFactory {
 		protected Integer editorId = 0;
 		protected Integer publisherId = 0;
 		protected Integer unpublisherId = 0;
+		protected Integer futureUnpublisherId = 0;
+		protected Integer futurePublisherId = 0;
 
 		/**
 		 * page ids of the language variants per channel
@@ -416,7 +418,7 @@ public class PageFactory extends AbstractFactory {
 				ContentNodeDate cDate, ContentNodeDate customCDate, ContentNodeDate eDate, ContentNodeDate customEDate, ContentNodeDate pDate, int creatorId, int editorId, int publisherId, ContentNodeDate timePub,
 				Integer timePubVersion, int pubQueueUserId, ContentNodeDate timePubQueue, Integer timePubVersionQueue, ContentNodeDate timeOff,
 				int offQueueUserId, ContentNodeDate timeOffQueue, Integer channelSetId, Integer channelId, int syncPageId, ContentNodeDate syncTimestamp,
-				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId, int unpublisherId, ContentNodeDate unpublishedDate) {
+				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId, int unpublisherId, ContentNodeDate unpublishedDate, int futureUnpublisherId, int futurePublisher) {
 			super(id, info);
 			this.name = name;
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
@@ -467,6 +469,8 @@ public class PageFactory extends AbstractFactory {
 			this.udate = udate;
 			this.globalId = globalId;
 			this.unpublisherId = unpublisherId;
+			this.futureUnpublisherId = futureUnpublisherId;
+			this.futurePublisherId = futurePublisherId;
 			this.unpublishedDate = unpublishedDate;
 		}
 
@@ -748,8 +752,16 @@ public class PageFactory extends AbstractFactory {
 			return publisher;
 		}
 
+		public SystemUser getFuturePublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futurePublisherId);
+		}
+
 		public SystemUser getUnpublisher() throws NodeException {
 			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
+		}
+
+		public SystemUser getFutureUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futureUnpublisherId);
 		}
 
 		public List<Page> getLanguageVariants(boolean considerNodeLanguages) throws NodeException {
@@ -2597,23 +2609,26 @@ public class PageFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void takeOffline(int timestamp) throws ReadOnlyException, NodeException {
+		public void takeOffline(int timestamp) throws NodeException {
 			if (timestamp == 0) {
 				doTakeOffline();
 			} else {
 				// set the planned offline time and clear queue for planned offline time
 				Transaction t = TransactionManager.getCurrentTransaction();
-				DBUtils.update("UPDATE page SET time_off = ?, off_queue = ?, time_off_queue = ? WHERE id = ?", timestamp, 0, 0, getId());
+				DBUtils.update("UPDATE page SET time_off = ?, off_queue = ?, time_off_queue = ?, future_unpublisher = ? WHERE id = ?",
+						timestamp, 0, 0, t.getUserId(), getId());
 
 				timeOff = new ContentNodeDate(timestamp);
 				offQueueUserId = 0;
 				timeOffQueue = new ContentNodeDate(0);
+				futureUnpublisherId = t.getUserId();
 				t.dirtObjectCache(Page.class, getId());
 
 				// we need to sent the NOTIFY event for the page in order to allow indexing (for feature ELASTICSEARCH)
 				t.addTransactional(new TransactionalTriggerEvent(Page.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
 			}
 		}
+
 
 		@Override
 		public void queuePublish(SystemUser user, int timestamp, NodeObjectVersion version) throws ReadOnlyException, NodeException {
@@ -2958,7 +2973,7 @@ public class PageFactory extends AbstractFactory {
 					page.pubQueueUserId, page.timePubQueue, asNewPage ? null : page.timePubVersionQueue, page.timeOff, page.offQueueUserId, page.timeOffQueue, asNewPage ? 0 : page.channelSetId, page.channelId,
 					asNewPage ? 0 : page.syncPageId, asNewPage ? new ContentNodeDate(0) : page.syncTimestamp, asNewPage ? true : page.master, page.excluded,
 					page.disinheritDefault, asNewPage ? 0 : page.deleted, asNewPage ? 0 : page.deletedBy, asNewPage ? true : page.pageModified, asNewPage ? -1 : page.getUdate(),
-					asNewPage ? null : page.getGlobalId(), page.unpublisherId, page.unpublishedDate);
+					asNewPage ? null : page.getGlobalId(), page.unpublisherId, page.unpublishedDate, page.futureUnpublisherId, page.futurePublisherId);
 
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
@@ -3733,7 +3748,7 @@ public class PageFactory extends AbstractFactory {
 					// before creating the new version, we set the publisher, so that it is contained in the version
 					// otherwise the page would be "modified"
 					if (updatePublisher && user != null) {
-						DBUtils.update("UPDATE page SET publisher = ? WHERE id = ?", user.getId(), getId());
+						DBUtils.update("UPDATE page SET future_publisher = ? WHERE id = ?", user.getId(), getId());
 					}
 
 					createPageVersion(this, true, false, null);
@@ -5303,7 +5318,9 @@ public class PageFactory extends AbstractFactory {
 		int creatorId = rs.getInt("creator");
 		int editorId = rs.getInt("editor");
 		int publisherId = rs.getInt("publisher");
-		int unpublisher = rs.getInt("unpublisher");
+		int futurePublisherId = rs.getInt("future_publisher");
+		int unpublisherId = rs.getInt("unpublisher");
+		int futureUnpublisherId = rs.getInt("future_unpublisher");
 		boolean exclude = rs.getBoolean("mc_exclude");
 		boolean disinheritDefault = rs.getBoolean("disinherit_default");
 		List<Integer> tagIds = idLists != null ? idLists[0] : null;
@@ -5317,7 +5334,7 @@ public class PageFactory extends AbstractFactory {
 				cDate, new ContentNodeDate(rs.getInt("custom_cdate")), eDate, new ContentNodeDate(rs.getInt("custom_edate")), pDate, creatorId, editorId,
 				publisherId, timePub, timePubVersion, pubQueueUserId, timePubQueue, timePubVersionQueue, timeOff, offQueueUserId, timeOffQueue, channelSetId,
 				channelId, syncPageId, syncTimestamp, master, exclude, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"),
-				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs), unpublisher, unpublishedDate);
+				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs), unpublisherId, unpublishedDate, futureUnpublisherId, futurePublisherId);
 	}
 
 	private Content loadContentObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {

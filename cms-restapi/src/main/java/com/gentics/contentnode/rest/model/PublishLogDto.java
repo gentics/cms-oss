@@ -14,7 +14,7 @@ public record PublishLogDto(
 		int objId,
 		String type,
 		String state,
-		int user,
+		User user,
 		String date
 ) {
 

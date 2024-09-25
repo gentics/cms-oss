@@ -21,7 +21,6 @@ const PAGE_SIZE = 10;
 export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
     @Input()
     public page: Page;
-
     public loading = false;
     public backgroundActivity = false;
     public languageVariants: Page[];

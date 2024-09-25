@@ -30,16 +30,14 @@ h5 {
 
 
 .publish-entry {
-    & > span {
-        margin-right: 0.35rem;
-    }
-
     .date,
     .editor {
         color: $gtx-color-mid-gray;
     }
 
     .state {
+        margin-right: 0.35rem;
+
         &.online {
             color: $gtx-color-success;
         }

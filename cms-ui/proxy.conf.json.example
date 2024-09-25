@@ -49,12 +49,9 @@
         "secure": false,
         "changeOrigin": true
     },
-    "/spelling": {
-        "target": "http://localhost:8010/v2",
+    "/v2/check": {
+        "target": "http://localhost:8010",
         "secure": false,
-        "changeOrigin": true,
-        "pathRewrite": {
-            "^/spelling": ""
-        }
+        "changeOrigin": true
     }
 }

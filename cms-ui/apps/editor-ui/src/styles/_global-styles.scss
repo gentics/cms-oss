@@ -93,7 +93,7 @@ gtx-dropdown-content {
         margin-bottom: 1rem;
         font-size: 0.8rem;
         color: $gtx-color-alert;
-    
+
         &.invalid {
             color: $gtx-color-alert;
         }
@@ -106,4 +106,18 @@ gtx-dropdown-content {
 // Jumping screen after clicking on a checkbox fix
 gtx-checkbox > div {
     transform: translateZ(0);
+}
+
+.gtx-table-cell-boolean {
+    font-size: 1.2em;
+    height: 20px;
+    margin: auto 0;
+}
+
+.gtx-table-cell-boolean-true {
+    color: $gtx-color-success;
+}
+
+.gtx-table-cell-boolean-false {
+    color: $gtx-color-alert;
 }

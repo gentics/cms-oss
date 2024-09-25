@@ -1,0 +1,1 @@
+Editor User Interface: The permission check for images did not consider role permissions. This has been fixed.

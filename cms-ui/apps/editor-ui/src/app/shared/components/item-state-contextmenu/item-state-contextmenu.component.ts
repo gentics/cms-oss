@@ -9,6 +9,10 @@ import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PageLanguageIndicatorComponent } from '../page-language-indicator/page-language-indicator.component';
 
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
+
 /**
  * A context menu providing all relevant state information about a page.
  */
@@ -46,7 +50,25 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
 
     getUserById$(id: number): Observable<User> {
         return this.appState.select(state => state.entities.user).pipe(
-            map(allUsers => allUsers[id])
+            map(allUsers => allUsers[id]),
+        );
+    }
+
+    getUserDisplayName$(value: number | User): Observable<string> {
+        if (value == null) {
+            return of(null);
+        }
+
+        if (
+            typeof value === 'object'
+            && typeof value.firstName === 'string'
+            && typeof value.lastName === 'string'
+        ) {
+            return of(`${value.firstName} ${value.lastName}`);
+        }
+
+        return this.getUserById$(typeof value === 'number' ? value : value.id).pipe(
+            map(user => `${user.firstName} ${user.lastName}`),
         );
     }
 
@@ -55,29 +77,27 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
      */
     timeAgo(previous: number): string {
         const current = Math.round(Date.now() / 1000);
-        const secondsPerMinute = 60;
-        const secondsPerHour = secondsPerMinute * 60;
-        const secondsPerDay = secondsPerHour * 24;
+
 
         const elapsed = current - previous;
-        let parts = {
+        const parts = {
             elapsed: 0,
             key: '',
         };
 
-        if (elapsed < secondsPerMinute) {
+        if (elapsed < SECONDS_PER_MINUTE) {
             parts.elapsed = elapsed;
             parts.key = 1 < elapsed ? 'editor.time_ago_seconds' : 'editor.time_ago_second';
-        } else if (elapsed < secondsPerHour) {
-            const minutes = Math.round(elapsed / secondsPerMinute);
+        } else if (elapsed < SECONDS_PER_HOUR) {
+            const minutes = Math.round(elapsed / SECONDS_PER_MINUTE);
             parts.elapsed = minutes;
             parts.key = 1 < minutes ? 'editor.time_ago_minutes' : 'editor.time_ago_minute';
-        } else if (elapsed < secondsPerDay) {
-            const hours = Math.round(elapsed / secondsPerHour);
+        } else if (elapsed < SECONDS_PER_DAY) {
+            const hours = Math.round(elapsed / SECONDS_PER_HOUR);
             parts.elapsed = hours;
             parts.key = 1 < hours ? 'editor.time_ago_hours' : 'editor.time_ago_hour';
         } else {
-            const days = Math.round(elapsed / secondsPerDay);
+            const days = Math.round(elapsed / SECONDS_PER_DAY);
             parts.elapsed = days;
             parts.key = 1 < days ? 'editor.time_ago_days' : 'editor.time_ago_day';
         }

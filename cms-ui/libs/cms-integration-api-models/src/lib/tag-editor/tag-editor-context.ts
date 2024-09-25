@@ -13,6 +13,7 @@ import {
     TagInContainer,
     Template,
 } from '@gentics/cms-models';
+import type { GCMSRestClient } from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
 import { TagValidator } from './tag-validator';
 
@@ -112,6 +113,10 @@ export interface GcmsUiServices {
      */
     openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
 
+    /**
+     * A client to perform REST-Requests directly with the current user.
+     */
+    restClient: GCMSRestClient;
     /**
      * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per

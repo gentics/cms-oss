@@ -1,10 +1,10 @@
 {
   "name": "@gentics/form-generator",
-  "version": "6.1.7",
+  "version": "6.1.12",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-components": "6.1.7",
-    "@gentics/cms-models": "6.1.7",
+    "@gentics/cms-components": "6.1.12",
+    "@gentics/cms-models": "6.1.12",
     "lodash-es": "^4.17.15",
     "uuid": "^9.0.0"
   },
@@ -15,6 +15,6 @@
     "@angular/forms": "^16.0.0"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

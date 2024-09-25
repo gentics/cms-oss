@@ -1,0 +1,3 @@
+When using synchronized object properties, loading an object from the REST API could fail with an internal error,
+when the object contained an object tag which was synchronized with the object tag of another object that had been put into the wastebin.
+This has been fixed.

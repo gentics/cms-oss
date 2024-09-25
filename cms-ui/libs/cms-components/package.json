@@ -1,10 +1,10 @@
 {
   "name": "@gentics/cms-components",
-  "version": "6.1.7",
+  "version": "6.1.12",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.7",
-    "@gentics/cms-integration-api-models": "6.1.7",
+    "@gentics/cms-models": "6.1.12",
+    "@gentics/cms-integration-api-models": "6.1.12",
     "lodash-es": "^4.17.15"
   },
   "peerDependencies": {
@@ -16,6 +16,6 @@
     "ngx-pagination": "^6.0.3"
   },
   "publishConfig": {
-    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

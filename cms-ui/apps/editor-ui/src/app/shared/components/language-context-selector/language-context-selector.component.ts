@@ -19,5 +19,11 @@ export class LanguageContextSelectorComponent {
     disabled = false;
 
     @Output()
-    selectLanguage = new EventEmitter<Language>();
+    languageChange = new EventEmitter<Language>();
+
+
+    public languageChangeHandler(language: Language): void {
+        this.languageChange.emit(language);
+    }
+
 }

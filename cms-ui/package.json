@@ -201,6 +201,7 @@
     "yaml-loader": "^0.7.0"
   },
   "optionalDependencies": {
-    "@nx/nx-linux-x64-gnu": "^16.10.0"
+    "@nx/nx-linux-x64-gnu": "^16.10.0",
+    "@nx/nx-win32-x64-msvc": "^16.10.0"
   }
 }

@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;
@@ -200,12 +199,10 @@ import com.gentics.mesh.core.rest.schema.impl.SchemaReferenceImpl;
 import com.gentics.mesh.core.rest.schema.impl.SchemaResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaUpdateRequest;
 import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
-import com.gentics.mesh.core.rest.tag.TagCreateRequest;
 import com.gentics.mesh.core.rest.tag.TagFamilyCreateRequest;
 import com.gentics.mesh.core.rest.tag.TagFamilyResponse;
 import com.gentics.mesh.core.rest.tag.TagListUpdateRequest;
 import com.gentics.mesh.core.rest.tag.TagReference;
-import com.gentics.mesh.core.rest.tag.TagResponse;
 import com.gentics.mesh.parameter.GenericParameters;
 import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
@@ -4734,7 +4731,7 @@ public class MeshPublisher implements AutoCloseable {
 
 				// when we found no default branch for the implementation version, we create a new branch
 				if (defaultBranch == null && !StringUtils.isEmpty(implementationVersion)) {
-					defaultBranch = createBranch(currentProjectName, getBranchName(name, implementationVersion), hostname, pathPrefix, ssl, latestDefaultBranch, true);
+					defaultBranch = createBranch(currentProjectName, getBranchName(name, implementationVersion), hostname, pathPrefix, ssl, latestDefaultBranch, implementationVersion, null);
 				}
 
 				// check default branch
@@ -4781,7 +4778,7 @@ public class MeshPublisher implements AutoCloseable {
 
 							entry.setValue(validateBranch(
 									createBranch(currentProjectName, branchName, channel.getHostname(), getPathPrefix(channel), channel.isHttps(),
-											latestChannelBranches.get(channel), !StringUtils.isEmpty(implementationVersion)),
+											latestChannelBranches.get(channel), implementationVersion, channel),
 									currentProjectName, branchName, channel, implementationVersion, null, getPathPrefix(channel), null, schemaMap, true, success));
 
 							branchParamMap.put(channel.getId(), new VersioningParametersImpl().setBranch(branchName));
@@ -4969,28 +4966,7 @@ public class MeshPublisher implements AutoCloseable {
 				}
 			}
 
-			// check required tags
-			TagListUpdateRequest request = new TagListUpdateRequest();
-
-			// when implementation version is not empty, the branch must be tagged with it
-			if (!StringUtils.isEmpty(implementationVersion) && !hasTag(branch, IMPLEMENTATION_VERSION_TAGFAMILY)) {
-				request.getTags().add(new TagReference().setTagFamily(IMPLEMENTATION_VERSION_TAGFAMILY).setName(implementationVersion));
-				request.getTags().add(new TagReference().setTagFamily(GCMS_INTERNAL_TAGFAMILY).setName(LATEST_TAG));
-			}
-
-			// branches for channels must be tagged with the channel UUID
-			if (channel != null && !hasTag(branch, CHANNEL_UUID_TAGFAMILY)) {
-				request.getTags().add(new TagReference().setTagFamily(CHANNEL_UUID_TAGFAMILY).setName(getMeshUuid(channel)));
-			}
-
-			if (!request.getTags().isEmpty()) {
-				for (TagReference ref : branch.getTags()) {
-					request.getTags().add(ref);
-				}
-
-				client.updateTagsForBranch(currentProjectName, branchUuid, request).toSingle().retry(RETRY_HANDLER)
-						.blockingGet();
-			}
+			setTagsOnBranch(branch, currentProjectName, channel, implementationVersion);
 
 			// check schema versions
 			BranchInfoSchemaList schemaInfoList = client.getBranchSchemaVersions(currentProjectName, branchUuid)
@@ -5144,11 +5120,12 @@ public class MeshPublisher implements AutoCloseable {
 		 * @param pathPrefix optional path prefix
 		 * @param ssl ssl setting
 		 * @param baseBranch optional base branch
-		 * @param tagAsLatest flag to tag the branch as "latest"
+		 * @param implementationVersion optional implementation version
+		 * @param channel optional channel, to which the branch belongs
 		 * @return created branch
 		 * @throws NodeException
 		 */
-		protected BranchResponse createBranch(String currentProjectName, String branchName, String host, String pathPrefix, boolean ssl, BranchResponse baseBranch, boolean tagAsLatest) throws NodeException {
+		protected BranchResponse createBranch(String currentProjectName, String branchName, String host, String pathPrefix, boolean ssl, BranchResponse baseBranch, String implementationVersion, Node channel) throws NodeException {
 			pathPrefix = cleanPathPrefix(pathPrefix);
 			BranchCreateRequest create = new BranchCreateRequest().setName(branchName).setHostname(host).setPathPrefix(pathPrefix)
 					.setSsl(ssl).setLatest(false);
@@ -5166,11 +5143,10 @@ public class MeshPublisher implements AutoCloseable {
 				client.grantBranchRolePermissions(currentProjectName, branch.getUuid(), new ObjectPermissionGrantRequest().setRead(roleReferences)).blockingAwait();
 			}
 
-			if (tagAsLatest) {
-				branch = client.addTagToBranch(currentProjectName, branch.getUuid(), latestTagUuid).blockingGet();
-				if (baseBranch != null) {
-					client.removeTagFromBranch(currentProjectName, baseBranch.getUuid(), latestTagUuid).blockingAwait();
-				}
+			setTagsOnBranch(branch, currentProjectName, channel, implementationVersion);
+			// when we set the "LATEST" tag on the new branch, we need to remove it from the base branch
+			if (!StringUtils.isEmpty(implementationVersion) && baseBranch != null) {
+				removeLatestTag(baseBranch, currentProjectName);
 			}
 
 			if (!branch.getMigrated()) {
@@ -5274,28 +5250,6 @@ public class MeshPublisher implements AutoCloseable {
 					tagFamilyUuids.put(familyName, optionalFamily.get().getUuid());
 				}
 			}
-
-			if (success.get()) {
-				String internalTagFamilyUuid = tagFamilyUuids.get(GCMS_INTERNAL_TAGFAMILY);
-				List<TagResponse> tags = client.findTags(projectName, internalTagFamilyUuid).toSingle()
-						.retry(RETRY_HANDLER).blockingGet().getData();
-				Optional<TagResponse> optionalLatestTag = tags.stream().filter(tag -> LATEST_TAG.equals(tag.getName())).findFirst();
-				if (optionalLatestTag.isPresent()) {
-					latestTagUuid = optionalLatestTag.get().getUuid();
-				} else {
-					if (repair) {
-						info(String.format("Creating \"%s\" tag", LATEST_TAG));
-						TagResponse response = client
-								.createTag(projectName, internalTagFamilyUuid,
-										new TagCreateRequest().setName(LATEST_TAG))
-								.toSingle().retry(RETRY_HANDLER).blockingGet();
-						latestTagUuid = response.getUuid();
-					} else {
-						error(String.format("Tag \"%s\" does not exist", LATEST_TAG));
-						success.set(false);
-					}
-				}
-			}
 		}
 
 		/**
@@ -5352,6 +5306,67 @@ public class MeshPublisher implements AutoCloseable {
 				return cleanPathPrefix(FilePublisher.getPath(true, false, node.getPublishDir(), node.getFolder().getPublishDir()));
 			} else {
 				return cleanPathPrefix(node.getPublishDir());
+			}
+		}
+
+		/**
+		 * Set the required tags on the branch
+		 * @param branch branch to modify
+		 * @param currentProjectName project name
+		 * @param channel optional channel (when the branch belongs to a channel)
+		 * @param implementationVersion optional implementation version
+		 * @throws NodeException
+		 */
+		protected void setTagsOnBranch(BranchResponse branch, String currentProjectName, Node channel, String implementationVersion) throws NodeException {
+			// check required tags
+			TagListUpdateRequest request = new TagListUpdateRequest();
+
+			// when implementation version is not empty, the branch must be tagged with it
+			if (!StringUtils.isEmpty(implementationVersion) && !hasTag(branch, IMPLEMENTATION_VERSION_TAGFAMILY)) {
+				request.getTags().add(new TagReference().setTagFamily(IMPLEMENTATION_VERSION_TAGFAMILY).setName(implementationVersion));
+				request.getTags().add(new TagReference().setTagFamily(GCMS_INTERNAL_TAGFAMILY).setName(LATEST_TAG));
+			}
+
+			// branches for channels must be tagged with the channel UUID
+			if (channel != null && !hasTag(branch, CHANNEL_UUID_TAGFAMILY)) {
+				request.getTags().add(new TagReference().setTagFamily(CHANNEL_UUID_TAGFAMILY).setName(getMeshUuid(channel)));
+			}
+
+			if (!request.getTags().isEmpty()) {
+				// preserve all already set tags
+				for (TagReference ref : branch.getTags()) {
+					request.getTags().add(ref);
+				}
+
+				// update the tags
+				client.updateTagsForBranch(currentProjectName, branch.getUuid(), request).toSingle().retry(RETRY_HANDLER)
+						.blockingGet();
+			}
+		}
+
+		/**
+		 * Remove the "latest" tag from the branch (if it is set)
+		 * @param branch branch to modify
+		 * @param currentProjectName project name
+		 * @throws NodeException
+		 */
+		protected void removeLatestTag(BranchResponse branch, String currentProjectName) throws NodeException {
+			// only change something, if the branch currently has the "latest" tag set
+			if (hasTag(branch, GCMS_INTERNAL_TAGFAMILY, LATEST_TAG)) {
+				TagListUpdateRequest request = new TagListUpdateRequest();
+				// preserve all currently set tags
+				for (TagReference ref : branch.getTags()) {
+					// only remove the "latest" tag
+					if (org.apache.commons.lang3.StringUtils.equals(ref.getTagFamily(), GCMS_INTERNAL_TAGFAMILY)
+							&& org.apache.commons.lang3.StringUtils.equals(ref.getName(), LATEST_TAG)) {
+						continue;
+					}
+					request.getTags().add(ref);
+				}
+
+				// update the tags
+				client.updateTagsForBranch(currentProjectName, branch.getUuid(), request).toSingle()
+						.retry(RETRY_HANDLER).blockingGet();
 			}
 		}
 	}

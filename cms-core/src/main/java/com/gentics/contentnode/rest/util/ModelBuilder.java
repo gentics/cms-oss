@@ -1129,6 +1129,14 @@ public class ModelBuilder {
 			restPage.setPublisher(getUser(nodePage.getPublisher()));
 		}
 
+		if (nodePage.getFuturePublisher() != null) {
+			restPage.setFuturePublisher(getUser(nodePage.getFuturePublisher()));
+		}
+
+		if (nodePage.getFutureUnpublisher() != null) {
+			restPage.setFutureUnpublisher(getUser(nodePage.getFutureUnpublisher()));
+		}
+
 		restPage.setContentSetId(nodePage.getContentsetId());
 
 		restPage.setInherited(nodePage.isInherited());

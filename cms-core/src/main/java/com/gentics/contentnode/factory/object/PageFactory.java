@@ -418,7 +418,7 @@ public class PageFactory extends AbstractFactory {
 				ContentNodeDate cDate, ContentNodeDate customCDate, ContentNodeDate eDate, ContentNodeDate customEDate, ContentNodeDate pDate, int creatorId, int editorId, int publisherId, ContentNodeDate timePub,
 				Integer timePubVersion, int pubQueueUserId, ContentNodeDate timePubQueue, Integer timePubVersionQueue, ContentNodeDate timeOff,
 				int offQueueUserId, ContentNodeDate timeOffQueue, Integer channelSetId, Integer channelId, int syncPageId, ContentNodeDate syncTimestamp,
-				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId, int unpublisherId, ContentNodeDate unpublishedDate, int futureUnpublisherId, int futurePublisher) {
+				boolean master, boolean excluded, boolean disinheritDefault, int deleted, int deletedBy, boolean pageModified, int udate, GlobalId globalId, int unpublisherId, ContentNodeDate unpublishedDate, int futureUnpublisherId, int futurePublisherId) {
 			super(id, info);
 			this.name = name;
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {

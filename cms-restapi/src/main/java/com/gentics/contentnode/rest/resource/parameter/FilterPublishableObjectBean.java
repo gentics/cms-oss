@@ -1,5 +1,6 @@
 package com.gentics.contentnode.rest.resource.parameter;
 
+import java.util.Arrays;
 import javax.ws.rs.QueryParam;
 import javax.xml.bind.annotation.XmlEnum;
 
@@ -12,7 +13,7 @@ public class FilterPublishableObjectBean {
 	 * The type of the publishable object.
 	 */
 	@QueryParam("type")
-	public PublishTypeDto type;
+	public String type;
 
 	/**
 	 * The ID of the publishable object.
@@ -27,7 +28,7 @@ public class FilterPublishableObjectBean {
 	 * @param typeFilter the type filter to set
 	 * @return the updated FilterPublishableObjectBean instance
 	 */
-	public FilterPublishableObjectBean withTypeFilter(PublishTypeDto typeFilter) {
+	public FilterPublishableObjectBean withTypeFilter(String typeFilter) {
 		this.type = typeFilter;
 		return this;
 	}
@@ -64,7 +65,10 @@ public class FilterPublishableObjectBean {
 			try {
 				return valueOf(toUpper);
 			} catch (Exception e) {
-				throw new IllegalArgumentException(e);
+				throw new IllegalArgumentException(
+						"Specified type does not exist. Valid values for the type filter are: "
+								+ Arrays.toString(
+								PublishTypeDto.values()));
 			}
 		}
 	}

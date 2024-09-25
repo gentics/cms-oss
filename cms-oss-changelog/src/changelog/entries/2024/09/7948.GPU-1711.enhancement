@@ -3,3 +3,5 @@ Two new endpoints have been introduced to obtain this information
 
 * @GET /publish/state/{type}/{objId}@
 * @GET /publish/state/@
+
+Additonally, a publish protocol of pages and forms has been added to the Editor User Interface.

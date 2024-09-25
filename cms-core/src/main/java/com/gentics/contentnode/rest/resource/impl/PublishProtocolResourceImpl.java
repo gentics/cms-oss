@@ -15,16 +15,19 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.publish.protocol.PublishLogEntry;
 import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.PublishLogDto;
 import com.gentics.contentnode.rest.model.response.GenericItemList;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PublishProtocolResource;
 import com.gentics.contentnode.rest.resource.parameter.FilterPublishableObjectBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterPublishableObjectBean.PublishTypeDto;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.log.NodeLogger;
+import java.util.Arrays;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -59,6 +62,7 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	@Path("/{type}/{objId}")
 	public PublishLogDto get(@PathParam("type") String type, @PathParam("objId") Integer objId)
 			throws NodeException {
+		validateRequest(type);
 		try (Trx trx = ContentNodeHelper.trx()) {
 			var publishLogEntry = PublishProtocolUtil.getPublishLogEntryByObjectId(type, objId);
 
@@ -78,15 +82,32 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	public GenericItemList<PublishLogDto> list(
 			@BeanParam PagingParameterBean paging,
 			@BeanParam FilterPublishableObjectBean filter) throws NodeException {
+		validateRequest(filter.type);
+
 		try (Trx trx = ContentNodeHelper.trx()) {
 			var publishLogEntries = PublishProtocolUtil.getPublishLogEntries();
 
 			return ListBuilder.from(publishLogEntries, MAP2REST)
 					.filter(this::canView)
 					.filter(entry -> (filter.objId == null || filter.objId.equals(entry.getObjId())) &&
-							(filter.type == null || filter.type.toString().equalsIgnoreCase(entry.getType())))
+							(filter.type == null || filter.type.equalsIgnoreCase(entry.getType())))
 					.page(paging)
 					.to(new GenericItemList<>());
+		}
+	}
+
+	/**
+	 * Validates the request filter
+	 * @param typeFilter
+	 * @throws NodeException
+	 */
+	private void validateRequest(String typeFilter) throws NodeException {
+		try {
+			PublishTypeDto.fromString(typeFilter);
+		} catch (IllegalArgumentException e) {
+			throw new RestMappedException(
+					"Specified type does not exist. Valid values for the type filter are: "
+							+ Arrays.toString(PublishTypeDto.values()));
 		}
 	}
 

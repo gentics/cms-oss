@@ -147,7 +147,11 @@ public abstract class PublishableContentItem extends ContentNodeItem implements 
 		return futureUnpublisher;
 	}
 
-
-
+	/**
+	 * Set the future unpublisher
+	 */
+	public void setFutureUnpublisher(User futureUnpublisher) {
+		this.futureUnpublisher = futureUnpublisher;
+	}
 
 }

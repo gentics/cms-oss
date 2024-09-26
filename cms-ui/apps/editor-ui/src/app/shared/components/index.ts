@@ -63,4 +63,4 @@ export * from './translate-page-modal/translate-page-modal.component';
 export * from './upload-button/upload-button.component';
 export * from './usage-list/usage-list.component';
 export * from './usage-modal/usage-modal.component';
-export * from './page-publish-protocol-modal/page-publish-protocol-modal.component';
+export * from './publish-protocol-modal/publish-protocol-modal.component';

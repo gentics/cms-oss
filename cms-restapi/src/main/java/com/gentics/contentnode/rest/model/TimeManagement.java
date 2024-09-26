@@ -40,6 +40,17 @@ public class TimeManagement implements Serializable {
 	private QueuedTimeManagement queuedOffline;
 
 	/**
+	 * the future publisher (i.e.: the user that planned to publish something)
+	 */
+	public User futurePublisher;
+
+	/**
+	 * the future unpublisher (i.e.: the user that planned to unpublish something)
+	 */
+	public User futureUnpublisher;
+
+
+	/**
 	 * Get the timestamp at which the page will be published
 	 * @return publish timestamp
 	 */
@@ -126,6 +137,42 @@ public class TimeManagement implements Serializable {
 	 */
 	public TimeManagement setQueuedOffline(QueuedTimeManagement queuedOffline) {
 		this.queuedOffline = queuedOffline;
+		return this;
+	}
+
+	/**
+	 * Gets user that planned to publish something
+	 * @return the future publisher
+	 */
+	public User getFuturePublisher() {
+		return futurePublisher;
+	}
+
+	/**
+	 * Sets the future publisher (i.e.: the user that planned to publish something)
+	 * @param futurePublisher
+	 * @return fluent API
+	 */
+	public TimeManagement setFuturePublisher(User futurePublisher) {
+		this.futurePublisher = futurePublisher;
+		return this;
+	}
+
+	/**
+	 * Gets user that planned to upublish something
+	 * @return the future upublisher
+	 */
+	public User getFutureUnpublisher() {
+		return futureUnpublisher;
+	}
+
+	/**
+	 * Sets the future unpublisher (i.e.: the user that planned to unpublish something)
+	 * @param futureUnpublisher
+	 * @return fluent API
+	 */
+	public TimeManagement setFutureUnpublisher(User futureUnpublisher) {
+		this.futureUnpublisher = futureUnpublisher;
 		return this;
 	}
 }

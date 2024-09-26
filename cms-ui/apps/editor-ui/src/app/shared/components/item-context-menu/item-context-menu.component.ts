@@ -157,8 +157,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         this.contextMenuOperations.listPageVersions(page, this.activeNode.id);
     }
 
-    publishProtocolClicked(page: Page): void {
-        this.contextMenuOperations.openPublishProtocol(page);
+    publishProtocolClicked(item: Page | Form): void {
+        this.contextMenuOperations.openPublishProtocol(item);
     }
 
     setAsStartpageClicked(page: Page): void {

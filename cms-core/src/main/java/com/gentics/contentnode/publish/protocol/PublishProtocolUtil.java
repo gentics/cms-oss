@@ -149,11 +149,11 @@ public class PublishProtocolUtil {
 	 * @param ttype the type code of the publishable node object
 	 * @return the type as a string
 	 */
-	private static String getType(int ttype) {
+	private static String getType(int ttype) throws NodeException {
 		return switch (ttype) {
 			case TYPE_PAGE -> PublishType.PAGE.toString();
 			case TYPE_FORM -> PublishType.FORM.toString();
-			default -> PublishType.OTHER.toString();
+			default -> throw new NodeException("Unexpected publish type for given TType value " + ttype);
 		};
 	}
 

@@ -141,15 +141,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (publisher != null) {
 			model.setPublisher(ModelBuilder.getUser(publisher));
 		}
-
-		model.setUnpublishedDate(form.getUnpublishedDate().getIntTimestamp());
 		SystemUser unpublisher = form.getUnpublisher();
 		if (unpublisher != null) {
 			model.setUnpublisher(ModelBuilder.getUser(unpublisher));
 		}
 
+		model.setUnpublishedDate(form.getUnpublishedDate().getIntTimestamp());
 		model.setDeleted(ModelBuilder.getDeleteInfo(form));
-
 		model.setModified(form.isModified());
 		model.setOnline(form.isOnline());
 
@@ -162,12 +160,19 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (lockedSince != null) {
 			model.setLockedSince(lockedSince.getIntTimestamp());
 		}
-
 		model.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getVersion()));
 
-		model.setTimeManagement(new FormTimeManagement().setAt(form.getTimePub().getTimestamp())
-				.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getTimePubVersion()))
-				.setOfflineAt(form.getTimeOff().getTimestamp()));
+		SystemUser futurePublisher = form.getFutureUnpublisher();
+		SystemUser futureUnpublisher = form.getFutureUnpublisher();
+
+		model.setTimeManagement(
+				new FormTimeManagement()
+						.setAt(form.getTimePub().getTimestamp())
+						.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getTimePubVersion()))
+						.setOfflineAt(form.getTimeOff().getTimestamp())
+						.setFuturePublisher(ModelBuilder.getUser(futurePublisher))
+						.setFutureUnpublisher(ModelBuilder.getUser(futureUnpublisher))
+		);
 		model.setPlanned(form.isPlanned());
 
 		return model;

@@ -3,13 +3,13 @@
 <div class="modal-title">
     <h5>
         <span>{{ 'modal.publish_protocol_title_prefix' | i18n }}</span>
-        <span class="page-name" title="page.name">{{ page.name }}"</span>
+        <span class="page-name" title="page.name">{{ item.name }}"</span>
 
         <span *ngIf="languageVariants?.length > 1">
             <gtx-dropdown-list align="right">
                 <gtx-dropdown-trigger>
                     <span class="pre">in</span>
-                    <span class="clickable">{{ 'lang.' + page?.language | i18n }}</span>
+                    <span class="clickable">{{ 'lang.' + item?.language | i18n }}</span>
                     <icon class="collapse">keyboard_arrow_down</icon> 
                 </gtx-dropdown-trigger>
 

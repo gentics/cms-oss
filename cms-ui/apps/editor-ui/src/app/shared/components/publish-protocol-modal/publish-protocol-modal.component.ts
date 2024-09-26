@@ -6,22 +6,22 @@ import {
     OnInit,
 } from '@angular/core';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { Page, PublishLogEntry, PublishLogListOption, PublishType, ResponseCode } from '@gentics/cms-models';
+import { Form, Page, PublishLogEntry, PublishLogListOption, PublishType, ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
 
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 @Component({
     selector: 'gtx-page-publish-protocol-modal',
-    templateUrl: './page-publish-protocol-modal.html',
-    styleUrls: ['./page-publish-protocol-modal.scss'],
+    templateUrl: './publish-protocol-modal.html',
+    styleUrls: ['./publish-protocol-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PagePublishProtocolModalComponent extends BaseModal<void> implements OnInit {
+export class PublishProtocolModalComponent extends BaseModal<void> implements OnInit {
     @Input()
-    public page: Page;
+    public item: Page | Form;
     public loading = false;
     public languageVariants: Page[];
     public publishLogEntries: PublishLogEntry[];
@@ -38,8 +38,8 @@ export class PagePublishProtocolModalComponent extends BaseModal<void> implement
     ngOnInit(): void {
         this.loading = true;
         Promise.all([
-            this.fetchLogEntries(this.page.id),
-            this.fetchLanguageVariant(this.page.id),
+            this.fetchLogEntries(this.item),
+            this.fetchLanguageVariant(this.item.id),
         ]).then(()=> {
             this.loading = false;
             this.changeDetector.markForCheck();
@@ -47,6 +47,9 @@ export class PagePublishProtocolModalComponent extends BaseModal<void> implement
     }
 
     private async fetchLanguageVariant(pageId: number): Promise<void> {
+        if (this.item.type !== 'page') {
+            return;
+        }
         const response = await this.api.page.get(pageId, {langvars: true}).toPromise();
 
         if (response.responseInfo.responseCode !== ResponseCode.OK) {
@@ -59,12 +62,12 @@ export class PagePublishProtocolModalComponent extends BaseModal<void> implement
         }
     }
 
-    private async fetchLogEntries(pageId: number): Promise<void>{
+    private async fetchLogEntries(item: Page | Form): Promise<void>{
         this.loading = true;
 
         const options: PublishLogListOption = {
-            objId: pageId,
-            type:  PublishType.PAGE,
+            objId: item.id,
+            type:  item.type === 'page'? PublishType.PAGE: PublishType.FORM,
             pageSize: PAGE_SIZE,
         }
         const response = await this.api.publishProtocol.list(options).toPromise();
@@ -92,8 +95,8 @@ export class PagePublishProtocolModalComponent extends BaseModal<void> implement
     }
 
     public selectPageVariant(variant: Page): void {
-        this.page = variant;
-        this.fetchLogEntries(this.page.id);
+        this.item = variant;
+        this.fetchLogEntries(this.item);
     }
 
 }

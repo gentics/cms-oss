@@ -6,7 +6,7 @@ import {
     ChannelDependenciesModal,
     InheritanceDialog,
     LinkTemplateModal,
-    PagePublishProtocolModalComponent,
+    PublishProtocolModalComponent,
     PageVersionsModal,
     PublishTimeManagedPagesModal,
     SynchronizeChannelModal,
@@ -593,9 +593,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .catch(err => {});
     }
 
-    openPublishProtocol(page: Page): void {
-        const options = { page };
-        this.modalService.fromComponent(PagePublishProtocolModalComponent, null, options)
+    openPublishProtocol(item: Page | Form): void {
+        const options = {
+            item,
+        };
+
+        this.modalService.fromComponent(PublishProtocolModalComponent, null, options)
             .then(modal => modal.open())
             .catch(err => {});
     }

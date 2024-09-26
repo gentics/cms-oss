@@ -5,9 +5,10 @@ import {
     Input,
     OnInit,
 } from '@angular/core';
+import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { Page, PublishLogEntry, PublishLogListOption, PublishType, ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
 
 
 const PAGE_SIZE = 10;
@@ -18,18 +19,20 @@ const PAGE_SIZE = 10;
     styleUrls: ['./page-publish-protocol-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
+export class PagePublishProtocolModalComponent extends BaseModal<void> implements OnInit {
     @Input()
     public page: Page;
     public loading = false;
-    public backgroundActivity = false;
     public languageVariants: Page[];
     public publishLogEntries: PublishLogEntry[];
 
     constructor(
         private api: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
-    ) { }
+        private errorHandler: ErrorHandler,
+    ) {
+        super();
+    }
 
 
     ngOnInit(): void {
@@ -47,11 +50,11 @@ export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
         const response = await this.api.page.get(pageId, {langvars: true}).toPromise();
 
         if (response.responseInfo.responseCode !== ResponseCode.OK) {
-            Promise.reject(new Error('Unable to retrieve language variants'));
+            return this.errorHandler.catch(new Error('Unable to retrieve language variants'));
         }
 
         this.languageVariants = [];
-        for (const [key, languageVariant] of Object.entries(response.page.languageVariants)) {
+        for (const languageVariant of Object.values(response.page.languageVariants || {})) {
             this.languageVariants.push(languageVariant);
         }
     }
@@ -67,7 +70,7 @@ export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
         const response = await this.api.publishProtocol.list(options).toPromise();
 
         if (response.responseInfo.responseCode !== ResponseCode.OK) {
-            Promise.reject(new Error('Unable to retrieve publish protocol'));
+            return this.errorHandler.catch(new Error('Unable to retrieve publish protocol'));
         }
 
         this.publishLogEntries = response.items.map(item => {
@@ -93,15 +96,4 @@ export class PagePublishProtocolModalComponent implements IModalDialog, OnInit {
         this.fetchLogEntries(this.page.id);
     }
 
-    closeFn(): void { }
-
-    cancelFn(): void { }
-
-    registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
-    }
 }

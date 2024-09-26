@@ -29,6 +29,12 @@ export interface FormTimeManagement {
 
     /** Form Version that will be published at the timestamp */
     version?: FormVersion;
+
+    /* The user that planned to publish */
+    futurePublisher?: User,
+
+    /* The user that planned to upublish */
+    futureUnpublisher?: User,
 }
 
 /** Superinterface for queued FormTimeManagement actions/ */

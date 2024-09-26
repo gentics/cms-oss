@@ -186,6 +186,7 @@ public class PageListParameterBean {
 	@QueryParam("excludeMlId")
 	public List<Integer> excludeMlIds = Collections.emptyList();
 
+
 	public PageListParameterBean setNodeId(Integer nodeId) {
 		this.nodeId = nodeId;
 		return this;

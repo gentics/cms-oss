@@ -182,10 +182,30 @@ public class FormFactory extends AbstractFactory {
 		@Unversioned
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
 
+		@DataField("unpublished_date")
+		@Updateable
+		@Unversioned
+		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
+
 		@DataField("publisher")
 		@Updateable
 		@Unversioned
 		protected int publisherId = 0;
+
+		@DataField("future_publisher")
+		@Updateable
+		@Unversioned
+		protected int futurePublisherId = 0;
+
+		@DataField("unpublisher")
+		@Updateable
+		@Unversioned
+		protected int unpublisherId = 0;
+
+		@DataField("future_unpublisher")
+		@Updateable
+		@Unversioned
+		protected int futureUnpublisherId = 0;
 
 		@DataField("time_pub")
 		@Unversioned
@@ -330,10 +350,30 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public ContentNodeDate getUnpublishedDate() {
+			return this.unpublishedDate;
+		}
+
+		@Override
 		public SystemUser getPublisher() throws NodeException {
 			SystemUser publisher = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, publisherId);
 			assertNodeObjectNotNull(publisher, publisherId, "Publisher", true);
 			return publisher;
+		}
+
+		@Override
+		public SystemUser getFuturePublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futurePublisherId);
+		}
+
+		@Override
+		public SystemUser getUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
+		}
+
+		@Override
+		public SystemUser getFutureUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futureUnpublisherId);
 		}
 
 		@Override
@@ -362,7 +402,7 @@ public class FormFactory extends AbstractFactory {
 				data.put("time_pub", at);
 				data.put("time_pub_version", version != null ? version.getId() : null);
 				if (user != null) {
-					data.put("publisher", user.getId());
+					data.put("future_publisher", user.getId());
 					publisherId = getInteger(user.getId(), publisherId);
 				}
 
@@ -419,8 +459,9 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void takeOffline(int at) throws ReadOnlyException, NodeException {
+		public void takeOffline(int at) throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
+
 			boolean onlineBefore = isOnline();
 
 			Map<String, Object> id = new HashMap<>();
@@ -439,6 +480,7 @@ public class FormFactory extends AbstractFactory {
 				data.put("online", 0);
 				online = false;
 				DBUtils.updateOrInsert("form", id, data);
+				saveUnpublishInfo();
 
 				ActionLogger.logCmd(ActionLogger.PAGEOFFLINE, TYPE_FORM, getId(), getFolderId(), "Form offline");
 
@@ -463,6 +505,17 @@ public class FormFactory extends AbstractFactory {
 
 			// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
 			t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
+		}
+
+		/**
+		 * Saves the future publisher
+		 *
+		 * @throws NodeException
+		 */
+		private void saveUnpublishInfo() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			DBUtils.update("UPDATE form SET future_unpublisher = ? WHERE id = ?", t.getUserId(), getId());
 		}
 
 		@Override

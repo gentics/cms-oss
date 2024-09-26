@@ -54,6 +54,7 @@ public class PublishableParameterBean extends EditableParameterBean {
 	@QueryParam("online")
 	public Boolean online;
 
+
 	public PublishableParameterBean setPublisher(boolean publisher) {
 		isPublisher = publisher;
 		return this;
@@ -88,4 +89,5 @@ public class PublishableParameterBean extends EditableParameterBean {
 		this.online = online;
 		return this;
 	}
+
 }

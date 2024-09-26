@@ -78,6 +78,7 @@ $highlighted-item-bg: desaturate(lighten($gtx-color-primary, 52%), 35%);
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-end;
+    white-space: nowrap;
 
     detail-chip {
         margin: 2px 2px;

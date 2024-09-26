@@ -76,6 +76,7 @@ import {
     UploadButtonComponent,
     UsageListComponent,
     UsageModalComponent,
+    PublishProtocolModalComponent,
 } from './components';
 import {
     DynamicDisableDirective,
@@ -183,6 +184,7 @@ const ENTRY_COMPONENTS = [
     MultiMoveModal,
     MultiRestoreModalComponent,
     PageVersionsModal,
+    PublishProtocolModalComponent,
     PublishPagesModalComponent,
     PublishTimeManagedPagesModal,
     RepositoryBrowser,

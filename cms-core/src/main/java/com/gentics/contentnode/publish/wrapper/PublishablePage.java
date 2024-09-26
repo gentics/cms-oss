@@ -421,6 +421,11 @@ public class PublishablePage extends AbstractPage {
 	protected ContentNodeDate pDate;
 
 	/**
+	 * unpublish date
+	 */
+	protected ContentNodeDate unpublishedDate;
+
+	/**
 	 * Map of object tags
 	 */
 	protected Map<String, ObjectTag> objectTags;
@@ -637,6 +642,21 @@ public class PublishablePage extends AbstractPage {
 		return getSystemUser(wrappedPage.getPublisher());
 	}
 
+	@Override
+	public SystemUser getFuturePublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getFuturePublisher());
+	}
+
+	@Override
+	public SystemUser getUnpublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getUnpublisher ());
+	}
+
+	@Override
+	public SystemUser getFutureUnpublisher() throws NodeException {
+		return getSystemUser(wrappedPage.getFutureUnpublisher());
+	}
+
 	/**
 	 * Get the given user as SystemUser
 	 * @param user user
@@ -726,6 +746,11 @@ public class PublishablePage extends AbstractPage {
 	@Override
 	public ContentNodeDate getPDate() {
 		return pDate;
+	}
+
+	@Override
+	public ContentNodeDate getUnpublishedDate() {
+		return unpublishedDate;
 	}
 
 	@Override

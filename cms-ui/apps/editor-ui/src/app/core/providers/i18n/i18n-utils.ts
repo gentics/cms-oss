@@ -1,4 +1,4 @@
-import { Form, FormRequestOptions, Page, PageRequestOptions, PageVersion, TimeManagement } from '@gentics/cms-models';
+import { Form, FormRequestOptions, Page, PageRequestOptions, PageVersion, TimeManagement, User } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -127,7 +127,7 @@ export function getFormattedTimeMgmtValue(
             const timeManagement = item.timeManagement;
             if (timeManagement.version) {
                 version = timeManagement.version.number;
-                user = item.timeManagement.version.editor.firstName + ' ' + item.timeManagement.version.editor.lastName;
+                user = `${item.timeManagement?.futurePublisher.firstName} ${item.timeManagement?.futurePublisher.lastName}`;
                 translation = i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
             } else {
                 user = i18n.translate('editor.publish_queue_migration_notice');
@@ -191,7 +191,8 @@ export function getFormattedTimeMgmtValue(
         case 'offlineAt':
             dateRaw = item.timeManagement.offlineAt;
             date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
-            user = item.timeManagement.version && item.timeManagement.version.editor.firstName + ' ' + item.timeManagement.version.editor.lastName;
+            user = item.timeManagement.futureUnpublisher && `${item.timeManagement.futureUnpublisher.firstName} ${item.timeManagement.futureUnpublisher.lastName}`;
+
             // if no user is available, fallback to date-only
             if (user) {
                 translation = i18n.translate('editor.publish_queue_date_value_label', {date, user})

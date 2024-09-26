@@ -27,6 +27,11 @@ export interface TimeManagement {
     /** Page / Form Version that will be published at the timestamp */
     version?: PageVersion;
 
+    /* The user that planned to publish */
+    futurePublisher?: User,
+
+    /* The user that planned to upublish */
+    futureUnpublisher?: User,
 }
 
 /** Superinterface for queued TimeManagement actions/ */

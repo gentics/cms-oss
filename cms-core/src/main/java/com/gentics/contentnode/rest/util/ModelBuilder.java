@@ -1118,6 +1118,13 @@ public class ModelBuilder {
 		restPage.setCustomEdate(nodePage.getCustomEDate().getIntTimestamp());
 
 		restPage.setPdate(nodePage.getPDate().getIntTimestamp());
+
+		restPage.setUnpublishedDate(nodePage.getUnpublishedDate().getIntTimestamp());
+
+		if (nodePage.getUnpublisher() != null) {
+			restPage.setUnpublisher(getUser(nodePage.getUnpublisher()));
+		}
+
 		if (nodePage.getPublisher() != null) {
 			restPage.setPublisher(getUser(nodePage.getPublisher()));
 		}
@@ -1165,6 +1172,12 @@ public class ModelBuilder {
 		if (nodePage.getOffQueueUser() != null) {
 			timeManagement.setQueuedOffline(
 					new QueuedTimeManagement().setAt(nodePage.getTimeOffQueue().getIntTimestamp()).setUser(getUser(nodePage.getOffQueueUser())));
+		}
+		if (nodePage.getFuturePublisher() != null) {
+			timeManagement.setFuturePublisher(getUser(nodePage.getFuturePublisher()));
+		}
+		if (nodePage.getFutureUnpublisher() != null) {
+			timeManagement.setFutureUnpublisher(getUser(nodePage.getFutureUnpublisher()));
 		}
 		restPage.setTimeManagement(timeManagement);
 

@@ -39,11 +39,38 @@ public interface PublishableNodeObject extends NodeObject {
 	ContentNodeDate getPDate();
 
 	/**
+	 * get the unpublish date as a unix timestamp
+	 * @return unpublish date unix timestamp
+	 */
+	ContentNodeDate getUnpublishedDate();
+
+	/**
 	 * Get the user, who published the object (last)
 	 * @return last publisher, may be null
 	 * @throws NodeException
 	 */
 	SystemUser getPublisher() throws NodeException;
+
+	/**
+	 * Get the user, who is going to publish the object (i.e. used the time management)
+	 * @return unpublisher
+	 * @throws NodeException
+	 */
+	SystemUser getFuturePublisher() throws NodeException;
+
+	/**
+	 * Get the user, who is going to unpublished the object (i.e. used the time management)
+	 * @return unpublisher
+	 * @throws NodeException
+	 */
+	SystemUser getFutureUnpublisher() throws NodeException;
+
+	/**
+	 * Get the user, who unpublished the object (last)
+	 * @return last unpublisher, may be null
+	 * @throws NodeException
+	 */
+	SystemUser getUnpublisher() throws NodeException;
 
 	/**
 	 * Publish the object

@@ -11,6 +11,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLan
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

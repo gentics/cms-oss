@@ -1408,7 +1408,7 @@ public class PermHandler {
 					ObjectTagDefinition tagDefinition = tag.getDefinition();
 
 					if (tagDefinition != null && (tagDefinition.isSyncContentset() || tagDefinition.isSyncChannelset() || tagDefinition.isSyncVariants())) {
-						for (Pair<NodeObject, ObjectTag> variant : tag.getSyncVariants()) {
+						for (Pair<NodeObject, ObjectTag> variant : tag.getSyncVariants(false)) {
 							// Check if the user can edit the object this object tag belongs to.
 							canEdit &= canEdit(variant.getLeft());
 						}

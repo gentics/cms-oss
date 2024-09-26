@@ -52,6 +52,20 @@ public interface PublishableNodeObject extends NodeObject {
 	SystemUser getPublisher() throws NodeException;
 
 	/**
+	 * Get the user, who is going to publish the object (i.e. used the time management)
+	 * @return unpublisher
+	 * @throws NodeException
+	 */
+	SystemUser getFuturePublisher() throws NodeException;
+
+	/**
+	 * Get the user, who is going to unpublished the object (i.e. used the time management)
+	 * @return unpublisher
+	 * @throws NodeException
+	 */
+	SystemUser getFutureUnpublisher() throws NodeException;
+
+	/**
 	 * Get the user, who unpublished the object (last)
 	 * @return last unpublisher, may be null
 	 * @throws NodeException

@@ -807,5 +807,5 @@
 2024-03-29  CH-1716 NOP SQL ALTER TABLE construct DROP COLUMN icon;
 2024-07-04  CH-1718 NOP SQL ALTER TABLE node ADD COLUMN mesh_project_name VARCHAR(255) NOT NULL DEFAULT '';
 2024-07-11  CH-1719 NOP SQL INSERT INTO type (id, name, description, auto, javaclass) VALUES (43, 'Handlebars', 'Render Handlebars Template', 0, 'com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType'); ## Add new part type for rendering Handlebars template
-2024-09-12  CH-1726 GO  SQL ALTER TABLE page ADD unpublished_date INT, ADD unpublisher INT;
-2024-09-12  CH-1727 GO  SQL ALTER TABLE form ADD unpublished_date INT, ADD unpublisher INT;
+2024-09-12  CH-1726 GO  SQL ALTER TABLE page ADD unpublished_date INT, ADD unpublisher INT, ADD future_unpublisher, ADD future_publisher INT;
+2024-09-12  CH-1727 GO  SQL ALTER TABLE form ADD unpublished_date INT, ADD unpublisher INT, ADD future_unpublisher, ADD future_publisher INT;

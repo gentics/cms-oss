@@ -36,6 +36,11 @@
                 {{ 'editor.version_history_label' | i18n }}
             </gtx-dropdown-item>
 
+            <gtx-dropdown-item *ngIf="buttons.publishProtocol" (click)="publishProtocolClicked(item)">
+                <icon left>news</icon>
+                {{ 'editor.published_protocol_label' | i18n }}
+            </gtx-dropdown-item>
+
             <gtx-dropdown-item
                 *ngIf="buttons.setAsStartpage"
                 data-action="startpage"

@@ -1,0 +1,63 @@
+<gtx-progress-bar [active]="loading || backgroundActivity"/>
+<div class="activity-overlay" *ngIf="backgroundActivity"></div>
+
+<div class="modal-title">
+    <h5>
+        <span>{{ 'modal.publish_protocol_title_prefix' | i18n }}</span>
+        <span class="page-name" title="page.name">{{ page.name }}"</span>
+
+        <span *ngIf="languageVariants?.length > 1">
+            <gtx-dropdown-list align="right">
+                <gtx-dropdown-trigger>
+                    <span class="pre">in</span>
+                    <span class="clickable">{{ 'lang.' + page?.language | i18n }}</span>
+                    <icon class="collapse">keyboard_arrow_down</icon> 
+                </gtx-dropdown-trigger>
+
+                <gtx-dropdown-content>
+                    <gtx-dropdown-item *ngFor="let variant of languageVariants" (click)="selectPageVariant(variant)">
+                        {{ 'lang.' + variant.language | i18n }}
+                    </gtx-dropdown-item>
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </span>
+    </h5>
+</div>
+
+<div class="modal-content">
+    <div class="loading-placeholder" *ngIf="loading">
+        <span class="text">{{ 'modal.page_versions_loading' | i18n }}</span>
+    </div>
+
+    <div *ngIf="publishLogEntries?.length === 0">
+        <gtx-contents-list-item>
+            <icon>not_interested</icon>
+            <div class="item-primary">{{ 'modal.page_publish_log_empty_label' | i18n }}</div>
+        </gtx-contents-list-item>
+    </div>
+
+    <div *ngIf="publishLogEntries?.length > 0">
+        <gtx-contents-list-item *ngFor="let entry of publishLogEntries">
+            <div class="publish-entry">
+                <span class="state" [class]="entry.state.toString().toLocaleLowerCase()">{{ entry.state }}</span>
+                <span class="date">{{ 
+                    'modal.page_published_date' | i18n: {
+                        date: entry.date
+                    }
+                }}</span>
+                <span *ngIf="entry.user && entry.user.lastName" class="editor">
+                    {{ 'modal.page_versions_editor_label' | i18n: { 
+                            name: entry.user?.firstName + ' ' + entry.user?.lastName 
+                        }
+                    }}
+                </span>
+            </div>
+        </gtx-contents-list-item>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="closeFn()">
+        {{ 'modal.page_versions_close_button' | i18n }}
+    </gtx-button>
+</div>

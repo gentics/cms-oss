@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 
 import com.gentics.contentnode.rest.model.PublishLogDto;
 import com.gentics.contentnode.rest.model.response.GenericItemList;
+import com.gentics.contentnode.rest.resource.parameter.FilterPublishableObjectBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
@@ -32,7 +33,9 @@ public interface PublishProtocolResource {
 			@ResponseCode(code = 404, condition = "Not found")
 
 	})
-	PublishLogDto get(@PathParam("type") String type, @PathParam("objId") Integer objId) throws Exception;
+	PublishLogDto get(
+			@PathParam("type") String type,
+			@PathParam("objId") Integer objId) throws Exception;
 
 	/**
 	 * Retrieves a list of publish protocol entries with pagination.
@@ -47,6 +50,7 @@ public interface PublishProtocolResource {
 			@ResponseCode(code = 200, condition = "Publish protocol list is returned.")
 	})
 	GenericItemList<PublishLogDto> list(
-			@BeanParam PagingParameterBean paging) throws Exception;
+			@BeanParam PagingParameterBean paging,
+			@BeanParam FilterPublishableObjectBean filter) throws Exception;
 
 }

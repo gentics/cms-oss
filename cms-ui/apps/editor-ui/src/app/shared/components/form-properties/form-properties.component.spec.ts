@@ -22,7 +22,7 @@ import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
-import { FormPropertiesComponent } from './form-properties-form.component';
+import { FormPropertiesComponent } from './form-properties.component';
 
 type PageWithNodeId = ItemInNode<Page<Raw>>;
 

@@ -83,8 +83,12 @@ export class PagePropertiesComponent
     @Input()
     public mode: PagePropertiesMode = PagePropertiesMode.EDIT;
 
+    /**
+     * When the linking of templates to the current folder have been updated and need to be
+     * re-fetched.
+     */
     @Output()
-    public templatesLoaded = new EventEmitter<void>();
+    public templatesLinked = new EventEmitter<void>();
 
     public linkToTemplatesAllowed: boolean
 
@@ -111,7 +115,8 @@ export class PagePropertiesComponent
             this.niceUrlEnabled = enabled;
 
             if (this.form) {
-                this.form.updateValueAndValidity();
+                this.configureForm(this.form.value, false);
+                this.triggerChange(this.assembleValue(this.form.value));
             }
 
             this.changeDetector.markForCheck();
@@ -127,21 +132,22 @@ export class PagePropertiesComponent
                 // Make sure we have the required properties at least set before we attempt to request
                 && value?.name && value?.language && value?.templateId != null,
             ),
-            debounceTime(100),
             map(value => ({
                 folderId: this.folderId,
                 nodeId: this.nodeId,
 
                 pageName: value.name,
-                fileName: this.form.controls.fileName.pristine ? '' : value.fileName || '',
+                fileName: value.fileName,
                 language: value.language,
                 templateId: value.templateId,
             })),
             distinctUntilChanged(isEqual),
+            debounceTime(100),
             switchMap(req => this.client.page.suggestFileName(req)),
         ).subscribe(res => {
-            if (res.fileName && this.form.controls.fileName.pristine) {
-                this.form.controls.fileName.setValue(res.fileName);
+            if (res?.fileName && this.form.controls.fileName.pristine) {
+                this.form.patchValue({ fileName: res.fileName }, { emitEvent: false });
+                this.triggerChange(this.assembleValue(this.form.value));
                 this.changeDetector.markForCheck();
             }
         }));
@@ -209,7 +215,7 @@ export class PagePropertiesComponent
     }
 
     protected configureForm(value: EditablePageProps, loud?: boolean): void {
-        const options = { onlySelf: true, emitEvent: loud };
+        const options = { onlySelf: false, emitEvent: loud };
         setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlEnabled, options);
         setControlsEnabled(this.form, ['language'], !this.disableLanguageSelect, options);
     }
@@ -264,8 +270,11 @@ export class PagePropertiesComponent
 
     public async linkToTemplatesClicked(event: Event): Promise<void> {
         cancelEvent(event);
-        await this.contextMenuOperations.linkTemplatesToFolder(this.nodeId, this.folderId);
+        const templates = await this.contextMenuOperations.linkTemplatesToFolder(this.nodeId, this.folderId);
+        if (templates != null) {
+            this.templates = templates;
+        }
 
-        this.templatesLoaded.emit();
+        this.templatesLinked.emit();
     }
 }

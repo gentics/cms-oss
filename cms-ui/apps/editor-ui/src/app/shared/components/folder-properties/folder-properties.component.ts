@@ -198,9 +198,9 @@ export class FolderPropertiesComponent
             }]),
 
             // I18n properties
-            nameI18n: new FormControl(this.value?.nameI18n),
-            descriptionI18n: new FormControl(this.value?.descriptionI18n),
-            publishDirI18n: new FormControl(this.value?.publishDirI18n),
+            nameI18n: new FormControl(this.value?.nameI18n || {}),
+            descriptionI18n: new FormControl(this.value?.descriptionI18n || {}),
+            publishDirI18n: new FormControl(this.value?.publishDirI18n || {}),
         });
 
         this.subscriptions.push(form.controls.name.valueChanges.pipe(

@@ -15,6 +15,10 @@ import {
 } from '@gentics/cms-models';
 
 export function getItemProperties(item: InheritableItem | Node): EditableProperties {
+    if (item == null) {
+        return null;
+    }
+
     // an item with type "node" or "channel" may be the base folder of a node. If it has
     // a folder-only property, then we can assume it is the base folder.
     if ((item.type === 'node' || item.type === 'channel') && item.hasOwnProperty('hasSubfolders')) {

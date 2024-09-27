@@ -11,7 +11,7 @@ import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
-import { FilePropertiesForm } from '../../../../shared/components/file-properties/file-properties.component';
+import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
 import { DynamicDisableDirective } from '../../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { FileSizePipe } from '../../../../shared/pipes/file-size/file-size.pipe';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
@@ -56,7 +56,7 @@ describe('UploadWithPropertiesComponent', () => {
             declarations: [
                 BrowseBoxComponent,
                 DynamicDisableDirective,
-                FilePropertiesForm,
+                FilePropertiesComponent,
                 FileSizePipe,
                 ImagePreviewComponent,
                 UploadWithPropertiesComponent,

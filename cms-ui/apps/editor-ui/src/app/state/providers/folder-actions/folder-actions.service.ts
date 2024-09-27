@@ -1305,7 +1305,7 @@ export class FolderActionsService {
     /**
      * Get templates of this folder
      */
-    async getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    async getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[]> {
         const nodeId = this.getCurrentNodeId();
 
         const maxItems = fetchAll ? -1 : 10;
@@ -1329,6 +1329,7 @@ export class FolderActionsService {
                 total: res.numItems,
                 schema: getNormalizrSchema('templates'),
             })).toPromise();
+            return res.templates;
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction('templates', error.message)).toPromise();
             throw error;

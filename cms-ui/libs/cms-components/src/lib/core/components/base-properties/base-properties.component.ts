@@ -1,9 +1,11 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, Validator } from '@angular/forms';
-import { BaseFormElementComponent, FormProperties, setEnabled } from '@gentics/ui-core';
+import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
+
+const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
@@ -74,6 +76,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     ) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', false]);
+        // Set the value to this flag. Used to ignore changes until intial value has been provided.
+        this.value = INIVIAL_UNSET_VALUE as any;
     }
 
     public ngOnInit(): void {
@@ -129,8 +133,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             ),
             this.form.statusChanges,
         ]).pipe(
-            // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled),
+            // Do not emit values if the value hasn't initialized yet
+            filter(() => (this.value as any) !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),

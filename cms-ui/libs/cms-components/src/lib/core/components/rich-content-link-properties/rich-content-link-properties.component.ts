@@ -1,12 +1,21 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AllowedSelectionType, File, ItemInNode, Node, Page } from '@gentics/cms-models';
+import { File, ItemInNode, Node, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { map, switchMap } from 'rxjs/operators';
 import { LINK_DEFAULT_DISPLAY_VALUE, RichContentLink, RichContentLinkType, RichContentType } from '../../../common/models';
 import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
 import { BasePropertiesComponent } from '../base-properties/base-properties.component';
+
+function getItemType(linkType: RichContentLinkType): 'page' | 'file' {
+    return linkType === RichContentLinkType.PAGE ? 'page' : 'file';
+}
+
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+function getLinkType(itemType: string): RichContentLinkType.PAGE | RichContentLinkType.FILE {
+    return itemType === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
+}
 
 @Component({
     selector: 'gtx-rich-content-link-properties',
@@ -48,12 +57,17 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
      * The display name of the currently picked item.
      */
     public itemDisplayValue: string;
+    /**
+     * If it is currently loading the item.
+     */
+    public loadingItem = false;
 
     /**
      * The loaded item.
      */
     protected loadedItem: File | Page;
     protected loadedNode: Node;
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     protected loadedItemType: RichContentLinkType.FILE | RichContentLinkType.PAGE;
 
     constructor(
@@ -105,17 +119,6 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
         return value;
     }
 
-    protected getSelectionType(type: RichContentLinkType): AllowedSelectionType {
-        switch (type) {
-            case RichContentLinkType.FILE:
-                return 'file';
-            case RichContentLinkType.PAGE:
-                return 'page';
-            default:
-                return null;
-        }
-    }
-
     protected override onValueChange(): void {
         super.onValueChange();
 
@@ -134,6 +137,9 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
         ) {
             return;
         }
+
+        this.loadingItem = true;
+        this.changeDetector.markForCheck();
 
         this.subscriptions.push(this.client.node.get(this.value.nodeId).pipe(
             switchMap(nodeRes => {
@@ -154,16 +160,18 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
             }),
         ).subscribe(([node, item]) => {
             this.hasLoadedItem = true;
+            this.loadingItem = false;
             this.loadedNode = node as Node;
             this.loadedItem = item as Page | File;
             this.itemDisplayValue = item.name;
-            this.loadedItemType = item.type === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
+            this.loadedItemType = getLinkType(item.type);
             this.changeDetector.markForCheck();
         }));
     }
 
     public async pickItem(): Promise<void> {
-        const type = this.form?.value?.linkType === RichContentLinkType.PAGE ? 'page' : 'file';
+        const type = getItemType(this.form?.value?.linkType);
+
         try {
             const picked = await this.gcmsUiServices.openRepositoryBrowser({
                 allowedSelection: type,
@@ -174,11 +182,15 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
                 return;
             }
 
+            this.loadingItem = false;
             this.hasLoadedItem = true;
             this.loadedNode = (await this.client.node.get(picked.nodeId).toPromise()).node;
             this.loadedItem = picked as any;
             this.itemDisplayValue = this.loadedItem.name;
-            this.loadedItemType = picked.type === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
+            this.loadedItemType = getLinkType(picked.type);
+
+            this.form.controls.itemId.markAsDirty();
+            this.form.controls.nodeId.markAsDirty();
 
             this.form.patchValue({
                 itemId: this.pickWithLocalIds ? this.loadedItem.id : this.loadedItem.globalId,

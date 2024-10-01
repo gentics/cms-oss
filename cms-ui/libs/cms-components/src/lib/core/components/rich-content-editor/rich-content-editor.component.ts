@@ -276,12 +276,16 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public async addNewContent(type: RichContentType, event?: Event): Promise<void> {
         cancelEvent(event);
+        if (!this.focused || this.activeContent || this.disabled) {
+            return;
+        }
 
         const container = this.containerRef.nativeElement;
         const doc = container.ownerDocument;
         const range = doc.getSelection().getRangeAt(0).cloneRange();
 
-        const content = await this.manageContentElement(type, null, true);
+        const content = await this.manageContentElement(type, null, range.collapsed);
+
         if (content == null) {
             return;
         }
@@ -304,8 +308,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public async editCurrentContent(event?: Event): Promise<void> {
         cancelEvent(event);
-
-        if (!this.activeContent || !this.activeElement) {
+        if (!this.focused || !this.activeContent || !this.activeElement || this.disabled) {
             return;
         }
 
@@ -321,8 +324,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     public deleteCurrentContent(event?: Event): void {
         cancelEvent(event);
-
-        if (!this.activeContent || !this.activeElement) {
+        if (!this.focused || !this.activeContent || !this.activeElement || this.disabled) {
             return;
         }
 

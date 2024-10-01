@@ -40,7 +40,7 @@
             property-name="item"
             [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | i18n) + '*'"
             [disabled]="disabled"
-            [displayValue]="itemDisplayValue"
+            [displayValue]="loadingItem ? ('richContent.link_item_loading_text' | i18n) : itemDisplayValue"
             [clearable]="false"
             (browse)="pickItem()"
         ></browse-box>

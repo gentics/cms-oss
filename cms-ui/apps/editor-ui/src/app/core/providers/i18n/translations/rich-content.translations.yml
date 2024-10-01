@@ -22,6 +22,9 @@ link_url:
 link_item:
     en: "Link Target"
     de: "Ziel Element"
+link_item_loading_text:
+    en: "Loading ..."
+    de: "Lade ..."
 link_item_PAGE:
     en: "Target Page"
     de: "Zielseite"

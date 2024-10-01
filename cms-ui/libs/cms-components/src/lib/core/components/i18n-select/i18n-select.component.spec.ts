@@ -41,7 +41,7 @@ describe('I18nSelectComponent', () => {
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-        await fixture.whenStable();
+        await fixture.whenRenderingDone();
         await fixture.whenRenderingDone();
         selectComponent = fixture.debugElement.children[0].children[0].componentInstance
     });

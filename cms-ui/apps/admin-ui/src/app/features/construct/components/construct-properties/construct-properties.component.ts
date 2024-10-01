@@ -12,7 +12,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, UntypedFormControl, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE, FormProperties } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     AccessControlledType,
     CmsI18nValue,
@@ -27,7 +27,7 @@ import {
     TagTypeBO,
     TagTypeBase,
 } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 

@@ -1,8 +1,10 @@
-<gtx-input class="filter-input"
-           #filterInput
-           *ngIf="displayFilter"
-           [label]="label"
-           [(ngModel)]="filterString"
-           (click)="onClick($event)"
-           (change)="onInput($event)"></gtx-input>
+<gtx-input
+    *ngIf="displayFilter"
+    #filterInput
+    class="filter-input"
+    [label]="label"
+    [(ngModel)]="filterString"
+    (click)="onClick($event)"
+    (valueChange)="onInput($event)"
+></gtx-input>
 <ng-content></ng-content>

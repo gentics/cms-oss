@@ -1,9 +1,8 @@
-import {Component, Pipe, PipeTransform} from '@angular/core';
+import { Component, Pipe, PipeTransform } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../testing';
-import {GenticsUICoreModule} from '@gentics/ui-core';
-
-import {BrowseBoxComponent} from './browse-box.component';
+import { BrowseBoxComponent } from './browse-box.component';
 
 const CLEAR_BUTTON = '.browse-box__button--clear';
 const BROWSE_BUTTON = '.browse-box__button--browse';
@@ -14,13 +13,13 @@ describe('BrowseBoxComponent', () => {
     beforeEach(() => {
         configureComponentTest({
             imports: [
-                GenticsUICoreModule.forRoot()
+                GenticsUICoreModule.forRoot(),
             ],
             declarations: [
                 BrowseBoxComponent,
                 TestComponent,
-                MockI18nPipe
-            ]
+                MockI18nPipe,
+            ],
         });
     });
 
@@ -32,18 +31,19 @@ describe('BrowseBoxComponent', () => {
 
             const labelElement = fixture.debugElement.query(By.css('gtx-input label'));
             expect(labelElement.nativeElement.innerHTML).toEqual(testLabel);
-        })
+        }),
     );
 
     it('displayValue is shown correctly',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             const testDisplayValue = 'Test Folder';
             instance.displayValue = testDisplayValue;
             fixture.detectChanges();
+            await fixture.whenRenderingDone();
 
             const inputElement = fixture.debugElement.query(By.css('gtx-input input'));
             expect(inputElement.nativeElement.value).toEqual(testDisplayValue);
-        })
+        }),
     );
 
     it('clear button is shown if content is clearable',
@@ -52,7 +52,7 @@ describe('BrowseBoxComponent', () => {
             fixture.detectChanges();
 
             expect(fixture.debugElement.query(By.css(CLEAR_BUTTON))).toBeTruthy();
-        })
+        }),
     );
 
     it('clear button is not shown if content is not clearable',
@@ -61,7 +61,7 @@ describe('BrowseBoxComponent', () => {
             fixture.detectChanges();
 
             expect(fixture.debugElement.query(By.css(CLEAR_BUTTON))).toBeFalsy();
-        })
+        }),
     );
 
     it('clear button shows the set tooltip',
@@ -72,7 +72,7 @@ describe('BrowseBoxComponent', () => {
 
             const clearButton = fixture.debugElement.query(By.css(CLEAR_BUTTON));
             expect(clearButton.nativeElement.title).toEqual(testClearTooltip);
-        })
+        }),
     );
 
     it('clear button shows the default tooltip if none is set',
@@ -82,7 +82,7 @@ describe('BrowseBoxComponent', () => {
 
             const clearButton = fixture.debugElement.query(By.css(CLEAR_BUTTON));
             expect(clearButton.nativeElement.title).toEqual('tag_editor.clear_selection');
-        })
+        }),
     );
 
     it('clear button click is emitted',
@@ -97,7 +97,7 @@ describe('BrowseBoxComponent', () => {
             const clearButton = fixture.debugElement.query(By.css(CLEAR_BUTTON));
             clearButton.nativeElement.click();
             expect(clicked).toEqual(true);
-        })
+        }),
     );
 
     it('browse button is shown',
@@ -105,7 +105,7 @@ describe('BrowseBoxComponent', () => {
             fixture.detectChanges();
 
             expect(fixture.debugElement.query(By.css(BROWSE_BUTTON))).toBeTruthy();
-        })
+        }),
     );
 
     it('browse button shows the set tooltip',
@@ -116,7 +116,7 @@ describe('BrowseBoxComponent', () => {
 
             const browseButton = fixture.debugElement.query(By.css(BROWSE_BUTTON));
             expect(browseButton.nativeElement.title).toEqual(testBrowseTooltip);
-        })
+        }),
     );
 
     it('browse button shows the default tooltip if none is set',
@@ -126,7 +126,7 @@ describe('BrowseBoxComponent', () => {
 
             const browseButton = fixture.debugElement.query(By.css(BROWSE_BUTTON));
             expect(browseButton.nativeElement.title).toEqual('tag_editor.browse');
-        })
+        }),
     );
 
     it('browse button click is emitted',
@@ -141,7 +141,7 @@ describe('BrowseBoxComponent', () => {
             const browseButton = fixture.debugElement.query(By.css(BROWSE_BUTTON));
             browseButton.nativeElement.click();
             expect(clicked).toEqual(true);
-        })
+        }),
     );
 
     it('upload button is shown if content can be uploaded',
@@ -150,7 +150,7 @@ describe('BrowseBoxComponent', () => {
             fixture.detectChanges();
 
             expect(fixture.debugElement.query(By.css(UPLOAD_BUTTON))).toBeTruthy();
-        })
+        }),
     );
 
     it('upload button is not shown if content cannot be uploaded',
@@ -159,7 +159,7 @@ describe('BrowseBoxComponent', () => {
             fixture.detectChanges();
 
             expect(fixture.debugElement.query(By.css(UPLOAD_BUTTON))).toBeFalsy();
-        })
+        }),
     );
 
     it('upload button shows the set tooltip',
@@ -170,7 +170,7 @@ describe('BrowseBoxComponent', () => {
 
             const uploadButton = fixture.debugElement.query(By.css(UPLOAD_BUTTON));
             expect(uploadButton.nativeElement.title).toEqual(testUploadTooltip);
-        })
+        }),
     );
 
     it('upload button shows the default tooltip if none is set',
@@ -180,7 +180,7 @@ describe('BrowseBoxComponent', () => {
 
             const uploadButton = fixture.debugElement.query(By.css(UPLOAD_BUTTON));
             expect(uploadButton.nativeElement.title).toEqual('tag_editor.upload');
-        })
+        }),
     );
 
     it('upload button click is emitted',
@@ -195,7 +195,7 @@ describe('BrowseBoxComponent', () => {
             const uploadButton = fixture.debugElement.query(By.css(UPLOAD_BUTTON));
             uploadButton.nativeElement.click();
             expect(clicked).toEqual(true);
-        })
+        }),
     );
 
     it('all buttons are disabled if browse box is disabled',
@@ -211,7 +211,7 @@ describe('BrowseBoxComponent', () => {
 
             const uploadButton = fixture.debugElement.query(By.css(`${UPLOAD_BUTTON} button`));
             expect(uploadButton.nativeElement.disabled).toEqual(true);
-        })
+        }),
     );
 
 });
@@ -232,17 +232,17 @@ describe('BrowseBoxComponent', () => {
             (browse) = "browseCallback()"
             (upload) = "uploadCallback()"
         ></browse-box>
-    `
+    `,
 })
 class TestComponent {
-    label: string = 'Label';
-    disabled: boolean = false;
-    displayValue: string = 'Folder';
-    clearable: boolean = true;
-    canUpload: boolean = true;
-    clearTooltip: string = 'Clear';
-    browseTooltip: string = 'Browse';
-    uploadTooltip: string = 'Upload';
+    label = 'Label';
+    disabled = false;
+    displayValue = 'Folder';
+    clearable = true;
+    canUpload = true;
+    clearTooltip = 'Clear';
+    browseTooltip = 'Browse';
+    uploadTooltip = 'Upload';
     clearCallback: () => void;
     browseCallback: () => void;
     uploadCallback: () => void;

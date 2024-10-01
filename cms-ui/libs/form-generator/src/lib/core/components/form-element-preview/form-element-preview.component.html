@@ -4,7 +4,7 @@
         <ng-container *ngIf="element.label_property_ui">
             <ng-container *ngIf="!!(element | property | i18nfg$:'content' | async); else emptyProperty">
                 <div class="label-property-value-container">
-                    {{ element | property | i18nfg$:'content' | async }}
+                    {{ element | property | i18nfg$:'content' | async | gtxStripRichContent }}
                 </div>
             </ng-container>
             <ng-template #emptyProperty>

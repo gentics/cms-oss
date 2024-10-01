@@ -57,9 +57,10 @@ import { EditTagInfo, TagEditorHostComponent, TagEditorService } from '../../../
 import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wrapper/iframe-wrapper.component';
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
+import { generateContentTagList } from '../../utils';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
-import { PropertiesEditor } from '../properties-editor/properties-editor.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
+import { PropertiesEditorComponent } from '../properties-editor/properties-editor.component';
 import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
 
 const CONTENT_TAG_NAME = 'contenttag0';
@@ -138,7 +139,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),
@@ -1383,14 +1384,12 @@ describe('CombinedPropertiesEditorComponent', () => {
             componentTest(() => TestComponent, (fixture, testComponent) => {
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                const sub = testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                const contentTags: Tag[] = generateContentTagList(mockPage);
                 tick(1000);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
-                sub.unsubscribe();
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
 
@@ -1405,22 +1404,21 @@ describe('CombinedPropertiesEditorComponent', () => {
                 }));
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                let contentTags: Tag[] = generateContentTagList(mockPage);
                 tick(100);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
 
                 // switch to folder item
                 testComponent.item = mockFolder;
                 fixture.detectChanges();
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                contentTags = generateContentTagList(mockFolder as any);
                 tick(100);
                 expect(contentTags).toEqual([]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
 
@@ -1435,22 +1433,20 @@ describe('CombinedPropertiesEditorComponent', () => {
                 }));
                 testComponent.item = mockFolder;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                let contentTags: Tag[] = generateContentTagList(mockFolder as any);
                 tick(100);
                 expect(contentTags).toEqual([]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows).toEqual([]);
 
                 // switch to page item
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                contentTags = generateContentTagList(mockPage);
                 tick(100);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
     });
@@ -1639,8 +1635,8 @@ class TestComponent {
 }
 
 @Component({
-    selector: 'properties-editor',
-    providers: [ { provide: PropertiesEditor, useClass: MockPropertiesEditor } ],
+    selector: 'gtx-properties-editor',
+    providers: [ { provide: PropertiesEditorComponent, useClass: MockPropertiesEditor } ],
     template: '',
 })
 class MockPropertiesEditor {

@@ -1,7 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { Validators } from '@angular/forms';
+import type { AbstractControl, Validators } from '@angular/forms';
 import { FormGroup, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import {
+    FormChangePropagation,
     FormProperties,
     JSON_VALUE_INVALID,
     JsonValidationErrorModel,
@@ -14,28 +15,31 @@ import {
     VALIDATOR_REGEX_ERROR_PROPERTY,
 } from '../common';
 
+export function setEnabled(ctl: AbstractControl, enabled: boolean, options?: FormChangePropagation): void {
+    if (ctl == null) {
+        return;
+    }
+
+    // Nothing to change
+    if ((enabled && ctl.enabled) || (!enabled && !ctl.enabled)) {
+        return;
+    }
+
+    if (enabled) {
+        ctl.enable(options);
+    } else {
+        ctl.disable(options);
+    }
+}
+
 export function setControlsEnabled<T = any>(
     group: FormGroup<FormProperties<T>>,
     controls: (keyof T)[],
     enabled: boolean,
-    options?: { emitEvent?: boolean, onlySelf?: boolean },
+    options?: FormChangePropagation,
 ): void {
     for (const ctlName of controls) {
-        const ctl = group.get(ctlName as any);
-        if (ctl == null) {
-            continue;
-        }
-
-        // Nothing to change
-        if ((enabled && ctl.enabled) || (!enabled && !ctl.enabled)) {
-            continue;
-        }
-
-        if (enabled) {
-            ctl.enable(options);
-        } else {
-            ctl.disable(options);
-        }
+        setEnabled(group.controls[ctlName], enabled, options);
     }
 }
 

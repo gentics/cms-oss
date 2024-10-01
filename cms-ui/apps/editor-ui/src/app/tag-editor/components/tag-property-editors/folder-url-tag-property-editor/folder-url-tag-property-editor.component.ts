@@ -226,8 +226,8 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
             this.folderActions.createNewFolder({
                 name: this.subfolderName,
                 description: '',
-                directory: parentFolder.publishDir,
-                parentFolderId: parentFolder.id,
+                publishDir: parentFolder.publishDir,
+                motherId: parentFolder.id,
                 nodeId: parentFolder.nodeId,
                 failOnDuplicate: true,
             })

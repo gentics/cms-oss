@@ -330,6 +330,10 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
         node: Node,
         tagEditorHost: TagEditorHostComponent,
     ): void {
+        if (tag == null) {
+            return;
+        }
+
         tag = cloneDeep(tag);
         const isReadOnly = this.checkIfReadOnly(tag);
         if (this.appState.now.features.tagfill_light) {
@@ -384,7 +388,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     private checkIfReadOnly(tag: Tag): boolean {
-        return !this.itemPermissions.edit || (tag.type === 'CONTENTTAG' && (tag as ObjectTag).readOnly);
+        return !this.itemPermissions?.edit || (tag?.type === 'CONTENTTAG' && (tag as ObjectTag)?.readOnly);
     }
 
     markObjectPropertiesAsModifiedInState(modified: boolean, valid: boolean): void {

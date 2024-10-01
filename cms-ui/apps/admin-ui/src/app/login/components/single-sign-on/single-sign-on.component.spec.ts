@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { KeycloakService } from '@gentics/cms-components';
 import { Store } from '@ngxs/store';
 import { NGXLogger } from 'ngx-logger';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -10,7 +11,6 @@ import { AuthOperations } from '../../../core/providers/operations/auth/auth.ope
 import { AppStateService } from '../../../state';
 import { TestAppState } from '../../../state/utils/test-app-state';
 import { MockStore } from '../../../state/utils/test-app-state/test-store.mock';
-import { KeycloakService } from '../../providers/keycloak/keycloak.service';
 import { SingleSignOnComponent } from './single-sign-on.component';
 
 class MockActivatedRoute {}
@@ -29,7 +29,7 @@ class MockNGXLogger {}
 class MockRouter {}
 
 @Component({
-    template: `<single-sign-on></single-sign-on>`,
+    template: '<single-sign-on></single-sign-on>',
 })
 class TestComponent implements OnInit {
     ngOnInitSpy = jasmine.createSpy('ngOnInit');

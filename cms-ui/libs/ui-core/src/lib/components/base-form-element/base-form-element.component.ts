@@ -34,13 +34,13 @@ export abstract class BaseFormElementComponent<T>
      * The value of the control.
      */
     @Input()
-    public value: T;
+    public value: T | null;
 
     /**
      * Event which triggers whenever the value is supposed to change.
      */
     @Output()
-    public valueChange = new EventEmitter<T>();
+    public valueChange = new EventEmitter<T | null>();
 
     /**
      * Event which triggers whenever this control has been touched/dirtied.
@@ -48,16 +48,8 @@ export abstract class BaseFormElementComponent<T>
     @Output()
     public touch = new EventEmitter<void>();
 
-    /**
-     * Since Angular 16, the #setDisabledState function is getting called initially with the disabled state.
-     * Even if it's false.
-     * To not lock our form and then unlock it again for no reason (and pushing a change which shouldn't occur),
-     * we check here if it has been called once already.
-     */
-    protected hasSetInitialDisabled = false;
-
     /** Internal values for control-value accessor impl */
-    private cvaChange: (value: T) => void;
+    private cvaChange: (value: T | null) => void;
     private cvaTouch: () => void;
 
     constructor(
@@ -88,7 +80,7 @@ export abstract class BaseFormElementComponent<T>
     /**
      * Optional hook to get the final value which is being emitted on value changes/triggers.
      */
-    protected getFinalValue(): T {
+    protected getFinalValue(): T | null {
         return this.value;
     }
 
@@ -103,7 +95,7 @@ export abstract class BaseFormElementComponent<T>
      *
      * @param value The new value
      */
-    public triggerChange(value: T): void {
+    public triggerChange(value: T | null): void {
         if (!this.pure) {
             this.value = value;
             this.onValueChange();
@@ -132,13 +124,13 @@ export abstract class BaseFormElementComponent<T>
 
     /* Control Value Accessort implementation */
 
-    public writeValue(value: T): void {
+    public writeValue(value: T | null): void {
         this.value = value;
         this.onValueChange();
         this.changeDetector.markForCheck();
     }
 
-    public registerOnChange(fn: (change: T) => void): void {
+    public registerOnChange(fn: (change: T | null) => void): void {
         this.cvaChange = fn;
     }
 
@@ -152,6 +144,5 @@ export abstract class BaseFormElementComponent<T>
             this.changeDetector.markForCheck();
             this.onDisabledChange();
         }
-        this.hasSetInitialDisabled = true;
     }
 }

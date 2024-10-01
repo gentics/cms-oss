@@ -1,0 +1,136 @@
+<form *ngIf="form" [formGroup]="form">
+    <gtx-input
+        [label]="('editor.item_name_label' | i18n) + '*'"
+        formControlName="name"
+        [autofocus]="mode === PagePropertiesMode.CREATE"
+    ></gtx-input>
+
+    <gtx-input
+        [label]="'editor.item_filename_label' | i18n"
+        formControlName="fileName"
+    ></gtx-input>
+
+    <gtx-input
+        [label]="'editor.item_description_label' | i18n"
+        formControlName="description"
+    ></gtx-input>
+
+    <div class="row collapse">
+        <div class="columns small-12" [class.medium-5]="languages?.length > 0">
+            <gtx-select
+                class="template-select"
+                [required]="true"
+                [label]="('editor.item_template_label' | i18n) + '*'"
+                formControlName="templateId"
+            >
+                <gtx-option
+                    *ngFor="let template of templates"
+                    [value]="template?.id"
+                >{{ template?.name }}</gtx-option>
+            </gtx-select>
+
+            <span
+                *ngIf="templates.length === 0"
+                class="no-templates"
+                [title]="linkToTemplatesAllowed ? ('editor.link_templates_no_templates_linked_assign_self' | i18n) : ('editor.link_templates_no_templates_linked_assign_request' | i18n)"
+            >
+                {{ 'editor.link_templates_no_templates_linked' | i18n }}.
+            </span>
+
+            <a
+                *ngIf="linkToTemplatesAllowed"
+                class="link-templates"
+                href=""
+                (click)="linkToTemplatesClicked($event)"
+            >
+                {{ 'editor.link_templates_to_folder_button' | i18n }}
+            </a>
+        </div>
+
+        <div class="columns small-12 medium-5 medium-push-2">
+            <gtx-select
+                *ngIf="languages?.length > 0"
+                [required]="true"
+                [label]="('editor.item_language_label' | i18n) + '*'"
+                formControlName="language"
+            >
+                <gtx-option
+                    *ngFor="let language of languages"
+                    [value]="language.code"
+                >{{ language?.name }}</gtx-option>
+            </gtx-select>
+        </div>
+    </div>
+
+    <div *ngIf="item" class="custom-date-row">
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_creation_date_label' | i18n"
+                formControlName="customCdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_date_created_label' | i18n  }}: {{ item.cdate | i18nDate:'dateTime' }}</span>
+        </div>
+
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_edit_date_label' | i18n"
+                formControlName="customEdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_edited_on_label' | i18n  }}: {{ item.edate | i18nDate:'dateTime' }}</span>
+        </div>
+    </div>
+
+    <div class="input-range-wrapper row small-collapse">
+        <gtx-input
+            [label]="('editor.item_priority_label' | i18n) + '*'"
+            class="columns small-2"
+            type="number"
+            formControlName="priority"
+            [min]="1"
+            [max]="100"
+        ></gtx-input>
+
+        <gtx-range
+            [value]="form?.controls?.priority?.value"
+            [disabled]="disabled"
+            class="columns small-10 medium-9 medium-push-1"
+            min="1"
+            max="100"
+            required
+            (change)="priorityRangeChanged($event)"
+        ></gtx-range>
+    </div>
+
+    <div *ngIf="niceUrlEnabled">
+        <gtx-input
+            [label]="'editor.item_nice_url_label' | i18n"
+            formControlName="niceUrl"
+        ></gtx-input>
+
+        <div
+            *ngIf="form.controls.niceUrl.invalid"
+            class="error-message"
+        >{{ 'editor.item_nice_url_error' | i18n }}</div>
+
+        <gtx-string-list
+            [label]="'editor.item_alternate_urls_label' | i18n"
+            [addLabel]="'editor.add_label' | i18n"
+            [errors]="form.controls.alternateUrls.errors"
+            class="alternate-urls"
+            formControlName="alternateUrls"
+        ></gtx-string-list>
+
+        <div
+            *ngIf="form.controls.alternateUrls.invalid"
+            class="error-message"
+        >{{ 'editor.item_alternate_urls_error' | i18n }}</div>
+    </div>
+</form>

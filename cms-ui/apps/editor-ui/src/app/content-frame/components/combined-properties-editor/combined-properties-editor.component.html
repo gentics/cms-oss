@@ -78,14 +78,17 @@
         <div class="item-properties" *ngIf="activeTabId === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item">
             <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | i18n }}</h2>
 
-            <properties-editor
+            <gtx-properties-editor
                 *ngIf="(itemProperties$ | async) as itemProps"
                 [item]="item"
                 [nodeId]="currentNode?.id"
+                [value]="editingProperties"
                 [templates]="itemProps.templates"
                 [languages]="itemProps.languages"
+                [itemClean]="itemClean"
                 (valueChange)="handlePropChanges($event)"
-            ></properties-editor>
+                (itemCleanChange)="forwardItemCleanChange($event)"
+            ></gtx-properties-editor>
         </div>
 
         <div class="form-reports" *ngIf="activeTabId === ITEM_REPORTS_TAB">
@@ -96,42 +99,34 @@
         <div class="item-tag-list" *ngIf="activeTabId === ITEM_TAG_LIST_TAB">
             <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | i18n }}</h2>
 
-            <ng-container *ngIf="itemWithContentTags$ | async as itemWithContentTag">
-                <div class="item-tag item-tag-head">
-                    <gtx-checkbox
-                        [ngModel]="isContentTagSelectedAll(itemWithContentTag.properties)"
-                        (ngModelChange)="toggleAllContentTagSelected(itemWithContentTag.properties)"
-                    ></gtx-checkbox>
-                    <span>{{ 'editor.tagname_label' | i18n }}</span>
-                    <span>{{ 'editor.tagtype_label' | i18n }}</span>
-                    <span class="tag-actions">
-                        <icon
-                            *ngIf="(selectedContentTags$ | async).length > 0"
-                            (click)="deleteSelectedContentTags(itemWithContentTag.item, itemWithContentTag.properties)"
-                        >delete</icon>
-                    </span>
-                </div>
+            <gtx-table
+                [selectAllType]="TableSelectAllType.PAGE"
+                [selectable]="true"
 
-                <div class="item-tag" *ngFor="let tagElement of itemWithContentTag.properties">
-                    <icon-checkbox
-                        [icon]="'code'"
-                        [selected]="isContentTagSelected(tagElement)"
-                        (change)="toggleSelectContentTag(tagElement, $event)"
-                    ></icon-checkbox>
-                    <span
-                        class="tag-name"
-                        (click)="openContentTag(itemWithContentTag.item, tagElement)"
-                    >
-                        {{ tagElement.name }} <detail-chip>ID: {{ tagElement.id }}</detail-chip>
-                    </span>
-                    <span>{{ tagElement.construct.name }}</span>
-                    <span class="tag-actions">
-                        <icon (click)="deleteContentTag(itemWithContentTag.item, tagElement)">delete</icon>
-                    </span>
-                </div>
-            </ng-container>
+                [columns]="contentTagColumns"
+                [rows]="contentTagRows"
+                [actions]="contentTagActions"
+                [(selected)]="contentTagSelection"
 
-            <tag-editor-overlay-host #taglistOverlayHost [class.active]="taglistOverlayHost.isVisible"></tag-editor-overlay-host>
+                [renderers]="{
+                    active: boolIconRenderer
+                }"
+
+                (rowClick)="handleContentTagClick($event)"
+                (actionClick)="handleContentTagAction($event)"
+            ></gtx-table>
+
+            <ng-template #boolIconRenderer let-value="value">
+                <icon
+                    class="gtx-table-cell-boolean"
+                    [ngClass]="'gtx-table-cell-boolean-' + value"
+                >{{ value ? 'check' : 'close' }}</icon>
+            </ng-template>
+
+            <tag-editor-overlay-host
+                #taglistOverlayHost
+                [class.active]="taglistOverlayHost.isVisible"
+            ></tag-editor-overlay-host>
         </div>
 
         <div
@@ -145,9 +140,9 @@
                     class="tag-wrapper"
                     [class.disabled]="isDisabled"
                     [class.nonActive]="!editedObjectProperty?.active"
-                    [class.tagfillLightEnabled]="(tagfillLightState$ | async)"
+                    [class.tagfillLightEnabled]="tagFillLightEnabled"
                 >
-                    <div *ngIf="!(tagfillLightState$ | async)" class="activate-obj-prop">
+                    <div *ngIf="!tagFillLightEnabled" class="activate-obj-prop">
                         <gtx-checkbox
                             [label]="'editor.obj_prop_active_label' | i18n"
                             [checked]="editedObjectProperty?.active"

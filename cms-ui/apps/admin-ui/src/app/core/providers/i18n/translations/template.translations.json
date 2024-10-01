@@ -207,6 +207,22 @@
         "en": "Sync with all Pages",
         "de": "Mit allen Seiten abgleichen"
     },
+    "localize": {
+        "en": "Localize template",
+        "de": "Template lokalisieren"
+    },
+    "unlocalize": {
+        "en": "Undo localization",
+        "de": "Lokalisierung aufheben"
+    },
+    "localize_success": {
+        "en": "The template '{{ templateName }}' was successfully localized!",
+        "de": "Die Vorlage '{{ templateName }}'  wurden erfolgreich lokalisiert!"
+    },
+    "unlocalize_success": {
+        "en": "The localization for the template '{{ templateName }}' has been undone successfully!",
+        "de": "Die Lokalisierung der Vorlage '{{ templateName }}' wurde erfolgreich aufgehoben!"
+    },
     "assign_to_folders": {
         "en": "Asssign to Folders",
         "de": "Zu Ordnern zuweisen"

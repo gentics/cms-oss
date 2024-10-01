@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import {
     ChangeDetectorRef,
     Component,
@@ -12,11 +13,12 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
+import { ActivatedRoute, Params } from '@angular/router';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
+    getExampleFolderData,
+    getExampleFormData,
     getExampleFormDataNormalized,
     getExampleLanguageData,
     getExampleNodeDataNormalized,
@@ -26,7 +28,7 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { NEVER, Observable, of as observableOf } from 'rxjs';
+import { BehaviorSubject, NEVER, Observable, of as observableOf } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
@@ -40,7 +42,7 @@ import { PermissionService } from '../../../core/providers/permissions/permissio
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
-import { FolderPropertiesForm } from '../../../shared/components/folder-properties-form/folder-properties-form.component';
+import { FolderPropertiesComponent } from '../../../shared/components/folder-properties/folder-properties.component';
 import { InheritedLocalizedIcon } from '../../../shared/components/inherited-localized-icon/inherited-localized-icon.component';
 import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
@@ -53,17 +55,20 @@ import { CustomScriptHostService } from '../../providers/custom-script-host/cust
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
+let route: MockActivatedRoute;
+let folderActions: MockFolderActions;
 
 const ITEM_ID = 1;
 const PARENTFOLDER_ID = 2;
 const ITEM_NODE = 11;
-
-const mockNodeName = 'MockNode';
+const MOCK_NODE_NAME = 'MockNode';
+const CURRENT_USER_ID = 1;
+const OTHER_USER_ID = 2;
 
 class MockApi {
     folders = {
@@ -72,12 +77,20 @@ class MockApi {
         }),
     };
 }
-class MockActivatedRoute {}
+class MockActivatedRoute implements Partial<ActivatedRoute> {
+    public paramSub = new BehaviorSubject<Params>(undefined);
+
+    params: Observable<Params> = this.paramSub.asObservable();
+
+    public clear(): void {
+        this.paramSub.next(undefined);
+    }
+}
 
 class MockCanSaveService {
     getCanSave = jasmine.createSpy('getCanSave').and.returnValue(true);
 }
-class MockNavigationService {
+class MockNavigationService implements Partial<NavigationService> {
     instruction(): any {
         return {
             navigate: () => {},
@@ -88,6 +101,18 @@ class MockNavigationService {
         return {
             commands: () => {},
         };
+    }
+
+    deserializeOptions<T>(options: string): T {
+        try {
+            return JSON.parse(options || '');
+        } catch (_err) {
+            return {} as any;
+        }
+    }
+
+    serializeOptions(options: any): { options: string; } {
+        return { options: JSON.stringify(options) };
     }
 }
 class MockModalService {}
@@ -108,15 +133,8 @@ class MockEditorActions {
 class MockFolderActions {
     getItem = jasmine.createSpy('getItem').and.callFake(() => Promise.resolve(null));
     getNode(): Promise<Partial<Node>> {
-        return Promise.resolve({ name: mockNodeName });
+        return Promise.resolve({ name: MOCK_NODE_NAME });
     }
-}
-class MockEntityResolver {
-    getNode(): any {
-        return { name: mockNodeName };
-    }
-    getEntity(): void {}
-    getLanguage(): any {}
 }
 class MockPermissionService {
     forItemInLanguage(): Observable<any> {
@@ -236,15 +254,6 @@ const findCombinedPropEditor = (fixture: ComponentFixture<TestComponent>): Debug
 
 function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: boolean = true): void {
     appState.mockState({
-        editor: {
-            editorIsOpen: editorIsOpen,
-            editMode: EditMode.EDIT_PROPERTIES,
-            itemId: ITEM_ID,
-            itemType: 'folder',
-            nodeId: ITEM_NODE,
-            openTab: 'properties',
-            saving: false,
-        },
         entities: {
             folder: {
                 [ITEM_ID]: {
@@ -288,22 +297,25 @@ function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: b
             contentFrameBreadcrumbsExpanded: true,
         },
     });
+
+    folderActions.getItem.and.returnValue(Promise.resolve(getExampleFolderData({ id: ITEM_ID })));
+
+    route.paramSub.next({
+        nodeId: ITEM_NODE,
+        type: 'folder',
+        itemId: ITEM_ID,
+        editMode: EditMode.EDIT_PROPERTIES,
+        options: JSON.stringify({
+            openTab: 'properties',
+        }),
+    });
+
     fixture.detectChanges();
     tick();
 }
 
 function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = ITEM_ID, openPropertiesTab: string = undefined): void {
     appState.mockState({
-        editor: {
-            editorIsOpen: true,
-            editMode: EditMode.EDIT_PROPERTIES,
-            itemId: pageId,
-            itemType: 'page',
-            nodeId: ITEM_NODE,
-            openTab: 'properties',
-            openPropertiesTab: openPropertiesTab,
-            saving: false,
-        },
         entities: {
             node: {
                 [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
@@ -341,20 +353,26 @@ function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = 
             contentFrameBreadcrumbsExpanded: true,
         },
     });
+
+    folderActions.getItem.and.returnValue(Promise.resolve(getExamplePageData({ id: pageId })));
+
+    route.paramSub.next({
+        nodeId: ITEM_NODE,
+        type: 'page',
+        itemId: pageId,
+        editMode: EditMode.EDIT_PROPERTIES,
+        options: JSON.stringify({
+            openTab: 'properties',
+            propertiesTab: openPropertiesTab,
+        }),
+    });
+
     fixture.detectChanges();
     tick();
 }
 
 function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = ITEM_ID): void {
     appState.mockState({
-        editor: {
-            editorIsOpen: true,
-            editMode: EditMode.EDIT,
-            itemId: pageId,
-            itemType: 'page',
-            nodeId: ITEM_NODE,
-            saving: false,
-        },
         entities: {
             node: {
                 [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
@@ -392,20 +410,22 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
             contentFrameBreadcrumbsExpanded: true,
         },
     });
+
+    folderActions.getItem.and.returnValue(Promise.resolve(getExamplePageData({ id: pageId })));
+
+    route.paramSub.next({
+        nodeId: ITEM_NODE,
+        type: 'page',
+        itemId: pageId,
+        editMode: EditMode.EDIT,
+    });
+
     fixture.detectChanges();
     tick();
 }
 
 function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = ITEM_ID): void {
     appState.mockState({
-        editor: {
-            editorIsOpen: true,
-            editMode: EditMode.EDIT,
-            itemId: formId,
-            itemType: 'form',
-            nodeId: ITEM_NODE,
-            saving: false,
-        },
         entities: {
             node: {
                 [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
@@ -443,6 +463,16 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
             contentFrameBreadcrumbsExpanded: true,
         },
     });
+
+    folderActions.getItem.and.returnValue(Promise.resolve(getExampleFormData({ id: formId })));
+
+    route.paramSub.next({
+        nodeId: ITEM_NODE,
+        type: 'form',
+        itemId: formId,
+        editMode: EditMode.EDIT,
+    });
+
     fixture.detectChanges();
     tick();
 }
@@ -451,9 +481,6 @@ describe('ContentFrame', () => {
     let api: MockApi;
 
     let origDebounce: any;
-
-    let editorActions: MockEditorActions;
-    let folderActions: MockFolderActions;
 
     let canSaveService: MockCanSaveService;
 
@@ -472,7 +499,7 @@ describe('ContentFrame', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: DecisionModalsService, useClass: MockDecisionModalsService },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetector },
-                { provide: EditorActionsService, useClass: MockEditorActions },
+                EditorActionsService,
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PermissionService, useValue: permissionService },
                 { provide: IFrameManager, useClass: MockIFrameManager },
@@ -490,7 +517,7 @@ describe('ContentFrame', () => {
             declarations: [
                 ContentFrameComponent,
                 DynamicDisableDirective,
-                FolderPropertiesForm,
+                FolderPropertiesComponent,
                 InheritedLocalizedIcon,
                 ItemIsLocalizedPipe,
                 MockCombinedPropertiesEditor,
@@ -499,7 +526,7 @@ describe('ContentFrame', () => {
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),
@@ -508,7 +535,6 @@ describe('ContentFrame', () => {
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
-                RouterTestingModule.withRoutes([]),
             ],
         });
 
@@ -520,9 +546,20 @@ describe('ContentFrame', () => {
 
         appState = TestBed.get(ApplicationStateService);
         api = TestBed.get(Api);
-        editorActions = TestBed.get(EditorActionsService);
         folderActions = TestBed.get(FolderActionsService);
         canSaveService = TestBed.get(MockCanSaveService);
+        route = TestBed.inject(ActivatedRoute) as any;
+
+        // Make sure we're marking the test as logged in, otherwise nothing will be displayed/rendered
+        appState.mockState({
+            auth: {
+                isLoggedIn: true,
+                // Not really used anywhere
+                currentUserId: CURRENT_USER_ID,
+            },
+        });
+
+        route.clear();
 
         // We need to mock the lodash debounce function, otherwise we will get
         // an error about a pending timer in the queue (in newer Angular versions zone.js supports using tick for lodash).
@@ -778,10 +815,10 @@ describe('ContentFrame', () => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.setMasterFrameLoaded(true);
+            (instance.contentFrame.currentItem as Page).locked = true;
+            (instance.contentFrame.currentItem as Page).lockedBy = OTHER_USER_ID;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = true;
-            currentState.entities.page[ITEM_ID].lockedBy = 1;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();

@@ -8,7 +8,7 @@ import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, Node, NodeCreateRequest, NodeFeatureModel, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
-import { NodePropertiesFormData } from '..';
+import { EditableNodeProps } from '..';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesComponent, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
@@ -34,7 +34,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     nodeProperties: NodePropertiesComponent;
 
     /** Form data of tab 'Properties' */
-    fgProperties: FormControl<NodePropertiesFormData>;
+    fgProperties: FormControl<EditableNodeProps>;
 
     isChildNode: boolean;
 
@@ -74,7 +74,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     }
 
     private initForms(): void {
-        this.fgProperties = new FormControl<NodePropertiesFormData>(null, [
+        this.fgProperties = new FormControl<EditableNodeProps>(null, [
             Validators.required,
             createNestedControlValidator(),
         ]);

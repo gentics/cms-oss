@@ -52,11 +52,11 @@ export class UsageActionsService {
         this.api.folders.getTotalUsage(type, itemIds, nodeId).subscribe(result => {
             const usage = result.infos;
             const updateHash: { [id: number]: { usage: Usage } } = {};
-            for (let id of Object.keys(usage)) {
+            for (const id of Object.keys(usage)) {
                 updateHash[id as any] = { usage: usage[id as any] };
             }
 
-            this.appState.dispatch(new UpdateEntitiesAction(updateHash));
+            this.appState.dispatch(new UpdateEntitiesAction({ [type]: updateHash }));
         });
     }
 
@@ -90,7 +90,7 @@ export class UsageActionsService {
 
         forkJoin(requests).subscribe(responses => {
             const usageData: PartialUsageData = {};
-            for (let response of responses) {
+            for (const response of responses) {
                 const typeKey = `${response.usageType}s` as keyof PartialUsageData;
                 const listKey = this.getUsageResponseListKey(response.usageType);
                 usageData[typeKey] = response.res[listKey];

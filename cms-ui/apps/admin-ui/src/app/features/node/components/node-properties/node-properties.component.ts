@@ -21,7 +21,7 @@ import {
     generateValidatorProvider,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
+export type EditableNodeProps = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
@@ -44,7 +44,7 @@ export enum NodePropertiesMode {
         generateValidatorProvider(NodePropertiesComponent),
     ],
 })
-export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
+export class NodePropertiesComponent extends BasePropertiesComponent<EditableNodeProps> implements OnInit, OnChanges {
 
     public readonly NodePropertiesMode = NodePropertiesMode;
     public readonly VALIDATOR_REGEX_ERROR_PROPERTY = VALIDATOR_REGEX_ERROR_PROPERTY;
@@ -141,8 +141,8 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         }));
     }
 
-    protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
-        return new FormGroup<FormProperties<NodePropertiesFormData>>({
+    protected createForm(): FormGroup<FormProperties<EditableNodeProps>> {
+        return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.value?.name, [
                 Validators.required,
                 Validators.maxLength(50),
@@ -187,7 +187,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         });
     }
 
-    protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
+    protected configureForm(value: Partial<EditableNodeProps>, loud?: boolean): void {
         if (!value) {
             return;
         }
@@ -211,7 +211,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         }
     }
 
-    protected assembleValue(value: NodePropertiesFormData): NodePropertiesFormData {
+    protected assembleValue(value: EditableNodeProps): EditableNodeProps {
         return {
             ...value,
             hostProperty: value.hostProperty || '',

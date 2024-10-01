@@ -16,7 +16,6 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.Transaction;
@@ -32,7 +31,7 @@ import com.gentics.contentnode.rest.model.User;
  *
  */
 @TType(SystemUser.TYPE_SYSTEMUSER)
-public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, NamedNodeObject {
+public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, NamedNodeObject, MetaDateNodeObject {
 	/**
 	 * The ttype of the user administration
 	 */
@@ -201,22 +200,10 @@ public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, Named
 	int getCreator();
 
 	/**
-	 * get the user's creation date as a unix timestamp
-	 * @return unix timestamp of the user's creation date
-	 */
-	ContentNodeDate getCDate();
-
-	/**
 	 * get the user's editor id
 	 * @return id of the last systemuser who edited this user
 	 */
 	int getEditor();
-
-	/**
-	 * get the user's last edit date as a unix timestamp
-	 * @return unix timestamp of the user's last edit date
-	 */
-	ContentNodeDate getEDate();
 
 	/**
 	 * get the user's description

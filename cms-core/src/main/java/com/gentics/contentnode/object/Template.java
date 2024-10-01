@@ -18,7 +18,6 @@ import com.gentics.contentnode.devtools.model.ObjectTagModel;
 import com.gentics.contentnode.devtools.model.TemplateModel;
 import com.gentics.contentnode.devtools.model.TemplateTagModel;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
@@ -36,7 +35,7 @@ import com.gentics.lib.resolving.ResolvableMapWrappable;
  */
 @TType(Template.TYPE_TEMPLATE)
 public interface Template extends TagContainer, GCNRenderable, ObjectTagContainer, LocalizableNodeObject<Template>,
-		Resolvable, ResolvableMapWrappable, SynchronizableNodeObject, NamedNodeObject {
+		Resolvable, ResolvableMapWrappable, SynchronizableNodeObject, NamedNodeObject, MetaDateNodeObject {
 	/**
 	 * the keynames which the template can handle.
 	 */
@@ -285,18 +284,6 @@ public interface Template extends TagContainer, GCNRenderable, ObjectTagContaine
 	 * @throws NodeException
 	 */
 	SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	ContentNodeDate getEDate();
 
 	/**
 	 * get a templatettag of this template by name.

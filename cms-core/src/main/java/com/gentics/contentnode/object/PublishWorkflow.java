@@ -7,17 +7,16 @@ package com.gentics.contentnode.object;
 
 import java.util.List;
 
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.TType;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 
 /**
  * Class implementing Publish Workflows for pages
  */
 @TType(PublishWorkflow.TYPE_PUBLISHWORKFLOW)
-public abstract class PublishWorkflow extends AbstractContentObject {
+public abstract class PublishWorkflow extends AbstractContentObject implements MetaDateNodeObject {
 
 	/**
 	 * The ttype of the publish workflow object as defined in system/include/public.inc.php
@@ -91,23 +90,11 @@ public abstract class PublishWorkflow extends AbstractContentObject {
 	public abstract SystemUser getCreator() throws NodeException;
 
 	/**
-	 * get the creation date
-	 * @return creation date
-	 */
-	public abstract ContentNodeDate getCDate();
-
-	/**
 	 * get the editor
 	 * @return editor
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the last edit date
-	 * @return last edit date
-	 */
-	public abstract ContentNodeDate getEDate();
 
 	@Override
 	public void delete(boolean force) throws InsufficientPrivilegesException, NodeException {

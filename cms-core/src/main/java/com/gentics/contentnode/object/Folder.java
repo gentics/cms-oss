@@ -18,7 +18,6 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
@@ -46,7 +45,7 @@ import com.gentics.lib.etc.StringUtils;
 @TType(Folder.TYPE_FOLDER)
 public interface Folder
 		extends ObjectTagContainer, StackResolvable, LocalizableNodeObject<Folder>, Disinheritable<Folder>, Resolvable,
-		StageableChanneledNodeObject, NamedNodeObject, StackResolvableNodeObject {
+		StageableChanneledNodeObject, NamedNodeObject, StackResolvableNodeObject, MetaDateNodeObject {
 	public static final int TYPE_FOLDER = 10002;
 
 	public static final int TYPE_INHERITED_FOLDER = 10034;
@@ -410,18 +409,6 @@ public interface Folder
 	 * @throws NodeException
 	 */
 	List<Form> getForms(FormSearch search) throws NodeException;
-
-	/**
-	 * return the creation date of the folder as a unix timestamp
-	 * @return creation date as a unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
-	 * return the edit date of the folder as a unix timestamp
-	 * @return edit date as a unix timestamp
-	 */
-	ContentNodeDate getEDate();
 
 	/**
 	 * retrieve folder creator

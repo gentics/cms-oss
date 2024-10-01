@@ -2,7 +2,6 @@ package com.gentics.contentnode.object;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -10,7 +9,7 @@ import com.gentics.lib.i18n.CNI18nString;
  * Regular expression definition for validating textual input for tag parts
  */
 @TType(Regex.TYPE_REGEX)
-public interface Regex extends NodeObject, I18nNamedNodeObject {
+public interface Regex extends NodeObject, I18nNamedNodeObject, MetaDateNodeObject {
 	public final static int TYPE_REGEX = 2;
 
 	/**
@@ -60,16 +59,4 @@ public interface Regex extends NodeObject, I18nNamedNodeObject {
 	 * @throws NodeException
 	 */
 	SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	ContentNodeDate getEDate();
 }

@@ -31,7 +31,7 @@
             [properties]="properties"
             [templates]="templates"
             [languages]="languages"
-            [disableLanguageSelect]="true"
+            [disableLanguageSelect]="itemAsPage.language != null"
             [disabled]="!(editPermission$ | async)"
             (changes)="simplePropertiesChanged($event)"
         ></page-properties-form>

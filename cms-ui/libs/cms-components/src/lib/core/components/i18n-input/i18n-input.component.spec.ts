@@ -41,7 +41,7 @@ describe('I18nInputComponent', () => {
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-        await fixture.whenStable();
+        await fixture.whenRenderingDone();
         await fixture.whenRenderingDone();
         inputElement = (fixture.nativeElement as HTMLElement).querySelector('input');
     });
@@ -62,7 +62,7 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(1);
+        expect(changeSpy).toHaveBeenCalledTimes(2);
         expect(component.currentValue).toEqual({ [DEFAULT_LANGUAGE]: firstValue });
 
         // --------------------
@@ -81,7 +81,7 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(1);
+        expect(changeSpy).toHaveBeenCalledTimes(2);
         expect(component.currentValue).toEqual({
             [DEFAULT_LANGUAGE]: firstValue,
             [SECOND_LANGUAGE]: secondValue,
@@ -112,7 +112,7 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(1);
+        expect(changeSpy).toHaveBeenCalledTimes(2);
         expect(component.currentValue).toEqual({
             [DEFAULT_LANGUAGE]: newValue,
             [SECOND_LANGUAGE]: secondValue,

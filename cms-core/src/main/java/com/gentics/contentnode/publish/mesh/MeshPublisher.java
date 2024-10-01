@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,12 +55,14 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.SemaphoreMap;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.AnyChannelTrx;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.ContentLanguageTrx;
 import com.gentics.contentnode.factory.HandleDependenciesTrx;
@@ -87,6 +90,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
+import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -3186,7 +3190,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public String render(Form form, String language) throws NodeException {
-		String data = form.getData(language).toString();
+		String data = renderFormTextUrls(form.getData(language).toString(), language);
 		String projectName = getMeshProjectName(form.getOwningNode());
 		String uuid = getMeshUuid(form);
 
@@ -3199,9 +3203,71 @@ public class MeshPublisher implements AutoCloseable {
 
 		return client.post(String.format("/%s/plugins/forms/forms/%s/preview", encodeSegment(projectName), uuid),
 				dataAsModel, FormsPluginRenderResponse.class).toSingle().doOnSubscribe(disp -> {
-					MeshPublisher.logger.debug(
-							String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
+					MeshPublisher.logger.debug(String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
 				}).blockingGet().getHtml();
+	}
+
+	public static final String renderFormTextUrls(String form, String language) throws NodeException {
+		if (form == null) {
+			// TODO check allow_links if possible
+			return form;
+		}
+		String linkPattern = "\\{\\{"
+				+ "[\\s]*(LINK)[\\s]*"
+				+ "[|]"
+				+ "[\\s]*(?<type>(PAGE|FILE))"
+				+ "[:]"
+				+ "(?<nodeId>[a-zA-Z0-9\\-]+)"
+				+ "[:]"
+				+ "(?<pageId>[a-zA-Z0-9\\-]+)"
+				+ "([:](?<langCode>[a-zA-Z]{2}))?"
+				+ "[\\s]*[|][\\s]*"
+				+ "(?<displayText>[^|]*)"
+				+ "([\\s]*[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
+				+ "\\}\\}";
+		Pattern pattern = Pattern.compile(linkPattern);
+		Matcher matcher = pattern.matcher(form);
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Deque<String> matches = new ArrayDeque<>(1);
+			Transaction t = trx.getTransaction();
+			while (matcher.find()) {
+				String ltype = matcher.group("type");
+				String nodeId = matcher.group("nodeId");
+				String pageId = matcher.group("pageId");
+				String displayText = matcher.group("displayText");
+				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
+				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
+				Node channelOrNode = t.getObject(Node.class, nodeId);
+				Disinheritable<?> renderedObject;
+				if ("FILE".equals(ltype)) {
+					renderedObject = t.getObject(File.class, pageId);
+					if (renderedObject == null) {
+						renderedObject = t.getObject(ImageFile.class, pageId);
+					}
+				} else {
+					renderedObject = t.getObject(Page.class, pageId);
+					if (maybeLangCode.isPresent()) {
+						Page localizedObject = ((Page)renderedObject).getLanguageVariant(maybeLangCode.get(), channelOrNode.getId());
+						if (localizedObject != null) {
+							renderedObject = localizedObject;
+						} else {
+							logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), renderedObject));
+						}
+					}
+				}
+				if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
+						&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
+					// TODO more meaningful error / logging
+					throw new NodeException("Wrong node / channel for " + matcher.toString());
+				}
+				matches.addLast(String.format("<a href='%s' %s>%s</a>", MeshURLRenderer.renderDisinheritableUrl(renderedObject), maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), displayText));
+			}
+			String link;
+			while ((link = matches.poll()) != null) {
+				form = form.replaceFirst(linkPattern, link);
+			}
+		}
+		return form;
 	}
 
 	/**

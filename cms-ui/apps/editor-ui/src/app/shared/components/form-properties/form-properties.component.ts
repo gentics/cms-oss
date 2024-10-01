@@ -11,7 +11,7 @@ import {
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsFormData,
     CmsFormElementI18nValue,
@@ -33,7 +33,7 @@ import {
     FormPropertiesConfiguration,
 } from '@gentics/form-generator';
 import { UILanguage } from '@gentics/image-editor';
-import { setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, take, tap } from 'rxjs/operators';

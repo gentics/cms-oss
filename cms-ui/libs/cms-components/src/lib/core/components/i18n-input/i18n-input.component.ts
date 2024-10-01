@@ -1,28 +1,20 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
-    EventEmitter,
-    forwardRef,
     Input,
     OnChanges,
-    OnDestroy,
-    OnInit,
-    Output,
     SimpleChanges,
     ViewEncapsulation,
 } from '@angular/core';
 import {
     AbstractControl,
-    ControlValueAccessor,
-    NG_VALIDATORS,
-    UntypedFormControl,
     ValidationErrors,
     Validator,
 } from '@angular/forms';
 import { CmsFormElementI18nValue } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { BaseFormElementComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
-import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'gtx-i18n-input',
@@ -30,136 +22,84 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./i18n-input.component.scss'],
     providers: [
         generateFormProvider(I18nInputComponent),
-        {
-            provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-            useExisting: forwardRef(() => I18nInputComponent), // for now validation will be put into the component, but can be separated
-            multi: true,
-        },
+        generateValidatorProvider(I18nInputComponent),
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
 })
-export class I18nInputComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
+export class I18nInputComponent
+    extends BaseFormElementComponent<CmsFormElementI18nValue<string | number | null>>
+    implements Validator, OnChanges {
 
     @Input()
-    label: string;
+    public type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
 
     @Input()
-    type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
+    public requiredInCurrentLanguage: boolean;
 
     @Input()
-    requiredInCurrentLanguage: boolean;
+    public language: string;
 
     @Input()
-    language: string;
+    public availableLanguages: string[];
 
     @Input()
-    availableLanguages: string[];
+    public useRichEditor = false;
 
-    @Output()
-    blur: EventEmitter<FocusEvent> = new EventEmitter<FocusEvent>();
+    private validatorChange: () => void = () => { /* no op until assigned */ };
 
-    i18nInput = new UntypedFormControl();
+    public isTranslated = true;
+    public translationSuggestions: { language: string, value: string | number | null }[] = [];
 
-    private cvaChange: (value: any) => void;
-    cvaTouch: () => void;
-    private validatorChange: () => void;
-
-    private i18nData: CmsFormElementI18nValue<string | number | null> = {};
-    private valueChangesSubscription: Subscription;
-
-    isTranslated = true;
-    translationSuggestions: { language: string, value: string | number | null }[] = [];
-
-    ngOnInit(): void {
-        this.valueChangesSubscription = this.i18nInput.valueChanges.subscribe((value: string | number | null) => {
-            if (this.i18nData && this.language) {
-                // Has to be a clone. Since the value is passed as ref, we'd edit it
-                // in here and the change detection above would not detect any changes,
-                // since the value is already present/updated.
-                const tmp = cloneDeep(this.i18nData || {});
-                tmp[this.language] = value;
-                this.i18nData = tmp;
-                this.triggerChange(tmp);
-            }
-        });
+    constructor(
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+        this.booleanInputs.push('requiredInCurrentLanguage');
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (this.i18nData) {
-            if (changes.language) {
-                this.i18nData ??= {};
-                this.i18nInput.setValue(this.i18nData[this.language] || '', {
-                    emitEvent: false,
-                });
-            }
-        }
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
         if (changes.language || changes.availableLanguages) {
-            if (this.validatorChange) {
-                this.validatorChange();
-            }
+            this.validatorChange();
         }
     }
 
-    ngOnDestroy(): void {
-        if (this.valueChangesSubscription) {
-            this.valueChangesSubscription.unsubscribe();
-        }
+    protected onValueChange(): void {
+        /* No op */
     }
 
-    writeValue(i18nData: CmsFormElementI18nValue<string | number | null>): void {
-        // Create a copy, since the original is usually readonly for whatever reason
-        this.i18nData = cloneDeep(i18nData || {});
-        this.i18nInput.setValue(this.i18nData[this.language] || '', {
-            emitEvent: false,
-        });
-    }
-
-    registerOnChange(fn: (value: any) => void): void {
-        this.cvaChange = fn;
-    }
-
-    registerOnTouched(fn: any): void {
-        this.cvaTouch = fn;
-    }
-
-    triggerChange(newValue: any): void {
-        if (typeof this.cvaChange === 'function') {
-            this.cvaChange(newValue);
-        }
-    }
-
-    triggerTouch(event: FocusEvent): void {
-        this.blur.emit(event);
-        if (typeof this.cvaTouch === 'function') {
-            this.cvaTouch();
-        }
-    }
-
-    setDisabledState?(isDisabled: boolean): void {
-        if (isDisabled) {
-            this.i18nInput.disable({
-                onlySelf: true,
-                emitEvent: true,
-            });
+    public handleInputChange(changeValue: string | number | null): void {
+        if (this.value && this.language) {
+            // Has to be a clone. Since the value is passed as ref, we'd edit it
+            // in here and the change detection above would not detect any changes,
+            // since the value is already present/updated.
+            const tmp = cloneDeep(this.value || {});
+            tmp[this.language] = changeValue;
+            this.triggerChange(tmp);
+            this.validatorChange();
         } else {
-            this.i18nInput.enable({
-                onlySelf: true,
-                emitEvent: true,
-            });
+            const tmp = {};
+            if (this.language) {
+                tmp[this.language] = changeValue;
+            }
+            this.triggerChange(tmp);
+            this.validatorChange();
         }
     }
 
     validate(control: AbstractControl): ValidationErrors {
         const requiredError: ValidationErrors = this.validateRequired(control);
         const translatedError: ValidationErrors = this.validateTranslated(control);
+        this.changeDetector.markForCheck();
         if (!requiredError && !translatedError) {
             return null;
         }
         return Object.assign({}, requiredError, translatedError);
     }
 
-    registerOnValidatorChange?(fn: () => void): void {
+    registerOnValidatorChange(fn: () => void): void {
         this.validatorChange = fn;
     }
 
@@ -168,7 +108,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
          * if there is no i18n data, then there is a required error,
          * if the value is required in the current language
          */
-        if (!this.i18nData) {
+        if (!this.value) {
             if (this.requiredInCurrentLanguage) {
                 return { requiredInCurrentLanguage: true };
             }
@@ -192,7 +132,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         /**
          * if there is no i18n data, then there cannot be a translation error
          */
-        if (!this.i18nData) {
+        if (!this.value) {
             this.isTranslated = true;
             return null;
         }
@@ -231,7 +171,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
             this.isTranslated = false;
             this.translationSuggestions = languagesOfAvailableTranslations.map(language => ({
                 language: language,
-                value: this.i18nData[language],
+                value: this.value[language],
             }));
             return { untranslated: true };
         }
@@ -244,8 +184,8 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
      * checks whether a value is present in the given language
      */
     private valuePresent(language: string = this.language): boolean {
-        if (this.i18nData && language) {
-            const value = this.i18nData[language];
+        if (this.value && language) {
+            const value = this.value[language];
             if (this.type === 'number') {
                 if (typeof value === 'number') {
                     return true;

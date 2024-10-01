@@ -10,7 +10,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     EditablePageProps,
     Feature,
@@ -22,6 +22,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     cancelEvent,
     createMultiValuePatternValidator,
+    FormProperties,
     generateFormProvider,
     generateValidatorProvider,
     setControlsEnabled,

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
-import { EditableFileProps, Feature, NodeFeature, FileOrImage } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import { EditableFileProps, Feature, FileOrImage, NodeFeature } from '@gentics/cms-models';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { filter, map, switchMap } from 'rxjs/operators';
 
 @Component({

@@ -13,10 +13,10 @@ import {
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';

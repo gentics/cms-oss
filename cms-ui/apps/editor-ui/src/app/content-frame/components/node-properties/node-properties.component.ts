@@ -12,10 +12,16 @@ import {
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { EditableNodeProps } from '@editor-ui/app/common/models';
 import { FolderActionsService } from '@editor-ui/app/state';
-import { BasePropertiesComponent, FormProperties } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { Folder, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, Raw } from '@gentics/cms-models';
-import { createPropertyPatternValidator, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    createPropertyPatternValidator,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { RepositoryBrowserClient } from '../../../shared/providers';
 

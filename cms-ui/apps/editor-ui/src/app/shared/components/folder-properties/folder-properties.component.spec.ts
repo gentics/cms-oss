@@ -1,7 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FormProperties } from '@gentics/cms-components';
 import {
     ContentRepositoryType,
     EditableFolderProps,
@@ -14,7 +13,7 @@ import {
 import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { FormProperties, GenticsUICoreModule } from '@gentics/ui-core';
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EditableProperties, emptyItemInfo } from '../../../common/models';

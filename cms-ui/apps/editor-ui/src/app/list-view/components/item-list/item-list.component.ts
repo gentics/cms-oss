@@ -223,10 +223,20 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         const items = changes.items;
+
+        if (items) {
+            if (!Array.isArray(this.items)) {
+                this.items = [];
+            } else {
+                this.items = this.items.filter(item => item != null);
+            }
+        }
+
         if (
-            items?.previousValue?.length > 0
-            && items.currentValue?.length > 0
-            && (items.currentValue[0].type === 'image' || items.currentValue[0].type === 'page')
+            items
+            && items.previousValue?.length > 0
+            && this.items?.length > 0
+            && (this.items[0]?.type === 'image' || this.items[0]?.type === 'page')
         ) {
             (this.items || []).forEach(item => {
                 if (!item.usage) {
@@ -265,6 +275,9 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     updateItemHash(): void {
         const itemHash: ItemsHashMap = {};
         for (const item of this.items) {
+            if (item == null) {
+                continue;
+            }
             itemHash[item.id] = item;
         }
         this.itemHash$.next(itemHash);
@@ -299,13 +312,17 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
      * Tracking function for ngFor for better performance.
      */
     identify(index: number, item: Item): number {
-        return item.id;
+        return item?.id ?? index;
     }
 
     /**
      * Returns true is the item is in the selectedItems array.
      */
     isSelected(item: Item): boolean {
+        if (item == null) {
+            return false;
+        }
+
         return this.itemsInfo.selected.indexOf(item.id) >= 0;
     }
 

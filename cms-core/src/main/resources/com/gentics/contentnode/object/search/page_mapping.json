@@ -1,5 +1,8 @@
 {
 	"properties": {
+		"_type": {
+			"type": "keyword"
+		},
 		"id": {
 			"type": "integer",
 			"gtx_tagname": "page.id"

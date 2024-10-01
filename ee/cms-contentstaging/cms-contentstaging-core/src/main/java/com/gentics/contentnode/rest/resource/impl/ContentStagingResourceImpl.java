@@ -1203,35 +1203,28 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			throw new IllegalArgumentException("Node object '" + storedObject.getId() + storedObject.getSuffix() + " is versioned and not applicable here. Use exportIntoVersionedStageable().");
 		}
 		storedObject = (S) loadFromFilesystem(currentPath, storedObject.getClass(), s -> s);
-		try {
-			N nodeObject = (N) loadFromDatabase(nodeObjectClass, storedObject.getId());
+		N nodeObject = (N) loadFromDatabase(nodeObjectClass, storedObject.getId());
 
-			if (nodeObject != null) {
-				Path folderPath;
-				if (nodeObject instanceof Node) {
-					folderPath = currentPath.getParent();
-				} else {
-					Optional<Node> maybeChannel = nodeObject.maybeHasChannels().flatMap(ch -> {
-						try {
-							return ch.maybeGetChannel();
-						} catch (NodeException e) {
-							throw new IllegalStateException(e);
-						}
-					});
-					try (ChannelTrx ctrx = new ChannelTrx(maybeChannel.orElse(null))) {
-						folderPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
-					}
+		Path folderPath;
+		if (nodeObject instanceof Node) {
+			folderPath = currentPath.getParent();
+		} else {
+			Optional<Node> maybeChannel = nodeObject.maybeHasChannels().flatMap(ch -> {
+				try {
+					return ch.maybeGetChannel();
+				} catch (NodeException e) {
+					throw new IllegalStateException(e);
 				}
-				addStageable(folderPath, nodeObject, storedObject, modelInflater, Optional.empty(), Optional.ofNullable(deferDeleting));
-				if (storedObject.hasBinary()) {
-					synchronizeBinary(folderPath, storedObject.getId(), storedObject.getSuffix(), nodeObject.maybeBinary(), Optional.ofNullable(deferDeleting));
-				}
-				if (!currentPath.toString().startsWith(folderPath.toString())) {
-					deferDeleting.add(currentPath);
-				}
+			});
+			try (ChannelTrx ctrx = new ChannelTrx(maybeChannel.orElse(null))) {
+				folderPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
 			}
-		} catch (EntityNotFoundException e) {
-			// when the object was not found in the CMS (any more), we also want to remove the file in the content package
+		}
+		addStageable(folderPath, nodeObject, storedObject, modelInflater, Optional.empty(), Optional.ofNullable(deferDeleting));
+		if (storedObject.hasBinary()) {
+			synchronizeBinary(folderPath, storedObject.getId(), storedObject.getSuffix(), nodeObject.maybeBinary(), Optional.ofNullable(deferDeleting));
+		}
+		if (!currentPath.toString().startsWith(folderPath.toString())) {
 			deferDeleting.add(currentPath);
 		}
 	}
@@ -1269,6 +1262,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 			}
 		} catch (EntityNotFoundException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("NodeObject is missing in CMS: " + currentPath, e);
+			}
 			// when the object was not found in the CMS (any more), we also want to remove the file in the content package
 			deferDeleting.add(currentPath);
 		}
@@ -1393,36 +1389,89 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 */
 	private void exportIntoStageable(Path currentPath, Path pathRoot, Set<Path> deferDeleting) throws NodeException {
 		String filename = currentPath.getFileName().toString();
-		if (Files.isDirectory(currentPath)) {
-			Path folderMetadata = currentPath.getParent().resolve(filename + FOLDER_EXTENSION);
-			Path nodeMetadata = currentPath.getParent().resolve(filename + NODE_EXTENSION);
-			Path channelMetadata = currentPath.getParent().resolve(filename + CHANNEL_EXTENSION);
-			if (Files.exists(folderMetadata)) {
-				exportIntoStageable(folderMetadata, pathRoot, Folder.class, new StoredFolder(), (n, s) -> StagingModelBuilder.getFolder(n, s), deferDeleting);
-			} else if (Files.exists(nodeMetadata)) {
-				exportIntoStageable(nodeMetadata, pathRoot, Node.class, new StoredNode(), (n, s) -> StagingModelBuilder.getNode(n, s), deferDeleting);
-			} else if (Files.exists(channelMetadata)) {
-				exportIntoStageable(channelMetadata, pathRoot, Node.class, new StoredChannel(), (n, s) -> StagingModelBuilder.getNode(n, s), deferDeleting);
-			}
-		} else {
-			if (filename.endsWith(PAGE_EXTENSION)) {
-				exportIntoVersionedStageable(currentPath, pathRoot, Page.class, new StoredPage(), (n, s) -> StagingModelBuilder.getPage(n, s), deferDeleting);
-			} else if (filename.endsWith(FORM_EXTENSION)) {
-				exportIntoVersionedStageable(currentPath, pathRoot, Form.class, new StoredForm(), (n, s) -> StagingModelBuilder.getForm(n, s), deferDeleting);
-			} else if (filename.endsWith(FILE_EXTENSION)) {
-				exportIntoStageable(currentPath, pathRoot, File.class, new StoredFile(), (n, s) -> StagingModelBuilder.getFile(n, s), deferDeleting);
-			} else if (filename.endsWith(IMAGE_EXTENSION)) {
-				exportIntoStageable(currentPath, pathRoot, ImageFile.class, new StoredImage(), (n, s) -> StagingModelBuilder.getImage(n, s), deferDeleting);
-			} else if (filename.endsWith(NODE_EXTENSION)
-					|| filename.endsWith(FOLDER_EXTENSION) 
-					|| filename.endsWith(CHANNEL_EXTENSION) 
-					|| filename.equals(CONTENT_PACKAGE_METADATA_FILENAME) 
-					|| filename.endsWith(BINARY_EXTENSION)) {
-				// ignore - should already be processed
+		try {
+			if (Files.isDirectory(currentPath)) {
+				Path folderMetadata = currentPath.getParent().resolve(filename + FOLDER_EXTENSION);
+				Path packageMetadata = currentPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME);
+				if (Files.exists(folderMetadata)) {
+					exportIntoStageable(folderMetadata, pathRoot, Folder.class, new StoredFolder(), (n, s) -> StagingModelBuilder.getFolder(n, s), deferDeleting);
+				} else if (Files.exists(packageMetadata)) {
+					logger.info("Content Package to export: " + currentPath.toAbsolutePath());
+					// ignore
+				} else {
+					logger.warn("Removing alien folder " + currentPath.toAbsolutePath());
+					deferDeleting.add(currentPath);
+				}
 			} else {
-				logger.warn("Removing alien file " + currentPath.toAbsolutePath());
-				deferDeleting.add(currentPath);
+				if (filename.endsWith(PAGE_EXTENSION)) {
+					exportIntoVersionedStageable(currentPath, pathRoot, Page.class, new StoredPage(), (n, s) -> StagingModelBuilder.getPage(n, s), deferDeleting);
+				} else if (filename.endsWith(FORM_EXTENSION)) {
+					exportIntoVersionedStageable(currentPath, pathRoot, Form.class, new StoredForm(), (n, s) -> StagingModelBuilder.getForm(n, s), deferDeleting);
+				} else if (filename.endsWith(FILE_EXTENSION)) {
+					exportIntoStageable(currentPath, pathRoot, File.class, new StoredFile(), (n, s) -> StagingModelBuilder.getFile(n, s), deferDeleting);
+				} else if (filename.endsWith(IMAGE_EXTENSION)) {
+					exportIntoStageable(currentPath, pathRoot, ImageFile.class, new StoredImage(), (n, s) -> StagingModelBuilder.getImage(n, s), deferDeleting);
+				} else if (filename.endsWith(CHANNEL_EXTENSION)) {
+					exportIntoStageable(currentPath, pathRoot, Node.class, new StoredChannel(), (n, s) -> StagingModelBuilder.getNode(n, s), deferDeleting);
+				} else if (filename.endsWith(NODE_EXTENSION)) {
+					exportIntoStageable(currentPath, pathRoot, Node.class, new StoredNode(), (n, s) -> StagingModelBuilder.getNode(n, s), deferDeleting);
+				} else if (filename.endsWith(FOLDER_EXTENSION) 
+						|| filename.equals(CONTENT_PACKAGE_METADATA_FILENAME) 
+						|| filename.endsWith(BINARY_EXTENSION)) {
+					// ignore - should already be processed
+				} else {
+					logger.warn("Removing alien file " + currentPath.toAbsolutePath());
+					deferDeleting.add(currentPath);
+				}
 			}
+		} catch (EntityNotFoundException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("No NodeObject found for the staging entity: " + currentPath, e);
+			}
+			// when the object was not found in the CMS (any more), we also want to remove the file in the content package, including all its peers
+			if (filename.endsWith(FILE_EXTENSION) || filename.endsWith(IMAGE_EXTENSION)) {
+				Path binaryPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(METADATA_EXTENSION)) + BINARY_EXTENSION);
+				if (Files.exists(binaryPath)) {
+					deferDeleting.add(binaryPath);
+				}
+			} else if (filename.endsWith(CHANNEL_EXTENSION)) {
+				Path folderPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(CHANNEL_EXTENSION)));
+				if (Files.exists(folderPath)) {
+					deferDeleting.add(folderPath);
+				}
+				Path folderMetadataPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(CHANNEL_EXTENSION)) + FOLDER_EXTENSION);
+				if (Files.exists(folderMetadataPath)) {
+					deferDeleting.add(folderMetadataPath);
+				}
+			} else if (filename.endsWith(NODE_EXTENSION)) {
+				Path folderPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(NODE_EXTENSION)));
+				if (Files.exists(folderPath)) {
+					deferDeleting.add(folderPath);
+				}
+				Path folderMetadataPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(NODE_EXTENSION)) + FOLDER_EXTENSION);
+				if (Files.exists(folderMetadataPath)) {
+					deferDeleting.add(folderMetadataPath);
+				}
+			} else if (filename.endsWith(FOLDER_EXTENSION)) {
+				Path folderPath = currentPath.resolveSibling(filename.substring(0, filename.lastIndexOf(FOLDER_EXTENSION)));
+				if (Files.exists(folderPath)) {
+					deferDeleting.add(folderPath);
+				}
+			} else if (Files.isDirectory(currentPath)) {
+				Path channelMetadataPath = currentPath.resolveSibling(filename + CHANNEL_EXTENSION);
+				if (Files.exists(channelMetadataPath)) {
+					deferDeleting.add(channelMetadataPath);
+				}
+				Path nodeMetadataPath = currentPath.resolveSibling(filename + NODE_EXTENSION);
+				if (Files.exists(nodeMetadataPath)) {
+					deferDeleting.add(nodeMetadataPath);
+				}
+				Path folderMetadataPath = currentPath.resolveSibling(filename + FOLDER_EXTENSION);
+				if (Files.exists(folderMetadataPath)) {
+					deferDeleting.add(folderMetadataPath);
+				}
+			}
+			deferDeleting.add(currentPath);
 		}
 	}
 

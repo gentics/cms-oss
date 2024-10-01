@@ -116,7 +116,7 @@ docker-compose.yml:
 version: '3.4'
 services:
   app:
-    image: docker.apa-it.at/gentics/apps/gcn-testdb-manager:master
+    image: docker.gentics.com/gentics/apps/gcn-testdb-manager:master
     stop_grace_period: 30s
     environment:
       - GCN_TESTDB_MANAGER_PORT=8080
@@ -187,7 +187,7 @@ If some changelog entries are missing in the generated changelog, check the dire
 The CMS OSS Guides can be built in a container with the following command (path to the workspace needs to be inserted):
 
 ```
-docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
 ```
 
 The generated guides can be found at `cms-oss/cms-oss-doc/src/main/output`.
@@ -199,7 +199,7 @@ Building the CMS Guides locally requires three steps:
 First, the artifacts containing the assets of the guides need to be installed locally:
 
 ```
-docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
 cd [workspace]/cms-oss
 mvn -pl cms-oss-doc -am clean install -Dguides.exec.skip -Dskip.unit.tests
 ```
@@ -214,7 +214,7 @@ mvn -pl cms-doc -am clean package -Dguides.exec.skip
 Now the guides can be built with
 
 ```
-docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
 ```
 
 After that, build the package again

@@ -1,4 +1,4 @@
-FROM docker.apa-it.at/eclipse-temurin:17-jdk-alpine
+FROM docker.gentics.com/eclipse-temurin:17-jdk-alpine
 
 ENV CONF_FILES="" \
     LICENSEKEY=1111-1111-1111-1111-1111-1111-1111-1111 \

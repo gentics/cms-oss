@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { NodeVersionInfo, Version, VersionCompatibility, Node } from '@gentics/cms-models';
+import { Node, NodeVersionInfo, Version, VersionCompatibility } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { VersionModalComponent } from '../versions-modal';
+import { VersionModalComponent } from '../versions-modal/versions-modal.component';
 
 @Component({
     selector: 'gtx-app-version-label',

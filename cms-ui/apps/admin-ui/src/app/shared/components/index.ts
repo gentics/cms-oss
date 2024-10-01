@@ -32,7 +32,6 @@ export * from './folder-trable/folder-trable.component';
 export * from './generic-router-outlet/generic-router-outlet.component';
 export * from './group-table/group-table.component';
 export * from './group-trable/group-trable.component';
-export * from './i18n-panel-group/i18n-panel-group.component';
 export * from './icon-checkbox/icon-checkbox.component';
 export * from './icon/icon.component';
 export * from './language-table/language-table.component';

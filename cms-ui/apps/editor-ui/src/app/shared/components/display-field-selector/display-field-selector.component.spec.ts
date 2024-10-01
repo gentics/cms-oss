@@ -45,6 +45,7 @@ describe('DisplayFieldSelectorModal', () => {
                 'id',
                 'globalId',
                 'pdate',
+                'unpublishedDate',
                 'customCdate',
                 'customEdate',
                 'priority',

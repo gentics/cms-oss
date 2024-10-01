@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
-    EditableNodeProps,
     Feature,
     NODE_HOSTNAME_PROPERTY_PREFIX,
     NODE_PREVIEW_URL_PROPERTY_PREFIX,
@@ -15,11 +14,11 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     FormProperties,
-    generateFormProvider,
-    setControlsEnabled,
-    createPropertyPatternValidator,
     VALIDATOR_REGEX_ERROR_PROPERTY,
+    createPropertyPatternValidator,
+    generateFormProvider,
     generateValidatorProvider,
+    setControlsEnabled,
 } from '@gentics/ui-core';
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
@@ -45,7 +44,7 @@ export enum NodePropertiesMode {
         generateValidatorProvider(NodePropertiesComponent),
     ],
 })
-export class NodePropertiesComponent extends BasePropertiesComponent<EditableNodeProps> implements OnInit, OnChanges {
+export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
 
     public readonly NodePropertiesMode = NodePropertiesMode;
     public readonly VALIDATOR_REGEX_ERROR_PROPERTY = VALIDATOR_REGEX_ERROR_PROPERTY;
@@ -142,8 +141,8 @@ export class NodePropertiesComponent extends BasePropertiesComponent<EditableNod
         }));
     }
 
-    protected createForm(): FormGroup<FormProperties<EditableNodeProperties>> {
-        return new FormGroup<FormProperties<EditableNodeProps>>({
+    protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
+        return new FormGroup<FormProperties<NodePropertiesFormData>>({
             name: new FormControl(this.value?.name, [
                 Validators.required,
                 Validators.maxLength(50),
@@ -189,7 +188,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<EditableNod
         });
     }
 
-    protected configureForm(value: Partial<EditableNodeProps>, loud?: boolean): void {
+    protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
         if (!value) {
             return;
         }
@@ -213,7 +212,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<EditableNod
         }
     }
 
-    protected assembleValue(value: EditableNodeProps): EditableNodeProps {
+    protected assembleValue(value: NodePropertiesFormData): NodePropertiesFormData {
         return {
             ...value,
             hostProperty: value.hostProperty || '',

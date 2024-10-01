@@ -1,29 +1,30 @@
-import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ChangeDetectorRef, Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
-import { EditablePageProps, Language, Template } from '@gentics/cms-models';
+import { EditablePageProps, Feature, Language, PermissionListResponse, ResponseCode, SuggestPageFileNameResponse, Template } from '@gentics/cms-models';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExampleTemplateData,
     getExampleTemplateDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
-import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
+import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { mockPipes } from '../../../../testing/mock-pipe';
-import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
+import { ApplicationStateService, FolderActionsService, SetFeatureAction } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { PagePropertiesForm } from './page-properties-form.component';
+import { PagePropertiesComponent } from './page-properties.component';
 
 const testDataNodeId = 4;
 const testDataFolderId = 1;
@@ -32,13 +33,35 @@ const testDataPage = { ...getExamplePageData(), id: 123, nodeId: testDataNodeId,
 const testDataTemplate = { ...getExampleTemplateDataNormalized(), id: 123, nodeId: testDataNodeId, folderId: testDataFolderId };
 const testDataTemplateRaw = { ...getExampleTemplateData(), id: 123, nodeId: testDataNodeId, folderId: testDataFolderId };
 
-describe('PagePropertiesForm', () => {
+function suggestNameResponse(name: string): SuggestPageFileNameResponse {
+    return {
+        fileName: name,
+        messages: [],
+        responseInfo: {
+            responseCode: ResponseCode.OK,
+            responseMessage: '',
+        },
+    };
+}
 
-    let api: MockApi;
-    let featuresActions: MockFeaturesActions;
-    let folderActions: MockFolderActions;
+function templateListResponse(templates: Template[]): PermissionListResponse<Template> {
+    return {
+        hasMoreItems: false,
+        items: templates,
+        numItems: templates.length,
+        messages: [],
+        responseInfo: {
+            responseCode: ResponseCode.OK,
+            responseMessage: '',
+        },
+    };
+}
+
+describe('PagePropertiesComponent', () => {
+
     let permissions: PermissionService;
     let state: TestApplicationState;
+    let client: GCMSRestClientService;
 
     const getMockState = (templateList: number[] = [testDataTemplate.id]) => {
         return {
@@ -60,71 +83,75 @@ describe('PagePropertiesForm', () => {
         };
     };
 
+    function setNiceUrlStatus(active: boolean): void {
+        state.dispatch(new SetFeatureAction(Feature.NICE_URLS, active));
+    }
+
     beforeEach(() => {
         configureComponentTest({
-            imports: [GenticsUICoreModule.forRoot(), FormsModule, ReactiveFormsModule, CoreModule],
+            imports: [
+                GenticsUICoreModule.forRoot(),
+                FormsModule,
+                ReactiveFormsModule,
+                CoreModule,
+                GCMSRestClientModule,
+            ],
             providers: [
-                { provide: Api, useClass: MockApi },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: FeaturesActionsService, useClass: MockFeaturesActions },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 EntityResolver,
                 { provide: ContextMenuOperationsService, useClass: MockContextMenuOperationsService },
                 { provide: PermissionService, useClass: MockPermissionService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
             declarations: [
                 TestComponent,
-                PagePropertiesForm,
+                PagePropertiesComponent,
                 ...mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
-        api = TestBed.get(Api);
-        featuresActions = TestBed.get(FeaturesActionsService);
-        folderActions = TestBed.get(FolderActionsService);
-        permissions = TestBed.get(PermissionService);
-        state = TestBed.get(ApplicationStateService);
+
+        permissions = TestBed.inject(PermissionService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        client = TestBed.inject(GCMSRestClientService);
+
+        spyOn(client.page, 'suggestFileName').and.callFake(() => of(suggestNameResponse('')));
+        spyOn(client.permission, 'getInstance').and.callThrough();
+        spyOn(client.node, 'listTemplates').and.callFake(() => of(templateListResponse([testDataTemplateRaw])));
 
         state.mockState(getMockState());
     });
 
     describe('sanitization', () => {
-        const getPageName = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('[formcontrolname="pageName"]'));
-
-        const getSuggestedOrRequestedFileName = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('[formcontrolname="suggestedOrRequestedFileName"]'));
-
         it('file name suggestion works well for some pageName for english version if no file name has been entered manually',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageNameValue = 'Außenwirtschaft Oberösterreich';
+                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.en.html';
                 const expectedChanges = {
                     ...instance.properties,
-                    pageName: pageNameValue,
-                    fileName: '',
-                    suggestedOrRequestedFileName: 'Aussenwirtschaft_Oberoesterreich.en.html',
+                    name: pageNameValue,
+                    fileName: suggestedFileName,
                 };
+                delete expectedChanges.niceUrl;
+                delete expectedChanges.alternateUrls;
 
                 fixture.detectChanges();
                 tick();
 
-                api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.en.html' }));
+                (client.page.suggestFileName as jasmine.Spy).and.callFake(() => of(suggestNameResponse(suggestedFileName)));
 
-                const pageName = getPageName(fixture);
-
-                instance.propertiesForm.form.controls['pageName'].setValue(pageNameValue);
+                instance.propertiesForm.form.controls.fileName.markAsPristine();
+                instance.propertiesForm.form.controls.name.setValue(pageNameValue, { emitEvent: true, onlySelf: false });
 
                 // instance.onChange.calls.reset();
-
-                pageName.triggerEventHandler('keyup', {});
 
                 fixture.detectChanges();
                 tick(600); // Wait at least 400ms for the request to be triggered
                 fixture.detectChanges();
 
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledTimes(1);
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledWith({
+                expect(client.page.suggestFileName).toHaveBeenCalledWith({
                     folderId: instance.folderId,
                     nodeId: instance.nodeId,
                     templateId: instance.properties.templateId,
@@ -140,34 +167,32 @@ describe('PagePropertiesForm', () => {
         it('file name suggestion works well for some pageName for german version if no file name has been entered manually',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageNameValue = 'Außenwirtschaft Oberösterreich';
+                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.de.html';
                 const expectedChanges = {
                     ...instance.properties,
                     language: 'de',
-                    pageName: pageNameValue,
-                    fileName: '',
-                    suggestedOrRequestedFileName: 'Aussenwirtschaft_Oberoesterreich.de.html',
+                    name: pageNameValue,
+                    fileName: suggestedFileName,
                 };
+                delete expectedChanges.niceUrl;
+                delete expectedChanges.alternateUrls;
 
                 fixture.detectChanges();
                 tick();
 
-                api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.de.html' }));
+                (client.page.suggestFileName as jasmine.Spy).and.returnValue(of(suggestNameResponse(suggestedFileName)));
 
-                const pageName = getPageName(fixture);
-
-                instance.propertiesForm.form.controls['pageName'].setValue(pageNameValue);
-                instance.propertiesForm.form.controls['language'].setValue('de');
+                instance.propertiesForm.form.controls.fileName.markAsPristine();
+                instance.propertiesForm.form.controls.language.setValue('de');
+                instance.propertiesForm.form.controls.name.setValue(pageNameValue);
 
                 instance.onChange.calls.reset();
-
-                pageName.triggerEventHandler('keyup', {});
 
                 fixture.detectChanges();
                 tick(600); // Wait at least 400ms for the request to be triggered
                 fixture.detectChanges();
 
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledTimes(1);
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledWith({
+                expect(client.page.suggestFileName).toHaveBeenCalledWith({
                     folderId: instance.folderId,
                     nodeId: instance.nodeId,
                     templateId: instance.properties.templateId,
@@ -183,36 +208,34 @@ describe('PagePropertiesForm', () => {
         it('sanitizing works well for some fileName for english version',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const fileNameValue = 'Außenwirtschaft Oberösterreich';
+                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.en.html';
                 const expectedChanges = {
                     ...instance.properties,
-                    fileName: 'Aussenwirtschaft_Oberoesterreich.en.html',
-                    suggestedOrRequestedFileName: 'Aussenwirtschaft_Oberoesterreich.en.html',
+                    fileName: suggestedFileName,
                 };
+                delete expectedChanges.niceUrl;
+                delete expectedChanges.alternateUrls;
 
                 fixture.detectChanges();
                 tick();
 
-                api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.en.html' }));
+                (client.page.suggestFileName as jasmine.Spy).and.callFake(() => of(suggestNameResponse(suggestedFileName)));
 
-                const fileName = getSuggestedOrRequestedFileName(fixture);
-
-                instance.propertiesForm.form.controls['suggestedOrRequestedFileName'].setValue(fileNameValue);
+                instance.propertiesForm.form.controls.fileName.markAsPristine();
+                instance.propertiesForm.form.patchValue({ fileName: fileNameValue });
 
                 instance.onChange.calls.reset();
 
-                fileName.triggerEventHandler('blur', {});
-
                 fixture.detectChanges();
-                tick();
+                tick(600);
                 fixture.detectChanges();
 
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledTimes(1);
-                expect(api.folders.suggestPageFileName).toHaveBeenCalledWith({
+                expect(client.page.suggestFileName).toHaveBeenCalledWith({
                     folderId: instance.folderId,
                     nodeId: instance.nodeId,
                     templateId: instance.properties.templateId,
                     language: 'en',
-                    pageName: instance.properties.pageName,
+                    pageName: instance.properties.name,
                     fileName: 'Außenwirtschaft Oberösterreich',
                 });
 
@@ -225,11 +248,6 @@ describe('PagePropertiesForm', () => {
 
         const getNiceUrlInput = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
             fixture.debugElement.query(By.css('[formcontrolname="niceUrl"]'));
-
-        function setNiceUrlStatus(active: boolean): void {
-            featuresActions.checkFeature = jasmine.createSpy('checkFeature')
-                .and.returnValue(Promise.resolve(active));
-        }
 
         it('does not display niceUrl if feature is not enabled',
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -249,6 +267,8 @@ describe('PagePropertiesForm', () => {
                 fixture.detectChanges();
                 tick();
                 fixture.detectChanges();
+                fixture.whenRenderingDone();
+                flush();
 
                 const niceUrlInput = getNiceUrlInput(fixture);
                 expect(niceUrlInput).not.toBeNull();
@@ -259,7 +279,7 @@ describe('PagePropertiesForm', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 setNiceUrlStatus(true);
                 fixture.detectChanges();
-                tick();
+                tick(600);
                 fixture.detectChanges();
 
                 expect(instance.onChange).toHaveBeenCalled();
@@ -271,11 +291,6 @@ describe('PagePropertiesForm', () => {
 
         const getAlternateUrlsDebugger = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
             fixture.debugElement.query(By.css('[formcontrolname="alternateUrls"]'));
-
-        function setNiceUrlStatus(active: boolean): void {
-            featuresActions.checkFeature = jasmine.createSpy('checkFeature')
-                .and.returnValue(Promise.resolve(active));
-        }
 
         it('does not display niceUrl if feature is not enabled',
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -302,159 +317,19 @@ describe('PagePropertiesForm', () => {
         );
     });
 
-    describe('customCdate and customEdate fields', () => {
-
-        const getCustomCdateCell = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('.custom-creation-date'));
-
-        const getCustomEdateCell = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('.custom-edit-date'));
-
-        const getCustomDateCheckbox = (customDateCell: DebugElement): DebugElement => customDateCell.query(By.directive(CheckboxComponent));
-
-        it('displays customCdate and customEdate if a page is set and checks the checkboxes if custom dates are set',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-
-                const customCdateCell = getCustomCdateCell(fixture);
-                expect(customCdateCell).not.toBeNull();
-                const customCdateCheckbox = getCustomDateCheckbox(customCdateCell);
-                expect((customCdateCheckbox.componentInstance as CheckboxComponent).checked).toBeTruthy();
-
-                const customEdateCell = getCustomEdateCell(fixture);
-                expect(customEdateCell).not.toBeNull();
-                const customEdateCheckbox = getCustomDateCheckbox(customEdateCell);
-                expect((customEdateCheckbox.componentInstance as CheckboxComponent).checked).toBeTruthy();
-            }),
-        );
-
-        it('displays customCdate and customEdate if a page is set and does not check the checkboxes if custom dates are not set',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                instance.properties.customCdate = 0;
-                instance.properties.customEdate = 0;
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-
-                const customCdateCell = getCustomCdateCell(fixture);
-                expect(customCdateCell).not.toBeNull();
-                const customCdateCheckbox = getCustomDateCheckbox(customCdateCell);
-                expect((customCdateCheckbox.componentInstance as CheckboxComponent).checked).toBeFalsy();
-
-                const customEdateCell = getCustomEdateCell(fixture);
-                expect(customEdateCell).not.toBeNull();
-                const customEdateCheckbox = getCustomDateCheckbox(customEdateCell);
-                expect((customEdateCheckbox.componentInstance as CheckboxComponent).checked).toBeFalsy();
-            }),
-        );
-
-        it('does not display customCdate and customEdate if no page is set',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                instance.page = undefined;
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-
-                const customCdateCell = getCustomCdateCell(fixture);
-                expect(customCdateCell).toBeNull();
-                const customEdateCell = getCustomEdateCell(fixture);
-                expect(customEdateCell).toBeNull();
-            }),
-        );
-
-        it('emits changes with custom dates set to 0, when the custom date checkboxes are unchecked',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                const expectedChanges0: EditablePageProps = {
-                    ...instance.properties,
-                    customCdate: 0,
-                };
-                const expectedChanges1: EditablePageProps = {
-                    ...expectedChanges0,
-                    customEdate: 0,
-                };
-
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalled();
-
-                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('input'));
-                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('input'));
-
-                customCdateCheckbox.nativeElement.click();
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalledTimes(2);
-                expect(instance.onChange).toHaveBeenCalledWith({ ...expectedChanges0, suggestedOrRequestedFileName: '' });
-                instance.onChange.calls.reset();
-
-                customEdateCheckbox.nativeElement.click();
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalledTimes(1);
-                expect(instance.onChange).toHaveBeenCalledWith({ ...expectedChanges1, suggestedOrRequestedFileName: '' });
-            }),
-        );
-
-        it('emits changes with custom dates set, when the custom date checkboxes are checked',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                instance.properties.customCdate = 0;
-                instance.properties.customEdate = 0;
-                const expectedChanges0: EditablePageProps = {
-                    ...instance.properties,
-                    customCdate: instance.page.cdate,
-                };
-                const expectedChanges1: EditablePageProps = {
-                    ...expectedChanges0,
-                    customEdate: instance.page.edate,
-                };
-
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalled();
-
-                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('input'));
-                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('input'));
-
-                customCdateCheckbox.nativeElement.click();
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalledTimes(2);
-                expect(instance.onChange).toHaveBeenCalledWith({ ...expectedChanges0, suggestedOrRequestedFileName: '' });
-                instance.onChange.calls.reset();
-
-                customEdateCheckbox.nativeElement.click();
-                fixture.detectChanges();
-                tick();
-                fixture.detectChanges();
-                expect(instance.onChange).toHaveBeenCalledTimes(1);
-                expect(instance.onChange).toHaveBeenCalledWith({ ...expectedChanges1, suggestedOrRequestedFileName: '' });
-            }),
-        );
-
-    });
-
     describe('template selection', () => {
 
         const getNoTemplateLinkedWarning = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('[formControlName="templateId"] + .noTemplates'));
+            fixture.debugElement.query(By.css('.template-select ~ .no-templates'));
 
         const getLinkTemplateButton = (fixture: ComponentFixture<TestComponent>): DebugElement | null =>
-            fixture.debugElement.query(By.css('[formControlName="templateId"] ~ a'));
+            fixture.debugElement.query(By.css('.template-select ~ .link-templates'));
 
-        it('warning is shown if no templates are linked',
+        it('should show a warning when no templates are linked',
             componentTest(() => TestComponent, (fixture, instance) => {
-
-                // set no linked templates
-                state.mockState(getMockState([]));
-
                 fixture.detectChanges(); // ngOnInit
+
+                instance.templates = [];
 
                 tick(); // fetch permissions and linked folders
                 fixture.detectChanges();
@@ -466,9 +341,6 @@ describe('PagePropertiesForm', () => {
 
         it('warning is not shown if templates are linked',
             componentTest(() => TestComponent, (fixture, instance) => {
-
-                // set linked templates
-                state.mockState(getMockState([testDataTemplate.id]));
 
                 fixture.detectChanges(); // ngOnInit
 
@@ -482,11 +354,6 @@ describe('PagePropertiesForm', () => {
 
         it('"link templates" button is shown if user has permissions to link templates and node has templates',
             componentTest(() => TestComponent, (fixture, instance) => {
-
-                // set template for node
-                folderActions.getAllTemplatesOfNode = jasmine.createSpy('getAllTemplatesOfNode').and.returnValue(of(
-                    [testDataTemplateRaw],
-                ));
 
                 // set permission to link
                 permissions.forFolder = jasmine.createSpy('forFolder').and.returnValue(of({
@@ -509,7 +376,7 @@ describe('PagePropertiesForm', () => {
                 tick(); // fetch permissions and linked folders
                 fixture.detectChanges();
 
-                expect(folderActions.getAllTemplatesOfNode).toHaveBeenCalled();
+                expect(client.node.listTemplates).toHaveBeenCalled();
                 expect(permissions.forFolder).toHaveBeenCalled();
 
                 const linkTemplateButton = getLinkTemplateButton(fixture);
@@ -519,11 +386,6 @@ describe('PagePropertiesForm', () => {
 
         it('"link templates" button is not shown if user does not have permissions to link templates yet node has templates',
             componentTest(() => TestComponent, (fixture, instance) => {
-
-                // set template for node
-                folderActions.getAllTemplatesOfNode = jasmine.createSpy('getAllTemplatesOfNode').and.returnValue(of(
-                    [testDataTemplateRaw],
-                ));
 
                 // retract permission to link
                 permissions.forFolder = jasmine.createSpy('forFolder').and.returnValue(of({
@@ -546,7 +408,7 @@ describe('PagePropertiesForm', () => {
                 tick(); // fetch permissions and linked folders
                 fixture.detectChanges();
 
-                expect(folderActions.getAllTemplatesOfNode).toHaveBeenCalled();
+                expect(client.node.listTemplates).toHaveBeenCalled();
                 expect(permissions.forFolder).toHaveBeenCalled();
 
                 const linkTemplateButton = getLinkTemplateButton(fixture);
@@ -558,26 +420,28 @@ describe('PagePropertiesForm', () => {
 
 @Component({
     template: `
-        <page-properties-form #propertiesForm
-                              [page]="page"
-                              [enableFileNameSuggestion]="true"
-                              [folderId]="folderId"
-                              [nodeId]="nodeId"
-                              [properties]="properties"
-                              [templates]="templates"
-                              [languages]="languages"
-                              (changes)="onChange($event)"></page-properties-form>
+        <gtx-page-properties
+            #propertiesForm
+            [page]="page"
+            [enableFileNameSuggestion]="true"
+            [folderId]="folderId"
+            [nodeId]="nodeId"
+            [value]="properties"
+            [templates]="templates"
+            [languages]="languages"
+            (valueChange)="onChange($event)"
+        ></gtx-page-properties>
     `,
 })
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
-    propertiesForm: PagePropertiesForm;
+    propertiesForm: PagePropertiesComponent;
 
     page = testDataPage;
     folderId = testDataFolderId;
     nodeId = testDataNodeId;
     properties: EditablePageProps = {
-        pageName: 'pageName',
+        name: 'pageName',
         fileName: '',
         description: 'description',
         niceUrl: 'niceUrl',
@@ -593,30 +457,11 @@ class TestComponent {
     onChange = jasmine.createSpy('onChange').and.stub();
 }
 
-class MockApi {
-    folders = {
-        suggestPageFileName: jasmine.createSpy('suggestPageFileName'),
-    };
-    permissions = {
-        getFolderPermissions: jasmine.createSpy('getFolderPermissions'),
-    };
-}
-
 class MockErrorHandler {}
 
-class MockFeaturesActions {
-    checkFeature(): Promise<boolean> { return Promise.resolve(true); }
-}
+class MockFolderActions {}
 
-class MockFolderActions {
-    getAllTemplatesOfNode(): Observable<Template[]> {
-        return of([]);
-    }
-}
-
-class MockContextMenuOperationsService {
-
-}
+class MockContextMenuOperationsService {}
 
 class MockPermissionService {
     forFolder(): Observable<EditorPermissions> {

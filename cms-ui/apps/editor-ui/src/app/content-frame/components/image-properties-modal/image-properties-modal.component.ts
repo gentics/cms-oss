@@ -2,7 +2,6 @@ import {
     ChangeDetectionStrategy,
     Component,
     Input,
-    OnDestroy,
     OnInit,
     ViewChild,
 } from '@angular/core';
@@ -10,14 +9,10 @@ import { EditableProperties } from '@editor-ui/app/common/models';
 import {
     CombinedPropertiesEditorComponent,
 } from '@editor-ui/app/content-frame/components/combined-properties-editor/combined-properties-editor.component';
-import {
-    EditableFileProps,
-    FileOrImage,
-    InheritableItem,
-    Node,
-} from '@gentics/cms-models';
+import { FileOrImage } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { getItemProperties } from '../../utils';
 
 @Component({
     selector: 'image-properties-modal',
@@ -25,7 +20,7 @@ import { Observable } from 'rxjs';
     styleUrls: ['./image-properties-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ImagePropertiesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
+export class ImagePropertiesModalComponent extends BaseModal<void> implements OnInit {
 
     @Input()
     nodeId: number;
@@ -43,10 +38,7 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
     editPermission$: Observable<boolean>;
 
     ngOnInit(): void {
-        this.properties = this.getItemProperties(this.file);
-    }
-
-    ngOnDestroy(): void {
+        this.properties = getItemProperties(this.file);
     }
 
     async saveAndClose(): Promise<void> {
@@ -55,29 +47,4 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
 
         this.closeFn();
     }
-
-    private getItemProperties(item: InheritableItem | Node): EditableProperties {
-        // an item with type "node" or "channel" may be the base folder of a node. If it has
-        // a folder-only property, then we can assume it is the base folder.
-        if ((item.type === 'node' || item.type === 'channel') && item.hasOwnProperty('hasSubfolders')) {
-            (item as any).type = 'folder';
-        }
-
-        switch (item.type) {
-            case 'file':
-            case 'image':
-                return {
-                    name: item.name,
-                    description: (item as FileOrImage).description,
-                    forceOnline: (item as FileOrImage).forceOnline,
-                    niceUrl: (item as FileOrImage).niceUrl,
-                    alternateUrls: (item as FileOrImage).alternateUrls,
-                } as EditableFileProps;
-
-            default:
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                throw new Error(`getItemProperties: ${(item as any).type} is not handled.`);
-        }
-    }
-
 }

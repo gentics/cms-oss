@@ -125,8 +125,8 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
             ),
             this.form.statusChanges,
         ]).pipe(
-            // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled && (this.value as any) !== INIVIAL_UNSET_VALUE),
+            // Do not emit values if the value hasn't initialized yet
+            filter(() => (this.value as any) !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value)),

@@ -1,34 +1,33 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { FormProperties } from '@gentics/cms-components';
 import {
     ContentRepositoryType,
+    EditableFolderProps,
     Feature,
     Folder,
     FolderListResponse,
-    FolderPublishDirSanitizeResponse,
-    FolderResponse,
     Raw,
     ResponseCode,
 } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EditableProperties, emptyItemInfo } from '../../../common/models';
-import { Api } from '../../../core/providers/api/api.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
-import { FolderPropertiesForm } from './folder-properties-form.component';
+import { FolderPropertiesComponent, FolderPropertiesMode } from './folder-properties.component';
 
-function getInput<T>(fixture: ComponentFixture<TestComponent>, controlName: string): AbstractControl {
-    const comp = fixture.componentInstance.form;
-    if (comp?.form == null) {
-        return null;
-    }
-
-    return comp.form.get(controlName);
+function getInput<T extends keyof EditableFolderProps>(
+    fixture: ComponentFixture<TestComponent>,
+    controlName: T,
+): FormProperties<EditableFolderProps>[T] | null {
+    return fixture.componentInstance?.form?.form?.controls?.[controlName];
 }
 
 function triggerInputEvent(element: HTMLElement): void {
@@ -37,7 +36,10 @@ function triggerInputEvent(element: HTMLElement): void {
     element.dispatchEvent(customEvent);
 }
 
-function setInputValue<T>(fixture: ComponentFixture<T>, formcontrolname: string, value: string): void {
+function setInputValue<K extends keyof EditableFolderProps, T = EditableFolderProps[K]>(
+    fixture: ComponentFixture<TestComponent>,
+    formcontrolname: K, value: T,
+): void {
     const input = fixture.nativeElement.querySelector(`[formcontrolname=${formcontrolname}] input`);
     input.value = value;
     triggerInputEvent(input);
@@ -63,13 +65,11 @@ function setPubDirSegmentToTrueInInitialState(state: TestApplicationState) {
 function configureEnvironment<T extends TestComponent>(
     instance: T,
     state: TestApplicationState,
-    api: MockApiService,
     currentNodeId: number,
     currentNodePubDirSegment: boolean,
     contentRepositoryId: number,
     currentFolderId: number,
     testFolder: Folder<Raw>,
-    currentFolderSubFolders: Folder<Raw>[],
     contentRepositoryType: ContentRepositoryType,
 ): void {
     // test component instance
@@ -77,7 +77,7 @@ function configureEnvironment<T extends TestComponent>(
     instance.folderId = currentFolderId;
     instance.properties = {
         name: testFolder.name,
-        directory: testFolder.publishDir,
+        publishDir: testFolder.publishDir,
         description: testFolder.description,
     };
 
@@ -103,9 +103,6 @@ function configureEnvironment<T extends TestComponent>(
             activeFolder: currentFolderId,
         },
     });
-
-    // API
-    api.folderContent.folders = currentFolderSubFolders;
 }
 
 const ACTIVE_FOLDER_ID = 1;
@@ -121,105 +118,86 @@ const SANITIZATION_RESULT = 'sanitizationResult';
 
 @Component({
     template: `
-        <folder-properties-form
+        <gtx-folder-properties
             #form
             [nodeId]="nodeId"
             [folderId]="folderId"
-            [properties]="properties"
+            [value]="properties"
             [disabled]="disabled"
             [mode]="mode"
-            (changes)="simplePropertiesChanged($event)"
-        >
-        </folder-properties-form>
+            (valueChange)="simplePropertiesChanged($event)"
+        ></gtx-folder-properties>
     `,
 })
 class TestComponent {
-    @ViewChild('form')
-    form: FolderPropertiesForm;
+    @ViewChild('form', { static: true })
+    form: FolderPropertiesComponent;
 
     nodeId: number;
     folderId: number;
     properties: EditableProperties;
     simplePropertiesChanged = jasmine.createSpy('simplePropertiesChanged');
-    mode: 'create' | 'edit' = 'create';
+    mode: FolderPropertiesMode = FolderPropertiesMode.CREATE;
     disabled = false;
 }
 
-class MockApiService {
-
-    folderContent: FolderListResponse = {
-        folders: [
-            // to be filled with test data
-        ],
+function createFolderListResponse(folders: Folder[] = []): FolderListResponse {
+    return {
+        folders,
         hasMoreItems : false,
         messages: [],
-        numItems: 3,
+        numItems: folders.length,
         responseInfo: {
             responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
-    };
-
-    private folder: FolderResponse = {
-        folder: getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
-        messages: [],
-        responseInfo: {
-            responseCode: ResponseCode.OK,
-            responseMessage: 'Successfully loaded subfolders',
-        },
-    }
-
-    private folderPublishDirSanitize: FolderPublishDirSanitizeResponse = {
-        messages: [],
-        responseInfo: {
-            responseCode: ResponseCode.OK,
-            responseMessage: 'Successfully loaded subfolders',
-        },
-        publishDir: SANITIZATION_RESULT,
-    }
-
-    // constructor() {
-    //     spyOn(this, 'folders');
-    // }
-
-    folders = {
-        getFolders: (folderId: number): Observable<FolderListResponse> => {
-            return of(this.folderContent);
-        },
-        getItem: (folderId: number, type: 'folder'): Observable<FolderResponse> => {
-            return of(this.folder);
-        },
-        sanitizeFolderPath: jasmine.createSpy('sanitizeFolderPath').and.returnValue(of(this.folderPublishDirSanitize)),
     };
 }
 
-
-describe('FolderPropertiesForm', () => {
+describe('FolderPropertiesComponent', () => {
     let state: TestApplicationState;
     let initialState: MockAppState;
-    let folder: Folder;
-    let api: MockApiService;
+    let client: GCMSRestClientService;
 
     beforeEach(() => {
         configureComponentTest({
             imports: [
                 ReactiveFormsModule,
                 GenticsUICoreModule,
+                GCMSRestClientModule,
             ],
             declarations: [
                 DynamicDisableDirective,
-                FolderPropertiesForm,
+                FolderPropertiesComponent,
                 TestComponent,
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: Api, useClass: MockApiService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        folder = getExampleFolderData();
+        state = TestBed.inject(ApplicationStateService) as any;
+        client = TestBed.inject(GCMSRestClientService);
+
+        spyOn(client.folder, 'folders').and.callFake(() => of(createFolderListResponse()));
+        spyOn(client.folder, 'get').and.callFake(() => of({
+            folder: getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
+            messages: [],
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Successfully loaded subfolders',
+            },
+        }));
+        spyOn(client.folder, 'sanitizePublshDirectory').and.callFake(() => of({
+            messages: [],
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Successfully loaded subfolders',
+            },
+            publishDir: SANITIZATION_RESULT,
+        }));
+
         initialState = {
             auth: {
                 isLoggedIn: true,
@@ -255,10 +233,10 @@ describe('FolderPropertiesForm', () => {
         it('with feature setting autocomplete_folder_path = FALSE and pub_dir_segment = FALSE',
             componentTest(() => TestComponent, (fixture, instance) => {
 
-                instance.mode = 'create';
+                instance.mode = FolderPropertiesMode.CREATE;
                 instance.properties = {
                     name: '',
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 };
                 fixture.detectChanges();
@@ -268,13 +246,13 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
-                expect(getInput(fixture, 'directory').value).toEqual(PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR);
+                expect(getInput(fixture, 'publishDir').value).toEqual(PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -283,10 +261,10 @@ describe('FolderPropertiesForm', () => {
 
                 state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
 
-                instance.mode = 'create';
+                instance.mode = FolderPropertiesMode.CREATE;
                 instance.properties = {
                     name: '',
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 };
                 fixture.detectChanges();
@@ -296,13 +274,13 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
-                expect(getInput(fixture, 'directory').value).toEqual(SANITIZATION_RESULT);
+                expect(getInput(fixture, 'publishDir').value).toEqual(SANITIZATION_RESULT);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: SANITIZATION_RESULT,
+                    publishDir: SANITIZATION_RESULT,
                     description: '',
                 });
-                expect(api.folders.sanitizeFolderPath.calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${ACTIVE_FOLDER_PUBLISH_DIR}${TEST_STRING_FOLDER_NAME}` });
+                expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${ACTIVE_FOLDER_PUBLISH_DIR}${TEST_STRING_FOLDER_NAME}` });
             }),
         );
 
@@ -312,10 +290,10 @@ describe('FolderPropertiesForm', () => {
                 state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
-                instance.mode = 'create';
+                instance.mode = FolderPropertiesMode.CREATE;
                 instance.properties = {
                     name: '',
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 };
                 fixture.detectChanges();
@@ -325,13 +303,13 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
-                expect(getInput(fixture, 'directory').value).toEqual(PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR);
+                expect(getInput(fixture, 'publishDir').value).toEqual(PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -342,10 +320,10 @@ describe('FolderPropertiesForm', () => {
                 state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
-                instance.mode = 'create';
+                instance.mode = FolderPropertiesMode.CREATE;
                 instance.properties = {
                     name: '',
-                    directory: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
+                    publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
                 };
                 fixture.detectChanges();
@@ -355,13 +333,13 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
-                expect(getInput(fixture, 'directory').value).toEqual(SANITIZATION_RESULT);
+                expect(getInput(fixture, 'publishDir').value).toEqual(SANITIZATION_RESULT);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: SANITIZATION_RESULT,
+                    publishDir: SANITIZATION_RESULT,
                     description: '',
                 });
-                expect(api.folders.sanitizeFolderPath.calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${TEST_STRING_FOLDER_NAME}` });
+                expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${TEST_STRING_FOLDER_NAME}` });
             }),
         );
 
@@ -376,10 +354,10 @@ describe('FolderPropertiesForm', () => {
 
                 const TEST_STRING_DIRECTORY_NAME = '/custom_publish_dir/';
 
-                instance.mode = 'edit';
+                instance.mode = FolderPropertiesMode.EDIT;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: undefined,
                     nameI18n: undefined,
@@ -392,16 +370,16 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME_NEW);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME_NEW);
-                expect(getInput(fixture, 'directory').value).toEqual(TEST_STRING_DIRECTORY_NAME);
+                expect(getInput(fixture, 'publishDir').value).toEqual(TEST_STRING_DIRECTORY_NAME);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME_NEW,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: {},
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -412,10 +390,10 @@ describe('FolderPropertiesForm', () => {
 
                 state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
 
-                instance.mode = 'edit';
+                instance.mode = FolderPropertiesMode.EDIT;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: undefined,
                     nameI18n: undefined,
@@ -429,16 +407,16 @@ describe('FolderPropertiesForm', () => {
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME_NEW);
                 // autocompletion has no effect in edit mode
-                expect(getInput(fixture, 'directory').value).toEqual(TEST_STRING_DIRECTORY_NAME);
+                expect(getInput(fixture, 'publishDir').value).toEqual(TEST_STRING_DIRECTORY_NAME);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME_NEW,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: {},
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -450,10 +428,10 @@ describe('FolderPropertiesForm', () => {
                 state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
-                instance.mode = 'edit';
+                instance.mode = FolderPropertiesMode.EDIT;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: undefined,
                     nameI18n: undefined,
@@ -467,16 +445,16 @@ describe('FolderPropertiesForm', () => {
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME_NEW);
                 // autocompletion has no effect in edit mode
-                expect(getInput(fixture, 'directory').value).toEqual(TEST_STRING_DIRECTORY_NAME);
+                expect(getInput(fixture, 'publishDir').value).toEqual(TEST_STRING_DIRECTORY_NAME);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME_NEW,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: {},
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -489,10 +467,10 @@ describe('FolderPropertiesForm', () => {
                 state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
-                instance.mode = 'edit';
+                instance.mode = FolderPropertiesMode.EDIT;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: undefined,
                     nameI18n: undefined,
@@ -505,16 +483,16 @@ describe('FolderPropertiesForm', () => {
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME_NEW);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME_NEW);
-                expect(getInput(fixture, 'directory').value).toEqual(TEST_STRING_DIRECTORY_NAME);
+                expect(getInput(fixture, 'publishDir').value).toEqual(TEST_STRING_DIRECTORY_NAME);
                 expect(instance.simplePropertiesChanged).toHaveBeenCalledWith({
                     name: TEST_STRING_FOLDER_NAME_NEW,
-                    directory: TEST_STRING_DIRECTORY_NAME,
+                    publishDir: TEST_STRING_DIRECTORY_NAME,
                     description: '',
                     descriptionI18n: {},
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(api.folders.sanitizeFolderPath).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -540,22 +518,21 @@ describe('FolderPropertiesForm', () => {
             configureEnvironment(
                 instance,
                 state,
-                api,
                 currentNodeId,
                 currentNodePubDirSegment,
                 contentRepositoryId,
                 currentFolderId,
                 testFolder,
-                currentFolderSubFolders,
                 contentRepositoryType,
             );
+            (client.folder.folders as jasmine.Spy).and.callFake(() => of(createFolderListResponse(currentFolderSubFolders)));
 
             tick(1_000);
             fixture.detectChanges();
             tick(1_000);
 
             setInputValue(fixture, 'name', '');
-            setInputValue(fixture, 'directory', '');
+            setInputValue(fixture, 'publishDir', '');
 
             tick(1_000);
             fixture.detectChanges();
@@ -565,14 +542,11 @@ describe('FolderPropertiesForm', () => {
             expect(getInput(fixture, 'name').value).toBe('');
             expect(getInput(fixture, 'name').valid).toBe(false);
 
-            expect(getInput(fixture, 'directory').value).toBe('');
-            expect(getInput(fixture, 'directory').valid).toBe(false);
+            expect(getInput(fixture, 'publishDir').value).toBe('');
+            expect(getInput(fixture, 'publishDir').valid).toBe(false);
 
             expect(getInput(fixture, 'description').value).toBe(testFolder.description);
             expect(getInput(fixture, 'description').valid).toBe(true);
-
-            // remove the changes made to the API mock ...
-            api.folderContent.folders = [];
         }),
     );
 

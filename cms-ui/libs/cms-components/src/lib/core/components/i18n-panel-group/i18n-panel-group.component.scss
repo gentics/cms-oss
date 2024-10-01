@@ -1,17 +1,10 @@
-@import 'variables';
+@import "../../../../styles/variables";
 
-// Hide the button without using `display: none` or `visibility: hidden` otherwise IE does not
-// register the form submit event.
-.hidden-submit-button {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    padding: 0;
-    border: 0;
-}
+// i18n-TABS ////////////////////////////////////////////////////////////
 
-hr {
-    margin: 20px 0;
+:host {
+    display: block;
+    width: 100%;
 }
 
 .properties-editor-i18n {
@@ -131,5 +124,11 @@ hr {
             margin-top: 2rem;
         }
 
+    }
+}
+
+.language-pane-label {
+    &.invalid {
+        color: $gtx-color-alert;
     }
 }

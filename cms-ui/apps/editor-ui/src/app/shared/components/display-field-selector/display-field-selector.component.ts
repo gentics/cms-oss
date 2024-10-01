@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ItemType } from '@gentics/cms-models';
-import { IModalDialog, ISortableEvent } from '@gentics/ui-core';
+import { BaseModal, ISortableEvent } from '@gentics/ui-core';
 
 export interface LabeledField {
     name: string;
@@ -32,6 +32,8 @@ const PAGE_FIELDS = [
 ];
 
 const FILE_FIELDS = [
+    { name: 'customCdate', label: 'common.date_custom_created_label' },
+    { name: 'customEdate', label: 'common.date_custom_edited_label' },
     { name: 'fileType', label: 'common.file_type_label' },
     { name: 'fileSize', label: 'common.file_size_label' },
     { name: 'usage', label: 'common.usage_label' },
@@ -48,28 +50,34 @@ const FORM_FIELDS = [
     { name: 'usage', label: 'common.usage_label' },
 ];
 
+interface DisplayFieldSelection {
+    selection: string[];
+    showPath: boolean;
+}
+
 /**
  * The DisplayFieldSelector is used to select and order the item fields
  * to be displayed in each row of the ContentList.
  */
 @Component({
     selector: 'display-field-selector',
-    templateUrl: './display-field-selector.component.tpl.html',
-    styleUrls: ['./display-field-selector.scss'],
+    templateUrl: './display-field-selector.component.html',
+    styleUrls: ['./display-field-selector.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DisplayFieldSelector implements IModalDialog, OnInit {
+export class DisplayFieldSelectorModal extends BaseModal<DisplayFieldSelection> implements OnInit {
+
     type: ItemType;
     fields: string[] = [];
 
     showPath: boolean;
 
-    closeFn: (val: any) => void;
-    cancelFn: (val?: any) => void;
-
     availableFields: LabeledField[] = [];
     private selected: { [fieldName: string]: boolean } = {};
 
-    constructor(private changeDetector: ChangeDetectorRef) { }
+    constructor(private changeDetector: ChangeDetectorRef) {
+        super();
+    }
 
     ngOnInit(): void {
         let fieldsByType = COMMON_FIELDS;
@@ -128,13 +136,4 @@ export class DisplayFieldSelector implements IModalDialog, OnInit {
 
         this.closeFn({selection: selection, showPath: this.showPath});
     }
-
-    registerCloseFn(close: (val: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
-    }
-
 }

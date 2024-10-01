@@ -22,7 +22,7 @@ import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
-import { FormPropertiesFormComponent } from '../form-properties-form/form-properties-form.component';
+import { FormPropertiesComponent } from './form-properties.component';
 
 type PageWithNodeId = ItemInNode<Page<Raw>>;
 
@@ -42,7 +42,7 @@ describe('FormPropertiesForm', () => {
             ],
             declarations: [
                 TestComponent,
-                FormPropertiesFormComponent,
+                FormPropertiesComponent,
                 mockPipes('i18n'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
@@ -124,7 +124,7 @@ describe('FormPropertiesForm', () => {
                 ],
                 declarations: [
                     TestComponent,
-                    FormPropertiesFormComponent,
+                    FormPropertiesComponent,
                     mockPipes('i18n'),
                 ],
                 schemas: [NO_ERRORS_SCHEMA],
@@ -134,7 +134,7 @@ describe('FormPropertiesForm', () => {
         })
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
-            componentTest(() => FormPropertiesFormComponent, (fixture, instance) => {
+            componentTest(() => FormPropertiesComponent, (fixture, instance) => {
                 if (instance.properties.data == null) {
                     instance.properties.data = {};
                 }
@@ -169,9 +169,9 @@ describe('FormPropertiesForm', () => {
         );
 
         it('openRepositoryBrowser returns the correct Promise and setEmailTemplatePage sets the correct ID',
-            componentTest(() => FormPropertiesFormComponent, fixture => {
+            componentTest(() => FormPropertiesComponent, fixture => {
                 const options: RepositoryBrowserOptions = { selectMultiple: false, allowedSelection: 'page' };
-                const instance: FormPropertiesFormComponent = fixture.componentInstance;
+                const instance: FormPropertiesComponent = fixture.componentInstance;
                 instance.ngOnInit();
 
                 callRepositoryBrowser(TEST_PAGE);
@@ -188,16 +188,16 @@ describe('FormPropertiesForm', () => {
 
 @Component({
     template: `
-        <form-properties-form
+        <gtx-form-properties
             #propertiesForm
             [isMultiLang]="isMultiLang"
             [languages]="languages"
-        ></form-properties-form>
+        ></gtx-form-properties>
     `,
 })
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
-    propertiesForm: FormPropertiesFormComponent;
+    propertiesForm: FormPropertiesComponent;
     isMultiLang = true;
     languages: Language[] = [];
 }

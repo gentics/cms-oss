@@ -13,7 +13,7 @@ import { ContextMenuOperationsService } from '../../../core/providers/context-me
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-import { PagePropertiesForm } from '../../../shared/components';
+import { PagePropertiesComponent } from '../../../shared/components';
 import { DynamicDisableDirective } from '../../../shared/directives';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -45,7 +45,7 @@ xdescribe('CreatePageModal', () => {
             declarations: [
                 CreatePageModalComponent,
                 DynamicDisableDirective,
-                PagePropertiesForm,
+                PagePropertiesComponent,
                 TestComponent,
                 mockPipes('i18nDate'),
             ],

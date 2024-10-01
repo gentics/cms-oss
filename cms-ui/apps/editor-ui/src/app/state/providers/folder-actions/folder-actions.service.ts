@@ -40,6 +40,7 @@ import {
     FileReplaceOptions,
     FileUploadResponse,
     Folder,
+    FolderCreateRequest,
     FolderItemOrNodeSaveOptionsMap,
     FolderItemOrTemplateType,
     FolderItemSaveOptionsMap,
@@ -1324,7 +1325,7 @@ export class FolderActionsService {
     /**
      * Get templates of this folder
      */
-    async getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    async getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[]> {
         const nodeId = this.getCurrentNodeId();
 
         const maxItems = fetchAll ? -1 : 10;
@@ -1348,6 +1349,7 @@ export class FolderActionsService {
                 total: res.numItems,
                 schema: getNormalizrSchema('templates'),
             })).toPromise();
+            return res.templates;
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction('templates', error.message)).toPromise();
             throw error;
@@ -1420,29 +1422,11 @@ export class FolderActionsService {
     /**
      * Create a new folder
      */
-    async createNewFolder(
-        folder: {
-            name: string,
-            directory: string,
-            description: string,
-            parentFolderId: number,
-            nodeId: number,
-            failOnDuplicate?: boolean,
-        },
-    ): Promise<Folder<Raw> | void> {
+    async createNewFolder(req: FolderCreateRequest): Promise<Folder<Raw> | void> {
         await this.appState.dispatch(new StartListCreatingAction('folder')).toPromise();
 
-        const newFolder = {
-            name: folder.name,
-            publishDir: folder.directory,
-            description: folder.description,
-            nodeId: folder.nodeId,
-            motherId: folder.parentFolderId,
-            failOnDuplicate: folder.failOnDuplicate,
-        };
-
         try {
-            const res = await this.client.folder.create(newFolder).toPromise()
+            const res = await this.client.folder.create(req).toPromise()
             await this.appState.dispatch(new CreateItemSuccessAction('folder', [res.folder], false)).toPromise();
             return res.folder;
         } catch (error) {
@@ -1689,16 +1673,12 @@ export class FolderActionsService {
     /**
      * Update the editable properties of a folder.
      */
-    updateFolderProperties(folderId: number, properties: EditableFolderProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Folder<Raw> | void> {
-        const folderProps = {
-            name: properties.name,
-            description: properties.description,
-            publishDir: properties.directory,
-            nameI18n: properties.nameI18n,
-            descriptionI18n: properties.descriptionI18n,
-            publishDirI18n: properties.publishDirI18n,
-        };
-        return this.updateItem('folder', folderId, folderProps, {}, postUpdateBehavior);
+    updateFolderProperties(
+        folderId: number,
+        properties: EditableFolderProps,
+        postUpdateBehavior?: PostUpdateBehavior,
+    ): Promise<Folder<Raw> | void> {
+        return this.updateItem('folder', folderId, properties, {}, postUpdateBehavior);
     }
 
     /**
@@ -1725,21 +1705,7 @@ export class FolderActionsService {
      * Update the editable properties of a page.
      */
     updatePageProperties(pageId: number, properties: EditablePageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Page<Raw> | void> {
-        const pageProps: Partial<Page<Raw>> = {
-            name: properties.pageName,
-            fileName: properties.fileName,
-            description: properties.description,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-            templateId: properties.templateId,
-            customCdate: properties.customCdate,
-            customEdate: properties.customEdate,
-            priority: properties.priority,
-        };
-        if (properties.language) {
-            pageProps.language = properties.language;
-        }
-        return this.updateItem('page', pageId, pageProps, {}, postUpdateBehavior);
+        return this.updateItem('page', pageId, properties, {}, postUpdateBehavior);
     }
 
     /**
@@ -1786,30 +1752,14 @@ export class FolderActionsService {
      * Update the editable properties of a file.
      */
     updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<File<Raw> | void> {
-        const fileProps = {
-            name: properties.name,
-            description: properties.description,
-            forceOnline: properties.forceOnline,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-        };
-        return this.updateItem('file', fileId, fileProps, {}, postUpdateBehavior);
+        return this.updateItem('file', fileId, properties, {}, postUpdateBehavior);
     }
 
     /**
      * Update the editable properties of an image.
      */
     updateImageProperties(imageId: number, properties: EditableImageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Image<Raw> | void> {
-        const imageProps = {
-            name: properties.name,
-            description: properties.description,
-            forceOnline: properties.forceOnline,
-            fpX: properties.fpX,
-            fpY: properties.fpY,
-            niceUrl: properties.niceUrl,
-            alternateUrls: properties.alternateUrls,
-        };
-        return this.updateItem('image', imageId, imageProps, {}, postUpdateBehavior);
+        return this.updateItem('image', imageId, properties, {}, postUpdateBehavior);
     }
 
     updateNodeProperties(nodeId: number, properties: EditableNodeProps): Promise<Node<Raw> | void> {
@@ -2733,12 +2683,11 @@ export class FolderActionsService {
                 const completed = responses.filter(res => res.successfull);
 
                 if (failed.length > 0) {
-                // If the server provides an error message, show it to the user.
+                    // If the server provides an error message, show it to the user.
                     const fileErrors = failed.map(res => {
                         const fileError = (res.error.data?.messages?.[0]?.message || res.error.message || '')
                             .replace(/\.$/, '');
-                        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                        return res[2].name + (fileError ? ' - ' + fileError : '');
+                        return `${res.error?.name}${fileError ? ' - ' + fileError : ''}`;
                     });
 
                     this.notification.show({
@@ -3115,7 +3064,7 @@ export class FolderActionsService {
 
         const requests = pageIds.map(id =>
             this.client.page.takeOffline(id, { at: 0, alllang: false }).pipe(
-                map(response => ({ id, response, failed: response.responseInfo.responseCode !== 'OK' })),
+                map(response => ({ id, response, failed: response.responseInfo.responseCode !== ResponseCode.OK })),
                 catchError((error: ApiError) => {
                     const errorMsg = error && error.message || `Error on taking page offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('page', errorMsg));
@@ -3463,7 +3412,7 @@ export class FolderActionsService {
     async pageTimeManagementClear(pageId: number, payload: QueuedActionRequestClear): Promise<void> {
         try {
             const pageVersionPlanned = await this.getPageVersionPlanned(pageId);
-            await this.client.page.update(pageId, payload).toPromise();
+            await this.client.page.update(pageId, payload as any).toPromise();
 
             if (payload.clearPublishAt) {
                 this.notification.show({
@@ -3615,7 +3564,7 @@ export class FolderActionsService {
                     return of(error.response);
                 }),
                 map(response =>
-                    ({ id, response, failed: response.responseInfo.responseCode !== 'OK' }),
+                    ({ id, response, failed: response.responseInfo.responseCode !== ResponseCode.OK }),
                 ),
             ),
         );

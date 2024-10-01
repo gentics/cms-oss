@@ -329,6 +329,8 @@ export class PermissionService {
     getFolderPermissionMap(folderId: number): Observable<PermissionsMapCollection> {
         return this.appState.select((state: AppState) => state.entities.folder[folderId]).pipe(
             switchMap((folder: Folder) => {
+                folder = structuredClone(folder);
+
                 return this.api.permissions.getFolderPermissions(folder.id, folder.nodeId).pipe(
                     map((folderPermissions: PermissionResponse) => {
                         return folder.permissionsMap = folderPermissions.permissionsMap;

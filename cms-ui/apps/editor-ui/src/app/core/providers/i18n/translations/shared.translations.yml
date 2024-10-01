@@ -2,3 +2,6 @@
 keycloak_not_available:
   en: Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.
   de: Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.
+i18n_properties_label:
+  en: Multilingual
+  de: Mehrsprachig

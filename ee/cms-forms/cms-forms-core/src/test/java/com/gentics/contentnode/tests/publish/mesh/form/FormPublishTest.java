@@ -106,7 +106,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			try {
 				f.setData(mapper.readValue(String.format(
 						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + StringEscapeUtils.escapeHtml("|\"'AGB herunterladen'\"|").replace("|", "&vert;") + "|_blank }}", 
+						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
 						StringUtils.EMPTY, 
 						StringUtils.EMPTY
 					), ObjectNode.class));
@@ -169,7 +169,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			try {
 				f.setData(mapper.readValue(String.format(
 						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
+						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
 						StringUtils.EMPTY, 
 						StringUtils.EMPTY
 					), ObjectNode.class));
@@ -185,7 +185,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			try {
 				previewModel.setData(mapper.readValue(String.format(
 						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
+						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
 						StringUtils.EMPTY, 
 						StringUtils.EMPTY
 					), ObjectNode.class));
@@ -199,7 +199,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), 
-					meshUuid, "", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;");
+					meshUuid, "", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;");
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}
@@ -301,7 +301,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			try {
 				f.setData(mapper.readValue(String.format(
 						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + StringEscapeUtils.escapeHtml("|\"'AGB herunterladen'\"|").replace("|", "&vert;") + "|_blank }}", 
+						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
 						StringUtils.EMPTY, 
 						StringUtils.EMPTY
 					), ObjectNode.class));
@@ -317,7 +317,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			try {
 				previewModel.setData(mapper.readValue(String.format(
 						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + StringEscapeUtils.escapeHtml("|\"'AGB herunterladen'\"|").replace("|", "&vert;") + "|_blank }}", 
+						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
 						StringUtils.EMPTY, 
 						StringUtils.EMPTY
 					), ObjectNode.class));
@@ -330,7 +330,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), meshUuid, "", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;&amp;vert;&amp;quot;&#x27;AGB herunterladen&#x27;&amp;quot;&amp;vert;&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;&amp;vert;&amp;quot;&#x27;AGB herunterladen&#x27;&amp;quot;&amp;vert;&lt;/a&gt;");
+			String expected = String.format(writer.toString(), meshUuid, "", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;");
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}

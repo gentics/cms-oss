@@ -99,22 +99,24 @@
         <div class="item-tag-list" *ngIf="activeTabId === ITEM_TAG_LIST_TAB">
             <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | i18n }}</h2>
 
-            <gtx-table
-                [selectAllType]="TableSelectAllType.PAGE"
-                [selectable]="true"
+            <div class="tag-list-container">
+                <gtx-table
+                    [selectAllType]="TableSelectAllType.PAGE"
+                    [selectable]="true"
 
-                [columns]="contentTagColumns"
-                [rows]="contentTagRows"
-                [actions]="contentTagActions"
-                [(selected)]="contentTagSelection"
+                    [columns]="contentTagColumns"
+                    [rows]="contentTagRows"
+                    [actions]="contentTagActions"
+                    [(selected)]="contentTagSelection"
 
-                [renderers]="{
-                    active: boolIconRenderer
-                }"
+                    [renderers]="{
+                        active: boolIconRenderer
+                    }"
 
-                (rowClick)="handleContentTagClick($event)"
-                (actionClick)="handleContentTagAction($event)"
-            ></gtx-table>
+                    (rowClick)="handleContentTagClick($event)"
+                    (actionClick)="handleContentTagAction($event)"
+                ></gtx-table>
+            </div>
 
             <ng-template #boolIconRenderer let-value="value">
                 <icon

@@ -170,6 +170,16 @@ public class File extends ContentNodeItem implements Serializable {
 	private SortedSet<String> alternateUrls;
 
 	/**
+	 * Custom cdate
+	 */
+	private Integer customCdate;
+
+	/**
+	 * Custom edate
+	 */
+	private Integer customEdate;
+
+	/**
 	 * Name of the node, this file was inherited from
 	 * @return
 	 */
@@ -618,5 +628,37 @@ public class File extends ContentNodeItem implements Serializable {
 	 */
 	public void setAlternateUrls(SortedSet<String> alternateUrls) {
 		this.alternateUrls = alternateUrls;
+	}
+
+	/**
+	 * Custom creation date of the page (set to 0 for clearing custom creation date and falling back to the real creation date)
+	 * @return custom creation date
+	 */
+	public Integer getCustomCdate() {
+		return customCdate;
+	}
+
+	/**
+	 * Set custom creation date
+	 * @param customCdate custom creation date
+	 */
+	public void setCustomCdate(Integer customCdate) {
+		this.customCdate = customCdate;
+	}
+
+	/**
+	 * Custom edit date of the page (set to 0 for clearing custom edit date and falling back to the real edit date)
+	 * @return custom edit date
+	 */
+	public Integer getCustomEdate() {
+		return customEdate;
+	}
+
+	/**
+	 * Set custom edit date
+	 * @param customEdate custom edit date
+	 */
+	public void setCustomEdate(Integer customEdate) {
+		this.customEdate = customEdate;
 	}
 }

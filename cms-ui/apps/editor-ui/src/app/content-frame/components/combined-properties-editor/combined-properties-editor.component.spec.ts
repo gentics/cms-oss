@@ -57,10 +57,10 @@ import { EditTagInfo, TagEditorHostComponent, TagEditorService } from '../../../
 import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wrapper/iframe-wrapper.component';
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
-import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
-import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 import { generateContentTagList } from '../../utils';
+import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
+import { PropertiesEditorComponent } from '../properties-editor/properties-editor.component';
 import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
 
 const CONTENT_TAG_NAME = 'contenttag0';
@@ -139,7 +139,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),
@@ -1635,8 +1635,8 @@ class TestComponent {
 }
 
 @Component({
-    selector: 'properties-editor',
-    providers: [ { provide: PropertiesEditor, useClass: MockPropertiesEditor } ],
+    selector: 'gtx-properties-editor',
+    providers: [ { provide: PropertiesEditorComponent, useClass: MockPropertiesEditor } ],
     template: '',
 })
 class MockPropertiesEditor {

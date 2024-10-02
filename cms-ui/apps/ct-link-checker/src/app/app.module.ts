@@ -2,7 +2,6 @@ import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { RouterTestingModule } from '@angular/router/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -73,7 +72,6 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         GenticsUICoreModule.forRoot(),
         CoreModule,
         NgxPaginationModule,
-        RouterTestingModule,
         FormsModule,
         TranslateModule.forRoot({
             loader: {

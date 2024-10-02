@@ -7,14 +7,7 @@ import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 /**
  * These are the user-editable properties of a Folder object.
  */
-export interface EditableFolderProps {
-    name?: string;
-    directory?: string;
-    description?: string;
-    descriptionI18n?: GtxI18nProperty;
-    nameI18n?: GtxI18nProperty;
-    publishDirI18n?: GtxI18nProperty;
-}
+export type EditableFolderProps = Partial<Pick<Folder, 'name' | 'publishDir' | 'description' | 'nameI18n' | 'descriptionI18n' | 'publishDirI18n'>>;
 
 /** A folder in the list of breadcrumbs of a folder. */
 export interface FolderBreadcrumb {

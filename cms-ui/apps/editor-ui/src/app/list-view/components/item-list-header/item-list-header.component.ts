@@ -29,7 +29,7 @@ import { ErrorHandler } from '../../../core/providers/error-handler/error-handle
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { DisplayFieldSelector, SortingModal } from '../../../shared/components';
+import { DisplayFieldSelectorModal, SortingModal } from '../../../shared/components';
 import { EntityStateUtil } from '../../../shared/util/entity-states';
 import { ApplicationStateService, ChangeListSelectionAction, FolderActionsService } from '../../../state';
 import { CreateFolderModalComponent } from '../create-folder-modal/create-folder-modal.component';
@@ -465,7 +465,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         const type = this.itemType;
         const fields = this.itemsInfo.displayFields;
         const showPath = this.itemsInfo.showPath;
-        this.modalService.fromComponent(DisplayFieldSelector, {}, { type, showPath, fields })
+        this.modalService.fromComponent(DisplayFieldSelectorModal, {}, { type, showPath, fields })
             .then(modal => modal.open())
             .then((result: {selection: string[], showPath: boolean}) => {
                 this.updateDisplayFields(this.itemType, result.selection);

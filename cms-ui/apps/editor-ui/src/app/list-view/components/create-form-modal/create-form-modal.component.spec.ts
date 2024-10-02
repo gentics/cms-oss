@@ -5,7 +5,7 @@ import { Api } from '@editor-ui/app/core/providers/api';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { PagePropertiesForm } from '@editor-ui/app/shared/components';
+import { PagePropertiesComponent } from '@editor-ui/app/shared/components';
 import { DynamicDisableDirective } from '@editor-ui/app/shared/directives';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
@@ -41,7 +41,7 @@ xdescribe('CreateFormModalComponent', () => {
             declarations: [
                 CreatePageModalComponent,
                 DynamicDisableDirective,
-                PagePropertiesForm,
+                PagePropertiesComponent,
                 TestComponent,
                 mockPipes('i18nDate'),
             ],

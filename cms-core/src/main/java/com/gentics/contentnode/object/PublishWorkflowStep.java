@@ -9,14 +9,13 @@ import java.util.List;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.TType;
 
 /**
  * Class representing steps in a page publish workflow
  */
 @TType(PublishWorkflowStep.TYPE_PUBLISHWORKFLOW_STEP)
-public abstract class PublishWorkflowStep extends AbstractContentObject {
+public abstract class PublishWorkflowStep extends AbstractContentObject implements MetaDateNodeObject {
 
 	/**
 	 * The ttype of the publish workflow step object as defined in system/include/public.inc.php
@@ -103,23 +102,11 @@ public abstract class PublishWorkflowStep extends AbstractContentObject {
 	public abstract SystemUser getCreator() throws NodeException;
 
 	/**
-	 * get the creation date
-	 * @return creation date
-	 */
-	public abstract ContentNodeDate getCDate();
-
-	/**
 	 * get the editor
 	 * @return editor
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the last edit date
-	 * @return last edit date
-	 */
-	public abstract ContentNodeDate getEDate();
 
 	/**
 	 * Get the list of usergroups assigned to this step

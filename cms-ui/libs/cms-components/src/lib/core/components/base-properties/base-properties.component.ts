@@ -5,6 +5,8 @@ import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
+const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
+
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
@@ -75,7 +77,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         super(changeDetector);
         this.booleanInputs.push(['initialValue', false]);
         // Set the value to this flag. Used to ignore changes until intial value has been provided.
-        this.value = null;
+        this.value = INIVIAL_UNSET_VALUE as any;
     }
 
     public ngOnInit(): void {
@@ -131,8 +133,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             ),
             this.form.statusChanges,
         ]).pipe(
-            // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled),
+            // Do not emit values if the value hasn't initialized yet
+            filter(() => (this.value as any) !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),
@@ -208,7 +210,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * Basic implementation which will simply put the value into the form.
      */
-    protected onValueChange(): void {
+    protected override onValueChange(): void {
         if (this.form) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
@@ -220,12 +222,42 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         }
     }
 
-    public override setDisabledState(isDisabled: boolean): void {
-        super.setDisabledState(isDisabled);
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
 
-        if (this.form) {
-            this.form.updateValueAndValidity();
+        if (!this.form) {
+            return;
         }
+
+        /*
+         * Special disabled handling, because angular forms are inconsistent.
+         * Accoding to the documentation, angular form-groups itself should have it's own status
+         * and should be able to be dis-/enabled without affecting their child elements.
+         * This is not the case, and the option `onlySelf` is apparenly a lie, as it doesn't do anything.
+         * Updating the state affects the form and all it's controls - however, only when *disabling* them.
+         * When enabling the form, only the form is now enabled and the controls are still disabled.
+         * Therefore, we do it manually here and fix this mess by doing it ourself.
+         */
+
+        // No change has to be applied
+        if ((this.form.enabled && !this.disabled) || (this.form.disabled && this.disabled)) {
+            return;
+        }
+
+        if (this.disabled) {
+            this.form.enable({ emitEvent: false });
+            Object.values(this.form.controls).forEach(ctrl => {
+                ctrl.enable({ emitEvent: false });
+            });
+        } else {
+            this.form.enable({ emitEvent: false });
+            Object.values(this.form.controls).forEach(ctrl => {
+                ctrl.enable({ emitEvent: false });
+            });
+        }
+
+        this.configureForm(this.form.value as any, true);
+        this.form.updateValueAndValidity();
     }
 
     /**

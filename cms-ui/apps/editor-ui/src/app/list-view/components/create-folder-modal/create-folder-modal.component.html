@@ -1,0 +1,31 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.create_new_folder_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-folder-properties
+        mode="create"
+        [formControl]="control"
+        (submit)="saveChanges()"
+    ></gtx-folder-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button
+        type="primary"
+        [disabled]="loading || !control?.valid"
+        (click)="saveChanges()"
+    >
+        {{ 'common.okay_button' | i18n }}
+    </gtx-button>
+</div>

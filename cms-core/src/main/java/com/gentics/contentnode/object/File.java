@@ -18,7 +18,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.upload.FileInformation;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
@@ -34,7 +33,7 @@ import com.gentics.contentnode.rest.model.PageLanguageCode;
  * but on the hard drive.
  */
 @TType(File.TYPE_FILE)
-public interface File extends Resolvable, StageableChanneledNodeObject, Disinheritable<ContentFile>, ObjectTagContainer, NodeObjectWithAlternateUrls, NamedNodeObject, StackResolvableNodeObject {
+public interface File extends Resolvable, StageableChanneledNodeObject, Disinheritable<ContentFile>, ObjectTagContainer, NodeObjectWithAlternateUrls, NamedNodeObject, StackResolvableNodeObject, CustomMetaDateNodeObject {
 
 	/**
 	 * The ttype of the file.
@@ -158,18 +157,6 @@ public interface File extends Resolvable, StageableChanneledNodeObject, Disinher
 	 * @throws NodeException
 	 */
 	SystemUser getEditor() throws NodeException;
-    
-	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	ContentNodeDate getCDate();
-    
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	ContentNodeDate getEDate();
     
 	/**
 	 * Check if this file is an image.

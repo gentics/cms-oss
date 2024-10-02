@@ -7,7 +7,7 @@
     > gtx-input {
         flex: 1 1 auto;
 
-        &.clearable::ng-deep input {
+        &.clearable::ng-deep input.input-element {
             border-top-right-radius: 0px;
             border-bottom-right-radius: 0px;
             border-right-width: 1px;

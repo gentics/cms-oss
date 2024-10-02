@@ -66,10 +66,10 @@ import {
 } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
-import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
+import { EditableNodeProps, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 
-function nodeToPropertiesFormData(node: Node): NodePropertiesFormData {
+function nodeToPropertiesFormData(node: Node): EditableNodeProps {
     return {
         ...node,
         hostType: node.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE,
@@ -106,7 +106,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     public allowedToUpdate = false;
 
     /** Form data of tab 'Properties' */
-    fgProperties: FormControl<NodePropertiesFormData>;
+    fgProperties: FormControl<EditableNodeProps>;
 
     /** form of tab 'Publishing' */
     fgPublishing: FormControl<NodePublishingPropertiesFormData>;
@@ -436,7 +436,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     }
 
     private initForms(): void {
-        this.fgProperties = new FormControl<NodePropertiesFormData>(this.currentEntity || {} as any, Validators.required);
+        this.fgProperties = new FormControl<EditableNodeProps>(this.currentEntity || {} as any, Validators.required);
         this.fgPropertiesSaveDisabled$ = createFormSaveDisabledTracker(this.fgProperties);
         this.fgPublishing = new FormControl<NodePublishingPropertiesFormData>(this.currentEntity || {} as any, Validators.required)
         this.fgPublishingSaveDisabled$ = createFormSaveDisabledTracker(this.fgPublishing);

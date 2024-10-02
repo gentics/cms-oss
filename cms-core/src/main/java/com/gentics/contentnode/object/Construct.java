@@ -44,7 +44,7 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
  */
 @SuppressWarnings("serial")
 @TType(Construct.TYPE_CONSTRUCT)
-public abstract class Construct extends ValueContainer implements SynchronizableNodeObject, I18nNamedNodeObject {
+public abstract class Construct extends ValueContainer implements SynchronizableNodeObject, I18nNamedNodeObject, MetaDateNodeObject {
 	public final static Integer TYPE_CONSTRUCTS_INTEGER = new Integer(10003);
 
 	public static final int TYPE_CONSTRUCT = 10004;
@@ -508,23 +508,11 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	public abstract SystemUser getCreator() throws NodeException;
 
 	/**
-	 * get the creation date
-	 * @return creation date
-	 */
-	public abstract ContentNodeDate getCDate();
-
-	/**
 	 * retrieve last editor
 	 * @return last editor
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the last edit date
-	 * @return edit date
-	 */
-	public abstract ContentNodeDate getEDate();
 
 	/**
 	 * Get the ml_id

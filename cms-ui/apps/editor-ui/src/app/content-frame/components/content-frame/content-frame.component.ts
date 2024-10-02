@@ -147,6 +147,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     objectPropertyModified = false;
     modifiedObjectPropertyValid: boolean;
     currentItem: ItemNormalized;
+    currentItemPath = '';
+    currentItemClean = true;
+
     editorNodeId: number;
     currentNode: Node;
     editorIsOpen = false;
@@ -170,8 +173,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     alohaWindowLoaded = false;
     windowLoaded = false;
 
-    currentItemPath = '';
-
     activeUiLanguageCode$: Observable<string>;
     activeFormLanguageCode$: Observable<string>;
 
@@ -186,7 +187,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     /** If has permission to publish and state is planned return true */
     isInQueue$: Observable<boolean> = undefined;
 
-    private forceItemRefresh$ = new BehaviorSubject<void>(undefined);
     private onLoadListener: EventListener;
     public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
@@ -827,8 +827,10 @@ ins.gtx-diff {
         const itemId = this.currentItem.id;
         if (this.editMode === EditMode.EDIT_PROPERTIES) {
             if (this.appState.now.editor.modifiedObjectPropertiesValid) {
-                return this.combinedPropertiesEditor.saveChanges()
-                    .then(() => this.forceItemRefresh$.next());
+                return this.combinedPropertiesEditor.saveChanges().then(() => {
+                    this.currentItemClean = true;
+                    this.changeDetector.markForCheck();
+                });
             }
 
             this.notification.show({

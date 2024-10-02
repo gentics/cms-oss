@@ -1,32 +1,42 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ItemType, SortField } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
-import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ItemType, SortField, SortOrder } from '@gentics/cms-models';
+import { BaseModal } from '@gentics/ui-core';
+
+interface SortOption {
+    sortBy: SortField,
+    sortOrder: SortOrder,
+}
 
 /**
  * A dialog used to select the sorting field and direction for a given type.
  */
 @Component({
     selector: 'sorting-modal',
-    templateUrl: './sorting-modal.tpl.html',
-    styleUrls: ['./sorting-modal.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    templateUrl: './sorting-modal.component.html',
+    styleUrls: ['./sorting-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SortingModal implements IModalDialog, OnInit {
+export class SortingModal extends BaseModal<SortOption> implements OnInit {
 
-    // Injected when modal is created
+    @Input()
     itemType: ItemType | 'wastebin' | 'contenttag' | 'templatetag';
+
+    @Input()
     sortBy: SortField;
-    sortOrder: 'asc' | 'desc';
+
+    @Input()
+    sortOrder: SortOrder;
 
     availableFields: SortField[] = [];
 
-    constructor(private entityResolver: EntityResolver) {}
+    constructor() {
+        super();
+    }
 
     ngOnInit(): void {
         const commonFields: SortField[] = ['name' , 'cdate' , 'edate'];
         const pageFields: SortField[] = ['customordefaultcdate', 'customordefaultedate', 'pdate' , 'filename' , 'template' , 'priority' ];
-        const fileFields: SortField[] = ['type', 'filesize'];
+        const fileFields: SortField[] = ['customordefaultcdate', 'customordefaultedate', 'type', 'filesize'];
         const wastebinFields: SortField[] = ['deletedat'];
 
         switch (this.itemType) {
@@ -62,18 +72,7 @@ export class SortingModal implements IModalDialog, OnInit {
     setSort(): void {
         this.closeFn({
             sortBy: this.sortBy,
-            sortOrder: this.sortOrder
+            sortOrder: this.sortOrder,
         });
-    }
-
-    closeFn(val: any): void { }
-    cancelFn(val?: any): void { }
-
-    registerCloseFn(close: (val: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
     }
 }

@@ -53,9 +53,9 @@ export interface QueuedActionTakeOffline extends QueuedAction { }
 
 
 export interface QueuedActionRequestPublishAt {
-     at: number;
-     alllang: boolean;
-     keepVersion: boolean;
+    at: number;
+    alllang: boolean;
+    keepVersion: boolean;
 }
 
 export interface QueuedActionRequestTakeOfflineAt {
@@ -79,6 +79,7 @@ export interface QueuedActionRequestClear {
 export interface PageVersion {
 
     /** Version number */
+    // eslint-disable-next-line id-blacklist
     number: string;
 
     /** Version timestamp */
@@ -132,19 +133,8 @@ export interface PageWorkflow {
 /**
  * The user-editable properties of a Page object.
  */
-export interface EditablePageProps {
-    pageName?: string;
-    fileName?: string;
-    description?: string;
-    niceUrl?: string;
-    alternateUrls?: string[];
-    /** The 2-letter language code */
-    language?: string;
-    templateId?: number;
-    priority?: number;
-    customCdate?: number;
-    customEdate?: number;
-}
+export type EditablePageProps = Partial<Pick<Page, 'name' | 'fileName' | 'description' | 'niceUrl'
+| 'alternateUrls' |'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate'>>;
 
 /**
  * External Link Checker page list item, contains the page and the external links

@@ -1207,11 +1207,11 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 			break;
 
 		case ORDER_CDATE:
-			comp = new FileComparator("cdate", orderWay);
+			comp = new FileComparator("customordefaultcdate", orderWay);
 			break;
 
 		case ORDER_EDATE:
-			comp = new FileComparator("edate", orderWay);
+			comp = new FileComparator("customordefaultedate", orderWay);
 			break;
 
 		case ORDER_FILESIZE:

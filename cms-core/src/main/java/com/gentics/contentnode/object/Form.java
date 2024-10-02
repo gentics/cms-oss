@@ -28,7 +28,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 @EditPermType(PermType.updateform)
 @DeletePermType(PermType.deleteform)
 @PublishPermType(PermType.publishform)
-public interface Form extends StageableVersionedNodeObject, PublishableNodeObjectInFolder, Resolvable, NamedNodeObject, StackResolvableNodeObject {
+public interface Form extends StageableVersionedNodeObject, PublishableNodeObjectInFolder, Resolvable, NamedNodeObject, StackResolvableNodeObject, MetaDateNodeObject {
 	/**
 	 * The ttype of the form object. Value: {@value}
 	 */
@@ -153,23 +153,11 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	List<String> getIndexableContent(String language) throws NodeException;
 
 	/**
-	 * Get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
 	 * Form creator
 	 * @return creator of the form
 	 * @throws NodeException
 	 */
 	SystemUser getCreator() throws NodeException;
-
-	/**
-	 * Get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	ContentNodeDate getEDate();
 
 	/**
 	 * Form editor

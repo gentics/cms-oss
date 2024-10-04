@@ -253,6 +253,16 @@ public class UniquifyHelper {
 		return getObjectUsingProperty(clazz, referenceValue, propertyFunction, objectIds) == null;
 	}
 
+	/**
+	 * Make the given reference value unique by adding numbers to the original value.
+	 * Uniqueness is checked with the given checkFunction
+	 * @param referenceValue value to make unique
+	 * @param type separator type
+	 * @param maxLength maximum allowed length
+	 * @param checkFunction function, which checks whether a value is unique. It should return "true" for unique values, "false" otherwise
+	 * @return possibly modified value
+	 * @throws NodeException
+	 */
 	public static String makeUnique(String referenceValue, UniquifyHelper.SeparatorType type, int maxLength,
 			Function<String, Boolean> checkFunction) throws NodeException {
 		if (type == null) {
@@ -348,6 +358,22 @@ public class UniquifyHelper {
 		return uniqueI18nMap;
 	}
 
+	/**
+	 * Make the values in the given {@link I18nMap} unique among each other. Checks will be done in specific order:
+	 * <ol>
+	 * <li>Modified values (which are different from the given original) are checked first</li>
+	 * <li>Values are checked in the reverse order of the given languages (so translations for languages with the highest priority will be checked and possibly modified last)</li>
+	 * </ol>
+	 * The translations will also be checked against the given default value (only the "en" translation is allowed to be identical to the default value)
+	 * @param languages list of content languages to check
+	 * @param map map to be checked
+	 * @param defaultValue default value
+	 * @param original original translations
+	 * @param type separator type
+	 * @param maxLength maximum allowed value length
+	 * @return translation map with unique values
+	 * @throws NodeException
+	 */
 	public static I18nMap makeUnique(List<ContentLanguage> languages, I18nMap map, String defaultValue,
 			Optional<I18nMap> original, UniquifyHelper.SeparatorType type, int maxLength) throws NodeException {
 		languages = new ArrayList<>(languages);

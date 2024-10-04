@@ -3820,12 +3820,25 @@ public class MeshPublisher implements AutoCloseable {
 						String conflictingUuid = conflictingNode.get().getLeft();
 						String conflictingLanguage = conflictingNode.get().getRight();
 
+						if (renderResult != null) {
+							renderResult.warn(MeshPublisher.class, String.format(
+									"Handling conflict with mesh node %s (language %s) when writing %d.%d into {%s} for node %d",
+									conflictingUuid, conflictingLanguage, task.objType, task.objId, cr.getName(),
+									task.nodeId));
+						}
+
 						if (org.apache.commons.lang3.StringUtils.equals(conflictingUuid, task.uuid)
 								&& !org.apache.commons.lang3.StringUtils.equals(conflictingLanguage, task.language)) {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
 
-							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
+							if (languageVariant != null && !Trx.supply(() -> cr.mustContain(languageVariant))) {
+								if (renderResult != null) {
+									renderResult.info(MeshPublisher.class,
+											String.format(
+													"Removing conflicting language variant %s (language %s) from mesh",
+													conflictingUuid, conflictingLanguage));
+								}
 								// remove language variant
 								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
 								// repeat task
@@ -3841,6 +3854,12 @@ public class MeshPublisher implements AutoCloseable {
 								int objType = optNodeObject.get().getLeft();
 								NodeObject conflictingNodeObject = optNodeObject.get().getRight();
 								if (conflictingNodeObject == null || !Trx.supply(() -> cr.mustContain(conflictingNodeObject))) {
+									if (renderResult != null) {
+										renderResult.info(MeshPublisher.class,
+												String.format(
+														"Removing conflicting object %s (language %s) from mesh",
+														conflictingUuid, conflictingLanguage));
+									}
 									// remove the object from Mesh
 									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
 									// repeat task

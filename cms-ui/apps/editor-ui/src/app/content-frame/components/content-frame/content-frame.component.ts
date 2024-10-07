@@ -1267,6 +1267,7 @@ ins.gtx-diff {
                 && state.openTab === 'properties'
                 && state.openPropertiesTab !== ITEM_TAG_LIST_TAB
             );
+        this.isLocked = this.isLockedByAnother();
 
         if (state.editorIsOpen && state.itemId) {
             const item = this.entityResolver.getEntity(state.itemType, state.itemId);
@@ -1291,7 +1292,6 @@ ins.gtx-diff {
             }
         }
 
-        this.isLocked = this.isLockedByAnother();
         this.changeDetector.markForCheck();
     }
 

@@ -52,7 +52,6 @@ export class DebugToolService extends InitializableServiceBase {
         private hotkeysService: HotkeysService,
         private modalService: ModalService,
         private appState: AppStateService,
-        private cmsErrorHandler: CMSErrorHandler,
         private apiService: GcmsApi,
         private i18n: I18nService,
     ) {

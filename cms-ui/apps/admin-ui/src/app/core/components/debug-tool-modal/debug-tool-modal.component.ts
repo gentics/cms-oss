@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
 import { DebugToolService } from '../../providers/debug-tool/debug-tool.service';
 
 @Component({
@@ -7,13 +7,16 @@ import { DebugToolService } from '../../providers/debug-tool/debug-tool.service'
     templateUrl: './debug-tool-modal.component.html',
     styleUrls: ['./debug-tool-modal.component.scss'],
 })
-export class DebugToolModalComponent implements IModalDialog {
+export class DebugToolModalComponent extends BaseModal<void> {
 
     public inProgress = false;
     public clearingData = false;
-    public debugToolService: DebugToolService = null;
 
-    constructor() {}
+    constructor(
+        public debugToolService: DebugToolService,
+    ) {
+        super();
+    }
 
     generateReport(): void {
         this.inProgress = true;
@@ -26,19 +29,8 @@ export class DebugToolModalComponent implements IModalDialog {
     clearSiteData(): void {
         this.inProgress = true;
         this.debugToolService.clearSiteData().then(
-            (result: any) => this.clearingData = true,
-            (reject: any) => this.inProgress = false,
+            () => { this.clearingData = true; },
+            () => { this.inProgress = false; },
         );
-    }
-
-    closeFn(val: any): void { }
-    cancelFn(val?: any): void { }
-
-    registerCloseFn(close: (val: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
     }
 }

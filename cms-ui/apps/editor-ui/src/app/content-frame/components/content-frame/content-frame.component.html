@@ -97,7 +97,7 @@
                 class="frame master-frame"
                 [attr.data-item-type]="currentItem?.type"
                 [attr.data-edit-mode]="editMode"
-                [attr.loaded]="!requesting && windowLoaded && !(editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+                [attr.loaded]="windowLoaded && !(editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
                 name="master-frame"
                 aria-hidden="false"
             ></iframe>

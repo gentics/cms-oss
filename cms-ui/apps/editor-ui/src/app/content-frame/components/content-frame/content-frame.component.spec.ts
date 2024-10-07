@@ -48,7 +48,7 @@ import { ItemStatusLabelComponent } from '../../../shared/components/item-status
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { ItemIsLocalizedPipe } from '../../../shared/pipes/item-is-localized/item-is-localized.pipe';
 import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.service';
-import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
+import { ApplicationStateService, EditorActionsService, FolderActionsService, MarkContentAsModifiedAction } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorService } from '../../../tag-editor';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
@@ -815,10 +815,11 @@ describe('ContentFrame', () => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.setMasterFrameLoaded(true);
-            (instance.contentFrame.currentItem as Page).locked = true;
-            (instance.contentFrame.currentItem as Page).lockedBy = OTHER_USER_ID;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
+            currentState.entities.page[ITEM_ID].locked = true;
+            // CurrentUserId is 1, so use another one
+            currentState.entities.page[ITEM_ID].lockedBy = 2;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();

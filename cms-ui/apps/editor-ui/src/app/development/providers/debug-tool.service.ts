@@ -115,16 +115,14 @@ export class DebugToolService implements OnDestroy {
             styles: this.debug_loadedStyles,
         };
 
-        this.modalService.fromComponent(DebugTool,
-            {
-                closeOnOverlayClick: false,
-                closeOnEscape: false,
-                onClose: () => {
-                    this.debugDataSnapshot = {}; // Clear Debug Data Snapshot
-                },
-                width: '700px',
+        this.modalService.fromComponent(DebugTool, {
+            closeOnOverlayClick: false,
+            closeOnEscape: false,
+            onClose: () => {
+                this.debugDataSnapshot = {}; // Clear Debug Data Snapshot
             },
-            { debugToolService: this })
+            width: '700px',
+        })
             .then(modal => modal.open())
             .then(result => {
                 if ( typeof result === 'object') {

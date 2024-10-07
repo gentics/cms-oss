@@ -1,6 +1,16 @@
-import { fakeAsync, tick } from '@angular/core/testing';
-import { ModalService } from '@gentics/ui-core';
+import { Type } from '@angular/core';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import { IModalDialog, IModalInstance, IModalOptions, ModalService } from '@gentics/ui-core';
+import { CoreModule } from '../../core/core.module';
 import { DebugToolService } from './debug-tool.service';
+
+class MockModalService implements Partial<ModalService> {
+    public fromComponent<T extends IModalDialog>(component: Type<T>, options?: IModalOptions, locals?: { [K in keyof T]?: T[K]; }): Promise<IModalInstance<T>> {
+        return Promise.resolve(null);
+    }
+}
+class MockI18nService implements Partial<I18nService> {}
 
 describe('DebugToolService', () => {
 
@@ -13,9 +23,19 @@ describe('DebugToolService', () => {
     let modalService: ModalService;
 
     beforeEach(() => {
-        modalService = new ModalService(null, null);
+        TestBed.configureTestingModule({
+            providers: [
+                DebugToolService,
+                { provide: ModalService, useClass: MockModalService },
+                { provide: I18nService, useClass: MockI18nService },
+            ],
+            imports: [CoreModule],
+        });
+
+        modalService = TestBed.inject(ModalService);
+        /// ???
         spyOn(DebugToolService.prototype, 'initialize').and.stub();
-        debugToolService = new DebugToolService(null, modalService, null, null, null, null, null, null);
+        debugToolService = TestBed.inject(DebugToolService);
 
         // Fake AppState
         const debugAppStateSpy = jasmine.createSpy('debug_appState').and.returnValue({});

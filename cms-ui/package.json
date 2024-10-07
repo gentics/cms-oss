@@ -21,7 +21,7 @@
     "test": "nx test",
     "e2e": "nx e2e",
     "component-test": "nx component-test",
-    "report:list": "npm list --prod --json > target/dependencies.json",
+    "report:list": "npm list --omit=dev --json > target/dependencies.json",
     "report:outdated": "npm outdated --json --long > target/outdated.json || true",
     "publish": "nx release publish"
   },

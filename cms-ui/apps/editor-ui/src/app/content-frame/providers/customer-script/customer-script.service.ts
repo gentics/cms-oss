@@ -41,6 +41,7 @@ import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
 import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 
+
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
@@ -61,6 +62,8 @@ export class CustomerScriptService implements OnDestroy {
     private customerScript: any;
     private entryPoint: (GCMSUI: GcmsUiBridge) => any;
     private customerScriptZone: ZoneType;
+    private gcmsUiStylesForIFrameBlob: Blob;
+    private gcmsUiStylesForIFrameBlobUrl: string;
 
     constructor(
         private http: HttpClient,
@@ -85,9 +88,19 @@ export class CustomerScriptService implements OnDestroy {
                 return true;
             },
         });
+
+        const iFrameStylesStr = '';
+        this.gcmsUiStylesForIFrameBlob = new Blob([iFrameStylesStr], { type: 'text/css' });
+        this.gcmsUiStylesForIFrameBlobUrl = window.URL.createObjectURL(this.gcmsUiStylesForIFrameBlob);
     }
 
-    ngOnDestroy(): void {}
+    ngOnDestroy(): void {
+        if (this.gcmsUiStylesForIFrameBlobUrl) {
+            window.URL.revokeObjectURL(this.gcmsUiStylesForIFrameBlobUrl);
+            this.gcmsUiStylesForIFrameBlobUrl = null;
+            this.gcmsUiStylesForIFrameBlob = null;
+        }
+    }
 
     /**
      * Check to see if a customer script has been defined in the customer-config/scripts folder, and if so attempt to
@@ -162,7 +175,7 @@ export class CustomerScriptService implements OnDestroy {
 
         const executePreLoadScript = () => {
             if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(iFrameWindow, document, scriptHost);
+                this.runPreLoadScript(iFrameWindow, document);
                 preLoadScriptExecuted = true;
             }
         };
@@ -217,6 +230,7 @@ export class CustomerScriptService implements OnDestroy {
             runPreLoadScript: executePreLoadScript,
             runPostLoadScript: executePostLoadScript,
             openRepositoryBrowser,
+            gcmsUiStylesUrl: this.gcmsUiStylesForIFrameBlobUrl,
             appState: this.mapToPartialState(this.state.now),
             onStateChange: (handler) => stateChangedHandler = handler,
             paths: {
@@ -296,9 +310,9 @@ export class CustomerScriptService implements OnDestroy {
     }
 
     /** Runs the pre-load script */
-    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
+    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument): void {
         try {
-            const script = new PreLoadScript(window, document, scriptHost);
+            const script = new PreLoadScript(window, document);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });

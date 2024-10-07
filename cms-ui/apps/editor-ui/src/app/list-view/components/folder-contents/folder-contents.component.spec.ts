@@ -89,6 +89,7 @@ import { FolderContentsComponent } from '../folder-contents/folder-contents.comp
 import { GridItemComponent } from '../grid-item/grid-item.component';
 import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from '../item-list/item-list.component';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 const PERMISSIONS = {
     assignPermissions: true,
@@ -355,6 +356,18 @@ class MockClient {
     };
 }
 
+class MockLocalStorage implements Partial<LocalStorage> {
+    private store = {};
+
+    setForUser(userId: number, key: string, value: any): void {
+        this.store[`${userId}_${key}`] = value;
+    }
+
+    getForUser(userId: number, key: string) {
+        return this.store[`${userId}_${key}`];
+    }
+}
+
 describe('FolderContentsComponent', () => {
 
     let state: TestApplicationState;
@@ -448,6 +461,7 @@ describe('FolderContentsComponent', () => {
                 QueryAssemblerElasticSearchService,
                 WindowRef,
                 { provide: ContentStagingActionsService, useClass: MockContentStatingActions },
+                { provide: LocalStorage, useClass: MockLocalStorage },
             ],
             declarations: [
                 AllItemsSelectedPipe,

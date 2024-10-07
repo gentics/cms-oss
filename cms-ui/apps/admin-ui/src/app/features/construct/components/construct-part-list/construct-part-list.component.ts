@@ -289,6 +289,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             supportedLanguages: this.supportedLanguages,
             keywordBlacklist: this.internalParts.map(part => part.keyword),
             orderBlacklist: usedOrders,
+            dataSources: this.dataSources,
         };
 
         if (highestOrder > 0) {

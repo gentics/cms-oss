@@ -1178,7 +1178,7 @@ public class TagFactory extends AbstractFactory {
 				}
 				inSyncNow.add(variantObjectTag.getId());
 				t.dirtObjectCache(variant.getObjectInfo().getObjectClass(), variant.getId());
-			});
+			}, true);
 
 			DBUtils.update("UPDATE objtag SET in_sync = 1 WHERE id IN ("
 					+ StringUtils.repeat("?", inSyncNow.size(), ",") + ")",
@@ -1209,7 +1209,7 @@ public class TagFactory extends AbstractFactory {
 				} else {
 					inSync.set(false);
 				}
-			});
+			}, false);
 
 			// set check stati
 			Object[] args = new Integer[ids.size() + 1];
@@ -1221,7 +1221,7 @@ public class TagFactory extends AbstractFactory {
 		}
 
 		@Override
-		public Set<Pair<NodeObject, ObjectTag>> getSyncVariants() throws NodeException {
+		public Set<Pair<NodeObject, ObjectTag>> getSyncVariants(boolean lookIntoWastebin) throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.OBJTAG_SYNC)
 					|| ObjectTransformer.getBoolean(t.getAttributes().get(SYNC_RUNNING_ATTRIBUTENAME), false)) {
@@ -1240,7 +1240,7 @@ public class TagFactory extends AbstractFactory {
 				if (variantObjectTag != null) {
 					set.add(Pair.of(variant, variantObjectTag));
 				}
-			});
+			}, lookIntoWastebin);
 
 			return set;
 		}
@@ -1271,16 +1271,17 @@ public class TagFactory extends AbstractFactory {
 					variantObjectTag.delete();
 					t.dirtObjectCache(variant.getObjectInfo().getObjectClass(), variant.getId());
 				}
-			});
+			}, true);
 		}
 
 		/**
 		 * Do all necessary syncs for the object tag
 		 * @param syncMethod lambda that performs the sync for the variant
+		 * @param lookIntoWastebin true to look into the wastebin, false to ignore objects in the wastebin
 		 * @throws NodeException
 		 */
-		protected void doSync(Consumer<ObjectTagContainer> syncMethod) throws NodeException {
-			try (WastebinFilter wb = new WastebinFilter(Wastebin.INCLUDE)) {
+		protected void doSync(Consumer<ObjectTagContainer> syncMethod, boolean lookIntoWastebin) throws NodeException {
+			try (WastebinFilter wb = new WastebinFilter(lookIntoWastebin ? Wastebin.INCLUDE : Wastebin.EXCLUDE)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				NodeObject container = getNodeObject();
 

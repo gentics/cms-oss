@@ -1,6 +1,7 @@
 <div class="content-frame-container">
 
     <gtx-editor-toolbar
+        *ngIf="currentItem && currentNode"
         [nodeInherited]="isInherited$ | async"
         [currentNode]="currentNode"
         [currentItem]="currentItem"
@@ -72,11 +73,11 @@
     <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
         <gtx-progress-bar
             class="frame-requesting"
-            [active]="requesting || !windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+            [active]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
         ></gtx-progress-bar>
 
         <gtx-loading-spinner
-            [visible]="requesting || !windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+            [visible]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
             [message]="(editMode === EditMode.EDIT ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| i18n"
             [longerMessage]="'editor.loading_takes_more_time' | i18n"
         ></gtx-loading-spinner>

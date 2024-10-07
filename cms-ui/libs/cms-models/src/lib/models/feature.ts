@@ -17,6 +17,9 @@ export enum Feature {
     FOCAL_POINT_EDITING = 'focal_point_editing',
     IMAGE_MANIPULATION2 = 'imagemanipulation2',
     ENABLE_UPLOAD_IN_TAGFILL = 'enable_image_upload_in_tagfill',
+    /**
+     * @deprecated Feature will be removed in the future
+     */
     TAGFILL_LIGHT = 'tagfill_light',
     WASTEBIN = 'wastebin',
     DEVTOOLS = 'devtools',

@@ -237,7 +237,7 @@
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
-                        *ngIf="selectedItems | anyItemInherited"
+                        *ngIf="multiChannelingEnabled && (selectedItems | anyItemInherited)"
                         data-action="localize"
                         (click)="localizeSelected()"
                     >

@@ -2,7 +2,8 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
+import { Router } from '@angular/router';
+import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, KeycloakService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
@@ -21,7 +22,6 @@ import { EmbeddedToolsService } from '../embedded-tools/providers/embedded-tools
 import { ExposedUIAPI } from '../embedded-tools/providers/exposed-ui-api/exposed-ui-api.service';
 import { ToolApiChannelService } from '../embedded-tools/providers/tool-api-channel/tool-api-channel.service';
 import { ToolMessagingChannelFactory } from '../embedded-tools/providers/tool-messaging-channel/tool-messaging-channel.factory';
-import { KeycloakService } from '../login/providers/keycloak/keycloak.service';
 import { SharedModule } from '../shared/shared.module';
 import { ApplicationStateService } from '../state';
 import { StateModule } from '../state/state.module';
@@ -42,7 +42,7 @@ import {
     MessageList,
     MessageModal,
     NoNodesComponent,
-    ProjectEditor,
+    ProjectEditorComponent,
     PublishQueueList,
     PublishQueueModal,
     SearchLabel,
@@ -84,7 +84,7 @@ export const getSidFromAppState = (appState: ApplicationStateService): Observabl
 export const createLanguageObservable = (appState: ApplicationStateService): Observable<GcmsUiLanguage> =>
     appState.select(state => state.ui.language);
 
-export function initializeApp(appState: ApplicationStateService, client: GCMSRestClientService): () => Promise<any> {
+export function initializeApp(appState: ApplicationStateService, client: GCMSRestClientService, keycloak: KeycloakService): () => Promise<any> {
     return () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         client.init({
@@ -97,7 +97,7 @@ export function initializeApp(appState: ApplicationStateService, client: GCMSRes
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             client.setSessionId(sid);
         });
-        return KeycloakService.checkKeycloakAuth();
+        return keycloak.checkKeycloakAuth();
     };
 }
 
@@ -111,7 +111,7 @@ const COMPONENTS = [
     MessageBody,
     MessageInboxComponent,
     MessageList,
-    ProjectEditor,
+    ProjectEditorComponent,
     PublishQueueList,
     TagEditorRouteComponent,
 
@@ -181,7 +181,7 @@ const PROVIDERS = [
     {
         provide: APP_INITIALIZER,
         useFactory: initializeApp,
-        deps: [ ApplicationStateService, GCMSRestClientService ],
+        deps: [ ApplicationStateService, GCMSRestClientService, KeycloakService ],
         multi: true,
     },
 ];

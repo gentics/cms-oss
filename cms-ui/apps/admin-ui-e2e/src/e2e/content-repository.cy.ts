@@ -3,17 +3,34 @@ import { AUTH_ADMIN } from '../support/app.po';
 
 describe('Content Repository', () => {
 
-    const IMPORTER = new EntityImporter();
+    const IMPORTER = new EntityImporter({
+        logRequests: false,
+        logImports: false
+    });
     const CR_NAME = 'Mesh CR';
 
-    before(async () => {
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    const NEW_PROJECT_NAME = 'New Project';
+
+    const TRABLE_PROJECTS = 'Projekte';
+
+    const TRABLE_NODES = 'Nodes';
+
+    const EXAMPLE_PROJECT = 'example';
+
+    const MINIMAL = "Minimal";
+    const FOLDER_A = "Folder A";
+    const FOLDER_B = "Folder B";
+
+    before(() => {
+        cy.wrap(IMPORTER.cleanupTest());
+        cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL));
     });
 
     beforeEach(() => {
-        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
-        IMPORTER.client = null;
         cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
+        cy.wrap(IMPORTER.cleanupTest());
+        cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
+        cy.wrap(IMPORTER.runPublish());
 
         cy.navigateToApp();
         cy.login(AUTH_ADMIN);
@@ -236,6 +253,152 @@ describe('Content Repository', () => {
                 // Reset to original state
                 updateUserPassword(auth.mesh.password);
                 updateCRPassword(auth.mesh.password);
+            });
+        });
+
+        describe('Mesh Management Login', () => {
+            beforeEach(() => {
+                cy.get('.cr-login-button').click();
+            });
+            afterEach(() => {
+                cy.get('.management-container .logout-button').click();
+            });
+
+            describe('Projects', () => {
+                it('should be possible to create a new project', () => {
+                    // select projects
+                    cy.get('.grouped-tabs .tab-link[data-id="projects"]').click();
+    
+                    // click button to create new project
+                    cy.get('gtx-mesh-project-table')
+                        .find('[data-action="create"]')
+                        .click();
+                    cy.get('gtx-mesh-project-modal').as('modal');
+
+                    // fill in project name
+                    cy.get('@modal').find('gtx-input[formcontrolname="name"] input[type="text"]').type(NEW_PROJECT_NAME);
+
+                    // select "folder" as schema for root node
+                    cy.get('@modal').find('gtx-mesh-schema-picker .select-button').click();
+                    cy.get('gtx-mesh-schema-table gtx-table')
+                        .findRowContainingText('folder')
+                        .selectRow();
+                    cy.get('gtx-mesh-select-schema-modal')
+                        .find('.modal-footer [data-action="confirm"]')
+                        .click();
+
+                    // create project
+                    cy.get('@modal').find('.modal-footer [data-action="confirm"]').click();
+
+                    // assert that the new project is listed
+                    cy.get('gtx-mesh-project-table')
+                        .findRowContainingText(NEW_PROJECT_NAME)
+                        .should('exist');
+
+                    // new delete the project
+                    cy.get('gtx-mesh-project-table')
+                        .findRowContainingText(NEW_PROJECT_NAME)
+                        .find('[data-id="delete"]')
+                        .click();
+                    cy.get('gtx-confirm-delete-modal')
+                        .find('.modal-footer [data-action="confirm"]')
+                        .click();
+                });
+            });
+
+            describe('Role Permissions', () => {
+                it.only('should be possible to read and modify role permissions on projects', () => {
+                    // select roles
+                    cy.get('.grouped-tabs .tab-link[data-id="roles"]').click();
+
+                    // open modal to manage permissions for anonymous
+                    cy.get('gtx-table')
+                        .findRowContainingText('anonymous')
+                        .find('[data-id="managePermissions"]')
+                        .click();
+
+                    cy.get('gtx-mesh-role-permissions-modal').as('modal');
+                    cy.get('gtx-mesh-role-permissions-trable').as('trable');
+
+                    // open "Projekte"
+                    cy.get('@trable')
+                        .findRowContainingText(TRABLE_PROJECTS)
+                        .expandTrableRow();
+
+                    cy.get('@trable')
+                        .findRowContainingText(EXAMPLE_PROJECT)
+                        .should('exist')
+                        .expandTrableRow();
+
+                    cy.get('@trable')
+                        .findRowContainingText(TRABLE_NODES)
+                        .should('exist')
+                        .expandTrableRow();
+
+                    // the node "Minimal" should not have the readPublished permission
+                    cy.get('@trable')
+                        .findRowContainingText(MINIMAL)
+                        .should('exist')
+                        .find('.permission-icon[data-id="readPublished"]')
+                        .should('exist')
+                        .should('not.have.class', 'granted');
+
+                    // edit permissions
+                    cy.get('@trable')
+                        .findRowContainingText(MINIMAL)
+                        .find('[data-id="edit"]')
+                        .click();
+
+                    // set "readPublished"
+                    cy.get('gtx-mesh-role-permissions-edit-modal')
+                        .as('perm_modal')
+                        .find('gtx-checkbox[formcontrolname="readPublished"]')
+                        .click();
+                    cy.get('@perm_modal')
+                        .find('.modal-footer [data-action="confirm"]')
+                        .click();
+
+                    // the node "Minimal" should have readPublished permission
+                    cy.get('@trable')
+                        .findRowContainingText(MINIMAL)
+                        .should('exist')
+                        .find('.permission-icon[data-id="readPublished"]')
+                        .should('exist')
+                        .should('have.class', 'granted');
+
+                    // apply the permissions recursively
+                    cy.get('@trable')
+                        .findRowContainingText(MINIMAL)
+                        .find('[data-id="applyRecursive"]')
+                        .click();
+                    cy.get('gtx-modal-dialog')
+                        .find('.modal-footer [data-id="default"]')
+                        .click();
+
+                    cy.get('@trable')
+                        .findRowContainingText(MINIMAL)
+                        .expandTrableRow();
+
+                    // assert that Folder A and Folder B now also have read published set
+                    cy.get('@trable')
+                        .findRowContainingText(FOLDER_A)
+                        .should('exist')
+                        .find('.permission-icon[data-id="readPublished"]')
+                        .should('exist')
+                        .should('have.class', 'granted');
+
+                    cy.get('@trable')
+                        .findRowContainingText(FOLDER_B)
+                        .should('exist')
+                        .find('.permission-icon[data-id="readPublished"]')
+                        .should('exist')
+                        .should('have.class', 'granted');
+
+                    // close modal
+                    cy.get('@modal')
+                        .find('.modal-footer [data-action="cancel"]')
+                        .click();
+                });
             });
         });
     });

@@ -12,6 +12,8 @@ import {
     Page,
     PageCreateRequest,
     PagingSortOrder,
+    Schedule,
+    ScheduleType,
     Template,
     User,
 } from '@gentics/cms-models';
@@ -81,6 +83,9 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
 }
 
+const PUBLISHER_TASK_CMD = "publish";
+const PUBLISHER_SCHEDULE_NAME = "Run Publish Process";
+
 /**
  * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
  * instance, by using a dedicated GCMS REST Client.
@@ -115,6 +120,8 @@ export class EntityImporter {
     public templates: Record<string, Template> = {};
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
+
+    private publisherSchedule: Schedule;
 
     constructor(
         public options?: ImporterOptions,
@@ -168,6 +175,24 @@ export class EntityImporter {
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
 
+        const tasks = await this.client.schedulerTask.list().send();
+        const schedulerTask = tasks.items.find(item => item.internal === true && item.command === PUBLISHER_TASK_CMD);
+
+        const schedules = await this.client.scheduler.list().send();
+        this.publisherSchedule = schedules.items.find(item => item.taskId === schedulerTask.id);
+        if (!this.publisherSchedule) {
+            const response = await this.client.scheduler.create({
+                active: true,
+                parallel: false,
+                name: PUBLISHER_SCHEDULE_NAME,
+                taskId: schedulerTask.id,
+                scheduleData: {
+                    type: ScheduleType.MANUAL
+                }
+            }).send();
+            this.publisherSchedule = response.item;
+        }
+
         this.bootstrapped = true;
     }
 
@@ -184,6 +209,25 @@ export class EntityImporter {
         const map = await this.setupContent(size);
 
         return map;
+    }
+
+    /**
+     * Start the scheduler task for the publish process and wait up to 100 seconds for the task to finish
+     */
+    public async runPublish(): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        await this.client.scheduler.execute(this.publisherSchedule.id).send();
+        for (let i = 0; i < 100; i++) {
+            this.publisherSchedule = (await this.client.scheduler.get(this.publisherSchedule.id).send()).item;
+            if (!this.publisherSchedule.lastExecution?.running) {
+                break;
+            }
+            cy.log('Waiting for the publish execution to finish');
+            cy.wait(1000, {log:false});
+        }
     }
 
     /**
@@ -666,6 +710,7 @@ export class EntityImporter {
                 return this.importUser(entity as UserImportData);
 
             default:
+                cy.log('Default case');
                 return Promise.resolve(null);
         }
     }
@@ -680,6 +725,9 @@ export class EntityImporter {
 
         // Then attempt to import all
         for (const importData of importList) {
+            // if (importData[IMPORT_TYPE] == ITEM_TYPE_FILE || importData[IMPORT_TYPE] == ITEM_TYPE_IMAGE) {
+            //     continue;
+            // }
             const entity = await this.importEntity(
                 pkgName,
                 importData[IMPORT_TYPE],
@@ -690,6 +738,9 @@ export class EntityImporter {
             }
             this.entityMap[importData[IMPORT_ID]] = entity;
         }
+
+        // let userResponse = await this.client.user.me().send();
+        // cy.log(`User ${userResponse.user.firstName}`);
 
         return this.entityMap;
     }

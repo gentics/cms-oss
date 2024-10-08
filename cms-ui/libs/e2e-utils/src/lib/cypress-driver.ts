@@ -126,6 +126,7 @@ export class CypressDriver implements GCMSClientDriver {
 
                     if (!valid) {
                         const err = createError(request, res);
+                        cy.log('Error while from the response body', err, body, err);
                         reject(err);
                         return Promise.resolve(body);
                     }

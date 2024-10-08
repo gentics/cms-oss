@@ -51,3 +51,22 @@ Cypress.Commands.add('editEntity', (type, identifier) => {
 
     return cy.get(properties);
 });
+
+Cypress.Commands.add('findRowContainingText', {prevSubject: 'element'}, (subject, text) => {
+   return cy.wrap(subject)
+        .find('.grid-row')
+        .contains(text)
+        .parents('.grid-row');
+});
+
+Cypress.Commands.add('selectRow', {prevSubject: 'element'}, (subject) => {
+    return cy.wrap(subject)
+        .find('gtx-checkbox.selection-checkbox')
+        .click();
+});
+
+Cypress.Commands.add('expandTrableRow', {prevSubject: 'element'}, (subject) => {
+    return cy.wrap(subject)
+        .find('.row-expansion-wrapper')
+        .click();
+});

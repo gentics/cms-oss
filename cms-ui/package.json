@@ -204,6 +204,6 @@
   },
   "optionalDependencies": {
     "@nx/nx-linux-x64-gnu": "19.3.2",
-	  "@nx/nx-win32-x64-msvc": "19.3.2"
+    "@nx/nx-win32-x64-msvc": "19.3.2"
   }
 }

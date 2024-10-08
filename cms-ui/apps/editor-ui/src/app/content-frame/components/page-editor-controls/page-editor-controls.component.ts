@@ -126,7 +126,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(combineLatest([
-            this.client.construct.list(),
+            this.client.construct.listForEditor(),
             this.aloha.activeEditable$.pipe(
                 tap(editable => {
                     this.editable = editable;
@@ -136,7 +136,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
             this.aloha.settings$,
         ]).pipe(
             map(([res, activeEditable, settings]) => {
-                const raw = res.items;
+                const raw = res.constructs || [];
 
                 // No element selected, nothing to do
                 if (activeEditable?.obj?.[0] == null) {

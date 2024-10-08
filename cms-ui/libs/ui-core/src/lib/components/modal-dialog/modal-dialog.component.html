@@ -9,7 +9,7 @@
 <div class="modal-footer">
     <gtx-button
         *ngFor="let button of config.buttons"
-        [attr.data-id]="button.type"
+        [attr.data-action]="button.id"
         [type]="button.type"
         [flat]="button.flat"
         (click)="onClick(button)"

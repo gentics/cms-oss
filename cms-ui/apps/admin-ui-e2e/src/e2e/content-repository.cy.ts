@@ -27,10 +27,10 @@ describe('Content Repository', () => {
     });
 
     beforeEach(() => {
+        cy.wrap(IMPORTER.clearClient());
         cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
         cy.wrap(IMPORTER.cleanupTest());
         cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
-        cy.wrap(IMPORTER.runPublish());
 
         cy.navigateToApp();
         cy.login(AUTH_ADMIN);
@@ -307,7 +307,16 @@ describe('Content Repository', () => {
             });
 
             describe('Role Permissions', () => {
-                it.only('should be possible to read and modify role permissions on projects', () => {
+                beforeEach(() => {
+                    cy.wrap(IMPORTER.deleteMeshProjects());
+                    cy.wrap(IMPORTER.runPublish());
+                });
+
+                afterEach(() => {
+                    cy.wrap(IMPORTER.deleteMeshProjects());
+                });
+
+                it('should be possible to read and modify role permissions on projects', () => {
                     // select roles
                     cy.get('.grouped-tabs .tab-link[data-id="roles"]').click();
 
@@ -352,8 +361,7 @@ describe('Content Repository', () => {
                     // set "readPublished"
                     cy.get('gtx-mesh-role-permissions-edit-modal')
                         .as('perm_modal')
-                        .find('gtx-checkbox[formcontrolname="readPublished"]')
-                        .find('label')
+                        .find('gtx-checkbox[formcontrolname="readPublished"] label')
                         .click();
                     cy.intercept({pathname: '/rest/contentrepositories/**', method: 'GET'}).as('load_request');
                     cy.get('@perm_modal')
@@ -378,7 +386,7 @@ describe('Content Repository', () => {
                         .find('[data-id="applyRecursive"]')
                         .click();
                     cy.get('gtx-modal-dialog')
-                        .find('.modal-footer [data-id="default"]')
+                        .find('.modal-footer [data-action="confirm"]')
                         .click();
 
                     cy.get('@trable')

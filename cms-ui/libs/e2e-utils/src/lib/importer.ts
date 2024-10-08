@@ -231,6 +231,24 @@ export class EntityImporter {
     }
 
     /**
+     * Delete all mesh projects for all contentrepositories
+     */
+    public async deleteMeshProjects(): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        const crListResponse = await this.client.contentRepository.list().send();
+        crListResponse.items.forEach(async cr => {
+            await this.client.contentRepository.proxyLogin(cr.id).send();
+            const projectsList = await this.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${cr.id}/proxy/api/v2/projects`).send();
+            projectsList.data.forEach(async project => {
+                await this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/contentrepositories/${cr.id}/proxy/api/v2/projects/${project.uuid}`).send();
+            });
+        });
+    }
+
+    /**
      * Clears all CMS Nodes and therefore all CMS entities which can not be restored via
      * devtool imports.
      * @param completeClean If it should also remove the `dummyNode` to completely clear the CMS out.
@@ -322,6 +340,10 @@ export class EntityImporter {
                 }
             }
         }
+    }
+
+    public async clearClient(): Promise<void> {
+        this.client = null;
     }
 
     public async syncPackages(size: TestSize): Promise<void> {
@@ -710,7 +732,6 @@ export class EntityImporter {
                 return this.importUser(entity as UserImportData);
 
             default:
-                cy.log('Default case');
                 return Promise.resolve(null);
         }
     }
@@ -725,9 +746,6 @@ export class EntityImporter {
 
         // Then attempt to import all
         for (const importData of importList) {
-            // if (importData[IMPORT_TYPE] == ITEM_TYPE_FILE || importData[IMPORT_TYPE] == ITEM_TYPE_IMAGE) {
-            //     continue;
-            // }
             const entity = await this.importEntity(
                 pkgName,
                 importData[IMPORT_TYPE],
@@ -738,9 +756,6 @@ export class EntityImporter {
             }
             this.entityMap[importData[IMPORT_ID]] = entity;
         }
-
-        // let userResponse = await this.client.user.me().send();
-        // cy.log(`User ${userResponse.user.firstName}`);
 
         return this.entityMap;
     }

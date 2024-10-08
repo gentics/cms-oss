@@ -353,10 +353,16 @@ describe('Content Repository', () => {
                     cy.get('gtx-mesh-role-permissions-edit-modal')
                         .as('perm_modal')
                         .find('gtx-checkbox[formcontrolname="readPublished"]')
+                        .find('label')
                         .click();
+                    cy.intercept({pathname: '/rest/contentrepositories/**', method: 'GET'}).as('load_request');
                     cy.get('@perm_modal')
                         .find('.modal-footer [data-action="confirm"]')
                         .click();
+                    cy.wait('@load_request');
+
+                    // find the trable again (was reloaded)
+                    cy.get('gtx-mesh-role-permissions-trable').as('trable');
 
                     // the node "Minimal" should have readPublished permission
                     cy.get('@trable')

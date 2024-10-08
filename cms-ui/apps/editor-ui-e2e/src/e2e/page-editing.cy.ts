@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import '@gentics/e2e-utils/commands';
+import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
 import { PageSaveRequest, StringTagPartProperty } from '@gentics/cms-models';
 import {
     EntityImporter,
@@ -436,5 +437,87 @@ describe('Page Editing', () => {
                         .should('have.text', NOTE_CONTENT);
                 });
         });
+    });
+});
+
+describe('Page Preview', () => {
+
+    const IMPORTER = new EntityImporter();
+
+    const ALIAS_CONTENT = '@content';
+    const ALIAS_CONTROLS = '@controls';
+    const ALIAS_TABS = '@tabs';
+
+    before(async () => {
+        cy.muteXHR();
+        await IMPORTER.cleanupTest();
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    });
+
+    beforeEach(async () => {
+        cy.muteXHR();
+        await IMPORTER.cleanupTest();
+        await IMPORTER.setupTest(TestSize.MINIMAL);
+
+        cy.navigateToApp();
+        cy.login(AUTH_ADMIN);
+        cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        cy.findList(ITEM_TYPE_PAGE)
+            .findItem(IMPORTER.get(pageOne)!.id)
+            .find('.item-primary .item-name .item-name-only')
+            .click();
+    });
+
+    /*
+     * SUP-17223: Issue where when a page is open in preview mode, and opens in edit-mode,
+     * the edit-mode doesn't properly initialize the constructs.
+     */
+    it('should load constructs correctly when switching to edit mode', () => {
+
+        // High timeout for all of aloha to finish loading
+        cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
+            .its('0.contentDocument.body')
+            .find('main', { timeout: 60_000 })
+            .should('exist');
+
+        /*
+         * This wait is *required*, as otherwise the subscriptions aren't setup,
+         * which cause this whole issue in the first place.
+         */
+        // eslint-disable-next-line cypress/no-unnecessary-waiting
+        cy.wait(2_000);
+
+        // Now switch to the edit-mode
+        cy.editorAction('edit');
+
+        // High timeout for all of aloha to finish loading
+        cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
+            .its('0.contentDocument.body')
+            // Additional wait, for aloha to initialze all the blocks
+            .find('main [contenteditable="true"]', { timeout: 60_000 })
+            .as(ALIAS_CONTENT)
+
+        cy.get('project-editor content-frame gtx-page-editor-controls')
+            .as(ALIAS_CONTROLS);
+        cy.get('project-editor content-frame gtx-page-editor-tabs')
+            .as(ALIAS_TABS);
+
+        cy.get(ALIAS_TABS)
+            .find(`[data-id="${TAB_ID_CONSTRUCTS}"]`)
+            .click();
+
+        cy.get(ALIAS_CONTENT)
+            .click();
+
+        cy.get(ALIAS_CONTROLS)
+            .find('gtx-construct-controls .no-constructs')
+            .should('not.exist');
+
+        cy.get(ALIAS_CONTROLS)
+            .find('gtx-construct-controls .groups-container')
+            .should('exist')
+            .find('.construct-category')
+            .should('exist')
+            .should('have.lengthOf', 2);
     });
 });

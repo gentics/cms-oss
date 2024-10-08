@@ -1,3 +1,4 @@
+import '@gentics/e2e-utils/commands';
 import {
     EntityImporter,
     IMPORT_ID,

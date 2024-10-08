@@ -14,6 +14,11 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './index';
+/*
+ * TODO: Find a way that this is properly imported in the test files as well.
+ * Currently there's bunch of errors in the Editor unless the imports are done.
+ * import '@gentics/e2e-utils/commands';
+ */
+import './typings';
 import './commands';
 import './assertions';

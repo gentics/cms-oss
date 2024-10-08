@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import '@gentics/e2e-utils/commands';
 import { PageCreateResponse, PageSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import {
     EntityImporter,
@@ -60,7 +61,9 @@ describe('Page Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/create',
-        }).as(ALIAS_CREATE_REQ);
+        }, req => {
+            req.alias = ALIAS_CREATE_REQ;
+        });
 
         cy.get(ALIAS_MODAL)
             .find('.modal-footer [data-action="confirm"]')
@@ -68,7 +71,7 @@ describe('Page Management', () => {
 
         // Wait for the folder to have reloaded
         cy.wait<any, PageCreateResponse>(ALIAS_CREATE_REQ).then(data => {
-            cy.editorClose();
+            cy.editorAction('close');
 
             const page = data.response?.body?.page;
             expect(page).to.exist;
@@ -99,7 +102,9 @@ describe('Page Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/save/**',
-        }).as(ALIAS_UPDATE_REQ);
+        }, req => {
+            req.alias = ALIAS_UPDATE_REQ;
+        });
 
         // Clear the name and enter the new one
         // eslint-disable-next-line cypress/unsafe-to-chain-command
@@ -108,7 +113,7 @@ describe('Page Management', () => {
             .clear()
             .type(CHANGE_PAGE_NAME);
 
-        cy.editorSave();
+        cy.editorAction('save');
 
         // Wait for the update to be actually handled
         cy.wait(ALIAS_UPDATE_REQ).then(() => {
@@ -136,9 +141,11 @@ describe('Page Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/page/save/**',
-        }).as(ALIAS_UPDATE_REQ);
+        }, req => {
+            req.alias = ALIAS_UPDATE_REQ;
+        });
 
-        cy.editorSave();
+        cy.editorAction('save');
 
         cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(data => {
             const req = data.request.body;

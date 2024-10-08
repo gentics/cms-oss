@@ -1,3 +1,4 @@
+import '@gentics/e2e-utils/commands';
 import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,

@@ -50,9 +50,11 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/file/save/**',
-            }).as(ALIAS_UPDATE_REQUEST);
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQUEST;
+            });
 
-            cy.editorSave();
+            cy.editorAction('save');
 
             // Wait for the folder to have reloaded
             cy.wait<FileSaveRequest>(ALIAS_UPDATE_REQUEST)
@@ -88,9 +90,11 @@ describe('Media Management', () => {
             cy.intercept({
                 method: 'POST',
                 pathname: '/rest/image/save/**',
-            }).as(ALIAS_UPDATE_REQUEST);
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQUEST;
+            });
 
-            cy.editorSave();
+            cy.editorAction('save');
 
             cy.wait<ImageSaveRequest>(ALIAS_UPDATE_REQUEST).then(data => {
                 const req = data.request.body;

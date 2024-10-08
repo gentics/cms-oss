@@ -245,10 +245,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }),
             this.appState.select(state => state.editor.objectPropertiesModified).subscribe(modified => {
                 this.objectPropertyModified = modified;
+                this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
                 this.changeDetector.markForCheck();
             }),
             this.appState.select(state => state.editor.modifiedObjectPropertiesValid).subscribe(valid => {
                 this.modifiedObjectPropertyValid = valid;
+                this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
                 this.changeDetector.markForCheck();
             }),
             this.appState.select(state => state.editor.openPropertiesTab).subscribe(openPropertiesTab => {

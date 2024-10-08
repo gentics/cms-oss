@@ -94,10 +94,7 @@ export function resolveFixtures(
             let chain = cy.fixture(data.fixturePath, null);
 
             if (options?.applyAlias) {
-                // Check if it is defined before attempting to save it again
-                if (this[data.fixturePath] == null) {
-                    chain = chain.as(data.fixturePath);
-                }
+                chain = chain.as(data.fixturePath);
             }
 
             chain.then((bin: Buffer) => {

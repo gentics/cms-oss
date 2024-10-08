@@ -61,7 +61,9 @@ describe('Folder Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/create',
-        }).as(ALIAS_CREATE_REQ);
+        }, req => {
+            req.alias = ALIAS_CREATE_REQ;
+        });
 
         cy.get(ALIAS_MODAL)
             .find('.modal-footer [data-action="confirm"]')
@@ -96,14 +98,16 @@ describe('Folder Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/save/**',
-        }).as(ALIAS_UPDATE_REQ);
+        }, req => {
+            req.alias = ALIAS_UPDATE_REQ;
+        });
 
         // Clear the name and enter the new one
         cy.get(ALIAS_FORM)
             .find('[formcontrolname="name"] input')
             .type(`{selectall}{del}${CHANGE_FOLDER_NAME}`);
 
-        cy.editorSave();
+        cy.editorAction('save');
 
         // Wait for the update to be actually handled
         cy.wait(ALIAS_UPDATE_REQ).then(() => {
@@ -131,9 +135,11 @@ describe('Folder Management', () => {
         cy.intercept({
             method: 'POST',
             pathname: '/rest/folder/save/**',
-        }).as(ALIAS_UPDATE_REQ);
+        }, req => {
+            req.alias = ALIAS_UPDATE_REQ;
+        });
 
-        cy.editorSave();
+        cy.editorAction('save');
 
         cy.wait<FolderSaveRequest>(ALIAS_UPDATE_REQ).then(data => {
             const req = data.request.body;

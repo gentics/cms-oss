@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/prefer-namespace-keyword */
-type ItemType = 'folder' | 'page' | 'image' | 'file' | 'form';
-
 interface ImportBinary {
     /** The path to the fixture file to load. */
     fixturePath: string;
@@ -11,6 +9,7 @@ interface ImportBinary {
     /** The mime-type of the binary, because cypress doesn't provide it. */
     type: string;
 }
+
 interface ContentFile {
     contents: string | Buffer;
     fileName: string;
@@ -31,18 +30,6 @@ interface BinaryFileLoadOptions extends BinaryLoadOptions {}
 
 interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
     asContent: true;
-}
-
-type RenderableAlohaComponentType =
-    'attribute-button' | 'attribute-toggle-button' | 'button'
-    | 'checkbox' | 'color-picker' | 'context-button' | 'context-toggle-button'
-    | 'date-time-picker' | 'iframe' | 'input' | 'link-target' | 'select' | 'select-menu'
-    | 'split-button' | 'symbol-grid' | 'symbol-search-grid' | 'table-size-select'
-    | 'toggle-button' | 'toggle-split-button';
-
-interface FindAlohaRendererOptions {
-    slot?: string;
-    type?: RenderableAlohaComponentType;
 }
 
 declare module Chai {
@@ -142,7 +129,6 @@ declare namespace Cypress {
         (chainer: 'not.be.included', array: any[]): Chainable<Subject>;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         /**
          * Prevents the logging of XHR/Fetch requests (unless intercepted/aliased).
@@ -158,66 +144,6 @@ declare namespace Cypress {
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
         /**
-         * Helper to navigate to the application.
-         * @param path The route/path in the application to navigate to. Usually leave this empty, unless you need to
-         * test the routing of the application.
-         * @param raw If the navigation should happen without adding a `skip-sso` to prevent unwilling sso logins.
-         */
-        navigateToApp(path?: string, raw?: boolean): Chainable<void>;
-        /**
-         * Login with pre-defined user data or with a cypress alias.
-         * @param account The account name in the `auth.json` fixture, or an alias to a credentials object.
-         * @param keycloak If this is a keycloak login.
-         */
-        login(account: string, keycloak?: boolean): Chainable<null>;
-        /**
-         * Select the specified node in the editor-ui, to display it's content.
-         * @param nodeId The node to select
-         */
-        selectNode(nodeId: number | string): Chainable<null>;
-        /**
-         * Attempt to find a specified item-type list.
-         * @param type The type of list that should be found/searched for.
-         */
-        findList(type: ItemType): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Attempt to find a specified item in a list.
-         * @param id The id of the element that should be found/searched for.
-         */
-        findItem(id: string | number): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Click/Perform an action on an item (iE edit, preview, delete, ...)
-         * @param action The action id to click/perform for an item.
-         */
-        itemAction(action: string): Chainable<null>;
-        /**
-         * Select the provided object-property - Requires the `editProperties` mode to be active for the item already.
-         * @param name The tag-name of the object-property, without the `object.` prefix.
-         */
-        openObjectPropertyEditor(name: string): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Finds the tag-editor element(s) which are for controlling the tag value.
-         * @param type The part-type of the tag-editor, i.E. 'SELECT' to get the select property inputs.
-         */
-        findTagEditorElement(type: string): Chainable<JQuery<HTMLElement>>;
-        /**
-         * Attempts to find a control based on the specified slot.
-         * @param options The options for finding the component.
-         */
-        findAlohaComponent(options?: FindAlohaRendererOptions): Chainable<HTMLElement>;
-        /**
-         * Attempts to find a dynamic form-modal element.
-         * When a ref is provided, it'll try to find the one with the corresponding ref.
-         * @param ref The reference data, if any.
-         */
-        findDynamicFormModal(ref?: string): Chainable<HTMLElement>;
-        /**
-         * Attempts to find a dynamic dropdown element.
-         * When a ref is provided, it'll try to find the one with the corresponding ref.
-         * @param ref The reference data, if any.
-         */
-        findDynamicDropdown(ref?: string): Chainable<HTMLElement>;
-        /**
          * Uploads the specified fixture-names as files or images.
          * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
          * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
@@ -225,15 +151,40 @@ declare namespace Cypress {
          */
         uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
         /**
+         * Current element needs to be a `gtx-dropdown-list` element.
+         * Will click the trigger-element (`data-context-trigger`) with `btnClick`,
+         * and gets the associated `gtx-dropdown-content` based on the `data-context-id` attributes.
+         *
+         * @example
+         * ```html
+         * <gtx-dropdown-list
+         *      class="my-dropdown"
+         *      data-context-id="my-context-id"
+         * >
+         *      <gtx-dropdown-trigger>
+         *          <gtx-button data-context-trigger>Click me</gtx-button>
+         *      </gtx-dropdown-trigger>
+         *
+         *      <gtx-dropdown-content data-context-id="my-context-id">
+         *          <gtx-dropdown-item data-action="whatever"></gtx-dropdown-item>
+         *          <!-- ... -->
+         *      </gtx-dropdown-content>
+         * </gtx-dropdown-list>
+         * ```
+         * ```ts
+         * cy.get('.my-dropdown')
+         *      .openContext()
+         *      .find('[data-action="whatever"]')
+         *      .click();
+         * ```
+         */
+        openContext(): Chainable<HTMLElement>;
+        /**
          * Requires the subject to be a `gtx-select`.
          * Will select the option with the corresponding `valueId`.
          * @param valueId The value/option to select.
          */
         selectValue(valueId: any): Chainable<null>;
-        /** Click the save button in the editor-toolbar */
-        editorSave(): Chainable<null>;
-        /** Closes the editor */
-        editorClose(): Chainable<null>;
         /** */
         btn(options?: ButtonOptions): Chainable<HTMLElement>;
         /** Helper function to press the actual button element of various custom buttons */

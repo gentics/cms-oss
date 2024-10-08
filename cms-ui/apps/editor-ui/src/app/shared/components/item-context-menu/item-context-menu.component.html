@@ -1,11 +1,20 @@
-<gtx-dropdown-list *ngIf="buttons" align="right">
+<gtx-dropdown-list
+    *ngIf="buttons"
+    align="right"
+    data-action="item-context"
+    data-context-id="item-context"
+>
     <gtx-dropdown-trigger>
-        <gtx-button data-action="open-item-context-menu" icon type="secondary">
+        <gtx-button
+            data-context-trigger
+            icon
+            type="secondary"
+        >
             <icon>more_vert</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content class="item-context-menu-content">
+    <gtx-dropdown-content data-context-id="item-context" class="item-context-menu-content">
         <ng-container *ngIf="uiMode === UIMode.EDIT">
             <gtx-dropdown-item
                 *ngIf="buttons.edit"

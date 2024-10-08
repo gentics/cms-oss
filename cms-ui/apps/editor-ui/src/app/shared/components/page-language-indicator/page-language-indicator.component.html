@@ -16,7 +16,12 @@
         (click)="onIconClicked(language)"
     >
         <div [title]="language.name">
-            <gtx-dropdown-list width="contents" [disabled]="isModeSelect()">
+            <gtx-dropdown-list
+                width="contents"
+                data-action="page-language"
+                data-context-id="page-language"
+                [disabled]="isModeSelect()"
+            >
                 <gtx-dropdown-trigger @animNgForChild>
                     <div class="stateDeleted" [hidden]="!(currentLanguage$ | async) || !((stateDeleted$(language?.code) | async) && (displayDeleted$ | async))"></div>
 
@@ -40,10 +45,10 @@
                         </ng-template>
                     </ng-container>
 
-                    <a class="language-code">{{ language?.code | uppercase }}</a>
+                    <a data-context-trigger class="language-code">{{ language?.code | uppercase }}</a>
                 </gtx-dropdown-trigger>
 
-                <gtx-dropdown-content class="page-language-context">
+                <gtx-dropdown-content data-context-id="page-language" class="page-language-context">
                     <ng-container *ngIf="uiMode === UIMode.EDIT">
                         <gtx-dropdown-item
                             *ngIf="!(isAvailable$(language) | async) && !(currentLanguage$ | async)"

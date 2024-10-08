@@ -1,3 +1,4 @@
+import '@gentics/e2e-utils/commands';
 import { EntityImporter, IMPORT_ID, rootGroup, userAlpha, userBeta } from '@gentics/e2e-utils';
 import { AUTH_ADMIN } from '../support/common';
 

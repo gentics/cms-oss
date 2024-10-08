@@ -1,22 +1,7 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
+import { registerCommonCommands, setupAliasOverrides } from '@gentics/e2e-utils';
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-        navigateToApp(path?: string, raw?: boolean): Chainable<void>;
-        login(account: string, keycloak?: boolean): Chainable<void>;
-        editEntity(type: string, identifier: string): Chainable<JQuery<HTMLElement>> | Chainable<null>;
-    }
-}
+setupAliasOverrides();
+registerCommonCommands();
 
 Cypress.Commands.add('navigateToApp', (path, raw) => {
     /*

@@ -194,6 +194,9 @@ export function createRange(element: HTMLElement, start: number, end: number | n
     if (!end) {
         const last = nodesAfterStart.pop();
         range.setEnd(last, last.textContent.length);
+    } else if (end === start) {
+        // If it's the same position, it's actually just a cursor position/collapsed range.
+        range.collapse(true);
     } else if (end < 0) {
         // Since we start backwards from the "beginning", we have to reset the offset
         offset = 0;

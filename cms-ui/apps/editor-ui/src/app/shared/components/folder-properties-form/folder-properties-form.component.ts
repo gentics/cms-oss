@@ -284,9 +284,7 @@ export class FolderPropertiesForm implements AfterViewInit, OnChanges, OnDestroy
         this.changeSubs.push(this.form.valueChanges.subscribe(changes => {
             changes = this.sanitizeFolderData(changes);
 
-            // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
-            const isModified = !deepEqual(this.properties, changes);
-            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(isModified, this.form.valid));
+            this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.form.dirty, this.form.valid));
 
             this.changes.emit(changes);
         }));

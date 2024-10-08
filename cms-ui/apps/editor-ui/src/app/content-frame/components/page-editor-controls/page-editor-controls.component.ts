@@ -13,7 +13,13 @@ import {
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaComponent, AlohaEditable, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
-import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
+import {
+    GCNAlohaPlugin,
+    GCNLinkCheckerAlohaPluigin,
+    GCNLinkCheckerPluginSettings,
+    TAB_ID_CONSTRUCTS,
+    TAB_ID_LINK_CHECKER,
+} from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription, combineLatest, merge, of } from 'rxjs';
@@ -25,8 +31,6 @@ import {
     NormalizedSlotDisplay,
     NormalizedTabsSettings,
     NormalizedToolbarSizeSettings,
-    TAB_ID_CONSTRUCTS,
-    TAB_ID_LINK_CHECKER,
 } from '../../providers/aloha-integration/aloha-integration.service';
 import { MobileMenu } from '../../utils';
 

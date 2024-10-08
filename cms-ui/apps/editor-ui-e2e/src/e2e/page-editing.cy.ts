@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+import '@gentics/e2e-utils/commands';
 import { PageSaveRequest, StringTagPartProperty } from '@gentics/cms-models';
 import {
     EntityImporter,
@@ -89,11 +90,11 @@ describe('Page Editing', () => {
             // There's a periodic "save" request being sent which only "updates" the ID,
             // to keep the page in the "locked" state.
             if (request.body.page?.tags) {
-                request.alias = 'save';
+                request.alias = ALIAS_SAVE;
             }
         });
 
-        cy.editorSave();
+        cy.editorAction('save');
 
         cy.wait<PageSaveRequest, never>(ALIAS_SAVE).then(intercept => {
             const req = intercept.request.body;

@@ -16,10 +16,10 @@ import {
     AlohaUiPlugin,
     ScreenSize,
 } from '@gentics/aloha-models';
-import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
+import { GCNAlohaPlugin, TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, first, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, first, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
@@ -46,8 +46,6 @@ export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings 
 export const RENDERABLE_COMPONENTS: string[] = Object.values(AlohaCoreComponentNames);
 
 const LINE_BREAK_COMPONENT = '\n';
-export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
-export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
 
 /** Special scope which is to filter out that it should only be visible in the GCMS UI. */
 const GCMSUI_SCOPE = 'gtx.gcmsui';

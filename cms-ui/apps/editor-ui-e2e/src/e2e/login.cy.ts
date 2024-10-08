@@ -1,3 +1,4 @@
+import '@gentics/e2e-utils/commands';
 import { Feature, Variant } from '@gentics/cms-models';
 import { EntityImporter, isVariant, skipableSuite, TestSize } from '@gentics/e2e-utils';
 import { AUTH_ADMIN, AUTH_KEYCLOAK } from '../support/common';
@@ -7,6 +8,10 @@ describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
     const ALIAS_SSO_LOGIN = '@ssoLogin';
+
+    before(() => {
+        cy.muteXHR();
+    });
 
     describe('Without keycloak feature enabled', () => {
         // Make sure to have keycloak disabled for these tests
@@ -62,7 +67,9 @@ describe('Login', () => {
             // Wait for login to be finished
             cy.intercept({
                 pathname: '/rest/auth/ssologin',
-            }).as(ALIAS_SSO_LOGIN);
+            }, req => {
+                req.alias = ALIAS_SSO_LOGIN;
+            });
             cy.wait(ALIAS_SSO_LOGIN, { timeout: 60_000 });
 
             cy.get('project-editor').should('exist');

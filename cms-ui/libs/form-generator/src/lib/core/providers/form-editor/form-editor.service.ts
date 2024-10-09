@@ -1,11 +1,19 @@
 import { Injectable } from '@angular/core';
-import { CmsFormElementBO, CmsFormElementProperty, CmsFormElementPropertyType, CmsFormType } from '@gentics/cms-models';
+import {
+    CmsFormElementBO,
+    CmsFormElementProperty,
+    CmsFormElementPropertyDefault,
+    CmsFormElementPropertyString,
+    CmsFormElementPropertyType,
+    CmsFormType,
+} from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { distinctUntilChanged, filter, publishReplay, refCount, take } from 'rxjs/operators';
 import {
     FormEditorConfiguration,
     FormElementConfiguration,
+    FormElementPropertyConfigurationString,
     FormElementPropertyOptionConfiguration,
     FormElementPropertyTypeConfiguration,
 } from '../../../common/models/form-editor-configuration';
@@ -145,8 +153,8 @@ export class FormEditorService {
                 case FormElementPropertyTypeConfiguration.BOOLEAN:
                 case FormElementPropertyTypeConfiguration.NUMBER:
                 case FormElementPropertyTypeConfiguration.STRING:
-                default:
-                    return {
+                default: {
+                    const elem: CmsFormElementPropertyDefault = {
                         name: propertyConfiguration.name,
                         type: CmsFormElementPropertyType[propertyConfiguration.type],
                         label_i18n_ui: propertyConfiguration.label_i18n_ui,
@@ -155,6 +163,14 @@ export class FormEditorService {
                         validation: propertyConfiguration.validator,
                         value_i18n: propertyConfiguration.default_value_i18n ? propertyConfiguration.default_value_i18n : null,
                     };
+
+                    if (propertyConfiguration.type === FormElementPropertyTypeConfiguration.STRING) {
+                        (elem as CmsFormElementPropertyString).allow_rich_content
+                            = (propertyConfiguration as FormElementPropertyConfigurationString).allow_rich_content;
+                    }
+
+                    return elem;
+                }
             }
         });
     }

@@ -19,7 +19,7 @@ import {
 import { GCNAlohaPlugin, TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, first, map, startWith, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
@@ -41,6 +41,11 @@ export interface NormalizedTabsSettings extends Omit<AlohaToolbarTabsSettings, '
 
 export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings {
     tabs: NormalizedTabsSettings[];
+}
+
+export interface RequireOptions {
+    skipReady?: boolean;
+    allowNull?: boolean;
 }
 
 export const RENDERABLE_COMPONENTS: string[] = Object.values(AlohaCoreComponentNames);
@@ -167,11 +172,11 @@ export class AlohaIntegrationService {
     public pubSubRef$: Observable<AlohaPubSub>;
     public contextChange$: Observable<AlohaRangeObject>;
     public scopeChange$: Observable<AlohaScopeChangeEvent>;
-    public activeEditable$: Observable<AlohaEditable>;
 
     protected editorTabSub = new BehaviorSubject<string>(null);
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
+    protected activeEditableSub = new BehaviorSubject<AlohaEditable | null>(null);
     protected windowSub = new BehaviorSubject<CNWindow>(null);
     protected toolbarReloadSub = new BehaviorSubject<void>(null);
 
@@ -183,6 +188,9 @@ export class AlohaIntegrationService {
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly size$ = this.activeSizeSub.asObservable();
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly activeEditable$ = this.activeEditableSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly components$ = this.componentsSub.asObservable();
@@ -203,7 +211,7 @@ export class AlohaIntegrationService {
         });
 
         this.scopesRef$ = this.require('ui/scopes');
-        this.pubSubRef$ = this.require('PubSub');
+        this.pubSubRef$ = this.require('PubSub', { allowNull: true });
         this.uiPlugin$ = this.require('ui/ui-plugin');
         this.gcnPlugin$ = this.require('gcn/gcn-plugin');
         this.scopeChange$ = this.on('aloha.ui.scope.change');
@@ -236,18 +244,19 @@ export class AlohaIntegrationService {
             debounceTime(10),
         );
 
-        this.activeEditable$ = this.on<AlohaSetEditableActiveEvent>('aloha.editable.set-active').pipe(
-            map(event => event?.editable),
-        );
+        this.on<AlohaSetEditableActiveEvent>('aloha.editable.set-active').pipe(
+            map(event => {
+                return event?.editable;
+            }),
+        ).subscribe(this.activeEditableSub);
     }
 
-    public require<T = any>(resourceName: string, skipReady = false): Observable<T> {
+    public require<T = any>(resourceName: string, options?: RequireOptions): Observable<T> {
         return combineLatest([
             this.reference$.asObservable(),
             this.ready$.asObservable(),
         ]).pipe(
-            filter(([ref, ready]) => ref != null && (skipReady || ready)),
-            first(),
+            filter(([ref, ready]) => (options?.allowNull || ref != null) && (options?.skipReady || ready)),
             map(([ref]) => {
                 try {
                     return ref == null ? null : ref.require(resourceName);
@@ -302,7 +311,9 @@ export class AlohaIntegrationService {
                     };
                     PubSub.sub(eventName, handler);
 
-                    return () => PubSub.unsub(eventName, handler);
+                    return () => {
+                        PubSub.unsub(eventName, handler);
+                    }
                 });
             }),
         );

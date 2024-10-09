@@ -1,15 +1,20 @@
 package com.gentics.contentnode.cluster;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.distributed.DistributedWebApplicationException;
 import com.gentics.contentnode.etc.Feature;
@@ -18,52 +23,57 @@ import com.gentics.contentnode.rest.model.response.cluster.ClusterInfo;
 import com.gentics.contentnode.rest.model.response.cluster.MemberInfo;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
-import com.hazelcast.core.Cluster;
+import com.hazelcast.cluster.Cluster;
+import com.hazelcast.cluster.Member;
+import com.hazelcast.cluster.MembershipEvent;
+import com.hazelcast.cluster.MembershipListener;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ILock;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.MemberAttributeEvent;
-import com.hazelcast.core.MembershipEvent;
-import com.hazelcast.core.MembershipListener;
-import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.Message;
+import com.hazelcast.topic.MessageListener;
 
 /**
  * Encapsulation of clustering support
  */
 public final class ClusterSupport {
 	/**
-	 * Key of the master lock and the master attribute
-	 */
-	private final static String MASTER = "master";
-
-	/**
 	 * Name of the Topic for requesting the master status
 	 */
 	private final static String REQUEST_MASTER_TOPIC = "request.master";
 
 	/**
+	 * Name of the member attribute specifying the starttime (in ms)
+	 */
+	private final static String MEMBER_ATTRIBUTE_STARTTIME = "member.starttime";
+
+	/**
 	 * Request master message listener
 	 */
 	private static MessageListener<Void> REQUEST_MASTER_LISTENER = msg -> {
-		ClusterSupport.executeIfNotFromLocal(msg, m -> {
-			giveUpMasterFlag();
-		});
-		ClusterSupport.executeIfFromLocal(msg, m -> {
-			HazelcastInstance instance = get();
-			if (instance != null) {
-				Member localMember = instance.getCluster().getLocalMember();
-				localMember.setBooleanAttribute(MASTER, true);
-			}
-		});
+		// we just need to store the uuid of the member, that published the request
+		currentMasterUuid = msg.getPublishingMember().getUuid();
 	};
 
 	/**
-	 * Master lock
+	 * Comparator, which is used to elect a (new) master. The master is always "lowest" member according to this comparator.
+	 * The comparator will compare the start timestamp of each member (stored in the member attribute {@link #MEMBER_ATTRIBUTE_STARTTIME}).
+	 * If a member does not have this attribute set (for whatever reason) the value will be set to {@link Long#MAX_VALUE}.
+	 * If two members have the same start timestamp, the comparator will compare the member UUIDs.
 	 */
-	private static ILock masterLock;
+	private static Comparator<Member> MASTER_COMPARATOR = (m1, m2) -> {
+		long timestamp1 = ObjectTransformer.getLong(m1.getAttribute(MEMBER_ATTRIBUTE_STARTTIME), Long.MAX_VALUE);
+		long timestamp2 = ObjectTransformer.getLong(m2.getAttribute(MEMBER_ATTRIBUTE_STARTTIME), Long.MAX_VALUE);
+
+		int longCompare = Long.compare(timestamp1, timestamp2);
+		if (longCompare != 0) {
+			return longCompare;
+		} else {
+			return m1.getUuid().compareTo(m2.getUuid());
+		}
+	};
 
 	/**
 	 * Internal hazelcast instance
@@ -74,6 +84,11 @@ public final class ClusterSupport {
 	 * Flag that is set, when the instance is merging (back) into the cluster
 	 */
 	private static boolean merging = false;
+
+	/**
+	 * UUID of the current master member
+	 */
+	private static UUID currentMasterUuid;
 
 	/**
 	 * Logger instance
@@ -98,8 +113,11 @@ public final class ClusterSupport {
 	 */
 	public static void start() throws NodeException {
 		if (instance == null) {
-			instance = Hazelcast.newHazelcastInstance();
-			masterLock = instance.getLock(MASTER);
+			Config config = Config.loadDefault();
+			MemberAttributeConfig memberAttributeConfig = new MemberAttributeConfig(config.getMemberAttributeConfig());
+			memberAttributeConfig.setAttribute(MEMBER_ATTRIBUTE_STARTTIME, Long.toString(System.currentTimeMillis()));
+			Config.loadDefault().setMemberAttributeConfig(memberAttributeConfig);
+			instance = Hazelcast.newHazelcastInstance(config);
 
 			electMaster();
 			addMessageListeners();
@@ -126,8 +144,8 @@ public final class ClusterSupport {
 				.setStarted(instance != null);
 		if (instance != null) {
 			Cluster cluster = instance.getCluster();
-			info.setLocalMember(new MemberInfo().setUuid(cluster.getLocalMember().getUuid()).setName(instance.getName()))
-					.setMembers(cluster.getMembers().stream().map(Member::getUuid).collect(Collectors.toSet()));
+			info.setLocalMember(new MemberInfo().setUuid(cluster.getLocalMember().getUuid().toString()).setName(instance.getName()))
+					.setMembers(cluster.getMembers().stream().map(member -> member.getUuid().toString()).collect(Collectors.toSet()));
 		}
 		return info;
 	}
@@ -164,46 +182,6 @@ public final class ClusterSupport {
 		if (instance != null) {
 			ITopic<Void> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
 			requestMasterTopic.publish(null);
-		}
-	}
-
-	/**
-	 * If the CMS instance runs in a cluster, acquire the distributed lock with given key
-	 * @param key lock key
-	 * @throws InterruptedException
-	 */
-	public static void acquireLock(String key) throws InterruptedException {
-		ILock lock = getLock(key);
-		if (lock != null) {
-			lock.lockInterruptibly();
-		}
-	}
-
-	/**
-	 * If the CMS instance runs in a cluster, acquire the distributed lock with given key
-	 * @param key lock key
-	 * @param timeout timeout
-	 * @param unit timeout unit
-	 * @throws NodeException
-	 * @throws InterruptedException
-	 */
-	public static void acquireLock(String key, long timeout, TimeUnit unit) throws NodeException, InterruptedException {
-		ILock lock = getLock(key);
-		if (lock != null) {
-			if (!lock.tryLock(timeout, unit)) {
-				throw new NodeException(String.format("Timeout of %d %s reached when trying to acquire lock %s", timeout, unit.name(), key));
-			}
-		}
-	}
-
-	/**
-	 * If the CMS instance runs in a cluster, release the distributed lock with given key
-	 * @param key lock key
-	 */
-	public static void releaseLock(String key) {
-		ILock lock = getLock(key);
-		if (lock != null) {
-			lock.unlock();
 		}
 	}
 
@@ -285,20 +263,6 @@ public final class ClusterSupport {
 	}
 
 	/**
-	 * If the instance runs in a cluster, return the distributed lock with given key, otherwise return null
-	 * @param key lock key
-	 * @return distributed lock or null
-	 */
-	private static ILock getLock(String key) {
-		HazelcastInstance instance = get();
-		if (instance != null) {
-			return instance.getLock(key);
-		} else {
-			return null;
-		}
-	}
-
-	/**
 	 * Let the handler accept the object from the given message, if the message was not published from the local node
 	 * @param msg message
 	 * @param handler handler
@@ -331,20 +295,6 @@ public final class ClusterSupport {
 	}
 
 	/**
-	 * Give up the master flag
-	 */
-	static void giveUpMasterFlag() {
-		HazelcastInstance instance = get();
-		if (instance != null) {
-			Member localMember = instance.getCluster().getLocalMember();
-			if (isMaster(localMember)) {
-				localMember.setBooleanAttribute(MASTER, false);
-				// TODO check for publish process, synchronizer, etc.
-			}
-		}
-	}
-
-	/**
 	 * Add message listeners
 	 */
 	private static void addMessageListeners() {
@@ -358,10 +308,6 @@ public final class ClusterSupport {
 					if (isMaster(membershipEvent.getMember())) {
 						electMaster();
 					}
-				}
-
-				@Override
-				public void memberAttributeChanged(MemberAttributeEvent memberAttributeEvent) {
 				}
 
 				@Override
@@ -397,7 +343,6 @@ public final class ClusterSupport {
 			ITopic<Void> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
 			requestMasterTopic.addMessageListener(REQUEST_MASTER_LISTENER);
 
-			ClusteredUpdate.addMessageListeners();
 			ClusterCacheService.addMessageListeners();
 			ClusterPermissionStoreService.addMessageListeners();
 			ClusterInstantPublishService.addMessageListeners();
@@ -411,20 +356,14 @@ public final class ClusterSupport {
 		HazelcastInstance instance = get();
 		if (instance != null) {
 			Cluster cluster = instance.getCluster();
-			logger.info("Locking for master election");
-			masterLock.lock();
-			try {
-				logger.info("Locked for master election");
-				if (!cluster.getMembers().stream().filter(m -> isMaster(m)).findFirst().isPresent()) {
-					cluster.getLocalMember().setBooleanAttribute(MASTER, true);
-					logger.info("Cluster node was elected as new master");
-				} else if (cluster.getMembers().stream().filter(m -> isMaster(m)).count() > 1) {
-					logger.info("Detected multiple masters in the cluster, giving up the master flag");
-					giveUpMasterFlag();
-				}
-			} finally {
-				masterLock.unlock();
-				logger.info("Unlocked after master election");
+
+			List<Member> members = new ArrayList<>(cluster.getMembers());
+			currentMasterUuid = members.stream().min(MASTER_COMPARATOR).map(m -> m.getUuid()).orElse(null);
+
+			if (isMaster()) {
+				logger.info("Cluster node was elected as new master");
+			} else if (currentMasterUuid == null) {
+				logger.warn("Currently, there is no master");
 			}
 		}
 	}
@@ -435,6 +374,6 @@ public final class ClusterSupport {
 	 * @return true for the master
 	 */
 	private static boolean isMaster(Member member) {
-		return member.getBooleanAttribute(MASTER) == Boolean.TRUE;
+		return Objects.equals(member.getUuid(), currentMasterUuid);
 	}
 }

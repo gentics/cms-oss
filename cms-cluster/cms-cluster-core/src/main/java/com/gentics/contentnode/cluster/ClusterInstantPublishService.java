@@ -6,8 +6,8 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.publish.InstantPublishService;
 import com.gentics.contentnode.publish.PublishController;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.MessageListener;
 
 /**
  * Cluster support for instant publishing

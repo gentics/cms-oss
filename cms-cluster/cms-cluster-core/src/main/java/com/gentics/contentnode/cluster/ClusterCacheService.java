@@ -4,8 +4,8 @@ import com.gentics.contentnode.cache.CacheService;
 import com.gentics.contentnode.distributed.DistributionSync;
 import com.gentics.contentnode.object.NodeObject;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.MessageListener;
 
 /**
  * Cluster specific implementation of {@link CacheService} which will send messages to clear or dirt caches on all cluster instances

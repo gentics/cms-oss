@@ -1,4 +1,3 @@
-import {ChangesOf} from '@admin-ui/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -6,10 +5,10 @@ import {
     HostBinding,
     Input,
     OnChanges,
-    Output
+    Output,
 } from '@angular/core';
-
-import {MessageLink, parseMessage} from './message-parsing';
+import { ChangesOf } from '@gentics/ui-core';
+import { MessageLink, parseMessage } from './message-parsing';
 
 /**
  * A component that parses a message's body and inserts links where appropriate.

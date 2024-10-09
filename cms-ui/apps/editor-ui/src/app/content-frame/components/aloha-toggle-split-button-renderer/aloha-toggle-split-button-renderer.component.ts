@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AlohaToggleSplitButtonComponent } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
+import { patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -15,38 +16,36 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setIcon = icon => {
-            this.settings.icon = icon;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setIconOnly = only => {
-            this.settings.iconOnly = only;
-            this.changeDetector.markForCheck();
-        }
-        this.settings.setIconHollow = hollow => {
-            this.settings.iconHollow = hollow;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setText = text => {
-            this.settings.text = text;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setTooltip = tooltip => {
-            this.settings.tooltip = tooltip;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setSecondaryVisible = visible => {
-            this.settings.secondaryVisible = visible;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setActive = (active) => {
-            this.writeValue(active);
-            this.changeDetector.markForCheck();
-        }
+        patchMultipleAlohaFunctions(this.settings, {
+            setIcon: icon => {
+                this.settings.icon = icon;
+                this.changeDetector.markForCheck();
+            },
+            setIconOnly: only => {
+                this.settings.iconOnly = only;
+                this.changeDetector.markForCheck();
+            },
+            setIconHollow: hollow => {
+                this.settings.iconHollow = hollow;
+                this.changeDetector.markForCheck();
+            },
+            setText: text => {
+                this.settings.text = text;
+                this.changeDetector.markForCheck();
+            },
+            setTooltip: tooltip => {
+                this.settings.tooltip = tooltip;
+                this.changeDetector.markForCheck();
+            },
+            setSecondaryVisible: visible => {
+                this.settings.secondaryVisible = visible;
+                this.changeDetector.markForCheck();
+            },
+            setActive: active => {
+                this.writeValue(active);
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     public handleClick(): void {

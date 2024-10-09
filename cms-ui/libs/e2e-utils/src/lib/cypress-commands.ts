@@ -167,9 +167,10 @@ export function registerCommonCommands(): void {
     });
 
     Cypress.Commands.add('selectValue', { prevSubject: 'element' }, (subject, valueId) => {
-        cy.wrap(subject, { log: false }).click({ force: true });
-        cy.get('gtx-dropdown-content.select-context')
-            .find(`.select-option[data-id="${valueId}"]`)
+        cy.wrap(subject)
+            .find('> gtx-dropdown-list')
+            .openContext()
+            .find(`[data-id="${valueId}"]`)
             .click({ force: true });
         return cy.wrap(null, { log: false });
     });
@@ -182,7 +183,9 @@ export function registerCommonCommands(): void {
             return cy.wrap(null, { log: false });
         }
 
-        cy.wrap(subject).find('gtx-dropdown-trigger [data-context-trigger]').btnClick();
+        cy.wrap(subject)
+            .find('gtx-dropdown-trigger [data-context-trigger]')
+            .btnClick();
 
         return cy.get(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
     });

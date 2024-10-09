@@ -355,15 +355,26 @@ public final class ClusterSupport {
 	private static void electMaster() {
 		HazelcastInstance instance = get();
 		if (instance != null) {
+			logger.info("Started master election");
 			Cluster cluster = instance.getCluster();
 
 			List<Member> members = new ArrayList<>(cluster.getMembers());
+
+			// check whether current master is still found in the cluster
+			if (members.stream().filter(ClusterSupport::isMaster).findFirst().isPresent()) {
+				logger.info("Current master still present");
+				return;
+			}
+
+			// elect a new master
 			currentMasterUuid = members.stream().min(MASTER_COMPARATOR).map(m -> m.getUuid()).orElse(null);
 
 			if (isMaster()) {
-				logger.info("Cluster node was elected as new master");
+				logger.info("This member was elected as new master");
 			} else if (currentMasterUuid == null) {
 				logger.warn("Currently, there is no master");
+			} else {
+				logger.info(String.format("Member %s was elected as new master", currentMasterUuid.toString()));
 			}
 		}
 	}

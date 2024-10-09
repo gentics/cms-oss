@@ -1,7 +1,19 @@
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    Output,
+    SimpleChanges,
+} from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
+import { patchMultipleAlohaFunctions, unpatchAllAlohaFunctions } from '../../utils';
 
 @Component({ template: '' })
 export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
@@ -53,6 +65,7 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
 
     public override ngOnDestroy(): void {
         super.ngOnDestroy();
+        unpatchAllAlohaFunctions(this.settings);
         this.unregisterAsRendered();
     }
 
@@ -71,40 +84,28 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
     }
 
     protected setupAlohaHooks(): void {
-        if (!this.settings) {
-            return;
-        }
-
         // Initialize/override setting functions
-        this.settings.disable = () => {
-            this.setDisabledState(true);
-        };
-        this.settings.enable = () => {
-            this.setDisabledState(false);
-        };
-        this.settings.getValue = () => {
-            return this.getFinalValue();
-        };
-        this.settings.setValue = (value) => {
-            this.writeValue(value);
-        };
-        this.settings.show = () => {
-            if (!this.settings.visible) {
-                this.settings.visible = true;
-                this.aloha.reloadToolbarSettings();
-                this.changeDetector.markForCheck();
-            }
-        };
-        this.settings.hide = () => {
-            if (this.settings.visible) {
-                this.settings.visible = false;
-                this.aloha.reloadToolbarSettings();
-                this.changeDetector.markForCheck();
-            }
-        };
-        this.settings.touch = () => {
-            this.triggerTouch();
-        };
+        patchMultipleAlohaFunctions(this.settings as AlohaComponent, {
+            disable: () => this.setDisabledState(true),
+            enable: () => this.setDisabledState(false),
+            getValue: () => this.getFinalValue(),
+            setValue: (val) => this.writeValue(val),
+            show: () => {
+                if (!this.settings.visible) {
+                    this.settings.visible = true;
+                    this.aloha.reloadToolbarSettings();
+                    this.changeDetector.markForCheck();
+                }
+            },
+            hide: () => {
+                if (this.settings.visible) {
+                    this.settings.visible = false;
+                    this.aloha.reloadToolbarSettings();
+                    this.changeDetector.markForCheck();
+                }
+            },
+            touch: () => this.triggerTouch(),
+        });
     }
 
     protected onValueChange(): void {

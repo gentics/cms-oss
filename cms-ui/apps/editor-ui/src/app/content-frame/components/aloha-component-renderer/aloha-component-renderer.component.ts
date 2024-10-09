@@ -4,7 +4,9 @@ import {
     ChangeDetectorRef,
     Component,
     ComponentRef,
+    EnvironmentInjector,
     EventEmitter,
+    Injector,
     Input,
     OnChanges,
     OnDestroy,
@@ -12,7 +14,7 @@ import {
     SimpleChanges,
     Type,
     ViewChild,
-    ViewContainerRef,
+    ViewContainerRef
 } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 import { AlohaComponent, AlohaCoreComponentNames } from '@gentics/aloha-models';
@@ -30,6 +32,7 @@ import { AlohaIFrameRendererComponent } from '../aloha-iframe-renderer/aloha-ifr
 import { AlohaInputRendererComponent } from '../aloha-input-renderer/aloha-input-renderer.component';
 import { AlohaLinkTargetRendererComponent } from '../aloha-link-target-renderer/aloha-link-target-renderer.component';
 import { AlohaSelectMenuRendererComponent } from '../aloha-select-menu-renderer/aloha-select-menu-renderer.component';
+import { AlohaSelectRendererComponent } from '../aloha-select-renderer/aloha-select-renderer.component';
 import { AlohaSplitButtonRendererComponent } from '../aloha-split-button-renderer/aloha-split-button-renderer.component';
 import { AlohaSymbolGridRendererComponent } from '../aloha-symbol-grid-renderer/aloha-symbol-grid-renderer.component';
 import { AlohaSymbolSearchGridRendererComponent } from '../aloha-symbol-search-grid-renderer/aloha-symbol-search-grid-renderer.component';
@@ -37,7 +40,6 @@ import { AlohaTableSizeSelectRendererComponent } from '../aloha-table-size-selec
 import { AlohaToggleButtonRendererComponent } from '../aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
 import { AlohaToggleSplitButtonRendererComponent } from '../aloha-toggle-split-button-renderer/aloha-toggle-split-button-renderer.component';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
-import { AlohaSelectRendererComponent } from '../aloha-select-renderer/aloha-select-renderer.component';
 
 const RENDER_COMPONENTS: Record<string, Type<BaseAlohaRendererComponent<any, any>>> = {
     [AlohaCoreComponentNames.ATTRIBUTE_BUTTON]: AlohaAttributeButtonRendererComponent,
@@ -124,6 +126,8 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected injector: Injector,
+        protected envInjector: EnvironmentInjector,
     ) {}
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -178,7 +182,10 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
             return;
         }
 
-        this.instanceRef = this.containerRef.createComponent(componentType);
+        this.instanceRef = this.containerRef.createComponent(componentType, {
+            injector: this.injector,
+            environmentInjector: this.envInjector,
+        });
         this.forwardInputs();
         this.setupEventForward();
 

@@ -296,6 +296,10 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     return of(params);
                 }
 
+                // Set the window as unloaded, as we're reloading everything here.
+                this.windowLoaded = false;
+                this.changeDetector.markForCheck();
+
                 const options = { nodeId: params.nodeId };
 
                 if (requireLoadForUpdate) {
@@ -483,7 +487,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
         masterFrame.addEventListener('load', () => {
             this.windowLoaded = true;
-            if (!this.childFrameInitialized) {
+
+            // We only need to wait/check for Aloha, if we're in the edit-mode.
+            if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
                 // Similiar to the error handler above, but with a timeout instead
                 this.childFrameInitTimer = window.setTimeout(() => {
                     console.warn('UI was not properly initialized in the Aloha-Page!');
@@ -491,6 +497,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.changeDetector.markForCheck();
                 }, 10_000);
             } else {
+                // Clear the timeout just in case it's still here
+                if (this.childFrameInitTimer != null) {
+                    window.clearTimeout(this.childFrameInitTimer);
+                    this.childFrameInitTimer = null;
+                }
                 this.alohaWindowLoaded = true;
             }
 

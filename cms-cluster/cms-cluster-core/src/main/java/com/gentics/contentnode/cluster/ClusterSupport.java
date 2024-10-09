@@ -361,7 +361,9 @@ public final class ClusterSupport {
 
 			if (logger.isDebugEnabled()) {
 				logger.debug(String.format("Found members: %s",
-						members.stream().map(Member::getUuid).collect(Collectors.toList())));
+						members.stream().map(member -> {
+							return String.format("%s (%s)", member.getUuid().toString(), member.getAttribute(MEMBER_ATTRIBUTE_STARTTIME));
+						}).collect(Collectors.toList())));
 			}
 
 			// check whether current master is still found in the cluster

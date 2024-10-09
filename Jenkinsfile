@@ -87,6 +87,7 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
+        booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker image")
         string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")
@@ -326,7 +327,9 @@ spec:
                     sh "docker --version"
                     sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                    scanImage image: imageNameWithTag, exitCode: 1
+                    if (!params.omitScan) {
+                        scanImage image: imageNameWithTag, exitCode: 1
+                    }
                     // Push released image
                     if (tagName != null) {
                         String dockerImageVersionTag = imageName + ":" + tagName

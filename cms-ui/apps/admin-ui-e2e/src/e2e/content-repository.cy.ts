@@ -1,5 +1,6 @@
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 import { AUTH_ADMIN } from '../support/app.po';
+import '@gentics/e2e-utils/commands';
 
 describe('Content Repository', () => {
 
@@ -21,9 +22,9 @@ describe('Content Repository', () => {
     const FOLDER_A = "Folder A";
     const FOLDER_B = "Folder B";
 
-    before(() => {
-        cy.wrap(IMPORTER.cleanupTest());
-        cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL));
+    before(async () => {
+        await IMPORTER.cleanupTest();
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
     beforeEach(() => {
@@ -281,8 +282,8 @@ describe('Content Repository', () => {
                     // select "folder" as schema for root node
                     cy.get('@modal').find('gtx-mesh-schema-picker .select-button').click();
                     cy.get('gtx-mesh-schema-table gtx-table')
-                        .findRowContainingText('folder')
-                        .selectRow();
+                        .findTableRowContainingText('folder')
+                        .selectTableRow();
                     cy.get('gtx-mesh-select-schema-modal')
                         .find('.modal-footer [data-action="confirm"]')
                         .click();
@@ -292,12 +293,12 @@ describe('Content Repository', () => {
 
                     // assert that the new project is listed
                     cy.get('gtx-mesh-project-table')
-                        .findRowContainingText(NEW_PROJECT_NAME)
+                        .findTableRowContainingText(NEW_PROJECT_NAME)
                         .should('exist');
 
                     // new delete the project
                     cy.get('gtx-mesh-project-table')
-                        .findRowContainingText(NEW_PROJECT_NAME)
+                        .findTableRowContainingText(NEW_PROJECT_NAME)
                         .find('[data-id="delete"]')
                         .click();
                     cy.get('gtx-confirm-delete-modal')
@@ -322,7 +323,7 @@ describe('Content Repository', () => {
 
                     // open modal to manage permissions for anonymous
                     cy.get('gtx-table')
-                        .findRowContainingText('anonymous')
+                        .findTableRowContainingText('anonymous')
                         .find('[data-id="managePermissions"]')
                         .click();
 
@@ -331,22 +332,22 @@ describe('Content Repository', () => {
 
                     // open "Projekte"
                     cy.get('@trable')
-                        .findRowContainingText(TRABLE_PROJECTS)
+                        .findTableRowContainingText(TRABLE_PROJECTS)
                         .expandTrableRow();
 
                     cy.get('@trable')
-                        .findRowContainingText(EXAMPLE_PROJECT)
+                        .findTableRowContainingText(EXAMPLE_PROJECT)
                         .should('exist')
                         .expandTrableRow();
 
                     cy.get('@trable')
-                        .findRowContainingText(TRABLE_NODES)
+                        .findTableRowContainingText(TRABLE_NODES)
                         .should('exist')
                         .expandTrableRow();
 
                     // the node "Minimal" should not have the readPublished permission
                     cy.get('@trable')
-                        .findRowContainingText(MINIMAL)
+                        .findTableRowContainingText(MINIMAL)
                         .should('exist')
                         .find('.permission-icon[data-id="readPublished"]')
                         .should('exist')
@@ -354,7 +355,7 @@ describe('Content Repository', () => {
 
                     // edit permissions
                     cy.get('@trable')
-                        .findRowContainingText(MINIMAL)
+                        .findTableRowContainingText(MINIMAL)
                         .find('[data-id="edit"]')
                         .click();
 
@@ -374,7 +375,7 @@ describe('Content Repository', () => {
 
                     // the node "Minimal" should have readPublished permission
                     cy.get('@trable')
-                        .findRowContainingText(MINIMAL)
+                        .findTableRowContainingText(MINIMAL)
                         .should('exist')
                         .find('.permission-icon[data-id="readPublished"]')
                         .should('exist')
@@ -382,7 +383,7 @@ describe('Content Repository', () => {
 
                     // apply the permissions recursively
                     cy.get('@trable')
-                        .findRowContainingText(MINIMAL)
+                        .findTableRowContainingText(MINIMAL)
                         .find('[data-id="applyRecursive"]')
                         .click();
                     cy.get('gtx-modal-dialog')
@@ -390,19 +391,19 @@ describe('Content Repository', () => {
                         .click();
 
                     cy.get('@trable')
-                        .findRowContainingText(MINIMAL)
+                        .findTableRowContainingText(MINIMAL)
                         .expandTrableRow();
 
                     // assert that Folder A and Folder B now also have read published set
                     cy.get('@trable')
-                        .findRowContainingText(FOLDER_A)
+                        .findTableRowContainingText(FOLDER_A)
                         .should('exist')
                         .find('.permission-icon[data-id="readPublished"]')
                         .should('exist')
                         .should('have.class', 'granted');
 
                     cy.get('@trable')
-                        .findRowContainingText(FOLDER_B)
+                        .findTableRowContainingText(FOLDER_B)
                         .should('exist')
                         .find('.permission-icon[data-id="readPublished"]')
                         .should('exist')

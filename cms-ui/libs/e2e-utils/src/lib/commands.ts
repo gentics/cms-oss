@@ -205,5 +205,18 @@ declare namespace Cypress {
          * @param aloha If it should apply the range to aloha as well.
          */
         textSelection(text: string, aloha?: boolean): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to be a gtx-table and will find the (first) row containing the given text
+         * @param text The text which should be found
+         */
+        findTableRowContainingText(text: string): Chainable<JQuery<HTMLElement>>;
+        /**
+         * Requires the subject to be a row in a gtx-table and will select that row
+         */
+        selectTableRow(): Chainable<JQuery<HTMLElement>>;
+        /**
+         * Requires the subject to be a row in a trable and will expand that row
+         */
+        expandTrableRow(): Chainable<JQuery<HTMLElement>>;
     }
 }

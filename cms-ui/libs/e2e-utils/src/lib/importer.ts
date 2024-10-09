@@ -239,13 +239,16 @@ export class EntityImporter {
         }
 
         const crListResponse = await this.client.contentRepository.list().send();
-        crListResponse.items.forEach(async cr => {
+        for (let i = 0; i < crListResponse.items.length; i++) {
+            const cr = crListResponse.items[i];
+
             await this.client.contentRepository.proxyLogin(cr.id).send();
             const projectsList = await this.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${cr.id}/proxy/api/v2/projects`).send();
-            projectsList.data.forEach(async project => {
+            for (let j = 0; j < projectsList.data.length; j++) {
+                const project = projectsList.data[j];
                 await this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/contentrepositories/${cr.id}/proxy/api/v2/projects/${project.uuid}`).send();
-            });
-        });
+            }
+        }
     }
 
     /**

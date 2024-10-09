@@ -51,7 +51,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
             [MBO_TYPE]: MeshType.NODE,
             [MBO_AVILABLE_PERMISSIONS]: NODE_PERMISSIONS,
             [MBO_ROLE_PERMISSIONS]: toPermissionArray(node.rolePerms),
-            [MBO_PERMISSION_PATH]: `${project}/nodes/${node.uuid}`,
+            [MBO_PERMISSION_PATH]: `projects/${project}/nodes/${node.uuid}`,
             [MBO_PROJECT_CONTEXT]: project,
         };
     }

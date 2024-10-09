@@ -11,6 +11,7 @@ export * from './page';
 export * from './permissions';
 export * from './page-controls';
 export * from './repository-browser';
+export * from './settings';
 export * from './staging';
 
 // State models

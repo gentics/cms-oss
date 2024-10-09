@@ -56,6 +56,7 @@
                 "libs/cms-rest-clients-angular/src/testing"
             ],
             "@gentics/e2e-utils": ["libs/e2e-utils/src/public-api"],
+            "@gentics/e2e-utils/*": ["libs/e2e-utils/src/lib/*"],
             "@gentics/form-generator": ["libs/form-generator/src/public-api"],
             "@gentics/image-editor": ["libs/image-editor/src/public-api"],
             "@gentics/ui-core": ["libs/ui-core/src/public-api"],

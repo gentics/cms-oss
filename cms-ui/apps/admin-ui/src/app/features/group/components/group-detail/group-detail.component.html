@@ -86,22 +86,24 @@
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
-                <gtx-permissions-trable
-                    *ngIf="permissionContentRead$ | async; else unauthorized"
-                    [group]="currentEntity"
-                    [inlineExpansion]="true"
-                    [inlineSelection]="true"
-                    [parentName]="currentEntity.name"
-                    [parentType]="PermissionsTreeType.CONTENT"
-                    [groupPermissionsByCategory]="true"
-                ></gtx-permissions-trable>
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-permissions-trable
+                        *ngIf="permissionContentRead$ | async; else unauthorized"
+                        [group]="currentEntity"
+                        [inlineExpansion]="true"
+                        [inlineSelection]="true"
+                        [parentName]="currentEntity.name"
+                        [parentType]="PermissionsTreeType.CONTENT"
+                        [groupPermissionsByCategory]="true"
+                    ></gtx-permissions-trable>
 
-                <ng-template #unauthorized>
-                    <div class="message-unauthorized">
-                        <h5>{{ 'common.general_permission_required' | i18n }}</h5>
-                        <icon>warning</icon>
-                    </div>
-                </ng-template>
+                    <ng-template #unauthorized>
+                        <div class="message-unauthorized">
+                            <h5>{{ 'common.general_permission_required' | i18n }}</h5>
+                            <icon>warning</icon>
+                        </div>
+                    </ng-template>
+                </div>
             </div>
         </gtx-tab>
 
@@ -117,14 +119,16 @@
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
-                <gtx-permissions-trable
-                    *ngIf="permissionContentRead$ | async; else unauthorized"
-                    [group]="currentEntity"
-                    [inlineExpansion]="true"
-                    [inlineSelection]="true"
-                    [parentName]="currentEntity.name"
-                    [groupPermissionsByCategory]="false"
-                ></gtx-permissions-trable>
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-permissions-trable
+                        *ngIf="permissionContentRead$ | async; else unauthorized"
+                        [group]="currentEntity"
+                        [inlineExpansion]="true"
+                        [inlineSelection]="true"
+                        [parentName]="currentEntity.name"
+                        [groupPermissionsByCategory]="false"
+                    ></gtx-permissions-trable>
+                </div>
             </div>
         </gtx-tab>
 
@@ -141,7 +145,7 @@
 
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-user-table
-                        [groupId]="currentEntity.id"
+                        [group]="currentEntity"
                         [showSearch]="true"
                     ></gtx-user-table>
                 </div>

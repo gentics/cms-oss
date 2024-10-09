@@ -331,6 +331,8 @@ import {
     TemplateTagStatusResponse,
     TemplateUsageResponse,
     TotalUsageResponse,
+    TranslationTextRequest,
+    TranslationResponse,
     UnlocalizeRequest,
     UpdatesInfo,
     UsageInFilesOptions,
@@ -354,6 +356,8 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
+    TranslationRequestOptions,
+    GenericItemResponse,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -389,6 +393,7 @@ export interface AbstractAuthenticationAPI extends BasicAPI {
     login: (data: LoginRequest, params?: LoginOptions) => LoginResponse;
     logout: (sid: string | number) => Response;
     validate: (sid: string | number) => ValidateSidResponse;
+    ssoLogin: (bearerToken: string) => string;
 }
 
 export interface AbstractClusterAPI extends BasicAPI {
@@ -402,6 +407,8 @@ export interface AbstractConstructAPI extends BasicAPI {
     get: (id: number | string) => ConstructLoadResponse;
     update: (id: number | string, body: ConstructUpdateRequest) => ConstructUpdateResponse;
     delete: (id: number | string) => void;
+
+    listForEditor: (options?: ConstructListOptions) => ConstructListResponse,
 
     hash: (id: number | string) => ImplementationHashResponse;
     getLinkedNodes: (id: number | string) => ConstructLinkedNodesResponse;
@@ -1042,6 +1049,11 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 }
 
+export interface AbstractTranslationAPI extends BasicAPI {
+    translateText: (data: TranslationTextRequest) => TranslationResponse;
+    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>
+}
+
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
     auth: AbstractAuthenticationAPI;
@@ -1078,6 +1090,7 @@ export interface AbstractRootAPI {
     schedulerTask: AbstractScheduleTaskAPI;
     searchIndex: AbstractSearchIndexAPI;
     template: AbstractTemplateAPI;
+    translation: AbstractTranslationAPI;
     user: AbstractUserAPI;
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;

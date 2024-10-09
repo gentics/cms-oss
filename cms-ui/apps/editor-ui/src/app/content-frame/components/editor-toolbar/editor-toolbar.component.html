@@ -32,6 +32,7 @@
                 class="primary-action"
                 size="small"
                 flat
+                data-action="save-copy"
                 [disabled]="copyDisabled"
                 [title]="'editor.content_frame_save_copy_tooltip' | i18n"
                 (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
@@ -45,6 +46,7 @@
                 class="primary-action edit-button"
                 size="small"
                 flat
+                data-action="edit"
                 (click)="editItem()"
                 [title]="'editor.edit_tooltip' | i18n"
             >
@@ -68,6 +70,7 @@
                 *ngIf="showSave"
                 class="primary-action save-button"
                 size="small"
+                data-action="save"
                 [disabled]="saveDisabled || isSaving"
                 [title]="'editor.content_frame_save_changes_tooltip' | i18n"
             >
@@ -80,6 +83,7 @@
 
                 <gtx-dropdown-item
                     *ngIf="currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
+                    data-action="save-recursive"
                     (click)="saveChanges(SaveBehaviour.APPLY_TO_SUBFOLDERS)"
                 >
                     <icon left>save</icon>
@@ -87,7 +91,10 @@
                 </gtx-dropdown-item>
 
                 <gtx-dropdown-item
-                    *ngIf="editorState.editMode === EditMode.EDIT_PROPERTIES && currentItem?.type === 'page' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
+                    *ngIf="editorState.editMode === EditMode.EDIT_PROPERTIES
+                        && currentItem?.type === 'page'
+                        && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
+                    data-action="save-variants"
                     (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
                 >
                     <icon left>save</icon>
@@ -97,25 +104,43 @@
 
             <gtx-dropdown-list
                 *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'"
+                data-action="editor-context"
+                data-context-id="item-editor"
                 class="content-frame-context-menu"
-                [disabled]="currentItem?.type === 'page' && !alohaReady"
             >
                 <gtx-dropdown-trigger>
-                    <gtx-button icon type="secondary" [disabled]="currentItem?.type === 'page' && !alohaReady">
+                    <gtx-button
+                        icon
+                        type="secondary"
+                        data-context-trigger
+                        [disabled]="currentItem?.type === 'page' && !alohaReady"
+                    >
                         <icon>more_vert</icon>
                     </gtx-button>
                 </gtx-dropdown-trigger>
 
-                <gtx-dropdown-content>
-                    <gtx-dropdown-item *ngIf="buttons.editProperties" (click)="editProperties()">
+                <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.editProperties"
+                        data-action="edit-properties"
+                        (click)="editProperties()"
+                    >
                         <icon left>settings</icon> {{ 'editor.properties_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.editItem" (click)="editItem()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.editItem"
+                        data-action="edit"
+                        (click)="editItem()"
+                    >
                         <icon left>edit</icon> {{ 'editor.edit_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.previewPage" (click)="previewPage()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.previewPage"
+                        data-action="preview"
+                        (click)="previewPage()"
+                    >
                         <ng-container *ngIf="!editorState.version; else previewCurrentVersion">
                             <icon left>pageview</icon> {{ 'editor.preview_label' | i18n }}
                         </ng-container>
@@ -124,29 +149,51 @@
                         </ng-template>
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.compareSources" (click)="switchToCompareSources()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.compareSources"
+                        data-action="compare-sources"
+                        (click)="switchToCompareSources()"
+                    >
                         <icon left>code</icon> {{ 'editor.compare_version_sources_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.compareContents" (click)="switchToCompareContents()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.compareContents"
+                        data-action="compare-contents"
+                        (click)="switchToCompareContents()"
+                    >
                         <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.versionHistory" (click)="showPageVersionsModal()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.versionHistory"
+                        data-action="versions"
+                        (click)="showPageVersionsModal()"
+                    >
                         <icon left>history</icon> {{ 'editor.version_history_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="buttons.timeManagement" (click)="showTimeManagement()">
+                    <gtx-dropdown-item
+                        *ngIf="buttons.timeManagement"
+                        data-action="time-management"
+                        (click)="showTimeManagement()"
+                    >
                         <icon left>date_range</icon> {{ 'editor.time_management_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="inQueue" (click)="approve()" class="success">
+                    <gtx-dropdown-item
+                        *ngIf="inQueue"
+                        class="success"
+                        data-action="approve"
+                        (click)="approve()"
+                    >
                         <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | i18n }}
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
                         *ngIf="buttons.publish"
                         class="success"
+                        data-action="publish"
                         (click)="saveChanges(SaveBehaviour.SAVE_AND_PUBLISH)"
                     >
                         <icon left>cloud_upload</icon> {{ 'editor.publish_label' | i18n }}
@@ -155,6 +202,7 @@
                     <gtx-dropdown-item
                         *ngIf="buttons.takeOffline"
                         class="alert"
+                        data-action="take-offline"
                         (click)="takeItemOffline()"
                     >
                         <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | i18n }}
@@ -167,6 +215,8 @@
                     icon
                     class="focus-mode-button"
                     type="secondary"
+                    data-action="toggle-focus-mode"
+                    [attr.data-active]="editorState.focusMode"
                     [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | i18n"
                     (click)="setFocusMode(!editorState.focusMode)"
                 >
@@ -178,6 +228,7 @@
                 class="close-button"
                 icon
                 type="secondary"
+                data-action="close"
                 (click)="closeEditor()"
             >
                 <icon>close</icon>
@@ -188,6 +239,8 @@
     <gtx-page-editor-controls
         *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT"
         class="page-editor-controls"
+        [nodeId]="currentNode.id"
+        [pageId]="currentItem.id"
         (brokenLinkCountChange)="updateBrokenLinkCount($event)"
     ></gtx-page-editor-controls>
 

@@ -4,6 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderItemType } from '@gentics/cms-models';
 import { EditorStateUrlOptions } from '../../../state/modules/editor/editor.actions';
+import { EditorOutlet } from '@editor-ui/app/common/models';
 
 export type ListUrlParams = {
     nodeId: number;
@@ -25,9 +26,9 @@ export type ModalByTypeUrlParams = {
 };
 
 export interface NavigationInstruction {
-    list?: ListUrlParams;
-    detail?: DetailUrlParams | null;
-    modal?: DetailUrlParams | null;
+    [EditorOutlet.LIST]?: ListUrlParams;
+    [EditorOutlet.DETAIL]?: DetailUrlParams | null;
+    [EditorOutlet.MODAL]?: DetailUrlParams | null;
     modalByType?: ModalByTypeUrlParams | null;
 }
 
@@ -87,7 +88,7 @@ export class NavigationService {
         searchFilters?: any,
     ): InstructionActions {
         return this.instruction({
-            list: {
+            [EditorOutlet.LIST]: {
                 nodeId,
                 folderId,
                 searchTerm,
@@ -123,7 +124,7 @@ export class NavigationService {
         options?: EditorStateUrlOptions,
     ): InstructionActions {
         return this.instruction({
-            detail: {
+            [EditorOutlet.DETAIL]: {
                 nodeId,
                 itemType,
                 itemId,
@@ -142,7 +143,7 @@ export class NavigationService {
         editMode: EditMode,
         options?: EditorStateUrlOptions): InstructionActions {
         return this.instruction({
-            modal: {
+            [EditorOutlet.MODAL]: {
                 nodeId,
                 itemType,
                 itemId,
@@ -166,7 +167,9 @@ export class NavigationService {
      * Decode an object which was encoded by serializeOptions()
      */
     deserializeOptions<T>(options: string): T {
-        return JSON.parse(atob(options));
+        const jsonData = atob(options);
+        const parsed = JSON.parse(jsonData);
+        return parsed;
     }
 
     /**
@@ -181,36 +184,36 @@ export class NavigationService {
      * Converts the NavigationInstruction object into a router commands array.
      */
     private commands(instruction: NavigationInstruction): any[] {
-        const outlets = {} as any;
+        const outlets: Partial<Record<EditorOutlet, any[]>> = {};
 
-        if (instruction.detail === null) {
-            outlets.detail = null;
+        if (instruction[EditorOutlet.DETAIL] === null) {
+            outlets[EditorOutlet.DETAIL] = null;
         }
 
-        if (instruction.modal === null) {
-            outlets.modal = null;
+        if (instruction[EditorOutlet.MODAL] === null) {
+            outlets[EditorOutlet.MODAL] = null;
         }
 
-        if (instruction.detail) {
-            const { nodeId, itemType, itemId, editMode, options } = instruction.detail;
+        if (instruction[EditorOutlet.DETAIL]) {
+            const { nodeId, itemType, itemId, editMode, options } = instruction[EditorOutlet.DETAIL];
             const optionsArg = this.serializeOptions(options);
-            outlets.detail = ['node', nodeId, itemType, itemId, editMode, optionsArg];
+            outlets[EditorOutlet.DETAIL] = ['node', nodeId, itemType, itemId, editMode, optionsArg];
         }
 
-        if (instruction.modal) {
-            const { nodeId, itemType, itemId, editMode, options } = instruction.modal;
+        if (instruction[EditorOutlet.MODAL]) {
+            const { nodeId, itemType, itemId, editMode, options } = instruction[EditorOutlet.MODAL];
             const optionsArg = this.serializeOptions(options);
-            outlets.modal = ['node', nodeId, itemType, itemId, editMode, optionsArg];
+            outlets[EditorOutlet.MODAL] = ['node', nodeId, itemType, itemId, editMode, optionsArg];
         }
 
         if (instruction.modalByType) {
             const { type } = instruction.modalByType;
-            outlets.modal = ['type', type];
+            outlets[EditorOutlet.MODAL] = ['type', type];
         }
 
-        if (instruction.list) {
-            const { nodeId, folderId, searchTerm, searchFilters } = instruction.list;
-            outlets.list = ['node', nodeId, 'folder', folderId];
+        if (instruction[EditorOutlet.LIST]) {
+            const { nodeId, folderId, searchTerm, searchFilters } = instruction[EditorOutlet.LIST];
+            outlets[EditorOutlet.LIST] = ['node', nodeId, 'folder', folderId];
 
             const searchFiltersArg = this.serializeOptions(searchFilters).options;
             const searchTermText = searchTerm || '';
@@ -223,7 +226,7 @@ export class NavigationService {
                 searchArgs.searchFilters = searchFiltersArg;
             }
             if (searchArgs.searchTerm || searchArgs.searchFilters) {
-                outlets.list.push(searchArgs);
+                outlets[EditorOutlet.LIST].push(searchArgs);
             }
         }
 

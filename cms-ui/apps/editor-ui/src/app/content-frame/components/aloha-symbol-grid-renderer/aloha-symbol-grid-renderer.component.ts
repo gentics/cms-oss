@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { AlohaSymbolGridComponent, SymbolGridItem } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
+import { patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -29,15 +30,13 @@ export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setSymbols = (symbols) => {
-            this.settings.symbols = symbols;
-            this.onSymbolsChange();
-            this.changeDetector.markForCheck();
-        };
+        patchMultipleAlohaFunctions(this.settings, {
+            setSymbols: symbols => {
+                this.settings.symbols = symbols;
+                this.onSymbolsChange();
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     protected onSymbolsChange(): void {}

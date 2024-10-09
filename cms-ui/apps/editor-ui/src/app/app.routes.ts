@@ -1,11 +1,12 @@
 import { Route } from '@angular/router';
 import { NoNodesComponent, TagEditorRouteComponent } from './core/components';
-import { ProjectEditor } from './core/components/project-editor/project-editor.component';
+import { ProjectEditorComponent } from './core/components/project-editor/project-editor.component';
 import { AuthGuard } from './core/providers/guards/auth-guard';
 import { OpenModalGuard } from './core/providers/guards/open-modal-guard';
 import { ToolOverviewComponent } from './embedded-tools/components/tool-overview/tool-overview.component';
 import { ToolProxyComponent } from './embedded-tools/components/tool-proxy/tool-proxy.component';
 import { ProxyRouteComponent, RessourceProxyComponent } from './shared/components';
+import { EditorOutlet } from './common/models';
 
 export const APP_ROUTES: Route[] = [
     {
@@ -27,7 +28,7 @@ export const APP_ROUTES: Route[] = [
     },
     {
         path: 'editor',
-        component: ProjectEditor,
+        component: ProjectEditorComponent,
         canActivate: [AuthGuard],
         children: [
             {
@@ -39,7 +40,7 @@ export const APP_ROUTES: Route[] = [
                         loadChildren: () => import('./list-view/list-view.module').then(m => m.ListViewModule),
                     },
                 ],
-                outlet: 'list',
+                outlet: EditorOutlet.LIST,
                 canDeactivate: [OpenModalGuard],
                 canActivate: [OpenModalGuard],
                 canActivateChild: [OpenModalGuard],
@@ -53,7 +54,7 @@ export const APP_ROUTES: Route[] = [
                         loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then(m => m.EditorOverlayRoutingModule),
                     },
                 ],
-                outlet: 'modal',
+                outlet: EditorOutlet.MODAL,
                 canDeactivate: [OpenModalGuard],
                 canActivate: [OpenModalGuard],
                 canActivateChild: [OpenModalGuard],
@@ -67,7 +68,7 @@ export const APP_ROUTES: Route[] = [
                         loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then(m => m.EditorOverlayRoutingModule),
                     },
                 ],
-                outlet: 'modal',
+                outlet: EditorOutlet.MODAL,
                 canDeactivate: [OpenModalGuard],
                 canActivate: [OpenModalGuard],
                 canActivateChild: [OpenModalGuard],
@@ -81,7 +82,7 @@ export const APP_ROUTES: Route[] = [
                         loadChildren: () => import('./content-frame/content-frame.module').then(m => m.ContentFrameModule),
                     },
                 ],
-                outlet: 'detail',
+                outlet: EditorOutlet.DETAIL,
                 canDeactivate: [OpenModalGuard],
                 canActivate: [OpenModalGuard],
                 canActivateChild: [OpenModalGuard],

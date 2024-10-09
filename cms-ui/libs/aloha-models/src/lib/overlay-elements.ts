@@ -86,6 +86,11 @@ export interface DynamicControlConfiguration<T> {
 
 export interface OverlayElementSettings<T> {
     /**
+     * Reference to the opening element.
+     * Will be added to the overlay element when opened, in one way or another.
+     */
+    openerReference?: string;
+    /**
      * Value of the form/component and what it's starting value is.
      */
     initialValue?: T;

@@ -43,6 +43,7 @@ import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.tests.category.MeshTest;
@@ -58,7 +59,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 /**
  * Test cases for publishing translated folders to mesh
  */
-@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.INSTANT_CR_PUBLISHING, Feature.ATTRIBUTE_DIRTING })
+@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.INSTANT_CR_PUBLISHING, Feature.ATTRIBUTE_DIRTING, Feature.PUB_DIR_SEGMENT })
 @RunWith(value = Parameterized.class)
 @Category(MeshTest.class)
 public class MeshPublishFolderTranslationTest {
@@ -136,6 +137,11 @@ public class MeshPublishFolderTranslationTest {
 			c.setInstantPublishing(instantPublishing);
 		});
 		operate(() -> clear(node));
+
+		node = update(node, update -> {
+			update.setPubDirSegment(false);
+		});
+
 		cleanMesh(mesh.client());
 		operate(() -> assertThat(cr.checkStructure(true)).as("Structure valid").isTrue());
 
@@ -466,6 +472,54 @@ public class MeshPublishFolderTranslationTest {
 			MeshAssertions.assertThat(n).as("File").hasStringField("foldername", "Generic Name");
 			MeshAssertions.assertThat(n).as("File").hasStringField("folderdescription", "Generic Description");
 		});
+	}
+
+	@Test
+	public void testTranslateOnlyNameWithPubDirSegment() throws Exception {
+		// acticate pub_dir_segments
+		node = update(node, update -> {
+			update.setPubDirSegment(true);
+		});
+
+		// create folder (no translations)
+		Folder folder = create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Generic Name");
+			f.setPublishDir("path");
+		});
+
+		// run publish process (should succeed)
+		try (Trx trx = new Trx()) {
+			assertThat(context.getContext().publish(false).getReturnCode()).isEqualTo(PublishInfo.RETURN_CODE_SUCCESS);
+			trx.success();
+		}
+
+		assertObject("Check published folder in english", mesh.client(), MESH_PROJECT_NAME, null, folder, "en", true, n -> {
+			MeshAssertions.assertThat(n).as("Folder").hasStringField("name", "Generic Name");
+			MeshAssertions.assertThat(n).as("Folder").hasStringField("pub_dir", "path");
+		});
+		assertObject("Check published folder in german", mesh.client(), MESH_PROJECT_NAME, null, folder, "de", false);
+
+		// update folder (translate name to german)
+		folder = update(folder, f -> {
+			f.setNameI18n(new I18nMap().put("de", "Name auf Deutsch"));
+		});
+
+		// run publish process
+		PublishInfo info = null;
+		try (Trx trx = new Trx()) {
+			info = context.getContext().publish(false);
+			trx.success();
+		}
+
+		assertObject("Check published folder in english", mesh.client(), MESH_PROJECT_NAME, null, folder, "en", true, n -> {
+			MeshAssertions.assertThat(n).as("Folder").hasStringField("name", "Generic Name");
+			MeshAssertions.assertThat(n).as("Folder").hasStringField("pub_dir", "path");
+		});
+		assertObject("Check published folder in german", mesh.client(), MESH_PROJECT_NAME, null, folder, "de", false);
+
+		// publish process should have failed
+		assertThat(info.getReturnCode()).as("Publish return code").isEqualTo(PublishInfo.RETURN_CODE_ERROR);
 	}
 
 	/**

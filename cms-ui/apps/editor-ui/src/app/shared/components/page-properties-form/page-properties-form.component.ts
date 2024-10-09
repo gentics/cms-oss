@@ -230,10 +230,6 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
-        if (this.form && this.languages && this.languages.length > 0) {
-            this.form.get('language').setValue(this.properties.language || this.languages[0], { emitEvent: false });
-        }
-
         if (changes.properties) {
             this.updateForm(this.properties);
         }

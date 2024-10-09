@@ -1,0 +1,8 @@
+{
+    "realm": "CMS-UI",
+    "auth-server-url": "http://keycloak.localhost.gentics.com",
+    "ssl-required": "external",
+    "resource": "cms",
+    "public-client": true,
+    "confidential-port": 0
+}

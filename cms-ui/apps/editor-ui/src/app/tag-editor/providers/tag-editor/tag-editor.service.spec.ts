@@ -1,4 +1,7 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
+import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
+import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
+import { RepositoryBrowserClient, UserAgentRef } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@editor-ui/app/state';
 import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
@@ -11,6 +14,11 @@ import {
     TagType,
 } from '@gentics/cms-models';
 import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { ApiBase } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
+import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { NEVER, Observable } from 'rxjs';
@@ -36,24 +44,25 @@ describe('TagEditorService', () => {
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: EditorOverlayService, useClass: MockEditorOverlayService },
+                { provide: EntityResolver, useClass: MockEntityResolver },
+                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
+                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: UserAgentRef, useClass: MockUserAgentRef },
+                { provide: ModalService, useClass: MockModalService },
+                { provide: ApiBase, useClass: MockBaseApiService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                TagEditorService,
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        editorOverlayService = new MockEditorOverlayService();
-        userAgentRef = new MockUserAgentRef();
-        entityResolver = new MockEntityResolver();
-        repositoryBrowserClient = new MockRepositoryBrowserClient();
-        tagEditorService = new TagEditorService(
-            state,
-            editorOverlayService as any,
-            entityResolver as any,
-            repositoryBrowserClient as any,
-            new MockTranslateService() as any,
-            userAgentRef as any,
-            new MockModalService() as any,
-            new MockBaseApiService() as any,
-        );
+        state = TestBed.inject(ApplicationStateService) as any;
+        editorOverlayService = TestBed.inject(EditorOverlayService) as any;
+        userAgentRef = TestBed.inject(UserAgentRef) as any;
+        entityResolver = TestBed.inject(EntityResolver) as any;
+        repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient) as any;
+        tagEditorService = TestBed.inject(TagEditorService);
+
         tagEditorOverlayHost = <any> new MockTagEditorOverlayHost();
         tagEditorService.registerTagEditorOverlayHost(tagEditorOverlayHost);
         state.mockState({

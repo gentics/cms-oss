@@ -1,12 +1,10 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
-@Library('jenkins-pipeline-library') import com.gentics.*
+@Library('jenkins-pipeline-library@nexus') import com.gentics.*
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)
 
 
-final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-oss"
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
@@ -21,6 +19,8 @@ def runJUnitTests              = true
 def qaDeploy                   = false
 def qaDeployBranchList         = ["dev"] as String[]
 
+def imageHost                  = "push.docker.gentics.com"
+def imageRepo                  = "docker-snapshots"
 
 pipeline {
     agent {
@@ -81,6 +81,7 @@ spec:
         booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
+        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
         booleanParam(name: 'deployTesting',             defaultValue: false, description: "Like deploy, but only the server image will be built and deployed to a different repository")
         booleanParam(name: 'install',                   defaultValue: false, description: "Install the Maven artifacts to the local repository (unless deploy or runReleaseBuild is true). If this is set, no tests will be executed (regardless of other settings).")
@@ -89,13 +90,12 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
-        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
     }
 
     options {
-        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
         gitLabConnection('git.gentics.com')
         gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
@@ -222,7 +222,6 @@ spec:
                             echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
                         }
 
-                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix)
                         mvnGoal = "deploy"
                     } else {
                         // for now, do not build modules in parallel
@@ -245,19 +244,17 @@ spec:
                     }
 
                     // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ > ~/.npmrc"
-                    withCredentials([string(credentialsId: 'artifactory-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.apa-it.at/artifactory/api/npm/gtx-npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm-products/> ~/.npmrc"
+                    withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                        sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
-                    // Login to docker.apa-it.at, so that the tests can pull all Mesh images
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
-                        withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-releases-test-system.docker.apa-it.at/v2" ]) {
-                            withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                                sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
-                                    " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
-                            }
-                        }
+                    // Login to docker.gentics.com so that the tests can pull all Mesh images
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                        sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
+                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                     }
 
                     if (params.runReleaseBuild) {
@@ -275,11 +272,6 @@ spec:
                             tagName = version
                             GitHelper.addTag(tagName, releaseMessage)
                         }
-
-                        // It can't hurt to let Artifactory recalculate some meta data
-                        for (mavenName in ['cms']) {
-                            GenericHelper.recalculateArtifactoryMetadata(mavenRepositoryBase, repoUsername, repoPassword, '/lan.releases/com/gentics/' + mavenName)
-                        }
                     }
                 }
             }
@@ -293,13 +285,14 @@ spec:
 
                         if (params.runTests) {
                             if (runJUnitTests) {
-                                junit  testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
-                                junit  testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
-                                junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
+                                junit testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
-                            junit  testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -316,25 +309,25 @@ spec:
 			}
 
             environment {
-                DOCKER_TAG   = "${branchName}"
+                DOCKER_TAG = "${branchName}"
             }
 
             steps {
                 script {
-                    def imageHost = "gtx-docker-products.docker.apa-it.at"
-                    // if (params.deployTesting) {
-                    //     imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
-                    // }
-                    def imageName = "${imageHost}/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://${imageHost}/v2" ]) {
-                        sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
-
-                        if (tagName != null) {
-                            String dockerImageVersionTag = imageName + ":" + tagName
-                            sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
-                        } 
+                    if (params.runReleaseBuild) {
+                        imageRepo = "docker-products"
                     }
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
+                    def imageNameWithTag = "${imageName}:${branchName}"
+
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
+
+                    if (tagName != null) {
+                        String dockerImageVersionTag = imageName + ":" + tagName
+                        sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                    } 
                 }
             }
 		}
@@ -342,7 +335,8 @@ spec:
         stage("UI Integration Tests") {
 			when {
 				expression {
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
+                    // Requires Docker image; Forcefully disabled until fully tested
+					return false && env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
 				}
 			}
 
@@ -352,20 +346,16 @@ spec:
 
             steps {
                 script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
                             // prior to starting the tests, start the docker containers with CMS
-                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.apa-it.at"
+                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.gentics.com"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-
-                            // run the integration tests in the ui-module
-                            sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
-                                // Setup NPM correctly for this run
-                                "-Dnodejs.npm.bin=/opt/node/bin/npm " + 
-                                // And skip all other parts - these had to run before hand or will be executed by the UI repo
-                                "-Dui.skip.install=true -Dui.skip.publish=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report=true -Dui.skip.assembly=true"
+                            
+                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
+                            sh "mvn integration-test -B -am -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report"
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
@@ -377,7 +367,9 @@ spec:
             post {
                 always {
                     script {
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: false
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
                     }
                 }
             }
@@ -398,18 +390,50 @@ spec:
 
             steps {
                 script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
 
-                        // Push released image
-                        if (tagName != null) {
-                            String dockerImageVersionTag = imageName + ":" + tagName
-                            sh "docker push " + dockerImageVersionTag
-                        } else if (params.deploy || params.deployTesting) {
-                            // push snapshot build image
-                            sh "docker push ${imageNameWithTag}"
-                        }
+                    authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                    authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+
+                    // Push released image
+                    if (tagName != null) {
+                        String dockerImageVersionTag = imageName + ":" + tagName
+                        sh "docker push " + dockerImageVersionTag
+                    } else if (params.deploy || params.deployTesting) {
+                        // push snapshot build image
+                        sh "docker push ${imageNameWithTag}"
+                    }
+                }
+            }
+		}
+
+        stage("UI Integration Tests") {
+			when {
+				expression {
+                    // Needs built docker images to be deployed (as they are used in another job)
+                    // And only if the tests should be performed as well
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && (params.deploy || params.deployTesting) && params.integrationTests
+				}
+			}
+            
+            steps {
+                script {
+                    def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
+                    def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
+                        parameters: [
+                            string(name: 'variant', value: 'OSS'),
+                            string(name: 'cmsVersion', value: branchName),
+                            // TODO: Get Mesh Version from POM?
+                            // string(name: 'meshVersion', value: '2.1.0')
+                        ],
+                        wait: true
+                    )
+
+                    if ( testJob.getBuildVariables()["BUILD_SKIPPED"] == "true" ) {
+                        echo "Integration Tests finished with an error"
+                    } else {
+                        echo "Integration Tests finished successfully"
                     }
                 }
             }

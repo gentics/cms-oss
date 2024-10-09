@@ -17,6 +17,9 @@ export class TableFilterWrapperComponent {
     @Input()
     public hasValue = false;
 
+    @Input()
+    public hasClear = true;
+
     @Output()
     public clear = new EventEmitter<void>();
 

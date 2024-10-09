@@ -1,11 +1,10 @@
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { NormalizableEntityType } from '@gentics/cms-models';
+import { Group, NormalizableEntityType, Normalized, User } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { AssignEntityToPackageModalComponent } from '../../components/assign-entity-to-package-modal/assign-entity-to-package-modal.component';
-import { AssignGroupToUsersModalComponent } from '../../components/assign-group-to-users-modal/assign-group-to-users-modal.component';
 import { AssignPackagesToNodeModalComponent } from '../../components/assign-packages-to-node-modal/assign-packages-to-node-modal.component';
-import { AssignUserToGroupsModalComponent } from '../../components/assign-user-to-groups-modal/assign-user-to-groups-modal.component';
+import { AssignUserToGroupsModal } from '../../components/assign-user-to-groups-modal/assign-user-to-groups-modal.component';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -17,7 +16,7 @@ export class ContextMenuService {
         protected notificationTools: NotificationService,
     ) { }
 
-    changeGroupsOfUsersModalOpen(userIds: number[]): Promise<AssignUserToGroupsModalComponent> {
+    changeGroupsOfUsersModalOpen(userIds: number[]): Promise<User[] | boolean> {
         // if no row is selected, display modal
         if (!userIds || userIds.length < 1) {
             this.notificationTools.notificationNoneSelected();
@@ -26,31 +25,17 @@ export class ContextMenuService {
 
         // if only one user, preselect groups
         let userGroupIds: number[] = [];
+        let user: User<Normalized>;
         if (userIds && userIds.length === 1) {
-            const selectedUser = this.state.now.entity.user[userIds[0]];
-            userGroupIds = [...selectedUser.groups];
+            user = this.state.now.entity.user[userIds[0]];
+            userGroupIds = [...user.groups];
         }
 
         // open modal
         return this.modalService.fromComponent(
-            AssignUserToGroupsModalComponent,
+            AssignUserToGroupsModal,
             { closeOnOverlayClick: false, width: '50%' },
-            { userIds, userGroupIds },
-        )
-            .then(modal => modal.open());
-    }
-
-    changeUsersOfGroupModalOpen(groupId: number): Promise<AssignGroupToUsersModalComponent> {
-        // Pre-collect users which has the group already
-        const userIds = Object.values(this.state.now.entity.user)
-            .filter(user => user.groups && user.groups.includes(groupId))
-            .map(user => user.id);
-
-        // open modal
-        return this.modalService.fromComponent(
-            AssignGroupToUsersModalComponent,
-            { closeOnOverlayClick: false, width: '50%' },
-            { groupId, userIds },
+            { userIds, userGroupIds, user },
         )
             .then(modal => modal.open());
     }
@@ -65,7 +50,7 @@ export class ContextMenuService {
             .then(modal => modal.open());
     }
 
-    changePackagesOfNodeModalOpen(nodeId: number): Promise<AssignPackagesToNodeModalComponent> {
+    changePackagesOfNodeModalOpen(nodeId: number): Promise<boolean> {
         // open modal
         return this.modalService.fromComponent(
             AssignPackagesToNodeModalComponent,

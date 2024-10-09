@@ -1,11 +1,12 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaToolbarTabsSettings } from '@gentics/aloha-models';
+import { TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { NodeFeature } from '@gentics/cms-models';
 import { Subscription, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { DefaultEditorControlTabs } from '../../../common/models';
-import { AlohaIntegrationService, NormalizedTabsSettings, TAB_ID_LINK_CHECKER } from '../../providers/aloha-integration/aloha-integration.service';
+import { AlohaIntegrationService, NormalizedTabsSettings } from '../../providers/aloha-integration/aloha-integration.service';
 import { OverflowManager } from '../../utils';
 
 @Component({

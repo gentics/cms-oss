@@ -26,6 +26,7 @@ import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { KeycloakService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
@@ -33,7 +34,6 @@ import { NGXLogger } from 'ngx-logger';
 import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from './common';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { SetBackendLanguage } from './state/ui/ui.actions';
 
 @Component({

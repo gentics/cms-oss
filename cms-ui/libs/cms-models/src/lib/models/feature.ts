@@ -17,6 +17,9 @@ export enum Feature {
     FOCAL_POINT_EDITING = 'focal_point_editing',
     IMAGE_MANIPULATION2 = 'imagemanipulation2',
     ENABLE_UPLOAD_IN_TAGFILL = 'enable_image_upload_in_tagfill',
+    /**
+     * @deprecated Feature will be removed in the future
+     */
     TAGFILL_LIGHT = 'tagfill_light',
     WASTEBIN = 'wastebin',
     DEVTOOLS = 'devtools',
@@ -28,6 +31,7 @@ export enum Feature {
      */
     PUB_DIR_SEGMENT = 'pub_dir_segment',
     USERSNAP = 'usersnap',
+    KEYCLOAK = 'keycloak',
     KEYCLOAK_SIGNOUT = 'keycloak_signout',
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
     CONTENT_STAGING = 'content_staging',
@@ -98,6 +102,11 @@ export enum NodeFeature {
      * If this feature is activated a modal dialog with the images properties is opened immediately after the upload.
      */
     UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
+
+    /**
+     * If this feature is activated, automatic page translation is available
+     */
+    AUTOMATIC_TRANSLATION = 'automatic_translation',
 }
 
 /**

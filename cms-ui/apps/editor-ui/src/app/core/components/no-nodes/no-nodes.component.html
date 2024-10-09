@@ -1,5 +1,5 @@
 <div *ngIf="isLoaded" class="container">
-    <div class="error-container">
+    <div class="error-container" [class.admin]="isAdmin">
         <h1 class="error-title">{{ ('editor.' + (isAdmin ? 'admin' : 'user') + '_no_nodes_title') | i18n }}</h1>
         <span class="error-message" [innerHTML]="errorMessage"></span>
     </div>

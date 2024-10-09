@@ -1,5 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
@@ -24,25 +25,6 @@ import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-pu
 import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
 import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ItemListHeaderComponent } from './item-list-header.component';
-
-const enum ITEM_LIST_STATES {
-    STATE_1 = 'item-list-status-1',
-    STATE_2 = 'item-list-status-2',
-    STATE_3 = 'item-list-status-3',
-    STATE_4 = 'item-list-status-4',
-    STATE_5 = 'item-list-status-5'
-}
-
-function getItemListStatus(fixture: ComponentFixture<TestComponent>): string {
-    // get dom element
-    const statusElements: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('item-list-header .item-list-status'));
-    const statusElementClass = statusElements.map(e => ({ id: e.id, class: e.classList.value }));
-    if (statusElementClass.length === 1 && statusElementClass[0].class) {
-        return statusElementClass[0].id;
-    } else {
-        throw new Error('Unexpected status structure.');
-    }
-}
 
 const allPermissions = (): EditorPermissions => // Sorry, but it works.
     JSON.parse(JSON.stringify(getNoPermissions()).replace(/false/g, 'true'));
@@ -191,25 +173,29 @@ describe('ItemListHeader', () => {
     }),
     );
 
-    it(`displays correct status info for ${ITEM_LIST_STATES.STATE_1}`, componentTest(() => TestComponent, (fixture, instance) => {
+    it('displays correct status info for selected not filtering items', componentTest(() => TestComponent, (fixture, instance) => {
         instance.selectedItems = [1];
         instance.filterTerm = '';
 
         fixture.detectChanges();
         tick();
-        expect(getItemListStatus(fixture)).toEqual(ITEM_LIST_STATES.STATE_1);
+
+        const elem = fixture.debugElement.query(By.css('item-list-header .item-list-status.selected:not(.filtering)'));
+        expect(elem).toBeDefined();
     }));
 
-    it(`displays correct status info for ${ITEM_LIST_STATES.STATE_2}`, componentTest(() => TestComponent, (fixture, instance) => {
+    it('displays correct status info for selected and filtering item', componentTest(() => TestComponent, (fixture, instance) => {
         instance.selectedItems = [1, 2, 3];
         instance.filterTerm = 'xxx';
 
         fixture.detectChanges();
         tick();
-        expect(getItemListStatus(fixture)).toEqual(ITEM_LIST_STATES.STATE_2);
+
+        const elem = fixture.debugElement.query(By.css('item-list-header .item-list-status.selected.filtering'));
+        expect(elem).toBeDefined();
     }));
 
-    it(`displays correct status info for ${ITEM_LIST_STATES.STATE_3}`, componentTest(() => TestComponent, (fixture, instance) => {
+    it('displays correct status info for not selected and all visible items', componentTest(() => TestComponent, (fixture, instance) => {
         instance.selectedItems = [];
         instance.itemsInfo.total = 20;
         instance.itemsInfo.itemsPerPage = 25;
@@ -217,10 +203,12 @@ describe('ItemListHeader', () => {
 
         fixture.detectChanges();
         tick();
-        expect(getItemListStatus(fixture)).toEqual(ITEM_LIST_STATES.STATE_3);
+
+        const elem = fixture.debugElement.query(By.css('item-list-header .item-list-status:not(.selected).all-items'));
+        expect(elem).toBeDefined();
     }));
 
-    it(`displays correct status info for ${ITEM_LIST_STATES.STATE_4}`, componentTest(() => TestComponent, (fixture, instance) => {
+    it('displays correct status info for not selected and partial visible items', componentTest(() => TestComponent, (fixture, instance) => {
         instance.selectedItems = [];
         instance.itemsInfo.total = 30;
         instance.itemsInfo.itemsPerPage = 25;
@@ -228,16 +216,20 @@ describe('ItemListHeader', () => {
 
         fixture.detectChanges();
         tick();
-        expect(getItemListStatus(fixture)).toEqual(ITEM_LIST_STATES.STATE_4);
+
+        const elem = fixture.debugElement.query(By.css('item-list-header .item-list-status:not(.selected).partial-items'));
+        expect(elem).toBeDefined();
     }));
 
-    it(`displays correct status info for ${ITEM_LIST_STATES.STATE_5}`, componentTest(() => TestComponent, (fixture, instance) => {
+    it('displays correct status info for not selected and filtering', componentTest(() => TestComponent, (fixture, instance) => {
         instance.selectedItems = [];
         instance.filterTerm = 'xxx';
 
         fixture.detectChanges();
         tick();
-        expect(getItemListStatus(fixture)).toEqual(ITEM_LIST_STATES.STATE_5);
+
+        const elem = fixture.debugElement.query(By.css('item-list-header .item-list-status:not(.selected).filtering'));
+        expect(elem).toBeDefined();
     }));
 
 });

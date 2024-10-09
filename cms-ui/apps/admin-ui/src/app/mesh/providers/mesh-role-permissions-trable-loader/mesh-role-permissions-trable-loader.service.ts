@@ -295,6 +295,8 @@ query($parent: String, $role: String!) {
                     read
                     update
                     delete
+                    publish
+                    readPublished
                 }
             }
         }

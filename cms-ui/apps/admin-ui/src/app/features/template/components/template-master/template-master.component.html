@@ -35,6 +35,7 @@
             [nodeId]="activeNode.id"
             [activeEntity]="activeEntity"
             [extraActions]="actions"
+            [(selected)]="selected"
             (rowClick)="handleRowClick($event)"
             (createClick)="handleCreate()"
             (actionClick)="handleAction($event)"

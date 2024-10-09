@@ -71,7 +71,7 @@ describe('Page Editing', () => {
             // High timeout for all of aloha to finish loading
             cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
                 .its('0.contentDocument.body')
-            // Additional wait, for aloha to initialze all the blocks
+                // Additional wait, for aloha to initialze all the blocks
                 .find('main [contenteditable="true"]', { timeout: 60_000 })
                 .as(ALIAS_CONTENT);
 
@@ -450,14 +450,17 @@ describe('Page Editing', () => {
      * The endpoint for editable constructs for the page, is `/rest/construct/list`.
      * This test verifies that the request has used the correct endpoint.
      */
-    it.only('should load the constructs for the edit-mode correctly', () => {
+    it('should load the constructs for the edit-mode correctly', () => {
         const ALIAS_VALID_REQ = '@validReq';
 
         cy.intercept({
             method: 'GET',
             pathname: '/rest/construct',
-        }, () => {
-            expect(true).to.equal(false, 'Invalid Request to "/rest/construct" has been sent!');
+        }, req => {
+            // Requests with '_' in the query are from aloha, and should be ignored here.
+            if (!req.query['_']) {
+                expect(true).to.equal(false, 'Invalid Request to "/rest/construct" has been sent!');
+            }
         });
 
         cy.intercept({
@@ -467,7 +470,9 @@ describe('Page Editing', () => {
                 nodeId: `${IMPORTER.get(minimalNode)!.id}`,
                 pageId: `${IMPORTER.get(pageOne)!.id}`,
             },
-        }).as(ALIAS_VALID_REQ);
+        }, req => {
+            req.alias = ALIAS_VALID_REQ;
+        });
 
         cy.findList(ITEM_TYPE_PAGE)
             .findItem(IMPORTER.get(pageOne)!.id)
@@ -479,12 +484,23 @@ describe('Page Editing', () => {
         cy.get('project-editor content-frame gtx-page-editor-tabs')
             .as(ALIAS_TABS);
 
+        // High timeout for all of aloha to finish loading
+        cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
+            .its('0.contentDocument.body')
+            // Additional wait, for aloha to initialze all the blocks
+            .find('main [contenteditable="true"]', { timeout: 60_000 })
+            .as(ALIAS_CONTENT);
+
         cy.get(ALIAS_TABS)
             .find(`[data-id="${TAB_ID_CONSTRUCTS}"]`)
             .click();
 
         // Will fail if it hasn't been called
         cy.wait(ALIAS_VALID_REQ);
+
+        // Select the content to make the constructs selectable
+        cy.get(ALIAS_CONTENT)
+            .click();
 
         cy.get(ALIAS_CONTROLS)
             .find('gtx-construct-controls .no-constructs')

@@ -88,8 +88,6 @@ export function setupAliasOverrides(): void {
  * These commands are common commands which are shared between all app e2e tests.
  */
 export function registerCommonCommands(): void {
-
-
     Cypress.Commands.add('muteXHR', () => {
         // Disable logging of XHR/Fetch requests, since they just spam everything
         return cy.intercept({ resourceType: /xhr|fetch/ }, { log: false });

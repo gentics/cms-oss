@@ -38,10 +38,10 @@ declare module Chai {
          * Assertion to check if a value has specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('have.formatting', 'text', ['b']);
-        ```
+         * ```ts
+         * expect($someElement).to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('have.formatting', 'text', ['b']);
+         * ```
          */
         formatting(text: string, format: string[]): Assertion;
         /**
@@ -51,15 +51,15 @@ declare module Chai {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(123).to.be.included([123, 456, 789]);
-        // > true
-        expect('hello').to.be.included(['hello', 'world']);
-        // > true
-        expect('hello').to.be.included(['hello world', 'foo bar']);
-        // > true
-        cy.wrap(456).should('be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(123).to.be.included([123, 456, 789]);
+         * // > true
+         * expect('hello').to.be.included(['hello', 'world']);
+         * // > true
+         * expect('hello').to.be.included(['hello world', 'foo bar']);
+         * // > true
+         * cy.wrap(456).should('be.included', [123, 456, 789]);
+         * ```
          */
         included(array: any[]): Assertion;
     }
@@ -71,10 +71,10 @@ declare namespace Cypress {
          * Assertion to check if a value has specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('have.formatting', 'text', ['b']);
-        ```
+         * ```ts
+         * expect($someElement).to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('have.formatting', 'text', ['b']);
+         * ```
          */
         (chainer: 'have.formatting', text: string, formats: string[]): Chainable<Subject>;
 
@@ -82,10 +82,10 @@ declare namespace Cypress {
          * Assertion to check if a value does not have a specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).not.to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('not.have.formatting', 'text', ['b']);
-        ```
+         * ```ts
+         * expect($someElement).not.to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('not.have.formatting', 'text', ['b']);
+         * ```
          */
         (chainer: 'not.have.formatting', text: string, formats: string[]): Chainable<Subject>;
 
@@ -96,15 +96,15 @@ declare namespace Cypress {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(123).to.be.included([123, 456, 789]);
-        // > true
-        expect('hello').to.be.included(['hello', 'world']);
-        // > true
-        expect('hello').to.be.included(['hello world', 'foo bar']);
-        // > true
-        cy.wrap(456).should('be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(123).to.be.included([123, 456, 789]);
+         * // > true
+         * expect('hello').to.be.included(['hello', 'world']);
+         * // > true
+         * expect('hello').to.be.included(['hello world', 'foo bar']);
+         * // > true
+         * cy.wrap(456).should('be.included', [123, 456, 789]);
+         * ```
          */
         (chainer: 'be.included', array: any[]): Chainable<Subject>;
         (chainer: 'to.be.included', array: any[]): Chainable<Subject>;
@@ -116,15 +116,15 @@ declare namespace Cypress {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(420).not.to.be.included([123, 456, 789]);
-        // > true
-        expect('example').not.to.be.included(['hello', 'world']);
-        // > true
-        expect('world').not.to.be.included(['hello world', 'foo bar']);
-        // > false
-        cy.wrap(420).should('not.be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(420).not.to.be.included([123, 456, 789]);
+         * // > true
+         * expect('example').not.to.be.included(['hello', 'world']);
+         * // > true
+         * expect('world').not.to.be.included(['hello world', 'foo bar']);
+         * // > false
+         * cy.wrap(420).should('not.be.included', [123, 456, 789]);
+         * ```
          */
         (chainer: 'not.be.included', array: any[]): Chainable<Subject>;
     }
@@ -171,7 +171,11 @@ declare namespace Cypress {
          *      </gtx-dropdown-content>
          * </gtx-dropdown-list>
          * ```
+         *
+         * ---
+         *
          * ```ts
+         * // my-test.cy.ts
          * cy.get('.my-dropdown')
          *      .openContext()
          *      .find('[data-action="whatever"]')

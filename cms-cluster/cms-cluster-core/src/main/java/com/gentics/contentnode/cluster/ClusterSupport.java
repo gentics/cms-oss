@@ -116,7 +116,7 @@ public final class ClusterSupport {
 			Config config = Config.loadDefault();
 			MemberAttributeConfig memberAttributeConfig = new MemberAttributeConfig(config.getMemberAttributeConfig());
 			memberAttributeConfig.setAttribute(MEMBER_ATTRIBUTE_STARTTIME, Long.toString(System.currentTimeMillis()));
-			Config.loadDefault().setMemberAttributeConfig(memberAttributeConfig);
+			config.setMemberAttributeConfig(memberAttributeConfig);
 			instance = Hazelcast.newHazelcastInstance(config);
 
 			electMaster();
@@ -366,11 +366,11 @@ public final class ClusterSupport {
 						}).collect(Collectors.toList())));
 			}
 
-			// check whether current master is still found in the cluster
-			if (members.stream().filter(ClusterSupport::isMaster).findFirst().isPresent()) {
-				logger.info("Current master still present");
-				return;
-			}
+//			// check whether current master is still found in the cluster
+//			if (members.stream().filter(ClusterSupport::isMaster).findFirst().isPresent()) {
+//				logger.info("Current master still present");
+//				return;
+//			}
 
 			// elect a new master
 			currentMasterUuid = members.stream().min(MASTER_COMPARATOR).map(m -> m.getUuid()).orElse(null);

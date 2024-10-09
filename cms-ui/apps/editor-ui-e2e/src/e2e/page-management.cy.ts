@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import '@gentics/e2e-utils/commands';
 import { PageCreateResponse, PageSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import {
     EntityImporter,
@@ -15,6 +14,7 @@ import {
     pageOne,
     TestSize,
 } from '@gentics/e2e-utils';
+import '@gentics/e2e-utils/commands';
 import { AUTH_ADMIN } from '../support/common';
 
 describe('Page Management', () => {
@@ -62,7 +62,7 @@ describe('Page Management', () => {
                 .find('[formcontrolname="suggestedOrRequestedFileName"] input')
                 .type(NEW_PAGE_PATH)
             cy.get(ALIAS_FORM)
-                .find('[formcontrolname="language"] .select-input')
+                .find('[formcontrolname="language"]')
                 .selectValue(LANGUAGE_EN);
 
             cy.intercept({
@@ -91,20 +91,21 @@ describe('Page Management', () => {
         it('should be possible to edit the page properties', () => {
             const PAGE = IMPORTER.get(pageOne)!;
             const CHANGE_PAGE_NAME = 'Foo bar change';
+            const ALIAS_ITEM = '@item';
 
             // Confirm that the original name is correct
             cy.findList(ITEM_TYPE_PAGE)
                 .findItem(PAGE.id)
-                .should('exist');
-            cy.findList(ITEM_TYPE_PAGE)
-                .findItem(PAGE.id)
+                .as(ALIAS_ITEM)
+                .should('exist')
                 .find('.item-name .item-name-only')
                 .should('have.text', PAGE.name);
 
-            cy.findList(ITEM_TYPE_PAGE)
-                .findItem(PAGE.id)
+            cy.get(ALIAS_ITEM)
                 .itemAction('properties');
-            cy.get('content-frame combined-properties-editor .properties-content page-properties-form').as(ALIAS_FORM);
+
+            cy.get('content-frame combined-properties-editor .properties-content page-properties-form')
+                .as(ALIAS_FORM);
 
             cy.intercept({
                 method: 'POST',
@@ -124,8 +125,7 @@ describe('Page Management', () => {
 
             // Wait for the update to be actually handled
             cy.wait(ALIAS_UPDATE_REQ).then(() => {
-                cy.findList(ITEM_TYPE_PAGE)
-                    .findItem(PAGE.id)
+                cy.get(ALIAS_ITEM)
                     .find('.item-name .item-name-only')
                     .should('have.text', CHANGE_PAGE_NAME);
             });
@@ -139,6 +139,7 @@ describe('Page Management', () => {
             cy.findList(ITEM_TYPE_PAGE)
                 .findItem(PAGE.id)
                 .itemAction('properties');
+
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)
                 .selectValue(COLOR_ID);
@@ -198,24 +199,28 @@ describe('Page Management', () => {
             }
         });
 
-        beforeEach(() => {
-            cy.wrap(IMPORTER.cleanupTest());
-            cy.wrap(IMPORTER.importData(CONTENT));
+        beforeEach(async () => {
+            IMPORTER.client = null;
+            await IMPORTER.cleanupTest();
+            await IMPORTER.importData(CONTENT);
         });
 
         beforeEach(() => Promise.all([
-            IMPORTER.client?.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
-            IMPORTER.client?.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
+            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
+            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
         ]));
 
-        it.only('should be possible to assign a language to a page with the language markers', () => {
+        it('should be possible to assign a language to a page with the language markers', () => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);
             cy.selectNode(IMPORTER.get(minimalNode)!.id);
 
             const LANG = 'en';
             const ALIAS_ITEM = '@item';
+            const ALIAS_UPDATE_REQUEST = '@updateRequest';
             const CLASS_AVAILABLE = 'available';
+
+            // Validate initial state
 
             cy.findList(ITEM_TYPE_PAGE)
                 .findItem(IMPORTER.get(pageOne)!.id)
@@ -228,11 +233,77 @@ describe('Page Management', () => {
                 .find('.language-indicator .language-icon')
                 .should('not.have.class', CLASS_AVAILABLE);
 
+            cy.intercept({
+                pathname: '/rest/page/save/*',
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQUEST;
+            });
+
+            // Assign the language via language indicator action
+
             cy.get(ALIAS_ITEM)
                 .find(`.language-indicator .language-icon[data-id="${LANG}"] [data-action="page-language"]`)
                 .openContext()
                 .find('[data-action="set-source-language"]')
                 .click();
+
+            // Validate the update
+
+            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQUEST).then(intercept => {
+                expect(intercept.request.body.page.language).to.equal(LANG);
+            });
+
+            cy.get(ALIAS_ITEM)
+                .find(`.language-indicator .language-icon[data-id="${LANG}"]`)
+                .should('have.class', CLASS_AVAILABLE);
+        });
+
+        it('should be possible to assign a language in the page-properties', () => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
+
+            const LANG = 'en';
+            const ALIAS_ITEM = '@item';
+            const ALIAS_UPDATE_REQUEST = '@updateRequest';
+            const CLASS_AVAILABLE = 'available';
+
+            // Validate initial state
+
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(IMPORTER.get(pageOne)!.id)
+                .as(ALIAS_ITEM)
+                // Open the languages, since these are hidden on default (why?)
+                .find('.language-indicator .expand-toggle')
+                .click();
+
+            cy.get(ALIAS_ITEM)
+                .find('.language-indicator .language-icon')
+                .should('not.have.class', CLASS_AVAILABLE);
+
+            cy.intercept({
+                pathname: '/rest/page/save/*',
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQUEST;
+            });
+
+            // Assign the language by opening the properties, selecting the language, and saving
+
+            cy.get(ALIAS_ITEM)
+                .itemAction('properties');
+
+            cy.get('content-frame combined-properties-editor .properties-content page-properties-form')
+                .as(ALIAS_FORM)
+                .find('[formcontrolname="language"]')
+                .selectValue(LANG);
+
+            cy.editorAction('save');
+
+            // Validate the update
+
+            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQUEST).then(intercept => {
+                expect(intercept.request.body.page.language).to.equal(LANG);
+            });
 
             cy.get(ALIAS_ITEM)
                 .find(`.language-indicator .language-icon[data-id="${LANG}"]`)

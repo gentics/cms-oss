@@ -91,7 +91,7 @@ Cypress.Commands.add('findTagEditorElement', { prevSubject: 'element' }, (subjec
         // Should always use the `TagPropertyType` values
         case 'select':
         case 'SELECT':
-            return subject.find('gentics-tag-editor select-tag-property-editor gtx-select .select-input');
+            return subject.find('gentics-tag-editor select-tag-property-editor gtx-select');
 
         default:
             return subject;

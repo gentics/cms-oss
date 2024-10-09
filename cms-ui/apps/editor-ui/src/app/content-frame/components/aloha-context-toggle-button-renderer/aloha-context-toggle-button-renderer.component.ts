@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { AlohaContextToggleButtonComponent } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaContextButtonRendererComponent } from '../aloha-context-button-renderer/aloha-context-button-renderer.component';
+import { patchMultipleAlohaFunctions } from '../../utils';
 
 @Component({
     selector: 'gtx-aloha-context-toggle-button-renderer',
@@ -18,14 +19,12 @@ export class AlohaContextToggleButtonRendererComponent<T> extends AlohaContextBu
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setActive = (active) => {
-            this.settings.active = active;
-            this.changeDetector.markForCheck();
-        }
+        patchMultipleAlohaFunctions(this.settings as AlohaContextToggleButtonComponent<any>, {
+            setActive: (active) => {
+                this.settings.active = active;
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     public override handleClick(): void {

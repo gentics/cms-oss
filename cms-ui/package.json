@@ -140,7 +140,7 @@
     "@nx/workspace": "16.10.0",
     "@schematics/angular": "~16.1.0",
     "@swc-node/register": "^1.9.0",
-    "@swc/core": "^1.4.13",
+    "@swc/core": "^1.7.26",
     "@types/dompurify": "^2.0.0",
     "@types/hammerjs": "~2.0.36",
     "@types/jasmine": "~4.3.0",
@@ -201,6 +201,7 @@
     "yaml-loader": "^0.7.0"
   },
   "optionalDependencies": {
-    "@nx/nx-linux-x64-gnu": "^16.10.0"
+    "@nx/nx-linux-x64-gnu": "^16.10.0",
+    "@nx/nx-win32-x64-msvc": "^16.10.0"
   }
 }

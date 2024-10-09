@@ -60,7 +60,6 @@
                 "libs/cms-models/src/lib/*"
             ],
             "@gentics/aloha-models": [
-                "dist/libs/aloha-models/src/public-api",
                 "libs/aloha-models/src/public-api"
             ],
             "@gentics/cms-rest-client": [

@@ -14,20 +14,31 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.assertj.core.api.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.ContentLanguageTrx;
+import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.Folder;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
@@ -663,6 +674,181 @@ public class FolderTranslationTest {
 					"Error while saving folder " + id
 							+ ": Die Sprache Italiano ist dem Node Node name nicht zugewiesen.",
 					new Message(Type.CRITICAL, "Die Sprache Italiano ist dem Node Node name nicht zugewiesen."));
+		}, folder.getId());
+	}
+
+	/**
+	 * Test creating a folder with the name translated to german, but the publish dir segment not set
+	 * @throws NodeException
+	 */
+	@Test
+	public void testCreateTranslationWithEmptyPubDirSegment() throws NodeException {
+		masterNode = update(masterNode, upd -> {
+			upd.setPubDirSegment(true);
+		});
+
+		Folder folder = supply(() -> {
+			FolderCreateRequest request = new FolderCreateRequest();
+			request.setMotherId(Integer.toString(masterNode.getFolder().getId()));
+			request.setName("Generic Name");
+			request.setPublishDir("path");
+			request.setNameI18n(map("de", "Name auf Deutsch"));
+			FolderLoadResponse response = getFolderResource().create(request);
+			assertResponseOK(response);
+			return response.getFolder();
+		});
+
+		assertDifferentPubDirs(folder);
+	}
+
+	/**
+	 * Test creating a folder with the name translated to german, requesting the same publish dir segment
+	 * @throws NodeException
+	 */
+	@Test
+	public void testCreateTranslationWithSamePubDirSegment() throws NodeException {
+		masterNode = update(masterNode, upd -> {
+			upd.setPubDirSegment(true);
+		});
+
+		Folder folder = supply(() -> {
+			FolderCreateRequest request = new FolderCreateRequest();
+			request.setMotherId(Integer.toString(masterNode.getFolder().getId()));
+			request.setName("Generic Name");
+			request.setPublishDir("path");
+			request.setNameI18n(map("de", "Name auf Deutsch"));
+			request.setPublishDirI18n(map("de", "path"));
+			FolderLoadResponse response = getFolderResource().create(request);
+			assertResponseOK(response);
+			return response.getFolder();
+		});
+
+		assertDifferentPubDirs(folder);
+	}
+
+	/**
+	 * Test adding a translation to a folder with the name translated to german, but the publish dir segment not set
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAddTranslationWithEmptyPubDirSegment() throws NodeException {
+		masterNode = update(masterNode, upd -> {
+			upd.setPubDirSegment(true);
+		});
+
+		Folder folder = supply(() -> {
+			FolderCreateRequest request = new FolderCreateRequest();
+			request.setMotherId(Integer.toString(masterNode.getFolder().getId()));
+			request.setName("Generic Name");
+			request.setPublishDir("path");
+			FolderLoadResponse response = getFolderResource().create(request);
+			assertResponseOK(response);
+			return response.getFolder();
+		});
+		assertDifferentPubDirs(folder);
+
+		// add translation (without explicit request for a publish dir segment)
+		consume(id -> {
+			FolderSaveRequest request = new FolderSaveRequest();
+			Folder update = new Folder();
+			update.setNameI18n(map("de", "Name auf Deutsch"));
+			request.setFolder(update);
+			request.setFailOnDuplicate(true);
+			GenericResponse response = getFolderResource().save(Integer.toString(id), request);
+			assertResponse(response, ResponseCode.INVALIDDATA, "Error while saving folder " + id
+					+ ": Das Verzeichnissegment \"path\" wird bereits vom Ordner \"/Node name/Generic Name\" verwendet.",
+					new Message(Type.CRITICAL,
+							"Das Verzeichnissegment \"path\" wird bereits vom Ordner \"/Node name/Generic Name\" verwendet."));
+		}, folder.getId());
+		assertDifferentPubDirs(folder);
+
+		// add translation (without explicit request for a publish dir segment)
+		consume(id -> {
+			FolderSaveRequest request = new FolderSaveRequest();
+			Folder update = new Folder();
+			update.setNameI18n(map("de", "Name auf Deutsch"));
+			request.setFolder(update);
+			request.setFailOnDuplicate(false);
+			GenericResponse response = getFolderResource().save(Integer.toString(id), request);
+			assertResponseOK(response);
+		}, folder.getId());
+		assertDifferentPubDirs(folder);
+	}
+
+	/**
+	 * Test adding a translation to a folder with the name translated to german, requesting the same publish dir segment
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAddTranslationWithSamePubDirSegment() throws NodeException {
+		masterNode = update(masterNode, upd -> {
+			upd.setPubDirSegment(true);
+		});
+
+		Folder folder = supply(() -> {
+			FolderCreateRequest request = new FolderCreateRequest();
+			request.setMotherId(Integer.toString(masterNode.getFolder().getId()));
+			request.setName("Generic Name");
+			request.setPublishDir("path");
+			FolderLoadResponse response = getFolderResource().create(request);
+			assertResponseOK(response);
+			return response.getFolder();
+		});
+		assertDifferentPubDirs(folder);
+
+		// add translation and let it fail on duplicates
+		consume(id -> {
+			FolderSaveRequest request = new FolderSaveRequest();
+			Folder update = new Folder();
+			update.setNameI18n(map("de", "Name auf Deutsch"));
+			update.setPublishDirI18n(map("de", "path"));
+			request.setFolder(update);
+			request.setFailOnDuplicate(true);
+			GenericResponse response = getFolderResource().save(Integer.toString(id), request);
+			assertResponse(response, ResponseCode.INVALIDDATA, "Error while saving folder " + id
+					+ ": Das Verzeichnissegment \"path\" wird bereits vom Ordner \"/Node name/Generic Name\" verwendet.",
+					new Message(Type.CRITICAL,
+							"Das Verzeichnissegment \"path\" wird bereits vom Ordner \"/Node name/Generic Name\" verwendet."));
+		}, folder.getId());
+		assertDifferentPubDirs(folder);
+
+		// add translation and let it make the pub dir segment unique
+		consume(id -> {
+			FolderSaveRequest request = new FolderSaveRequest();
+			Folder update = new Folder();
+			update.setNameI18n(map("de", "Name auf Deutsch"));
+			update.setPublishDirI18n(map("de", "path"));
+			request.setFolder(update);
+			request.setFailOnDuplicate(false);
+			GenericResponse response = getFolderResource().save(Integer.toString(id), request);
+			assertResponseOK(response);
+		}, folder.getId());
+		assertDifferentPubDirs(folder);
+	}
+
+	/**
+	 * Assert that the folder does have different pub_dirs for all existing languages
+	 * @param folder folder
+	 * @throws NodeException
+	 */
+	protected void assertDifferentPubDirs(Folder folder) throws NodeException {
+		// now render the pub_dir of the folder in all available languages and assert that the pub_dir's are all different
+		consume(id -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			com.gentics.contentnode.object.Folder nodeFolder = t.getObject(com.gentics.contentnode.object.Folder.class, id);
+			Set<String> languages = new HashSet<>();
+			languages.add(MeshPublisher.getMeshLanguage(nodeFolder));
+			languages.addAll(MeshPublisher.getAlternativeMeshLanguages(nodeFolder));
+
+			List<String> pubDirs = new ArrayList<>();
+			for (String lang : languages) {
+				try (RenderTypeTrx rTrx = RenderTypeTrx.publish(); ContentLanguageTrx langTrx = new ContentLanguageTrx(lang)) {
+					pubDirs.add(ObjectTransformer.getString(nodeFolder.get("pub_dir"), null));
+				}
+			}
+
+			Condition<String> notNull = new Condition<>(s -> s != null, "not null");
+			assertThat(pubDirs).as("Translated pub_dirs").are(notNull).doesNotHaveDuplicates();
 		}, folder.getId());
 	}
 }

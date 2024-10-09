@@ -240,6 +240,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/${id}`),
 
+        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct/list', null, options),
+
         hash: (id) => this.executeMappedJsonRequest(GET, `/constructs/${id}/hash`),
         getLinkedNodes: (id) => this.executeMappedJsonRequest(GET, `/construct/${id}/nodes`),
         linkToNode: (body) => this.executeMappedJsonRequest(POST, '/construct/link/nodes', body),
@@ -248,7 +250,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public constructCategory: GCMSConstrctCategoryAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/construct/category', null, options),
-        create: (body) => this.executeMappedJsonRequest(POST, '/construct', body),
+        create: (body) => this.executeMappedJsonRequest(POST, '/construct/category', body),
         get: (id) => this.executeMappedJsonRequest(GET, `/construct/category/${id}`),
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/category/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/category/${id}`),

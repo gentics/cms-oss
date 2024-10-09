@@ -305,14 +305,13 @@ public final class ClusterSupport {
 				@Override
 				public void memberRemoved(MembershipEvent membershipEvent) {
 					logger.info(String.format("Removed %s", membershipEvent.getMember().getUuid()));
-					if (isMaster(membershipEvent.getMember())) {
-						electMaster();
-					}
+					electMaster();
 				}
 
 				@Override
 				public void memberAdded(MembershipEvent membershipEvent) {
 					logger.info(String.format("Added %s", membershipEvent.getMember().getUuid()));
+					electMaster();
 				}
 			});
 			instance.getLifecycleService().addLifecycleListener(event -> {
@@ -359,6 +358,11 @@ public final class ClusterSupport {
 			Cluster cluster = instance.getCluster();
 
 			List<Member> members = new ArrayList<>(cluster.getMembers());
+
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format("Found members: %s",
+						members.stream().map(Member::getUuid).collect(Collectors.toList())));
+			}
 
 			// check whether current master is still found in the cluster
 			if (members.stream().filter(ClusterSupport::isMaster).findFirst().isPresent()) {

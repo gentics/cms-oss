@@ -1105,6 +1105,7 @@ describe('FormEditorMappingService', () => {
             label_i18n_ui: {
                 en: 'String',
             },
+            allow_rich_content: undefined,
             description_i18n_ui: undefined,
             required: undefined,
             validation: 'DATE',
@@ -1197,6 +1198,7 @@ describe('FormEditorMappingService', () => {
             label_i18n_ui: {
                 en: 'String',
             },
+            allow_rich_content: undefined,
             description_i18n_ui: undefined,
             required: undefined,
             validation: 'DATE',
@@ -1286,6 +1288,7 @@ describe('FormEditorMappingService', () => {
             label_i18n_ui: {
                 en: 'String',
             },
+            allow_rich_content: undefined,
             description_i18n_ui: undefined,
             required: undefined,
             validation: 'DATE',
@@ -1394,6 +1397,7 @@ describe('FormEditorMappingService', () => {
             label_i18n_ui: {
                 en: 'String',
             },
+            allow_rich_content: undefined,
             description_i18n_ui: undefined,
             required: undefined,
             validation: 'DATE',

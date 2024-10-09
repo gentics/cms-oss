@@ -1,11 +1,24 @@
-<gtx-input
-    [formControl]="i18nInput"
+<gtx-rich-content-editor
+    *ngIf="useRichEditor; else defaultInput"
+    [value]="value?.[language] || ''"
     [label]="label"
-    [type]="type"
-    [required]="requiredInCurrentLanguage && requiredInCurrentLanguage"
-    [class.untranslated]="!isTranslated"
-    (blur)="triggerTouch($event)"
-></gtx-input>
+    [disabled]="disabled"
+    (valueChange)="handleInputChange($event)"
+></gtx-rich-content-editor>
+
+<ng-template #defaultInput>
+    <gtx-input
+        [value]="value?.[language] || ''"
+        [label]="label"
+        [type]="type"
+        [required]="requiredInCurrentLanguage"
+        [class.untranslated]="!isTranslated"
+        [disabled]="disabled"
+        (valueChange)="handleInputChange($event)"
+        (blur)="triggerTouch()"
+    ></gtx-input>
+</ng-template>
+
 <div *ngIf="!isTranslated && requiredInCurrentLanguage" class="translation-suggestions">
     <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>
     <div class="translation-suggestions__values">

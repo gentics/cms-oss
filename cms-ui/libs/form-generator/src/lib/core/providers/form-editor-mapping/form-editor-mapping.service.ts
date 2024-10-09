@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core';
 import {
     CmsFormElement,
     CmsFormElementBO,
+    CmsFormElementPropertyDefault,
+    CmsFormElementPropertyString,
     CmsFormElementPropertyType,
     CmsFormElementPropertyUnsupported,
     CmsFormType,
@@ -10,14 +13,15 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
+import { cloneDeep } from 'lodash-es';
 import {
     FormEditorConfiguration,
     FormElementConfiguration,
+    FormElementPropertyConfigurationString,
     FormElementPropertyOptionConfiguration,
     FormElementPropertyTypeConfiguration,
     UNKNOWN_ELEMENT_TYPE,
 } from '../../../common/models/form-editor-configuration';
-import { cloneDeep } from 'lodash-es';
 
 @Injectable()
 export class FormEditorMappingService {
@@ -184,8 +188,8 @@ export class FormEditorMappingService {
                 mappedForm.data.mailsource_pageid = form.data.mailsource_pageid;
                 mappedForm.data.mailsource_nodeid = form.data.mailsource_nodeid;
                 mappedForm.data.mailtemp_i18n = form.data.mailtemp_i18n;
-                mappedForm.data.type = !!form.data.type ? form.data.type : CmsFormType.GENERIC;
-                mappedForm.data.templateContext = !!form.data.templateContext ? form.data.templateContext : '';
+                mappedForm.data.type = form.data.type ? form.data.type : CmsFormType.GENERIC;
+                mappedForm.data.templateContext = form.data.templateContext ? form.data.templateContext : '';
             }
             if (form.data && form.data.elements) {
                 mappedForm.data.elements = form.data.elements.map(element => this.mapFormElementToFormElementBO(
@@ -322,17 +326,25 @@ export class FormEditorMappingService {
                 case FormElementPropertyTypeConfiguration.BOOLEAN:
                 case FormElementPropertyTypeConfiguration.NUMBER:
                 case FormElementPropertyTypeConfiguration.STRING:
-                default:
-                    mappedFormElement.properties.push({
+                default: {
+                    const elem: CmsFormElementPropertyDefault = {
                         name: elementPropertyConfiguration.name,
-                        type: CmsFormElementPropertyType[elementPropertyConfiguration.type],
+                        type: CmsFormElementPropertyType[elementPropertyConfiguration.type] as any,
                         description_i18n_ui: elementPropertyConfiguration.description_i18n_ui,
                         label_i18n_ui: elementPropertyConfiguration.label_i18n_ui,
                         required: elementPropertyConfiguration.required,
                         validation: elementPropertyConfiguration.validator,
                         value_i18n: formElement[propertyValueName],
-                    });
+                    };
+
+                    if (elementPropertyConfiguration.type === FormElementPropertyTypeConfiguration.STRING) {
+                        (elem as CmsFormElementPropertyString).allow_rich_content
+                            = (elementPropertyConfiguration as FormElementPropertyConfigurationString).allow_rich_content;
+                    }
+
+                    mappedFormElement.properties.push(elem);
                     break;
+                }
             }
         }
 

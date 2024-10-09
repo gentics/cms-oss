@@ -16,8 +16,7 @@
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async)"
                 [language]="formEditorService.activeContentLanguageCode$ | async"
                 [availableLanguages]="formEditorService.formLanguages$ | async"
-            >
-            </gtx-i18n-checkbox>
+            >            </gtx-i18n-checkbox>
         </ng-container>
 
         <ng-container *ngSwitchCase="CmsFormElementPropertyType.NUMBER">
@@ -36,6 +35,7 @@
             <gtx-i18n-input
                 [attr.data-cy]="'string-input'"
                 [formControlName]="property.name"
+                [useRichEditor]="property.allow_rich_content ?? false"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [requiredInCurrentLanguage]="property.required"
                 [language]="formEditorService.activeContentLanguageCode$ | async"

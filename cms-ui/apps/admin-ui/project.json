@@ -10,10 +10,7 @@
             "executor": "@nx/angular:application",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": {
-                    "base": "dist/apps/admin-ui",
-                    "browser": "."
-                },
+                "outputPath": "dist/apps/admin-ui",
                 "index": "apps/admin-ui/src/index.html",
                 "browser": "apps/admin-ui/src/main.ts",
                 "polyfills": ["apps/admin-ui/src/polyfills.ts"],

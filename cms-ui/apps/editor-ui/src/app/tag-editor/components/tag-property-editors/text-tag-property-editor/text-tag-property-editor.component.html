@@ -10,7 +10,7 @@
             [readonly]="readOnly"
             [value]="tagProperty.stringValue"
             (blur)="onBlur()"
-            (change)="onChange($event)"
+            (valueChange)="onChange($event)"
         ></gtx-input>
 
         <gtx-textarea

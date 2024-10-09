@@ -150,7 +150,7 @@
                     <gtx-input
                         formControlName="publishDir"
                         [label]="'editor.node_properties_page_directory' | i18n"
-                        (change)="fileSystemDirChange($event)"
+                        (valueChange)="fileSystemDirChange($event)"
                         [gtxDisabled]="fileSystemDisabled || !form.controls.publishFsPages?.value"
                     ></gtx-input>
 
@@ -177,7 +177,7 @@
                     <gtx-input
                         formControlName="binaryPublishDir"
                         [label]="'editor.node_properties_binary_directory' | i18n"
-                        (change)="fileSystemDirChange($event)"
+                        (valueChange)="fileSystemDirChange($event)"
                         [gtxDisabled]="fileSystemDisabled || !form.controls?.publishFsFiles?.value"
                     ></gtx-input>
                 </div>

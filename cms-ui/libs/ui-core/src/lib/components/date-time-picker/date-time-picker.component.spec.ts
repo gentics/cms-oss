@@ -12,8 +12,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { timer as observableTimer } from 'rxjs';
-import { take, tap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { IModalInstance, IModalOptions } from '../../common/modal';
 import { IconDirective } from '../../directives/icon/icon.directive';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
@@ -153,14 +152,15 @@ describe('DateTimePickerComponent', () => {
 
     describe('input display:', () => {
 
-        function inputValue(fixture: ComponentFixture<TestComponent>): string {
+        async function inputValue(fixture: ComponentFixture<TestComponent>): Promise<string> {
             fixture.detectChanges();
+            await fixture.whenRenderingDone();
             return fixture.nativeElement.querySelector('input').value.trim();
         }
 
         it('contains an empty input if timestamp is not set',
-            componentTest(() => TestComponent, fixture => {
-                expect(inputValue(fixture)).toBe('');
+            componentTest(() => TestComponent, async fixture => {
+                expect(await inputValue(fixture)).toBe('');
             }),
         );
 
@@ -168,8 +168,8 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker value="1457971763" displayTime="false">
                 </gtx-date-time-picker>`,
-            fixture => {
-                expect(inputValue(fixture)).toBe('03/14/2016');
+            async fixture => {
+                expect(await inputValue(fixture)).toBe('03/14/2016');
             },
             ),
         );
@@ -178,8 +178,8 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}" displayTime="true">
                 </gtx-date-time-picker>`,
-            fixture => {
-                expect(inputValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
+            async fixture => {
+                expect(await inputValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
             },
             ),
         );
@@ -188,8 +188,8 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker [value]="testModel" displayTime="true">
                 </gtx-date-time-picker>`,
-            fixture => {
-                expect(inputValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
+            async fixture => {
+                expect(await inputValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
             },
             ),
         );
@@ -198,8 +198,8 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}" format="YY-MM-ddd">
                 </gtx-date-time-picker>`,
-            fixture => {
-                expect(inputValue(fixture)).toBe('16-03-Mon');
+            async fixture => {
+                expect(await inputValue(fixture)).toBe('16-03-Mon');
             },
             ),
         );
@@ -281,12 +281,13 @@ describe('DateTimePickerComponent', () => {
                     [(ngModel)]="testModel"
                     (change)="onChange($event)"
                 ></gtx-date-time-picker>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 fixture.detectChanges();
                 const clearButton = fixture.debugElement.query(By.css('gtx-button'));
                 clearButton.triggerEventHandler('click', document.createEvent('Event'));
                 tick();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
 
                 expect(instance.testModel).not.toBeNull();
                 expect(instance.onChange).not.toHaveBeenCalledWith(null);
@@ -395,7 +396,7 @@ describe('DateTimePickerComponent', () => {
                 <form [formGroup]="testForm">
                     <gtx-date-time-picker formControlName="test"></gtx-date-time-picker>
                 </form>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 fixture.detectChanges();
 
                 const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
@@ -403,6 +404,8 @@ describe('DateTimePickerComponent', () => {
 
                 instance.testForm.get('test')?.disable();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
+
                 expect(input.disabled).toBe(true);
             },
             ),
@@ -444,11 +447,12 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker [(ngModel)]="testModel">
                 </gtx-date-time-picker>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 const format = formatProvider.format = jasmine.createSpy('format').and.returnValue('formatted date');
                 fixture.detectChanges();
                 tick();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
 
                 const nativeInput = fixture.nativeElement.querySelector('input');
 
@@ -475,22 +479,24 @@ describe('DateTimePickerComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}">
                 </gtx-date-time-picker>`,
-            (fixture, instance) => {
-                // Change date format after 1 second
+            async (fixture, instance) => {
                 formatProvider.format = () => 'date in first format';
-                formatProvider.changed$ = observableTimer(1000).pipe(
-                    take(1),
-                    tap(() => { formatProvider.format = () => 'date in second format'; }),
-                );
+                const sub = new Subject<void>();
+                formatProvider.changed$ = sub.asObservable();
 
                 fixture.detectChanges();
                 tick();
+                await fixture.whenRenderingDone();
 
                 const nativeInput = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.value).toBe('date in first format');
 
-                tick(1000);
+                formatProvider.format = () => 'date in second format';
+                sub.next();
+                tick();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
+
                 expect(nativeInput.value).toBe('date in second format');
             },
             ),

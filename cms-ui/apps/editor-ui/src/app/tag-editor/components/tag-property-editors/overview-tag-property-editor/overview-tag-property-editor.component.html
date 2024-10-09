@@ -76,7 +76,7 @@
                     [pattern]="'^[0-9]+$'"
                     [readonly]="context.readOnly"
                     [(ngModel)]="tagProperty.overview.maxItems"
-                    (change)="onMaxItemsChange($event)"
+                    (valueChange)="onMaxItemsChange($event)"
                 ></gtx-input>
             </div>
 

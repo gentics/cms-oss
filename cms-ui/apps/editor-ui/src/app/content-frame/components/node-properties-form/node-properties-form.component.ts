@@ -14,10 +14,9 @@ import {
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { EditableNodeProps } from '@editor-ui/app/common/models';
 import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { FormProperties } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { Folder, NODE_HOSTNAME_PROPERTY_PREFIX, Node, NodeHostnameType, Raw } from '@gentics/cms-models';
-import { createPropertyPatternValidator } from '@gentics/ui-core';
+import { FormProperties, createPropertyPatternValidator } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';

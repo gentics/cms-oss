@@ -25,8 +25,10 @@ describe('SearchBarComponent', () => {
     }));
 
     it('binds the value of its native input the the "query" property',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, async fixture => {
             fixture.detectChanges();
+            await fixture.whenRenderingDone();
+
             const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
             expect(input.value).toBe('foo');
         }),
@@ -35,8 +37,9 @@ describe('SearchBarComponent', () => {
     it('defaults to an empty search string if no query is set',
         componentTest(() => TestComponent, `
             <gtx-search-bar></gtx-search-bar>`,
-        fixture => {
+        async fixture => {
             fixture.detectChanges();
+            await fixture.whenRenderingDone();
             const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
             expect(input.value).toBe('');
         },
@@ -146,12 +149,13 @@ describe('SearchBarComponent', () => {
             const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
             testInstance.onChange = jasmine.createSpy('onChange');
 
+            input.value = 'test 123';
             const event = document.createEvent('Event');
             event.initEvent('input', true, true);
             input.dispatchEvent(event);
             tick();
 
-            expect(testInstance.onChange).toHaveBeenCalledWith('foo');
+            expect(testInstance.onChange).toHaveBeenCalledWith('test 123');
         }),
     );
 
@@ -176,11 +180,13 @@ describe('SearchBarComponent', () => {
                 [ngModel]="subject | async"
                 (ngModelChange)="subject.next($event)">
             </gtx-search-bar>`,
-        (fixture, testInstance) => {
+        async (fixture, testInstance) => {
             testInstance.subject.next('A');
             fixture.detectChanges();
             tick();
             fixture.detectChanges();
+            await fixture.whenRenderingDone();
+
             const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
             expect(input.value).toBe('A');

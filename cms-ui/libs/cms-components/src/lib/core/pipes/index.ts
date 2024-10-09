@@ -6,3 +6,4 @@ export * from './i18n-date';
 export * from './i18n-relative-date';
 export * from './safe';
 export * from './values/values.pipe';
+export * from './strip-rich-content/strip-rich-content.pipe';

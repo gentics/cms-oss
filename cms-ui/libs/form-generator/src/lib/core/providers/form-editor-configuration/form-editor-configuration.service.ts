@@ -14,6 +14,7 @@ import {
     FormElementPropertyConfigurationRepositoryBrowser,
     FormElementPropertyConfigurationSelect,
     FormElementPropertyConfigurationSelectableOptions,
+    FormElementPropertyConfigurationString,
     FormElementPropertyDefaultKeyI18nValuePair,
     FormElementPropertyOptionConfiguration,
     FormElementPropertyTypeConfiguration,
@@ -122,6 +123,7 @@ export class FormEditorConfigurationService {
                             prunedAdminMailOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                         } else {
                             throw new Error('Form editor configuration contains invalid option value '
+                                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                                 + `'${option.value_i18n_ui}' for form property name 'admin mail options'.`);
                         }
                     } else {
@@ -144,6 +146,7 @@ export class FormEditorConfigurationService {
                             prunedTemplateContextOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                         } else {
                             throw new Error('Form editor configuration contains invalid option value '
+                             // eslint-disable-next-line @typescript-eslint/no-base-to-string
                              + `'${option.value_i18n_ui}' for form property name 'template context options'.`);
                         }
                     } else {
@@ -283,6 +286,7 @@ export class FormEditorConfigurationService {
                                 prunedOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                             } else {
                                 throw new Error('Form editor configuration contains invalid option value '
+                                    // eslint-disable-next-line @typescript-eslint/no-base-to-string
                                     + `'${option.value_i18n_ui}' for property name '${formElementPropertyConfiguration.name}' `
                                     + `in element type '${elementType}'.`);
                             }
@@ -348,6 +352,7 @@ export class FormEditorConfigurationService {
                                         .push({ key: keyValuePair.key, value_i18n: keyValuePair.value_i18n });
                                 } else {
                                     throw new Error('Form editor configuration contains invalid property default value '
+                                        // eslint-disable-next-line @typescript-eslint/no-base-to-string
                                         + `'${keyValuePair.value_i18n}' for property name '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                                 }
                             } else {
@@ -405,6 +410,19 @@ export class FormEditorConfigurationService {
                     } else {
                         throw new Error('Form editor configuration contains invalid property default value '
                             + `'${formElementPropertyConfiguration.default_value_i18n}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
+                    }
+                }
+
+                if (prunedFormElementPropertyConfigurationType === FormElementPropertyTypeConfiguration.STRING) {
+                    if (formElementPropertyConfiguration.allow_rich_content != null) {
+                        if (typeof formElementPropertyConfiguration.allow_rich_content === 'boolean') {
+                            (
+                                prunedFormElementPropertyConfigurationDefault as FormElementPropertyConfigurationString
+                            ).allow_rich_content = formElementPropertyConfiguration.allow_rich_content;
+                        } else {
+                            throw new Error('Form editor configuration contains invalid property allow rich content '
+                                + `'${formElementPropertyConfiguration.allow_rich_content}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
+                        }
                     }
                 }
 

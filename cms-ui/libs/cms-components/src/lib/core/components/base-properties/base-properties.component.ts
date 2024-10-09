@@ -5,6 +5,8 @@ import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
+const INITIAL_UNSET_VALUE = Symbol('initial-unset-value');
+
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
@@ -52,8 +54,19 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     @Input()
     public pureInitialValue = false;
 
+    /**
+     * When the value changes and therefore warants an update to the `initialValue` to be applied.
+     * This event typically only emits `false`, as the marking of `true` should be done in the parent.
+     */
     @Output()
     public initialValueChange = new EventEmitter<boolean>();
+
+    /**
+     * Forwards an submit event of the form (if used), which can be used to determine if a user attempts
+     * to save the current state of the properties.
+     */
+    @Output()
+    public submit = new EventEmitter<void>();
 
     /**
      * The form which should be used in the component template for all form interactions.
@@ -75,7 +88,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         super(changeDetector);
         this.booleanInputs.push(['initialValue', false]);
         // Set the value to this flag. Used to ignore changes until intial value has been provided.
-        this.value = null;
+        this.value = INITIAL_UNSET_VALUE as any;
     }
 
     public ngOnInit(): void {
@@ -103,7 +116,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected initializeForm(): void {
         this.form = this.createForm();
-        this.configureForm(this.value);
+        this.configureForm(this.form.value as T);
         this.form.markAsPristine();
 
         // For some reason, changes from `configureForm` are only really applied,
@@ -131,8 +144,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             ),
             this.form.statusChanges,
         ]).pipe(
-            // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled),
+            // Do not emit values if the value hasn't been initialized yet
+            filter(() => (this.value as any) !== INITIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),
@@ -237,5 +250,15 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.initialValue = value;
         }
         this.initialValueChange.emit(value);
+    }
+
+    /**
+     * Trigger a submit to the parent, to potentially trigger a save of this state.
+     */
+    public triggerSubmit(): void {
+        // Only allow submitting if this component in it self is valid.
+        if (this.form && this.form.valid) {
+            this.submit.emit();
+        }
     }
 }

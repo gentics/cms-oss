@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { SerializableRepositoryBrowserOptions } from '@gentics/cms-models';
 
 /**
@@ -38,10 +39,15 @@ interface FormElementPropertyConfigurationBase {
 
 export interface FormElementPropertyConfigurationDefault extends FormElementPropertyConfigurationBase {
     type: FormElementPropertyTypeConfiguration.BOOLEAN
-        | FormElementPropertyTypeConfiguration.NUMBER
-        | FormElementPropertyTypeConfiguration.STRING;
+    | FormElementPropertyTypeConfiguration.NUMBER
+    | FormElementPropertyTypeConfiguration.STRING;
     validator?: FormElementPropertyValidatorConfiguration;
     default_value_i18n?: FormElementPropertyDefaultI18nValue<string | number | boolean | null>;
+}
+
+export interface FormElementPropertyConfigurationString extends FormElementPropertyConfigurationDefault {
+    type: FormElementPropertyTypeConfiguration.STRING;
+    allow_rich_content?: boolean;
 }
 
 export interface FormElementPropertyConfigurationSelect extends FormElementPropertyConfigurationBase {
@@ -67,6 +73,7 @@ export interface FormElementPropertyConfigurationRepositoryBrowser extends FormE
 
 export type FormElementPropertyConfiguration
     = FormElementPropertyConfigurationDefault
+    | FormElementPropertyConfigurationString
     | FormElementPropertyConfigurationSelect
     | FormElementPropertyConfigurationSelectableOptions
     | FormElementPropertyConfigurationRepositoryBrowser;

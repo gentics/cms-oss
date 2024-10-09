@@ -4,6 +4,8 @@ import {
     ChangeDetectorRef,
     Component,
     EventEmitter,
+    Input,
+    OnChanges,
     OnDestroy,
     OnInit,
     Output,
@@ -22,7 +24,8 @@ import {
 } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Subscription, combineLatest, merge, of } from 'rxjs';
+import { ChangesOf } from '@gentics/ui-core';
+import { BehaviorSubject, Subscription, combineLatest, merge, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
@@ -82,10 +85,16 @@ function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): stri
     styleUrls: ['./page-editor-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PageEditorControlsComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 
     public readonly TAB_ID_CONSTRUCTS = TAB_ID_CONSTRUCTS;
     public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
+
+    @Input()
+    public nodeId: number;
+
+    @Input()
+    public pageId: number;
 
     @Output()
     public brokenLinkCountChange = new EventEmitter<number>();
@@ -115,6 +124,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
     public brokenLinkElements: HTMLElement[] = [];
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
 
+    protected constructReload = new BehaviorSubject<void>(null);
     protected subscriptions: Subscription[] = [];
     protected currentMenus: MobileMenu[] = [];
 
@@ -130,7 +140,12 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(combineLatest([
-            this.client.construct.list(),
+            this.constructReload.asObservable().pipe(
+                switchMap(() => this.client.construct.listForEditor({
+                    nodeId: this.nodeId,
+                    pageId: this.pageId,
+                })),
+            ),
             this.aloha.activeEditable$.pipe(
                 tap(editable => {
                     this.editable = editable;
@@ -140,7 +155,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
             this.aloha.settings$,
         ]).pipe(
             map(([res, activeEditable, settings]) => {
-                const raw = res.items;
+                const raw = res.constructs || [];
 
                 // No element selected, nothing to do
                 if (activeEditable?.obj?.[0] == null) {
@@ -303,6 +318,12 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
             this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
             this.brokenLinkCountChange.emit(this.brokenLinkElements.length);
         }));
+    }
+
+    public ngOnChanges(changes: ChangesOf<this>): void {
+        if (!changes.nodeId.firstChange || !changes.pageId.firstChange) {
+            this.constructReload.next();
+        }
     }
 
     public ngAfterViewInit(): void {

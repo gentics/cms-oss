@@ -239,6 +239,8 @@
     <gtx-page-editor-controls
         *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT"
         class="page-editor-controls"
+        [nodeId]="currentNode.id"
+        [pageId]="currentItem.id"
         (brokenLinkCountChange)="updateBrokenLinkCount($event)"
     ></gtx-page-editor-controls>
 

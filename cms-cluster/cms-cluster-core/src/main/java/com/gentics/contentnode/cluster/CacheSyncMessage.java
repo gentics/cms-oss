@@ -90,4 +90,11 @@ public class CacheSyncMessage implements Serializable {
 			type.execute(this);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return String.format("CacheSyncMessage type: %s%s%s", type.name(),
+				clazz != null ? String.format(", class: %s", clazz.getName()) : "",
+				id != null ? String.format(", id: %s", id) : "");
+	}
 }

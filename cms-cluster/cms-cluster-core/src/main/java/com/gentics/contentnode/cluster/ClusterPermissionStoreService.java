@@ -1,5 +1,7 @@
 package com.gentics.contentnode.cluster;
 
+import java.util.function.Supplier;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.perm.PermissionStoreService;
 import com.hazelcast.core.HazelcastInstance;
@@ -26,66 +28,54 @@ public class ClusterPermissionStoreService implements PermissionStoreService {
 
 	@Override
 	public void refreshGroup(int groupId) throws NodeException {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.refreshGroup).setGroupId(groupId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.refreshGroup).setGroupId(groupId));
 	}
 
 	@Override
 	public void refreshObject(int objType, int objId) throws NodeException {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.refreshObject).setObjectType(objType).setObjectId(objId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.refreshObject).setObjectType(objType).setObjectId(objId));
 	}
 
 	@Override
 	public void refreshRole(int roleId) throws NodeException {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.refreshRole).setRoleId(roleId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.refreshRole).setRoleId(roleId));
 	}
 
 	@Override
 	public void removeGroup(int groupId) throws NodeException {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.removeGroup).setGroupId(groupId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.removeGroup).setGroupId(groupId));
 	}
 
 	@Override
 	public void removeObject(int objType, int objId) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.removeObject).setObjectType(objType).setObjectId(objId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.removeObject).setObjectType(objType).setObjectId(objId));
 	}
 
 	@Override
 	public void removeRole(int roleId) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null) {
-			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.removeRole).setRoleId(roleId));
-		}
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.removeRole).setRoleId(roleId));
 	}
 
 	/**
 	 * Reinitialize the permission stores in the cluster
 	 */
 	public static void init() {
+		publishMessage(() -> new PermSyncMessage().setType(PermSyncMessageType.init));
+	}
+
+	/**
+	 * Publish the message supplied by the given message supplier
+	 * @param msgSupplier message supplier
+	 */
+	protected static void publishMessage(Supplier<PermSyncMessage> msgSupplier) {
 		HazelcastInstance instance = ClusterSupport.get();
 		if (instance != null) {
 			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
-			topic.publish(new PermSyncMessage().setType(PermSyncMessageType.init));
+			PermSyncMessage msg = msgSupplier.get();
+			topic.publish(msg);
+			if (ClusterSupport.logger.isDebugEnabled()) {
+				ClusterSupport.logger.debug(String.format("Published %s", msg));
+			}
 		}
 	}
 

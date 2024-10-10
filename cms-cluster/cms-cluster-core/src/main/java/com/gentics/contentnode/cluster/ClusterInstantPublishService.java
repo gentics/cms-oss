@@ -1,5 +1,7 @@
 package com.gentics.contentnode.cluster;
 
+import java.util.function.Supplier;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.NodeObject;
@@ -34,6 +36,9 @@ public class ClusterInstantPublishService implements InstantPublishService {
 							PublishController.instantPublished(object);
 						}
 					}
+					if (ClusterSupport.logger.isDebugEnabled()) {
+						ClusterSupport.logger.debug(String.format("Handled %s", syncMsg));
+					}
 				});
 			} catch (NodeException e) {
 				ClusterSupport.logger.error("Error while handling instant publish sync message", e);
@@ -48,13 +53,7 @@ public class ClusterInstantPublishService implements InstantPublishService {
 	 */
 	@Override
 	public void succeeded(int objType, int objId) {
-		if (!ClusterSupport.isMaster()) {
-			HazelcastInstance instance = ClusterSupport.get();
-			if (instance != null) {
-				ITopic<InstantPublishSyncMessage> topic = instance.getTopic(INSTANT_PUBLISH_SYNC_TOPIC);
-				topic.publish(new InstantPublishSyncMessage().setFailed(false).setObjectType(objType).setObjectId(objId));
-			}
-		}
+		publishMessage(() -> new InstantPublishSyncMessage().setFailed(false).setObjectType(objType).setObjectId(objId));
 	}
 
 	/**
@@ -64,11 +63,23 @@ public class ClusterInstantPublishService implements InstantPublishService {
 	 */
 	@Override
 	public void failed(int objType, int objId) {
+		publishMessage(() -> new InstantPublishSyncMessage().setFailed(true).setObjectType(objType).setObjectId(objId));
+	}
+
+	/**
+	 * If allowed, publish the message supplied by the given message supplier
+	 * @param msgSupplier message supplier
+	 */
+	protected void publishMessage(Supplier<InstantPublishSyncMessage> msgSupplier) {
 		if (!ClusterSupport.isMaster()) {
 			HazelcastInstance instance = ClusterSupport.get();
 			if (instance != null) {
 				ITopic<InstantPublishSyncMessage> topic = instance.getTopic(INSTANT_PUBLISH_SYNC_TOPIC);
-				topic.publish(new InstantPublishSyncMessage().setFailed(true).setObjectType(objType).setObjectId(objId));
+				InstantPublishSyncMessage msg = msgSupplier.get();
+				topic.publish(msg);
+				if (ClusterSupport.logger.isDebugEnabled()) {
+					ClusterSupport.logger.debug(String.format("Published %s", msg));
+				}
 			}
 		}
 	}

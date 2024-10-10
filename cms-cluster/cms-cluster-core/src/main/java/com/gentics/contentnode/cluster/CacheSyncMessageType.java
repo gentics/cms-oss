@@ -63,6 +63,9 @@ public enum CacheSyncMessageType {
 	void execute(CacheSyncMessage msg) {
 		try {
 			handler.accept(msg);
+			if (ClusterSupport.logger.isDebugEnabled()) {
+				ClusterSupport.logger.debug(String.format("Handled %s", msg));
+			}
 		} catch (NodeException e) {
 			ClusterSupport.logger.error(String.format("Error while handling cache sync message %s", msg), e);
 		}

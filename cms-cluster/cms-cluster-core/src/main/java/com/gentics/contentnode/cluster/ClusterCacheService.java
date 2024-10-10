@@ -1,5 +1,7 @@
 package com.gentics.contentnode.cluster;
 
+import java.util.function.Supplier;
+
 import com.gentics.contentnode.cache.CacheService;
 import com.gentics.contentnode.distributed.DistributionSync;
 import com.gentics.contentnode.object.NodeObject;
@@ -34,37 +36,37 @@ public class ClusterCacheService implements CacheService {
 
 	@Override
 	public void clear() {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.clearall));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearall));
 	}
 
 	@Override
 	public void clear(Class<? extends NodeObject> clazz) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.cleartype).setClazz(clazz));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.cleartype).setClazz(clazz));
 	}
 
 	@Override
 	public void clear(Class<? extends NodeObject> clazz, Integer id) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.clearobject).setClazz(clazz).setId(id));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearobject).setClazz(clazz).setId(id));
 	}
 
 	@Override
 	public void dirt(Class<? extends NodeObject> clazz, Integer id) {
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.dirt).setClazz(clazz).setId(id));
+	}
+
+	/**
+	 * If allowed, publish the message which is supplied by the given message supplier
+	 * @param msgSupplier message supplier
+	 */
+	protected void publishMessage(Supplier<CacheSyncMessage> msgSupplier) {
 		HazelcastInstance instance = ClusterSupport.get();
 		if (instance != null && sync.allow()) {
 			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.dirt).setClazz(clazz).setId(id));
+			CacheSyncMessage msg = msgSupplier.get();
+			cacheSyncTopic.publish(msg);
+			if (ClusterSupport.logger.isDebugEnabled()) {
+				ClusterSupport.logger.debug(String.format("Published %s", msg));
+			}
 		}
 	}
 

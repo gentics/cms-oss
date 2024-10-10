@@ -65,6 +65,9 @@ public enum PermSyncMessageType {
 		try (Trx trx = new Trx()) {
 			handler.accept(msg);
 			trx.success();
+			if (ClusterSupport.logger.isDebugEnabled()) {
+				ClusterSupport.logger.debug(String.format("Handled %s", msg));
+			}
 		} catch (NodeException e) {
 			ClusterSupport.logger.error(String.format("Error while handling perm sync message %s", msg), e);
 		}

@@ -52,7 +52,7 @@ public final class ClusterSupport {
 	/**
 	 * Request master message listener
 	 */
-	private static MessageListener<Void> REQUEST_MASTER_LISTENER = msg -> {
+	private static MessageListener<String> REQUEST_MASTER_LISTENER = msg -> {
 		// we just need to store the uuid of the member, that published the request
 		currentMasterUuid = msg.getPublishingMember().getUuid();
 	};
@@ -180,8 +180,8 @@ public final class ClusterSupport {
 
 		HazelcastInstance instance = ClusterSupport.get();
 		if (instance != null) {
-			ITopic<Void> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
-			requestMasterTopic.publish(null);
+			ITopic<String> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
+			requestMasterTopic.publish("");
 		}
 	}
 
@@ -339,7 +339,7 @@ public final class ClusterSupport {
 				}
 			});
 
-			ITopic<Void> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
+			ITopic<String> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
 			requestMasterTopic.addMessageListener(REQUEST_MASTER_LISTENER);
 
 			ClusterCacheService.addMessageListeners();

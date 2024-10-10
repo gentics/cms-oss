@@ -136,4 +136,23 @@ public class PermSyncMessage implements Serializable {
 			type.execute(this);
 		}
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(String.format("PermSyncMessage type: %s", type));
+		if (groupId != 0) {
+			builder.append(String.format(", groupId: %d", groupId));
+		}
+		if (roleId != 0) {
+			builder.append(String.format(", roleId: %d", roleId));
+		}
+		if (objectType != 0) {
+			builder.append(String.format(", objectType: %d", objectType));
+		}
+		if (objectId != 0) {
+			builder.append(String.format(", objectId: %d", objectId));
+		}
+		return builder.toString();
+	}
 }

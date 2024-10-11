@@ -2,7 +2,9 @@ package com.gentics.contentnode.publish.cr;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.object.File;
@@ -92,6 +94,17 @@ public class MeshURLRenderer implements TagmapEntryRenderer {
 	@Override
 	public boolean canSkip() {
 		return true;
+	}
+
+	@Override
+	public boolean skip(Set<String> attributes) {
+		if (objType == File.TYPE_FILE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("name")) {
+			return false;
+		}
+		if (objType == Page.TYPE_PAGE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("filename")) {
+			return false;
+		}
+		return TagmapEntryRenderer.super.skip(attributes);
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import static com.gentics.contentnode.devtools.Synchronizer.logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -166,4 +167,29 @@ public interface TagmapEntryRenderer {
 	 * @return true iff the tagmap entry may be skipped
 	 */
 	boolean canSkip();
+
+	/**
+	 * Determine, whether the renderer can be skipped for the given set of modified attributes.
+	 * The default implementation returns true, when all of these apply:
+	 * <ol>
+	 * <li>{@link #canSkip()} returns true</li>
+	 * <li>attributes is not empty or null</li>
+	 * <li>attributes does not contain the mapname of the renderer</li>
+	 * </ol>
+	 * @param attributes set of attributes
+	 * @return true iff it can be skipped, false if not
+	 */
+	default boolean skip(Set<String> attributes) {
+		// renderer cannot be skipped or no attributes given => do not skip
+		if (!canSkip() || ObjectTransformer.isEmpty(attributes)) {
+			return false;
+		}
+
+		// mapname of entry is listed in attributes => do not skip
+		if (attributes.contains(getMapname())) {
+			return false;
+		}
+
+		return true;
+	}
 }

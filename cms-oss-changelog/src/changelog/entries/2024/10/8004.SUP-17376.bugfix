@@ -1,0 +1,4 @@
+When publishing files to a Mesh ContentRepository while not using publish directory segments and the
+filename of a file was modified in the CMS, the field gtx_url in Mesh (containing the files URL) was not
+always properly changed.
+This has been fixed.

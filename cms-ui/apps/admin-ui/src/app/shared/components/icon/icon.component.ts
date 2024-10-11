@@ -1,6 +1,6 @@
-import { ChangesOf } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 import { GcmsPermission } from '@gentics/cms-models';
+import { ChangesOf } from '@gentics/ui-core';
 
 const PERM_PREFIX = 'perm.';
 

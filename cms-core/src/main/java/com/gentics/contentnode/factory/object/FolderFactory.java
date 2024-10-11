@@ -3418,6 +3418,13 @@ public class FolderFactory extends AbstractFactory {
 							try {
 								folder.setPublishDir(UniquifyHelper.makeUnique(folder, folder.pubDir, PUB_DIR_FUNCTION,
 										objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+
+								// make the translated publish directories unique among each other
+								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.getOwningNode().getLanguages(), folder.publishDirI18n,
+										folder.pubDir, Optional.ofNullable(orgFolder).map(Folder::getPublishDirI18n), SeparatorType.underscore,
+										Folder.MAX_PUB_DIR_LENGTH));
+
+								// and then make them unique with all other
 								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder, folder.publishDirI18n,
 										PUB_DIR_FUNCTION, objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
 							} finally {
@@ -7581,12 +7588,25 @@ public class FolderFactory extends AbstractFactory {
 		conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, folder.getPublishDir(), PUB_DIR_FUNCTION, objectIds);
 		if (conflictingObject != null) {
 			return Pair.of(folder.getPublishDir(), conflictingObject);
-	}
+		}
 
 		for (String i18nPubDir : folder.getPublishDirI18n().values()) {
 			conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds);
 			if (conflictingObject != null) {
 				return Pair.of(i18nPubDir, conflictingObject);
+			}
+		}
+
+		// finally check for uniqueness of the (translated) pubdirs of the folder itself
+		if (!folder.getPublishDirI18n().isEmpty()) {
+			Set<String> checked = new HashSet<>();
+			checked.add(folder.getPublishDir());
+
+			for (String i18nPubDir : folder.getPublishDirI18n().values()) {
+				if (checked.contains(i18nPubDir)) {
+					return Pair.of(i18nPubDir, folder);
+				}
+				checked.add(i18nPubDir);
 			}
 		}
 

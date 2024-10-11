@@ -411,6 +411,8 @@ export interface AbstractConstructAPI extends BasicAPI {
     update: (id: number | string, body: ConstructUpdateRequest) => ConstructUpdateResponse;
     delete: (id: number | string) => void;
 
+    listForEditor: (options?: ConstructListOptions) => ConstructListResponse,
+
     hash: (id: number | string) => ImplementationHashResponse;
     getLinkedNodes: (id: number | string) => ConstructLinkedNodesResponse;
     linkToNode: (body: ConstructNodeLinkRequest) => ConstructNodeLinkResponse;

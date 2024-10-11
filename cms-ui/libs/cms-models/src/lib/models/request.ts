@@ -1903,7 +1903,15 @@ export type RolePermissionsUpdateRequest = RolePermissions;
 /**
  * Query parameters for `/construct/list`
  */
-export type ConstructListOptions = BaseListOptionsWithPaging<TagType>;
+export type ConstructListOptions = BaseListOptionsWithSkipCount & {
+    category?: number;
+    changable?: boolean;
+    nodeId?: number;
+    pageId?: number;
+    partTypeId?: number | number[];
+    search?: string;
+    sortby?: 'category' | 'description' | 'keyword' | 'name';
+};
 
 /**
  * Request used for saving a `TagType`.

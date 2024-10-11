@@ -2261,7 +2261,7 @@ public class CnMapPublisher {
 			// properties
 			for (TagmapEntryRenderer entry : tagmapEntries) {
 				// omit writing attribute, if not dirted
-				if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+				if (entry.skip(attributes)) {
 					// preserve dependencies on omitted attribute
 					renderType.preserveDependencies(entry.getMapname());
 					continue;

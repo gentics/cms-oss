@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { Feature, Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
 
 export interface MultiDeleteResult {
     delete: InheritableItem[];
@@ -73,6 +73,14 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
             }
         });
 
+        this.updateDeleteCount();
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    updateDeleteCount(): void {
         if (this.itemType === 'page') {
             this.deleteCount = this.flattenMap(this.selectedPageLanguageVariants).length;
         } else if (this.itemType === 'form') {
@@ -80,10 +88,6 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
         } else {
             this.deleteCount = this.otherItems.length + this.localizedItems.length;
         }
-    }
-
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     confirm(): void {
@@ -118,11 +122,13 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
     onPageLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
         if (!checkLocalizations || !this.appState.now.features[Feature.MULTICHANNELLING]) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             return;
         }
         const uncheckedIds = this.getUncheckedLocalizationIds(variantIds);
         if (uncheckedIds.length < 1) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             return;
         }
 
@@ -131,12 +137,14 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
         ).subscribe(newMap => {
             Object.assign(this.itemLocalizations, newMap);
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             this.changeDetector.markForCheck();
         }));
     }
 
     onFormLanguageSelectionChange(itemId: number, languageCodes: string[]): void {
         this.selectedFormLanguageVariants[itemId] = languageCodes;
+        this.updateDeleteCount();
     }
 
     /**
@@ -153,8 +161,7 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
         const selectedVariants = this.selectedPageLanguageVariants[itemId];
 
         if (Array.isArray(selectedVariants) && selectedVariants.length > 0) {
-            const allLocalizations = selectedVariants.map(itemId => this.itemLocalizations[itemId]);
-            return this.flattenArray(allLocalizations);
+            return selectedVariants.flatMap(itemId => this.itemLocalizations[itemId]);
         } else {
             return [];
         }
@@ -170,14 +177,7 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
      * Given a map of { id: T[] }, flattens it into an array of T.
      */
     private flattenMap<T>(hashMap: { [id: number]: T[] }): T[] {
-        return Object.keys(hashMap).reduce((all, id) => all.concat(hashMap[+id]), []);
-    }
-
-    /**
-     * Flattens a 2d array into a simple array.
-     */
-    private flattenArray<T>(arr: T[][]): T[] {
-        return arr.reduce((flattened, current) => flattened.concat(current), []);
+        return Object.values(hashMap).flatMap(elements => elements);
     }
 
     private getUncheckedLocalizationIds(itemIds: number[]): number[] {

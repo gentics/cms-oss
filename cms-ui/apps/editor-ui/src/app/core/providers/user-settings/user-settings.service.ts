@@ -329,8 +329,8 @@ export class UserSettingsService {
         this.set('lastNodeId', nodeId);
     }
 
-    saveFavourites(favourites: Favourite[]): void {
-        this.set('favourites', favourites);
+    async saveFavourites(favourites: Favourite[]): Promise<void> {
+        await this.set('favourites', favourites);
     }
 
     private dispatchAndSaveChange(key: string, value: any): void {

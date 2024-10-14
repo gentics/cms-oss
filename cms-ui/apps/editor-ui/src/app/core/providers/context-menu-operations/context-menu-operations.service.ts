@@ -6,6 +6,7 @@ import {
     ChannelDependenciesModal,
     InheritanceDialog,
     LinkTemplateModal,
+    MultiDeleteResult,
     PageVersionsModal,
     PublishTimeManagedPagesModal,
     SynchronizeChannelModal,
@@ -240,7 +241,16 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     async deleteItems(type: FolderItemType, items: Item[], activeNodeId: number): Promise<number[]> {
         // If multiple items are to be deleted, some of them may be inherited or localized.
         // In that case, open a modal to give feedback to the user.
-        const selectResult = await this.decisionModals.selectItemsToDelete(items as InheritableItem[]);
+        let selectResult: MultiDeleteResult;
+        try {
+            selectResult = await this.decisionModals.selectItemsToDelete(items as InheritableItem[]);
+        } catch (err) {
+            // Ignore user close errors
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+            return;
+        }
 
         let deleteResult: { succeeded: number, failed: number, error: ApiError } | null = null;
         let updateResult: { succeeded: number, failed: number, error: ApiError } | null = null;

@@ -43,7 +43,7 @@ import { DecisionModalsService } from '../decision-modals/decision-modals.servic
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { FavouritesService } from '../favourites/favourites.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
+import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
 import { I18nService } from '../i18n/i18n.service';
 import { InstructionActions, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
@@ -508,7 +508,7 @@ describe('ContextMenuOperationsService', () => {
                 spyOn(folderActions, 'refreshList').and.returnValue(undefined);
             });
 
-            it('will not trigger any deletions or updates, if no forms are selected', fakeAsync(() => {
+            it('will not trigger any deletions or updates, if no forms are selected', async () => {
                 const type: FolderItemType = 'form';
                 const items: Form[] = [
                     { name: 'Some Form 1', type: 'form', id: ITEM_ID + 1, languages: ['en', 'de'], data: cloneDeep(basicFormData) } as Form,
@@ -525,18 +525,14 @@ describe('ContextMenuOperationsService', () => {
                 }));
 
                 const expectedResult: number[] = [];
-                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then(result => {
-                    expect(wastebinActions.moveItemsToWastebin).not.toHaveBeenCalled();
-                    expect(folderActions.updateItem).not.toHaveBeenCalled();
-                    expect(result).toEqual(expectedResult);
-                });
+                const result = await contextMenuOperationsService.deleteItems(type, items, activeNodeId);
 
-                tick();
-                flush();
-                discardPeriodicTasks();
-            }));
+                expect(wastebinActionsMoveItemsToWastebinSpy).not.toHaveBeenCalled();
+                expect(folderActionsUpdateItemSpy).not.toHaveBeenCalled();
+                expect(result).toEqual(expectedResult);
+            });
 
-            it('will only trigger updates, if not all languages of a form are deleted', fakeAsync(() => {
+            it('will only trigger updates, if not all languages of a form are deleted', async () => {
                 const type: FolderItemType = 'form';
                 const items: Form[] = [
                     { name: 'Some Form 1', type: 'form', id: ITEM_ID + 1, languages: ['en', 'de'], data: cloneDeep(basicFormData) } as Form,
@@ -553,23 +549,17 @@ describe('ContextMenuOperationsService', () => {
                 }));
 
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 3];
-                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    expect(removedItemIds).toEqual(expectedResult);
-                });
+                const removedItemIds = await contextMenuOperationsService.deleteItems(type, items, activeNodeId);
 
-                tick();
-                flush();
+                expect(removedItemIds).toEqual(expectedResult);
+                expect(wastebinActionsMoveItemsToWastebinSpy).not.toHaveBeenCalled();
 
-                expect(wastebinActions.moveItemsToWastebin).not.toHaveBeenCalled();
-
-                expect(folderActions.updateItem).toHaveBeenCalledTimes(2);
+                expect(folderActionsUpdateItemSpy).toHaveBeenCalledTimes(2);
                 expect(folderActionsUpdateItemSpy.calls.allArgs()[0]).toEqual([type, ITEM_ID + 1, { data: basicFormDataWithoutDe, languages: ['en'] }]);
                 expect(folderActionsUpdateItemSpy.calls.allArgs()[1]).toEqual([type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] }]);
+            });
 
-                discardPeriodicTasks();
-            }));
-
-            it('will only trigger deletions, if all languages of a form are deleted', fakeAsync(() => {
+            it('will only trigger deletions, if all languages of a form are deleted', async () => {
                 const type: FolderItemType = 'form';
                 const items: Form[] = [
                     { name: 'Some Form 1', type: 'form', id: ITEM_ID + 1, languages: ['en', 'de'], data: cloneDeep(basicFormData) } as Form,
@@ -586,22 +576,16 @@ describe('ContextMenuOperationsService', () => {
                 }));
 
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3];
-                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    expect(removedItemIds).toEqual(expectedResult);
-                });
+                const removedItemIds = await contextMenuOperationsService.deleteItems(type, items, activeNodeId);
 
-                tick();
-                flush();
+                expect(removedItemIds).toEqual(expectedResult);
+                expect(wastebinActionsMoveItemsToWastebinSpy).toHaveBeenCalledTimes(1);
+                expect(wastebinActionsMoveItemsToWastebinSpy).toHaveBeenCalledWith(type, [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3], ACTIVE_NODE_ID, true);
 
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3], ACTIVE_NODE_ID, true);
+                expect(folderActionsUpdateItemSpy).not.toHaveBeenCalled();
+            });
 
-                expect(folderActions.updateItem).not.toHaveBeenCalled();
-
-                discardPeriodicTasks();
-            }));
-
-            it('will trigger updates for forms where not all languages are deleted and deletions where all languages are deleted', fakeAsync(() => {
+            it('will trigger updates for forms where not all languages are deleted and deletions where all languages are deleted', async () => {
                 const type: FolderItemType = 'form';
                 const items: Form[] = [
                     { name: 'Some Form 1', type: 'form', id: ITEM_ID + 1, languages: ['en', 'de'], data: cloneDeep(basicFormData) } as Form,
@@ -618,21 +602,15 @@ describe('ContextMenuOperationsService', () => {
                 }));
 
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 3];
-                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    expect(removedItemIds).toEqual(expectedResult);
-                });
+                const removedItemIds = await contextMenuOperationsService.deleteItems(type, items, activeNodeId);
 
-                tick();
-                flush();
+                expect(removedItemIds).toEqual(expectedResult);
+                expect(wastebinActionsMoveItemsToWastebinSpy).toHaveBeenCalledTimes(1);
+                expect(wastebinActionsMoveItemsToWastebinSpy).toHaveBeenCalledWith(type, [ITEM_ID + 1], ACTIVE_NODE_ID, false);
 
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
-                expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1], ACTIVE_NODE_ID, false);
-
-                expect(folderActions.updateItem).toHaveBeenCalledTimes(1);
-                expect(folderActions.updateItem).toHaveBeenCalledWith(type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] });
-
-                discardPeriodicTasks();
-            }));
+                expect(folderActionsUpdateItemSpy).toHaveBeenCalledTimes(1);
+                expect(folderActionsUpdateItemSpy).toHaveBeenCalledWith(type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] });
+            });
         });
     });
 
@@ -679,7 +657,11 @@ class MockFolderActions implements Partial<FolderActionsService> {
     }
 }
 
-class MockI18nNotification { }
+class MockI18nNotification implements Partial<I18nNotification> {
+    show(options: TranslatedNotificationOptions): { dismiss: () => void; } {
+        return { dismiss: () => {} };
+    }
+}
 
 class MockPermissionService implements Partial<PermissionService> {
     wastebin$ = of(false);

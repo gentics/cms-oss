@@ -4,10 +4,12 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
+    Output,
     QueryList,
     SimpleChange,
     ViewChild,
@@ -153,6 +155,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     @Input()
     nodeId: number;
+
+    @Output()
+    public itemChange = new EventEmitter<ItemWithObjectTags | Form | Node>();
 
     pointObjProp: any;
     position: string;
@@ -426,6 +431,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ...changes,
         } as any;
         this.item$.next(this.item as any);
+        this.itemChange.emit(this.item);
     }
 
     onTabChange(newTabId: string, readOnly: boolean = false): void {
@@ -545,6 +551,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
             this.item = updatedItem;
             this.item$.next(this.item);
+            this.itemChange.emit(this.item);
             this.contentTagSelection = [];
             this.changeDetector.markForCheck();
         } catch (err) {
@@ -592,6 +599,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ).then(updatedItem => {
                 this.item = updatedItem;
                 this.item$.next(this.item);
+                this.itemChange.emit(this.item);
                 this.contentTagSelection = [];
                 this.changeDetector.markForCheck();
             }));
@@ -789,6 +797,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             )
                 .then(updatedItems => {
                     this.item = updatedItems.find(item => item.id === this.item.id);
+                    this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
                 });
         }
@@ -802,6 +811,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         )
             .then(updatedItem => {
                 this.item = updatedItem;
+                this.itemChange.emit(this.item);
                 this.changeDetector.markForCheck();
             });
     }
@@ -827,6 +837,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             .then(updatedItem => {
                 this.item = updatedItem;
                 this.item$.next(updatedItem);
+                this.itemChange.emit(this.item);
                 this.changeDetector.markForCheck();
             });
     }
@@ -951,6 +962,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ... (this.item as any).tags,
             [this.editedObjectProperty.name]: this.editedObjectProperty,
         }
+
+        this.itemChange.emit(this.item);
     }
 
     private checkIfReadOnly(objProp: ObjectTag): boolean {

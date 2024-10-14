@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Type } from '@angular/core';
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, discardPeriodicTasks, fakeAsync, flush, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
@@ -69,6 +69,7 @@ describe('ContextMenuOperationsService', () => {
     let templateActions: MockTemplateActions;
 
     let linkTemplate: LinkTemplateService;
+    let entityResolver: EntityResolver;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -100,18 +101,24 @@ describe('ContextMenuOperationsService', () => {
         contextMenuOperationsService = TestBed.inject(ContextMenuOperationsService);
 
         // Mocked ones
-        decisionModalsService = TestBed.get(DecisionModalsService);
-        errorHandler = TestBed.get(ErrorHandler);
-        folderActions = TestBed.get(FolderActionsService);
-        modalService = TestBed.get(ModalService);
-        navigationService = TestBed.get(NavigationService);
-        wastebinActions = TestBed.get(WastebinActionsService);
-        usageActions = TestBed.get(UsageActionsService);
-        repositoryBrowserClient = TestBed.get(RepositoryBrowserClient);
-        templateActions = TestBed.get(TemplateActionsService);
+        decisionModalsService = TestBed.inject(DecisionModalsService);
+        errorHandler = TestBed.inject(ErrorHandler);
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        modalService = TestBed.inject(ModalService);
+        navigationService = TestBed.inject(NavigationService) as any;
+        wastebinActions = TestBed.inject(WastebinActionsService);
+        usageActions = TestBed.inject(UsageActionsService) as any;
+        repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient);
+        templateActions = TestBed.inject(TemplateActionsService);
+        entityResolver = TestBed.inject(EntityResolver);
 
         linkTemplate = new MockLinkTemplateService() as any as LinkTemplateService;
     });
+
+    afterEach(() => {
+        entityResolver.ngOnDestroy();
+        contextMenuOperationsService.ngOnDestroy();
+    })
 
     describe('localizing', () => {
         let activeNodeId: number;
@@ -510,7 +517,6 @@ describe('ContextMenuOperationsService', () => {
                 ];
                 const activeNodeId: number = ACTIVE_NODE_ID;
 
-
                 spyOn(decisionModalsService, 'selectItemsToDelete').and.returnValue(Promise.resolve({
                     delete: items,
                     deleteForms: { [ITEM_ID + 1]: [], [ITEM_ID + 2]: [], [ITEM_ID + 3]: [] },
@@ -518,17 +524,16 @@ describe('ContextMenuOperationsService', () => {
                     unlocalize: [],
                 }));
 
-                let result: number[];
                 const expectedResult: number[] = [];
-                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    result = removedItemIds;
+                contextMenuOperationsService.deleteItems(type, items, activeNodeId).then(result => {
+                    expect(wastebinActions.moveItemsToWastebin).not.toHaveBeenCalled();
+                    expect(folderActions.updateItem).not.toHaveBeenCalled();
+                    expect(result).toEqual(expectedResult);
                 });
 
                 tick();
-
-                expect(wastebinActions.moveItemsToWastebin).not.toHaveBeenCalled();
-                expect(folderActions.updateItem).not.toHaveBeenCalled();
-                expect(result).toEqual(expectedResult);
+                flush();
+                discardPeriodicTasks();
             }));
 
             it('will only trigger updates, if not all languages of a form are deleted', fakeAsync(() => {
@@ -540,7 +545,6 @@ describe('ContextMenuOperationsService', () => {
                 ];
                 const activeNodeId: number = ACTIVE_NODE_ID;
 
-
                 spyOn(decisionModalsService, 'selectItemsToDelete').and.returnValue(Promise.resolve({
                     delete: items,
                     deleteForms: { [ITEM_ID + 1]: ['de'], [ITEM_ID + 2]: [], [ITEM_ID + 3]: ['en'] },
@@ -548,13 +552,13 @@ describe('ContextMenuOperationsService', () => {
                     unlocalize: [],
                 }));
 
-                let result: number[];
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 3];
                 contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    result = removedItemIds;
+                    expect(removedItemIds).toEqual(expectedResult);
                 });
 
                 tick();
+                flush();
 
                 expect(wastebinActions.moveItemsToWastebin).not.toHaveBeenCalled();
 
@@ -562,7 +566,7 @@ describe('ContextMenuOperationsService', () => {
                 expect(folderActionsUpdateItemSpy.calls.allArgs()[0]).toEqual([type, ITEM_ID + 1, { data: basicFormDataWithoutDe, languages: ['en'] }]);
                 expect(folderActionsUpdateItemSpy.calls.allArgs()[1]).toEqual([type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] }]);
 
-                expect(result).toEqual(expectedResult);
+                discardPeriodicTasks();
             }));
 
             it('will only trigger deletions, if all languages of a form are deleted', fakeAsync(() => {
@@ -574,7 +578,6 @@ describe('ContextMenuOperationsService', () => {
                 ];
                 const activeNodeId: number = ACTIVE_NODE_ID;
 
-
                 spyOn(decisionModalsService, 'selectItemsToDelete').and.returnValue(Promise.resolve({
                     delete: items,
                     deleteForms: { [ITEM_ID + 1]: ['en', 'de'], [ITEM_ID + 2]: ['en'], [ITEM_ID + 3]: ['en', 'de'] },
@@ -582,20 +585,20 @@ describe('ContextMenuOperationsService', () => {
                     unlocalize: [],
                 }));
 
-                let result: number[];
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3];
                 contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    result = removedItemIds;
+                    expect(removedItemIds).toEqual(expectedResult);
                 });
 
                 tick();
+                flush();
 
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1, ITEM_ID + 2, ITEM_ID + 3], ACTIVE_NODE_ID, true);
 
                 expect(folderActions.updateItem).not.toHaveBeenCalled();
 
-                expect(result).toEqual(expectedResult);
+                discardPeriodicTasks();
             }));
 
             it('will trigger updates for forms where not all languages are deleted and deletions where all languages are deleted', fakeAsync(() => {
@@ -607,7 +610,6 @@ describe('ContextMenuOperationsService', () => {
                 ];
                 const activeNodeId: number = ACTIVE_NODE_ID;
 
-
                 spyOn(decisionModalsService, 'selectItemsToDelete').and.returnValue(Promise.resolve({
                     delete: items,
                     deleteForms: { [ITEM_ID + 1]: ['en', 'de'], [ITEM_ID + 2]: [], [ITEM_ID + 3]: ['en'] },
@@ -615,13 +617,13 @@ describe('ContextMenuOperationsService', () => {
                     unlocalize: [],
                 }));
 
-                let result: number[];
                 const expectedResult: number[] = [ITEM_ID + 1, ITEM_ID + 3];
                 contextMenuOperationsService.deleteItems(type, items, activeNodeId).then((removedItemIds) => {
-                    result = removedItemIds;
+                    expect(removedItemIds).toEqual(expectedResult);
                 });
 
                 tick();
+                flush();
 
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledTimes(1);
                 expect(wastebinActions.moveItemsToWastebin).toHaveBeenCalledWith(type, [ITEM_ID + 1], ACTIVE_NODE_ID, false);
@@ -629,8 +631,7 @@ describe('ContextMenuOperationsService', () => {
                 expect(folderActions.updateItem).toHaveBeenCalledTimes(1);
                 expect(folderActions.updateItem).toHaveBeenCalledWith(type, ITEM_ID + 3, { data: basicFormDataWithoutEn, languages: ['de'] });
 
-                expect(result).toEqual(expectedResult);
-
+                discardPeriodicTasks();
             }));
         });
     });
@@ -680,7 +681,9 @@ class MockFolderActions implements Partial<FolderActionsService> {
 
 class MockI18nNotification { }
 
-class MockPermissionService { }
+class MockPermissionService implements Partial<PermissionService> {
+    wastebin$ = of(false);
+}
 
 class MockWastebinActions implements Partial<WastebinActionsService> {
     moveItemsToWastebin(

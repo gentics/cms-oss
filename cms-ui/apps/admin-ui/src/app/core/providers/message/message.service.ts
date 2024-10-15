@@ -14,10 +14,10 @@ import { Injectable } from '@angular/core';
 import {
     AccessControlledType,
     GcmsPermission,
-    MessageFromServer,
-    MessageListResponse,
+    MessageFromServer
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { NotificationService } from '@gentics/ui-core';
 import {
     forkJoin,
     NEVER,
@@ -27,9 +27,8 @@ import {
     timer,
 } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
-import { NotificationService } from '@gentics/ui-core';
-import { PermissionsService } from '../permissions/permissions.service';
 import { I18nService } from '../i18n';
+import { PermissionsService } from '../permissions/permissions.service';
 
 const DEFAULT_DELAY = 2;
 const DEFAULT_INTERVAL = 30;
@@ -124,10 +123,10 @@ export class MessageService extends ServiceBase {
     fetchAllMessages(): Promise<boolean> {
         this.appState.dispatch(new FetchAllMessageStart());
 
-        return forkJoin<MessageListResponse>(
+        return forkJoin([
             this.api.messages.getMessages(false),
             this.api.messages.getMessages(true),
-        )
+        ])
             .toPromise()
             .then(
                 (responses) => {

@@ -25,12 +25,12 @@
 		</fileSet>
 
         <fileSet>
-            <directory>${basedir}/dist/apps/admin-ui</directory>
-            <outputDirectory>/admin</outputDirectory>
-            <includes>
-                <include>3rdpartylicenses.txt</include>
-            </includes>
-        </fileSet>
+			<directory>${basedir}/dist/apps/admin-ui</directory>
+			<outputDirectory>/admin</outputDirectory>
+			<includes>
+				<include>3rdpartylicenses.txt</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 
     <files>

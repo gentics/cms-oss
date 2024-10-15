@@ -410,6 +410,11 @@ export interface CmsFormElementPropertyDefault extends CmsFormElementPropertyBas
     value_i18n?: CmsFormElementI18nValue<string | number | boolean | null>;
 }
 
+export interface CmsFormElementPropertyString extends CmsFormElementPropertyDefault {
+    type: CmsFormElementPropertyType.STRING;
+    allow_rich_content?: boolean;
+}
+
 export interface CmsFormElementPropertySelect extends CmsFormElementPropertyBase {
     type: CmsFormElementPropertyType.SELECT;
     options: CmsFormElementPropertyOption[];
@@ -442,6 +447,7 @@ export interface FormElementLabelPropertyI18nValues {
 
 export type CmsFormElementProperty
     = CmsFormElementPropertyDefault
+    | CmsFormElementPropertyString
     | CmsFormElementPropertySelect
     | CmsFormElementPropertySelectableOptions
     | CmsFormElementPropertyRepositoryBrowser

@@ -45,9 +45,13 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.translate.CharSequenceTranslator;
+import org.apache.commons.text.translate.EntityArrays;
+import org.apache.commons.text.translate.LookupTranslator;
 import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -3190,14 +3194,14 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public String render(Form form, String language) throws NodeException {
-		String data = renderFormTextUrls(form.getData(language).toString(), language);
+		JsonNode data = renderFormTextUrls(form.getData(language), language);
 		String projectName = getMeshProjectName(form.getOwningNode());
 		String uuid = getMeshUuid(form);
 
 		RestModel dataAsModel = new RestModel() {
 			@Override
 			public String toJson(boolean minify) {
-				return data;
+				return data.toString();
 			}
 		};
 
@@ -3207,67 +3211,143 @@ public class MeshPublisher implements AutoCloseable {
 				}).blockingGet().getHtml();
 	}
 
-	public static final String renderFormTextUrls(String form, String language) throws NodeException {
+	/**
+	 * Render URLS in text fields of the given form.
+	 * 
+	 * @param form
+	 * @param language
+	 * @return
+	 * @throws NodeException
+	 */
+	public static final JsonNode renderFormTextUrls(JsonNode form, String language) throws NodeException {
 		if (form == null) {
-			// TODO check allow_links if possible
 			return form;
+		}
+		for (Iterator<Entry<String, JsonNode>> i = form.fields(); i.hasNext();) {
+			Entry<String, JsonNode> entry = i.next(); 
+			if (entry.getValue() == null) {
+				continue;
+			}
+			switch (entry.getValue().getNodeType()) {
+			case STRING:
+				String newValue = renderFormTextUrls(entry.getValue().asText(), language);
+				((ObjectNode)form).put(entry.getKey(), newValue);
+				break;
+			case OBJECT:
+				JsonNode newNode = renderFormTextUrls(entry.getValue(), language);
+				((ObjectNode)form).replace(entry.getKey(), newNode);
+				break;
+			case ARRAY:
+				ArrayNode anode = ((ArrayNode)entry.getValue());
+				for (int ii = 0; ii < anode.size(); ii++) {
+					anode.set(ii, renderFormTextUrls(anode.get(ii), language));
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		return form;
+	}
+
+	/**
+	 * Render URLS in text, if any.
+	 * 
+	 * @param text
+	 * @param language
+	 * @return
+	 * @throws NodeException
+	 */
+	public static final String renderFormTextUrls(String text, String language) throws NodeException {
+		if (text == null) {
+			// TODO check allow_links if possible
+			return text;
 		}
 		String linkPattern = "\\{\\{"
 				+ "[\\s]*(LINK)[\\s]*"
 				+ "[|]"
-				+ "[\\s]*(?<type>(PAGE|FILE))"
-				+ "[:]"
-				+ "(?<nodeId>[a-zA-Z0-9\\-]+)"
-				+ "[:]"
-				+ "(?<pageId>[a-zA-Z0-9\\-]+)"
-				+ "([:](?<langCode>[a-zA-Z]{2}))?"
-				+ "[\\s]*[|][\\s]*"
+				+ "[\\s]*(?<linkType>(PAGE|FILE|URL))"
+				+ "[:]("
+					+ "?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)"
+					+ "(?<nodeId>[a-zA-Z0-9\\-\\.]+)"
+					+ "[:]"
+					+ "(?<itemId>[a-zA-Z0-9\\-\\.]+)"
+					+ "(?:[:](?<langCode>[a-zA-Z]{2}))?"
+				+ ")[\\s]*[|][\\s]*"
 				+ "(?<displayText>[^|]*)"
-				+ "([\\s]*[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
+				+ "[\\s]*(?:[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
 				+ "\\}\\}";
 		Pattern pattern = Pattern.compile(linkPattern);
-		Matcher matcher = pattern.matcher(form);
+		Matcher matcher = pattern.matcher(text);
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Deque<String> matches = new ArrayDeque<>(1);
 			Transaction t = trx.getTransaction();
 			while (matcher.find()) {
-				String ltype = matcher.group("type");
+				String linkType = matcher.group("linkType");
 				String nodeId = matcher.group("nodeId");
-				String pageId = matcher.group("pageId");
+				String itemId = matcher.group("itemId");
 				String displayText = matcher.group("displayText");
+				Optional<String> maybeUrl = Optional.ofNullable(matcher.group("url"));
 				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
 				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
 				Node channelOrNode = t.getObject(Node.class, nodeId);
-				Disinheritable<?> renderedObject;
-				if ("FILE".equals(ltype)) {
-					renderedObject = t.getObject(File.class, pageId);
-					if (renderedObject == null) {
-						renderedObject = t.getObject(ImageFile.class, pageId);
+				Optional<Disinheritable<?>> maybeRenderedObject = Optional.empty();
+				if ("FILE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(File.class, itemId));
+					if (maybeRenderedObject.isEmpty()) {
+						maybeRenderedObject = Optional.ofNullable(t.getObject(ImageFile.class, itemId));
 					}
-				} else {
-					renderedObject = t.getObject(Page.class, pageId);
+				} else if ("PAGE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
 					if (maybeLangCode.isPresent()) {
-						Page localizedObject = ((Page)renderedObject).getLanguageVariant(maybeLangCode.get(), channelOrNode.getId());
-						if (localizedObject != null) {
-							renderedObject = localizedObject;
-						} else {
-							logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), renderedObject));
+						try {
+							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
+								try {
+									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
+								} catch (NodeException e) {
+									throw new IllegalStateException(e);
+								}
+							});
+							if (maybeLocPage.isPresent()) {
+								maybeRenderedObject = maybeLocPage;
+							} else {
+								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
+							}
+						} catch (Throwable e) {
+							if (e.getCause() instanceof NodeException) {
+								throw (NodeException) e.getCause();
+							} else {
+								throw e;
+							}
 						}
 					}
+				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
+					throw new NodeException("No URL provided for " + matcher.toString());
 				}
-				if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
-						&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
-					// TODO more meaningful error / logging
-					throw new NodeException("Wrong node / channel for " + matcher.toString());
+				String url;
+				if ("URL".equals(linkType)) {
+					url = maybeUrl.get();
+				} else {
+					Disinheritable<?> renderedObject = maybeRenderedObject.get();
+					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
+							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
+						// TODO more meaningful error / logging
+						throw new NodeException("Wrong node / channel for " + matcher.toString());
+					}
+					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
 				}
-				matches.addLast(String.format("<a href='%s' %s>%s</a>", MeshURLRenderer.renderDisinheritableUrl(renderedObject), maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), displayText));
+				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
+						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
+						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), 
+						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(displayText))
+					));
 			}
 			String link;
 			while ((link = matches.poll()) != null) {
-				form = form.replaceFirst(linkPattern, link);
+				text = text.replaceFirst(linkPattern, link);
 			}
 		}
-		return form;
+		return text;
 	}
 
 	/**
@@ -5462,6 +5542,46 @@ public class MeshPublisher implements AutoCloseable {
 				client.updateTagsForBranch(currentProjectName, branch.getUuid(), request).toSingle()
 						.retry(RETRY_HANDLER).blockingGet();
 			}
+		}
+	}
+
+	/**
+	 * Character escape utils, mimic StringEscapeUtils of apache commons-text.
+	 */
+	public static final class UrlEscapeUtils {
+		static final Map<CharSequence, CharSequence> URL_ESCAPE;
+		static final Map<CharSequence, CharSequence> URL_UNESCAPE;
+		static final CharSequenceTranslator ESCAPE_URL;
+		static final CharSequenceTranslator UNESCAPE_URL;
+
+		static {
+			final Map<CharSequence, CharSequence> initialMap = new HashMap<>();
+			initialMap.put("\"", "&quot;");
+			initialMap.put("&", "&amp;"); 
+			initialMap.put("<", "&lt;");
+			initialMap.put(">", "&gt;"); 
+			initialMap.put("|", "&vert;");
+			initialMap.put("'", "&apos;"); 
+			initialMap.put("$", "&dollar;");
+			initialMap.put(":", "&col;"); 
+			initialMap.put("(", "&lpar;");
+			initialMap.put(")", "&rpar;"); 
+			initialMap.put("{", "&lcurb;");
+			initialMap.put("}", "&rcurb;"); 
+			initialMap.put("=", "&equals;");
+			initialMap.put("\\", "&bsol;"); 
+			URL_ESCAPE = Collections.unmodifiableMap(initialMap);
+			URL_UNESCAPE = Collections.unmodifiableMap(EntityArrays.invert(URL_ESCAPE));
+			ESCAPE_URL = new LookupTranslator(URL_ESCAPE);
+			UNESCAPE_URL = new LookupTranslator(URL_UNESCAPE);
+		}
+
+		public static final String escapeUrl(final String input) {
+			return ESCAPE_URL.translate(input);
+		}
+
+		public static final String unescapeUrl(final String input) {
+			return UNESCAPE_URL.translate(input);
 		}
 	}
 }

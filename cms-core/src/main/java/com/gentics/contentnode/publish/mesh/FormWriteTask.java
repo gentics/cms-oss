@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.object.Form;
@@ -111,9 +115,16 @@ class FormWriteTask extends AbstractWriteTask {
 	 * @throws NodeException 
 	 */
 	protected Completable publish(String data, String language) throws NodeException {
-		String renderedData = MeshPublisher.renderFormTextUrls(data, language);
+		ObjectMapper objectMapper = new ObjectMapper();
+		JsonNode form;
+		try {
+			form = objectMapper.readTree(data);
+		} catch (Exception e) {
+			throw new NodeException(e);
+		}
+		JsonNode renderedData = MeshPublisher.renderFormTextUrls(form, language);
 		return publisher.client.post(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), uuid),
-				new JsonObject(renderedData)).toCompletable().doOnSubscribe(disp -> {
+				new JsonObject(renderedData.toString())).toCompletable().doOnSubscribe(disp -> {
 					MeshPublisher.logger
 							.debug(String.format("Saving form %s, language %s, json: %s", uuid, language, renderedData));
 				}).doOnComplete(() -> {

@@ -75,6 +75,8 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
             acc[prop.name] = new TagValidatorImpl(prop.construct);
             return acc;
         }, {});
+
+        this.validateItem(this.file);
     }
 
     ngOnDestroy(): void {
@@ -99,6 +101,8 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
          * Needs at the very least the changes from GPU-1561 (6.2) to even get access to these outside of the editors.
          */
         this.propertiesValid = !!element.name;
+
+        this.changeDetector.markForCheck();
     }
 
     async saveAndClose(): Promise<void> {

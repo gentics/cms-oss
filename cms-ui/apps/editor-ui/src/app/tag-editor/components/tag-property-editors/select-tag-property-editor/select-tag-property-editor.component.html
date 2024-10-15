@@ -3,7 +3,7 @@
         <gtx-select
             *ngIf="tagPart.type === 'SELECT'"
             [label]="tagPart | tagPropLabel"
-            clearable
+            [clearable]="!tagPart?.mandatory"
             [required]="tagPart?.mandatory"
             [disabled]="readOnly"
             [(ngModel)]="selectedSingleOptionId"
@@ -19,9 +19,10 @@
             *ngIf="tagPart.type === 'MULTISELECT'"
             [label]="tagPart | tagPropLabel"
             [required]="tagPart?.mandatory"
+            [clearable]="!tagPart?.mandatory"
             [disabled]="readOnly"
+            [multiple]="true"
             [(ngModel)]="selectedMultipleOptionsIds"
-            multiple="true"
             (valueChange)="onMultipleSelectChange($event)"
         >
             <gtx-option

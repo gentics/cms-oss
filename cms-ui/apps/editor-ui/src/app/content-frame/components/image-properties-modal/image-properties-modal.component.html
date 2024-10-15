@@ -23,7 +23,7 @@
 
     <gtx-button
         type="primary"
-        [disabled]="!objPropValid"
+        [disabled]="!objPropValid || !propertiesValid"
         (click)="saveAndClose()"
     >{{ 'modal.save_changes' | i18n }}</gtx-button>
 </div>

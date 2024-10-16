@@ -65,6 +65,9 @@ export interface ObjectTag extends Tag {
     /** The name of the category, to which the object property belongs. */
     categoryName?: string;
 
+    /** The id of the category, to which the object property belongs. */
+    categoryId?: number;
+
     /** Used for sorting the object properties of a container item. */
     sortOrder: number;
 

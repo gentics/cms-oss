@@ -3,7 +3,6 @@
 @mixin is-active {
     border-left: 2px solid $gtx-tabs-active-border-color;
     border-right: 1px solid white;
-    margin-right: -1px;
 }
 
 @mixin inline-ellipsis-text {
@@ -78,7 +77,7 @@
                 cursor: pointer;
                 // text-transform: uppercase;
                 color: $gtx-color-dark-gray;
-                transition: border-left 0.3s, color 0.2s;
+                transition: 200ms;
                 border-right: 1px solid $gtx-color-light-gray;
                 vertical-align: middle;
                 position: relative;
@@ -182,6 +181,7 @@
                         width: 16px;
                         height: 16px;
                         font-size: 16px;
+                        transition: 200ms linear;
                     }
 
                     .tab-label {
@@ -192,8 +192,12 @@
                 .collapsible-body {
                     display: block;
                     visibility: hidden;
+                    max-height: 0;
                     opacity: 0;
-                    transition: visibility 0s ease 0.15s, opacity 0.10s ease-out 0.05s, max-height 0.15s ease-out;
+                    transition:
+                        visibility 0s ease 0.15s,
+                        opacity 0.10s ease-out 0.05s,
+                        max-height 0.15s ease-out;
                     padding: 0;
                     border: none;
                     z-index: 0;
@@ -242,10 +246,18 @@
                 }
 
                 &.expanded {
+                    .collapsible-header .header-icon {
+                        transform: rotateZ(90deg);
+                    }
+
                     .collapsible-body {
                         visibility: visible;
                         opacity: 1;
-                        transition: visibility 0s, opacity 0.15s ease-in 0.10s, max-height 0.25s ease-in;
+                        max-height: 100vh;
+                        transition:
+                            visibility 0s,
+                            opacity 0.15s ease-in 0.10s,
+                            max-height 0.25s ease-in;
                     }
                 }
             }

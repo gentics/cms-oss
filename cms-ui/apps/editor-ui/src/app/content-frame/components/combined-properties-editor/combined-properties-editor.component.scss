@@ -145,24 +145,25 @@ hr {
                 > li.tab-link,
                 li.tab-group div {
                     text-transform: none;
+                    transition: 300ms;
                 }
 
                 > li.tab-link:not(.is-active) {
-                    border-left: 1px solid $gtx-color-light-gray;
-                    border-right: 1px solid $gtx-color-light-gray;
+                    border-left-color: $gtx-color-light-gray;
+                    border-right-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group:not(.is-active) {
                     padding-left: 1px;
-                    border-left: 1px solid $gtx-color-light-gray;
+                    border-left-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group li.tab-link:not(.is-active), .collapsible-header {
-                    border-right: 1px solid $gtx-color-light-gray;
+                    border-right-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group li.tab-link.is-active {
-                    border-right: 2px solid white;
+                    border-right-color: white;
                     border-left-color: $gtx-color-warning;
                 }
             }

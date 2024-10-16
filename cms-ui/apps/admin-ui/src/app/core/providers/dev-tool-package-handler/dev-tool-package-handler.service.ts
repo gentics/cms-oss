@@ -117,7 +117,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         data: EntityUpdateRequestModel<EditableEntity.DEV_TOOL_PACKAGE>,
         params?: EntityUpdateRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.DEV_TOOL_PACKAGE>> {
-        return of(null as never);
+        return of(null);
     }
 
     /**
@@ -128,7 +128,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         data: EntityUpdateRequestModel<EditableEntity.DEV_TOOL_PACKAGE>,
         params?: EntityUpdateRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.DEV_TOOL_PACKAGE]> {
-        return of(null as never);
+        return of(null);
     }
 
     delete(id: string): Observable<void> {
@@ -451,7 +451,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
      * Poll the check result
      */
     pollCheckResultUntilResultIsAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
-        const pollStop = new Subject();
+        const pollStop = new Subject<void>();
 
         return interval(10000).pipe(
             startWith(0),

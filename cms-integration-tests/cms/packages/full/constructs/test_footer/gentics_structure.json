@@ -1,0 +1,62 @@
+{
+  "globalId" : "3821.45da0ed4-3244-11ef-872a-0242ac110002",
+  "keyword" : "test_footer",
+  "name" : {
+    "de" : "[Test] Footer",
+    "en" : "[Test] Footer"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "9d1e.d8d053c5-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : " ",
+    "regexId" : 0
+  }, {
+    "globalId" : "9d1e.d8d0c167-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

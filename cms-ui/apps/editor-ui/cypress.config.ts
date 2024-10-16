@@ -8,4 +8,5 @@ export default defineConfig({
         indexHtmlFile: './cypress/support/component-index.html',
     },
     ...createComponentReporterOptions('apps', 'editor-ui', false),
+    video: false,
 });

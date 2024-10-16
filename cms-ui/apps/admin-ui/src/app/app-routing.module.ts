@@ -1,6 +1,6 @@
 import { PermissionsGuard } from '@admin-ui/core/guards/permissions/permissions.guard';
 import { NgModule, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ROUTE_DETAIL_OUTLET } from './common';
 import {

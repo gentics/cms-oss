@@ -5,10 +5,10 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { KeycloakService } from '@gentics/cms-components';
 import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
-import { KeycloakService } from '../../providers/keycloak/keycloak.service';
 
 @Component({
     selector: 'gtx-single-sign-on',

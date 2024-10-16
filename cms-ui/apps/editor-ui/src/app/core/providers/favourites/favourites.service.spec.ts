@@ -1,10 +1,9 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { Favourite, FavouriteWithDisplayDetails, Starrable } from '@gentics/cms-models';
+import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
-import { LocalStorageProvider } from '../local-storage/local-storage.service';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 import { FavouritesService } from './favourites.service';
 
@@ -16,20 +15,21 @@ describe('FavouritesService', () => {
     let exampleStarrable: Omit<Favourite, 'nodeId'>;
 
     beforeEach(() => {
-        userSettings = new MockUserSettingsService();
-
         TestBed.configureTestingModule({
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: UserSettingsService, useClass: MockUserSettingsService },
+                EntityResolver,
+                FavouritesService,
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+
+        userSettings = TestBed.inject(UserSettingsService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
+        service = TestBed.inject(FavouritesService);
 
         state.mockState({ auth: { currentUserId: 123 } });
-
-        const entityResolver = new EntityResolver(state);
-        service = new FavouritesService(userSettings as any as UserSettingsService, state, entityResolver);
 
         exampleStarrable = { type: 'folder', id: 17, globalId: 'some-folder-id', name: 'Folder 17' };
     });
@@ -90,16 +90,16 @@ describe('FavouritesService', () => {
 
     describe('add()', () => {
 
-        it('updates the app state via favourites.add', () => {
-            service.add([exampleStarrable], { nodeId: 7 });
+        it('updates the app state via favourites.add', async () => {
+            await service.add([exampleStarrable], { nodeId: 7 });
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 7 } as any]);
         });
 
-        it('calls favourites.add regardless of the input', () => {
-            service.add([exampleStarrable], { nodeId: 7 });
-            service.add([exampleStarrable], { nodeId: 7 });
-            service.add([]);
-            service.add([]);
+        it('calls favourites.add regardless of the input', async () => {
+            await service.add([exampleStarrable], { nodeId: 7 });
+            await service.add([exampleStarrable], { nodeId: 7 });
+            await service.add([]);
+            await service.add([]);
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 7 } as any]);
         });
 
@@ -107,17 +107,18 @@ describe('FavouritesService', () => {
             expect(() => service.add([exampleStarrable], { nodeId: 7 })).not.toThrow();
         });
 
-        it('stores the result in the user storage', () => {
+        it('stores the result in the user storage', async () => {
             state.mockState({ folder: { activeNode: 1 } });
             expect(userSettings.saveFavourites).not.toHaveBeenCalled();
 
-            service.add([exampleStarrable]);
+            await service.add([exampleStarrable]);
+
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 1 } as any]);
             expect(userSettings.saveFavourites)
                 .toHaveBeenCalledWith([{ ...exampleStarrable, nodeId: 1 }]);
         });
 
-        it('adds the current node id to the saved data if none is provided', () => {
+        it('adds the current node id to the saved data if none is provided', async () => {
             state.mockState({
                 entities: {
                     node: {
@@ -130,14 +131,14 @@ describe('FavouritesService', () => {
             });
 
             expect('nodeId' in exampleStarrable).toBe(false);
-            service.add([exampleStarrable]);
+            await service.add([exampleStarrable]);
 
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 10 } as any]);
             expect(userSettings.saveFavourites)
                 .toHaveBeenCalledWith([{ ...exampleStarrable, nodeId: 10 }]);
         });
 
-        it('keeps the node id if one is provided', () => {
+        it('keeps the node id if one is provided', async () => {
             state.mockState({
                 entities: {
                     node: {
@@ -151,14 +152,14 @@ describe('FavouritesService', () => {
             });
 
             expect('nodeId' in exampleStarrable).toBe(false);
-            service.add([exampleStarrable], { nodeId: 10 });
+            await service.add([exampleStarrable], { nodeId: 10 });
 
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 10 } as any]);
             expect(userSettings.saveFavourites)
                 .toHaveBeenCalledWith([{ ...exampleStarrable, nodeId: 10 }]);
         });
 
-        it('keeps the node id if one is in the provided favourite', () => {
+        it('keeps the node id if one is in the provided favourite', async () => {
             state.mockState({
                 entities: {
                     node: {
@@ -173,7 +174,7 @@ describe('FavouritesService', () => {
 
             const item = Object.assign({}, exampleStarrable, { nodeId: 10 });
             expect('nodeId' in item).toBe(true);
-            service.add([item]);
+            await service.add([item]);
 
             expect(state.now.favourites.list).toEqual([{ ...exampleStarrable, nodeId: 10 } as any]);
             expect(userSettings.saveFavourites)
@@ -183,14 +184,15 @@ describe('FavouritesService', () => {
 
     describe('remove()', () => {
 
-        it('updates the app state via favourites.remove', () => {
+        it('updates the app state via favourites.remove', async () => {
             const fav: Favourite = { nodeId: 7, type: 'folder', id: 17, name: 'myfolder', globalId: 'SomeGlobalID' };
             state.mockState({
                 favourites: {
                     list: [fav],
                 },
             });
-            service.remove([fav]);
+
+            await service.remove([fav]);
             const currentState = state.now.favourites;
             expect(currentState.list).toEqual([]);
         });
@@ -201,14 +203,14 @@ describe('FavouritesService', () => {
             }).not.toThrow();
         });
 
-        it('stores the result in the user settings', () => {
+        it('stores the result in the user settings', async () => {
             expect(userSettings.saveFavourites).not.toHaveBeenCalled();
             const itemToDelete: Favourite = { nodeId: 7, type: 'folder', id: 17, name: 'some name', globalId: 'GlobalIdOne' };
             const remainingItem: Favourite = { nodeId: 7, type: 'page', id: 999, name: 'remaining', globalId: 'GlobalIdTwo' };
             const initialState = [remainingItem, itemToDelete];
             state.mockState({ favourites: { list: initialState } });
 
-            service.remove([itemToDelete]);
+            await service.remove([itemToDelete]);
             expect(userSettings.saveFavourites).toHaveBeenCalledWith([remainingItem]);
         });
 
@@ -216,7 +218,7 @@ describe('FavouritesService', () => {
 
     describe('reorder()', () => {
 
-        it('updates the app state via favourites.reorder', () => {
+        it('updates the app state via favourites.reorder', async () => {
             const folderFav: Favourite = { nodeId: 7, type: 'folder', id: 17, name: 'a folder', globalId: 'global-folder-id' };
             const pageFav: Favourite = { nodeId: 8, type: 'page', id: 65, name: 'a page', globalId: 'global-page-id' };
 
@@ -229,7 +231,7 @@ describe('FavouritesService', () => {
                 },
             });
 
-            service.reorder([
+            await service.reorder([
                 folderFav,
                 pageFav,
             ]);
@@ -248,5 +250,7 @@ class MockUserSettingsService implements Partial<UserSettingsService> {
     constructor() {
         spyOn(this as any, 'saveFavourites');
     }
-    saveFavourites(favourites: Favourite[]): void { }
+    saveFavourites(favourites: Favourite[]): Promise<void> {
+        return Promise.resolve();
+    }
 }

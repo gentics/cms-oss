@@ -1,13 +1,33 @@
-import { ENV_MESH_CR_ENABLED, TestSize, bootstrapSuite, envAll, skipableSuite } from '@gentics/e2e-utils';
+import { EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/app.po';
 
-describe('Content Repository', () => {
+describe('Mesh Browser', () => {
+
     const CR_NAME = 'Mesh CR';
+    const IMPORTER = new EntityImporter();
+
+    before(async () => {
+        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    });
 
     beforeEach(() => {
-        cy.wrap(bootstrapSuite(TestSize.MINIMAL));
+        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+        IMPORTER.client = null;
+        cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
 
         cy.navigateToApp();
-        cy.login(true);
+        cy.login(AUTH_ADMIN);
+
+        cy.intercept({
+            pathname: '/rest/admin/features/*',
+        }).as('featureChecks');
+        cy.intercept({
+            pathname: '/rest/perm/contentrepositoryadmin',
+        }).as('permChecks');
+
+        cy.wait('@featureChecks');
+        cy.wait('@permChecks');
+
         cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
     });
 
@@ -19,17 +39,19 @@ describe('Content Repository', () => {
 
     it('should show login gate on click', () => {
         cy.get('gtx-table')
-            .find('.grid-row').contains(CR_NAME)
+            .find('.grid-row')
+            .contains(CR_NAME)
             .click();
 
         cy.get('.login-gate-wrapper').should('exist');
     });
 
     // TODO: Needs proper CR repair and content import to work
-    skipableSuite(false && envAll(ENV_MESH_CR_ENABLED), 'Mesh Browser', () => {
+    describe.skip('Mesh Browser', () => {
         beforeEach(() => {
             cy.get('gtx-table')
-                .find('.grid-row').contains(CR_NAME)
+                .find('.grid-row')
+                .contains(CR_NAME)
                 .click();
 
             cy.fixture('auth.json').then(auth => {
@@ -49,18 +71,12 @@ describe('Content Repository', () => {
         });
 
         it('should be able to navigate to node content', () => {
-            cy.intercept('POST', '**graphql**').as('graphqlRequest');
-
             cy.get('.schema-items')
                 .find('.schema-element')
                 .find('[data-is-container="true"]')
                 .first()
                 .should('have.length.gte', 1)
-                .click()
-
-            cy.wait('@graphqlRequest').then(({ request, response }) => {
-                expect(response?.statusCode).to.eq(200);
-            });
+                .click();
         });
 
         it('should be able to open detail view', () => {

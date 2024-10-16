@@ -1,5 +1,9 @@
 @import '../../../styles/base-import';
 
+:host {
+    display: flex;
+}
+
 .wrapper {
     display: flex;
     flex-direction: row;

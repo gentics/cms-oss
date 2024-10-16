@@ -89,6 +89,7 @@ export class ResourceUrlBuilder {
         return `${API_BASE_URL}/file/content/load/${fileId}?${params}`;
     }
 
+
     /**
      * Returns the URL of the live page preview of a specific version.
      */

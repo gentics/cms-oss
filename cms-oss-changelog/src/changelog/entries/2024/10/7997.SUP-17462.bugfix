@@ -1,0 +1,5 @@
+When publishing into a Mesh Content.Repository with the setting "Publish Directory Segments" enabled,
+and some properties of folders were translated into languages other than English it was possible to not also translate
+the Publish Directory Segment, which subsequently caused errors in the publish process.
+The behaviour has been changed so that translation of the Publish Directory Segment is also enforced and the translations are
+made unique.

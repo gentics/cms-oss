@@ -8,6 +8,7 @@
     class="gtx-context-menu"
     [class.with-confirm]="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
     [class.no-header]="hideHeader"
+    [attr.data-ref]="configuration?.openerReference"
 >
     <div class="context-menu-header">
         <button

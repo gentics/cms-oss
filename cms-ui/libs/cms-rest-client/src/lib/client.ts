@@ -1,4 +1,4 @@
-import { CONTENT_TYPE_FORM, CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
+import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
     GCMSAuthenticationAPI,
@@ -45,6 +45,7 @@ import {
     GCMSUsersnapAPI,
     GCMSValidationAPI,
     RequestMethod,
+    GCMSTranslationAPI,
 } from './models';
 import { parseJSONSafe, stringifyEmbedOptions, stringifyPagingSortOptions, toRelativePath, trimTrailingSlash } from './utils';
 
@@ -222,6 +223,10 @@ export class GCMSRestClient implements GCMSRootAPI {
         login: (data, params) => this.executeMappedJsonRequest(POST, '/auth/login', data, params),
         logout: (sid) => this.executeMappedJsonRequest(POST, `/auth/logout/${sid}`),
         validate: (sid) => this.executeMappedJsonRequest(GET, `/auth/validate/${sid}`),
+        ssoLogin: (bearerToken) => this.executeRawRequest(GET, '/auth/ssologin', {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Authorization: `Bearer ${bearerToken}`,
+        }),
     } as const;
 
     public cluster: GCMSClusterAPI = {
@@ -236,6 +241,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/${id}`),
 
+        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct/list', null, options),
+
         hash: (id) => this.executeMappedJsonRequest(GET, `/constructs/${id}/hash`),
         getLinkedNodes: (id) => this.executeMappedJsonRequest(GET, `/construct/${id}/nodes`),
         linkToNode: (body) => this.executeMappedJsonRequest(POST, '/construct/link/nodes', body),
@@ -244,7 +251,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public constructCategory: GCMSConstrctCategoryAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/construct/category', null, options),
-        create: (body) => this.executeMappedJsonRequest(POST, '/construct', body),
+        create: (body) => this.executeMappedJsonRequest(POST, '/construct/category', body),
         get: (id) => this.executeMappedJsonRequest(GET, `/construct/category/${id}`),
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/category/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/category/${id}`),
@@ -830,7 +837,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         unlock: (id) => this.executeMappedJsonRequest(POST, `/template/${id}/unlock`),
         hash: (id) => this.executeMappedJsonRequest(GET, `/template/${id}/hash`),
 
-        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/link`, body),
+        link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
         unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),
@@ -877,5 +884,10 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public validation: GCMSValidationAPI = {
 
+    } as const;
+
+    public translation: GCMSTranslationAPI = {
+        translateText: (body) => this.executeMappedJsonRequest(POST, 'translation/text', body),
+        translatePage: (pageId, params) => this.executeMappedJsonRequest(POST, `translation/page/${pageId}/`, null, params),
     } as const;
 }

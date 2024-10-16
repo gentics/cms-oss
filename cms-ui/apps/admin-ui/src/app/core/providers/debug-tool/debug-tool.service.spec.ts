@@ -1,16 +1,29 @@
 import { InterfaceOf } from '@admin-ui/common';
-import { fakeAsync, tick } from '@angular/core/testing';
+import { AppStateService } from '@admin-ui/state';
+import { Type } from '@angular/core';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { IModalDialog, IModalInstance, IModalOptions, ModalService } from '@gentics/ui-core';
 import { HotkeysService } from 'angular2-hotkeys';
-import { ModalService } from '@gentics/ui-core';
-import { Subject } from 'rxjs';
+import { I18nService } from '../i18n';
 import { DebugToolService } from './debug-tool.service';
 
 class MockHotkeysService implements Partial<InterfaceOf<HotkeysService>> {
     add = jasmine.createSpy('add').and.stub();
 }
 
-class MockCmsErrorHandler {
-    caughtErrors$ = new Subject();
+class MockModalService implements Partial<ModalService> {
+    public fromComponent<T extends IModalDialog>(component: Type<T>, options?: IModalOptions, locals?: { [K in keyof T]?: T[K]; }): Promise<IModalInstance<T>> {
+        return Promise.resolve(null);
+    }
+}
+
+class MockI18nService implements Partial<I18nService> {}
+
+class MockGcmsApi {}
+
+class MockAppStateService implements Partial<AppStateService> {
+    get now() { return {} as any }
 }
 
 describe('DebugToolService', () => {
@@ -23,14 +36,23 @@ describe('DebugToolService', () => {
     let debugToolService: DebugToolService;
     let modalService: ModalService;
     let hotkeysService: MockHotkeysService;
-    let cmsErrorHandler: MockCmsErrorHandler;
 
     beforeEach(() => {
-        hotkeysService = new MockHotkeysService();
-        modalService = new ModalService(null, null);
-        cmsErrorHandler = new MockCmsErrorHandler();
+        TestBed.configureTestingModule({
+            providers: [
+                DebugToolService,
+                { provide: HotkeysService, useClass: MockHotkeysService },
+                { provide: AppStateService, useClass: MockAppStateService },
+                { provide: GcmsApi, useClass: MockGcmsApi },
+                { provide: ModalService, useClass: MockModalService },
+                { provide: I18nService, useClass: MockI18nService },
+            ],
+        });
+
+        hotkeysService = TestBed.inject(HotkeysService) as any;
+        modalService = TestBed.inject(ModalService);
         spyOn(DebugToolService.prototype, 'init').and.callThrough();
-        debugToolService = new DebugToolService(hotkeysService as any, modalService, null, cmsErrorHandler as any, null, null);
+        debugToolService = TestBed.inject(DebugToolService);
 
         // Fake AppState
         const debugAppStateSpy = jasmine.createSpy('debug_appState').and.returnValue({});
@@ -44,7 +66,6 @@ describe('DebugToolService', () => {
     it('initializes correctly', () => {
         debugToolService.init();
         expect(hotkeysService.add).toHaveBeenCalledTimes(1);
-        expect(cmsErrorHandler.caughtErrors$.observers.length).toBe(1);
     });
 
     describe('modal actions', () => {

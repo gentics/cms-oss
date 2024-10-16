@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { RecentItem, plural } from '@editor-ui/app/common/models';
+import { RecentItem, SETTING_LAST_NODE_ID, plural } from '@editor-ui/app/common/models';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { Favourite, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';
@@ -117,27 +117,16 @@ export class UserSettingsService {
             this.dispatchChangedSetting(setting, value);
         }
 
-        const lastNodeidFromLocalStorage = this.localStorage.getForUser(this.currentUserId, 'lastNodeId');
+        const lastNodeIdFromLocalStorage = this.localStorage.getForUser(this.currentUserId, SETTING_LAST_NODE_ID);
 
         this.serverStorage.getAll().subscribe(settings => {
-            // If last node is set in local storage and/or server settings, fall back on default node if all last nodes are invalid
-            const invalidNodeInLocalStorage$ = this.appState.select(state => state.entities.node[lastNodeidFromLocalStorage]).pipe(
-                map(node => !node),
-                take(1),
-            )
-            const invalidNodeInServerSettings$ = this.appState.select(state => state.entities.node[settings.lastNodeId]).pipe(
-                map(node => !node),
-                take(1),
-            );
+            const allNodes = this.appState.now.entities.node;
 
-            forkJoin({
-                invalidNodeInLocalStorage: invalidNodeInLocalStorage$,
-                invalidNodeInServerSettings: invalidNodeInServerSettings$,
-            }).subscribe(({ invalidNodeInLocalStorage, invalidNodeInServerSettings }) => {
-                if (invalidNodeInLocalStorage && invalidNodeInServerSettings) {
-                    this.navigateToFallbackNode();
-                }
-            });
+            if ((!lastNodeIdFromLocalStorage || !allNodes[lastNodeIdFromLocalStorage]) && !allNodes[settings[SETTING_LAST_NODE_ID]]) {
+                // Clear the last node id in the local storage, to cause the correct fallback node to be selected
+                this.localStorage.setForUser(this.currentUserId, SETTING_LAST_NODE_ID, null);
+                this.navigateToFallbackNode();
+            }
 
             if (this.serverStorage.supported === false) {
                 return;
@@ -340,8 +329,8 @@ export class UserSettingsService {
         this.set('lastNodeId', nodeId);
     }
 
-    saveFavourites(favourites: Favourite[]): void {
-        this.set('favourites', favourites);
+    async saveFavourites(favourites: Favourite[]): Promise<void> {
+        await this.set('favourites', favourites);
     }
 
     private dispatchAndSaveChange(key: string, value: any): void {

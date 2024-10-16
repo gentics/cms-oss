@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
     ChannelSyncRequest,
+    Feature,
     FolderItemOrTemplateType,
     FolderItemTypePlural,
     InheritableItem,
@@ -132,7 +133,7 @@ export class SynchronizeChannelModal extends BaseModal<ChannelSyncRequest> imple
     }
 
     private fetchAvailableSyncTargets(): void {
-        if (itemIsLocal(this.item)) {
+        if (itemIsLocal(this.item) || !this.appState.now.features[Feature.MULTICHANNELLING]) {
             this.determineAvailableMasterNodes([]);
             this.changeDetector.markForCheck();
             return;
@@ -173,7 +174,7 @@ export class SynchronizeChannelModal extends BaseModal<ChannelSyncRequest> imple
     }
 
     private getSyncReport(): void {
-        if (this.item.type === 'folder') {
+        if (this.item.type === 'folder' && this.appState.now.features[Feature.MULTICHANNELLING]) {
             this.folderActions.getChannelSyncReport(this.item.id, this.channel.id, this.recursive);
         }
     }

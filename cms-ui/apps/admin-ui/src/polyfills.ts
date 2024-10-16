@@ -65,5 +65,5 @@ import 'zone.js'; // Included with Angular CLI.
 
 /* Add Buffer support, because serialize-to-js expects Buffer type is there (like in Node.js) */
 // eslint-disable-next-line import/no-nodejs-modules
-import { Buffer } from 'buffer';
-(window as any).Buffer = Buffer;
+// import { Buffer } from 'buffer';
+// (window as any).Buffer = Buffer;

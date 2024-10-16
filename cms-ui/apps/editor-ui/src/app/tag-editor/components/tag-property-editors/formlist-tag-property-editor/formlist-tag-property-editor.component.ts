@@ -30,7 +30,7 @@ export class FormlistTagPropertyEditor implements TagPropertyEditor, OnDestroy, 
 
     forms: GtxFormWithUuid[] = [];
 
-    private destroy$ = new Subject<any>();
+    private destroy$ = new Subject<void>();
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
     tagPart: TagPart;

@@ -53,6 +53,12 @@ class EntityManagerWithAccessibleInternals extends EntityManagerService {
     }
 }
 
+function isObservable<T>(value: any): value is Observable<T> {
+    return value != null
+        && typeof value === 'object'
+        && typeof value.subscribe === 'function';
+}
+
 interface EntityNormalizationPair<T extends NormalizableEntity<Raw>> {
     raw: T[];
     normalized: Partial<NormalizedEntityStore>;
@@ -140,7 +146,7 @@ describe('EntityManagerService', () => {
                 let page: Page<Normalized>;
 
                 const result$ = entityManager.getEntity('page', PAGE_A_ID);
-                expect(result$ instanceof Observable).toBe(true, 'getEntity() did not return an Observable');
+                expect(isObservable(result$)).toBe(true, 'getEntity() did not return an Observable');
 
                 result$.pipe(
                     takeUntil(stopper.stopper$),

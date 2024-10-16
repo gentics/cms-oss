@@ -3,11 +3,11 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
+import { KeycloakService } from '@gentics/cms-components';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
-import { KeycloakService } from '../../providers/keycloak/keycloak.service';
 
 @Component({
     selector: 'single-sign-on',

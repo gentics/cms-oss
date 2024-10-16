@@ -12,6 +12,7 @@ import { generateFormProvider } from '@gentics/ui-core';
 import { fromEvent } from 'rxjs';
 import { AlohaIntegrationService } from '../../providers';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { patchMultipleAlohaFunctions } from '../../utils';
 
 const PARAM_FRAME_ID = 'aloha-iframe-id';
 interface WindowSize {
@@ -125,23 +126,21 @@ export class AlohaIFrameRendererComponent<T>
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setUrl = (url) => {
-            this.settings.url = url;
-            this.updateUrlToUse(url);
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setOptions = (options) => {
-            this.settings.options = options;
-            this.sendMessageIfAvailable({
-                eventName: AlohaIFrameEventNames.UPDATE_OPTIONS,
-                id: this.currentId,
-                value: options,
-            });
-        }
+        patchMultipleAlohaFunctions(this.settings, {
+            setUrl: url => {
+                this.settings.url = url;
+                this.updateUrlToUse(url);
+                this.changeDetector.markForCheck();
+            },
+            setOptions: options => {
+                this.settings.options = options;
+                this.sendMessageIfAvailable({
+                    eventName: AlohaIFrameEventNames.UPDATE_OPTIONS,
+                    id: this.currentId,
+                    value: options,
+                });
+            },
+        });
     }
 
     protected override onDisabledChange(): void {

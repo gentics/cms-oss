@@ -446,20 +446,24 @@ export class ContentRepositoryHandlerService
                 const requestChanges = (requests: Observable<void>[]) => {
                     if (requests.length > 0) {
                         return forkJoin(requests).pipe(
-                            catchError(() => of(this.notification.show({
-                                type: 'alert',
-                                message: 'shared.assign_contentRepository_to_crnodes_error',
-                            }))),
+                            catchError(() => {
+                                this.notification.show({
+                                    type: 'alert',
+                                    message: 'shared.assign_contentRepository_to_crnodes_error',
+                                });
+                                return of(null);
+                            }),
                         );
                     } else {
                         // complete Observable
-                        return of(undefined);
+                        return of(null);
                     }
                 };
 
                 // request assign changes before unassign changes to avoid that a user has no group
                 return requestChanges(assignRequests).pipe(
                     switchMap(() => requestChanges(unassignRequests)),
+                    discard(),
                 );
             }),
             tap(() => this.notification.show({
@@ -547,16 +551,20 @@ export class ContentRepositoryHandlerService
                     }
 
                     return forkJoin(requests).pipe(
-                        catchError(() => of(this.notification.show({
-                            type: 'alert',
-                            message: 'shared.assign_contentRepository_to_crfragments_error',
-                        }))),
+                        catchError(() => {
+                            this.notification.show({
+                                type: 'alert',
+                                message: 'shared.assign_contentRepository_to_crfragments_error',
+                            })
+                            return of(null);
+                        }),
                     );
                 };
 
                 // request assign changes before unassign changes to avoid that a user has no group
                 return requestChanges(assignRequests).pipe(
                     switchMap(() => requestChanges(unassignRequests)),
+                    discard(),
                 );
             }),
             tap(() => this.notification.show({

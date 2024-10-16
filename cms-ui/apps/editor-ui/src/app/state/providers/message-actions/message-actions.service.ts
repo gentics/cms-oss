@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
-import { MessageFromServer, MessageListResponse } from '@gentics/cms-models';
-import { forkJoin } from 'rxjs';
+import { MessageFromServer, Response } from '@gentics/cms-models';
+import { forkJoin, Observable } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
-import { ApplicationStateService } from '../../providers';
 import {
     MessagesFetchingErrorAction,
     MessagesFetchingSuccessAction,
     MessagesReadAction,
     StartMessagesFetchingAction,
 } from '../../modules';
+import { ApplicationStateService } from '../../providers';
 
 @Injectable()
 export class MessageActionsService {
@@ -17,7 +17,7 @@ export class MessageActionsService {
     fetchAllMessages(): Promise<MessageFromServer[][]> {
         this.appState.dispatch(new StartMessagesFetchingAction());
 
-        return forkJoin<MessageListResponse, MessageListResponse>([
+        return forkJoin([
             this.api.messages.getMessages(false),
             this.api.messages.getMessages(true),
         ])
@@ -95,7 +95,7 @@ export class MessageActionsService {
     }
 
     deleteMessages(messageIds: number[]): void {
-        const deleteReqs = [];
+        const deleteReqs: Observable<Response>[] = [];
 
         messageIds.forEach((messageId) =>
             deleteReqs.push(this.api.messages.deleteMessage(messageId)),

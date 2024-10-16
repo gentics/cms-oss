@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import {
     AnyModelType,
     ContentRepository,
@@ -17,6 +17,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
+import { Subscription } from 'rxjs';
 import { EntityState, EntityTypesMap } from '../../../common/models';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
@@ -25,16 +26,24 @@ import { ApplicationStateService } from '../../../state/providers/application-st
  * based on that entity's id.
  */
 @Injectable()
-export class EntityResolver {
+export class EntityResolver implements OnDestroy {
 
     entities: EntityState;
 
     protected normalizer = new GcmsNormalizer();
 
-    constructor(private appState: ApplicationStateService) {
-        appState.select(state => state.entities).subscribe(entities => {
+    public subscription: Subscription;
+
+    constructor(appState: ApplicationStateService) {
+        this.subscription = appState.select(state => state.entities).subscribe(entities => {
             this.entities = entities;
         });
+    }
+
+    ngOnDestroy(): void {
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+        }
     }
 
     getContentRepository(id: number): ContentRepository<Normalized> {

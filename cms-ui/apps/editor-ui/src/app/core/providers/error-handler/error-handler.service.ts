@@ -10,6 +10,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -65,6 +66,11 @@ export class ErrorHandler {
      * Can be extended later to log client-side errors to the server.
      */
     catch = (error: Error, options?: { notification: boolean }): void => {
+        // Ignore modal close errors
+        if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+            return;
+        }
+
         if (!error || (error as any).reason !== 'auth') {
             console.error('Error details: ', error);
         }

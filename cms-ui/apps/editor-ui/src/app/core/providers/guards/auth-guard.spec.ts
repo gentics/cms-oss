@@ -33,6 +33,12 @@ function mockRouterState(url: string): MockRouterState {
 const LOGIN_ROUTE = '/login';
 const ITEM_LIST_ROUTE = '/editor/(list:node/3/folder/63)';
 
+function isObservable<T>(value: any): value is Observable<T> {
+    return value != null
+        && typeof value === 'object'
+        && typeof value.subscribe === 'function';
+}
+
 describe('AuthGuard', () => {
 
     let authGuard: AuthGuard;
@@ -51,10 +57,10 @@ describe('AuthGuard', () => {
             ],
         });
 
-        authGuard = TestBed.get(AuthGuard);
-        appState = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        router = TestBed.get(Router);
+        authGuard = TestBed.inject(AuthGuard);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        router = TestBed.inject(Router) as any;
     });
 
     function assertNoRedirectAction(): void {
@@ -188,7 +194,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(LOGIN_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Observable).toBe(true, 'canActive() should return an Observable in this case.');
+            expect(isObservable(result)).toBe(true, 'canActive() should return an Observable in this case.');
+            // expect(result instanceof Observable).toBe(true, 'canActive() should return an Observable in this case.');
+
             let accessGranted: boolean;
             subscription = (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             expect(accessGranted).toBeUndefined('The observable should not emit until we have a list of nodes in the AppState.');
@@ -212,7 +220,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(LOGIN_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Observable).toBe(true, 'canActivate() should return an Observable in this case.');
+            expect(isObservable(result)).toBe(true, 'canActivate() should return an Observable in this case.');
+            // expect(result instanceof Observable).toBe(true, 'canActivate() should return an Observable in this case.');
+
             let accessGranted: boolean;
             subscription = (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             expect(accessGranted).toBeUndefined('The observable should not emit until we have a list of nodes in the AppState.');

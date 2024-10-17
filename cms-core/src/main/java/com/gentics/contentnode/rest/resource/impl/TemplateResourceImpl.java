@@ -124,68 +124,40 @@ public class TemplateResourceImpl implements TemplateResource {
 	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 
 	/**
-	 * Count the pages in sync with the template with regards to the tag
-	 * @param templateId template ID
-	 * @param tagName tag name
+	 * Count the pages in sync with the template
 	 * @param constructId construct ID (used by the template)
+	 * @param tagMap map containing the pages, which contain the tag (identified by name), keys are the construct IDs used in the pages, values are sets of page IDs
 	 * @return number of pages in sync
-	 * @throws NodeException
 	 */
-	public static int getPagesInSync(int templateId, String tagName, int constructId) throws NodeException {
-		return DBUtils.select(
-				"SELECT count(DISTINCT page.id) c FROM page, contenttag WHERE page.deleted = 0 AND page.content_id = contenttag.content_id AND page.template_id = ? AND contenttag.name = ? AND contenttag.construct_id = ?",
-				pst -> {
-					pst.setInt(1, templateId);
-					pst.setString(2, tagName);
-					pst.setInt(3, constructId);
-				}, rs -> {
-					rs.next();
-					return rs.getInt("c");
-				});
+	public static int getPagesInSync(int constructId, Map<Integer, Set<Integer>> tagMap) {
+		return tagMap.getOrDefault(constructId, Collections.emptySet()).size();
 	}
 
 	/**
-	 * Get counts for pages not in sync with the template with regards to the tag
-	 * @param templateId template ID
-	 * @param tagName tag name
+	 * Get counts for pages not in sync with the template
 	 * @param constructId construct ID (used by the template)
+	 * @param tagMap map containing the pages, which contain the tag (identified by name), keys are the construct IDs used in the pages, values are sets of page IDs
 	 * @return map of construct IDs used by pages to page counts
-	 * @throws NodeException
 	 */
-	public static Map<Integer, AtomicInteger> getPagesOutOfSync(int templateId, String tagName, int constructId) throws NodeException {
-		return DBUtils.select(
-				"SELECT contenttag.construct_id FROM page, contenttag WHERE page.deleted = 0 AND page.content_id = contenttag.content_id AND page.template_id = ? AND contenttag.name = ? AND contenttag.construct_id != ?",
-				pst -> {
-					pst.setInt(1, templateId);
-					pst.setString(2, tagName);
-					pst.setInt(3, constructId);
-				}, rs -> {
-					Map<Integer, AtomicInteger> counts = new HashMap<>();
-					while (rs.next()) {
-						int sourceConstructId = rs.getInt("construct_id");
-						counts.computeIfAbsent(sourceConstructId, id -> new AtomicInteger()).incrementAndGet();
-					}
-					return counts;
-				});
+	public static Map<Integer, Integer> getPagesOutOfSync(int constructId, Map<Integer, Set<Integer>> tagMap) {
+		Map<Integer, Integer> map = tagMap.entrySet().stream()
+				.filter(entry -> Integer.compare(entry.getKey(), constructId) != 0)
+				.map(entry -> Pair.of(entry.getKey(), entry.getValue().size()))
+				.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+		return map;
 	}
 
 	/**
 	 * Count the pages missing the tag
-	 * @param templateId template ID
-	 * @param tagName tag name
+	 * @param tagMap map containing the pages, which contain the tag (identified by name), keys are the construct IDs used in the pages, values are sets of page IDs
+	 * @param totalPages total number of pages using the template
 	 * @return number of pages missing the tag
-	 * @throws NodeException
 	 */
-	public static int getPagesMissing(int templateId, String tagName) throws NodeException {
-		return DBUtils.select(
-				"SELECT count(DISTINCT page.id) c FROM page LEFT JOIN contenttag ON page.content_id = contenttag.content_id AND contenttag.name = ? WHERE page.deleted = 0 AND page.template_id = ? AND contenttag.id IS NULL",
-				pst -> {
-					pst.setString(1, tagName);
-					pst.setInt(2, templateId);
-				}, rs -> {
-					rs.next();
-					return rs.getInt("c");
-				});
+	public static int getPagesMissing(Map<Integer, Set<Integer>> tagMap, int totalPages) {
+		Set<Integer> pagesWithTag = new HashSet<>();
+		tagMap.values().forEach(set -> pagesWithTag.addAll(set));
+
+		return totalPages - pagesWithTag.size();
 	}
 
 	/**
@@ -223,28 +195,56 @@ public class TemplateResourceImpl implements TemplateResource {
 		int templateId = template.getId();
 		List<TemplateTag> tags = template.getTemplateTags().values().stream().filter(TemplateTag::isPublic).collect(Collectors.toList());
 
+		// make a single sql query for counting all pages of the template and get all tag names and construct IDs for those pages
+		AtomicInteger totalPages = new AtomicInteger();
+		// this map maps the tag names to maps of constructID to sets of page IDs
+		Map<String, Map<Integer, Set<Integer>>> tagMap = DBUtils.select(
+				"SELECT page.id, contenttag.name, contenttag.construct_id FROM page LEFT JOIN contenttag ON page.content_id = contenttag.content_id WHERE page.template_id = ? AND page.deleted = ?",
+				pst -> {
+					pst.setInt(1, templateId);
+					pst.setInt(2, 0);
+				}, rs -> {
+					Map<String, Map<Integer, Set<Integer>>> map = new HashMap<>();
+					Set<Integer> pageIds = new HashSet<>();
+					while (rs.next()) {
+						int pageId = rs.getInt("id");
+						String tagName = rs.getString("name");
+						int constructId = rs.getInt("construct_id");
+
+						pageIds.add(pageId);
+
+						if (!StringUtils.isBlank(tagName)) {
+							map.computeIfAbsent(tagName, key -> new HashMap<>())
+									.computeIfAbsent(constructId, key -> new HashSet<>()).add(pageId);
+						}
+					}
+
+					totalPages.set(pageIds.size());
+					return map;
+				});
+
 		return ListBuilder.from(tags, tag -> {
 			String tagName = tag.getName();
 			int constructId = tag.getConstructId();
 			String constructName = tag.getConstruct().getName().toString();
 
-			Map<Integer, AtomicInteger> pagesOutOfSync = getPagesOutOfSync(templateId, tagName, constructId);
-			int outOfSync = pagesOutOfSync.values().stream().mapToInt(AtomicInteger::get).sum();
+			Map<Integer, Integer> pagesOutOfSync = getPagesOutOfSync(constructId, tagMap.getOrDefault(tagName, Collections.emptyMap()));
+			int outOfSync = pagesOutOfSync.values().stream().mapToInt(i -> i).sum();
 
 			int incompatible = 0;
 			Map<Integer, Map<Integer, Boolean>> cache = new HashMap<>();
-			for (Map.Entry<Integer, AtomicInteger> entry : pagesOutOfSync.entrySet()) {
+			for (Map.Entry<Integer, Integer> entry : pagesOutOfSync.entrySet()) {
 				int fromConstructId = entry.getKey();
 				if (!canConvert(fromConstructId, constructId, cache)) {
-					incompatible += entry.getValue().get();
+					incompatible += entry.getValue();
 				}
 			}
 
 			return new TagStatus().setName(tagName).setConstructId(constructId).setConstructName(constructName)
-					.setInSync(getPagesInSync(templateId, tagName, constructId)).setMissing(getPagesMissing(templateId, tagName)).setOutOfSync(outOfSync)
-					.setIncompatible(incompatible);
+					.setInSync(getPagesInSync(constructId, tagMap.getOrDefault(tagName, Collections.emptyMap())))
+					.setMissing(getPagesMissing(tagMap.getOrDefault(tagName, Collections.emptyMap()), totalPages.get()))
+					.setOutOfSync(outOfSync).setIncompatible(incompatible);
 		}).filter(ResolvableFilter.get(filter, "name")).sort(ResolvableComparator.get(sort, "name")).page(paging).to(new TagStatusResponse());
-
 	}
 
 	@Override

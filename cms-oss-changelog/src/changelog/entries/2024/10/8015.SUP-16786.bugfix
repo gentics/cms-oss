@@ -1,0 +1,3 @@
+Some performance fixes have been done:
+* Performance of handling page versions has been improved.
+* Performance of getting the tag status of templates with many pages has been improved.

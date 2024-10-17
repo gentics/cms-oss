@@ -17,7 +17,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.lib.db.DBHandle;
 import com.gentics.lib.db.SQLExecutor;
-import com.gentics.lib.db.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion;
 
 /**
  * Background job that fixes the DatasourcePartType instances.
@@ -167,9 +167,8 @@ public class FixDatasourcesJob extends InitJob {
 	 * @throws NodeException
 	 */
 	protected TableVersion getTableVersion(DBHandle handle, String table, String wherePart) throws NodeException {
-		TableVersion tableVersion = new TableVersion(false);
+		TableVersion tableVersion = new TableVersion();
 		tableVersion.setAutoIncrement(true);
-		tableVersion.setHandle(handle);
 		tableVersion.setTable(table);
 		tableVersion.setWherePart(wherePart);
 		return tableVersion;

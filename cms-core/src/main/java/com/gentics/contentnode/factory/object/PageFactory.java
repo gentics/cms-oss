@@ -123,9 +123,9 @@ import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
-import com.gentics.lib.db.TableVersion;
-import com.gentics.lib.db.TableVersion.Diff;
-import com.gentics.lib.db.TableVersion.Join;
+import com.gentics.contentnode.factory.object.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion.Diff;
+import com.gentics.contentnode.factory.object.TableVersion.Join;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
@@ -5888,7 +5888,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion valueVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		valueVersion.setAutoIncrement(true);
-		valueVersion.setHandle(t.getDBHandle());
 		valueVersion.setTable("value");
 		valueVersion.setJoin("contenttag", "id", "contenttag_id");
 		if (singleTag) {
@@ -5920,7 +5919,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion contentTagVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		contentTagVersion.setAutoIncrement(true);
-		contentTagVersion.setHandle(t.getDBHandle());
 		contentTagVersion.setTable("contenttag");
 		contentTagVersion.setJoin("construct", "id", "construct_id");
 		if (singleTag) {
@@ -5940,10 +5938,9 @@ public class PageFactory extends AbstractFactory {
 	 */
 	private static TableVersion getPageTableVersion() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		TableVersion pageVersion = new TableVersion(false);
+		TableVersion pageVersion = new TableVersion();
 
 		pageVersion.setAutoIncrement(true);
-		pageVersion.setHandle(t.getDBHandle());
 		pageVersion.setTable("page");
 		pageVersion.setWherePart("gentics_main.id = ?");
 		return pageVersion;
@@ -5956,10 +5953,9 @@ public class PageFactory extends AbstractFactory {
 	 */
 	private static TableVersion getAlternateUrlTableVersion() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		TableVersion niceUrlVersion = new TableVersion(false);
+		TableVersion niceUrlVersion = new TableVersion();
 
 		niceUrlVersion.setAutoIncrement(true);
-		niceUrlVersion.setHandle(t.getDBHandle());
 		niceUrlVersion.setTable("page_alt_url");
 		niceUrlVersion.setWherePart("gentics_main.page_id = ?");
 		return niceUrlVersion;
@@ -5986,7 +5982,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion dsVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		dsVersion.setAutoIncrement(true);
-		dsVersion.setHandle(t.getDBHandle());
 		dsVersion.setTable("ds");
 		dsVersion.setJoin("contenttag", "id", "contenttag_id");
 		if (singleTag) {
@@ -6018,7 +6013,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion dsObjVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		dsObjVersion.setAutoIncrement(true);
-		dsObjVersion.setHandle(t.getDBHandle());
 		dsObjVersion.setTable("ds_obj");
 		dsObjVersion.setJoin("contenttag", "id", "contenttag_id");
 		if (singleTag) {
@@ -6073,7 +6067,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion datasourceVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		datasourceVersion.setAutoIncrement(true);
-		datasourceVersion.setHandle(t.getDBHandle());
 		datasourceVersion.setTable("datasource");
 
 		datasourceVersion.addJoin(new TableVersion.Join("id", "value", "value_ref"));
@@ -6109,7 +6102,6 @@ public class PageFactory extends AbstractFactory {
 		FilteringTableVersion datasourceValueVersion = new FilteringTableVersion().filter(row -> deletedIds.contains(row.getInt("id")));
 
 		datasourceValueVersion.setAutoIncrement(true);
-		datasourceValueVersion.setHandle(t.getDBHandle());
 		datasourceValueVersion.setTable("datasource_value");
 
 		datasourceValueVersion.addJoin(new Join("datasource_id", "datasource", "id"));

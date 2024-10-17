@@ -1,0 +1,4 @@
+When importing a devtool package from the filesystem to the CMS, the pages of templates contained in the devtool package
+will no longer by synchronized with the template during the process.
+The synchronization must either be done using the "Tag Status" tab of the template properties in the Administration User Interface,
+or by using the UpdateImplementation tool.

@@ -8,8 +8,6 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.lib.db.SimpleResultProcessor;
-import com.gentics.lib.db.TableVersion;
-import com.gentics.lib.db.TableVersionRestoreProcessor;
 import com.gentics.lib.etc.StringUtils;
 
 /**

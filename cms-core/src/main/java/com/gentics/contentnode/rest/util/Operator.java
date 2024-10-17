@@ -564,6 +564,6 @@ public class Operator {
 	 * Enum of possible lock types
 	 */
 	public static enum LockType {
-		channelSet, contentSet, contentPackage
+		channelSet, contentSet, contentPackage, devtoolPackage
 	}
 }

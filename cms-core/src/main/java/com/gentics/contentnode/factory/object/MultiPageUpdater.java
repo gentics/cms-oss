@@ -1,6 +1,7 @@
 package com.gentics.contentnode.factory.object;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.TimingStats;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.Transaction;
@@ -200,41 +202,61 @@ public class MultiPageUpdater {
 				logger.debug("Updating " + numPages + " pages");
 			}
 
+			// prepare statistics
+			TimingStats getBatch = new TimingStats().as("Get next batch of pages").withLogger(logger);
+			TimingStats applyFilter = new TimingStats().as("Apply filter").withLogger(logger);
+			TimingStats checkPermissions = new TimingStats().as("Check permission").withLogger(logger);
+			TimingStats getEditablePage = new TimingStats().as("Get editable page").withLogger(logger);
+			TimingStats updatePage = new TimingStats().as("Update page").withLogger(logger);
+			TimingStats savePage = new TimingStats().as("Save page").withLogger(logger);
+			TimingStats publishPage = new TimingStats().as("Publish page").withLogger(logger);
+			TimingStats unlockPage = new TimingStats().as("Unlock page").withLogger(logger);
+			TimingStats commitTransaction = new TimingStats().as("Commit transaction").withLogger(logger);
+
+			List<TimingStats> inLoop = Arrays.asList(applyFilter, checkPermissions, getEditablePage, updatePage,
+					savePage, publishPage, unlockPage, commitTransaction);
+
 			Collection<Integer> batch = getBatch();
 			while (!batch.isEmpty()) {
-				List<Page> pages = t.getObjects(Page.class, batch, false, false);
+				List<Page> pages = getBatch.apply(b -> t.getObjects(Page.class, b, false, false), batch);
+
+				// reset statistics
+				inLoop.forEach(TimingStats::reset);
+
 				for (Page p : pages) {
 					try {
 						// if a filter is given, use it
-						if (filter == null || filter.apply(p)) {
-							if (!t.canEdit(p)) {
+						if (filter == null || applyFilter.apply(filter, p)) {
+							if (!checkPermissions.apply(p1 -> t.canEdit(p1), p)) {
 								I18nString message = new CNI18nString("rest.page.nopermission");
 								message.setParameter("0", p.getId().toString());
 								throw new InsufficientPrivilegesException(message.toString(), p, PermType.update);
 							}
 
 							boolean onlineAndNotModified = p.isOnline() && !p.isModified();
-							p = t.getObject(Page.class, p.getId(), true);
+							p = getEditablePage.apply(id -> t.getObject(Page.class, id, true), p.getId());
 
 							// getting the editable copy of the page might change the page to be modified, if missing tags were added
 							boolean editablePageModified = p.isModified();
 
-							updater.accept(p);
+							updatePage.accept(updater, p);
 
 							// save the page. If either something was saved or the status of the editable page was different from the
 							// original status (meaning that the page was modified), we handle the original status
-							if (p.save(true, false) || editablePageModified) {
+							boolean pageChanged = savePage.apply(p1 -> p1.save(true, false), p);
+
+							if (pageChanged || editablePageModified) {
 								if (onlineAndNotModified) {
-									p.publish(0, null, false);
+									publishPage.accept(p1 -> p1.publish(0, null, false), p);
 								}
 							}
-							p.unlock();
+							unlockPage.accept(p1 -> p1.unlock(), p);
 
 							numUpdated++;
 							numInTrx++;
 
 							if (commitAfter > 0 && numInTrx >= commitAfter) {
-								t.commit(false);
+								commitTransaction.operate(() -> t.commit(false));
 								numInTrx = 0;
 							}
 						}
@@ -277,9 +299,21 @@ public class MultiPageUpdater {
 						}
 					}
 				}
+
+				// commit the last batch
+				if (commitAfter > 0 && numInTrx > 0) {
+					commitTransaction.operate(() -> t.commit(false));
+					numInTrx = 0;
+				}
+
+				// log statistics
+				inLoop.forEach(TimingStats::logStatistics);
+
 				// get next batch
 				batch = getBatch();
 			}
+			getBatch.logStatistics();
+
 			UpdatePagesResult result = new UpdatePagesResult(numUpdated, numPages, numErrors, numNoPermission, numLocked);
 			if (msg != null) {
 				result.getMessages().addAll(msg);

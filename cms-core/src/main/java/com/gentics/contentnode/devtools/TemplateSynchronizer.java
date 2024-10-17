@@ -303,7 +303,9 @@ public class TemplateSynchronizer extends AbstractSynchronizer<Template, Templat
 				}
 			}
 
-			editable.save();
+			// we do not synchronize the pages while saving the template, because this might
+			// take long, and lock many pages in the current transaction
+			editable.save(false);
 
 			// Create missing reference entries for imported template and object tags.
 

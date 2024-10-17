@@ -390,7 +390,7 @@ public class OverviewPartType extends AbstractPartType {
 			if (item instanceof StackResolvable) {
 				result.add(overview.translate(new RenderResult(), (StackResolvable) item, overview.getTemplate(), ++i, items.size()));
 			} else {
-				logger.warn("Encountered strange object {" + item + "} in the overview {" + overviewId + "}.");
+				logger.warn("Unexpected object {" + item + "} the overview {" + overviewId + "}.");
 			}
 		}
 		return result;

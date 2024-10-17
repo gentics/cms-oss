@@ -967,7 +967,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 						try {
 							restPages.add(ModelBuilder.getPage(page, fillRefs, wastebin));
 						} catch (InconsistentDataException e) {
-							logger.error("Error while fetching page {" + page.getId() + "}", e);
+							logger.warn("Error while fetching page {" + page.getId() + "}", e);
 						}
 					}
 

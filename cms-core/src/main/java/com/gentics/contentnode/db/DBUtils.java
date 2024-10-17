@@ -115,7 +115,7 @@ public final class DBUtils {
 				try {
 					t.closeResultSet(stmt.getResultSet());
 				} catch (SQLException e) {
-					logger.error("Error while closing resultset", e);
+					logger.warn("Error while closing resultset", e);
 				}
 			}
 			t.closeStatement(stmt);
@@ -200,7 +200,7 @@ public final class DBUtils {
 				try {
 					t.closeResultSet(stmt.getResultSet());
 				} catch (SQLException e) {
-					logger.error("Error while closing resultset", e);
+					logger.warn("Error while closing resultset", e);
 				}
 			}
 			t.closeStatement(stmt);
@@ -606,7 +606,7 @@ public final class DBUtils {
 				try {
 					stmth.closeResultSet(stmt.getResultSet());
 				} catch (SQLException e) {
-					logger.error("Error while closing resultset", e);
+					logger.warn("Error while closing resultset", e);
 				}
 			}
 			stmth.closeStatement(stmt);

@@ -64,3 +64,9 @@ feature:
 </javascript>
 
 users will automatically be logged out from Keycloak, if they log out from the CMS using the Editor User Interface or Administration User Interface.
+
+h4. Missing Keycloak
+
+When Keycloak is configured but currently not available, the CMS login will show a message that Single-Sign-On is currently not available.
+
+!images/gcmsui/keycloak-unavailable.png!

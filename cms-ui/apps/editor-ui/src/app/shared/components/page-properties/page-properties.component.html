@@ -15,8 +15,8 @@
         formControlName="description"
     ></gtx-input>
 
-    <div class="row collapse">
-        <div class="columns small-12" [class.medium-5]="languages?.length > 0">
+    <div class="basic-flex-row">
+        <div class="flex-col">
             <gtx-select
                 class="template-select"
                 [required]="true"
@@ -47,9 +47,8 @@
             </a>
         </div>
 
-        <div class="columns small-12 medium-5 medium-push-2">
+        <div *ngIf="languages?.length > 0" class="flex-col">
             <gtx-select
-                *ngIf="languages?.length > 0"
                 [required]="true"
                 [label]="('editor.item_language_label' | i18n) + '*'"
                 formControlName="language"
@@ -62,8 +61,8 @@
         </div>
     </div>
 
-    <div *ngIf="item" class="custom-date-row">
-        <div class="custom-date-col">
+    <div *ngIf="item" class="basic-flex-row custom-date-row">
+        <div class="flex-col custom-date-col">
             <gtx-date-time-picker
                 class="custom-date-picker"
                 [label]="'editor.item_custom_creation_date_label' | i18n"
@@ -75,7 +74,7 @@
             <span class="actual-date">{{ 'editor.item_date_created_label' | i18n  }}: {{ item.cdate | i18nDate:'dateTime' }}</span>
         </div>
 
-        <div class="custom-date-col">
+        <div class="flex-col custom-date-col">
             <gtx-date-time-picker
                 class="custom-date-picker"
                 [label]="'editor.item_custom_edit_date_label' | i18n"

@@ -114,7 +114,6 @@ public abstract class PortalCache {
 		try {
 			return (PortalCache) cacheClassConstructor.newInstance(new Object[] { region});
 		} catch (Exception e) {
-			NodeLogger.getLogger(PortalCache.class).error("failed to retrieve a cache instance for {" + region + "}", e);
 			throw new PortalCacheException("Could not create PortalCache for region {" + region + "}", e);
 		}
 	}

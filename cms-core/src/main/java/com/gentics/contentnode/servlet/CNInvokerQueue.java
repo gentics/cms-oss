@@ -142,7 +142,7 @@ public class CNInvokerQueue implements Runnable {
 	public void assureRunningThread() {
 		// make sure the thread is still running
 		if (!thread.isAlive()) {
-			logger.error("It seems the CNInvokerQueue thread has died - trying to restart it.");
+			logger.warn("It seems the CNInvokerQueue thread has died - trying to restart it.");
 			thread = new Thread(this, "CNInvokerQueue");
 			thread.setDaemon(true);
 			thread.start();
@@ -206,7 +206,7 @@ public class CNInvokerQueue implements Runnable {
 							this.wait(15 * 60 * 1000);
 						} catch (InterruptedException e) {
 							if (running) {
-								logger.error("Error while waiting for new queue entries.", e);
+								logger.warn("Interruption while waiting for new queue entries.", e);
 							}
 						}
 					}
@@ -226,7 +226,7 @@ public class CNInvokerQueue implements Runnable {
 					}
 				}
 			} catch (Throwable e) {
-				logger.fatal("Error while processing invoker queue", e);
+				logger.error("Error while processing invoker queue", e);
 				try {
 					synchronized (this) {
 						// avoid endless loops with 100% CPU usage by waiting a second ..
@@ -234,7 +234,7 @@ public class CNInvokerQueue implements Runnable {
 					}
 				} catch (InterruptedException e1) {
 					if (running) {
-						logger.error("error while waiting ...", e);
+						logger.warn("Interruption while waiting for processing invoker queue ...", e);
 					}
 				}
 			}
@@ -269,7 +269,7 @@ public class CNInvokerQueue implements Runnable {
 			transaction = factory.startTransaction(null, null, true);
 			TransactionManager.setCurrentTransaction(transaction);
 		} catch (NodeException e) {
-			logger.fatal("Error while starting transaction", e);
+			logger.error("Error while starting transaction", e);
 		}
 	}
 

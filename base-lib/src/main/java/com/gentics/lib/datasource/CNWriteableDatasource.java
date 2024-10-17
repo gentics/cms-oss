@@ -451,7 +451,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 					int modifiedRows = DB.update(getHandle().getDBHandle(), sql, params.toArray(), null);
 
 					if (modifiedRows != 1) {
-						logger.error(
+						logger.warn(
 								"Tried updating a single value attribut, but {" + modifiedRows
 								+ "} rows were affected. deleting all attributes of that name to insert it.");
 						insertSinglevalueAttribute(attribute, newValue);
@@ -1074,7 +1074,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 				StringBuffer sql = new StringBuffer(500);
 				String[] attr;
 				ArrayList params = new ArrayList();
-				HashMap map = new HashMap();
+				Map<String, GenticsContentAttribute> map = new HashMap<>();
 
 				int obj_id = 0;
 				int obj_type = 0;
@@ -1221,7 +1221,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 						// insert content
 						sql.append("UPDATE " + dbHandle.getContentMapName() + " SET ");
 
-						Iterator oit = map.entrySet().iterator();
+						Iterator<Map.Entry<String, GenticsContentAttribute>> oit = map.entrySet().iterator();
 
 						// update previously prepared optimized values
 						boolean first = true;
@@ -1232,7 +1232,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 							} else {
 								first = false;
 							}
-							Map.Entry e = (Map.Entry) oit.next();
+							Map.Entry<String, GenticsContentAttribute> e = oit.next();
 
 							sql.append(e.getKey());
 							sql.append(" = ? ");
@@ -1574,7 +1574,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 				String[] attr;
 				ArrayList params = new ArrayList();
 				Map<String, Object> insertData = new HashMap<>();
-				HashMap map = new HashMap();
+				Map<String, GenticsContentAttribute> map = new HashMap<>();
 
 				int obj_id = 0;
 				int obj_type = 0;
@@ -1844,7 +1844,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 						// insert content
 						sql.append("UPDATE " + dbHandle.getContentMapName() + " SET ");
 
-						Iterator oit = map.entrySet().iterator();
+						Iterator<Map.Entry<String, GenticsContentAttribute>> oit = map.entrySet().iterator();
 
 						// update previously prepared optimized values
 						boolean first = true;
@@ -1855,7 +1855,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 							} else {
 								first = false;
 							}
-							Map.Entry e = (Map.Entry) oit.next();
+							Map.Entry<String, GenticsContentAttribute> e = oit.next();
 
 							sql.append(e.getKey());
 							sql.append(" = ? ");
@@ -1907,30 +1907,24 @@ public class CNWriteableDatasource extends CNDatasource implements
 		}
 	}
 
-	private void addQuickColumnParam(ArrayList params, Map.Entry e, StringLengthManipulator manipulator) throws CMSUnavailableException {
-		Object val = e.getValue();
+	private void addQuickColumnParam(ArrayList params,Map.Entry<String, GenticsContentAttribute> e, StringLengthManipulator manipulator) throws CMSUnavailableException {
+		GenticsContentAttribute val = e.getValue();
 
 		if (val == null) {
 			params.add(null);
-		} else if (!(val instanceof GenticsContentAttribute)) {
-			// This can never happen imho
-			logger.fatal("Value is no content attribute. {" + val.getClass().getName() + "}");
-			params.add(null);
 		} else {
-			GenticsContentAttribute contentattr = (GenticsContentAttribute) val;
-
-			if (contentattr.isMultivalue()) {
-				logger.error("Attribute is multivalue but marked as optimized !! {" + contentattr.getAttributeName() + "}");
+			if (val.isMultivalue()) {
+				logger.error("Attribute is multivalue but marked as optimized !! {" + val.getAttributeName() + "}");
 				params.add(null);
 			} else {
 				// now check if we have a text(short) attr. and truncate if needed.
-				if (contentattr.getRealAttributeType() == GenticsContentAttribute.ATTR_TYPE_TEXT) {
-					String truncated = truncateAttributeValue(contentattr.getNextValue(), contentattr.getParent().getContentId(), contentattr.getAttributeName(),
+				if (val.getRealAttributeType() == GenticsContentAttribute.ATTR_TYPE_TEXT) {
+					String truncated = truncateAttributeValue(val.getNextValue(), val.getParent().getContentId(), val.getAttributeName(),
 							manipulator);
 
 					params.add(truncated);
 				} else {
-					params.add(contentattr.getNextObjectValue());
+					params.add(val.getNextObjectValue());
 				}
 			}
 		}
@@ -1966,7 +1960,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 	private String truncateAttributeValue(String value, String contentId, String attributName, StringLengthManipulator manipulator) {
 		if (value != null) {
 			if (manipulator.getLength(value) > 255) {
-				logger.error(
+				logger.warn(
 						"The value of the attribute {" + attributName + "} in the object {" + contentId
 						+ "} is too long for the specified datatype and will be truncated.");
 				return manipulator.truncate(value, 255);
@@ -2014,7 +2008,7 @@ public class CNWriteableDatasource extends CNDatasource implements
 			}
 
 		} else {
-			logger.error("Caution: This datasource does not use id_counter for generation of obj_id's. " + "It is possible that contentid's are not unique!");
+			logger.warn("Caution: This datasource does not use id_counter for generation of obj_id's. " + "It is possible that contentid's are not unique!");
 			DB.query(getHandle().getDBHandle(), "SELECT max(obj_id) maxid FROM " + getHandle().getDBHandle().getContentMapName() + " WHERE obj_type = ?",
 					new Integer(objType), rs);
 			if (rs == null) {

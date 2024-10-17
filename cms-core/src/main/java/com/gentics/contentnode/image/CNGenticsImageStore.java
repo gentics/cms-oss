@@ -559,7 +559,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			String cropheight = m.group("ch");
 
 			ImageFile image = t.getObject(ImageFile.class, task.contentfileId);
-			// TODO think about that, why not abort fatal?
+
 			if (image == null) {
 				logger.error("Could not find image {" + task.contentfileId + "} for resizing");
 				throw new NodeException("Could not find image {" + task.contentfileId + "} for resizing");
@@ -772,7 +772,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 							while (rs.next()) {
 								// found another image with the same publish
 								// path
-								logger.error("Found another image for publish path {" + paramFullImagePath + "}: " + rs.getInt("id") + " (using image "
+								logger.warn("Found another image for publish path {" + paramFullImagePath + "}: " + rs.getInt("id") + " (using image "
 										+ image[0].getFileId() + ")");
 							}
 						}
@@ -1578,8 +1578,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 						offset += numRead;
 					}
 				} catch (IOException e) {
-					logger.fatal("Error while reading original file contents.");
-					throw new NodeException("Error while reading original file contents.");
+					logger.error("Error while reading original file contents.", e);
+					throw new NodeException("Error while reading original file contents.", e);
 				} finally {
 					if (is != null) {
 						try {

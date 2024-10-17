@@ -1,5 +1,6 @@
 package com.gentics.contentnode.rest.util;
 
+import com.gentics.api.lib.exception.TranslationException;
 import java.util.concurrent.Callable;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -236,9 +237,14 @@ public class RestCallable implements Callable<GenericResponse> {
 							t.addTransactional(messageSender);
 
 							CNI18nString messageText = new CNI18nString("backgroundjob_finished_with_errors");
-
 							messageText.addParameter(description);
-							messageSender.sendMessage(new Message(1, userId, messageText.toString(), INSTANT_TIME));
+							var message = messageText.toString();
+
+							if (e instanceof TranslationException) {
+								message = e.getMessage();
+							}
+
+							messageSender.sendMessage(new Message(1, userId, message, INSTANT_TIME));
 						}
 					});
 				}

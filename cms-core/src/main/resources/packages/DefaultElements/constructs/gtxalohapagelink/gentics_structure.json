@@ -34,23 +34,6 @@
     "externalEditorUrl" : "",
     "regexId" : 0
   }, {
-    "globalId" : "A547.75233",
-    "name" : {
-      "de" : "Template",
-      "en" : "Template"
-    },
-    "keyword" : "template",
-    "editable" : false,
-    "typeId" : 21,
-    "order" : 2,
-    "mlId" : 0,
-    "visible" : false,
-    "required" : false,
-    "inlineEditable" : false,
-    "hideInEditor" : false,
-    "externalEditorUrl" : "",
-    "regexId" : 0
-  }, {
     "globalId" : "A547.70966",
     "name" : {
       "de" : "Text",

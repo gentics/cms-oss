@@ -22,7 +22,7 @@ import {
 import { BaseFormElementComponent, generateFormProvider, setEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, switchMap, tap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { NodePropertiesMode } from '../node-properties/node-properties.component';
 
@@ -73,7 +73,10 @@ export class PropertiesEditorComponent
     ngOnInit(): void {
         this.control = new FormControl({ value: this.value, disabled: true }, Validators.required);
 
-        this.subscriptions.push(this.control.valueChanges.subscribe(value => {
+        this.subscriptions.push(this.control.valueChanges.pipe(
+            distinctUntilChanged(isEqual),
+            skip(1),
+        ).subscribe(value => {
             this.triggerChange(value);
         }));
 
@@ -135,10 +138,6 @@ export class PropertiesEditorComponent
         if (this.control && !isEqual(this.value, this.control.value)) {
             this.control.setValue(this.value);
         }
-    }
-
-    simplePropertiesChanged(changes: EditableProperties): void {
-        this.triggerChange(changes);
     }
 
     forwardItemCleanChange(value: boolean): void {

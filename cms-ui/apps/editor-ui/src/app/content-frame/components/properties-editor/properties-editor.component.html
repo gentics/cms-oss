@@ -8,7 +8,6 @@
 
             [initialValue]="itemClean"
             [formControl]="control"
-            (valueChange)="simplePropertiesChanged($event)"
             (initialValueChange)="forwardItemCleanChange($event)"
         ></gtx-folder-properties>
     </ng-container>
@@ -24,7 +23,6 @@
 
             [initialValue]="itemClean"
             [formControl]="control"
-            (valueChange)="simplePropertiesChanged($event)"
             (initialValueChange)="forwardItemCleanChange($event)"
         ></gtx-form-properties>
     </ng-container>
@@ -42,7 +40,6 @@
 
             [initialValue]="itemClean"
             [formControl]="control"
-            (valueChange)="simplePropertiesChanged($event)"
             (initialValueChange)="forwardItemCleanChange($event)"
         ></gtx-page-properties>
     </ng-container>
@@ -69,7 +66,6 @@
         [item]="item"
         [initialValue]="itemClean"
         [formControl]="control"
-        (valueChange)="simplePropertiesChanged($event)"
         (initialValueChange)="forwardItemCleanChange($event)"
     ></gtx-file-properties>
 </ng-template>
@@ -80,7 +76,6 @@
         [initialValue]="itemClean"
         [formControl]="control"
         [mode]="NodePropertiesMode.EDIT"
-        (valueChange)="simplePropertiesChanged($event)"
         (initialValueChange)="forwardItemCleanChange($event)"
     ></gtx-node-properties>
 </ng-template>

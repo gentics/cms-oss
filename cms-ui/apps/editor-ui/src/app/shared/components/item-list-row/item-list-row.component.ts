@@ -221,6 +221,7 @@ export class ItemListRowComponent implements OnInit {
         const pageLanguageIds = item.languageVariants ? Object.keys(item.languageVariants).map(id => +id) : [];
         const languageVariantId = item.languageVariants && item.languageVariants[language.id];
         const pageTranslation = languageVariantId && this.entityResolver.getPage(languageVariantId);
+        const pageLanguageIsSet = item.language ?? false;
 
         if (restore) {
             const entityToBeRestoredId = languageVariantId;
@@ -241,7 +242,7 @@ export class ItemListRowComponent implements OnInit {
                 this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, EditMode.PREVIEW).navigate();
             }
             return;
-        } else if (source && !pageTranslation && !isDeleted) {
+        } else if (source && !pageTranslation && !pageLanguageIsSet && !isDeleted) {
             this.folderActions.updatePageLanguage(item.id, language).then(() => {
                 this.folderActions.refreshList('page');
             });

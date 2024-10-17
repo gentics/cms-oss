@@ -119,6 +119,7 @@ import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
 import com.gentics.contentnode.rest.util.ResolvableFilter;
+import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.contentnode.utils.JsonSerializer;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
@@ -304,7 +305,7 @@ public class PackageResourceImpl implements PackageResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			CNI18nString description = new CNI18nString("devtools_packages.action.cms2fs");
 			description.addParameter(name);
-			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
+			return Operator.executeLocked(description.toString(), waitMs, Operator.lock(LockType.devtoolPackage, name), () -> {
 				PackageSynchronizer packageSynchronizer = getPackage(name);
 				Map<Class<? extends SynchronizableNodeObject>, Integer> counts = new HashMap<>();
 				for (Class<? extends SynchronizableNodeObject> clazz : Synchronizer.CLASSES) {
@@ -338,7 +339,7 @@ public class PackageResourceImpl implements PackageResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			CNI18nString description = new CNI18nString("devtools_packages.action.fs2cms");
 			description.addParameter(name);
-			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
+			return Operator.executeLocked(description.toString(), waitMs, Operator.lock(LockType.devtoolPackage, name), () -> {
 				PackageSynchronizer packageSynchronizer = getPackage(name);
 				Map<Class<? extends SynchronizableNodeObject>, Integer> counts = new HashMap<>();
 				for (Class<? extends SynchronizableNodeObject> clazz : Synchronizer.CLASSES) {

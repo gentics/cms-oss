@@ -5,8 +5,6 @@
  */
 package com.gentics.contentnode.factory.url;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,7 +13,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
@@ -25,7 +22,6 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.render.RenderResult;
@@ -33,7 +29,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
-import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -66,13 +61,10 @@ public class StaticUrlFactory extends AbstractRenderUrlFactory {
 		Node node = folder.getNode();
 		ContentRepository cr = node.getContentRepository();
 
-		if (ignoreNodePublishDir(cr)) {
-			return FilePublisher.getPath(true, false, folder.getPublishPath(), appendFileName ? file.getName() : "");
-		} else if (ignoreSeparateBinaryPublishDir(cr)) {
-			// For mesh CR, the binary publish dir is not used for binaries.
-			return FilePublisher.getPath(true, false, node.getPublishDir(), folder.getPublishPath(), appendFileName ? file.getName() : "");
+		if (appendFileName) {
+			return String.format("%s%s", file.getFullPublishPath(true, !ignoreNodePublishDir(cr)), file.getFilename());
 		} else {
-			return FilePublisher.getPath(true, false, node.getBinaryPublishDir(), folder.getPublishPath(), appendFileName ? file.getName() : "");
+			return file.getFullPublishPath(false, !ignoreNodePublishDir(cr));
 		}
 	}
 
@@ -89,26 +81,11 @@ public class StaticUrlFactory extends AbstractRenderUrlFactory {
 		Node node = folder.getNode();
 		ContentRepository cr = node.getContentRepository();
 
-		List<String> segments = new ArrayList<>();
-
-		if (!ignoreNodePublishDir(cr)) {
-			segments.add(node.getPublishDir());
-		}
-
-		if (folder.getOwningNode().getPageLanguageCode() == PageLanguageCode.PATH) {
-			ContentLanguage language = page.getLanguage();
-			if (language != null) {
-				segments.add(language.getCode());
-			}
-		}
-
-		segments.add(folder.getPublishPath());
-
 		if (appendFileName) {
-			segments.add(page.getFilename());
+			return String.format("%s%s", page.getFullPublishPath(true, !ignoreNodePublishDir(cr)), page.getFilename());
+		} else {
+			return page.getFullPublishPath(false, !ignoreNodePublishDir(cr));
 		}
-
-		return FilePublisher.getPath(true, false, segments.toArray(new String[0]));
 	}
 
 	/**

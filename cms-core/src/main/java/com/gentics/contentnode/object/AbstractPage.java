@@ -716,7 +716,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 						for (Iterator<TagmapEntryRenderer> i = tagmapEntries.keySet().iterator(); i.hasNext();) {
 							TagmapEntryRenderer entry = i.next();
 	
-							if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+							if (entry.skip(attributes)) {
 								renderType.preserveDependencies(entry.getMapname());
 								i.remove();
 							} else if (CnMapPublisher.isPageContent(entry)) {

@@ -116,5 +116,29 @@ export function registerCommonAssertions(): void {
                 JSON.stringify(array),
             );
         });
+
+        ref.Assertion.addMethod('displayed', function assertElementIsDislayed(options?: IntersectionObserverInit) {
+            const elem = validateElementObject(this);
+            if (elem == null) {
+                return;
+            }
+
+            const observer = new IntersectionObserver(snapshot => {
+                if (snapshot.length !== 1) {
+                    return;
+                }
+
+                this.assert(
+                    snapshot[0].isIntersecting,
+                    'expected #{this} to be displayed/visible to the user',
+                    'expected #{this} to not be displayed/visible to the user',
+                    true,
+                );
+
+                observer.disconnect();
+            }, options);
+
+            observer.observe(elem);
+        });
     });
 }

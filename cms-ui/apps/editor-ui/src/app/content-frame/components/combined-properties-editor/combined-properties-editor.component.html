@@ -37,6 +37,7 @@
                 <gtx-tab-group
                     *ngFor="let category of objectPropertiesGrouped$ | async"
                     [label]="category.name | i18n"
+                    [id]="category.id"
                     [expanded]="(expandedState$ | async).includes(category.name)"
                     (tabGroupToggle)="tabGroupToggled($event, category.name)"
                 >

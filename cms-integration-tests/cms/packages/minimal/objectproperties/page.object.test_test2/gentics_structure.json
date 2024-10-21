@@ -1,0 +1,24 @@
+{
+  "globalId" : "b067.ea3bcc99-8bca-11ef-bd41-0242ac140002",
+  "type" : "page",
+  "keyword" : "object.test_test2",
+  "name" : {
+    "de" : "[Test] Text 2",
+    "en" : "[Test] Text 2"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "constructId" : "3821.174e1f5c-3244-11ef-872a-0242ac110002",
+  "required" : true,
+  "category" : {
+    "globalId" : "994d.e54046e7-37b9-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 1
+  },
+  "nodeIds" : [ ]
+}

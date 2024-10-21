@@ -38,8 +38,13 @@ declare module Chai {
          * Assertion to check if a value has specific formats applied.
          *
          * @example
+         * ```html
+         * <div class="some-element">
+         *      <p>Hello World! This <b>text</b> is <i>formatted</i>!
+         * </div>
+         * ```
          * ```ts
-         * expect($someElement).to.have.formatting('text', ['b']);
+         * expect($('.some-element)).to.have.formatting('text', ['b']);
          * cy.get('.some-element').should('have.formatting', 'text', ['b']);
          * ```
          */
@@ -62,6 +67,18 @@ declare module Chai {
          * ```
          */
         included(array: any[]): Assertion;
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('be.displayed');
+         * ```
+         */
+        displayed(options?: IntersectionObserverInit): Assertion;
     }
 }
 
@@ -72,7 +89,7 @@ declare namespace Cypress {
          *
          * @example
          * ```ts
-         * expect($someElement).to.have.formatting('text', ['b']);
+         * expect($('.some-element')).to.have.formatting('text', ['b']);
          * cy.get('.some-element').should('have.formatting', 'text', ['b']);
          * ```
          */
@@ -83,7 +100,7 @@ declare namespace Cypress {
          *
          * @example
          * ```ts
-         * expect($someElement).not.to.have.formatting('text', ['b']);
+         * expect($('.some-element')).not.to.have.formatting('text', ['b']);
          * cy.get('.some-element').should('not.have.formatting', 'text', ['b']);
          * ```
          */
@@ -127,6 +144,34 @@ declare namespace Cypress {
          * ```
          */
         (chainer: 'not.be.included', array: any[]): Chainable<Subject>;
+
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('be.displayed');
+         * ```
+         */
+        (chainer: 'be.displayed', threshold?: number | string): Chainable<Subject>;
+        (chainer: 'to.be.displayed', threshold?: number | string): Chainable<Subject>;
+
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('not.be.displayed');
+         * ```
+         */
+        (chainer: 'not.be.displayed', options?: IntersectionObserverInit): Chainable<Subject>;
+        (chainer: 'not.to.be.displayed', options?: IntersectionObserverInit): Chainable<Subject>;
     }
 
     interface Chainable<Subject> {

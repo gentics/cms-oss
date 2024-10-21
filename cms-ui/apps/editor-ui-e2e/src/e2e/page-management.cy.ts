@@ -33,11 +33,20 @@ describe('Page Management', () => {
     });
 
     describe('Minimal Setup', () => {
+        const OBJ_PROP_CAT_TESTS = '2';
+        const DEFAULT_OBJ_PROP_CAT = [
+            '_others_',
+            OBJ_PROP_CAT_TESTS,
+        ];
+
         beforeEach(async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
 
             cy.navigateToApp();
+            cy.window().then(win => {
+                win.localStorage.setItem('GCMSUI_openObjectPropertyGroups', JSON.stringify(DEFAULT_OBJ_PROP_CAT));
+            })
             cy.login(AUTH_ADMIN);
             cy.selectNode(IMPORTER.get(minimalNode)!.id);
         });
@@ -129,6 +138,29 @@ describe('Page Management', () => {
                     .find('.item-name .item-name-only')
                     .should('have.text', CHANGE_PAGE_NAME);
             });
+        });
+
+        it('should have the testing object-property category open on default', () => {
+            const PAGE = IMPORTER.get(pageOne)!;
+            const ALIAS_REQ_BREADCRUMB = '@reqBreadcrumb';
+
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(PAGE.id)
+                .itemAction('properties');
+
+            cy.intercept({
+                pathname: '/rest/folder/breadcrumb/*',
+            }, req => {
+                req.alias = ALIAS_REQ_BREADCRUMB;
+            });
+
+            cy.wait(ALIAS_REQ_BREADCRUMB);
+
+            cy.get(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${OBJ_PROP_CAT_TESTS}"]`)
+                .should('have.class', 'expanded')
+                .find('.tab-link')
+                .should('be.visible')
+                .and('be.displayed');
         });
 
         it('should be possible to edit the page object-properties', () => {

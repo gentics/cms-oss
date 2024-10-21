@@ -2699,8 +2699,10 @@ export class FolderActionsService {
                     const fileErrors = failed.map(res => {
                         const fileError = (res.error.data?.messages?.[0]?.message || res.error.message || '')
                             .replace(/\.$/, '');
-                        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                        return res[2].name + (fileError ? ' - ' + fileError : '');
+                        return [
+                            ((res.file as any)?.name || res.item?.name || '') as string,
+                            fileError,
+                        ].filter(s => s).join(' - ');
                     });
 
                     this.notification.show({
@@ -2835,8 +2837,8 @@ export class FolderActionsService {
                     .filter(response => response.successfull);
 
                 if (successfulUploads.length) {
-                    const onlyImages = successfulUploads.every(response =>
-                        /^image\//.test(response.item?.type || ''));
+                    const onlyImages = successfulUploads
+                        .every(response => /^image\//.test(response.item?.type || ''));
 
                     this.notification.show({
                         message: 'message.file_uploads_success',
@@ -2864,19 +2866,19 @@ export class FolderActionsService {
         for (const upload of successfulUploads) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                if (upload.response.file.fileType.startsWith('image/')) {
+                if (upload.item.type === 'image') {
                     // Image handling
                     if (!showImageProperties) {
                         continue;
                     }
-                    const loaded = await this.client.image.get(upload.response.file.id, { nodeId: nodeId, construct: true }).toPromise();
+                    const loaded = await this.client.image.get(upload.item.id, { nodeId: nodeId, construct: true }).toPromise();
                     await this.openImageModal(loaded.image, nodeId);
                 } else {
                     // File handlign
                     if (!showFileProperties) {
                         continue;
                     }
-                    const loaded = await this.client.file.get(upload.response.file.id, { nodeId: nodeId, construct: true }).toPromise();
+                    const loaded = await this.client.file.get(upload.item.id, { nodeId: nodeId, construct: true }).toPromise();
                     await this.openImageModal(loaded.file, nodeId);
                 }
             } catch (err) {

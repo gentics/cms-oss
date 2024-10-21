@@ -7,6 +7,7 @@ import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
+import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { SharedModule } from '@editor-ui/app/shared/shared.module';
 import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
@@ -74,6 +75,7 @@ class MockI18nService {
         return key;
     }
 }
+class MockUserSettingsService {}
 
 const NODE_ID = 1;
 
@@ -108,6 +110,7 @@ describe('ImagePropertiesModal', () => {
                 { provide: ModalService, useClass: MockModalService },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: UserSettingsService, useClass: MockUserSettingsService },
                 Api,
             ],
             schemas: [NO_ERRORS_SCHEMA],

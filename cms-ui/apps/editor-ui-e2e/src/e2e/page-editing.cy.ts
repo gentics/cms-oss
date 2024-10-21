@@ -387,12 +387,12 @@ describe('Page Editing', () => {
         });
 
         /*
-     * TODO: This test only works, because we have the `extra/cite` plugin enabled.
-     * Otherwise, the quote formatting would work differently.
-     * We should make it possible to test different aloha configs, but not sure how just yet.
-     * Additionally, the `note` feature is not really working in the context of the CMS,
-     * which is why we have the entire test skipped and the plugin disabled so far.
-     */
+        * TODO: This test only works, because we have the `extra/cite` plugin enabled.
+        * Otherwise, the quote formatting would work differently.
+        * We should make it possible to test different aloha configs, but not sure how just yet.
+        * Additionally, the `note` feature is not really working in the context of the CMS,
+        * which is why we have the entire test skipped and the plugin disabled so far.
+        */
         skipableSuite(envAll(ENV_ALOHA_PLUGIN_CITE), 'With "extra/cite" aloha plugin active', () => {
             it('should format and manage a inline quote correctly', () => {
                 const TEXT_CONTENT = 'test content';
@@ -442,6 +442,84 @@ describe('Page Editing', () => {
                             .should('have.text', NOTE_CONTENT);
                     });
             });
+        });
+
+        it('should insert new links correctly', () => {
+            const TEXT_CONTENT = 'Hello ';
+            const LINK_URL = 'https://gentics.com';
+            const LINK_ANCHOR = 'example';
+            const LINK_TARGET = '_blank';
+            const LINK_LANGUAGE = 'de';
+            const LINK_TITLE = 'This is a title!';
+
+            const ALIAS_MODAL = '@modal';
+            const ALIAS_FORM = '@form';
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_CONTENT)
+                .clear()
+                .type(TEXT_CONTENT);
+
+            cy.findAlohaComponent({ slot: 'insertLink', type: 'toggle-split-button' })
+                .btnClick();
+
+            cy.findDynamicFormModal()
+                .as(ALIAS_MODAL)
+                .find('.modal-content .form-wrapper')
+                .as(ALIAS_FORM);
+
+            /*
+             * Fill out the link form
+             */
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_FORM)
+                .find('> [data-slot="url"] .target-input input')
+                .clear()
+                .type(LINK_URL);
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_FORM)
+                .find('> [data-slot="url"] .anchor-input input')
+                .clear()
+                .type(LINK_ANCHOR);
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_FORM)
+                .find('> [data-slot="title"] input')
+                .clear()
+                .type(LINK_TITLE);
+
+            cy.get(ALIAS_FORM)
+                .find('> [data-slot="target"] gtx-select')
+                .selectValue(LINK_TARGET);
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_FORM)
+                .find('> [data-slot="lang"] input')
+                .clear()
+                .type(LINK_LANGUAGE);
+
+            /*
+             * Confirm the modal so the link get's inserted
+             */
+
+            cy.get(ALIAS_MODAL)
+                .find('.modal-footer [data-action="confirm"]')
+                .btnClick();
+
+            /*
+             * Validate HTML
+             */
+
+            cy.get(ALIAS_CONTENT)
+                .find('a')
+                .then($elem => {
+                    expect($elem.attr('href')).to.equal(`${LINK_URL}#${LINK_ANCHOR}`);
+                    expect($elem.attr('hreflang')).to.equal(LINK_LANGUAGE);
+                    expect($elem.attr('target')).to.equal(LINK_TARGET);
+                    expect($elem.attr('title')).to.equal(LINK_TITLE);
+                });
         });
     });
 

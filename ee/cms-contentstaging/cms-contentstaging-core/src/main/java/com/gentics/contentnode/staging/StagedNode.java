@@ -55,6 +55,8 @@ public class StagedNode extends StagingBase {
 
 	private Set<String> packages = new TreeSet<>();
 
+	private String meshProjectName;
+
 	private String meshPreviewUrlProperty;
 
 	/**
@@ -452,6 +454,14 @@ public class StagedNode extends StagingBase {
 		this.meshPreviewUrlProperty = meshPreviewUrlProperty;
 	}
 
+	public String getMeshProjectName() {
+		return meshProjectName;
+	}
+
+	public void setMeshProjectName(String meshProjectName) {
+		this.meshProjectName = meshProjectName;
+	}
+
 	@XmlTransient
 	@JsonIgnore
 	public void clone(StagedNode origin) {
@@ -480,6 +490,7 @@ public class StagedNode extends StagingBase {
 		this.hostname = origin.hostname;
 		this.hostnameProperty = origin.hostnameProperty;
 		this.meshPreviewUrlProperty = origin.meshPreviewUrlProperty;
+		this.meshProjectName = origin.meshProjectName;
 	}
 
 	@Override

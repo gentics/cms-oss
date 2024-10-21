@@ -822,6 +822,7 @@ public class StagingModelBuilder {
 		node.setPublishImageVariants(stagedNode.isPublishImageVariants());
 
 		node.setMeshPreviewUrlProperty(stagedNode.getMeshPreviewUrlProperty());
+		node.setMeshProjectName(stagedNode.getMeshProjectName());
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(stagedNode.isPubDirSegment());
@@ -1019,6 +1020,7 @@ public class StagingModelBuilder {
 		}
 
 		node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
+		node.setMeshProjectName(nodeNode.getMeshProjectName());
 
 		return node;
 	}

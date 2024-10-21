@@ -1212,9 +1212,29 @@ NOTE: Assign at least one language to the node where you will be creating forms.
 
 After this, the feature must be enabled for all Nodes, that need to contain forms.
 
-h3. Implementation
+h3. Implementation using Handlebars
 
-For including forms into pages, it is necessary to create a tagtype with at least the following parts:
+For including forms into pages using Handlebars, a tagtype with two parts needs to be created:
+
+!images/gcn_dialogs/form_hbs_tagtype.png!
+
+The Handlebars Part should have the following template:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+{{#gtx_form cms.tag.parts.form type="java"}}
+    {{{this}}}
+{{else}}
+    {{gtx_i18n de="Kein Formular ausgewählt" en="No Form selected"}}
+{{/gtx_form}}
+</pre>
+</div>
+
+For details on the +gtx_form+ helper see "Rendering with Handlebars":handlebars.html#gtx_form
+
+h3. Implementation using Velocity
+
+For including forms into pages using Velocity, it is necessary to create a tagtype with at least the following parts:
 
 !images/gcn_dialogs/form_tagtype.png!
 

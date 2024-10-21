@@ -1238,7 +1238,7 @@ public final class LinkChecker {
 					// 409: "conflict"
 					return check(url, CheckMethod.GET);
 				} else if (responseCode == 429) {
-					logger.warn(String.format("%s Request to %s returned code %d", method, url, responseCode));
+					logger.debug(String.format("%s Request to %s returned code %d", method, url, responseCode));
 					int usedRetryAfter = retryAfter;
 					String retryAfterResponse = response.header("Retry-After", Integer.toString(retryAfter));
 					try {

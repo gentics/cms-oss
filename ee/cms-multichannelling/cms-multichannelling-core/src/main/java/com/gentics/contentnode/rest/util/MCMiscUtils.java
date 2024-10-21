@@ -240,11 +240,13 @@ public class MCMiscUtils {
 				dependencies.put(ItemType.image, imageDeps.stream().collect(toMap));
 			}
 
-			logger.debug(
-				"Found dependencies for " + obj + ": "
-						+ pageDeps.size() + " page" + (pageDeps.size() == 1 ? "" : "s") + " "
-						+ fileDeps.size() + " file" + (fileDeps.size() == 1 ? "" : "s") + " "
-						+ imageDeps.size() + " image" + (imageDeps.size() == 1 ? "" : "s"));
+			if (logger.isDebugEnabled()) {
+				logger.debug(
+						"Found dependencies for " + obj + ": "
+								+ pageDeps.size() + " page" + (pageDeps.size() == 1 ? "" : "s") + " "
+								+ fileDeps.size() + " file" + (fileDeps.size() == 1 ? "" : "s") + " "
+								+ imageDeps.size() + " image" + (imageDeps.size() == 1 ? "" : "s"));
+			}
 
 			if (!ObjectTransformer.isEmpty(dependencies)) {
 				ret.put(id, dependencies);

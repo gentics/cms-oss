@@ -404,7 +404,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					stored = mapper.readValue(is, StoredContentPackage.class);
 				} catch (NoSuchFileException noSuchFileException) {
 					String message = "The Content Package '" + finalName + "' does not exist";
-					logger.warn(path, noSuchFileException);
+					logger.warn("Could not load package file from path " + path + ": " + noSuchFileException.getMessage(), noSuchFileException);
 					response.setResponseInfo(new ResponseInfo(ResponseCode.NOTFOUND, message));
 					return null;
 				} catch (IOException e) {
@@ -665,7 +665,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				try {
 					urlEncodedName = new URLCodec(Charsets.UTF_8.name()).encode(name);
 				} catch (EncoderException e) {
-					logger.info("Could not urlencode package name", e);
+					logger.warn("Could not url encode package name, falling back to sanitize check", e);
 					urlEncodedName = sanitizeCheck(name, false);
 				}
 				// Serve the request
@@ -2210,35 +2210,35 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			try {
 				consumeViewable(page, child -> addVersionedStageable(currentPath, page, new StoredPage(), (n, s) -> StagingModelBuilder.getPage(n, s), Optional.empty()));
 			} catch (InsufficientPrivilegesException e) {
-				logger.info("Could not recursively process the page " + page.getGlobalId() + " due to the insuffisient privileges");
+				logger.error("Could not recursively process the page " + page.getGlobalId() + " due to the insufficient privileges");
 			}
 		}
 		for (File file : f.getFiles()) {
 			try {
 				consumeViewable(file, child -> addStageable(currentPath, file, new StoredFile(), (n, s) -> StagingModelBuilder.getFile(n, s), Optional.empty(), Optional.empty()));
 			} catch (InsufficientPrivilegesException e) {
-				logger.info("Could not recursively process the file " + file.getGlobalId() + " due to the insuffisient privileges");
+				logger.error("Could not recursively process the file " + file.getGlobalId() + " due to the insufficient privileges");
 			}
 		}
 		for (ImageFile image : f.getImages()) {
 			try {
 				consumeViewable(image, child -> addStageable(currentPath, image, new StoredImage(), (n, s) -> StagingModelBuilder.getImage(n, s), Optional.empty(), Optional.empty()));
 			} catch (InsufficientPrivilegesException e) {
-				logger.info("Could not recursively process the image " + image.getGlobalId() + " due to the insuffisient privileges");
+				logger.error("Could not recursively process the image " + image.getGlobalId() + " due to the insufficient privileges");
 			}
 		}
 		for (Form form : f.getForms(null)) {
 			try {
 				consumeViewable(form, child -> addVersionedStageable(currentPath, form, new StoredForm(), (n, s) -> StagingModelBuilder.getForm(n, s), Optional.empty()));
 			} catch (InsufficientPrivilegesException e) {
-				logger.info("Could not recursively process the form " + form.getGlobalId() + " due to the insuffisient privileges");
+				logger.error("Could not recursively process the form " + form.getGlobalId() + " due to the insufficient privileges");
 			}
 		}
 		for (Folder folder : f.getChildFolders()) {
 			try {
 				consumeViewable(folder, child -> addStageable(currentPath, child, new StoredFolder(), (n, s) -> StagingModelBuilder.getFolder(n, s), Optional.of(this::consumeRecursiveFolder), Optional.empty()));
 			} catch (InsufficientPrivilegesException e) {
-				logger.info("Could not recursively process the folder " + folder.getGlobalId() + " due to the insuffisient privileges");
+				logger.error("Could not recursively process the folder " + folder.getGlobalId() + " due to the insufficient privileges");
 			}
 		}
 	};

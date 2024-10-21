@@ -142,6 +142,8 @@ public class StagingModelBuilder {
 		restFile.setFileSize(nodeFile.getFilesize());
 		restFile.setFileType(nodeFile.getFiletype());
 		restFile.setDescription(nodeFile.getDescription());
+		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
+		restFile.setCustomEdate(nodeFile.getCustomEDate().getIntTimestamp());
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			restFile.setNiceUrl(nodeFile.getNiceUrl());
@@ -1153,6 +1155,12 @@ public class StagingModelBuilder {
 		if (restFile.getForceOnline() != null) {
 			file.setForceOnline(restFile.getForceOnline());
 		}
+		if (restFile.getCustomCdate() != null) {
+			file.setCustomCDate(restFile.getCustomCdate());
+		}
+		if (restFile.getCustomEdate() != null) {
+			file.setCustomEDate(restFile.getCustomEdate());
+		}
 		fillMultichannellingData(restFile, file, File.class, channel);
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			if (restFile.getNiceUrl() != null) {
@@ -1193,6 +1201,12 @@ public class StagingModelBuilder {
 		}
 		if (restImage.getForceOnline() != null) {
 			image.setForceOnline(restImage.getForceOnline());
+		}
+		if (restImage.getCustomCdate() != null) {
+			image.setCustomCDate(restImage.getCustomCdate());
+		}
+		if (restImage.getCustomEdate() != null) {
+			image.setCustomEDate(restImage.getCustomEdate());
 		}
 		fillMultichannellingData(restImage, image, ImageFile.class, channel);
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {

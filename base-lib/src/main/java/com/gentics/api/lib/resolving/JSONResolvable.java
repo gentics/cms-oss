@@ -51,7 +51,7 @@ public class JSONResolvable implements Resolvable {
 				return transformValue(jsonObject.get(key));
 			}
 		} catch (JSONException e) {
-			NodeLogger.getNodeLogger(getClass()).error("Error while resolving key {" + key + "}", e);
+			NodeLogger.getNodeLogger(getClass()).warn("Error while resolving key {" + key + "}", e);
 			return null;
 		}
 	}

@@ -166,7 +166,6 @@ public final class Events {
 	 * transaction has already been started and is set as current transaction
 	 * @param object object for that the event occurred
 	 * @param properties string array of affected properties, may be null
-	 * @param sid session id
 	 * @param eventMask eventmask of the triggered event
 	 * @throws NodeException
 	 */
@@ -322,17 +321,17 @@ public final class Events {
 					I18nString msg = new CNI18nString("instantpublishing.page." + suffix);
 
 					msg.setParameter("0", ((Page) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
+					renderResult.addMessage(new DefaultNodeMessage(Level.ERROR, Events.class, msg.toString()), false);
 				} else if (object instanceof Folder) {
 					I18nString msg = new CNI18nString("instantpublishing.folder." + suffix);
 
 					msg.setParameter("0", ((Folder) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
+					renderResult.addMessage(new DefaultNodeMessage(Level.ERROR, Events.class, msg.toString()), false);
 				} else if (object instanceof com.gentics.contentnode.object.File) {
 					I18nString msg = new CNI18nString("instantpublishing.file." + suffix);
 
 					msg.setParameter("0", ((com.gentics.contentnode.object.File) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
+					renderResult.addMessage(new DefaultNodeMessage(Level.ERROR, Events.class, msg.toString()), false);
 				}
 			}
 		} finally {

@@ -311,7 +311,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		return ret;
@@ -419,7 +419,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		// We could fail fast here by switching the operands, but we want
@@ -579,7 +579,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		return ret;

@@ -427,7 +427,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				try {
 					cnBlock.put("constructid", construct.getId().toString());
 				} catch (Exception e) {
-					logger.error("construct for tag {" + blockTagIds[i] + "} has no id.");
+					logger.warn("construct for tag {" + blockTagIds[i] + "} has no id.");
 				}
 				cnBlock.put("icontitle", tag.getName() + " (" + construct.getName() + ")");
 				cnBlock.put("editdo", tag.containsOverviewPart() ? "17001" : "10008");
@@ -1101,11 +1101,11 @@ public class AlohaRenderer implements TemplateRenderer {
 
 			// replace editables
 			if (isReplaceEditables(renderType)) {
-			try {
-				template = replaceEditables(template, renderResult);
-			} catch (Exception e) {
-				logger.error("Error while replacing editables", e);
-			}
+				try {
+					template = replaceEditables(template, renderResult);
+				} catch (Exception e) {
+					logger.error("Error while replacing editables in template", e);
+				}
 			}
 
 			if (!isRenderSettings(renderType)) {

@@ -1870,7 +1870,7 @@ public class FileFactory extends AbstractFactory {
 		dbFilesDir = new java.io.File(ConfigurationValue.DBFILES_PATH.get());
 		if (!dbFilesDir.exists()) {
 			if (!dbFilesDir.mkdirs()) {
-				logger.warn(String.format("Failed to create dbfiles directory %s", dbFilesDir.getAbsolutePath()));
+				logger.error(String.format("Failed to create dbfiles directory %s", dbFilesDir.getAbsolutePath()));
 			}
 		}
 	}

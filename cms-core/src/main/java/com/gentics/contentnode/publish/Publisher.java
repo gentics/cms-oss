@@ -470,7 +470,7 @@ public class Publisher implements Runnable {
 			try {
 				doTimeManagement(prefs);
 			} catch (NodeException e) {
-				renderResult.fatal(Publisher.class, "Error while doing time management.", e);
+				renderResult.error(Publisher.class, "Error while doing time management.", e);
 				throw e;
 			}
 
@@ -494,7 +494,7 @@ public class Publisher implements Runnable {
 
 				publishData = t.getPublishData();
 			} catch (NodeException e) {
-				renderResult.fatal(Publisher.class, "Error while starting transaction.", e);
+				renderResult.error(Publisher.class, "Error while starting transaction.", e);
 				throw e;
 			}
 
@@ -544,7 +544,7 @@ public class Publisher implements Runnable {
 					}
 				});
 				if (lastPublishRun == 0) {
-					logger.error("Unable to get timestamp of last publish run.");
+					logger.warn("Unable to get timestamp of last publish run.");
 				}
 
 				if (logger.isInfoEnabled()) {
@@ -828,7 +828,7 @@ public class Publisher implements Runnable {
 			// remember error for invoker and scheduler
 			myPublishInfo.setError(e);
 			myPublishInfo.setReturnCode(PublishInfo.RETURN_CODE_ERROR);
-			logger.fatal("Error during publish run.", e);
+			logger.error("Error during publish run.", e);
 		} finally {
 			t.resetPublishData();
 			publishData = null;
@@ -1642,7 +1642,7 @@ public class Publisher implements Runnable {
 
 			filePublisher.finalizeWriter(true);
 		} catch (Throwable e) {
-			logger.fatal("Error during writefs", e);
+			logger.error("Error during writefs", e);
 			filePublisher.finalizeWriter(false);
 			if (e instanceof NodeException) {
 				throw (NodeException) e;

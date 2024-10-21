@@ -84,9 +84,9 @@ public class SemaphoreMap <T> {
 			}
 		} catch (InterruptedException e) {
 			SemaphoreAcquirer acquirer = semaphoreAcquirerMap.get(key);
-			logger.error(String.format("Waited %d ms for semaphore %s for %s, before getting interrupted", (System.currentTimeMillis() - startTime), this.name, key));
+			logger.warn(String.format("Waited %d ms for semaphore %s for %s, before getting interrupted", (System.currentTimeMillis() - startTime), this.name, key));
 			if (acquirer != null) {
-				logger.error(String.format("Last acquirer %s", acquirer));
+				logger.warn(String.format("Last acquirer %s", acquirer));
 			}
 			for (LockService service : lockServiceLoader) {
 				service.release(lockKey);
@@ -122,9 +122,9 @@ public class SemaphoreMap <T> {
 			}
 		} catch (InterruptedException e) {
 			SemaphoreAcquirer acquirer = semaphoreAcquirerMap.get(key);
-			logger.error(String.format("Waited %d ms for semaphore %s for %s, before getting interrupted", (System.currentTimeMillis() - startTime), this.name, key));
+			logger.warn(String.format("Waited %d ms for semaphore %s for %s, before getting interrupted", (System.currentTimeMillis() - startTime), this.name, key));
 			if (acquirer != null) {
-				logger.error(String.format("Last acquirer %s", acquirer));
+				logger.warn(String.format("Last acquirer %s", acquirer));
 			}
 			for (LockService service : lockServiceLoader) {
 				service.release(lockKey);

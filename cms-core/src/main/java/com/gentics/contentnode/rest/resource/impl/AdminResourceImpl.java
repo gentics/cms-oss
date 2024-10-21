@@ -203,7 +203,7 @@ public class AdminResourceImpl implements AdminResource {
 								meshVersion,
 								CmpVersionUtils.getPortalVersion(node.getEffectiveMeshPreviewUrl()));
 						} catch (Exception e) {
-							logger.error("Could not get version for the node {" + node.getMeshPreviewUrl() + "}", e);
+							logger.warn("Could not get version for the node {" + node.getMeshPreviewUrl() + "}", e);
 							versionInfo = new CmpVersionInfo().setCompatibility(CmpCompatibility.UNKNOWN);
 						}
 

@@ -63,9 +63,9 @@ public class BcryptPasswords extends InitJob {
 		} finally {
 			try {
 				t.commit(false);
-			} catch (TransactionException ignored) {
+			} catch (TransactionException e) {
 				if (logger.isWarnEnabled()) {
-					logger.warn("BcryptPasswords: TransactionException occured ");
+					logger.warn("BcryptPasswords: TransactionException occurred: " + e.getMessage(), e);
 				}
 			}
 		}

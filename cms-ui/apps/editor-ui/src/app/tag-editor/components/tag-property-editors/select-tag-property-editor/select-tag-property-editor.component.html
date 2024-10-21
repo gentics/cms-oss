@@ -19,7 +19,7 @@
             *ngIf="tagPart.type === 'MULTISELECT'"
             [label]="tagPart | tagPropLabel"
             [required]="tagPart?.mandatory"
-            [clearable]="!tagPart?.mandatory"
+            [clearable]="true"
             [disabled]="readOnly"
             [multiple]="true"
             [(ngModel)]="selectedMultipleOptionsIds"

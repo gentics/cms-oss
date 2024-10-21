@@ -1,12 +1,12 @@
 package com.gentics.contentnode.rest.model.form;
 
+import com.gentics.contentnode.rest.model.PublishableContentItem;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.gentics.contentnode.rest.model.ContentNodeItem;
 import com.gentics.contentnode.rest.model.FormTimeManagement;
 import com.gentics.contentnode.rest.model.ItemVersion;
 import com.gentics.contentnode.rest.model.User;
@@ -16,7 +16,7 @@ import com.gentics.contentnode.rest.model.User;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class FormModel extends ContentNodeItem {
+public class FormModel extends PublishableContentItem {
 	/**
 	 * Serial Version UID
 	 */
@@ -42,15 +42,6 @@ public class FormModel extends ContentNodeItem {
 	 */
 	private JsonNode data;
 
-	/**
-	 * Last publisher of this form
-	 */
-	private User publisher;
-
-	/**
-	 * Date when this form was published the last time
-	 */
-	private int pdate;
 
 	/**
 	 * The online status of the form.
@@ -176,38 +167,6 @@ public class FormModel extends ContentNodeItem {
 	 */
 	public void setData(JsonNode data) {
 		this.data = data;
-	}
-
-	/**
-	 * Publisher of the form
-	 * @return the publisher
-	 */
-	public User getPublisher() {
-		return publisher;
-	}
-
-	/**
-	 * Set the publisher
-	 * @param publisher the publisher to set
-	 */
-	public void setPublisher(User publisher) {
-		this.publisher = publisher;
-	}
-
-	/**
-	 * Publish timestamp
-	 * @return the pdate
-	 */
-	public int getPdate() {
-		return pdate;
-	}
-
-	/**
-	 * Set the publish timestamp
-	 * @param pdate the pdate to set
-	 */
-	public void setPdate(int pdate) {
-		this.pdate = pdate;
 	}
 
 	/**

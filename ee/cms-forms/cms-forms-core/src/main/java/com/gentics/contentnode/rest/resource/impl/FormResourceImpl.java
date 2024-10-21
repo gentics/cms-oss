@@ -5,6 +5,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -139,9 +141,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (publisher != null) {
 			model.setPublisher(ModelBuilder.getUser(publisher));
 		}
+		SystemUser unpublisher = form.getUnpublisher();
+		if (unpublisher != null) {
+			model.setUnpublisher(ModelBuilder.getUser(unpublisher));
+		}
 
+		model.setUnpublishedDate(form.getUnpublishedDate().getIntTimestamp());
 		model.setDeleted(ModelBuilder.getDeleteInfo(form));
-
 		model.setModified(form.isModified());
 		model.setOnline(form.isOnline());
 
@@ -154,12 +160,19 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (lockedSince != null) {
 			model.setLockedSince(lockedSince.getIntTimestamp());
 		}
-
 		model.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getVersion()));
 
-		model.setTimeManagement(new FormTimeManagement().setAt(form.getTimePub().getTimestamp())
-				.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getTimePubVersion()))
-				.setOfflineAt(form.getTimeOff().getTimestamp()));
+		SystemUser futurePublisher = form.getFutureUnpublisher();
+		SystemUser futureUnpublisher = form.getFutureUnpublisher();
+
+		model.setTimeManagement(
+				new FormTimeManagement()
+						.setAt(form.getTimePub().getTimestamp())
+						.setVersion(NodeObjectVersion.TRANSFORM2REST.apply(form.getTimePubVersion()))
+						.setOfflineAt(form.getTimeOff().getTimestamp())
+						.setFuturePublisher(ModelBuilder.getUser(futurePublisher))
+						.setFutureUnpublisher(ModelBuilder.getUser(futureUnpublisher))
+		);
 		model.setPlanned(form.isPlanned());
 
 		return model;

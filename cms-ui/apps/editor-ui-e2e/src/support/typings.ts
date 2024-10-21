@@ -25,7 +25,7 @@ declare namespace Cypress {
          * test the routing of the application.
          * @param raw If the navigation should happen without adding a `skip-sso` to prevent unwilling sso logins.
          */
-        navigateToApp(path?: string, raw?: boolean): Chainable<void>;
+        navigateToApp(path?: string, raw?: boolean): Chainable<AUTWindow>;
         /**
          * Login with pre-defined user data or with a cypress alias.
          * @param account The account name in the `auth.json` fixture, or an alias to a credentials object.

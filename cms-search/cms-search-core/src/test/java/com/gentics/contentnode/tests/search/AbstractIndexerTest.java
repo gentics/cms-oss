@@ -1,42 +1,5 @@
 package com.gentics.contentnode.tests.search;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.commons.codec.binary.Base64InputStream;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -50,13 +13,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
-import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Form;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.*;
 import com.gentics.contentnode.object.search.IndexableNodeObject;
 import com.gentics.contentnode.object.search.Indexer;
 import com.gentics.contentnode.object.search.SearchIndex;
@@ -64,13 +21,55 @@ import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.lib.etc.StringUtils;
 import com.jayway.jsonpath.JsonPath;
-
 import io.reactivex.Flowable;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.ClassRule;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Abstract base class for Indexer Tests
  */
 public abstract class AbstractIndexerTest {
+
+	@ClassRule
+	public static ElasticsearchContext elasticsearch = new ElasticsearchContext(ElasticsearchContext.VERSION_ES8);
+	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+
+	/**
+	 * Create an ArrayNode containing the integers from the collection
+	 * @param dataCollection collection of integers
+	 * @return ArrayNode instance
+	 */
+	public static ArrayNode createIntArray(Collection<Integer> dataCollection) {
+		ArrayNode arrayNode = mapper.createArrayNode();
+		for (int i : dataCollection) {
+			arrayNode.add(i);
+		}
+		return arrayNode;
+	}
+
+	/**
+	 * Create an ArrayNode containing the strings from the collection
+	 * @param dataCollection collection of strings
+	 * @return ArrayNode instance
+	 */
+	public static ArrayNode createStringArray(Collection<String> dataCollection) {
+		ArrayNode arrayNode = mapper.createArrayNode();
+		for (String S : dataCollection) {
+			arrayNode.add(S);
+		}
+		return arrayNode;
+	}
+
 	/**
 	 * Create the expected PUT body for indexing the given object for the nodes
 	 * 
@@ -109,15 +108,15 @@ public abstract class AbstractIndexerTest {
 	 */
 	protected JsonNode pageBody(Page page, Node... nodes) throws NodeException {
 		return Trx.supply(() -> {
-			ObjectNode json = FakeElasticsearchResource.mapper.createObjectNode();
+			ObjectNode json = mapper.createObjectNode();
+			json.put("_type", "page");
 			json.put("id", page.getId());
-			json.set("nodeId", FakeElasticsearchResource
-					.createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
+			json.set("nodeId", createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
 			json.put("folderId", page.getFolderId());
 			json.put("name", page.getName());
 			json.put("filename", page.getFilename());
 			json.put("description", page.getDescription());
-			json.set("content", FakeElasticsearchResource.mapper.createArrayNode());
+			json.set("content", mapper.createArrayNode());
 			json.put("created", page.getCustomOrDefaultCDate().getIntTimestamp());
 			json.put("creatorId", page.getCreator().getId());
 			json.put("edited", page.getCustomOrDefaultEDate().getIntTimestamp());
@@ -129,10 +128,9 @@ public abstract class AbstractIndexerTest {
 			}
 			json.put("templateId", page.getTemplate().getId());
 			if (page.isOnline()) {
-				json.set("online", FakeElasticsearchResource
-						.createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
+				json.set("online", createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
 			} else {
-				json.set("online", FakeElasticsearchResource.mapper.createArrayNode());
+				json.set("online", mapper.createArrayNode());
 			}
 			json.put("queued", page.isQueued());
 			json.put("modified", page.isModified());
@@ -146,8 +144,8 @@ public abstract class AbstractIndexerTest {
 			setPositiveInt(json, "systemEditDate", page.getEDate().getIntTimestamp());
 			setPositiveInt(json, "customEditDate", page.getCustomEDate().getIntTimestamp());
 			json.put("deleted", page.isDeleted());
-			json.set("niceUrl", FakeElasticsearchResource.createStringArray(page.getNiceAndAlternateUrls()));
-			ArrayNode groupIdsArray = FakeElasticsearchResource.mapper.createArrayNode();
+			json.set("niceUrl", createStringArray(page.getNiceAndAlternateUrls()));
+			ArrayNode groupIdsArray = mapper.createArrayNode();
 			for (Integer groupId : PermissionStore.getInstance().getGroupsWithPerm(Folder.TYPE_FOLDER,
 					page.getFolderId(), PermType.readitems, Page.TYPE_PAGE, ObjectTransformer.getInt(page.getLanguageId(), -1))) {
 				groupIdsArray.add(groupId);
@@ -167,10 +165,10 @@ public abstract class AbstractIndexerTest {
 	 */
 	protected JsonNode folderBody(Folder folder, Node... nodes) throws NodeException {
 		return Trx.supply(() -> {
-			ObjectNode json = FakeElasticsearchResource.mapper.createObjectNode();
+			ObjectNode json = mapper.createObjectNode();
+			json.put("_type", "folder");
 			json.put("id", folder.getId());
-			json.set("nodeId", FakeElasticsearchResource
-					.createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
+			json.set("nodeId", createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
 			json.put("folderId", folder.getMother().getId());
 			json.put("name", folder.getName());
 			json.put("description", folder.getDescription());
@@ -181,7 +179,7 @@ public abstract class AbstractIndexerTest {
 			json.put("systemCreationDate", folder.getCDate().getIntTimestamp());
 			json.put("systemEditDate", folder.getEDate().getIntTimestamp());
 			json.put("deleted", folder.isDeleted());
-			ArrayNode groupIdsArray = FakeElasticsearchResource.mapper.createArrayNode();
+			ArrayNode groupIdsArray = mapper.createArrayNode();
 			for (Integer groupId : PermissionStore.getInstance().getGroupsWithPerm(Folder.TYPE_FOLDER,
 					folder.getId(), PermType.read, Folder.TYPE_FOLDER, -1)) {
 				groupIdsArray.add(groupId);
@@ -201,22 +199,30 @@ public abstract class AbstractIndexerTest {
 	 */
 	protected JsonNode fileBody(File file, Node... nodes) throws NodeException {
 		return Trx.supply(() -> {
-			ObjectNode json = FakeElasticsearchResource.mapper.createObjectNode();
+			ObjectNode json = mapper.createObjectNode();
+			json.put("_type", file.isImage() ? "image" : "file");
 			json.put("id", file.getId());
-			json.set("nodeId", FakeElasticsearchResource
-					.createIntArray(Flowable.fromArray(nodes).map(Node::getId).toList().blockingGet()));
-			json.set("online", FakeElasticsearchResource.createIntArray(Flowable.fromArray(nodes)
+			json.set("nodeId", createIntArray(Flowable.fromArray(nodes).map(Node::getId).toList().blockingGet()));
+			json.set("online", createIntArray(Flowable.fromArray(nodes)
 					.filter(n -> FileOnlineStatus.isOnline(file, n)).map(Node::getId).toList().blockingGet()));
 			json.put("folderId", file.getFolder().getId());
 			json.put("name", file.getName());
 			json.put("filename", file.getName());
 			json.put("description", file.getDescription());
 			if (!file.isImage() && !Objects.equals(file.getFiletype(), "application/zip")) {
+                try {
+                    json.put("content", StringUtils.readStream(file.getFileStream()));
+                } catch (IOException e) {
+                    throw new NodeException(e);
+                }
+
+				/*
 				try (InputStream in = new Base64InputStream(file.getFileStream(), true, 0, null)) {
 					json.put("content", StringUtils.readStream(in));
 				} catch (IOException e) {
 					throw new NodeException(e);
 				}
+				 */
 			}
 			json.put("created", file.getCDate().getIntTimestamp());
 			json.put("creatorId", file.getCreator().getId());
@@ -226,8 +232,8 @@ public abstract class AbstractIndexerTest {
 			json.put("systemCreationDate", file.getCDate().getIntTimestamp());
 			json.put("systemEditDate", file.getEDate().getIntTimestamp());
 			json.put("deleted", file.isDeleted());
-			json.set("niceUrl", FakeElasticsearchResource.createStringArray(file.getNiceAndAlternateUrls()));
-			ArrayNode groupIdsArray = FakeElasticsearchResource.mapper.createArrayNode();
+			json.set("niceUrl", createStringArray(file.getNiceAndAlternateUrls()));
+			ArrayNode groupIdsArray = mapper.createArrayNode();
 			for (Integer groupId : PermissionStore.getInstance().getGroupsWithPerm(Folder.TYPE_FOLDER,
 					file.getFolder().getId(), PermType.readitems, file.getTType(), -1)) {
 				groupIdsArray.add(groupId);
@@ -250,20 +256,19 @@ public abstract class AbstractIndexerTest {
 			Wastebin wb = form.isDeleted() ? Wastebin.INCLUDE : Wastebin.EXCLUDE;
 
 			try (WastebinFilter wbf = wb.set()) {
-				ObjectNode json = FakeElasticsearchResource.mapper.createObjectNode();
+				ObjectNode json = mapper.createObjectNode();
+				json.put("_type", "form");
 				json.put("id", form.getId());
-				json.set("nodeId", FakeElasticsearchResource
-						.createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
+				json.set("nodeId", createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
 				if (form.isOnline()) {
-					json.set("online", FakeElasticsearchResource
-							.createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
+					json.set("online", createIntArray(Stream.of(nodes).map(Node::getId).collect(Collectors.toList())));
 				} else {
-					json.set("online", FakeElasticsearchResource.mapper.createArrayNode());
+					json.set("online", mapper.createArrayNode());
 				}
 				json.put("folderId", form.getFolder().getId());
 				json.put("name", form.getName());
 				json.put("description", form.getDescription());
-				ArrayNode content = FakeElasticsearchResource.mapper.createArrayNode();
+				ArrayNode content = mapper.createArrayNode();
 				for (String string : form.getIndexableContent("de")) {
 					content.add(string);
 				}
@@ -284,7 +289,7 @@ public abstract class AbstractIndexerTest {
 				json.put("systemCreationDate", form.getCDate().getIntTimestamp());
 				json.put("systemEditDate", form.getEDate().getIntTimestamp());
 				json.put("deleted", form.isDeleted());
-				ArrayNode groupIdsArray = FakeElasticsearchResource.mapper.createArrayNode();
+				ArrayNode groupIdsArray = mapper.createArrayNode();
 				for (Integer groupId : PermissionStore.getInstance().getGroupsWithPerm(Folder.TYPE_FOLDER,
 						form.getFolder().getId(), PermType.viewform, Form.TYPE_FORM, -1)) {
 					groupIdsArray.add(groupId);
@@ -353,21 +358,6 @@ public abstract class AbstractIndexerTest {
 	 * @throws NodeException
 	 */
 	protected <T> T indexTest(Supplier<T> testCode, Consumer<T> asserter) throws NodeException {
-		return indexTest(testCode, asserter, true);
-	}
-
-	/**
-	 * Do an index test
-	 * 
-	 * @param testCode test code
-	 * @param asserter asserter
-	 * @param clear    true to clear the fake resource
-	 * @throws NodeException
-	 */
-	protected <T> T indexTest(Supplier<T> testCode, Consumer<T> asserter, boolean clear) throws NodeException {
-		if (clear) {
-			FakeElasticsearchResource.clear();
-		}
 		Indexer.init();
 		T result = null;
 		try {
@@ -391,12 +381,32 @@ public abstract class AbstractIndexerTest {
 	 * @throws NodeException
 	 */
 	protected void assertIndexed(NodeObject object, JsonNode node) throws NodeException {
-		String index = index(object);
-
-		String actual = toSortedJson(FakeElasticsearchResource.store.getOrDefault(index, Collections.emptyMap())
-				.get(Integer.toString(object.getId())));
 		String expected = toSortedJson(node);
-		assertThat(actual).isEqualTo(expected);
+		String index = index(object);
+		HttpClient httpClient = new HttpClient();
+		String url = String.format("http://%s:%d/%s/_doc/%d", elasticsearch.getHost(), elasticsearch.getMappedPort(9200), index, object.getId());
+		GetMethod loadDOcumentMethod = new GetMethod(url);
+
+        try {
+            int responseCode = httpClient.executeMethod(loadDOcumentMethod);
+
+			assertThat(responseCode)
+				.as("Index lookup response code")
+				.isEqualTo(200);
+
+			ObjectNode doc = (ObjectNode) mapper.readTree(loadDOcumentMethod.getResponseBodyAsString()).get("_source");
+
+			if (doc.has("attachment")) {
+				JsonNode attachment = doc.get("attachment");
+
+				doc.remove("attachment");
+				doc.put("content", attachment.get("content").asText());
+			}
+
+			assertThat(toSortedJson(doc)).isEqualTo(expected);
+        } catch (IOException e) {
+            throw new NodeException(e);
+        }
 	}
 
 	/**
@@ -412,7 +422,7 @@ public abstract class AbstractIndexerTest {
 		}
 		try {
 			// convert node into a Map
-			Map<String, Object> map = FakeElasticsearchResource.mapper.readValue(node.toString(), Map.class);
+			Map<String, Object> map = mapper.readValue(node.toString(), Map.class);
 
 			// convert map into a TreeMap (which sorts entries by natural order of the keys)
 			map = new TreeMap<>(map);
@@ -425,7 +435,7 @@ public abstract class AbstractIndexerTest {
 			}
 
 			// serialize as JSON
-			return FakeElasticsearchResource.mapper.writeValueAsString(map);
+			return mapper.writeValueAsString(map);
 		} catch (IOException e) {
 			throw new NodeException(e);
 		}
@@ -436,10 +446,35 @@ public abstract class AbstractIndexerTest {
 	 * 
 	 * @param object object
 	 */
-	protected void assertNotIndexed(NodeObject object) {
+	protected void assertNotIndexed(NodeObject object) throws NodeException {
 		String index = index(object);
-		assertThat(FakeElasticsearchResource.store.getOrDefault(index, Collections.emptyMap()))
-				.doesNotContainKey(Integer.toString(object.getId()));
+		HttpClient httpClient = new HttpClient();
+		String url = String.format("http://%s:%d/%s/_doc/%d", elasticsearch.getHost(), elasticsearch.getMappedPort(9200), index, object.getId());
+		GetMethod loadDOcumentMethod = new GetMethod(url);
+
+		try {
+			int responseCode = httpClient.executeMethod(loadDOcumentMethod);
+
+			assertThat(responseCode)
+					.as("Index lookup response code")
+					.isEqualTo(404);
+
+			/*
+			ObjectNode doc = (ObjectNode) mapper.readTree(loadDOcumentMethod.getResponseBodyAsString()).get("_source");
+
+			if (doc.has("attachment")) {
+				JsonNode attachment = doc.get("attachment");
+
+				doc.remove("attachment");
+				doc.put("content", attachment.get("content").asText());
+			}
+
+			assertThat(toSortedJson(doc)).isEqualTo(expected);
+			 */
+		} catch (IOException e) {
+			throw new NodeException(e);
+		}
+//		fail("assertNotIndexed not implemented");
 	}
 
 	/**
@@ -510,156 +545,4 @@ public abstract class AbstractIndexerTest {
 
 		return objectCount;
 	}
-
-	@Path("/")
-	public final static class FakeElasticsearchResource {
-		public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
-		public static List<Triple<String, String, JsonNode>> requests = new ArrayList<>();
-
-		public static Map<String, Map<String, JsonNode>> store = new HashMap<>();
-
-		@Context
-		UriInfo uriInfo;
-
-		/**
-		 * Create an ArrayNode containing the integers from the collection
-		 * @param dataCollection collection of integers
-		 * @return ArrayNode instance
-		 */
-		public static ArrayNode createIntArray(Collection<Integer> dataCollection) {
-			ArrayNode arrayNode = mapper.createArrayNode();
-			for (int i : dataCollection) {
-				arrayNode.add(i);
-			}
-			return arrayNode;
-		}
-
-		/**
-		 * Create an ArrayNode containing the strings from the collection
-		 * @param dataCollection collection of strings
-		 * @return ArrayNode instance
-		 */
-		public static ArrayNode createStringArray(Collection<String> dataCollection) {
-			ArrayNode arrayNode = mapper.createArrayNode();
-			for (String S : dataCollection) {
-				arrayNode.add(S);
-			}
-			return arrayNode;
-		}
-
-		/**
-		 * Clear everything
-		 */
-		public static void clear() {
-			requests.clear();
-			store.clear();
-		}
-
-		@HEAD
-		@Path("{path: .*}")
-		public Response head(@PathParam("path") String path) {
-			requests.add(Triple.of("HEAD", path, null));
-			return Response.ok().build();
-		}
-
-		@GET
-		@Path("/{index}/_mapping/{type}")
-		public Response getMapping(@PathParam("index") String index, @PathParam("type") String type) {
-			requests.add(Triple.of("GET", uriInfo.getPath(), null));
-
-			ObjectNode json = FakeElasticsearchResource.mapper.createObjectNode();
-			ObjectNode indexObj = FakeElasticsearchResource.mapper.createObjectNode();
-			json.set(index, indexObj);
-			ObjectNode mappings = FakeElasticsearchResource.mapper.createObjectNode();
-			indexObj.set("mappings", mappings);
-			ObjectNode typeObj = FakeElasticsearchResource.mapper.createObjectNode();
-			mappings.set(type, typeObj);
-			ObjectNode properties = FakeElasticsearchResource.mapper.createObjectNode();
-			typeObj.set("properties", properties);
-			// TODO set properties
-			return Response.ok(json, MediaType.APPLICATION_JSON).build();
-		}
-
-		@PUT
-		@Path("/{index}/_mapping/{type}")
-		public Response updateMapping(@PathParam("index") String index, @PathParam("type") String type, String body)
-				throws Exception {
-			requests.add(Triple.of("PUT", uriInfo.getPath(), mapper.readValue(body, JsonNode.class)));
-			return Response.ok().build();
-		}
-
-		@POST
-		@Path("/{index}/{type}/{id}/_update")
-		public Response update(@PathParam("index") String index, @PathParam("type") String type,
-				@PathParam("id") String id, String body) throws Exception {
-			Map<String, JsonNode> indexStore = store.computeIfAbsent(index, k -> new HashMap<>());
-			if (!indexStore.containsKey(id)) {
-				return Response.status(Status.NOT_FOUND).build();
-			}
-
-			JsonNode document = mapper.readValue(body, JsonNode.class).get("doc");
-			ObjectNode stored = (ObjectNode) indexStore.get(id);
-
-			for (Iterator<Entry<String, JsonNode>> iterator = document.fields(); iterator.hasNext();) {
-				Entry<String, JsonNode> entry = iterator.next();
-				stored.set(entry.getKey(), entry.getValue());
-			}
-
-			indexStore.put(id, stored);
-
-			requests.add(Triple.of("POST", uriInfo.getPath(), mapper.readValue(body, JsonNode.class)));
-			return Response.ok().build();
-		}
-
-		@POST
-		@Path("{path: .*}")
-		public Response post(@PathParam("path") String path, String body) throws Exception {
-			requests.add(Triple.of("POST", path, mapper.readValue(body, JsonNode.class)));
-			return Response.ok().build();
-		}
-
-		@PUT
-		@Path("{path: .*}")
-		public Response put(@PathParam("path") String path, String body) throws Exception {
-			JsonNode document = mapper.readValue(body, JsonNode.class);
-			Pair<String, String> indexAndId = parsePath(path);
-			String index = indexAndId.getLeft();
-			String id = indexAndId.getRight();
-
-			store.computeIfAbsent(index, k -> new HashMap<>()).put(id, document);
-
-			requests.add(Triple.of("PUT", path, document));
-			return Response.ok().build();
-		}
-
-		@DELETE
-		@Path("{path: .*}")
-		public Response delete(@PathParam("path") String path) throws Exception {
-			Pair<String, String> indexAndId = parsePath(path);
-			String index = indexAndId.getLeft();
-			String id = indexAndId.getRight();
-
-			store.computeIfAbsent(index, k -> new HashMap<>()).remove(id);
-			requests.add(Triple.of("DELETE", path, null));
-
-			return Response.ok().build();
-		}
-
-		/**
-		 * Parse the path and return pair of index and document Id
-		 * 
-		 * @param path path
-		 * @return pair of index and document id
-		 * @throws Exception
-		 */
-		protected Pair<String, String> parsePath(String path) throws Exception {
-			String[] parts = path.split("/");
-			if (parts.length == 3) {
-				return Pair.of(parts[0], parts[2]);
-			} else {
-				throw new Exception(String.format("Unexpected path %s", path));
-			}
-		}
-	}
-
 }

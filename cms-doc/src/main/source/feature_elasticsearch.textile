@@ -7,7 +7,10 @@ endprologue.
 
 h3. Requirements
 
-This feature requires an existing installation of Elasticsearch 5 or Elasticsearch 6.
+This feature requires an existing installation of Elasticsearch 8.
+
+NOTE: Due to incompatible changes in the REST API and the mappings, the CMS is _not_ compatible older Elasticsearch version.
+
 Please consult the "Elasticsearch documentation":https://www.elastic.co/products/elasticsearch for details on installation, configuration
 and maintenance of Elasticsearch.
 
@@ -40,7 +43,21 @@ elasticsearch:
   index: "genticscms"
   # number of threads for indexing
   threads: 10
+  certPath: "conf/http.pem"
+  caPath: "conf/elastic-stack-ca.pem"
+  username: "elastic"
+  password: "pass"
 </shell>
+
+h4. HTTPS connections
+
+Elasticsearch 8 has HTTPS enabled by default. If the used certificate is self signed, the CMS must be configured to accept the certificate. The configuration items @elasticsearch.certPath@ and @elasticsearch.caPath@ must be paths to PEM files containing the certificate and the certificate authority used to create the certificate respectively.
+
+The configured certificate will automatically be used when Elasticsearch is accessed via HTTPS.
+
+h4. Basic Auth
+
+Elasticsearch 8 has basic auth enabled by default. The default username is @elastic@ and the generated password is output during the first start of Elasticsearch. The username and password must be configured via the settings @elasticsearch.username@ and @elasticsearch.password@ respectively.
 
 h4. Indexing file contents
 

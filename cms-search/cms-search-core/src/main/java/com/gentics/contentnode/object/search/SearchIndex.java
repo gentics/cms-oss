@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.gentics.contentnode.object.*;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
@@ -50,16 +51,6 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
-import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Form;
-import com.gentics.contentnode.object.LocalizableNodeObject;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.NodeObjectWithAlternateUrls;
-import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.StackResolvableNodeObject;
-import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.TextPartType;
 import com.gentics.contentnode.perm.PermissionStore;
@@ -90,7 +81,7 @@ public class SearchIndex {
 	 */
 	public final static Function<SearchIndex, IndexModel> TRANSFORM2REST = searchIndex -> {
 		IndexModel model = new IndexModel();
-		HttpClient httpClient = new HttpClient();
+		HttpClient httpClient = Indexer.getClient();
 		model.setName(searchIndex.name);
 		boolean found = searchIndex.exists(httpClient);
 		model.setFound(found);
@@ -371,7 +362,7 @@ public class SearchIndex {
 			}
 			PutMethod createIndexMethod = new PutMethod(url);
 			JSONObject indexSettings = new JSONObject();
-			indexSettings.put("mappings", new JSONObject().put(type.name(), mapping));
+			indexSettings.put("mappings", mapping);
 
 			if (settings != null) {
 				indexSettings.put("settings", settings);
@@ -476,7 +467,7 @@ public class SearchIndex {
 	@SuppressWarnings("unchecked")
 	public Set<String> checkMapping(HttpClient httpClient) throws NodeException {
 		try {
-			String mappingUrl = String.format("%s/_mapping/%s", url, type.name());
+			String mappingUrl = String.format("%s/_mapping", url);
 			if (Indexer.logger.isInfoEnabled()) {
 				Indexer.logger.info(String.format("Checking Mapping %s", mappingUrl));
 			}
@@ -489,7 +480,7 @@ public class SearchIndex {
 			}
 
 			JSONObject response = new JSONObject(getMappingMethod.getResponseBodyAsString());
-			JSONObject existing = response.getJSONObject(name).getJSONObject("mappings").getJSONObject(type.name()).getJSONObject("properties");
+			JSONObject existing = response.getJSONObject(name).getJSONObject("mappings").getJSONObject("properties");
 
 			Set<String> diff = new HashSet<>(Arrays.asList(JSONObject.getNames(mapping.getJSONObject("properties"))));
 			String[] names = JSONObject.getNames(existing);
@@ -522,7 +513,7 @@ public class SearchIndex {
 	 */
 	public void updateMapping(HttpClient httpClient) throws NodeException {
 		try {
-			String mappingUrl = String.format("%s/_mapping/%s", url, type.name());
+			String mappingUrl = String.format("%s/_mapping", url);
 			if (Indexer.logger.isInfoEnabled()) {
 				Indexer.logger.info(String.format("Updating Mapping %s", mappingUrl));
 			}
@@ -570,7 +561,9 @@ public class SearchIndex {
 	 * @return URL
 	 */
 	public String getUrl(int id, boolean update) {
-		return String.format("%s/%s/%s%s", url, type.name(), Integer.toString(id), update ? "/_update" : "");
+		return update
+			? String.format("%s/_update/%d", url, id)
+			: String.format("%s/_doc/%d", url, id);
 	}
 
 	/**
@@ -595,7 +588,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Indexing %s", object));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			PutMethod indexObjectMethod = new PutMethod(getUrl(object));
 			JSONObject indexJSON = getIndexJSON(object);
@@ -645,7 +638,7 @@ public class SearchIndex {
 
 	/**
 	 * Try to update the object (render only the provided attributes). If the object does not yet exist in the index,
-	 * it will be indexed completely by using {@link #putObject(IndexableNodeObject)}.
+	 * it will be indexed completely by using {@link #put(IndexableNodeObject)}.
 	 * @param object object
 	 * @param attributes set of attributes (must not be null or empty)
 	 * @throws NodeException
@@ -673,7 +666,7 @@ public class SearchIndex {
 				Indexer.logger.debug(String.format("Updating %s (%s)", object, attributes));
 			}
 
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			PostMethod updateObjectMethod = new PostMethod(getUrl(object, true));
 			JSONObject updateJSON = getUpdateJSON(object, attributes);
@@ -743,7 +736,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Removing %s", object));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(object));
 
@@ -764,7 +757,7 @@ public class SearchIndex {
 
 	/**
 	 * Synchronously remove the object with given ID from the index
-	 * @param object object
+	 * @param id object ID
 	 * @throws NodeException
 	 */
 	public void delete(int id) throws NodeException {
@@ -773,7 +766,7 @@ public class SearchIndex {
 			if (Indexer.logger.isDebugEnabled()) {
 				Indexer.logger.debug(String.format("Removing object with ID %d", id));
 			}
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 
 			DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(id, false));
 
@@ -815,6 +808,16 @@ public class SearchIndex {
 		JSONObject json = new JSONObject();
 		RenderType renderType = t.getRenderType();
 		try {
+			if (object instanceof Page) {
+				json.put("_type", "page");
+			} else if (object instanceof Folder) {
+				json.put("_type", "folder");
+			} else if (object instanceof File) {
+				json.put("_type", ((File) object).isImage() ? "image" : "file");
+			} else if (object instanceof Form) {
+				json.put("_type", "form");
+			}
+
 			for (TagmapEntryRenderer entry : tagmapEntries) {
 				if (!doIndex(entry.getMapname(), attributes)) {
 					continue;
@@ -1015,7 +1018,7 @@ public class SearchIndex {
 		Flowable<Integer> idFlowable = Flowable.generate(() -> Pair.of(new AtomicReference<String>(), new LinkedList<Integer>()), (state, emitter) -> {
 			AtomicReference<String> scrollId = state.getLeft();
 			Deque<Integer> deque = state.getRight();
-			HttpClient httpClient = new HttpClient();
+			HttpClient httpClient = Indexer.getClient();
 			if (deque.isEmpty()) {
 				PostMethod searchMethod = null;
 				JSONObject search = new JSONObject();
@@ -1025,12 +1028,12 @@ public class SearchIndex {
 					searchMethod = new PostMethod(String.format("%s/_search", url));
 					searchMethod.setQueryString(new NameValuePair[] { new NameValuePair("scroll", "1m") });
 					search
-						.put("_source", false)
+						.put("_source", "_type")
 						.put("size", Indexer.OBSOLETION_BATCH_SIZE)
 						.put("query", new JSONObject().put("term", new JSONObject().put("_type", type.name())));
 				} else {
 					// this is a subsequent scroll request
-					searchMethod = new PostMethod(String.format("%s_search/scroll", Indexer.elasticsearchUrl));
+					searchMethod = new PostMethod("/_search/scroll");
 					search
 						.put("scroll", "1m")
 						.put("scroll_id", scrollId.get());
@@ -1105,7 +1108,7 @@ public class SearchIndex {
 
 		try {
 			if (!ids.isEmpty()) {
-				HttpClient httpClient = new HttpClient();
+				HttpClient httpClient = Indexer.getClient();
 				for (Integer id : ids) {
 					DeleteMethod removeObjectMethod = new DeleteMethod(getUrl(id, false));
 					int responseCode = httpClient.executeMethod(removeObjectMethod);

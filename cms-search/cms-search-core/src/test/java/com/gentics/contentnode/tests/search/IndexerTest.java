@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -71,22 +69,18 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.testutils.RESTAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.ELASTICSEARCH, Feature.WASTEBIN, Feature.NICE_URLS })
 @RunWith(value = Parameterized.class)
 public class IndexerTest extends AbstractIndexerTest {
+	private static final Logger log = LoggerFactory.getLogger(IndexerTest.class);
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext().config(map -> {
 		map.setProperty(Indexer.THREADS_PARAM, "1");
 	});
 
-	/**
-	 * REST Application used as fake elasticsearch
-	 */
-	@ClassRule
-	public static RESTAppContext appContext = new RESTAppContext(
-			new ResourceConfig().registerResources(Resource.builder(FakeElasticsearchResource.class).build()));
 
 	private static Node node;
 
@@ -140,7 +134,10 @@ public class IndexerTest extends AbstractIndexerTest {
 
 	@Before
 	public void setup() throws NodeException {
-		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, appContext.getBaseUri());
+		String esUrl = String.format("http://%s:%d/", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
+		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
+
+		System.out.printf("Elasticsearch URL: %s\n", esUrl);
 
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {
@@ -242,7 +239,11 @@ public class IndexerTest extends AbstractIndexerTest {
 			consume(NodeObject::delete, object);
 			return object;
 		}, object -> {
-			assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+            assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
 			assertThat(getObjectCount(IndexType.wrap(object).get())).as("Object count").isEqualTo(objectCount.get());
 		});
 	}
@@ -469,7 +470,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			return fileObject;
 		}, object -> {
 			assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
-		}, false);
+		});
 	}
 
 	@Test
@@ -496,7 +497,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			return fileObject;
 		}, object -> {
 			assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
-		}, false);
+		});
 	}
 
 	@Test
@@ -518,7 +519,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -538,7 +539,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			return update(page, Page::publish);
 		}, object -> {
 			assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
-		}, false);
+		});
 
 		indexTest(() -> {
 			try (Trx trx = new Trx()) {
@@ -552,7 +553,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -586,7 +587,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertThat(expected.get("modified").asBoolean()).as("page is modified").isFalse();
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			try (Trx trx = new Trx()) {
@@ -602,7 +603,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertThat(expected.get("modified").asBoolean()).as("page is modified").isTrue();
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -646,7 +647,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, run publish process (should publish the page)
 		indexTest(() -> {
@@ -668,7 +669,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -712,7 +713,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, plan page to be published at timestamp 4
 		indexTest(() -> {
@@ -730,7 +731,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt").asInt()).as("offline at").isEqualTo(4);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 4, run publish process (should take page offline)
 		indexTest(() -> {
@@ -752,7 +753,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("offlineAt")).as("offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -792,7 +793,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isTrue();
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, approve
 		indexTest(() -> {
@@ -808,7 +809,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -848,7 +849,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isTrue();
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, deny request
 		indexTest(() -> {
@@ -864,7 +865,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -908,7 +909,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queuedOfflineAt")).as("page queued offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -948,7 +949,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, queue page to got offline
 		indexTest(() -> {
@@ -964,7 +965,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isTrue();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 4, approve
 		indexTest(() -> {
@@ -980,7 +981,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1020,7 +1021,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, queue page to got offline
 		indexTest(() -> {
@@ -1036,7 +1037,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isTrue();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 4, deny request
 		indexTest(() -> {
@@ -1052,7 +1053,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queued").asBoolean()).as("page is queued").isFalse();
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1096,7 +1097,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queuedOfflineAt")).as("page queued offline at").isEqualTo(NullNode.instance);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		// at timestamp 3, queue page to got offline at timestamp 4
 		indexTest(() -> {
@@ -1114,7 +1115,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("queuedOfflineAt").asInt()).as("page queued offline at").isEqualTo(4);
 			assertOnline(expected, node.getId(), channel.getId(), subchannel.getId(), sidechannel.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1158,7 +1159,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("systemCreationDate").asInt()).as("page systemCreationDate").isEqualTo(1);
 			assertThat(expected.get("customCreationDate").asInt()).as("page customCreationDate").isEqualTo(3);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1202,7 +1203,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertThat(expected.get("systemEditDate").asInt()).as("page systemEditDate").isEqualTo(2);
 			assertThat(expected.get("customEditDate").asInt()).as("page customEditDate").isEqualTo(3);
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1252,7 +1253,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// revoke read permission to the testgroup
@@ -1269,7 +1270,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertNotGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1309,7 +1310,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// remove the role from the group
@@ -1322,7 +1323,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertNotGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1358,7 +1359,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// change the role permissions
@@ -1370,7 +1371,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertNotGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1401,7 +1402,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// create subgroup, which inherits the permissions
@@ -1419,7 +1420,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId(), subGroup.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1458,7 +1459,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			JsonNode expected = body(object, node, channel, subchannel, sidechannel);
 			assertGroupIds(expected, group.getId(), subGroup.getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 
 		indexTest(() -> {
 			// remove the subgroup
@@ -1470,7 +1471,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			assertGroupIds(expected, group.getId());
 			assertNotGroupIds(expected, testPair.getRight().getId());
 			assertIndexed(object, expected);
-		}, false);
+		});
 	}
 
 	@Test
@@ -1488,7 +1489,7 @@ public class IndexerTest extends AbstractIndexerTest {
 			LocalizableNodeObject<?> object = pair.getLeft();
 			Node testChannel = pair.getRight();
 			assertIndexed(object, body(object, node, channel, subchannel, sidechannel, testChannel));
-		}, false);
+		});
 	}
 
 	@Test
@@ -1506,6 +1507,6 @@ public class IndexerTest extends AbstractIndexerTest {
 			return testObject;
 		}, object -> {
 			assertIndexed(object, body(object, node, channel, subchannel, sidechannel));
-		}, false);
+		});
 	}
 }

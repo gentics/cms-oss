@@ -37,7 +37,8 @@
 		<module>cms-server</module>
 		<module>cms-changelog</module>
 		<module>cms-doc</module>
-	</modules>
+    <module>cms-translation</module>
+  </modules>
 
 	<properties>
 		<!-- Dynamic third party dependencies -->

@@ -35,7 +35,7 @@ describe('Page Management', () => {
     describe('Minimal Setup', () => {
         const OBJ_PROP_CAT_TESTS = '2';
         const DEFAULT_OBJ_PROP_CAT = [
-            'editor.object_properties_category_others_label',
+            '_others_',
             OBJ_PROP_CAT_TESTS,
         ];
 
@@ -140,7 +140,7 @@ describe('Page Management', () => {
             });
         });
 
-        it.only('should have the testing object-property category open on default', () => {
+        it('should have the testing object-property category open on default', () => {
             const PAGE = IMPORTER.get(pageOne)!;
             const ALIAS_REQ_BREADCRUMB = '@reqBreadcrumb';
 

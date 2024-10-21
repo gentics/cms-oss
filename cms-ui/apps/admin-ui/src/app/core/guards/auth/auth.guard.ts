@@ -2,7 +2,7 @@ import { AdminUIModuleRoutes } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
-import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, take, tap } from 'rxjs/operators';
 import { AppStateService } from '../../../state';
 
 /**
@@ -40,13 +40,12 @@ export class AuthGuard {
                 filter(auth => !auth.loggingIn),
                 take(1),
                 map(auth => auth.isLoggedIn),
-            ).toPromise()
-                .then(loginValidated => {
+                tap(loginValidated => {
                     if (!loginValidated) {
                         this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: routerStateSnapshot.url } });
                     }
-                    return loginValidated;
-                });
+                }),
+            );
         }
 
         this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: routerStateSnapshot.url } });

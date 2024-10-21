@@ -6,13 +6,25 @@
         <icon [class]="item.type || ''">{{ item.type | gtxTypeIcon }}</icon>
         <span>{{ item.name }}</span>
     </div>
-    <p class="lead"
+    <p
+        class="lead"
         [innerHTML]="'modal.confirm_objprop_apply_to_subitems_body' | i18n:{
-            'objPropName': objPropName, 'subitems': ('modal.confirm_objprop_apply_to_subitems_' + item.type | i18n)
+            'objPropName': item?.tags?.[objPropId]?.displayName || '',
+            'subitems': ('modal.confirm_objprop_apply_to_subitems_' + item.type | i18n)
         }">
     </p>
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button type="warning" (click)="closeFn(true)">{{ 'common.okay_button' | i18n }}</gtx-button>
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        type="warning"
+        data-action="confirm"
+        (click)="closeFn(true)"
+    >{{ 'common.okay_button' | i18n }}</gtx-button>
 </div>

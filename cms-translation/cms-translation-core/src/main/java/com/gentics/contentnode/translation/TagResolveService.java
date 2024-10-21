@@ -108,8 +108,7 @@ public class TagResolveService {
 
 	/**
 	 * This method resolves the tags in the given text. It replaces the tag in the resolvable text
-	 * with the content of the text property. The content of the text property is wrapped in double
-	 * curly braces.
+	 * with the content of the text property. The content of the text property is wrapped in a span.
 	 *
 	 * @param untranslatedTagMap The map of untranslated tags.
 	 * @param resolvableText     The text in which to resolve the tags.
@@ -119,12 +118,14 @@ public class TagResolveService {
 		var resolvedText = resolvableText;
 		for (var tag : untranslatedTagMap.entrySet()) {
 			var tagStringValueOpt = this.getResolvablePartProperty(tag.getValue());
+			var tagContent = "";
+
 			if (tagStringValueOpt.isPresent()) {
-				var tagContent = tagStringValueOpt.get().getStringValue();
-				tagContent = String.format("<span data-translate-id=\"%s\">%s</span>",
-						tag.getValue().getId(), tagContent);
-				resolvedText = resolvedText.replaceAll(tag.getKey(), tagContent);
+				tagContent = tagStringValueOpt.get().getStringValue();
 			}
+			tagContent = String.format("<span data-translate-id=\"%s\">%s</span>",
+					tag.getValue().getId(), tagContent);
+			resolvedText = resolvedText.replaceAll(tag.getKey(), tagContent);
 		}
 		return resolvedText;
 	}
@@ -154,7 +155,7 @@ public class TagResolveService {
 			var originalTag = translatedTagList.stream()
 					.filter(tag -> tag.getValue().getId() == replacementId.intValue()).findFirst()
 					.orElseThrow(()-> new NodeException("Could not find tag with id " + replacementId + " to unresolve tag"));
-			unresolvedText = resolvedText.replace(tagToUnresolve, originalTag.getKey());
+			unresolvedText = unresolvedText.replace(tagToUnresolve, originalTag.getKey());
 
 			// update tags with translated text
 			this.getResolvablePartProperty(originalTag.getValue()).ifPresent(untranslatedProperty ->
@@ -210,7 +211,6 @@ public class TagResolveService {
 							.replace(">", "")
 							.trim()
 							.equals(tag.getName()))
-					.filter(tag -> tag.getConstructId() == this.linkConstructId)
 					.findAny();
 			correspondingTag.ifPresent(tag -> tagMap.put(matchedNodeTag, tag));
 		}

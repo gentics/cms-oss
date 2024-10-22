@@ -62,10 +62,6 @@ public class TranslationServiceLoaderUtil {
 		}
 		final var implementationClassFromConfig = implementationClassOpt.get();
 
-		if (isSameImplementation(implementationClassFromConfig)) {
-			return false;
-		}
-
 		final var serviceDefinitionFilePath = Paths.get(
 				String.format("%s/META-INF/services/%s", classpath, INTERFACE_FQDN));
 
@@ -88,15 +84,21 @@ public class TranslationServiceLoaderUtil {
 	}
 
 	/**
-	 * Checks if the current translation service implementation matches the one specified in the configuration.
+	 * Checks if the TranslationService implementation is already provided.
 	 *
-	 * @param implementationClassFromConfig The fully qualified class name of the implementation from the configuration.
-	 * @return {@code true} if the current translation service implementation matches the specified class name; {@code false} otherwise.
+	 * @return true if the implementation is provided and matches the configured class name, false otherwise
 	 */
-	private static boolean isSameImplementation(String implementationClassFromConfig) {
+	public static boolean isAlreadyProvided() {
+		final var implementationClassOpt = getImplementationClass();
+		if (implementationClassOpt.isEmpty()) {
+			logger.error("No implementation for the 'TranslationService' interface is configured.");
+			return false;
+		}
+		final var implementationClassFromConfig = implementationClassOpt.get();
+
 		var currentService = getTranslationService();
 		return currentService.map(translationService -> translationService.getClass().getName()
-				.equals(implementationClassFromConfig))
+						.equals(implementationClassFromConfig))
 				.orElse(false);
 	}
 

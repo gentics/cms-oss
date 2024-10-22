@@ -3,6 +3,8 @@ package com.gentics.contentnode.tests.rest;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createformDataBodyPart;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
@@ -41,9 +43,6 @@ import org.assertj.core.api.Condition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.uri.UriComponent;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -55,11 +54,13 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
@@ -85,11 +86,7 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
-import com.gentics.contentnode.rest.util.MiscUtils;
-import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.staging.StagingErrorKind;
-import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -775,7 +772,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		Integer node1ExtraConstructId = supply(() -> createConstruct(node1, LongHTMLPartType.class, "node1", "text"));
 		Page page3 = supply(() -> create(Page.class, p -> {
 			p.setFolderId(folder1.getId());
-			p.setTemplateId(pageTemplate.getId());
+			p.setTemplateId(template.getId());
 			p.setName("Page 3");
 			p.getContent().addContentTag(node1ExtraConstructId);
 		}));
@@ -1227,7 +1224,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		{
 			// This throws on duplicated pages, which should not happen on page move
 			response.setContentPackage(new StagedContentPackage());
-			Path rootPath = cpFilesDir.toPath().resolve(packageName);
+			Path rootPath = dbFilesDir.toPath().resolve(packageName);
 			ContentStagingResourceImpl.fillContentPackageStatistic(rootPath, response.getContentPackage(), true);
 		}
 		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);

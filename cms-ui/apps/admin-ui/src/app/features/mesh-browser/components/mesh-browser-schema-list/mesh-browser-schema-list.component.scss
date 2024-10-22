@@ -1,11 +1,27 @@
+@import '../../../../../styles/variables';
+
 .schema-list-wrapper {
-    margin: 1rem 0;
-    padding-right: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
     overflow-y: auto;
-    max-height: 75vh;
-}    
+    overflow-x: hidden;
+
+    .schema-list::ng-deep .schema-items {
+        transition: 200ms;
+
+        &:not(.collapsed) {
+            padding-bottom: 0.5rem;
+        }
+    }
+
+    .schema-list:not(:first-child)::ng-deep .schema-header {
+        border-top: 1px dotted $gtx-color-dark-gray;
+    }
+}
 
 .no-schema-elements {
-    margin: 1rem 0;
+    padding: 1rem 0;
     font-weight: 300;
 }

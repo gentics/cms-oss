@@ -24,7 +24,6 @@ import { ContentRepository } from '@gentics/cms-models';
 import { BranchReference, ProjectResponse, User } from '@gentics/mesh-models';
 import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
-
 @Component({
     selector: 'gtx-mesh-browser-master',
     templateUrl: './mesh-browser-master.component.html',
@@ -35,34 +34,31 @@ export class MeshBrowserMasterComponent
     extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
-    public selectedRepository: ContentRepository;
-
-    public me: User;
-
-    public meName: string;
-
-    public loggedIn = false;
-
-    public projects: Array<string> = [];
-
     @Input({ alias: ROUTE_MESH_PROJECT_ID })
     public currentProject: string;
-
-    public branches: Array<BranchReference> = [];
 
     @Input({ alias: ROUTE_MESH_BRANCH_ID })
     public currentBranchUuid: string;
 
-    public currentBranch: BranchReference;
-
     @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
     public parentNodeUuid: string;
-
-    public languages: Array<string> = [];
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
     public currentLanguage = FALLBACK_LANGUAGE;
 
+    // User Info
+    public me: User;
+    public meName: string;
+    public loggedIn = false;
+
+    // Info from current Project & Node
+    public branches: Array<BranchReference> = [];
+    public projects: Array<string> = [];
+    public languages: Array<string> = [];
+
+    // Current element state
+    public selectedRepository: ContentRepository;
+    public currentBranch: BranchReference;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -75,7 +71,6 @@ export class MeshBrowserMasterComponent
     ) {
         super(changeDetector, router, route, appState);
     }
-
 
     ngOnChanges(): void {
         const loadedRepository = this.route.snapshot.data[ROUTE_DATA_MESH_REPO_ITEM];

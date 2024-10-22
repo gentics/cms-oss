@@ -43,6 +43,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     public initialized = false;
     public canLoginWithCR = false;
     public loading = false;
+    public requiresLogin = false;
 
     public form: FormGroup<FormProperties<LoginRequest>>;
 
@@ -118,6 +119,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         this.meshClient.auth.me().send().then(me => {
             this.loading = false;
             this.loggedIn = me.username !== 'anonymous';
+            this.requiresLogin = !this.loggedIn;
             this.changeDetector.markForCheck();
             if (this.loggedIn) {
                 this.loggedInChange.emit({ loggedIn: true, user: me });
@@ -128,6 +130,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
             this.loading = false;
             this.loggedIn = false;
+            this.requiresLogin = true;
             this.changeDetector.markForCheck();
         });
     }

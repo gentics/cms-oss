@@ -24,7 +24,6 @@ import {
     MeshBrowserModuleMasterComponent,
 } from './components';
 
-
 export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
     {
         path: '',

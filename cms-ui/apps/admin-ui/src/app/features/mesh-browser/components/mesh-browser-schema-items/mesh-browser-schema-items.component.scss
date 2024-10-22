@@ -1,66 +1,112 @@
-@import "variables";
+@import "../../../../../styles/variables";
 
 .schema-header {
-    margin: 0.5rem 0;
-    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+    position: relative;
     display: flex;
+    flex-direction: column;
 
-    .schema-title {
-        flex-grow: 1;
-        white-space: nowrap;
-        text-transform: uppercase;  
-        font-weight: 300;
+    .title-wrapper {
+        display: flex;
+        align-items: center;
+
+        .schema-title {
+            flex-grow: 1;
+            white-space: nowrap;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .collapse-icon {
+            cursor: pointer;
+            transition: 200ms;
+        }
     }
-    & > icon {
-        cursor: pointer;
-    }
-    .collapsed {
-        transform: rotate(-90deg);
+
+    .progress-wrapper {
+        position: relative;
     }
 }
 
-
 .schema-items {
-    padding: 0.2rem;
+    &.collapsed {
+        .schema-header .collapse-icon {
+            transform: rotateZ(-90deg);
+        }
 
-    .striped {
-        background-color: $gtx-color-off-white;
-        border-radius: 2px;
+        .schema-content {
+            max-height: 0;
+        }
     }
 
-    .schema-content.collapsed {
-        max-height: 0;
+    .schema-content {
+        max-height: 100vh;
+        transition: 200ms;
         overflow: hidden;
     }
 
     .schema-element {
-        color: $gtx-color-primary;
-        padding: 0.4rem 0;
-        padding-left: 0.4rem;
+        padding: 4px 8px 6px;
         margin: 0rem 0;
-        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
 
-        .title {
-            display: flex;
+        &:nth-child(even) {
+            background-color: $gtx-color-off-white;
         }
 
-        .language {
-            font-size: 11px;
-            margin-right: 5px;
-            margin-left: 0.2rem;
-            border-radius: 3px;
-            padding: 1px 4px;
-            text-transform: uppercase;
-            background: $gtx-color-light-gray;
-            color: black;
-            font-weight: 500;
-            cursor: default;
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-content: center;
 
-            &.active {
-                border-bottom: 1px solid $gtx-color-off-black;
-                background-color: $gtx-color-primary;
-                color: white;
+            .content-icon {
+                color: $gtx-color-primary;
+                cursor: pointer;
+            }
+
+            .title {
+                color: $gtx-color-primary;
+                cursor: pointer;
+            }
+
+            @media (max-width: $small-screen) {
+                .status {
+                    margin-left: auto;
+                }
             }
         }
+
+        .language-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 2px;
+
+            .language {
+                font-size: 11px;
+                border-radius: 3px;
+                padding: 1px 4px;
+                text-transform: uppercase;
+                background: $gtx-color-light-gray;
+                border: none;
+                color: black;
+                font-weight: 500;
+                transition: 200ms;
+                @include z-depth-1;
+
+                &.active {
+                    background-color: $gtx-color-primary;
+                    color: white;
+                }
+            }
+        }
+    }
+
+    .pagingation {
+        display: block;
+        padding-bottom: 0.75rem;
     }
 }

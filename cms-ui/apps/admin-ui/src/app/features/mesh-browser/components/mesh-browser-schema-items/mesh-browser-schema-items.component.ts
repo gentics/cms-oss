@@ -4,9 +4,7 @@ import { BranchReference } from '@gentics/mesh-models';
 import { SchemaElement } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
-
 let uniqueComponentId = 0;
-
 
 @Component({
     selector: 'gtx-mesh-browser-schema-items',
@@ -40,19 +38,17 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public currentLanguage: string;
 
     @Output()
-    public nodeChanged = new EventEmitter<string>();
+    public nodeChange = new EventEmitter<string>();
 
     @Output()
     public elementsLoaded = new EventEmitter<number>();
 
     public page = 1;
-
     public perPage = 10;
-
     public totalCount = 0;
 
     public collapsed = false;
-
+    public isLoading = false;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -86,10 +82,13 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             this.currentProject,
             this.currentBranch.uuid,
             element.language,
-        )
+        );
     }
 
     private async loadNodeChildren(nodeUuid: string, emitEvents=true): Promise<void> {
+        this.isLoading = true;
+        this.changeDetector.markForCheck();
+
         const schemaPage = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schemaName,
             nodeUuid: nodeUuid,
@@ -102,13 +101,14 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         const schemaElements: SchemaElement[] = schemaPage.elements;
 
         schemaElements?.forEach((schemaElement) =>
-            schemaElement.languages = schemaElement?.languages.sort((a,_b) => a.language === this.currentLanguage ? -1 :1),
+            schemaElement.languages = schemaElement?.languages?.sort?.((a,_b) => a.language === this.currentLanguage ? -1 :1) ?? [],
         );
         this.schemaElements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
+        this.isLoading = false;
         this.changeDetector.markForCheck();
 
         if (emitEvents) {
-            this.nodeChanged.emit(nodeUuid)
+            this.nodeChange.emit(nodeUuid)
             this.elementsLoaded.emit(this.schemaElements?.length ?? 0);
         }
     }
@@ -122,6 +122,4 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.collapsed = !this.collapsed;
         this.changeDetector.markForCheck();
     }
-
 }
-

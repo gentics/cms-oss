@@ -4,7 +4,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MeshBrowserNavigatorService } from '../../providers';
 import { BreadcrumbNode } from '../../models/mesh-browser-models';
 
-
 @Component({
     selector: 'gtx-mesh-browser-breadcrumbs',
     templateUrl: './mesh-browser-breadcrumbs.component.html',
@@ -14,20 +13,18 @@ import { BreadcrumbNode } from '../../models/mesh-browser-models';
 export class MeshBrowserBreadcrumbComponent implements OnChanges {
 
     @Input()
-    public currentProject: string;
+    public project: string;
 
     @Input()
-    public currentBranchUuid: string;
+    public branch: string;
 
     @Input()
-    public currentNodeUuid: string;
+    public node: string;
 
     @Input()
-    public currentLanguage: string;
-
+    public language: string;
 
     public breadcrumbEntries: BreadcrumbNode[] = [];
-
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -37,16 +34,15 @@ export class MeshBrowserBreadcrumbComponent implements OnChanges {
         protected resolver: RouteEntityResolverService,
     ) { }
 
-
     ngOnChanges(): void {
         this.updateComponent();
     }
 
     async updateComponent(): Promise<void> {
         const breadcrumbs = await this.navigationService.getBreadcrumbNavigationEntries(
-            this.currentProject,
-            { nodeUuid: this.currentNodeUuid },
-            this.currentBranchUuid,
+            this.project,
+            { nodeUuid: this.node },
+            this.branch,
         );
 
         this.breadcrumbEntries = [];
@@ -60,5 +56,4 @@ export class MeshBrowserBreadcrumbComponent implements OnChanges {
 
         this.changeDetector.markForCheck();
     }
-
 }

@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { BranchReference } from '@gentics/mesh-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
-
 @Component({
     selector: 'gtx-mesh-browser-project-switcher',
     templateUrl: './mesh-browser-project-switcher.component.html',
@@ -12,23 +11,22 @@ import { MeshBrowserLoaderService } from '../../providers';
 export class MeshBrowserProjectSwitcherComponent {
 
     @Input()
-    public projects: Array<string> = [];
+    public availableProjects: Array<string> = [];
 
     @Input()
-    public branches: Array<string> = [];
+    public availableBranches: Array<string> = [];
 
     @Input()
-    public currentProject: string;
+    public project: string;
 
     @Input()
-    public currentBranch: BranchReference;
+    public branch: BranchReference;
 
     @Output()
     public projectChange = new EventEmitter<string>();
 
     @Output()
     public branchChange = new EventEmitter<BranchReference>();
-
 
     constructor(
         protected changeDetector: ChangeDetectorRef,

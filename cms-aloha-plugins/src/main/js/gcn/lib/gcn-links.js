@@ -34,17 +34,18 @@ define('gcn/gcn-links', [
 	var ATTR_TAG_NAME = 'data-gcn-tagname';
 
 	// General link attributes
-	var ATTR_ANCHOR = 'data-gentics-gcn-anchor';
-	var ATTR_URL = 'data-gentics-gcn-url';
+	var ATTR_REPOSITORY = 'data-gentics-aloha-repository';
+	var ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
 	var ATTR_HREF = 'href';
-	var ATTR_FILE_URL = 'data-gentics-gcn-fileurl';
-	var ATTR_CHANNEL_ID = 'data-gcn-channelid';
 	var ATTR_HREF_LANG = 'hreflang';
 	var ATTR_TITLE = 'title';
 	
 	// Internal Link attributes
-	var ATTR_REPOSITORY = 'data-gentics-aloha-repository';
-	var ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
+	var ATTR_ANCHOR = 'data-gentics-gcn-anchor';
+	var ATTR_URL = 'data-gentics-gcn-url';
+	var ATTR_FILE_URL = 'data-gentics-gcn-fileurl';
+	var ATTR_CHANNEL_ID = 'data-gcn-channelid';
+	var ATTR_TARGET_LABEL = 'data-gcn-target-label';
 	var ATTR_OBJECT_ONLINE = 'data-gentics-aloha-object-online';
 	
 	// Misc constants
@@ -141,7 +142,7 @@ define('gcn/gcn-links', [
 		link.removeAttribute(ATTR_CHANNEL_ID);
 		link.removeAttribute(ATTR_FILE_URL);
 		link.removeAttribute(ATTR_URL);
-		link.removeAttribute(ATTR_TITLE);
+		link.removeAttribute(ATTR_TARGET_LABEL);
 	}
 
 	/**
@@ -160,7 +161,9 @@ define('gcn/gcn-links', [
 
 		var targetId = 0;
 		var targetType = '';
-		var targetLabel = link.getAttribute(ATTR_TITLE) || '';
+		var targetLabel = link.hasAttribute(ATTR_TARGET_LABEL)
+			? link.getAttribute(ATTR_TARGET_LABEL) || ''
+			: link.getAttribute(ATTR_TITLE) || '';
 		var targetNodeId = null;
 
 		/** @type {array.<string>} */
@@ -229,12 +232,13 @@ define('gcn/gcn-links', [
 		}
 
 		link.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
-		link.setAttribute(ATTR_TITLE, data.url.internalTargetLabel);
+		link.setAttribute(ATTR_TARGET_LABEL, data.url.internalTargetLabel);
 		link.setAttribute(ATTR_OBJECT_ID, objId + '.' + data.url.internalTargetId);
 		link.setAttribute(ATTR_CHANNEL_ID, data.url.internalTargetNodeId);
 		link.setAttribute(ATTR_URL, data.url.href);
 		link.setAttribute(ATTR_HREF, '#' + data.url.anchor);
 		link.setAttribute(ATTR_ANCHOR, data.url.anchor);
+		link.setAttribute(ATTR_HREF_LANG, data.lang);
 	};
 
 	/**

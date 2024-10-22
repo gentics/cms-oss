@@ -132,6 +132,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 
 			return AUTO;
 		}
+
+		/**
+		 * Get the instance with the given enum name or {@link UrlRenderWay#AUTO} if not found
+		 * @param name name
+		 * @return instance
+		 */
+		public static UrlRenderWay fromName(String name) {
+			for (UrlRenderWay urlRenderWayValue : UrlRenderWay.values()) {
+				if (urlRenderWayValue.name().equalsIgnoreCase(name)) {
+					return urlRenderWayValue;
+				}
+			}
+
+			return AUTO;
+		}
 	}
 
 	/**

@@ -25,7 +25,7 @@ import {
     coerceInstance,
 } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
-import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
+import { catchError, debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
 
 export const DELETE_ACTION = 'delete';
@@ -246,6 +246,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
                 return this.loadTablePage(options, additionalOptions).pipe(
                     tap(res => {
+                        this.hasError = res.hasError ?? false;
                         this.loading = false;
                         this.changeDetector.markForCheck();
 

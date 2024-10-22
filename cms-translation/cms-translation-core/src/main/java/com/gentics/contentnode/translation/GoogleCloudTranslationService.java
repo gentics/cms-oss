@@ -25,8 +25,8 @@ public class GoogleCloudTranslationService implements TranslationService {
 	 */
 	private final Translate translator;
 
-
 	public GoogleCloudTranslationService() throws NodeException {
+		logger.info("Instantiating Google Cloud Translation Service");
 		final var authToken = TranslationConfigUtil.getAuthTokenFromConfig(getClass().getSimpleName());
 		translator = TranslateOptions.newBuilder()
 				.setApiKey(authToken)

@@ -39,6 +39,7 @@ public class DeepLTranslationService implements TranslationService {
 
 
 	public DeepLTranslationService() throws NodeException {
+		logger.info("Initializing DeepL Translation Service");
 		final var authToken = TranslationConfigUtil.getAuthTokenFromConfig(getClass().getSimpleName());
 		languagePreferences = getLanguageSettingFromConfig();
 		translator = new Translator(authToken);

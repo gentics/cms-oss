@@ -6,19 +6,24 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    EventEmitter,
     Input,
     OnChanges,
+    Output,
     SimpleChanges,
 } from '@angular/core';
 import {
+    ContentPackageBO,
     ContentPackageImportError,
 } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import {
     ContentPackageImportErrorTableLoaderService,
+    ContentPackageTableLoaderService,
     ContentStagingImportErrorTableLoaderOptions,
 } from '../../providers';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-content-package-import-error-table',
@@ -30,7 +35,10 @@ export class ContentPackageImportErrorTableComponent extends BaseEntityTableComp
 ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>  implements OnChanges {
 
     @Input()
-    public packageName: string;
+    public contentPackage: ContentPackageBO;
+
+    @Output()
+    public reloadPackage = new EventEmitter<void>();
 
     public checkResultAvailable: boolean
 
@@ -75,6 +83,7 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
         private operations: ContentPackageOperations,
         private i18nNotification: I18nNotificationService,
         modalService: ModalService,
+        private contentPackageLoader: ContentPackageTableLoaderService,
     ) {
         super(changeDetector, appState, i18n, loader, modalService);
 
@@ -85,36 +94,42 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
         );
 
         this.lastCheckTimestamp$ = this.loader.lastCheckTimestamp$;
+        
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
-        if (changes.packageName) {
+        if (changes.contentPackage) {
             this.reload();
             this.changeDetector.markForCheck();
         }
     }
 
 
-    public handleCheckButtonClick(packageName: string): void {
+    public handleCheckButtonClick(): void {
         this.i18nNotification.show({
             message: 'content_staging.start_import__check_message',
             type: 'success',
             translationParams: {
-                packageName: packageName,
+                packageName: this.contentPackage.name,
             },
         });
 
-        this.operations.importFromFileSystem(packageName, {test: true}, false).toPromise().then(_success => {
-            this.reload();
+        this.subscriptions.push(this.operations.importFromFileSystem(this.contentPackage.name, {test: true, wait: 1}, false).subscribe(() => {
+            this.reloadWithPackage();
+            this.contentPackageLoader.reload();
             this.changeDetector.markForCheck();
-        });
+        }));
     }
-
+    
+    public reloadWithPackage(): void {
+        this.reload();
+        this.reloadPackage.emit();
+    }
 
     protected override createAdditionalLoadOptions(): ContentStagingImportErrorTableLoaderOptions {
         return {
-            packageName: this.packageName,
+            packageName: this.contentPackage.name,
         };
     }
 }

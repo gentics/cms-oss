@@ -1,5 +1,17 @@
 import { DefaultModelType, ModelType, NormalizableEntity } from './type-util';
 
+export interface ContentPackageSyncProgress {
+    done: number;
+    total: number;
+    started: number;
+    finished: number;
+}
+
+export interface ContentPackageImport {
+    running: boolean;
+    progress?: ContentPackageSyncProgress;
+}
+
 export interface ContentPackage<T extends ModelType = DefaultModelType> extends NormalizableEntity<T> {
     /** The global-id of the package (only available when imported) */
     globalId?: string;
@@ -21,6 +33,9 @@ export interface ContentPackage<T extends ModelType = DefaultModelType> extends 
     images?: number;
     /** How many pages are contained in the package */
     pages?: number;
+
+    /** Information about the latest import */
+    import?: ContentPackageImport;
 }
 
 /**

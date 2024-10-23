@@ -90,5 +90,21 @@
     "content_package_last_check": {
         "en": "Last check:",
         "de": "Letzte Überprüfung am: "
+    },
+    "content_package_check_running": {
+        "en": "Package import check is currently running",
+        "de": "Die Paketüberprüfung läuft gerade"
+    },
+    "imported": {
+        "en": "Imported",
+        "de": "Importiert"
+    },
+    "import_started": {
+        "en": "Started",
+        "de": "Gestartet"
+    },
+    "import_finished": {
+        "en": "Finished",
+        "de": "Beendet"
     }
 }

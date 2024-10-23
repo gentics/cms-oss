@@ -1,24 +1,40 @@
-<div>
+<div class="entity-table-actions-bar">
     <gtx-button
         *ngIf="!hideActions"
-        class="trigger-check-btn"
+        class="trigger-check-btn table-action-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
-        (click)="handleCheckButtonClick(packageName)"    
+        (click)="handleCheckButtonClick()"
     >
         {{ 'package.consistency_check_no_result_button' | i18n }}
     </gtx-button>
 
-    <span *ngIf="checkResultAvailable" class="check-time" data-test-id="check-result-available">
-        {{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp$ | async }}
-    </span>
-    <span *ngIf="!checkResultAvailable" class="check-time" data-test-id="check-result-unavailable">
-        {{ 'content_staging.content_package_check_no_result' | i18n }}
-    </span>
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reloadWithPackage()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+    </gtx-button>
 </div>
 
+<div>
+    <span *ngIf="checkResultAvailable && !contentPackage?.import?.running" class="check-time" data-test-id="check-result-available">
+        {{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp$ | async }}
+    </span>
+    <span *ngIf="!checkResultAvailable && !contentPackage?.import?.running" class="check-time" data-test-id="check-result-unavailable">
+        {{ 'content_staging.content_package_check_no_result' | i18n }}
+    </span>
+
+    <span *ngIf="contentPackage?.import?.running" class="check-time" data-test-id="check-import-running">
+        {{ 'content_staging.content_package_check_running' | i18n }} ({{ contentPackage?.import?.progress?.done}} / {{ contentPackage?.import?.progress?.total }})
+    </span>
+</div>
 
 <div class="check-ok" *ngIf="totalCount === 0 && checkResultAvailable">
     <span>{{ 'content_staging.content_package_check_ok' | i18n }}</span>

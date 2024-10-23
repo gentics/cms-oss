@@ -1,5 +1,4 @@
-import { FieldType, PagingOptions, SchemaField } from '@gentics/mesh-models';
-
+import { FieldType, NodeResponse, PagingOptions, SchemaField } from '@gentics/mesh-models';
 
 export interface MeshSchemaListParams extends PagingOptions {
     schemaName?: string;
@@ -40,7 +39,7 @@ export interface SchemaElement {
     version: string;
     versions?: SchemaElementVersion[];
     language: string;
-    languages: Array<ElementLanguage>;
+    availableLanguages: string[];
 }
 
 export interface SchemaElementVersion {
@@ -57,19 +56,13 @@ export enum PublishedState {
     ARCHIVED = 'ARCHIVED',
 }
 
-export interface ElementLanguage {
-    language: string;
-}
-
-export interface MeshField {
-    label: string;
-    value: string;
-    type: FieldType;
-}
-
 export interface BreadcrumbNode {
     uuid: string;
     displayName?: string;
+}
+
+export interface ResolvedParentNode extends Pick<NodeResponse, 'uuid' | 'availableLanguages' | 'language' | 'displayName'> {
+    breadcrumb: NavigationEntry[];
 }
 
 export interface NavigationEntry {

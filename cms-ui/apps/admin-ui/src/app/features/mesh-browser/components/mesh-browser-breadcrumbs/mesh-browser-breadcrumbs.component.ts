@@ -1,7 +1,4 @@
-import { RouteEntityResolverService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MeshBrowserNavigatorService } from '../../providers';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BreadcrumbNode } from '../../models/mesh-browser-models';
 
 @Component({
@@ -10,50 +7,12 @@ import { BreadcrumbNode } from '../../models/mesh-browser-models';
     styleUrls: ['./mesh-browser-breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserBreadcrumbComponent implements OnChanges {
+export class MeshBrowserBreadcrumbComponent {
 
     @Input()
-    public project: string;
-
-    @Input()
-    public branch: string;
-
-    @Input()
-    public node: string;
+    public entries: BreadcrumbNode[] = [];
 
     @Input()
     public language: string;
 
-    public breadcrumbEntries: BreadcrumbNode[] = [];
-
-    constructor(
-        protected changeDetector: ChangeDetectorRef,
-        protected navigationService: MeshBrowserNavigatorService,
-        protected route: ActivatedRoute,
-        protected router: Router,
-        protected resolver: RouteEntityResolverService,
-    ) { }
-
-    ngOnChanges(): void {
-        this.updateComponent();
-    }
-
-    async updateComponent(): Promise<void> {
-        const breadcrumbs = await this.navigationService.getBreadcrumbNavigationEntries(
-            this.project,
-            { nodeUuid: this.node },
-            this.branch,
-        );
-
-        this.breadcrumbEntries = [];
-
-        for(const entry of breadcrumbs) {
-            this.breadcrumbEntries.push({
-                uuid: entry.node.uuid,
-                displayName: entry.node.displayName,
-            })
-        }
-
-        this.changeDetector.markForCheck();
-    }
 }

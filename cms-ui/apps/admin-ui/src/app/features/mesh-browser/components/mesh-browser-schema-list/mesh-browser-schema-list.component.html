@@ -1,19 +1,22 @@
 <div class="schema-list-wrapper">
-    <ng-container *ngFor="let schema of schemas; trackBy: identify">
+    <gtx-progress-bar [active]="!hadIntiialLoad" />
+
+    <ng-container *ngFor="let schema of projectSchemas">
         <gtx-mesh-browser-schema-items
             class="schema-list"
-            [currentProject]="project"
-            [schemaName]="schema.name"
-            [currentNodeUuid]="node"
-            [currentBranch]="branch"
-            [languages]="availableLanguages"
-            [currentLanguage]="language"
+            [contentRepository]="contentRepository"
+            [project]="project"
+            [schemaName]="schema"
+            [node]="node"
+            [branch]="branch"
+            [availableLanguages]="availableLanguages"
+            [language]="language"
             (nodeChange)="nodeChangeHandler($event)"
-            (elementsLoaded)="elementsLoaded(schema.name, $event)"
+            (loadingStateChange)="elementsLoaded(schema, $event)"
         />
     </ng-container>
 
-    <div *ngIf="!isLoading && allSchemasLoaded && noSchemaElements" class="no-schema-elements">
+    <div *ngIf="allSchemasLoaded && noSchemaElements" class="no-schema-elements">
         {{ 'mesh.browser_no_schema_elements' | i18n}}
     </div>
 </div>

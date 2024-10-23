@@ -10,7 +10,6 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
@@ -18,7 +17,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
 import { MeshAPIVersion, MeshClientConnection, MeshRestClientRequestError } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { FormProperties } from '@gentics/ui-core';
+import { ChangesOf, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 
 const NEEDS_NEW_PASSWORD_ERROR = 'auth_login_password_change_required';
@@ -75,9 +74,12 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         this.setupConnection();
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.repository && !changes.repository.firstChange && !this.loggedIn) {
             this.setupConnection();
+            // If we are no longer logged in, we have to show the login page again
+        } else if (changes.loggedIn && changes.loggedIn.previousValue && !this.loggedIn) {
+            this.requiresLogin = true;
         }
     }
 
@@ -153,6 +155,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         handler(value).then(() => {
             this.loading = false;
             this.loggedIn = true;
+            this.requiresLogin = false;
             this.form.enable();
             this.form.controls.newPassword.disable();
 
@@ -161,6 +164,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         }).catch(err => {
             this.loading = false;
             this.loggedIn = false;
+            this.requiresLogin = true;
             this.form.enable();
 
             if (err instanceof MeshRestClientRequestError && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {

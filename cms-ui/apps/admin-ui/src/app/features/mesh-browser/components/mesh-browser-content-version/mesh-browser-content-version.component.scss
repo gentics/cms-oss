@@ -1,5 +1,9 @@
 @import "variables";
 
+:host {
+    display: contents;
+}
+
 .content-state-wrapper {
     display: flex;
     font-size: 11px;

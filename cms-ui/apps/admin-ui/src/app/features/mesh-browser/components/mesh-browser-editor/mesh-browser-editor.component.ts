@@ -1,11 +1,20 @@
 import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '@admin-ui/common';
-import { AppStateService, SchemasLoaded, SetUIFocusEntity } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FieldType } from '@gentics/mesh-models';
-import { MeshField, SchemaContainer } from '../../models/mesh-browser-models';
-import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
+import { FieldType, NodeResponse, SchemaResponse } from '@gentics/mesh-models';
+import { MeshRestClientResponse } from '@gentics/mesh-rest-client';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { ChangesOf } from '@gentics/ui-core';
+import { BreadcrumbNode } from '../../models/mesh-browser-models';
+import { MeshBrowserImageService, MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
+export interface DisplayField {
+    id: string;
+    label: string;
+    value: string;
+    type: FieldType;
+}
 
 @Component({
     selector: 'gtx-mesh-browser-editor',
@@ -13,127 +22,131 @@ import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoader
     styleUrls: ['./mesh-browser-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
+export class MeshBrowserEditorComponent  implements OnChanges {
+
+    public readonly FieldType = FieldType;
 
     @Input({ alias: ROUTE_MESH_PROJECT_ID})
     public project: string;
 
     @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID})
-    public currentNodeUuid: string;
+    public node: string;
 
     @Input({ alias: ROUTE_MESH_BRANCH_ID})
-    public currentBranchUuid: string;
+    public branch: string;
 
     @Input({ alias: ROUTE_MESH_LANGUAGE})
-    public currentLanguage: string;
+    public language: string;
 
-    public fields: Array<MeshField> = [];
+    public loading = false;
 
+    public fields: Array<DisplayField> = [];
     public title: string;
-
     public version: string;
+    public breadcrumb: BreadcrumbNode[] = [];
 
+    private availableLanguages: string[] = [];
+    private resolvedProject: string;
+    private loadRequest: MeshRestClientResponse<any> | null = null;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected route: ActivatedRoute,
         protected router: Router,
-        protected appState: AppStateService,
+        private appState: AppStateService,
+        protected mesh: MeshRestClientService,
         protected loader: MeshBrowserLoaderService,
         protected imageService: MeshBrowserImageService,
-        protected activationGuard: MeshBrowserCanActivateGuard,
         protected navigator: MeshBrowserNavigatorService,
     ) { }
 
-    async ngOnInit(): Promise<void> {
-        const canActivate = await this.activationGuard.canActivate(this.route.snapshot)
-        if (!canActivate) {
-            this.detailsClose();
-            return;
+    ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.project || changes.node || this.branch || changes.language) {
+            this.resolveContent();
         }
     }
 
-    async updateComponent(): Promise<void> {
-        await this.mapResponseToSchemaFields()
-        this.changeDetector.markForCheck();
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.currentNodeId || this.currentBranchUuid || changes.currentLanguage) {
-            this.updateComponent();
-        }
+    public identify(_index: number, field: DisplayField): string {
+        return field.id;
     }
 
     public loadNode(nodeUuid: string): void {
-        this.currentNodeUuid = nodeUuid;
-        this.updateComponent();
-        this.navigator.navigateToDetails(this.route, nodeUuid, this.project, this.currentBranchUuid, this.currentLanguage);
+        this.navigator.navigateToDetails(this.route, {
+            project: this.project,
+            branch: this.branch,
+            node: nodeUuid,
+            language: this.language,
+        });
     }
 
-    private async mapResponseToSchemaFields(): Promise<void> {
-        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeUuid, {
-            lang: this.currentLanguage,
-            branch: this.currentBranchUuid,
-        })
+    private async resolveContent(): Promise<void> {
+        this.loading = true;
+        this.changeDetector.markForCheck();
 
-        const currentSchema = await this.getCurrentSchema();
-
-        this.title = response.fields.name as unknown as string;
-
-        if (!this.title) {
-            this.title = this.currentNodeUuid;
+        if (this.loadRequest) {
+            this.loadRequest.cancel();
         }
 
-        this.fields = [];
-        this.version = response.version;
+        if (this.project !== this.resolvedProject) {
+            this.availableLanguages = ((await this.mesh.language.list(this.project).send()).data ?? [])
+                .map(lang => lang.languageTag)
+                .sort(lang => lang === this.language ? -1 : 1);
+            this.resolvedProject = this.project;
+        }
 
-        for (const fieldDefinition of currentSchema.fields) {
-            let fieldValue = response.fields[fieldDefinition.name] as unknown as string;
+        this.loadRequest = this.mesh.nodes.get(this.project, this.node, {
+            // Provide multiple languages, so the breadcrumb properly resolves
+            lang: this.availableLanguages.join(','),
+            branch: this.branch,
+            // FIXME: Has to fixed in the Mesh JS Client; Ticket SUP-17656
+            fields: [['uuid', 'fields', 'version', 'displayName', 'schema', 'breadcrumb'].join(',') as any],
+        });
 
-            switch(fieldDefinition.type) {
+        try {
+            const response: NodeResponse = await this.loadRequest.send();
+
+            const schema = await this.mesh.schemas.get(response.schema.uuid).send();
+
+            this.title = response.displayName || this.node;
+            this.version = response.version;
+            this.breadcrumb = response.breadcrumb;
+            this.fields = this.createDisplayFields(response, schema);
+            this.loading = false;
+
+            this.changeDetector.markForCheck();
+        } catch (err) {
+            this.loading = false;
+            this.changeDetector.markForCheck();
+            // TODO: Ignore abort error
+        }
+    }
+
+    private createDisplayFields(node: NodeResponse, schema: SchemaResponse): DisplayField[] {
+        return schema.fields.map(field => {
+            let value: any = node.fields[field.name];
+
+            switch (field.type) {
                 case FieldType.BINARY: {
-                    fieldValue = this.getImagePath(fieldDefinition.name);
-                    break;
-                }
-                case FieldType.NODE: {
-                    const node = response.fields[fieldDefinition.name] as unknown as object;
-                    fieldValue = node['displayName'] ?? node['uuid'];
-                    break;
-                }
-                case FieldType.MICRONODE: {
-                    const microNode = response.fields[fieldDefinition.name] as unknown as object;
-                    fieldValue = microNode['fields'];
+                    value = this.getImagePath(field.name);
                     break;
                 }
             }
 
-            this.fields.push({
-                label: fieldDefinition.name,
-                value: fieldValue,
-                type: fieldDefinition.type,
-            });
-        }
-    }
-
-    private async getCurrentSchema(): Promise<SchemaContainer> {
-        const currentNodeSchemaName = await this.loader.getSchemaNameForNode(this.project, this.currentNodeUuid)
-
-        let currentSchema = this.appState.now.mesh.schemas.find(schema => schema.name === currentNodeSchemaName)
-        if (!currentSchema) {
-            const schemas =  await this.loader.listProjectSchemas(this.project);
-            currentSchema = schemas.find(schema => schema.name === currentNodeSchemaName)
-            this.appState.dispatch(new SchemasLoaded(schemas));
-        }
-
-        return currentSchema;
+            return {
+                id: field.name,
+                label: field.label || field.name,
+                type: field.type,
+                value,
+            };
+        });
     }
 
     private getImagePath(fieldName: string): string {
         return this.imageService.getImageUrlForBinaryField(
             this.project,
-            this.currentNodeUuid,
-            this.currentBranchUuid,
-            this.currentLanguage,
+            this.node,
+            this.branch,
+            this.language,
             fieldName,
         );
     }

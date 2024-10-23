@@ -23,11 +23,11 @@
             class="schema-element"
         >
             <div class="main-content">
-                <icon class="content-icon" (click)="showDetails(element)">
+                <icon class="content-icon" (click)="showElementDetails(element)">
                     {{ element.isContainer ? 'folder' : 'description' }}
                 </icon>
 
-                <div class="title" (click)="loadContent(element)" [attr.data-is-container]="element.isContainer">
+                <div class="title" (click)="handleElementClick(element)" [attr.data-is-container]="element.isContainer">
                     <span>{{ element.displayName ?? element?.uuid }}</span>
                 </div>
 
@@ -39,11 +39,11 @@
 
             <div class="language-content">
                 <span
-                    *ngFor="let language of element.languages"
-                    [class.active]="language.language === currentLanguage"
+                    *ngFor="let availLang of element.availableLanguages"
+                    [class.active]="availLang === language"
                     class="language"
                 >
-                    {{ language.language }}
+                    {{ availLang }}
                 </span>
             </div>
         </div>

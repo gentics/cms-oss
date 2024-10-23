@@ -1,10 +1,10 @@
-import { AppStateService, SchemasLoaded } from '@admin-ui/state';
+import { ContentRepositoryBO } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BranchReference, Schema } from '@gentics/mesh-models';
+import { BranchReference } from '@gentics/mesh-models';
 import { ChangesOf } from '@gentics/ui-core';
-import { SchemaContainer } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
+import { LoadingState } from '../mesh-browser-schema-items/mesh-browser-schema-items.component';
 
 @Component({
     selector: 'gtx-mesh-browser-schema-list',
@@ -15,7 +15,13 @@ import { MeshBrowserLoaderService } from '../../providers';
 export class MeshBrowserSchemaListComponent implements OnChanges {
 
     @Input()
+    public contentRepository: ContentRepositoryBO;
+
+    @Input()
     public project: string;
+
+    @Input()
+    public projectSchemas: string[] = [];
 
     @Input()
     public availableLanguages: Array<string> = [];
@@ -26,16 +32,15 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
     @Input()
     public branch: BranchReference;
 
-    @Input()
+    @Input({ required: true })
     public node: string;
 
     @Output()
     public nodeChange = new EventEmitter<string>();
 
-    public schemas: Array<SchemaContainer> = [];
-    public isLoading = false;
     public allSchemasLoaded = false;
     public noSchemaElements = true;
+    public hadIntiialLoad = false;
 
     protected loadingSchemas: string[] = [];
 
@@ -43,52 +48,36 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
         protected route: ActivatedRoute,
-        protected appState: AppStateService,
     ) { }
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.node) {
-            this.loadSchemas();
-        }
+        this.resetLoadingState();
     }
 
-    public identify(_index: number, item: Schema): string {
-        return item.name;
-    }
-
-    private async loadSchemas(): Promise<void> {
-        this.isLoading = true;
+    private resetLoadingState(): void {
         this.allSchemasLoaded = false;
-        this.loadingSchemas = this.schemas.map(schema => schema.name);
+        this.loadingSchemas = this.projectSchemas.slice();
         this.noSchemaElements = true;
-        this.changeDetector.markForCheck();
-
-        if (!this.node) {
-            this.node = await this.loader.getRootNodeUuid(this.project);
-        }
-
-        this.schemas = await this.loader.listNonEmptyProjectSchemas(this.project, this.node);
-        this.schemas.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
-        await this.appState.dispatch(new SchemasLoaded(this.schemas)).toPromise();
-
-        this.isLoading = false;
-        this.changeDetector.markForCheck();
     }
 
     public nodeChangeHandler(nodeUuid: string): void {
         if (nodeUuid === this.node) {
             return;
         }
-        this.node = nodeUuid;
         this.nodeChange.emit(nodeUuid);
     }
 
-    public elementsLoaded(schemaName: string, numberOfElements: number): void {
+    public elementsLoaded(schemaName: string, loadingState: LoadingState): void {
         // Remove this loaded schema from the list
         this.loadingSchemas = this.loadingSchemas.filter(name => name !== schemaName);
+        // Determine loading state
         this.allSchemasLoaded = this.loadingSchemas.length === 0;
+        // If this has now initially loaded items
+        if (this.allSchemasLoaded) {
+            this.hadIntiialLoad = true;
+        }
 
-        if (numberOfElements > 0) {
+        if (loadingState.hasElements) {
             this.noSchemaElements = false;
         }
 

@@ -1,4 +1,5 @@
 import {
+    OnDiscardChanges,
     ROUTE_DETAIL_OUTLET,
     ROUTE_MESH_BROWSER_OUTLET,
 } from '@admin-ui/common';
@@ -50,6 +51,16 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
                         },
                     },
                     {
+                        path: `:${ROUTE_MESH_PROJECT_ID}`,
+                        component: MeshBrowserMasterComponent,
+                        data: {
+                            [ROUTE_PERMISSIONS_KEY]: [],
+                        },
+                        resolve: {
+                            [ROUTE_DATA_MESH_REPO_ITEM]: (route) => inject(RouteEntityResolverService).resolveMeshRoute(route),
+                        },
+                    },
+                    {
                         path: `:${ROUTE_MESH_PROJECT_ID}/:${ROUTE_MESH_BRANCH_ID}/:${ROUTE_MESH_PARENT_NODE_ID}/:${ROUTE_MESH_LANGUAGE}`,
                         component: MeshBrowserMasterComponent,
                         resolve: {
@@ -76,10 +87,9 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
                 data: {
                     [ROUTE_PERMISSIONS_KEY]: [],
                 },
-                canActivate: [
-                ],
                 canDeactivate: [
-                    (routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent),
+                    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+                    (routeComponent: OnDiscardChanges) => inject(DiscardChangesGuard).canDeactivate(routeComponent),
                 ],
             },
         ],

@@ -1,68 +1,79 @@
 <div class="mesh-browser-detail">
 
-    <gtx-mesh-browser-breadcrumbs
-        [project]="project"
-        [branch]="currentBranchUuid"
-        [node]="currentNodeUuid"
-        [language]="currentLanguage"
-    />
-
     <gtx-entity-detail-header
         [saveDisabled]="true"
         (cancelClick)="detailsClose()"
     >
         <h2>
             {{ title }}
-            <span class="language-indicator">{{ currentLanguage.toLocaleUpperCase() }}</span>
+            <span class="language-indicator">{{ language }}</span>
         </h2>
     </gtx-entity-detail-header>
 
-    <gtx-mesh-copy-value
-        class="copy-uuid"
-        [value]="currentNodeUuid"
-        [label]="'UUID'"
-        [animate]="true"
+    <gtx-mesh-browser-breadcrumbs
+        [language]="language"
+        [entries]="breadcrumb"
     />
 
-    <div *ngIf="!!version" class="version-container">
-        <label class="label">Version</label>
-        <span class="value">{{ version }}</span>
-    </div>
+    <div class="field-grid">
+        <div class="grid-content header-element">
+            <div class="grid-item-label">UUID</div>
+            <div class="grid-item-value">
+                <gtx-mesh-copy-value
+                    class="copy-uuid"
+                    [value]="node"
+                    [animate]="true"
+                />
+            </div>
+        </div>
 
-    <hr class="separator">
+        <div class="grid-content header-element">
+            <div class="grid-item-label">{{ 'mesh.version' | i18n }}</div>
+            <div class="grid-item-value">
+                <code>{{ version }}</code>
+            </div>
+        </div>
 
-    <ng-container *ngFor="let field of fields">
-        <div class="field">
-            <label class="field-label">{{ field.label }}</label>
+        <div class="grid-content">
+            <div class="grid-separator-container">
+                <hr class="grid-separator" />
+            </div>
+            <div class="grid-separator-filler"></div>
+        </div>
 
-            <div [ngSwitch]="field.type" class="field-value-wrapper">
+        <div
+            *ngFor="let field of fields; trackBy: identify"
+            class="grid-content"
+            [attr.data-id]="field.id"
+        >
+            <div class="grid-item-label">{{ field.label }}</div>
+            <div [ngSwitch]="field.type" class="grid-item-value">
 
-                <div class="value-container" *ngSwitchCase="'list'">
+                <div *ngSwitchCase="FieldType.LIST" class="value-container">
                     <div *ngFor="let field of field.value" class="field-value">
                         {{ field }}
                     </div>
                 </div>
 
-                <div *ngSwitchCase="'binary'" class="field-binary">
+                <div *ngSwitchCase="FieldType.BINARY" class="field-binary">
                     <img [src]="field.value" />
                 </div>
 
-                <ng-container *ngSwitchCase="'boolean'">
-                    <icon *ngIf="field.value === true; else booleanRenderer" left class="boolean-true">check</icon>
-
-                    <ng-template #booleanRenderer>
-                        <icon left class="boolean-false">close</icon>
-                    </ng-template>
+                <ng-container *ngSwitchCase="FieldType.BOOLEAN">
+                    <icon
+                    class="gtx-table-cell-boolean"
+                    [ngClass]="field.value != null ? 'gtx-table-cell-boolean-' + field.value : 'gtx-table-cell-boolean-null'"
+                    >{{ field.value == null ? 'question_mark' : (field.value ? 'check' : 'close') }}</icon>
                 </ng-container>
 
-                <div *ngSwitchCase="'node'" (click)="loadNode(field.value)" class="field-node">
+                <div *ngSwitchCase="FieldType.NODE" (click)="loadNode(field.value.uuid)" class="field-node">
                     <icon left>share</icon>
-                    {{ field.value }}
+                    <span class="node-name">{{ field.value.displayName || field.value.uuid }}</span>
                 </div>
 
-                <div *ngSwitchCase="'micronode'" class="micronode-container value-container">
+                <div *ngSwitchCase="FieldType.MICRO_NODE" class="micronode-container value-container">
 
-                    <div *ngFor="let field of field.value | keyvalue" class="micronode-field">
+                    <div *ngFor="let field of field.value.fields | keyvalue" class="micronode-field">
                         <label class="field-label">{{ field.key }}</label>
 
                         <span *ngIf="!field.value['uuid'] else nodeReferenceRenderer" class="field-value">
@@ -83,8 +94,7 @@
                 </span>
             </div>
         </div>
-
-    </ng-container>
+    </div>
 
 </div>
 

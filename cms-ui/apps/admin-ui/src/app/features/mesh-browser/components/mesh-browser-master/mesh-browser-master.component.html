@@ -23,41 +23,43 @@
         <ng-container *ngIf="loggedIn">
             <h1 class="cr-title">{{ 'mesh.browser_title' | i18n: {name: selectedRepository?.name} }}</h1>
 
-            <ng-container *ngIf="!!currentProject else noProjectRenderer">
+            <ng-container *ngIf="project else noProjectRenderer">
 
                 <div class="switcher-row">
                     <gtx-mesh-browser-project-switcher
-                        [project]="currentProject"
-                        [branch]="currentBranch"
-                        [availableProjects]="projects"
-                        [availableBranches]="branches"
-                        (projectChange)="projectChangeHandler($event)"
-                        (branchChange)="branchChangeHandler($event)"
+                        [project]="project"
+                        [branch]="loadedBranch"
+                        [availableProjects]="availableProjects"
+                        [availableBranches]="projectBranches"
+                        (projectChange)="navigateToProject($event)"
+                        (branchChange)="navigateToBranch($event)"
                     />
 
                     <gtx-mesh-browser-language-switcher
-                        [language]="currentLanguage"
-                        [availableLanguages]="languages"
-                        (languageChange)="languageChangeHandler($event)"
+                        [language]="language"
+                        [availableLanguages]="projectLanguages"
+                        (languageChange)="navigateToLanguage($event)"
                     />
                 </div>
 
                 <gtx-mesh-browser-breadcrumbs
+                    *ngIf="loadedNode"
                     class="breadcrumbs"
-                    [project]="currentProject"
-                    [branch]="currentBranchUuid"
-                    [node]="parentNodeUuid"
-                    [language]="currentLanguage"
+                    [language]="language"
+                    [entries]="loadedNode?.breadcrumb"
                 />
 
                 <gtx-mesh-browser-schema-list
+                    *ngIf="loadedNode"
                     class="schema-list"
-                    [project]="currentProject"
-                    [language]="currentLanguage"
-                    [node]="parentNodeUuid"
-                    [availableLanguages]="languages"
-                    [branch]="currentBranch"
-                    (nodeChange)="nodeChangeHandler($event)"
+                    [contentRepository]="selectedRepository"
+                    [project]="project"
+                    [branch]="branch"
+                    [projectSchemas]="projectSchemas"
+                    [availableLanguages]="projectLanguages"
+                    [node]="node"
+                    [language]="language"
+                    (nodeChange)="navigateToNode($event)"
                 />
             </ng-container>
 

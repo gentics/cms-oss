@@ -1,5 +1,5 @@
 <div class="breadcrumb-container">
-    <ng-container *ngFor="let entry of breadcrumbEntries; let first = first">
+    <ng-container *ngFor="let entry of entries; let first = first">
         <icon *ngIf="!first" class="separator">keyboard_arrow_right</icon>
         <a
             title="{{ entry.displayName }}"

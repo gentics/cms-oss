@@ -3,11 +3,9 @@ import { RequestMethod } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { ResizeMode } from '../models/mesh-browser-models';
 
-
-const MODE = ResizeMode.PROP;
+const MODE = ResizeMode.SMART;
 const WIDTH = 1200;
 const HEIGHT = 500;
-
 
 @Injectable()
 export class MeshBrowserImageService {
@@ -22,17 +20,15 @@ export class MeshBrowserImageService {
         binaryFieldName: string,
     ): string {
         const basePath = `${project}/nodes/${nodeUuid}/binary/${binaryFieldName}`;
-        const request = this.meshClient.prepareRequest(RequestMethod.GET, basePath, {}, {});
-
-        const queryParams = {
+        const request = this.meshClient.prepareRequest(RequestMethod.GET, basePath, {
             lang: language,
             branch: branchUuid,
-            ...request.params,
-        };
+            ...this.createAdditionalImageParams(),
+        }, {});
 
         let fullUrl = request.url;
 
-        const params = new URLSearchParams(queryParams).toString();
+        const params = new URLSearchParams(request.params).toString();
         if (params) {
             fullUrl += `?${params}`;
         }

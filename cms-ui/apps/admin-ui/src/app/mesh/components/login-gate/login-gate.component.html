@@ -3,8 +3,10 @@
 </div>
 
 <ng-template #loginForm>
-    <div class="login-wrapper">
+    <div *ngIf="requiresLogin" class="login-wrapper">
         <div class="login">
+            <gtx-progress-bar [active]="loading" />
+
             <form class="login-form" [formGroup]="form" (submit)="loginWithFormCredentials()">
                 <gtx-input
                     class="login-input"

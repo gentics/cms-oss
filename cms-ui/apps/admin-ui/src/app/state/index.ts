@@ -18,7 +18,5 @@ export * from './permissions/permissions.state';
 export * from './providers/app-state/app-state.service';
 export * from './ui/ui.actions';
 export * from './ui/ui.state';
-export * from './mesh/mesh.actions';
-export * from './mesh/mesh.state';
 export * from './utils';
 export { StateModule };

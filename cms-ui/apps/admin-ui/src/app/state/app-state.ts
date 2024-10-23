@@ -3,7 +3,6 @@ import { EntityStateModel } from './entity/entity.state';
 import { FeaturesStateModel } from './features/features.state';
 import { LoadingStateModel } from './loading/loading.state';
 import { MaintenanceModeStateModel } from './maintenance-mode/maintenance-mode.state';
-import { MeshStateModel } from './mesh/mesh.state';
 import { MessageStateModel } from './messages/message.state';
 import { PermissionsStateModel } from './permissions/permissions.state';
 import { UIStateModel } from './ui/ui.state';
@@ -29,5 +28,4 @@ export interface AppState {
     messages: MessageStateModel;
     permissions: PermissionsStateModel;
     ui: UIStateModel;
-    mesh: MeshStateModel;
 }

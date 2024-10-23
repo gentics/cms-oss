@@ -1,4 +1,15 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
 .mesh-browser-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    flex-direction: column;
 
     &.logged-out {
         margin-top:1rem;
@@ -8,24 +19,50 @@
         }
     }
 
-    overflow-y: auto;
-
     .login-gate-wrapper {
-        height: 80%;
+        flex: 1 1 auto;
+        min-height: 1px;
+
+        &::ng-deep .content {
+            display: flex;
+            flex-direction: column;
+        }
     }
-    
+
+    .cr-title {
+        margin: 0;
+        padding: 0.6em 0 0.4em;
+    }
+
     .overview-header {
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-    
+
         .back-button {
             margin-right: 1.5rem;
         }
-    
+
         .overview-title {
             font-size: 1.1rem;
         }
+    }
+
+    .switcher-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .breadcrumbs {
+        padding-top: 1rem;
+    }
+
+    .schema-list {
+        flex: 1 1 auto;
+        min-height: 1px;
+        padding-top: 1rem;
     }
 }
 

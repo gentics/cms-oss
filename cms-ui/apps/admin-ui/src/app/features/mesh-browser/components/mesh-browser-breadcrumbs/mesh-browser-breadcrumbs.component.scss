@@ -1,24 +1,18 @@
 @import "variables";
 
-
 .breadcrumb-container {
-    margin-bottom: -0.7rem;
-    margin-top: 1rem;
-}
-
-.breadcrumb-item {
+    color: $gtx-breadcrumbs-inactive-color;
     font-size: 14px;
-    color: $gtx-breadcrumbs-inactive-color; 
-    
-    &:not(:first-child):before{
-        content: '\e5cc ';
-        display: inline-block;
-        font-family: 'Material Symbols Outlined';
-        font-weight: 400;
-        font-style: normal;
-        font-size: 17px;
-        vertical-align: top;
-        -webkit-font-smoothing: antialiased;
-    }
 
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 3px;
+    align-items: center;
+
+    .separator,
+    .breadcrumb-item {
+        font-size: inherit;
+        color: inherit;
+    }
 }

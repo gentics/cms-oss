@@ -1,15 +1,26 @@
-.branch-dropdown {
-    margin-left: 1rem;
+@import '../../../../../styles/variables';
+
+:host {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
 }
 
-icon, span {
+.selector {
+    border: none;
+    background: none;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+
+    color: $gtx-color-primary;
     cursor: pointer;
+
+    .collapse-icon {
+        font-size: 18px;
+    }
 }
-
-icon.collapse{
-    position: relative;
-    top: 5px;
-    margin-left: -5px;
-}
-
-

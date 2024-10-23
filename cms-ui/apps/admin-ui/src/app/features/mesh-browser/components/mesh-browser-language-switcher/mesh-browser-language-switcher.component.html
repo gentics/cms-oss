@@ -1,20 +1,20 @@
+<gtx-dropdown-list class="dropdown-language">
+    <gtx-dropdown-trigger>
+        <button class="selector">
+            <icon
+                *ngIf="availableLanguages?.length > 1"
+                class="collapse-icon"
+            >keyboard_arrow_down</icon>
+            <span class="item-name">{{ language }}</span>
+        </button>
+    </gtx-dropdown-trigger>
 
-<ng-container>
-
-    <gtx-dropdown-list class="dropdown-language">
-        <gtx-dropdown-trigger>
-            <a>
-                <icon *ngIf="languages?.length > 1" class="collapse">keyboard_arrow_down</icon> 
-                <span>{{ currentLanguage }}</span>
-            </a>
-        </gtx-dropdown-trigger>
-
-        <gtx-dropdown-content>
-            <gtx-dropdown-item *ngFor="let language of languages" (click)="languageChangeHandler(language)">
-                {{ language }}
-            </gtx-dropdown-item>
-        </gtx-dropdown-content>
-    </gtx-dropdown-list>
-
-
-</ng-container>
+    <gtx-dropdown-content>
+        <gtx-dropdown-item
+            *ngFor="let language of availableLanguages"
+            (click)="languageChangeHandler(language)"
+        >
+            {{ language }}
+        </gtx-dropdown-item>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>

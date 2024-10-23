@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -305,6 +306,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								try (InputStream is = Channels.newInputStream(FileChannel.open(p.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StandardOpenOption.READ).lock(0, Long.MAX_VALUE, true).channel())) {
 									StagedContentPackage cp = StoredContentPackage.NODE2REST.apply(mapper.readValue(is, StoredContentPackage.class), new StagedContentPackage());
 									fillContentPackageStatistic(p, cp);
+									addImportProgress(cp);
 									return cp;
 								} catch (Throwable e) {
 									throw new IllegalStateException(e);
@@ -383,20 +385,28 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		Path path = checkFeatureGetPath();
 		
 		try (Trx trx = ContentNodeHelper.trx()) {
+			String sanitizedName = sanitizeCheck(name, false);
+
 			ContentPackageLoadResponse response = new ContentPackageLoadResponse();
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
-			response.setImport(imports.entrySet().stream()
-					.filter(e -> e.getKey().equals(name))
-					.map(e -> e.getValue().getJobStatus())
-					.findAny().orElse(null));
-			if (response.getImport() == null || !response.getImport().isRunning()) {
-				response.setContentPackage(executeLocked(sanitizeCheck(name, true), () -> {
+			Optional<StagingJobController> optionalImport = Optional.ofNullable(imports.get(sanitizedName));
+
+			response.setImport(optionalImport.map(StagingJobController::getJobStatus).orElse(null));
+
+			if (!optionalImport.map(StagingJobController::getJobStatus).map(JobStatus::isRunning).orElse(false)) {
+				response.setContentPackage(executeLocked(sanitizedName, () -> {
 					Path pkgPath = path.resolve(name);
 					StagedContentPackage contentPackage = loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class, 
 							stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
 					fillContentPackageStatistic(pkgPath, contentPackage);
+					addImportProgress(contentPackage);
 					return contentPackage;
 				}));
+			} else {
+				response.setContentPackage(optionalImport.map(StagingJobController::getInitialState).map(pkg -> {
+					addImportProgress(pkg);
+					return pkg;
+				}).orElse(null));
 			}
 			return response;
 		} catch (IllegalStateException e) {
@@ -557,6 +567,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					break;
 				}
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
@@ -620,6 +631,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
@@ -806,6 +818,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 				// Clean off alien content
 				fillContentPackageStatistic(packagePath, packageToUpdate);
+				addImportProgress(packageToUpdate);
 
 				// Cleanup backups / temp
 				try {
@@ -843,6 +856,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			String sanitizedName = sanitizeCheck(name, false);
 
+			// check, whether the content package actually exists (if not, a 404 response will be generated)
+			Path pkgPath = pathRoot.resolve(name);
+			loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME),
+					StoredContentPackage.class,
+					stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
+
 			var contentPackageErrorFile = Path.of(
 					pathRoot + "/" + sanitizedName + "/" + CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME).toFile();
 			if (contentPackageErrorFile.exists()) {
@@ -850,9 +869,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						.entity(contentPackageErrorFile)
 						.type(MediaType.APPLICATION_JSON)
 						.build();
+			} else {
+				return Response.ok().build();
 			}
-			CNI18nString errorMessage = new CNI18nString("content.staging.import.check_result_unavailable");
-			throw new EntityNotFoundException(errorMessage.toString());
 		}
 	}
 
@@ -1507,6 +1526,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			}, maybeHaveOrphans, null, Optional.of((s, n) -> StagingModelBuilder.setFeatures(s, n)));
 		}
 		logger.info(" ... processed = " + processed);
+		progress.incDone(processed);
 
 		return returnedPair.get();
 	}
@@ -1523,7 +1543,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @throws IOException
 	 */
 	private void importFromStageable(Path currentPath, Path pathRoot, JobProgress progress,
-			Optional<List<Path>> maybeHaveOrphans, List<StagingError> errors, Node node) throws NodeException, IOException {
+			Optional<List<Path>> maybeHaveOrphans, Set<StagingError> errors, Node node) throws NodeException, IOException {
 		if (!Files.isDirectory(currentPath)) {
 			// operator, which is called when a referenced object (content object), could not be found.
 			com.gentics.contentnode.etc.Operator onReferenceNotFound = () -> {
@@ -1674,6 +1694,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			}
 			deferDeleting.add(currentPath);
 		}
+	}
+
+	/**
+	 * Add the import progress info of the latest (current) import (if any)
+	 * @param cp content package to modify
+	 */
+	private void addImportProgress(StagedContentPackage cp) {
+		Optional.ofNullable(imports.get(cp.getName())).ifPresent(lastImport -> cp.setImport(lastImport.getJobStatus()));
 	}
 
 	/**
@@ -2585,8 +2613,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		private final Path packagePath;
 		private final boolean isTest;
 		private boolean running = true;
+		private StagedContentPackage initialState;
 
 		public StagingJobController(String name, StagedContentPackage initialState, Path packagePath, boolean isTest) {
+			this.initialState = initialState;
 			this.name = name;
 			this.isTest = isTest;
 			this.packagePath = packagePath;
@@ -2597,7 +2627,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		public JobStatus call() throws NodeException {
 			progress.setStarted((int) (System.currentTimeMillis() / 1000L));
 
-			List<StagingError> errors = new ArrayList<>();
+			// if import errors file exists, we delete it now
+			FileUtils.deleteQuietly(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME).toFile());
+
+			Set<StagingError> errors = new TreeSet<>();
 			try (TrxAttribute trxAttr = TrxAttribute.with(NodeFactory.UNLOCK_AT_TRX_COMMIT, true)) {
 				List<Path> haveOrphans = new ArrayList<>();
 				try {
@@ -2698,7 +2731,11 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 				}
 				int tries = 2; 
+
+				// we need to increase the total by the number of orphans, which will be handled now
+				progress.setTotal(progress.getTotal() + haveOrphans.size());
 				while (!haveOrphans.isEmpty() && tries >= 0) {
+
 					for (int i = haveOrphans.size()-1; i >= 0; i--) {
 						Path orphaned = haveOrphans.remove(i);
 						try {
@@ -2718,34 +2755,43 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 					tries -= 1;
 				}
-				progress.setFinished((int) (System.currentTimeMillis() / 1000));
 				if (isTest) {
 					TransactionManager.getCurrentTransaction().rollback(false);
-					JobStatus response = getJobStatus();
-					Type status;
-					String i18nKey;
-					String[] i18nParams;
-					if (!errors.isEmpty()) {
-						status = Type.CRITICAL;
-						i18nKey = "content.staging.import.errors";
-						i18nParams = new String[] {name, errors.stream().map(err -> err.getPath() + ": " + err.getError()).collect(Collectors.joining("\n ", "\n ", ""))};
-					} else {
-						status = Type.SUCCESS;
-						i18nKey = "content.staging.import.test.success";
-						i18nParams = new String[] {Integer.toString(progress.getDone()), name};
-					}
+				}
+
+				JobStatus response = getJobStatus();
+				Type status;
+				String i18nKey;
+				String[] i18nParams;
+				boolean throwException = false;
+
+				if (errors.isEmpty()) {
+					status = Type.SUCCESS;
+					i18nKey = isTest ? "content.staging.import.test.success" : "content.staging.import.success";
+					i18nParams = new String[] {Integer.toString(progress.getDone()), name};
+				} else {
+					status = Type.CRITICAL;
+					i18nKey = "content.staging.import.errors";
+					i18nParams = new String[] {name, Integer.toString(errors.size())};
+					throwException = !isTest;
+				}
+
+				if (throwException) {
+					throw new RestMappedException("Error while importing", i18nKey, Arrays.asList(i18nParams));
+				} else {
 					response.addMessage(new Message(status, I18NHelper
 							.get(i18nKey, i18nParams)));
 					return response;
-				} else {
-					throw new RestMappedException("Error while importing",
-							"content.staging.import.implementation_mismatch",
-							Arrays.asList(name, errors.stream().map(err -> err.getPath() + ": " + err.getError()).collect(Collectors.joining("\n ", "\n ", ""))));
 				}
 			} finally {
+				// this is a bit lame, we just make sure that progress.done is not greater than progress.total
+				if (progress.getDone() > progress.getTotal()) {
+					progress.setTotal(progress.getDone());
+				}
+				progress.setFinished((int) (System.currentTimeMillis() / 1000));
 				running = false;
 				StagingErrors stagingErrors = new StagingErrors();
-				stagingErrors.setErrors(errors);
+				stagingErrors.setErrors(new ArrayList<>(errors));
 				try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME),
 						StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
 					mapper.writeValue(os, stagingErrors);
@@ -2762,6 +2808,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		 */
 		public JobStatus getJobStatus() {
 			return new JobStatus(I18NHelper.get("content.staging.import", name), running).setProgress(progress);
+		}
+
+		/**
+		 * Get the content package, which is currently imported
+		 * @return content package
+		 */
+		public StagedContentPackage getInitialState() {
+			return this.initialState;
 		}
 
 		/**

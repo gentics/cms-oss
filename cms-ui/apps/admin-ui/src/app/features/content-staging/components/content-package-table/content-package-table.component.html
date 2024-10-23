@@ -57,7 +57,7 @@
     [sortBy]="sortBy"
     [sortOrder]="sortOrder"
 
-    [renderers]="{ date: dateRenderer }"
+    [renderers]="{ date: dateRenderer, import_start: dateTimeRenderer, import_end: dateTimeRenderer, import_progress: progressRenderer }"
 
     (pageChange)="changePageTo($event)"
     (sortByChange)="updateSortBy($event)"
@@ -70,5 +70,19 @@
 <ng-template #dateRenderer let-value="value">
     <span class="gtx-table-cell-text">
         {{ value | i18nDate }}
+    </span>
+</ng-template>
+
+<ng-template #dateTimeRenderer let-value="value">
+    <span class="gtx-table-cell-text">
+        {{ value | i18nDate:"dateTimeDetailed" }}
+    </span>
+</ng-template>
+
+<ng-template #progressRenderer let-row="row">
+    <span class="gtx-table-cell-text">
+        <ng-content *ngIf="row.item?.import?.progress?.total > 0">
+            {{ row.item?.import?.progress?.done | i18nNumber }} / {{ row.item?.import?.progress?.total | i18nNumber }}
+        </ng-content>
     </span>
 </ng-template>

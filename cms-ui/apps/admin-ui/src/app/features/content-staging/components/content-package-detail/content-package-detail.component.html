@@ -39,7 +39,8 @@
                 />
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-content-package-import-error-table
-                        [packageName]="currentEntity?.name"
+                        [contentPackage]="currentEntity"
+                        (reloadPackage)="reloadEntity()"
                     />
                 </div>
             </div>

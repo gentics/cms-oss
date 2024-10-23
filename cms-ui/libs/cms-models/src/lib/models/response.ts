@@ -1,6 +1,6 @@
 import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage, ContentPackageImportError } from './content-package';
+import { ContentPackage, ContentPackageImportError, ContentPackageSyncProgress } from './content-package';
 import { ContentRepository } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -1423,13 +1423,6 @@ export interface ContentPackageListResponse extends ListResponse<ContentPackage>
 
 export interface ContentPackageResponse extends Response {
     contentPackage: ContentPackage;
-}
-
-export interface ContentPackageSyncProgress {
-    done: number;
-    total: number;
-    started: number;
-    finished: number;
 }
 
 export interface ContentPackageSyncResponse extends Response {

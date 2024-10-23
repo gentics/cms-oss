@@ -43,6 +43,20 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
             label: 'common.edate',
             fieldPath: 'timestamp',
         },
+        {
+            id: 'import_progress',
+            label: 'content_staging.imported',
+        },
+        {
+            id: 'import_start',
+            label: 'content_staging.import_started',
+            fieldPath: 'import.progress.started',
+        },
+        {
+            id: 'import_end',
+            label: 'content_staging.import_finished',
+            fieldPath: 'import.progress.finished',
+        },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentPackage';
 
@@ -224,6 +238,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         this.subscriptions.push(combineLatest(packages
             .map(pkg => this.operations.importFromFileSystem(pkg[BO_ID], { wait: 5_000 })),
         ).subscribe());
+        this.reload();
     }
 
     async exportPackages(packages: ContentPackageBO[]): Promise<void> {

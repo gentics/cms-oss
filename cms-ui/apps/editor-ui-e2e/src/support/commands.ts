@@ -10,7 +10,7 @@ Cypress.Commands.add('navigateToApp', { prevSubject: false }, (path, raw) => {
      * Therefore we also have to use the correct path for it.
      */
     const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/';
-    cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
+    return cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
 });
 
 Cypress.Commands.add('login', { prevSubject: false }, (account, keycloak) => {

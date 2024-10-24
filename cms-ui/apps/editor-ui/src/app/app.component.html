@@ -1,5 +1,4 @@
-<ng-template [ngIf]="(loggedIn$ | async) && !(hideExtras$ | async)">
-
+<ng-container *ngIf="(loggedIn$ | async) && !(hideExtras$ | async)">
     <gtx-top-bar class="top-bar">
         <a
             *ngIf="nodeRootLink$ | async"
@@ -104,8 +103,7 @@
             [nodes]="loadedNodes"
         ></gtx-app-version-label>
     </gtx-user-menu>
-
-</ng-template>
+</ng-container>
 
 <router-outlet (deactivate)="resetHideExtras()"></router-outlet>
 <logging-in-overlay [loggingIn]="loggingIn$ | async"></logging-in-overlay>

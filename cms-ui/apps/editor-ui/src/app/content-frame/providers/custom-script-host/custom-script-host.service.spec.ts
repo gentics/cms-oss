@@ -71,13 +71,6 @@ describe('CustomScriptHostService', () => {
         };
     });
 
-    it('setRequesting() sets the value of ContentFrame.requesting & runs change detection', () => {
-        customScriptHostService.setRequesting(true);
-
-        expect(mockContentFrame.requesting).toBe(true);
-        expect(mockContentFrame.runChangeDetection).toHaveBeenCalled();
-    });
-
     it('setContentModified() delegates to ContentFrame.setContentModified() with second arg true', () => {
         customScriptHostService.setContentModified(false);
 

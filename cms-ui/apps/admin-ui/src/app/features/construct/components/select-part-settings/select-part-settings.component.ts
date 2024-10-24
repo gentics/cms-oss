@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { DataSource, IndexById, Raw, SelectSetting } from '@gentics/cms-models';
+import { DataSource, DataSourceEntry, IndexById, Raw, SelectOption, SelectSetting } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -20,7 +20,9 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
 
     @Input()
     public dataSources: DataSource<Raw>[] = [];
+
     public dataSourceMap: IndexById<DataSource<Raw>> = {};
+    public entryMap: Record<number, DataSourceEntry> = {};
 
     private entriesSubscription: Subscription;
 
@@ -103,16 +105,26 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
          * Potentially abstract the APi again as EntityOperations should be for BOs only?
          */
         this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe(res => {
-            this.form.patchValue({
-                ...this.form.value,
-                datasourceId: dsId as number,
-                options: res.items.map(option => ({
+            this.entryMap = {};
+            const options: SelectOption[] = [];
+
+            res.items.forEach(entry => {
+                this.entryMap[entry.dsId] = entry;
+                options.push({
                     // "id" in the response context is the ID in the global CMS, while dsId is the one inside the Datasource
-                    id: option.dsId,
-                    key: option.key,
-                    value: option.value,
-                })),
+                    id: entry.dsId,
+                    key: entry.key,
+                    value: entry.value,
+                })
             });
+
+            this.form.patchValue({
+                datasourceId: dsId as number,
+                options: options,
+            }, { emitEvent: false });
+            this.form.controls.datasourceId.markAsDirty();
+            this.form.controls.options.markAsDirty();
+
             this.form.updateValueAndValidity();
             this.changeDetector.markForCheck();
         });

@@ -1,0 +1,1 @@
+REST API: Removes a misleading error message about missing permissions when trying to add a user to a group that was already assigned to the user.

@@ -21,7 +21,7 @@
         (updateCount)="updateBrokenLinkCount()"
     ></gtx-link-checker-controls>
 
-    <ng-container *ngIf="settings">
+    <ng-container *ngIf="alohaRef && settings">
         <ng-container *ngFor="let tab of settings?.tabs; trackBy: identifyTab">
             <div
                 *ngIf="tab.id !== TAB_ID_CONSTRUCTS && tab.id !== TAB_ID_LINK_CHECKER"
@@ -37,7 +37,7 @@
                             <gtx-aloha-component-renderer
                                 class="dynamic-component gtx-menu-element"
                                 [class.hidden]="!slot.visible"
-                                [attr.slot]="slot.name"
+                                [attr.data-slot]="slot.name"
                                 [slot]="slot.name"
                                 [component]="components[slot.name]"
                                 [disabled]="tagEditorOpen"

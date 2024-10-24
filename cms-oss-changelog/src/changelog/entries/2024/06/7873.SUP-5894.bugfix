@@ -1,0 +1,1 @@
+Fixes link resolving for pages that are referenced by forms (for example as mail templates). The links did not contain the host, this has been fixed.

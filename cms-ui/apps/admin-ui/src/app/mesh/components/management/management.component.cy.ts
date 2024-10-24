@@ -12,6 +12,7 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 import { MeshRestClientConfig } from '@gentics/mesh-rest-client';
 import { LoginGateComponent } from '../login-gate/login-gate.component';
 import { ManagementComponent } from './management.component';
+import { CmsComponentsModule } from '@gentics/cms-components';
 
 // TODO: Create a test client service like the cms-client in the mesh package
 class MockMeshRestClientService implements Partial<MeshRestClientService> {
@@ -45,6 +46,7 @@ describe('ManagementComponent', () => {
                 GenticsUICoreModule.forRoot(),
                 CoreModule,
                 RouterTestingModule,
+                CmsComponentsModule,
             ],
             declarations: [
                 LoginGateComponent,

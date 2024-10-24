@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
 
@@ -12,12 +12,20 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
 export class LoginComponent implements OnInit {
     errorMessage$: Observable<string>;
     loginForm: UntypedFormGroup;
+    public keycloakError?: string;
 
     constructor(
         private appState: ApplicationStateService,
         private route: ActivatedRoute,
-        private authActions: AuthActionsService
-    ) { }
+        private router: Router,
+        private authActions: AuthActionsService,
+    ) {
+        const navigation = this.router.getCurrentNavigation();
+
+        if (navigation?.extras?.state) {
+            this.keycloakError = navigation?.extras?.state['keycloakError'];
+        }
+    }
 
     ngOnInit(): void {
         this.loginForm = new UntypedFormGroup({
@@ -29,8 +37,8 @@ export class LoginComponent implements OnInit {
 
     login(): void {
         if (this.loginForm.valid) {
-            let { username, password } = this.loginForm.value;
-            let returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+            const { username, password } = this.loginForm.value;
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
             this.authActions.login(username, password, returnUrl);
         }
     }

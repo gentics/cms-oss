@@ -43,6 +43,12 @@ class NoAction {
     constructor(public param: number) { }
 }
 
+function isObservable<T>(value: any): value is Observable<T> {
+    return value != null
+        && typeof value === 'object'
+        && typeof value.subscribe === 'function';
+}
+
 let authStateModuleInstance: TestAuthStateModule;
 
 @AppStateBranch<AuthStateModel>({
@@ -137,7 +143,7 @@ describe('StateUtils', () => {
 
         it('@SelectState works', () => {
             const testService = TestBed.get(TestService) as TestService;
-            expect(testService.authState$ instanceof Observable).toBeTruthy();
+            expect(isObservable(testService.authState$)).toBeTruthy();
 
             let emissionCount = 0;
             let latestValue: AuthStateModel;

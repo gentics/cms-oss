@@ -20,7 +20,7 @@
     </gtx-input>
 
     <div class="row collapse">
-        <div class="columns small-12" [class.medium-5]="languages.length > 0">
+        <div class="columns small-12" [class.medium-5]="languages?.length > 0">
             <gtx-select [label]="('editor.item_template_label' | i18n) + '*'"
                         formControlName="templateId"
                         [gtxDisabled]="disabled"
@@ -44,7 +44,7 @@
             </a>
         </div>
         <div class="columns small-12 medium-5 medium-push-2">
-            <gtx-select *ngIf="languages.length > 0"
+            <gtx-select *ngIf="languages?.length > 0"
                         [label]="('editor.item_language_label' | i18n) + '*'"
                         formControlName="language"
                         [gtxDisabled]="disabled || disableLanguageSelect"

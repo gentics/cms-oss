@@ -629,6 +629,20 @@ public class UserResourceImpl implements UserResource {
 			Transaction t = trx.getTransaction();
 			SystemUser user = MiscUtils.load(SystemUser.class, id);
 			UserGroup group = MiscUtils.load(UserGroup.class, groupId);
+
+			if (user.getUserGroups().contains(group)) {
+				// Nothing to do when the user is already in the group. Trying to add the user again might lead to
+				// a failed permission check for the user of the request.
+				GroupLoadResponse response = new GroupLoadResponse(
+					null,
+					ResponseInfo.ok("User already in group"),
+					UserGroup.TRANSFORM2REST.apply(group));
+
+				trx.success();
+
+				return response;
+			}
+
 			MiscUtils.check(group, PermType.userassignment, (g, ph) -> {
 				return ph.checkGroupPerm(g, p -> p.checkPermissionBit(UserGroup.TYPE_GROUPADMIN, null, PermHandler.PERM_GROUP_USERADD));
 			});

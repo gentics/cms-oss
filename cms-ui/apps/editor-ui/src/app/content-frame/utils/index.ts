@@ -3,3 +3,4 @@ export * from './colors';
 export * from './content-frame-helpers';
 export * from './mobile-menu';
 export * from './overflow-manager';
+export * from './tag-utils';

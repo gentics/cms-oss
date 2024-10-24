@@ -18,10 +18,12 @@ import { Injectable, Injector } from '@angular/core';
 import {
     EntityIdType,
     Folder,
+    LocalizeRequest,
     ModelType,
     Node,
     NodeListRequestOptions,
     Raw,
+    Response,
     Template,
     TemplateBO,
     TemplateCreateRequest,
@@ -33,7 +35,9 @@ import {
     TemplateRequestOptions,
     TemplateSaveOptions,
     TemplateSaveRequest,
+    UnlocalizeRequest,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable } from 'rxjs';
 import { map, mergeMap, switchMap, tap } from 'rxjs/operators';
@@ -51,6 +55,7 @@ export class TemplateOperations
     constructor(
         injector: Injector,
         private api: GcmsApi,
+        private client: GCMSRestClientService,
         private appState: AppStateService,
         private entityManager: EntityManagerService,
         private notification: I18nNotificationService,
@@ -271,6 +276,19 @@ export class TemplateOperations
                     },
                 });
             }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    localizeTemplate(templateId: number, body: LocalizeRequest): Observable<Response> {
+        return this.client.template.localize(templateId, body).pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+
+    unlocalizeTemplate(templateId: number, body: UnlocalizeRequest): Observable<Response> {
+        return this.client.template.unlocalize(templateId, body).pipe(
             this.catchAndRethrowError(),
         );
     }

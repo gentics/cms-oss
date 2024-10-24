@@ -1,19 +1,31 @@
-<ng-template #groupTpl let-isFavourite="isFavourite" let-label="label" let-constructs="constructs">
+<ng-template
+    #groupTpl
+    let-isFavourite="isFavourite"
+    let-label="label"
+    let-constructs="constructs"
+    let-id="id"
+>
     <gtx-dropdown-list
         #dropdownRef
-        class="dropdown"
+        class="dropdown construct-category"
         [belowTrigger]="true"
         [sticky]="false"
         [width]="'content'"
+        [attr.data-id]="id"
+        data-context-id="construct-category"
     >
         <gtx-dropdown-trigger>
-            <div class="construct-group" (click)="handleDropdownOpen(dropdownRef, isFavourite)">
+            <button
+                class="construct-group"
+                data-context-trigger
+                (click)="handleDropdownOpen(dropdownRef, isFavourite)"
+            >
                 <div class="group-label">{{ label }}</div>
                 <icon class="group-icon">arrow_drop_down</icon>
-            </div>
+            </button>
         </gtx-dropdown-trigger>
 
-        <gtx-dropdown-content>
+        <gtx-dropdown-content data-context-id="construct-category">
             <div class="construct-list">
                 <div
                     *ngFor="let construct of constructs"
@@ -40,6 +52,7 @@
         <div class="groups-container">
             <ng-container *ngIf="favouriteConstructs.length > 0">
                 <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    id: FAVOURITES_ID,
                     label: (FAVOURITES_LABEL | i18n),
                     constructs: favouriteConstructs,
                     isFavourite: true
@@ -48,6 +61,7 @@
 
             <ng-container *ngFor="let group of displayGroups">
                 <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    id: group.id,
                     label: group.label,
                     constructs: group.constructs,
                     isFavourite: false

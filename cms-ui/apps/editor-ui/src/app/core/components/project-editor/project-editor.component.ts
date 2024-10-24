@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { EditorOutlet, EditorState } from '@editor-ui/app/common/models';
+import { isEqual } from 'lodash-es';
+import { Subscription } from 'rxjs';
+import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { PresentationService } from '../../../shared/providers/presentation/presentation.service';
 import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../../../state';
 
@@ -10,31 +12,51 @@ import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../
     styleUrls: ['./project-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProjectEditor implements OnInit {
+export class ProjectEditorComponent implements OnInit, OnDestroy {
 
-    editorFocused$: Observable<boolean>;
-    editorOpen$: Observable<boolean>;
-    focusMode$: Observable<boolean>;
-    activeNodeId$: Observable<number>;
+    public readonly EditorOutlet = EditorOutlet;
+
+    editorFocused: boolean;
+    editorOpen: boolean;
+    focusMode: boolean;
+    activeNodeId: number;
+    headerHeight: string;
 
     splitFocus: 'left' | 'right' = 'left';
 
-    headerHeight$: Observable<string>;
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private presentation: PresentationService,
-    ) {
-        this.editorFocused$ = appState.select(state => state.editor.editorIsFocused);
-        this.focusMode$ = appState.select(state => state.editor.focusMode);
-        this.editorOpen$ = appState.select(state => state.editor.editorIsOpen);
-        this.activeNodeId$ = appState.select(state => state.folder.activeNode);
-    }
+    ) {}
 
     ngOnInit(): void {
-        this.headerHeight$ = this.presentation.headerHeight$.pipe(
+        this.subscriptions.push(this.appState.select(state => state.editor).pipe(
+            distinctUntilChanged(isEqual),
+        ).subscribe((editorState: EditorState) => {
+            this.editorFocused = editorState.editorIsFocused;
+            this.focusMode = editorState.focusMode;
+            this.editorOpen = editorState.editorIsOpen;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.folder.activeNode).subscribe(nodeId => {
+            this.activeNodeId = nodeId;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.presentation.headerHeight$.pipe(
             filter((headerHeight: string) => typeof headerHeight === 'string'),
-        );
+        ).subscribe(height => {
+            this.headerHeight = height;
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     setSplitFocus(focus: 'left' | 'right'): void {

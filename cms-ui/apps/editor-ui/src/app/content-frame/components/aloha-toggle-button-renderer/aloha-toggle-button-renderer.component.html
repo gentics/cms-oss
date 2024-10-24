@@ -13,11 +13,12 @@
     <button
         gtx-tooltip-trigger
         class="gtx-editor-toggle-button"
+        data-action="primary"
         [class.icon-only]="settings.iconOnly"
         [class.hidden]="!settings.visible"
         [class.active]="settings.active"
         [disabled]="disabled"
-        (click)="handleClick()"
+        (click)="handleClick($event)"
     >
         <icon
             *ngIf="settings.icon"

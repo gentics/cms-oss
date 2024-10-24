@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AlohaSelectComponent } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { patchMultipleAlohaFunctions } from '../../utils';
 
 @Component({
     selector: 'gtx-alohal-select-renderer',
@@ -15,30 +16,28 @@ export class AlohaSelectRendererComponent extends BaseAlohaRendererComponent<Alo
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setLabel = (label) => {
-            this.settings.label = label;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setOptions = (options) => {
-            this.settings.options = options;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setMultiple = (multiple) => {
-            this.settings.multiple = multiple;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setClearable = (clearable) => {
-            this.settings.clearable = clearable;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setPlaceholder = (placeholder) => {
-            this.settings.placeholder = placeholder;
-            this.changeDetector.markForCheck();
-        };
+        patchMultipleAlohaFunctions(this.settings, {
+            setLabel: (label) => {
+                this.settings.label = label;
+                this.changeDetector.markForCheck();
+            },
+            setOptions: (options) => {
+                this.settings.options = options;
+                this.changeDetector.markForCheck();
+            },
+            setMultiple: (multiple) => {
+                this.settings.multiple = multiple;
+                this.changeDetector.markForCheck();
+            },
+            setClearable: (clearable) => {
+                this.settings.clearable = clearable;
+                this.changeDetector.markForCheck();
+            },
+            setPlaceholder: (placeholder) => {
+                this.settings.placeholder = placeholder;
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     protected override onValueChange(): void {

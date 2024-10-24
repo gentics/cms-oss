@@ -1,7 +1,7 @@
 import { ConstructPartPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { Language, TagPart } from '@gentics/cms-models';
+import { DataSource, Language, TagPart } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
 @Component({
@@ -22,6 +22,9 @@ export class CreateConstructPartModalComponent extends BaseModal<TagPart> implem
 
     @Input()
     public orderBlacklist: number[];
+
+    @Input()
+    public dataSources: DataSource[];
 
     @Input()
     public defaultOrder = 1;

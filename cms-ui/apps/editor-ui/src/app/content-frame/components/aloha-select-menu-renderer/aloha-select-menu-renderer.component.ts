@@ -5,7 +5,7 @@ import { generateFormProvider } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
-import { applyControl } from '../../utils';
+import { applyControl, patchMultipleAlohaFunctions } from '../../utils';
 
 @Component({
     selector: 'gtx-aloha-select-menu-renderer',
@@ -48,19 +48,17 @@ export class AlohaSelectMenuRendererComponent
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setIconsOnly = (iconsOnly) => {
-            this.settings.iconsOnly = iconsOnly;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setOptions = (options) => {
-            this.settings.options = options;
-            this.checkIcons();
-            this.changeDetector.markForCheck();
-        };
+        patchMultipleAlohaFunctions(this.settings, {
+            setIconsOnly: (iconsOnly) => {
+                this.settings.iconsOnly = iconsOnly;
+                this.changeDetector.markForCheck();
+            },
+            setOptions: (options) => {
+                this.settings.options = options;
+                this.checkIcons();
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     protected checkIcons(): void {

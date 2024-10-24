@@ -1,5 +1,4 @@
 import {
-    ComponentFactoryResolver,
     ComponentRef,
     EventEmitter,
     Injectable,
@@ -54,7 +53,6 @@ export class NotificationService {
     private verticalMargin = 10;
 
     constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
         overlayHostService: OverlayHostService,
     ) {
         overlayHostService.getHostView().then(view => {
@@ -112,8 +110,7 @@ export class NotificationService {
      * NotificationHost component in the DOM.
      */
     private createToast(options: INotificationOptions): ToastComponent {
-        const toastFactory = this.componentFactoryResolver.resolveComponentFactory(ToastComponent);
-        const ref = this.hostViewContainer.createComponent(toastFactory);
+        const ref = this.hostViewContainer.createComponent(ToastComponent);
         const toast: ToastComponent = ref.instance;
 
         let dismissTimer: any;
@@ -138,6 +135,7 @@ export class NotificationService {
             dismissTimer,
         });
         this.positionOpenToasts();
+        ref.changeDetectorRef.markForCheck();
         return toast;
     }
 

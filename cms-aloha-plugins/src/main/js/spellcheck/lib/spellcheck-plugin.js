@@ -2,12 +2,10 @@ define([
 	'jquery',
 	'aloha/plugin',
 	'aloha/core',
-	'util/html',
 	'util/dom',
-	'util/dom2',
-	'PubSub',
 	'aloha/ephemera',
 	'ui/ui',
+	'ui/icons',
 	'ui/button',
 	'i18n!spellcheck/nls/i18n',
 	'gcn/gcn-plugin',
@@ -16,12 +14,10 @@ define([
 	$,
 	Plugin,
 	Aloha,
-	Html,
 	Dom,
-	Dom2,
-	PubSub,
 	Ephemera,
 	Ui,
+	Icons,
 	Button,
 	i18n
 ) {
@@ -35,6 +31,7 @@ define([
 	var spellCheckInProgress = false;
 	var $menu                = null;
 	var lastActiveEditable   = null;
+	const SPELLCHECKER_URL 	 = '/v2/check';
 
 	var plugin = Plugin.create(pluginName, {
 		/**
@@ -85,9 +82,7 @@ define([
 
 			var button = Ui.adopt('gcnSpellCheck', Button, {
 				tooltip: i18n.t('button.spellchecking.tooltip'),
-				icon: 'aloha-icon aloha-icon-abbr',
-				'class': 'aloha-spellcheck-marker',
-				scope: 'Aloha.continuoustext',
+				icon: Icons.SPELLCHECK,
 				click: function () {
 					button.element.blur();
 					checkContent(plugin);
@@ -111,7 +106,7 @@ define([
 			} else {
 				$.ajax({
 					type: 'GET',
-					url: '/spelling/languages',
+					url: SPELLCHECKER_URL,
 
 					success: function(languages) {
 						var numLanguages = languages.length;
@@ -171,7 +166,7 @@ define([
 
 		$.ajax({
 			type: 'POST',
-			url: '/spelling/check',
+			url: SPELLCHECKER_URL,
 			data: {
 				language: plugin.language,
 				text: text,

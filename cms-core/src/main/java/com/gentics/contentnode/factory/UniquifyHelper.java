@@ -3,9 +3,12 @@ package com.gentics.contentnode.factory;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -19,6 +22,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.NodeObject;
@@ -250,31 +254,25 @@ public class UniquifyHelper {
 	}
 
 	/**
-	 * Make the given value unique for the object
-	 * @param <T> type of the object
-	 * @param object object holding the reference value
-	 * @param referenceValue value to be made unique
-	 * @param propertyFunction function that extracts the attribute values from other objects
-	 * @param objectIds object IDs of the objects from which the attribute values shall be extracted
-	 * @param type separator type (when the reference value needs to be made unique by adding numbers)
-	 * @param maxLength maximum allowed length for the reference value
-	 * @return unique value
+	 * Make the given reference value unique by adding numbers to the original value.
+	 * Uniqueness is checked with the given checkFunction
+	 * @param referenceValue value to make unique
+	 * @param type separator type
+	 * @param maxLength maximum allowed length
+	 * @param checkFunction function, which checks whether a value is unique. It should return "true" for unique values, "false" otherwise
+	 * @return possibly modified value
 	 * @throws NodeException
 	 */
-	public static <T extends NodeObject> String makeUnique(Disinheritable<T> object,
-			String referenceValue, Function<T, Set<String>> propertyFunction, Collection<Integer> objectIds,
-			UniquifyHelper.SeparatorType type, int maxLength) throws NodeException {
+	public static String makeUnique(String referenceValue, UniquifyHelper.SeparatorType type, int maxLength,
+			Function<String, Boolean> checkFunction) throws NodeException {
 		if (type == null) {
 			type = UniquifyHelper.SeparatorType.none;
 		}
 		if (StringUtils.isNotEmpty(referenceValue)) {
 			referenceValue = referenceValue.trim();
 		}
-		@SuppressWarnings("unchecked")
-		Class<T> clazz = (Class<T>) object.getObjectInfo().getObjectClass();
 
-		// check whether conflicting values are found
-		if (isPropertyAvailable(clazz, referenceValue, propertyFunction, objectIds)) {
+		if (checkFunction.apply(referenceValue)) {
 			return referenceValue;
 		}
 
@@ -301,10 +299,32 @@ public class UniquifyHelper {
 			} else {
 				modifiedValue = String.format("%s%s", base, toAdd);
 			}
-			if (isPropertyAvailable(clazz, modifiedValue, propertyFunction, objectIds)) {
+			if (checkFunction.apply(modifiedValue)) {
 				return modifiedValue;
 			}
 		}
+	}
+
+	/**
+	 * Make the given value unique for the object
+	 * @param <T> type of the object
+	 * @param object object holding the reference value
+	 * @param referenceValue value to be made unique
+	 * @param propertyFunction function that extracts the attribute values from other objects
+	 * @param objectIds object IDs of the objects from which the attribute values shall be extracted
+	 * @param type separator type (when the reference value needs to be made unique by adding numbers)
+	 * @param maxLength maximum allowed length for the reference value
+	 * @return unique value
+	 * @throws NodeException
+	 */
+	public static <T extends NodeObject> String makeUnique(Disinheritable<T> object,
+			String referenceValue, Function<T, Set<String>> propertyFunction, Collection<Integer> objectIds,
+			UniquifyHelper.SeparatorType type, int maxLength) throws NodeException {
+		@SuppressWarnings("unchecked")
+		Class<T> clazz = (Class<T>) object.getObjectInfo().getObjectClass();
+
+		return makeUnique(referenceValue, type, maxLength,
+				value -> isPropertyAvailable(clazz, value, propertyFunction, objectIds));
 	}
 
 	/**
@@ -333,6 +353,76 @@ public class UniquifyHelper {
 			String referenceValue = entry.getValue();
 			String modifiedValue = makeUnique(object, referenceValue, propertyFunction, objectIds, type, maxLength);
 			entry.setValue(modifiedValue);
+		}
+
+		return uniqueI18nMap;
+	}
+
+	/**
+	 * Make the values in the given {@link I18nMap} unique among each other. Checks will be done in specific order:
+	 * <ol>
+	 * <li>Modified values (which are different from the given original) are checked first</li>
+	 * <li>Values are checked in the reverse order of the given languages (so translations for languages with the highest priority will be checked and possibly modified last)</li>
+	 * </ol>
+	 * The translations will also be checked against the given default value (only the "en" translation is allowed to be identical to the default value)
+	 * @param languages list of content languages to check
+	 * @param map map to be checked
+	 * @param defaultValue default value
+	 * @param original original translations
+	 * @param type separator type
+	 * @param maxLength maximum allowed value length
+	 * @return translation map with unique values
+	 * @throws NodeException
+	 */
+	public static I18nMap makeUnique(List<ContentLanguage> languages, I18nMap map, String defaultValue,
+			Optional<I18nMap> original, UniquifyHelper.SeparatorType type, int maxLength) throws NodeException {
+		languages = new ArrayList<>(languages);
+		Collections.reverse(languages);
+		List<ContentLanguage> languagesToCheck = new ArrayList<>();
+
+		// first get the languages (in defined order) for the values that were changed, we will check those first
+		for (ContentLanguage language : languages) {
+			String originalValue = original.map(o -> o.get(language.getId())).orElse(null);
+			if (StringUtils.isNotBlank(map.getOrDefault(language.getId(), null))
+					&& !StringUtils.equalsIgnoreCase(map.get(language.getId()), originalValue)) {
+				languagesToCheck.add(language);
+			}
+		}
+
+		// now add the remaining languages, for which translations exist
+		for (ContentLanguage language : languages) {
+			// omit languages, which were added before
+			if (languagesToCheck.contains(language)) {
+				continue;
+			}
+
+			if (StringUtils.isNotBlank(map.getOrDefault(language.getId(), null))) {
+				languagesToCheck.add(language);
+			}
+		}
+
+		I18nMap uniqueI18nMap = new I18nMap();
+		uniqueI18nMap.putAll(map);
+
+		// now iterate over the languages and check, whether the value is different from
+		// all other values (and the default value, if the language is not "en")
+		for (ContentLanguage language : languagesToCheck) {
+			String value = uniqueI18nMap.get(language.getId());
+
+			value = makeUnique(value, type, maxLength, v -> {
+				// check whether any other translation uses the value in question
+				if (uniqueI18nMap.entrySet().stream().filter(entry -> Integer.compare(entry.getKey(), language.getId()) != 0)
+						.filter(entry -> StringUtils.equals(v, entry.getValue())).findAny().isPresent()) {
+					return false;
+				}
+				// when checking for languages other than "en", the value must also be different from the default value
+				if (!StringUtils.equals(language.getCode(), "en")) {
+					return !StringUtils.equals(v, defaultValue);
+				} else {
+					return true;
+				}
+			});
+			uniqueI18nMap.put(language.getId(), value);
 		}
 
 		return uniqueI18nMap;

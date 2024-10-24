@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AlohaToggleButtonComponent } from '@gentics/aloha-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { cancelEvent, generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { patchMultipleAlohaFunctions } from '../../utils';
 
 @Component({
     selector: 'gtx-aloha-toggle-button-renderer',
@@ -15,38 +16,36 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setIcon = icon => {
-            this.settings.icon = icon;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setIconOnly = only => {
-            this.settings.iconOnly = only;
-            this.changeDetector.markForCheck();
-        }
-        this.settings.setIconHollow = hollow => {
-            this.settings.iconHollow = hollow;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setText = text => {
-            this.settings.text = text;
-            this.changeDetector.markForCheck();
-        };
-        this.settings.setTooltip = tooltip => {
-            this.settings.tooltip = tooltip;
-            this.changeDetector.markForCheck();
-        };
-
-        this.settings.setActive = (active) => {
-            this.settings.active = active;
-            this.changeDetector.markForCheck();
-        }
+        patchMultipleAlohaFunctions(this.settings, {
+            setIcon: icon => {
+                this.settings.icon = icon;
+                this.changeDetector.markForCheck();
+            },
+            setIconOnly: only => {
+                this.settings.iconOnly = only;
+                this.changeDetector.markForCheck();
+            },
+            setIconHollow: hollow => {
+                this.settings.iconHollow = hollow;
+                this.changeDetector.markForCheck();
+            },
+            setText: text => {
+                this.settings.text = text;
+                this.changeDetector.markForCheck();
+            },
+            setTooltip: tooltip => {
+                this.settings.tooltip = tooltip;
+                this.changeDetector.markForCheck();
+            },
+            setActive: active => {
+                this.settings.active = active;
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
-    public handleClick(): void {
+    public handleClick(event: MouseEvent): void {
+        cancelEvent(event);
         if (!this.settings) {
             this.aloha.restoreSelection();
             return;

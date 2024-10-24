@@ -2,22 +2,22 @@
     class="split-view-container"
     gtxPreventFileDrop="page"
     noswipe
-    [class.focusMode]="focusMode$ | async"
-    [class.rightPanelFocused]="editorFocused$ | async"
-    [style.--gtx-view-top]="headerHeight$ | async"
+    [class.focusMode]="focusMode"
+    [class.rightPanelFocused]="editorFocused"
+    [style.--gtx-view-top]="headerHeight"
     [initialSplit]="35"
-    [rightPanelVisible]="editorOpen$ | async"
-    [focusedPanel]="(editorFocused$ | async) ? 'right' : 'left'"
+    [rightPanelVisible]="editorOpen"
+    [focusedPanel]="editorFocused ? 'right' : 'left'"
     (focusedPanelChange)="setSplitFocus($event)"
 >
     <div class="list-pane" left>
-        <router-outlet name="list"></router-outlet>
+        <router-outlet [name]="EditorOutlet.LIST"></router-outlet>
     </div>
 
     <div class="content-pane" right>
-        <router-outlet name="detail"></router-outlet>
+        <router-outlet [name]="EditorOutlet.DETAIL"></router-outlet>
     </div>
 
 </gtx-split-view-container>
 
-<router-outlet name="modal"></router-outlet>
+<router-outlet [name]="EditorOutlet.MODAL"></router-outlet>

@@ -73,7 +73,9 @@
     [sortBy]="sortBy"
     [sortOrder]="sortOrder"
 
-    [renderers]="{}"
+    [renderers]="{
+        name: nameRenderer
+    }"
 
     (pageChange)="changePageTo($event)"
     (sortByChange)="updateSortBy($event)"
@@ -84,3 +86,11 @@
     (rowClick)="handleRowClick($event)"
     (actionClick)="handleAction($event)"
 ></gtx-table>
+
+
+<ng-template #nameRenderer let-row="row">
+    <div class="name-wrapper">
+        <icon *ngIf="row.item.inherited">input</icon>
+        <span class="name">{{ row.item.name }}</span>
+    </div>
+</ng-template>

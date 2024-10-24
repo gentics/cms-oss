@@ -4,7 +4,6 @@ import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
@@ -59,7 +58,6 @@ export class CustomScriptHostService {
         private notification: I18nNotification,
         private i18n: I18nService,
         private errorHandler: ErrorHandler,
-        private resourceUrlBuilder: ResourceUrlBuilder,
         private folderActions: FolderActionsService,
         private navigationService: NavigationService,
         private router: Router,
@@ -87,14 +85,6 @@ export class CustomScriptHostService {
      */
     getPageComparisonLanguage(): Language {
         return this.contentFrame.getPageComparisonLanguage();
-    }
-
-    /**
-     * Set the value of the "requesting" flag.
-     */
-    setRequesting(val: boolean): void {
-        this.contentFrame.requesting = val;
-        this.contentFrame.runChangeDetection();
     }
 
     runChangeDetection(): void {

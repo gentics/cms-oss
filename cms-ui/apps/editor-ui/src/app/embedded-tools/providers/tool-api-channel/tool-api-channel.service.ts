@@ -1,9 +1,9 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { WindowRef } from '@gentics/cms-components';
 import { ExposableEmbeddedToolAPI } from '@gentics/cms-integration-api-models';
-import { Subscription } from 'rxjs';
+import { fromEvent, Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { EmbeddedToolsService } from '../embedded-tools/embedded-tools.service';
-import { ExposedUIAPI } from '../exposed-ui-api/exposed-ui-api.service';
 import { ToolMessagingChannel } from '../tool-messaging-channel/tool-messaging-channel.class';
 import { ToolMessagingChannelFactory } from '../tool-messaging-channel/tool-messaging-channel.factory';
 
@@ -12,17 +12,17 @@ const CONNECT_MESSAGE = 'gcms-tool-api';
 @Injectable()
 export class ToolApiChannelService implements OnDestroy {
 
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
     private toolChannels = new Map<string, ToolMessagingChannel>();
     private toolsService: EmbeddedToolsService;
 
     constructor(
-        private api: ExposedUIAPI,
         private channelFactory: ToolMessagingChannelFactory,
-        private windowRef: WindowRef) { }
+        private windowRef: WindowRef,
+    ) { }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     registerToolsService(service: EmbeddedToolsService): void {
@@ -31,7 +31,6 @@ export class ToolApiChannelService implements OnDestroy {
 
     connect(toolKey: string, toolWindow: Window): Subscription {
         const window: Window = this.windowRef.nativeWindow;
-        const windowSubscription = new Subscription();
         let channel: ToolMessagingChannel;
 
         const messageHandler = (event: MessageEvent) => {
@@ -53,14 +52,17 @@ export class ToolApiChannelService implements OnDestroy {
             }
         };
 
-        const unbind = () => {
-            window.removeEventListener('message', messageHandler);
-        };
+        const sub = fromEvent(window, 'message').pipe(
+            finalize(() => {
+                if (channel) {
+                    channel.destroy();
+                }
+            }),
+        ).subscribe(messageHandler);
 
-        window.addEventListener('message', messageHandler);
-        windowSubscription.add(unbind).add(() => channel && channel.destroy());
-        this.subscriptions.add(windowSubscription);
-        return windowSubscription;
+        this.subscriptions.push(sub);
+
+        return sub;
     }
 
     getApi(toolKey: string): ExposableEmbeddedToolAPI | undefined {

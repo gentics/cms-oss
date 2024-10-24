@@ -1,8 +1,11 @@
 <div
-    *ngIf="activeNode" class="content-list"
+    *ngIf="activeNode"
+    class="content-list"
     [class.empty]="items?.length === 0"
     [ngClass]="itemType || ''"
     [class.not-loading]="!(areItemsLoading$ | async)"
+    [attr.data-item-type]="itemType"
+    [attr.data-ui-mode]="uiMode"
 >
     <item-list-header
         #header
@@ -30,8 +33,6 @@
     <div
         class="list-body"
         [class.collapsed]="header.isCollapsed"
-        [attr.data-item-type]="itemType"
-        [attr.data-ui-mode]="uiMode"
     >
         <div *ngIf="itemType !== 'image' || !(showImagesGridView$ | async); else imageGrid">
             <div *ngFor="let item of items | paginate: paginationConfig; trackBy: identify">
@@ -67,6 +68,9 @@
                     *ngFor="let item of items | paginate: paginationConfig; trackBy: identify"
                     class="icon-checkbox-trigger"
                     [class.item-in-editor]="item === itemInEditor"
+                    [attr.data-item-type]="itemType"
+                    [attr.data-id]="item.id"
+                    [attr.data-global-id]="item.globalId"
                 >
                     <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
                     <grid-item

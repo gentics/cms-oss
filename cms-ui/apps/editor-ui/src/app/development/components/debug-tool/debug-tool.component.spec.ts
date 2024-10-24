@@ -1,16 +1,24 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { configureComponentTest } from '../../../../testing';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
 import { DebugToolService } from '../../providers/debug-tool.service';
 import { DebugTool } from './debug-tool.component';
 
+class MockDebugToolService implements Partial<DebugToolService> {
+    initialize = jasmine.createSpy('initialize').and.stub();
+    generateReport = jasmine.createSpy('generateReport').and.callFake(() => Promise.resolve({}));
+    clearSiteData = jasmine.createSpy('clearSiteData').and.callFake(() => Promise.resolve('clear'));
+}
+
 describe('DebugToolComponent', () => {
-    let fixture: ComponentFixture<DebugTool>;
+
+    let service: DebugToolService;
+
     beforeEach(() => {
         configureComponentTest({
             imports: [
@@ -19,6 +27,7 @@ describe('DebugToolComponent', () => {
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: DebugToolService, useClass: MockDebugToolService },
             ],
             declarations: [
                 DebugTool,
@@ -26,43 +35,37 @@ describe('DebugToolComponent', () => {
             ],
         });
 
-        spyOn(DebugToolService.prototype, 'initialize').and.stub();
-        let debugToolService = new DebugToolService(null, null, null, null, null, null, null, null);
-
-        fixture = TestBed.createComponent(DebugTool);
-        fixture.componentInstance.debugToolService = debugToolService;
+        service = TestBed.inject(DebugToolService);
     });
 
-    it('should call generateReport when Generate Report clicked', fakeAsync(() => {
+    it('should call generateReport when Generate Report clicked', componentTest(() => DebugTool, (fixture, instance) => {
         fixture.detectChanges();
 
-        spyOn(fixture.componentInstance, 'generateReport').and.callThrough();
-        spyOn(fixture.componentInstance.debugToolService, 'generateReport').and.returnValue(Promise.resolve({}));
+        spyOn(instance, 'generateReport').and.callThrough();
 
-        let btn = fixture.debugElement.query(By.css('gtx-button#debug-btn-report'));
+        const btn = fixture.debugElement.query(By.css('gtx-button#debug-btn-report'));
         btn.triggerEventHandler('click', null);
         tick();
 
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.generateReport).toHaveBeenCalled();
-        expect(fixture.componentInstance.debugToolService.generateReport).toHaveBeenCalled();
+        expect(instance.generateReport).toHaveBeenCalled();
+        expect(service.generateReport).toHaveBeenCalled();
     }));
 
-    it('should call clearSiteData when Clear Local Data clicked', fakeAsync(() => {
+    it('should call clearSiteData when Clear Local Data clicked', componentTest(() => DebugTool, (fixture, instance) => {
         fixture.detectChanges();
 
-        spyOn(fixture.componentInstance, 'clearSiteData').and.callThrough();
-        spyOn(fixture.componentInstance.debugToolService, 'clearSiteData').and.returnValue(Promise.resolve('clear'));
+        spyOn(instance, 'clearSiteData').and.callThrough();
 
-        let btn = fixture.debugElement.query(By.css('gtx-button#debug-btn-clear'));
+        const btn = fixture.debugElement.query(By.css('gtx-button#debug-btn-clear'));
         btn.triggerEventHandler('click', null);
         tick();
 
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.clearSiteData).toHaveBeenCalled();
-        expect(fixture.componentInstance.debugToolService.clearSiteData).toHaveBeenCalled();
+        expect(instance.clearSiteData).toHaveBeenCalled();
+        expect(service.clearSiteData).toHaveBeenCalled();
     }));
 
 });

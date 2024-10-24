@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AlohaColorPickerComponent, ColorValue, NormalizedColor, RGBAColor } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Color, ColorEvent, RGBA } from 'ngx-color';
-import { colorToHex, colorToRGBA, constrastColor } from '../../utils';
+import { colorToHex, colorToRGBA, constrastColor, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColor {
@@ -59,15 +59,13 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
-        if (!this.settings) {
-            return;
-        }
-
-        this.settings.setPalette = (palette) => {
-            this.settings.palette = palette;
-            this.updateAndNormalizePalette();
-            this.changeDetector.markForCheck();
-        };
+        patchMultipleAlohaFunctions(this.settings, {
+            setPalette: (palette) => {
+                this.settings.palette = palette;
+                this.updateAndNormalizePalette();
+                this.changeDetector.markForCheck();
+            },
+        });
     }
 
     protected override onValueChange(): void {

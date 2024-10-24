@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, WindowRef } from '@gentics/cms-components';
 import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     I18nLanguage,
@@ -32,8 +32,7 @@ import {
     shareReplay,
     switchMap,
     take,
-    takeWhile,
-    tap,
+    tap
 } from 'rxjs/operators';
 import { GtxChipSearchConfig, UIState } from './common/models';
 import {
@@ -51,7 +50,6 @@ import { PermissionService } from './core/providers/permissions/permission.servi
 import { UserSettingsService } from './core/providers/user-settings/user-settings.service';
 import { UsersnapService } from './core/providers/usersnap/usersnap.service';
 import { EmbeddedToolsService } from './embedded-tools/providers/embedded-tools/embedded-tools.service';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { ChipSearchBarConfigService } from './shared/providers/chip-search-bar-config/chip-search-bar-config.service';
 import { UIOverridesService } from './shared/providers/ui-overrides/ui-overrides.service';
 import {
@@ -262,21 +260,6 @@ export class AppComponent implements OnInit {
             this.featuresActions.checkAll();
             this.changeDetector.markForCheck();
         });
-
-        // When the user is logged in and the nodes & folders are loaded,
-        // we navigate them to the active node & folder.
-        onLogin$.pipe(
-            switchMap(() => this.appState.select(state => state.folder.activeNode)),
-            filter(activeNode => activeNode != null),
-            takeWhile(() => this.router.url === '/login' || this.router.url === '/' || this.router.url === ''),
-        )
-            .subscribe(activeNode => {
-                const node = this.entityResolver.getNode(activeNode);
-                if (node) {
-                    this.navigationService.list(node.id, node.folderId).navigate();
-                }
-            },
-                error => this.errorHandler.catch(error));
 
         // Whenever the active node or editor node changes, load that node's features if necessary.
         merge(

@@ -162,7 +162,7 @@ public class PublishableObjectTag extends ObjectTag {
 	}
 
 	@Override
-	public Set<Pair<NodeObject, ObjectTag>> getSyncVariants() throws NodeException {
+	public Set<Pair<NodeObject, ObjectTag>> getSyncVariants(boolean lookIntoWastebin) throws NodeException {
 		return Collections.emptySet();
 	}
 

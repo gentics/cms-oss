@@ -7,13 +7,26 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 Authenticate:
 ```bash
-npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
+npm adduser --registry=https://repo.gentics.com/repository/npm-products/ --always-auth
 ```
 
-Setup @gentics scope to the APA IT repository:
+Setup @gentics scope to the Gentics repository:
 ```bash
-npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
+npm config set @gentics:registry https://repo.gentics.com/repository/npm-products/
 ```
+
+If you wish/need to push new releases, you also need to authenticate to the repository.
+To do this, do the following:
+
+1. Since our repository doesn't authenticate with the NPM Tokens however, we need to create the auth value ourself:
+    ```bash
+    echo -n "{username}:{password}" | base64 -
+    ```
+2. Edit your global `.npmrc` file (should be `~/.npmrc`), and add the following at the end:
+    ```
+    @gentics:registry=https://repo.gentics.com/repository/npm-products/
+    //repo.gentics.com/repository/npm-products/:_auth={base64Auth}
+    ```
 
 ## Commands
 

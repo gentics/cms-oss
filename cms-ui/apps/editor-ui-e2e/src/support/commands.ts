@@ -1,84 +1,111 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
+import { registerCommonCommands, RENDERABLE_ALOHA_COMPONENTS, setupAliasOverrides } from '@gentics/e2e-utils';
 
-type ItemType = 'folder' | 'page' | 'image' | 'file' | 'form';
+setupAliasOverrides();
+registerCommonCommands();
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-        navigateToApp(path?: string): Chainable<void>;
-        login(source: 'cms' | 'keycloak'): Chainable<void>;
-        selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
-        findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
-        itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
-    }
-}
-
-//
-// -- This is a parent command --
-Cypress.Commands.add('navigateToApp', (path) => {
+Cypress.Commands.add('navigateToApp', { prevSubject: false }, (path, raw) => {
     /*
      * The baseUrl is always properly configured via NX.
      * When using the CI however, we use the served UI from the CMS directly.
      * Therefore we also have to use the correct path for it.
      */
     const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/';
-    cy.visit(`${appBasePath}${path || ''}`);
+    return cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`);
 });
 
-Cypress.Commands.add('login', (source) => {
+Cypress.Commands.add('login', { prevSubject: false }, (account, keycloak) => {
     return cy.fixture('auth.json').then(auth => {
-        const data = auth[source];
-
+        const data = auth[account];
+        if (data) {
+            return data;
+        }
+        return cy.get(account);
+    }).then(data => {
         cy.get('input[type="text"]').type(data.username);
         cy.get('input[type="password"]').type(data.password);
 
-        if (source === 'cms') {
-            cy.get('button[type="submit"]').click();
-        } else {
-            cy.get('input[type="submit"]').click();
-        }
+        cy.get(`${keycloak ? 'input' : 'button'}[type="submit"]`).click();
     });
 });
 
-Cypress.Commands.add('selectNode', (nodeId) => {
-    cy.get('.node-selector [data-action="select-node"]')
+Cypress.Commands.add('selectNode', { prevSubject: 'optional' }, (subject, nodeId) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('folder-contents');
+    root.find('node-selector [data-action="select-node"]')
         .click();
-    return cy.get('.node-selector-list')
-        .find(typeof nodeId === 'number' ? `[data-id="${nodeId}"]` : `[data-global-id="${nodeId}"]`)
+    cy.get('gtx-app-root .node-selector-list')
+        .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`)
         .click();
+    return cy.wrap(null, { log: false });
 });
 
-Cypress.Commands.add('findItem', (type, id) => {
-    return cy.get(`item-list .list-body[data-item-type="${type}"]`)
-        .find(`gtx-contents-list-item[data-id="${id}"]`);
+Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type) => {
+    const root = subject ? cy.wrap(subject) : cy.get('folder-contents');
+    return root.find(`item-list .content-list[data-item-type="${type}"]`);
 });
 
-Cypress.Commands.add('itemAction', (type, id, action) => {
-    cy.findItem(type, id)
-        .find('.context-menu gtx-button[data-action="context-menu-trigger"]')
+Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id) => {
+    return cy.wrap(subject, { log: false })
+        .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
+});
+
+Cypress.Commands.add('findAlohaComponent', { prevSubject: 'optional' }, (subject, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('project-editor content-frame gtx-page-editor-controls');
+    const slotSelector = options?.slot ? `[data-slot="${options.slot}"]` : '';
+    const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
+    return root.find(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`);
+});
+
+Cypress.Commands.add('findDynamicFormModal', { prevSubject: 'optional' }, (subject, ref) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('gtx-app-root');
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return root.find(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+});
+
+Cypress.Commands.add('findDynamicDropdown', { prevSubject: 'optional' }, (subject, ref) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('gtx-app-root');
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return root.find(`gtx-dynamic-dropdown .gtx-context-menu${refSelector}`);
+});
+
+Cypress.Commands.add('itemAction', { prevSubject: 'element' }, (subject, action) => {
+    switch (action) {
+        // For other actions such as selecting or similar
+        default:
+            cy.wrap(subject, { log: false })
+                .find('[data-action="item-context"]')
+                .openContext()
+                .find(`[data-action="${action}"]`)
+                .click({ force: true });
+            return cy.wrap(null);
+    }
+});
+
+Cypress.Commands.add('openObjectPropertyEditor', { prevSubject: false }, (name) => {
+    cy.get(`content-frame combined-properties-editor .tab-link[data-id="object.${name}"]`)
         .click({ force: true });
-    return cy.get('.item-context-menu-content')
-        .find(`[data-action="${action}"]`)
-        .click();
+    return cy.get('content-frame combined-properties-editor .properties-content .tag-editor tag-editor-host');
 });
 
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+Cypress.Commands.add('findTagEditorElement', { prevSubject: 'element' }, (subject, type) => {
+    switch (type) {
+        // Should always use the `TagPropertyType` values
+        case 'select':
+        case 'SELECT':
+            return subject.find('gentics-tag-editor select-tag-property-editor gtx-select');
+
+        default:
+            return subject;
+    }
+});
+
+Cypress.Commands.add('editorAction', { prevSubject: false }, action => {
+    switch (action) {
+        case 'editor-context':
+            return cy.get('content-frame gtx-editor-toolbar [data-action="editor-context"]')
+                .openContext();
+
+        default:
+            cy.get(`content-frame gtx-editor-toolbar [data-action="${action}"]`).btnClick();
+            return cy.wrap(null, { log: false });
+    }
+});

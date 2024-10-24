@@ -2,6 +2,11 @@
 import { AlohaPlugin } from '@gentics/aloha-models';
 import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
 
+/** Aloha/Edit-Mode Tab-ID to insert/manage constructs in a Page. */
+export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
+/** Aloha/Edit-Mode Tab-ID for the dynamic Link-Checker in a Page. */
+export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
+
 export interface GCNPluginSettings {
     blocks?: GCNPluginBlockDefintion[];
     buildRootTimestamp?: string;

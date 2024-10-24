@@ -16,6 +16,7 @@ const CORE_TRANSLATIONS: any = {
     user: require('./translations/user.translations.yml'),
     search: require('./translations/search.translations.yml'),
     template: require('./translations/template.translations.yml'),
+    shared: require('./translations/shared.translations.yml'),
 };
 
 /**

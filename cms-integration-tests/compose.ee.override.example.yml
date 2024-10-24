@@ -1,0 +1,8 @@
+services:
+  mesh:
+    environment:
+      LICENSEKEY: "YOUR-LICENSEKEY-HERE"
+
+  cms:
+    environment:
+      LICENSEKEY: "YOUR-LICENSEKEY-HERE"

@@ -20,6 +20,7 @@
         <button
             *ngIf="settings?.secondaryVisible"
             class="split-button-secondary"
+            data-action="secondary"
             [disabled]="disabled"
             (click)="handleSecondaryClick()"
         >
@@ -28,6 +29,7 @@
 
         <button
             class="split-button-main"
+            data-action="primary"
             [class.icon-only]="settings.iconOnly"
             [disabled]="disabled"
             (click)="handleClick()"

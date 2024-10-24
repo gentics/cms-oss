@@ -97,6 +97,23 @@ describe('Page Management', () => {
             });
         });
 
+        /*
+         * SUP-17188: When editing the properties of a page, it incorrectly had a secondary save
+         * option to save the properties and apply them to the language variants.
+         * This option is meant only to be used for object-properties, and it should only display
+         * the primary action actually.
+         */
+        it('should have only a primary save-action when editing page properties', () => {
+            const PAGE = IMPORTER.get(pageOne)!;
+
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(PAGE.id)
+                .itemAction('properties');
+
+            cy.get('content-frame gtx-editor-toolbar [data-action="save"] .primary-button')
+                .should('not.have.class', 'has-secondary-actions');
+        });
+
         it('should be possible to edit the page properties', () => {
             const PAGE = IMPORTER.get(pageOne)!;
             const CHANGE_PAGE_NAME = 'Foo bar change';
@@ -140,6 +157,10 @@ describe('Page Management', () => {
             });
         });
 
+        /*
+         * SUP-17472: Tab-Groups were expended on default, but height was incorrectly set,
+         * which hid the category entries (hidden in the sense of not visible to the user).
+         */
         it('should have the testing object-property category open on default', () => {
             const PAGE = IMPORTER.get(pageOne)!;
             const ALIAS_REQ_BREADCRUMB = '@reqBreadcrumb';

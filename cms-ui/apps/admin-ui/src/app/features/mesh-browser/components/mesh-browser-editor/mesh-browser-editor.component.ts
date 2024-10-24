@@ -49,7 +49,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         const canActivate = await this.activationGuard.canActivate(this.route.snapshot)
         if (!canActivate) {
             this.detailsClose();
-            return;
         }
     }
 
@@ -97,7 +96,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
                 }
                 case FieldType.NODE: {
                     const node = response.fields[fieldDefinition.name] as unknown as object;
-                    fieldValue = node['displayName'] ?? node['uuid'];
+                    fieldValue = (node as any)?.displayName ?? (node as any)?.uuid;
                     break;
                 }
                 case FieldType.MICRONODE: {

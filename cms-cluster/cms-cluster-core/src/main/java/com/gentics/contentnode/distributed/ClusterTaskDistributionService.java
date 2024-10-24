@@ -17,7 +17,7 @@ public class ClusterTaskDistributionService implements TaskDistributionService {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CLUSTER)) {
 			return null;
 		}
-		return ClusterSupport.isMaster();
+		return ClusterSupport.getSingleton().isMaster();
 	}
 
 	@Override
@@ -27,16 +27,16 @@ public class ClusterTaskDistributionService implements TaskDistributionService {
 		}
 
 		if (single) {
-			return Pair.of(true, ClusterSupport.callOnMaster(task));
+			return Pair.of(true, ClusterSupport.getSingleton().callOnMaster(task));
 		} else {
-			return Pair.of(true, ClusterSupport.callOnAllMembers(task));
+			return Pair.of(true, ClusterSupport.getSingleton().callOnAllMembers(task));
 		}
 	}
 
 	@Override
 	public void executeOther(Runnable task) {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.CLUSTER)) {
-			ClusterSupport.executeOnOtherMembers(task);
+			ClusterSupport.getSingleton().executeOnOtherMembers(task);
 		}
 	}
 }

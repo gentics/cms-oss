@@ -59,7 +59,7 @@ public class ClusterCacheService implements CacheService {
 	 * @param msgSupplier message supplier
 	 */
 	protected void publishMessage(Supplier<CacheSyncMessage> msgSupplier) {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 		if (instance != null && sync.allow()) {
 			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
 			CacheSyncMessage msg = msgSupplier.get();
@@ -74,7 +74,7 @@ public class ClusterCacheService implements CacheService {
 	 * Add message listeners
 	 */
 	static void addMessageListeners() {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 
 		// add listener for cache put/clear events
 		if (instance != null) {

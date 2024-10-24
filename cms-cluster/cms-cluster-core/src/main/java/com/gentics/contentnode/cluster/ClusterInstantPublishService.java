@@ -24,7 +24,7 @@ public class ClusterInstantPublishService implements InstantPublishService {
 	 * Instant Publishing Synchronization message listener
 	 */
 	private static MessageListener<InstantPublishSyncMessage> INSTANT_PUBLISH_SYNC_LISTENER = msg -> {
-		if (ClusterSupport.isMaster()) {
+		if (ClusterSupport.getSingleton().isMaster()) {
 			try {
 				Trx.operate(t -> {
 					InstantPublishSyncMessage syncMsg = msg.getMessageObject();
@@ -71,8 +71,8 @@ public class ClusterInstantPublishService implements InstantPublishService {
 	 * @param msgSupplier message supplier
 	 */
 	protected void publishMessage(Supplier<InstantPublishSyncMessage> msgSupplier) {
-		if (!ClusterSupport.isMaster()) {
-			HazelcastInstance instance = ClusterSupport.get();
+		if (!ClusterSupport.getSingleton().isMaster()) {
+			HazelcastInstance instance = ClusterSupport.getSingleton().get();
 			if (instance != null) {
 				ITopic<InstantPublishSyncMessage> topic = instance.getTopic(INSTANT_PUBLISH_SYNC_TOPIC);
 				InstantPublishSyncMessage msg = msgSupplier.get();
@@ -88,7 +88,7 @@ public class ClusterInstantPublishService implements InstantPublishService {
 	 * Add message listeners
 	 */
 	static void addMessageListeners() {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 		if (instance != null) {
 			// add listener for instant publishing sync events
 			ITopic<InstantPublishSyncMessage> instantPublishSyncTopic = instance.getTopic(INSTANT_PUBLISH_SYNC_TOPIC);

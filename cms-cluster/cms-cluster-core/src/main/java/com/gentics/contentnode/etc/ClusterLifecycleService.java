@@ -10,7 +10,7 @@ public class ClusterLifecycleService implements LifecycleService {
 	@Override
 	public void start() {
 		try {
-			ClusterSupport.init();
+			ClusterSupport.getSingleton().init();
 		} catch (NodeException e) {
 			throw new RuntimeException(e);
 		}
@@ -18,6 +18,6 @@ public class ClusterLifecycleService implements LifecycleService {
 
 	@Override
 	public void stop() {
-		ClusterSupport.stop();
+		ClusterSupport.getSingleton().stop();
 	}
 }

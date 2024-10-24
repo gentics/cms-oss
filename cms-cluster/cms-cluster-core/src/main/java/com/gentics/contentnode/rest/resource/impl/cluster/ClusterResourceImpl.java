@@ -27,7 +27,7 @@ public class ClusterResourceImpl implements ClusterResource {
 	@GET
 	@Path("/info")
 	public ClusterInfo getInfo() {
-		ClusterInfo response = ClusterSupport.getInfo();
+		ClusterInfo response = ClusterSupport.getSingleton().getInfo();
 		response.setResponseInfo(new ResponseInfo(ResponseCode.OK, null));
 		return response;
 	}
@@ -36,7 +36,7 @@ public class ClusterResourceImpl implements ClusterResource {
 	@PUT
 	@Path("/master")
 	public ClusterInfo setMaster() {
-		ClusterSupport.setMaster();
+		ClusterSupport.getSingleton().setMaster();
 		return getInfo();
 	}
 }

@@ -68,7 +68,7 @@ public class ClusterPermissionStoreService implements PermissionStoreService {
 	 * @param msgSupplier message supplier
 	 */
 	protected static void publishMessage(Supplier<PermSyncMessage> msgSupplier) {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 		if (instance != null) {
 			ITopic<PermSyncMessage> topic = instance.getTopic(PERM_SYNC_TOPIC);
 			PermSyncMessage msg = msgSupplier.get();
@@ -83,7 +83,7 @@ public class ClusterPermissionStoreService implements PermissionStoreService {
 	 * Add message listeners
 	 */
 	static void addMessageListeners() {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 		if (instance != null) {
 			// add listener for perm sync events
 			ITopic<PermSyncMessage> permSyncTopic = instance.getTopic(PERM_SYNC_TOPIC);

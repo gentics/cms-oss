@@ -4,10 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -42,7 +45,7 @@ public final class ClusterSupport {
 	/**
 	 * Name of the Topic for requesting the master status
 	 */
-	private final static String REQUEST_MASTER_TOPIC = "request.master";
+	public final static String REQUEST_MASTER_TOPIC = "request.master";
 
 	/**
 	 * Name of the member attribute specifying the starttime (in ms)
@@ -50,9 +53,14 @@ public final class ClusterSupport {
 	private final static String MEMBER_ATTRIBUTE_STARTTIME = "member.starttime";
 
 	/**
+	 * Singleton instance of {@link ClusterSupport}
+	 */
+	private static ClusterSupport singleton = new ClusterSupport();
+
+	/**
 	 * Request master message listener
 	 */
-	private static MessageListener<String> REQUEST_MASTER_LISTENER = msg -> {
+	private MessageListener<String> REQUEST_MASTER_LISTENER = msg -> {
 		// we just need to store the uuid of the member, that published the request
 		currentMasterUuid = msg.getPublishingMember().getUuid();
 	};
@@ -78,17 +86,17 @@ public final class ClusterSupport {
 	/**
 	 * Internal hazelcast instance
 	 */
-	private static HazelcastInstance instance;
+	private HazelcastInstance instance;
 
 	/**
 	 * Flag that is set, when the instance is merging (back) into the cluster
 	 */
-	private static boolean merging = false;
+	private boolean merging = false;
 
 	/**
 	 * UUID of the current master member
 	 */
-	private static UUID currentMasterUuid;
+	private UUID currentMasterUuid;
 
 	/**
 	 * Logger instance
@@ -96,10 +104,18 @@ public final class ClusterSupport {
 	static NodeLogger logger = NodeLogger.getNodeLogger(ClusterSupport.class);
 
 	/**
+	 * Get singleton instance
+	 * @return singleton
+	 */
+	public static ClusterSupport getSingleton() {
+		return singleton;
+	}
+
+	/**
 	 * Initialize cluster support (if feature is activated)
 	 * @throws NodeException
 	 */
-	public static void init() throws NodeException {
+	public void init() throws NodeException {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.CLUSTER)) {
 			start();
 		} else {
@@ -111,8 +127,9 @@ public final class ClusterSupport {
 	 * Start a new hazelcast instance
 	 * @throws NodeException
 	 */
-	public static void start() throws NodeException {
+	public void start() throws NodeException {
 		if (instance == null) {
+			System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
 			Config config = Config.loadDefault();
 			MemberAttributeConfig memberAttributeConfig = new MemberAttributeConfig(config.getMemberAttributeConfig());
 			memberAttributeConfig.setAttribute(MEMBER_ATTRIBUTE_STARTTIME, Long.toString(System.currentTimeMillis()));
@@ -127,7 +144,7 @@ public final class ClusterSupport {
 	/**
 	 * Stop hazelcast instance (if started)
 	 */
-	public static void stop() {
+	public void stop() {
 		if (instance != null) {
 			instance.shutdown();
 			instance = null;
@@ -135,10 +152,18 @@ public final class ClusterSupport {
 	}
 
 	/**
+	 * Check whether there is a running hazelcast instance
+	 * @return true when the instance is running
+	 */
+	public boolean isRunning() {
+		return Optional.ofNullable(instance).map(inst -> inst.getLifecycleService().isRunning()).orElse(false);
+	}
+
+	/**
 	 * Get info about the cluster state
 	 * @return info
 	 */
-	public static ClusterInfo getInfo() {
+	public ClusterInfo getInfo() {
 		HazelcastInstance instance = get();
 		ClusterInfo info = new ClusterInfo().setFeature(NodeConfigRuntimeConfiguration.isFeature(Feature.CLUSTER)).setMaster(isMaster())
 				.setStarted(instance != null);
@@ -158,7 +183,7 @@ public final class ClusterSupport {
 	 * in the cluster might both claim to be the master
 	 * @return true for the master
 	 */
-	public static boolean isMaster() {
+	public boolean isMaster() {
 		HazelcastInstance instance = get();
 		if (instance != null) {
 			if (merging) {
@@ -173,12 +198,12 @@ public final class ClusterSupport {
 	/**
 	 * Make this instance the master (if it not already is the master)
 	 */
-	public static void setMaster() {
+	public void setMaster() {
 		if (isMaster()) {
 			return;
 		}
 
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = get();
 		if (instance != null) {
 			ITopic<String> requestMasterTopic = instance.getTopic(REQUEST_MASTER_TOPIC);
 			requestMasterTopic.publish("");
@@ -195,7 +220,7 @@ public final class ClusterSupport {
 	 * @throws InterruptedException
 	 * @throws Exception
 	 */
-	public static <T> T callOnMaster(Callable<T> task) throws InterruptedException, Exception {
+	public <T> T callOnMaster(Callable<T> task) throws InterruptedException, Exception {
 		try {
 			if (isMaster()) {
 				return task.call();
@@ -203,7 +228,7 @@ public final class ClusterSupport {
 			HazelcastInstance instance = get();
 			if (instance != null) {
 				try {
-					return instance.getExecutorService("default").submit(task, ClusterSupport::isMaster).get();
+					return instance.getExecutorService("default").submit(task, this::isMaster).get();
 				} catch (ExecutionException e) {
 					if (e.getCause() instanceof Exception) {
 						throw (Exception) e.getCause();
@@ -227,12 +252,16 @@ public final class ClusterSupport {
 	 * @throws InterruptedException
 	 * @throws Exception
 	 */
-	public static <T> T callOnAllMembers(Callable<T> task) throws InterruptedException, Exception {
+	public <T> T callOnAllMembers(Callable<T> task) throws InterruptedException, Exception {
 		try {
 			HazelcastInstance instance = get();
 			if (instance != null) {
 				try {
-					return instance.getExecutorService("default").submitToAllMembers(task).get(instance.getCluster().getLocalMember()).get();
+					Map<Member, Future<T>> results = instance.getExecutorService("default").submitToAllMembers(task);
+					for (Future<T> future : results.values()) {
+						future.get();
+					}
+					return results.get(instance.getCluster().getLocalMember()).get();
 				} catch (ExecutionException e) {
 					if (e.getCause() instanceof Exception) {
 						throw (Exception) e.getCause();
@@ -252,7 +281,7 @@ public final class ClusterSupport {
 	 * Execute the given task (which must be {@link Serializable}) on all other cluster members
 	 * @param task task to execute
 	 */
-	public static void executeOnOtherMembers(Runnable task) {
+	public void executeOnOtherMembers(Runnable task) {
 		HazelcastInstance instance = get();
 		if (instance != null) {
 			try {
@@ -290,14 +319,14 @@ public final class ClusterSupport {
 	 * Get the hazelcast instance (or null)
 	 * @return hazelcast instance
 	 */
-	static HazelcastInstance get() {
+	HazelcastInstance get() {
 		return instance;
 	}
 
 	/**
 	 * Add message listeners
 	 */
-	private static void addMessageListeners() {
+	private void addMessageListeners() {
 		HazelcastInstance instance = get();
 		if (instance != null) {
 			// add membership listener for selecting a new master, if a node leaves the cluster
@@ -351,7 +380,7 @@ public final class ClusterSupport {
 	/**
 	 * Safely elect a new master in the cluster
 	 */
-	private static void electMaster() {
+	private void electMaster() {
 		HazelcastInstance instance = get();
 		if (instance != null) {
 			logger.info("Started master election");
@@ -365,12 +394,6 @@ public final class ClusterSupport {
 							return String.format("%s (%s)", member.getUuid().toString(), member.getAttribute(MEMBER_ATTRIBUTE_STARTTIME));
 						}).collect(Collectors.toList())));
 			}
-
-//			// check whether current master is still found in the cluster
-//			if (members.stream().filter(ClusterSupport::isMaster).findFirst().isPresent()) {
-//				logger.info("Current master still present");
-//				return;
-//			}
 
 			// elect a new master
 			currentMasterUuid = members.stream().min(MASTER_COMPARATOR).map(m -> m.getUuid()).orElse(null);
@@ -390,7 +413,7 @@ public final class ClusterSupport {
 	 * @param member member
 	 * @return true for the master
 	 */
-	private static boolean isMaster(Member member) {
+	private boolean isMaster(Member member) {
 		return Objects.equals(member.getUuid(), currentMasterUuid);
 	}
 }

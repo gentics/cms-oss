@@ -5199,6 +5199,13 @@ public class FolderFactory extends AbstractFactory {
 		public List<ContentLanguage> getLanguages() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
+			if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) || !isChannel()) {
+				List<Node> masterNodes = getMasterNodes();
+				if (!masterNodes.isEmpty()) {
+					return masterNodes.get(masterNodes.size() - 1).getLanguages();
+				}
+			}
+
 			// load the ids (if not done before)
 			loadLanguageIds();
 
@@ -5207,6 +5214,15 @@ public class FolderFactory extends AbstractFactory {
 
 		@Override
 		public String getLanguagesMD5() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) || !isChannel()) {
+				List<Node> masterNodes = getMasterNodes();
+				if (!masterNodes.isEmpty()) {
+					return masterNodes.get(masterNodes.size() - 1).getLanguagesMD5();
+				}
+			}
+
 			loadLanguageIds();
 			return languageIdsMD5;
 		}

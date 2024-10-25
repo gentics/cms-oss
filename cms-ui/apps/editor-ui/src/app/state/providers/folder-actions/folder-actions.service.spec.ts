@@ -25,7 +25,6 @@ import { UploadResponse } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of, throwError } from 'rxjs';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';

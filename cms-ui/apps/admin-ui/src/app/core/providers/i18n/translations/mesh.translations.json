@@ -798,6 +798,10 @@
         "en": "No Project available",
         "de": "Keine Projekte verfügbar"
     },
+    "browser_no_root_node": {
+        "en": "Could not find a viewable root node for project \"{{ project }}\". Please check the permissions of your user.",
+        "de": "Es konnte kein anzeigbarer Node für das Project „{{ project }}“ gefunden werden. Bitte überprüfen Sie ihre Benutzer-Berechtigungen."
+    },
     "browser_no_schema_elements": {
         "en": "This node has no schema elements",
         "de": "Dieser Node hat keine Schema-Elemente"

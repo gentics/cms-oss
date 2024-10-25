@@ -101,4 +101,45 @@ export class MeshBrowserLoaderService {
 
         return response.data?.node;
     }
+
+    public async getSchemaNamesWithNodes(
+        project: string,
+        branch: string,
+        node: string,
+        languages: string[],
+        schemaNames: string[],
+    ): Promise<string[]> {
+        let query = `
+            query ($nodeUuid: String, $lang: [String]) {
+                node(uuid: $nodeUuid, lang: $lang) {
+            `;
+
+        for (const schema of schemaNames) {
+            query += `
+                ${schema}: children(perPage: 0, lang: $lang, filter: {schema:{ name: { equals: "${schema}" }}}) {
+                    hasNextPage
+                }`;
+        }
+
+        query += `
+                }
+            }`;
+
+        const response = await this.meshClient.graphql(project, {
+            query,
+            variables: {
+                nodeUuid: node,
+                lang: languages,
+            },
+        }, {
+            branch,
+        }).send();
+
+        return Object.entries(response?.data?.node || {}).reduce((acc, [schemaName, info]: [string, any]) => {
+            if (info?.hasNextPage) {
+                acc.push(schemaName);
+            }
+            return acc;
+        }, []);
+    }
 }

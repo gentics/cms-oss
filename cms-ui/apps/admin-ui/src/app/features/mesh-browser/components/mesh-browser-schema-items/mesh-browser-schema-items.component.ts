@@ -43,6 +43,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     @Input()
     public language: string;
 
+    @Input()
+    public loading = false;
+
     @Output()
     public nodeChange = new EventEmitter<string>();
 
@@ -55,7 +58,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public schemaElements: Array<SchemaElement> = [];
 
     public collapsed = false;
-    public isLoading = false;
+    public elementsLoading = false;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -96,7 +99,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     }
 
     private async loadNodeChildren(nodeUuid: string): Promise<void> {
-        this.isLoading = true;
+        this.elementsLoading = true;
 
         this.loadingStateChange.emit({ loading: true });
         this.changeDetector.markForCheck();
@@ -118,7 +121,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         });
 
         this.schemaElements = schemaElements;
-        this.isLoading = false;
+        this.elementsLoading = false;
         this.loadingStateChange.emit({ loading: false, hasElements: this.schemaElements?.length > 0 });
 
         this.changeDetector.markForCheck();

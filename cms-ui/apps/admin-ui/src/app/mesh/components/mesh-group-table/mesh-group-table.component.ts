@@ -52,7 +52,7 @@ export class MeshGroupTableComponent
             id: 'users',
             label: 'common.user_plural',
             // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (group: MeshGroupBO) => (group.users).map(getUserDisplayName).filter(name => !!name).join(', '),
+            mapper: (group: MeshGroupBO) => (group.users || []).map(getUserDisplayName).filter(name => !!name).join(', '),
         },
         {
             id: 'roles',

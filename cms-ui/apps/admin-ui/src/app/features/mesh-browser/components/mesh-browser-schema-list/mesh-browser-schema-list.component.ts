@@ -1,10 +1,25 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BranchReference } from '@gentics/mesh-models';
 import { ChangesOf } from '@gentics/ui-core';
 import { MeshBrowserLoaderService } from '../../providers';
 import { LoadingState } from '../mesh-browser-schema-items/mesh-browser-schema-items.component';
+
+/**
+ * A single renderable schema, which has the info from the latest inputs.
+ * These are deliberately not passed through to the schema-items component,
+ * as this would cause them to update/load info before we want to.
+ */
+interface SchemaRenderInfo {
+    schemaName: string;
+
+    contentRepository: ContentRepositoryBO;
+    project: string;
+    availableLanguages: string[];
+    branch: string;
+    node: string;
+    language: string;
+}
 
 @Component({
     selector: 'gtx-mesh-browser-schema-list',
@@ -27,22 +42,28 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
     public availableLanguages: Array<string> = [];
 
     @Input()
-    public language: string;
-
-    @Input()
-    public branch: BranchReference;
+    public branch: string;
 
     @Input({ required: true })
     public node: string;
 
+    @Input()
+    public language: string;
+
     @Output()
     public nodeChange = new EventEmitter<string>();
 
+    // Loading info
     public allSchemasLoaded = false;
     public noSchemaElements = true;
-    public hadIntiialLoad = false;
 
-    protected loadingSchemas: string[] = [];
+    /** If it's loading the `schemasToRender` */
+    public isLoadingSchemas = false;
+    /** A subset of `projectSchemas` which actually have nodes within this current node. */
+    public schemasToRender: SchemaRenderInfo[] = [];
+
+    /** Names of the schemas which are currently still loading. */
+    protected loadingLists = new Set<string>();
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -51,13 +72,53 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
     ) { }
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        this.resetLoadingState();
+        if (
+            changes.contentRepository
+            || changes.project
+            || changes.projectSchemas
+            || changes.availableLanguages
+            || changes.branch
+            || changes.node
+        ) {
+            this.reloadSchemasToRender();
+        }
     }
 
-    private resetLoadingState(): void {
+    private async reloadSchemasToRender(): Promise<void> {
         this.allSchemasLoaded = false;
-        this.loadingSchemas = this.projectSchemas.slice();
         this.noSchemaElements = true;
+        this.isLoadingSchemas = true;
+        this.changeDetector.markForCheck();
+
+        const loadData: Partial<SchemaRenderInfo> = {
+            contentRepository: this.contentRepository,
+            project: this.project,
+            branch: this.branch,
+            availableLanguages: this.availableLanguages,
+            node: this.node,
+            language: this.language,
+        };
+
+        const schemaNamesToRender = await this.loader.getSchemaNamesWithNodes(
+            this.project,
+            this.branch,
+            this.node,
+            this.availableLanguages,
+            this.projectSchemas,
+        );
+        this.schemasToRender = schemaNamesToRender.map(name => {
+            const clone = structuredClone(loadData);
+            clone.schemaName = name;
+            return clone as SchemaRenderInfo;
+        });
+        this.loadingLists = new Set(schemaNamesToRender);
+        this.isLoadingSchemas = false;
+
+        this.changeDetector.markForCheck();
+    }
+
+    public identify(_index: number, renderInfo: SchemaRenderInfo): string {
+        return renderInfo.schemaName;
     }
 
     public nodeChangeHandler(nodeUuid: string): void {
@@ -69,13 +130,9 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
 
     public elementsLoaded(schemaName: string, loadingState: LoadingState): void {
         // Remove this loaded schema from the list
-        this.loadingSchemas = this.loadingSchemas.filter(name => name !== schemaName);
+        this.loadingLists.delete(schemaName);
         // Determine loading state
-        this.allSchemasLoaded = this.loadingSchemas.length === 0;
-        // If this has now initially loaded items
-        if (this.allSchemasLoaded) {
-            this.hadIntiialLoad = true;
-        }
+        this.allSchemasLoaded = this.loadingLists.size === 0;
 
         if (loadingState.hasElements) {
             this.noSchemaElements = false;

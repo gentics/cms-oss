@@ -55,16 +55,20 @@ export class MeshBrowserMasterComponent
     public loggedIn = false;
 
     // Loaded root elements which are only loaded once on start/login
-    protected loadedProjects: ProjectResponse[] | null = null;
+    public loadedProjects: ProjectResponse[] | null = null;
     public availableProjects: Array<string> = [];
     public selectedRepository: ContentRepositoryBO;
 
     // Info from current Project
     /** The currently loaded project. Used to determine if the loaded state is in sync. */
-    protected resolvedProject: ProjectResponse | null = null;
+    public resolvedProject: ProjectResponse | null = null;
     public projectBranches: Array<BranchReference> = [];
     public projectLanguages: Array<string> = [];
     public projectSchemas: string[] = [];
+
+    // Loading error states
+    /** If no root-node could be resolved. Usually due to permissions */
+    public noRootNode = false;
 
     // Additionally loaded elements
     public loadedBranch: BranchReference;
@@ -160,6 +164,7 @@ export class MeshBrowserMasterComponent
 
         // If we don't have any projects, we can't really do anything to begin with.
         if (this.loadedProjects.length === 0) {
+            this.changeDetector.markForCheck();
             return;
         }
 
@@ -177,6 +182,7 @@ export class MeshBrowserMasterComponent
 
         // Nothing to do, as we have already resolved everything.
         if (this.project === this.resolvedProject?.name) {
+            this.changeDetector.markForCheck();
             return;
         }
 
@@ -196,6 +202,14 @@ export class MeshBrowserMasterComponent
         this.resolvedProject = foundProject;
         this.changeDetector.markForCheck();
 
+        // This happens when the user has permission to read the project, but doesn't have permissions
+        // to read the root node. Therefore none of the branches will be available, which would break later on.
+        if (this.projectBranches.length === 0) {
+            this.noRootNode = true;
+            this.changeDetector.markForCheck();
+            return;
+        }
+
         await this.handleBranchChange();
     }
 
@@ -205,6 +219,14 @@ export class MeshBrowserMasterComponent
         // If the branch wasn't found or provided, we navigate to the root of the project
         // in the first branch we find.
         if (!foundBranch) {
+            if (this.projectBranches.length === 0) {
+                this.loadedBranch = null;
+                this.loadedNode = null;
+                this.noRootNode = true;
+                this.changeDetector.markForCheck();
+                return;
+            }
+
             this.loadedBranch = this.projectBranches[0];
             this.loadedNode = null;
             this.changeDetector.markForCheck();
@@ -248,6 +270,11 @@ export class MeshBrowserMasterComponent
             return;
         }
 
+        // Node is already loaded, nothing to do
+        if (this.node === this.loadedNode?.uuid && this.language === this.loadedNode?.language) {
+            return;
+        }
+
         this.reorderLanguages(this.language);
         this.changeDetector.markForCheck();
 
@@ -266,10 +293,13 @@ export class MeshBrowserMasterComponent
 
         // If the node couldn't be loaded, then try to load the root-node instead.
         if (!this.loadedNode) {
-            // If this is already the root-node, give up and throw an error.
+            // If this is already the root-node, give up and mark as error.
             if (this.node === this.resolvedProject.rootNode.uuid) {
-                throw Error('Could not resolve any parent-node!');
+                this.noRootNode = true;
+                this.changeDetector.markForCheck();
+                return;
             }
+
             this.handleNavigation({
                 node: this.resolvedProject.rootNode.uuid,
                 language: this.projectLanguages[0],

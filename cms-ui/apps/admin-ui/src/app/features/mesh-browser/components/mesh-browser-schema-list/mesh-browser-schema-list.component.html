@@ -1,16 +1,18 @@
 <div class="schema-list-wrapper">
-    <gtx-progress-bar [active]="!hadIntiialLoad" />
+    <gtx-progress-bar [active]="isLoadingSchemas" />
 
-    <ng-container *ngFor="let schema of projectSchemas">
+    <ng-container *ngFor="let info of schemasToRender; trackBy: identify">
         <gtx-mesh-browser-schema-items
             class="schema-list"
-            [contentRepository]="contentRepository"
-            [project]="project"
-            [schemaName]="schema"
-            [node]="node"
-            [branch]="branch"
-            [availableLanguages]="availableLanguages"
-            [language]="language"
+            [attr.data-id]="info.schemaName"
+            [schemaName]="info.schemaName"
+            [contentRepository]="info.contentRepository"
+            [project]="info.project"
+            [availableLanguages]="info.availableLanguages"
+            [branch]="info.branch"
+            [node]="info.node"
+            [language]="info.language"
+            [loading]="isLoadingSchemas"
             (nodeChange)="nodeChangeHandler($event)"
             (loadingStateChange)="elementsLoaded(schema, $event)"
         />

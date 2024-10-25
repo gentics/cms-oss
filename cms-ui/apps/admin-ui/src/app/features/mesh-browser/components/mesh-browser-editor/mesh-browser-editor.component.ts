@@ -107,7 +107,7 @@ export class MeshBrowserEditorComponent  implements OnChanges {
 
             const schema = await this.mesh.schemas.get(response.schema.uuid).send();
 
-            this.title = response.displayName || this.node;
+            this.title = response?.displayName || response.uuid;
             this.version = response.version;
             this.breadcrumb = response.breadcrumb;
             this.fields = this.createDisplayFields(response, schema);

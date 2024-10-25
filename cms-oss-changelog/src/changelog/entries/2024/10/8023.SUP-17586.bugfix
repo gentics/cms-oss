@@ -1,0 +1,1 @@
+Editor User Interface: Fixed a race condition which promted a login, even when the user was still logged in.

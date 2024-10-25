@@ -898,6 +898,7 @@ public class ModelBuilder {
 			restTag.setDescription(def.getDescription());
 			ObjectTagDefinitionCategory category = def.getCategory();
 			if (category != null) {
+				restTag.setCategoryId(category.getId());
 				restTag.setCategoryName(category.getName());
 			}
 		}

@@ -34,6 +34,8 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionStatistics;
 import com.gentics.contentnode.factory.object.ExtensiblePublishableObject;
 import com.gentics.contentnode.factory.object.PageFactory;
+import com.gentics.contentnode.factory.object.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion.Diff;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
@@ -45,8 +47,6 @@ import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.TemplateRenderer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
-import com.gentics.lib.db.TableVersion;
-import com.gentics.lib.db.TableVersion.Diff;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
@@ -729,7 +729,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 						for (Iterator<TagmapEntryRenderer> i = tagmapEntries.keySet().iterator(); i.hasNext();) {
 							TagmapEntryRenderer entry = i.next();
 	
-							if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+							if (entry.skip(attributes)) {
 								renderType.preserveDependencies(entry.getMapname());
 								i.remove();
 							} else if (CnMapPublisher.isPageContent(entry)) {
@@ -1098,7 +1098,6 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		// determine the modified parts and trigger specific mod events
 		TableVersion pageVersion = new TableVersion();
 
-		pageVersion.setHandle(t.getDBHandle());
 		pageVersion.setTable("page");
 		pageVersion.setWherePart("gentics_main.id = ?");
 

@@ -66,7 +66,7 @@ export class ErrorHandler {
      * Can be extended later to log client-side errors to the server.
      */
     catch = (error: Error, options?: { notification: boolean }): void => {
-        // Ignore all modal close errors, which aren't actual errors
+        // Ignore errors which are from modals which have been closed by the user
         if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
             return;
         }

@@ -767,11 +767,9 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		public abstract Object get(ContentFile object, String key);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.AbstractContentObject#getModifiedProperties(java.lang.String[])
-	 */
-	protected List getModifiedProperties(String[] modifiedDataProperties) {
-		List modifiedProperties = super.getModifiedProperties(modifiedDataProperties);
+	@Override
+	protected List<String> getModifiedProperties(String[] modifiedDataProperties) {
+		List<String> modifiedProperties = super.getModifiedProperties(modifiedDataProperties);
 
 		return getModifiedProperties(resolvableProperties, modifiedDataProperties, modifiedProperties);
 	}

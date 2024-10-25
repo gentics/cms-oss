@@ -19,10 +19,12 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.upload.FileInformation;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.ContentLanguageTrx;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
@@ -388,12 +390,19 @@ public interface File extends Resolvable, StageableChanneledNodeObject, Disinher
 			Node node = folder.getNode();
 			ContentRepository cr = node.getContentRepository();
 
-			if (cr == null || !cr.ignoreNodePublishDir()) {
-				segments.add(node.getBinaryPublishDir());
+			if (!StaticUrlFactory.ignoreNodePublishDir(cr)) {
+				if (StaticUrlFactory.ignoreSeparateBinaryPublishDir(cr)) {
+					segments.add(node.getPublishDir());
+				} else {
+					segments.add(node.getBinaryPublishDir());
+				}
 			}
 		}
 
-		segments.add(folder.getPublishPath());
+		// we need to remove the current language of the rendertype, since files in the cms do not have a language
+		try (ContentLanguageTrx cLTrx = new ContentLanguageTrx((ContentLanguage) null)) {
+			segments.add(folder.getPublishPath());
+		}
 
 		return FilePublisher.getPath(
 			true,

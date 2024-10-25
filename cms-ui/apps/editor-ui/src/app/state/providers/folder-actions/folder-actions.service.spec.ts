@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import {
     File as FileModel,
     FileUploadResponse,
@@ -85,6 +86,7 @@ function fileToResponse(file: File): FileUploadResponse {
             fileType: file.type,
             fileSize: file.size,
             name: file.name,
+            type: /^image\//.test(file.type) ? 'image' : 'file',
         } as Partial<FileModel>,
     } as any;
 }

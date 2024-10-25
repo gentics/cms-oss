@@ -69,7 +69,6 @@ import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
-import com.gentics.lib.db.TableVersion;
 import com.gentics.lib.etc.StringUtils;
 
 import io.reactivex.Flowable;
@@ -1644,10 +1643,9 @@ public class FormFactory extends AbstractFactory {
 	 */
 	private static TableVersion getFormTableVersion() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		TableVersion formVersion = new TableVersion(false);
+		TableVersion formVersion = new TableVersion();
 
 		formVersion.setAutoIncrement(true);
-		formVersion.setHandle(t.getDBHandle());
 		formVersion.setTable("form");
 		formVersion.setWherePart("gentics_main.id = ?");
 		return formVersion;

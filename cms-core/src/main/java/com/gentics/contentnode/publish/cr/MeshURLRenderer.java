@@ -2,9 +2,11 @@ package com.gentics.contentnode.publish.cr;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.object.Disinheritable;
@@ -98,6 +100,17 @@ public class MeshURLRenderer implements TagmapEntryRenderer {
 	}
 
 	@Override
+	public boolean skip(Set<String> attributes) {
+		if (objType == File.TYPE_FILE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("name")) {
+			return false;
+		}
+		if (objType == Page.TYPE_PAGE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("filename")) {
+			return false;
+		}
+		return TagmapEntryRenderer.super.skip(attributes);
+	}
+
+	@Override
 	public Object getRenderedTransformedValue(RenderType renderType, RenderResult renderResult,
 			BiFunction<TagmapEntryRenderer, Object, Object> linkTransformer) throws NodeException {
 		StackResolvable renderedObject = renderType.getRenderedRootObject();
@@ -110,8 +123,8 @@ public class MeshURLRenderer implements TagmapEntryRenderer {
 	}
 
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 * @param renderedObject
 	 * @return
 	 * @throws NodeException

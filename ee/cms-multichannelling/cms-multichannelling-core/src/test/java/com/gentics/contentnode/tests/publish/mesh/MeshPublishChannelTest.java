@@ -60,6 +60,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
+import com.gentics.mesh.assertj.MeshAssertions;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
 import com.gentics.mesh.core.rest.project.ProjectResponse;
 
@@ -605,5 +606,114 @@ public class MeshPublishChannelTest {
 		assertMeshProject(mesh.client(), alternativeMasterMeshProjectName, false);
 		assertMeshProject(mesh.client(), projectName, SCHEMA_PREFIX, MeshPublisher.getMeshUuid(node), true);
 		assertBranch(mesh.client(), projectName, isChannelBranch(channel), true, branchName, "channel.com", "/prefix", false);
+	}
+
+	@Test
+	public void testRenameInheritedFile() throws Exception {
+		// create folder
+		Folder folder = Builder.create(Folder.class, create -> {
+			create.setMotherId(node.getFolder().getId());
+			create.setName("Testfolder");
+			create.setPublishDir("/publish/path");
+		}).build();
+
+		// create file in master
+		File inheritedFile = supply(() -> createFile(folder, "testfile.txt", "File contents".getBytes()));
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertObject("Check original file in master", mesh.client(), projectName, projectName, inheritedFile, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("name", "testfile.txt");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/testfile.txt");
+				});
+		assertObject("Check original file in branch", mesh.client(), projectName, branchName, inheritedFile, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("name", "testfile.txt");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/testfile.txt");
+				});
+
+		// change filename
+		inheritedFile = update(inheritedFile, upd -> {
+			upd.setName("modified.txt");
+		});
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertObject("Check modified file in master", mesh.client(), projectName, projectName, inheritedFile, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("name", "modified.txt");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/modified.txt");
+				});
+		assertObject("Check modified file in branch", mesh.client(), projectName, branchName, inheritedFile, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("name", "modified.txt");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/modified.txt");
+				});
+	}
+
+	@Test
+	public void testRenameInheritedPage() throws Exception {
+		// create folder
+		Folder folder = Builder.create(Folder.class, create -> {
+			create.setMotherId(node.getFolder().getId());
+			create.setName("Testfolder");
+			create.setPublishDir("/publish/path");
+		}).build();
+
+		// create and publish page in master
+		Page inheritedPage = Builder.create(Page.class, create -> {
+			create.setFolder(node, folder);
+			create.setTemplateId(template.getId());
+			create.setName("Page");
+			create.setFilename("page.html");
+		}).publish().build();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertObject("Check original page in master", mesh.client(), projectName, projectName, inheritedPage, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("filename", "page.html");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/page.html");
+				});
+		assertObject("Check original page in branch", mesh.client(), projectName, branchName, inheritedPage, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("filename", "page.html");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/page.html");
+				});
+
+		// change filename
+		inheritedPage = Builder.update(inheritedPage, update -> {
+			update.setFilename("modified.html");
+		}).publish().build();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertObject("Check modified page in master", mesh.client(), projectName, projectName, inheritedPage, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("filename", "modified.html");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/modified.html");
+				});
+		assertObject("Check modified page in branch", mesh.client(), projectName, branchName, inheritedPage, true,
+				n -> {
+					MeshAssertions.assertThat(n).hasStringField("filename", "modified.html");
+					MeshAssertions.assertThat(n).hasStringField("gtx_url", "/publish/path/modified.html");
+				});
 	}
 }

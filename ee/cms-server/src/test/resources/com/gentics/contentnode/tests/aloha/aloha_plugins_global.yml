@@ -1,0 +1,6 @@
+feature:
+  link_checker: true
+  multichannelling: true
+aloha_plugins_global:
+  - "project/specific"
+  - "extra/ribbon"

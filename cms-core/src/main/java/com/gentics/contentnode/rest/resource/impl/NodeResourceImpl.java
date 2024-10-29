@@ -1447,6 +1447,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public LanguageList setLanguages(@PathParam("id") String nodeId, List<ContentLanguage> languages) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
+			if (node.isChannel()) {
+				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
+			}
 			checkFields(() -> Pair.of("languages", languages));
 
 			List<com.gentics.contentnode.object.ContentLanguage> requestedLanguages = new ArrayList<>();

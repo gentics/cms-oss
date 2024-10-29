@@ -237,7 +237,7 @@ public class StagingModelBuilder {
 	 * @throws NodeException
 	 */
 	public static com.gentics.contentnode.rest.model.Overview getOverview(Path ownerPath, String ownerId,
-			StagedOverview stagedOverview, List<StagingError> mismatches, Operator onReferenceNotFound) throws NodeException {
+			StagedOverview stagedOverview, Set<StagingError> mismatches, Operator onReferenceNotFound) throws NodeException {
 		if (stagedOverview == null || org.apache.commons.lang.StringUtils.isBlank(stagedOverview.getId())) {
 			return null;
 		}
@@ -456,7 +456,7 @@ public class StagingModelBuilder {
 	 * @return property
 	 * @throws NodeException
 	 */
-	public static Property getProperty(Path ownerPath, String ownerId, StagedProperty stagedProperty, Property nodeProperty, List<StagingError> mismatches,
+	public static Property getProperty(Path ownerPath, String ownerId, StagedProperty stagedProperty, Property nodeProperty, Set<StagingError> mismatches,
 			com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		nodeProperty.setBooleanValue(stagedProperty.getBooleanValue());
@@ -650,7 +650,7 @@ public class StagingModelBuilder {
 	 * @throws NodeException
 	 */
 	public static <T extends NodeObject, U extends StagedReferencedObject<T>> void getReferenced(Path ownerPath, String ownerId, Class<T> clazz, Function<T, U> wrapper, StagedReference reference,
-			List<StagingError> mismatches, Consumer<Integer> consumer) throws NodeException {
+			Set<StagingError> mismatches, Consumer<Integer> consumer) throws NodeException {
 		if (reference == null) {
 			return;
 		}
@@ -685,7 +685,7 @@ public class StagingModelBuilder {
 	 * @param channel optional channel
 	 * @return GCN Page object
 	 */
-	public static Page getPage(Path pagePath, StagedPage restPage, Page page, List<StagingError> mismatches,
+	public static Page getPage(Path pagePath, StagedPage restPage, Page page, Set<StagingError> mismatches,
 			com.gentics.contentnode.etc.Operator onReferenceNotFound, Node channel) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
@@ -1060,7 +1060,7 @@ public class StagingModelBuilder {
 	 * @return object tag
 	 * @throws NodeException
 	 */
-	public static ObjectTag getObjectTag(Path ownerPath, String ownerId, StagedObjectTag model, ObjectTag tag, List<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+	public static ObjectTag getObjectTag(Path ownerPath, String ownerId, StagedObjectTag model, ObjectTag tag, Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		getTag(ownerPath, ownerId, model, tag, mismatches, onReferenceNotFound);
 		getReferenced(ownerPath, ownerId, ObjectTagDefinition.class, StagedReferencedObjectTagDefinition::new, model.getDefinition(), mismatches, id -> {});
 		return tag;
@@ -1077,7 +1077,7 @@ public class StagingModelBuilder {
 	 * @param onReferenceNotFound optional operator, which is called when a reference was not found
 	 * @throws NodeException
 	 */
-	public static Tag getTag(Path ownerPath, String ownerId, StagedTag restTag, Tag tag, List<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+	public static Tag getTag(Path ownerPath, String ownerId, StagedTag restTag, Tag tag, Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		getReferenced(ownerPath, ownerId, Construct.class, StagedReferencedConstruct::new, restTag.getConstruct(), mismatches, tag::setConstructId);
 
 		tag.setEnabled(ObjectTransformer.getBoolean(restTag.getActive(), true));
@@ -1108,7 +1108,7 @@ public class StagingModelBuilder {
 	 * @throws NodeException
 	 */
 	public static void getObjectTags(Path ownerPath, String ownerId, Map<String, StagedObjectTag> stagedTags, ObjectTagContainer container,
-			List<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+			Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		if (stagedTags != null) {
@@ -1152,7 +1152,7 @@ public class StagingModelBuilder {
 	 * @param channel  optional channel
 	 * @return GCN File object
 	 */
-	public static File getFile(Path filePath, StagedFile restFile, File file, List<StagingError> mismatches,
+	public static File getFile(Path filePath, StagedFile restFile, File file, Set<StagingError> mismatches,
 			com.gentics.contentnode.etc.Operator onReferenceNotFound, Node channel) throws NodeException {
 		// fill in the data
 		if (restFile.getName() != null) {
@@ -1199,7 +1199,7 @@ public class StagingModelBuilder {
 	 * @param channel optional channel
 	 * @return GCN Image object
 	 */
-	public static ImageFile getImage(Path imagePath, StoredImage restImage, ImageFile image, List<StagingError> mismatches,
+	public static ImageFile getImage(Path imagePath, StoredImage restImage, ImageFile image, Set<StagingError> mismatches,
 			com.gentics.contentnode.etc.Operator onReferenceNotFound, Node channel) throws NodeException {
 		// fill in the data
 		if (restImage.getName() != null && !StringUtils.isEmpty(restImage.getName())) {
@@ -1330,7 +1330,7 @@ public class StagingModelBuilder {
 	 * @param channel optional channel
 	 * @return GCN Folder object
 	 */
-	public static Folder getFolder(Path folderPath, StagedFolder stagedFolder, Folder folder, List<StagingError> mismatches,
+	public static Folder getFolder(Path folderPath, StagedFolder stagedFolder, Folder folder, Set<StagingError> mismatches,
 			com.gentics.contentnode.etc.Operator onReferenceNotFound, Node channel) throws NodeException {
 
 		Transaction t = TransactionManager.getCurrentTransaction();

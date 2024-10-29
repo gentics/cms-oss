@@ -1,22 +1,24 @@
 package com.gentics.contentnode.staging;
 
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gentics.api.lib.exception.NodeException;
 
 /**
  * A distinct error, happened during the staging process.
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class StagingError implements Serializable {
+public class StagingError implements Serializable, Comparable<StagingError> {
 
 	private static final long serialVersionUID = 6003292888194582180L;
 
@@ -105,5 +107,34 @@ public class StagingError implements Serializable {
 
 	public void setRecommendation(String recommendation) {
 		this.recommendation = recommendation;
+	}
+
+	@Override
+	public int compareTo(StagingError o) {
+		int globalIdCmp = StringUtils.compare(globalId, o.globalId);
+		if (globalIdCmp != 0) {
+			return globalIdCmp;
+		}
+		int kindCmp = kind.compareTo(o.kind);
+		if (kindCmp != 0) {
+			return kindCmp;
+		}
+		return StringUtils.compare(error, o.error);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(globalId, kind, error);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof StagingError) {
+			StagingError other = (StagingError) obj;
+			return StringUtils.equals(globalId, other.globalId) && Objects.equals(kind, other.kind)
+					&& StringUtils.equals(error, other.error);
+		} else {
+			return false;
+		}
 	}
 }

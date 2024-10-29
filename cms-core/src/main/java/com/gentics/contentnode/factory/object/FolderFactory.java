@@ -5216,7 +5216,7 @@ public class FolderFactory extends AbstractFactory {
 		public String getLanguagesMD5() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) || !isChannel()) {
+			if (t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && isChannel()) {
 				List<Node> masterNodes = getMasterNodes();
 				if (!masterNodes.isEmpty()) {
 					return masterNodes.get(masterNodes.size() - 1).getLanguagesMD5();

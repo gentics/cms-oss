@@ -310,7 +310,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
-                    this.cancelEditingDebounced(this.currentItem);
+                    if (this.currentItem && this.currentItem?.id != item?.id) {
+                        this.cancelEditingDebounced(this.currentItem);
+                    }
                     this.currentItem = item as any;
                     this.onItemUpdate();
                     this.changeDetector.markForCheck();

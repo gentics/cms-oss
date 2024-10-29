@@ -1399,7 +1399,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse addLanguage(@PathParam("id") String nodeId, @PathParam("languageId") String languageId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
-			if (node.isChannel()) {
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
 				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
 			}
 			com.gentics.contentnode.object.ContentLanguage language = getLanguage(languageId);
@@ -1422,7 +1422,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse removeLanguage(@PathParam("id") String nodeId, @PathParam("languageId") String languageId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
-			if (node.isChannel()) {
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
 				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
 			}
 			com.gentics.contentnode.object.ContentLanguage language = getLanguage(languageId);
@@ -1447,7 +1447,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public LanguageList setLanguages(@PathParam("id") String nodeId, List<ContentLanguage> languages) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
-			if (node.isChannel()) {
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
 				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
 			}
 			checkFields(() -> Pair.of("languages", languages));

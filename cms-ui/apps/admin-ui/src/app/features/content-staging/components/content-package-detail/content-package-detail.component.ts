@@ -135,4 +135,11 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
         this.fgProperties.setValue(pkg);
         this.fgProperties.markAsPristine();
     }
+
+    public reloadEntity(): void {
+        this.entitiyOperations.get(this.currentEntity.name).subscribe(pkg => {
+            this.currentEntity = pkg;
+            this.changeDetectorRef.markForCheck();
+        });
+    }
 }

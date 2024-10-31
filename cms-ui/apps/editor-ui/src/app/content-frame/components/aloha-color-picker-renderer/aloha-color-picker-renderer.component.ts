@@ -5,11 +5,20 @@ import { Color, ColorEvent, RGBA } from 'ngx-color';
 import { colorToHex, colorToRGBA, constrastColor, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
+
+function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(value, max));
+}
+
 function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColor {
     const raw: NormalizedColor = [ngxColor.rgb.r, ngxColor.rgb.g, ngxColor.rgb.b, ngxColor.rgb.a];
 
     if (!allowAlpha) {
         raw[3] = 255;
+    }
+    else {
+        const normalizedValue = raw[3] * 255;
+        raw[3] = clamp(normalizedValue, 0, 255);
     }
 
     return raw;

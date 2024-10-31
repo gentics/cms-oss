@@ -17,7 +17,7 @@ function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColo
         raw[3] = 255;
     }
     else {
-        const normalizedValue = raw[3] * 255;
+        const normalizedValue = Math.round(raw[3] * 255);
         raw[3] = clamp(normalizedValue, 0, 255);
     }
 

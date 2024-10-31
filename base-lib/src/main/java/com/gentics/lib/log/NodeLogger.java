@@ -336,7 +336,11 @@ public class NodeLogger {
 	 * @param level level
 	 */
 	public void setLevel(Level level) {
-		Configurator.setLevel(logger.getName(), level);
+		LoggerConfig loggerConfig = getLoggerConfig();
+		loggerConfig.setLevel(level);
+
+		LoggerContext context = LoggerContext.getContext(NodeLogger.class.getClassLoader(), true, null);
+		context.updateLoggers();
 	}
 
 	/**

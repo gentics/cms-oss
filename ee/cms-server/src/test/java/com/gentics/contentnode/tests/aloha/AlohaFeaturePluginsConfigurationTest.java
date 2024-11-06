@@ -64,7 +64,7 @@ public class AlohaFeaturePluginsConfigurationTest {
 
 	private final static String CHANNEL_CONFIG = "aloha_plugins_channel.yml";
 
-	private final static List<String> configurations = Arrays.asList(DEFAULT_CONFIG, GLOBAL_CONFIG, NODE_CONFIG);
+	private final static List<String> configurations = Arrays.asList(DEFAULT_CONFIG, GLOBAL_CONFIG, NODE_CONFIG, CHANNEL_CONFIG);
 
 	private final static String[] DEFAULT_PLUGINS = new String[] { "gcn/gcn", "common/ui", "common/block",
 			"common/format", "common/autoparagraph", "common/highlighteditables", "common/list", "common/link",

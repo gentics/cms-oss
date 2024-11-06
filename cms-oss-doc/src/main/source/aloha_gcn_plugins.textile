@@ -6,25 +6,57 @@ endprologue.
 
 h3. Plugin Names
 
-Plugin names have changed be much more compact, and are now organized in plugin bundles.
+Plugin names have changed to be much more compact, and are now organized in plugin bundles.
 Therefore you need to change your Aloha Editor configuration if you're switching from 0.9.3.
 Please have a look at the "common bundle":https://github.com/alohaeditor/Aloha-Editor/tree/dev/src/plugins/common and the extra bundle to learn their new names.
 Common bundles will be actively maintained and kept up to date with Aloha Editor's core, whilst the "extra bundle":https://github.com/alohaeditor/Aloha-Editor/tree/dev/src/plugins/extra might not always be most up to date.
 
-h3. Configure list of loaded plugins
+h3. List of default plugins
 
-With the following setting, the global plugin list can be configured. The example seen below will show you how to extend the default set of enabled plugins:
+This is the default list of plugins:
 
 <javascript filename="conf/*.yml">
 aloha_plugins_global:
-  "common/characterpicker": true # add common/characterpicker
-  "extra/cite": true # add extra/cite
-  "common/format": false # deactivate common/format
+  - "gcn/gcn"
+  - "common/ui"
+  - "common/block"
+  - "common/format"
+  - "common/autoparagraph"
+  - "common/highlighteditables"
+  - "common/list"
+  - "common/link"
+  - "common/table"
+  - "common/paste"
+  - "common/contenthandler"
+  - "common/commands"
+  - "common/dom-to-xhtml"
+  - "gcn/spellcheck"
+</javascript>
+
+NOTE: The Gentics CMS Integration Plugin "gcn/gcn" will always be added automatically, if not contained in this list.
+
+h3. Configure list of loaded plugins
+
+With the following setting, the global plugin list can be configured.
+
+<javascript filename="conf/*.yml">
+aloha_plugins_global:
+  - "common/ui"
+  - "common/block"
+  - "common/autoparagraph"
+  - "common/highlighteditables"
+  - "common/list"
+  - "common/link"
+  - "common/table"
+  - "common/paste"
+  - "common/contenthandler"
+  - "common/commands"
+  - "common/dom-to-xhtml"
+  - "gcn/spellcheck"
+  - "extra/cite"
 </javascript>
 
 WARNING: Please note, that by overwriting the setting @aloha_plugins_global@ plugins array, future updates of Gentics CMS, that introduce new plugins will not automatically take effect.
-Therefore it is recommended to extend the array (as shown) rather than overwriting it. If the Gentics CMS integration plugin (gcn/gcn) is not contained in the list, it will automatically be added to the end.
-
 
 h3. Per Node Plugin List
 
@@ -32,34 +64,23 @@ It is also possible to configure the loaded plugins per node, using either the l
 
 NOTE: Configuration per local ID, global ID and name cannot be mixed. The CMS will first look for a configuration by global ID, if that is not found, by node name and if that is not found by local ID.
 
+NOTE: In multichannelling environments, the configuration is only applied to the specified node/channel and not to other channels of the same channel structure.
+
 <javascript filename="conf/*.yml">
 # Define the Aloha Editor plugins list for Node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f
 aloha_plugins_node:
   "3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f":
-    - "common/characterpicker"
+    - "common/ui"
+    - "common/block"
+    - "common/autoparagraph"
+    - "common/highlighteditables"
+    - "common/list"
+    - "common/link"
+    - "common/table"
+    - "common/paste"
+    - "common/contenthandler"
+    - "common/commands"
+    - "common/dom-to-xhtml"
+    - "gcn/spellcheck"
     - "extra/cite"
-    - "common/format"
-</javascript>
-
-
-h3. List of default Aloha Editor Plugins
-
-* common/format
-* common/highlighteditables
-* common/list
-* common/link
-* common/table
-* common/paste
-* common/contenthandler
-* common/commands
-* gcn/gcn-linkbrowser
-* gcn/gcn
-
-NOTE: You don't have to specify these in your config.
-
-You need to enable the block plugin when using the new gcn plugin. Please note that this feature might be enabled by default in future releases.
-
-<javascript filename="conf/*.yml">
-aloha_plugins_global:
-	"common/block": true
 </javascript>

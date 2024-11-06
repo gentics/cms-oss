@@ -1,4 +1,4 @@
-import { TemplateLinkRequestOptions } from '@gentics/cms-models';
+import { TemplateLinkRequestOptions, TemplateListRequest } from '@gentics/cms-models';
 import { MockApiBase } from '../base/api-base.mock';
 import { TemplateApi } from './template-api';
 
@@ -12,7 +12,7 @@ describe('TemplateApi', () => {
     });
 
     it('getTemplates sends a GET request to "template"', () => {
-        const options = { maxItems: -1 };
+        const options: TemplateListRequest = { pageSize: -1 };
         templateApi.getTemplates(options);
 
         expect(apiBase.get).toHaveBeenCalledWith('template', options);
@@ -22,7 +22,7 @@ describe('TemplateApi', () => {
         const id = 'globalId';
         templateApi.getTemplate(id);
 
-        expect(apiBase.get).toHaveBeenCalledWith(`template/${id}`);
+        expect(apiBase.get).toHaveBeenCalledWith(`template/${id}`, undefined);
     });
 
     it('linkTemplateToFolders sends a POST request to "template/link/id"', () => {

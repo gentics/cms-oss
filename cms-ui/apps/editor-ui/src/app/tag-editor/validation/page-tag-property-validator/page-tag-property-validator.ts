@@ -1,4 +1,5 @@
-import { PageTagPartProperty, TagPart, TagPartProperty, TagPropertyValidator, ValidationResult } from '@gentics/cms-models';
+import { TagPropertyValidator, ValidationResult } from '@gentics/cms-integration-api-models';
+import { PageTagPartProperty, TagPart, TagPartProperty } from '@gentics/cms-models';
 
 /**
  * Validator for tag properties of type TagPropertyType.PAGE.
@@ -10,7 +11,7 @@ export class PageTagPropertyValidator implements TagPropertyValidator<PageTagPar
         const isSet = !!pageProperty.pageId || !!pageProperty.stringValue;
         return {
             isSet: isSet,
-            success: isSet || !tagPart.mandatory
+            success: isSet || !tagPart.mandatory,
         };
     }
 

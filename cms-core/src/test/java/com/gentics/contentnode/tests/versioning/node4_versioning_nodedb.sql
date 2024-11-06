@@ -103,7 +103,7 @@ INSERT INTO `part` (`id`, `construct_id`, `type_id`, `name_id`, `required`, `edi
 INSERT INTO `part` (`id`, `construct_id`, `type_id`, `name_id`, `required`, `editable`, `partoption_id`, `partorder`, `keyword`, `hidden`, `ml_id`, `info_int`, `info_text`) VALUES (906,248,17,2988,0,1,0,7,'orderedlist',0,1,0,'mylist');
 INSERT INTO `part` (`id`, `construct_id`, `type_id`, `name_id`, `required`, `editable`, `partoption_id`, `partorder`, `keyword`, `hidden`, `ml_id`, `info_int`, `info_text`) VALUES (907,248,16,2989,0,1,0,8,'unorderedlist',0,1,0,'mylist');
  
-INSERT INTO `construct` (`id`, `name_id`, `ml_id`, `keyword`, `childable`, `intext`, `locked`, `locked_by`, `global`, `icon`, `creator`, `cdate`, `editor`, `edate`, `description_id`, `autoenable`, `category_id`, `hopedithook`) VALUES (248,2980,1,'parttypetest',1,1,0,0,0,'stop.gif',1,1260980296,1,1260981451,2981,1,14,'');
+INSERT INTO `construct` (`id`, `name_id`, `ml_id`, `keyword`, `childable`, `intext`, `locked`, `locked_by`, `global`, `creator`, `cdate`, `editor`, `edate`, `description_id`, `autoenable`, `category_id`) VALUES (248,2980,1,'parttypetest',1,1,0,0,0,1,1260980296,1,1260981451,2981,1,14);
 
  
 INSERT INTO `construct_node` (`construct_id`, `node_id`) VALUES (12,3);

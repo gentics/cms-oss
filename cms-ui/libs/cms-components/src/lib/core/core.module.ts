@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import {
     FormBrowseBoxComponent,
     I18nCheckboxComponent,
@@ -16,6 +17,7 @@ import {
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
     GtxUserMenuToggleComponent,
+    PasswordConfirmInputComponent,
     StringListComponent,
     VersionModalComponent,
 } from './components';
@@ -35,6 +37,7 @@ import {
 } from './pipes';
 import {
     I18nService,
+    KeycloakService,
     LocalTranslateLoader,
     WindowRef,
 } from './providers';
@@ -53,6 +56,7 @@ const COMPONENTS: any[] = [
     KeyI18nValueListInputComponent,
     VersionModalComponent,
     BrowseBoxComponent,
+    PasswordConfirmInputComponent,
 ];
 
 const ENTRY_COMPONENTS = [
@@ -88,6 +92,7 @@ const PROVIDERS: any[] = [
         deps: [ I18nService ],
     },
     WindowRef,
+    KeycloakService,
     ...PIPES,
 ];
 

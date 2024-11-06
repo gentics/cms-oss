@@ -3,6 +3,7 @@ package com.gentics.contentnode.server;
 import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PLUGINS_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.GCNJSAPI_PATH;
+import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP2;
 import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP_PORT;
 import static com.gentics.contentnode.runtime.ConfigurationValue.STATIC_SERVE_LIST;
 
@@ -12,19 +13,25 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.servlet.DispatcherType;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.rewrite.handler.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
@@ -58,6 +65,11 @@ public class OSSRunner {
 	static NodeLogger log;
 
 	/**
+	 * Server instance
+	 */
+	protected static Server server;
+
+	/**
 	 * Loader for implementations of {@link ServletContextHandlerService}
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
@@ -73,6 +85,59 @@ public class OSSRunner {
 	}
 
 	/**
+	 * Check whether the server has been started
+	 * @return true iff the server has been started
+	 */
+	public static boolean isServerStarted() {
+		return server != null && server.isStarted();
+	}
+
+	/**
+	 * Check whether the server has not been started or has been stopped
+	 * @return true iff the server has been stopped
+	 */
+	public static boolean isServerStopped() {
+		return server == null || server.isStopped();
+	}
+
+	/**
+	 * Check whether the server start has failed
+	 * @return true iff the server start has failed
+	 */
+	public static boolean isServerFailed() {
+		return server != null && server.isFailed();
+	}
+
+	/**
+	 * Stop the server
+	 * @throws Exception
+	 */
+	public static void stop() throws Exception {
+		if (server != null) {
+			server.stop();
+		}
+	}
+
+	/**
+	 * Get the port, the server is listening to. If the server has not been started, this return something < 0
+	 * @return port (negative, if the server is not started)
+	 */
+	public static int getPort() {
+		if (server == null) {
+			return -1;
+		} else {
+			Connector[] connectors = server.getConnectors();
+			if (ArrayUtils.isEmpty(connectors)) {
+				return -1;
+			} else {
+				return Stream.of(connectors).filter(conn -> conn instanceof NetworkConnector)
+						.map(conn -> NetworkConnector.class.cast(conn)).map(conn -> conn.getLocalPort()).findFirst()
+						.orElse(-1);
+			}
+		}
+	}
+
+	/**
 	 * Start the server
 	 */
 	protected static void start() {
@@ -83,6 +148,7 @@ public class OSSRunner {
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
+		boolean http2 = Boolean.parseBoolean(HTTP2.get());
 
 		// create context
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -138,6 +204,9 @@ public class OSSRunner {
 		errorHandler.addErrorPage(HttpStatus.INTERNAL_SERVER_ERROR_500, "/error/500.html");
 		context.setErrorHandler(errorHandler);
 
+		// set the connection factory up
+		HttpConfiguration httpConfiguration = new HttpConfiguration();
+		HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(httpConfiguration);
 		// Allow symlinks in the resource accessor. Keep in sync with the ones in createRewriteHandler().
 		context.addAliasCheck(
 				new SelectedSymlinkAllowedResourceAliasChecker(
@@ -145,9 +214,20 @@ public class OSSRunner {
 						Set.of("(.*)\\/packages\\/([^\\/]*)\\/files\\/(.*)", "(.*)\\/packages\\/([^\\/]*)\\/files-internal\\/(.*)")));
 
 		// create server
-		Server server = new Server(port);
+		server = new Server();
 		server.setStopAtShutdown(true);
 		server.setHandler(rewriteHandler);
+
+		// create connector
+		ServerConnector serverConnector;
+		if (http2) {
+			HTTP2CServerConnectionFactory h2cConnectionFactory = new HTTP2CServerConnectionFactory(httpConfiguration);
+			serverConnector = new ServerConnector(server, httpConnectionFactory, h2cConnectionFactory);
+		} else {
+			serverConnector = new ServerConnector(server, httpConnectionFactory);
+		}
+		serverConnector.setPort(port);
+		server.addConnector(serverConnector);
 
 		// add the ForwardedRequestCustomizer in order to support the CMS running behind a proxy, which e.g. terminates SSL
 		for (Connector c : server.getConnectors()) {
@@ -218,6 +298,8 @@ public class OSSRunner {
 		// only apply path info to resourceBase
 		holderServlet.setInitParameter("pathInfoOnly", "true");
 		holderServlet.setInitParameter("dirAllowed", "false");
+		holderServlet.setInitParameter("etags", "true");
+		holderServlet.setInitParameter("cacheControl", "no-cache");
 
 		return holderServlet;
 	}

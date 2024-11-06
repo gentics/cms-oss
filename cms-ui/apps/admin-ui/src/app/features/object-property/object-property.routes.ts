@@ -1,12 +1,18 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
-import { BreadcrumbResolver } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import {
-    ObjectPropertyCategoryDetailComponent,
-    ObjectPropertyDetailComponent,
+    AdminUIEntityDetailRoutes,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ObjectPropertyCategoryDetailTabs,
+    ObjectPropertyDetailTabs,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+    createEntityEditorRoutes,
+} from '@admin-ui/common';
+import {
+    ObjectPropertyCategoryEditorComponent,
+    ObjectPropertyEditorComponent,
     ObjectPropertyModuleMasterComponent,
 } from './components';
-import { CanActivateObjectPropertyCategoryGuard, CanActivateObjectPropertyGuard } from './providers';
 
 export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -14,45 +20,27 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
         component: ObjectPropertyModuleMasterComponent,
     },
     {
-        path: 'object-property',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: ':id',
-                component: ObjectPropertyDetailComponent,
-                data: {
-                    typePermissions: [],
-                },
-                canActivate: [CanActivateObjectPropertyGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
+            ...createEntityEditorRoutes(EditableEntity.OBJECT_PROPERTY, ObjectPropertyEditorComponent, ObjectPropertyDetailTabs.PROPERTIES),
         ],
     },
     {
-        path: 'object-property-category',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: ':id',
-                component: ObjectPropertyCategoryDetailComponent,
-                data: {
-                    typePermissions: [],
-                },
-                canActivate: [CanActivateObjectPropertyCategoryGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
+            ...createEntityEditorRoutes(
+                EditableEntity.OBJECT_PROPERTY_CATEGORY,
+                ObjectPropertyCategoryEditorComponent,
+                ObjectPropertyCategoryDetailTabs.PROPERTIES,
+            ),
         ],
     },
 ];

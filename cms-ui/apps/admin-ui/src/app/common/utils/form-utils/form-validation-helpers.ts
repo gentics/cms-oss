@@ -1,5 +1,5 @@
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { combineLatest, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -38,7 +38,7 @@ export function createFormSaveDisabledTracker(formGroup: AbstractControl): Obser
     );
 }
 
-export function blacklistValidator(blacklist: any[] | (() => any[])): ValidatorFn {
+export function createBlacklistValidator(blacklist: any[] | (() => any[])): ValidatorFn {
     return (control) => {
         let blacklistToCheck: any[];
 
@@ -56,7 +56,12 @@ export function blacklistValidator(blacklist: any[] | (() => any[])): ValidatorF
             for (const arrValue of control.value) {
                 for (const bannedItem of blacklistToCheck) {
                     if (isEqual(arrValue, bannedItem)) {
-                        return { blacklist: bannedItem };
+                        return {
+                            blacklist: {
+                                bannedValues: blacklistToCheck,
+                                actualValue: bannedItem,
+                            },
+                        };
                     }
                 }
             }
@@ -65,9 +70,48 @@ export function blacklistValidator(blacklist: any[] | (() => any[])): ValidatorF
 
         for (const bannedItem of blacklistToCheck) {
             if (isEqual(control.value, bannedItem)) {
-                return { blacklist: bannedItem };
+                return {
+                    blacklist: {
+                        bannedValues: blacklistToCheck,
+                        actualValue: bannedItem,
+                    },
+                };
             }
         }
+    }
+}
+
+type CompareFn = (a: any, b: any) => boolean;
+
+const DEFAULT_COMPARISON: CompareFn = (a, b) => a === b;
+
+export function createWhitelistValidator(whitelist: any[] | (() => any[]), compareFn: CompareFn = DEFAULT_COMPARISON): ValidatorFn {
+    return (control) => {
+        let whitelistToCheck: any[];
+
+        if (typeof whitelist === 'function') {
+            whitelistToCheck = whitelist();
+        } else {
+            whitelistToCheck = whitelist;
+        }
+
+        if (control.value == null || !Array.isArray(whitelistToCheck) || whitelistToCheck.length === 0) {
+            return null;
+        }
+
+        const ctlVal = Array.isArray(control.value) ? control.value : [control.value];
+        for (const arrValue of ctlVal) {
+            if (!whitelistToCheck.some(whitelisted => compareFn(whitelisted, arrValue))) {
+                return {
+                    whitelist: {
+                        allowedValues: whitelistToCheck,
+                        actualValue: ctlVal,
+                    },
+                };
+            }
+        }
+
+        return null;
     }
 }
 

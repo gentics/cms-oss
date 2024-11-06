@@ -247,14 +247,14 @@ define('gcn/gcn-tags', [
 					.contentEditable(false);
 
 				if (!Aloha.settings.readonly) {
-					var editIcon = '/images/content/constr/' + construct.icon;
 					var options = {
-						'aloha-block-type' : 'GCNBlock',
-						'gcn-tagname'      : tag.prop('name'),
-						'gcn-tagid'        : tag.prop('id'),
-						'gcn-pageid'       : tag.parent().id(),
-						'gcn-editicon'     : editIcon,
-						'gcn-deleteicon'   : deleteIcon
+						'aloha-block-type': 'GCNBlock',
+						'gcn-tagname': tag.prop('name'),
+						'gcn-tagid': tag.prop('id'),
+						'gcn-pageid': tag.parent().id(),
+						'gcn-constructid': construct.id,
+						'gcn-construct-ctl-style': (construct.editorControlStyle || 'ASIDE').toLowerCase(),
+						'gcn-construct-ctl-inside': (!!construct.editorControlsInside).toString(),
 					};
 					$elements.alohaBlock(options);
 
@@ -501,6 +501,10 @@ define('gcn/gcn-tags', [
 	 *                            and editables have been initialized.
 	 */
 	function decorateTagForEditing(tag, data, callback) {
+		/*
+		 * This function is sometimes called before aloha is ready.
+		 * Attempting to create blocks/editables at this point would just break aloha with really strange errors.
+		 */
 		var page = tag.parent();
 		var pageId = page.id();
 		var contained = GCN.PageAPI.trackRenderedTags(page, data);
@@ -515,6 +519,7 @@ define('gcn/gcn-tags', [
 			if (editable && editables[i].readonly) {
 				editable.disable();
 			}
+	
 		}
 
 		initializeBlocks(blocks, pageId, callback);

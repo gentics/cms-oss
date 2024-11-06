@@ -10,13 +10,12 @@ import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringSubstitutor;
-import org.apache.commons.text.lookup.StringLookupFactory;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.PropertySubstitutionUtil;
 
 /**
  * Implementation of {@link NodePreferences} that holds the configuration as nested Maps
@@ -226,38 +225,7 @@ public class MapPreferences implements NodePreferences {
 	 */
 	protected void substituteVariables() {
 		if (this.data != null) {
-			// configure the substitutors, that we want to support (base64 encoding and decoding, url encoding and decoding, environment variables and system properties)
-			System.setProperty(StringLookupFactory.DEFAULT_STRING_LOOKUPS_PROPERTY, "BASE64_DECODER,BASE64_ENCODER,DATE,ENVIRONMENT,SYSTEM_PROPERTIES,URL_DECODER,URL_ENCODER");
-			recursivelySubstituteVariables(this.data, StringSubstitutor.createInterpolator());
-		}
-	}
-
-	/**
-	 * Recursively use the {@link StringSubstitutor} on all string values of the map
-	 * @param map map
-	 * @param substitutor substitutor
-	 */
-	protected void recursivelySubstituteVariables(Map<String, Object> map, StringSubstitutor substitutor) {
-		for (Entry<String, Object> entry : map.entrySet()) {
-			if (entry.getValue() instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
-				recursivelySubstituteVariables(valueMap, substitutor);
-			} else if (entry.getValue() instanceof List) {
-				@SuppressWarnings("unchecked")
-				List<Object> listValue = (List<Object>) entry.getValue();
-				listValue.replaceAll(value -> {
-					if (value instanceof String) {
-						return substitutor.replace(value.toString());
-					} else {
-						return value;
-					}
-				});
-			} else if (entry.getValue() instanceof String) {
-				String stringValue = entry.getValue().toString();
-				stringValue = substitutor.replace(stringValue);
-				entry.setValue(stringValue);
-			}
+			PropertySubstitutionUtil.substituteAll(this.data);
 		}
 	}
 

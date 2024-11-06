@@ -1,9 +1,14 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import {
+    AdminUIEntityDetailRoutes,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    LanguageDetailTabs,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+    createEntityEditorRoutes,
+} from '@admin-ui/common';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { LanguageDetailComponent, LanguageMasterComponent } from './components';
-import { CanActivateLanguageGuard } from './providers';
+import { LanguageEditorComponent, LanguageMasterComponent } from './components';
 
 export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -11,36 +16,22 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
         component: LanguageMasterComponent,
     },
     {
-        path: 'language',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.LANGUAGE,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: `:id/:${EDITOR_TAB}`,
-                component: LanguageDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.LANGUAGE_ADMIN,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateLanguageGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
-            {
-                path: ':id',
-                redirectTo: ':id/properties',
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.LANGUAGE, LanguageEditorComponent, LanguageDetailTabs.PROPERTIES, {
+                [ROUTE_PERMISSIONS_KEY]: [
+                    {
+                        type: AccessControlledType.LANGUAGE_ADMIN,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
 ];

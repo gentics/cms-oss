@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
 /**
  * Service which returns URLs to non-REST resources such as Alohapages or Images.
@@ -89,16 +89,6 @@ export class ResourceUrlBuilder {
         return `${API_BASE_URL}/file/content/load/${fileId}?${params}`;
     }
 
-    /**
-     * Returns the URL of the split-screen language comparison page.
-     */
-    comparePageLanguages(nodeId: number, pageId: number, languageVariantId: number): string {
-        const params = this.createParamsString({
-            otherPageId: languageVariantId,
-            nodeId: nodeId,
-        });
-        return `${API_BASE_URL}/page/diff/${pageId}?${params}`;
-    }
 
     /**
      * Returns the URL of the live page preview of a specific version.

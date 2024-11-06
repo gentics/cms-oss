@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
+import { EditorPermissions, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '@editor-ui/app/common/models';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import {
-    EditorPermissions,
+    Feature,
     File as FileModel,
     Folder,
     Form,
@@ -13,7 +13,6 @@ import {
     Node as NodeModel,
     Page,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
@@ -84,6 +83,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
     buttons: ContextMenuButtonsMap;
     wastebinEnabled = false;
+    multiChannelingEnabled = false;
 
     private subscriptions: Subscription[] = [];
 
@@ -96,8 +96,13 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.state.select(state => state.features.wastebin).subscribe(enabled => {
+        this.subscriptions.push(this.state.select(state => state.features[Feature.WASTEBIN]).subscribe(enabled => {
             this.wastebinEnabled = enabled;
+            this.buttons = this.determineVisibleButtons();
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.state.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+            this.multiChannelingEnabled = enabled;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         }));
@@ -336,16 +341,16 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             createVariation: isPage && !this.isDeleted && userCan.create,
             pageVersions: isPage && !this.isDeleted && userCan.view,
             setAsStartpage: isPage && !this.isDeleted && isPage && !this.isFolderStartPage && this.permissions.folder.edit,
-            localize: !isForm && !this.isDeleted && inherited && userCan.localize,
-            editInParent: !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),
+            localize: this.multiChannelingEnabled && !isForm && !this.isDeleted && inherited && userCan.localize,
+            editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),
             move: !this.isDeleted && (isForm || (isMaster && !inherited)) && userCan.delete,
-            inheritanceSettings: !isForm && !this.isDeleted && isMaster && !inherited && userCan.inherit,
-            synchronizeChannel: !isForm && !this.isDeleted && canBeSynchronizedToParentNode,
+            inheritanceSettings: this.multiChannelingEnabled && !isForm && !this.isDeleted && isMaster && !inherited && userCan.inherit,
+            synchronizeChannel: this.multiChannelingEnabled && !isForm && !this.isDeleted && canBeSynchronizedToParentNode,
             requestTranslation: !this.isDeleted && showRequestTranslationButton,
             linkTemplates: !this.isDeleted && isFolder && userCan.edit && templatePermissions ? templatePermissions.link : false,
             delete: !this.isDeleted && (isMaster || isForm) && !inherited && userCan.delete,
             restore: this.wastebinEnabled && this.isDeleted && !inherited && userCan.delete,
-            unlocalize: !isForm && !this.isDeleted && isLocalized && userCan.unlocalize,
+            unlocalize: this.multiChannelingEnabled && !isForm && !this.isDeleted && isLocalized && userCan.unlocalize,
             takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited),
             publish: !this.isDeleted && (isPage || (isForm && this.permissions.form.publish)),
             publishLanguageVariants: !isForm && isPage && !this.isDeleted && this.hasLanguageVariants(this.item as Page) && canPublish,

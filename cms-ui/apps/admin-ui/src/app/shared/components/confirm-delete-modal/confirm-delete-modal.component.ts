@@ -25,13 +25,13 @@ export class ConfirmDeleteModalComponent<T extends NormalizableEntityType> imple
         if (this.entityAmount !== 1) {
             this.entityIdentifierTranslation = this.i18n.instant(`common.${this.entityIdentifier}_plural`);
             this.confirmDeleteMessageTranslation = this.i18n.instant(
-                `modal.confirm_delete_message_plural`,
+                'modal.confirm_delete_message_plural',
                 { entityName: this.entityIdentifierTranslation },
             );
         } else {
             this.entityIdentifierTranslation = this.i18n.instant(`common.${this.entityIdentifier}_singular`);
             this.confirmDeleteMessageTranslation = this.i18n.instant(
-                `modal.confirm_delete_message_singular`,
+                'modal.confirm_delete_message_singular',
                 { entityName: this.entityIdentifierTranslation },
             );
         }

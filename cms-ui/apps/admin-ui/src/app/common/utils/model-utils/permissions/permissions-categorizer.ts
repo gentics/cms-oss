@@ -1,5 +1,5 @@
 import { GcmsPermission, IndexByKey, PermissionInfo } from '@gentics/cms-models';
-import { groupBy as _groupBy } from 'lodash';
+import { groupBy as _groupBy } from'lodash-es'
 
 export const COMMON_CATEGORY = 'shared.common_perms';
 export const SPECIFIC_CATEGORY = 'shared.specific_perms';

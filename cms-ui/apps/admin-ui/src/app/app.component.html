@@ -71,15 +71,11 @@
             </gtx-tab>
         </gtx-tabs>
 
-        <gtx-link-to-manual
-            *ngIf="!(featureHideManual$ | async)"
-            bottom
-        ></gtx-link-to-manual>
-
         <gtx-app-version-label
             bottom
             appTitle="Gentics CMS"
             [versionData]="cmpVersion$ | async"
+            [nodes]="loadedNodes"
         ></gtx-app-version-label>
 
     </gtx-user-menu>

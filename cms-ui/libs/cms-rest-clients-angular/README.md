@@ -1,5 +1,7 @@
 # @gentics/cms-rest-clients-angular
 
+> **DEPRECATED**: This Package is deprecated in favour of the `@gentics/cms-rest-client` and `@gentics/cms-rest-client-angular` packages.
+
 This library contains Angular services for communicating with the GCMS [REST API](https://www.gentics.com/Content.Node/guides/#rest-api).
 
 It supplies one central service for accessing common features of the REST API: **GcmsApi**.
@@ -10,12 +12,12 @@ For developers, who want to write their own Angular services, this package provi
 
 Authenticate:
 ```bash
-npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
+npm adduser --registry=https://repo.gentics.com/repository/npm-products/ --always-auth
 ```
 
-Setup @gentics scope to the APA IT repository:
+Setup @gentics scope to the Gentics repository:
 ```bash
-npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
+npm config set @gentics:registry https://repo.gentics.com/repository/npm-products/
 ```
 
 ## Installing
@@ -64,22 +66,10 @@ import { ApplicationStateService } from '../state';
 export class AppModule { }
 ```
 
-## GCMS Model Types
-
-GCMS model types need to be imported from the `@gentics/cms-models` package, e.g., `import {Page} from '@gentics/cms-models';`.
-They must not be imported using a relative path, because otherwise the package build would fail.
-The path for `@gentics/cms-models` is redefined in the local `tsconfig.json` of this project, such that it points to the compiled files in the `dist` folder of the workspace.
-This means that the `@gentics/cms-models` package needs to be built before working on or building the `@gentics/cms-rest-clients-angular` package.
-
 ## Build
 
-Run `npm run build:rest-clients` to build the project.
-This will build the `@gentics/cms-models` package first and then the `@gentics/cms-rest-clients-angular` package.
+Run `npm run build cms-rest-clients-angular` in the ui-root to build the project.
 The build artifacts will be stored in the `dist/libs/` directory.
-
-## Testing package locally
-
-Do a build and run `npm link` in the `dist/libs/cms-rest-clients-angular/` folder. After that go to your project where you want to use this package and run `npm link @gentics/cms-rest-clients-angular`.
 
 ## Publishing
 

@@ -538,7 +538,6 @@ public class GlobalIdSync {
 
 		factory = ContentNodeFactory.getInstance();
 
-		NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getPersistentScheduler().shutdown();
 		JAXBHelper.init(null);
 	}
 

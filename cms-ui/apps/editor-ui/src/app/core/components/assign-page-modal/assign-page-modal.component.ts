@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Page, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 
@@ -11,8 +12,8 @@ import { EntityResolver } from '../../providers/entity-resolver/entity-resolver'
     templateUrl: './assign-page-modal.component.html',
     styleUrls: ['./assign-page-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
-export class AssignPageModal extends BaseModal<void> {
+})
+export class AssignPageModal extends BaseModal<void> implements OnInit {
 
     users$: Observable<User[]>;
     loading$: Observable<boolean>;
@@ -28,17 +29,24 @@ export class AssignPageModal extends BaseModal<void> {
         private folderActions: FolderActionsService,
     ) {
         super();
-        publishQueueActions.getUsersForRevision();
+    }
 
-        const filterTerm$ = this.filterTerm.valueChanges.startWith('');
-        const publishQueueUsers$ = appState.select(state => state.publishQueue.users)
-            .map(users => users.map(id => entityResolver.getUser(id)));
+    ngOnInit(): void {
+        this.publishQueueActions.getUsersForRevision();
 
-        this.users$ = publishQueueUsers$
-            .combineLatest(filterTerm$)
-            .map(result => this.filterUsers(result[0], result[1]));
+        const filterTerm$ = this.filterTerm.valueChanges.pipe(startWith(''));
+        const publishQueueUsers$ = this.appState.select(state => state.publishQueue.users).pipe(
+            map(users => users.map(id => this.entityResolver.getUser(id))),
+        );
 
-        this.loading$ = appState.select(state => state.publishQueue.assigning);
+        this.users$ = combineLatest([
+            publishQueueUsers$,
+            filterTerm$,
+        ]).pipe(
+            map(([users, term]) => this.filterUsers(users, term)),
+        );
+
+        this.loading$ = this.appState.select(state => state.publishQueue.assigning);
     }
 
     /**

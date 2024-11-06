@@ -1,26 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { CmsFormElementBO, CmsFormElementInsertionInformation, CmsFormElementProperty, EditMode } from '@gentics/cms-models';
+import { CmsFormElementBO, CmsFormElementInsertionInformation, CmsFormElementProperty } from '@gentics/cms-models';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorService } from '../../providers';
-
-export interface FormEditorElementState {
-    /** Element is in Drag state. */
-    isBeingDragged: boolean;
-    /** Element is in Drop-preview state. */
-    onDropPreview: boolean;
-    /** Element's properties menu is visible. */
-    propertiesEditorOpen: boolean;
-    /** Element exists within form and writable. */
-    readOnly: boolean;
-    /** Element exists within form editor and will try to render content properties, e. g. label. */
-    isInEditor: boolean;
-    /** If TRUE, element will show visual indicators of being interactive, e. g. has hover efect. */
-    isInteractive: boolean;
-    /** If TRUE, element will visually indicate that one of element properties has value set in another language than current. */
-    isUntranslated: boolean;
-    /** If TRUE, some requirement or validation constraint is unfulfilled in the current language. This will be reflected in the element. */
-    containsPropertyError: boolean;
-}
 
 @Component({
     selector: 'gtx-form-editor-element',
@@ -31,53 +12,8 @@ export interface FormEditorElementState {
 })
 export class FormEditorElementComponent implements OnChanges {
 
-    state: FormEditorElementState = {
-        isBeingDragged: false,
-        onDropPreview: false,
-        propertiesEditorOpen: false,
-        readOnly: false,
-        isInEditor: false,
-        isInteractive: false,
-        isUntranslated: false,
-        containsPropertyError: false,
-    };
-
-    public _formEditMode;
-
     @Input()
-    set formEditMode(v: EditMode) {
-        switch (v) {
-            case 'preview':
-                // close properties editor in case it is opened
-                this.state.propertiesEditorOpen = false;
-                this.state.readOnly = true;
-                this.state.isInteractive = false;
-                break;
-
-            case 'edit':
-                this.state.isInteractive = true;
-                this.state.readOnly = false;
-                break;
-
-            default:
-                break;
-        }
-        this._formEditMode = v;
-    }
-    @Input()
-    set isInEditor(v: boolean) {
-        this.state.isInEditor = v;
-    }
-
-    @Input()
-    set isInteractive(v: boolean) {
-        this.state.isInteractive = v;
-    }
-
-    @Input()
-    set isBeingDragged(v: boolean) {
-        this.state.isBeingDragged = v;
-    }
+    public readonly: boolean;
 
     @Input()
     element: CmsFormElementBO;
@@ -109,11 +45,15 @@ export class FormEditorElementComponent implements OnChanges {
     @Input()
     hideDropZones = true;
 
+    /** Element exists within form editor and will try to render content properties, e. g. label. */
+    @Input()
+    isInEditor: boolean;
+
     @Output()
     remove = new EventEmitter<CmsFormElementBO>();
 
     @Output()
-    propertiesEditorOpen = new EventEmitter<boolean>();
+    openPropertiedEditor = new EventEmitter<boolean>();
 
     @Output()
     beforeFormElementInsert = new EventEmitter<CmsFormElementInsertionInformation>();
@@ -124,7 +64,19 @@ export class FormEditorElementComponent implements OnChanges {
     @Output()
     propertiesErrorChange = new EventEmitter<boolean>();
 
+    /** Element is in Drag state. */
+    isBeingDragged: boolean;
+    /** Element is in Drop-preview state. */
+    onDropPreview: boolean;
+    /** Element's properties menu is visible. */
+    propertiesEditorIsOpen: boolean;
+    /** If TRUE, element will visually indicate that one of element properties has value set in another language than current. */
+    isUntranslated: boolean;
+    /** If TRUE, some requirement or validation constraint is unfulfilled in the current language. This will be reflected in the element. */
+    containsPropertyError: boolean;
+
     propertiesContainError = false;
+
     private childElementsContainPropertiesError = false;
 
     constructor(
@@ -133,8 +85,10 @@ export class FormEditorElementComponent implements OnChanges {
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.formEditMode && changes.formEditMode.previousValue !== changes.formEditMode.currentValue) {
-            this.changeDetectorRef.detectChanges();
+        if (changes.readonly) {
+            if (this.readonly) {
+                this.propertiesEditorIsOpen = false;
+            }
         }
     }
 
@@ -152,17 +106,17 @@ export class FormEditorElementComponent implements OnChanges {
     }
 
     containerClicked(event: MouseEvent): void {
-        if (this.state.readOnly || !this.element.properties || this.element.properties.length === 0) {
+        if (this.readonly || !this.element.properties || this.element.properties.length === 0) {
             return;
         }
 
-        this.state.propertiesEditorOpen = !this.state.propertiesEditorOpen;
+        this.propertiesEditorIsOpen = !this.propertiesEditorIsOpen;
         // notify parent
-        this.propertiesEditorOpen.emit(this.state.propertiesEditorOpen);
+        this.openPropertiedEditor.emit(this.propertiesEditorIsOpen);
     }
 
     onTranslationErrorChange(v: boolean): void {
-        this.state.isUntranslated = v;
+        this.isUntranslated = v;
         this.changeDetectorRef.detectChanges();
     }
 
@@ -197,7 +151,7 @@ export class FormEditorElementComponent implements OnChanges {
 
     private updatePropertiesError(): void {
         const containsPropertiesError = this.propertiesContainError || this.childElementsContainPropertiesError;
-        this.state.containsPropertyError = containsPropertiesError;
+        this.containsPropertyError = containsPropertiesError;
         this.propertiesErrorChange.emit(containsPropertiesError);
     }
 

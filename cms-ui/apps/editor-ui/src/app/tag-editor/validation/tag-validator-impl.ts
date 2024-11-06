@@ -1,16 +1,18 @@
 import {
-    findTagPart,
     MultiValidationResult,
     TagEditorError,
+    TagPropertyValidator,
+    TagValidationResult,
+    TagValidator,
+    ValidationResult,
+} from '@gentics/cms-integration-api-models';
+import {
     TagPart,
     TagPartProperty,
     TagPropertyMap,
     TagPropertyType,
-    TagPropertyValidator,
     TagType,
-    TagValidationResult,
-    TagValidator,
-    ValidationResult,
+    findTagPart,
 } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { GenericTagPropertyValidator } from './generic-tag-property-validator/generic-tag-property-validator';

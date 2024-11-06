@@ -4,7 +4,7 @@
             <ng-template [ngIf]="tabItem.expand != null" [ngIfElse]="standaloneTabItem">
                 <li
                     class="tab-group"
-                    [id]="tabItem.id || tabItem.UNIQUE_ID"
+                    [attr.data-id]="tabItem.id || tabItem.UNIQUE_ID"
                     [class.expanded]="tabItem.expand"
                     [class.is-active]="tabItem.hasActiveChild"
                 >
@@ -12,7 +12,7 @@
                         <ng-container *ngTemplateOutlet="labelTemplate;context:{tabItem: tabItem}"></ng-container>
                     </div>
 
-                    <div class="collapsible-body" [style.max-height.px]="tabsHeight(tabItem)">
+                    <div class="collapsible-body">
                         <ul class="tab-links" *ngIf="tabItem.tabs.length > 0">
                             <ng-container *ngFor="let tab of tabItem.tabs">
                                 <ng-container *ngTemplateOutlet="tabItemTemplate;context:{tabItem: tab}"></ng-container>
@@ -37,7 +37,7 @@
 <div class="clearfix"></div>
 
 <ng-template #labelTemplate let-tabItem="tabItem">
-    <icon *ngIf="tabItem?.expand != null" class="header-icon">{{ 'keyboard_arrow_' + (tabItem.expand ? 'down' : 'right') }}</icon>
+    <icon *ngIf="tabItem?.expand != null" class="header-icon">keyboard_arrow_right</icon>
 
     <!-- If there is a label template, use it. -->
     <ng-container *ngIf="tabItem.templateLabel; else tabTextLabel">
@@ -54,6 +54,7 @@
     <li
         class="tab-link"
         role="presentation"
+        [attr.data-id]="tabItem.id || tabItem.UNIQUE_ID"
         [class.disabled]="tabItem.disabled"
         [class.is-active]="tabItem.active"
         [class.readonly]="tabItem.readonly"

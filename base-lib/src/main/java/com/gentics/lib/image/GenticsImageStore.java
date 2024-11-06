@@ -1,5 +1,16 @@
 package com.gentics.lib.image;
 
+import com.gentics.api.lib.cache.PortalCache;
+import com.gentics.api.lib.cache.PortalCacheException;
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.upload.FileInformation;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.log.RuntimeProfiler;
+import com.gentics.lib.log.profilerconstants.JavaParserConstants;
+import com.gentics.lib.util.FileUtil;
+import javax.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,11 +29,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -41,17 +49,6 @@ import org.jmage.ImageRequest;
 import org.jmage.JmageException;
 import org.jmage.dispatcher.RequestDispatcher;
 
-import com.gentics.api.lib.cache.PortalCache;
-import com.gentics.api.lib.cache.PortalCacheException;
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.upload.FileInformation;
-import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.log.RuntimeProfiler;
-import com.gentics.lib.log.profilerconstants.JavaParserConstants;
-import com.gentics.lib.util.FileUtil;
-
 public class GenticsImageStore {
 
 	/**
@@ -63,11 +60,15 @@ public class GenticsImageStore {
 	 * flag which decides what happens if resizing of an image fails
 	 * true: only an error message is logged and the original image is returned
 	 * false: an exception is thrown
-	 * @see #callPluggableAction(String, String, String, String)
+	 * TODO: There is no setter for this value, is this intended?
 	 */
 	protected boolean useOriginalIfResizeFails = true;
 
 	protected Double jpegQuality;
+
+	protected Double webpQuality;
+
+	protected Boolean webpLossless;
 
 	/**
 	 * Optional semaphore to use for locking of resizing operations
@@ -95,12 +96,12 @@ public class GenticsImageStore {
 	public final static String CACHEREGION = "gentics-content-imagestorecache";
 
 	/**
-	 * Pattern to determine the filetype from the contenttype 
+	 * Pattern to determine the filetype from the contenttype
 	 */
 	protected final static Pattern IMAGE_TYPE_PATTERN = Pattern.compile("image/(.+)");
 
 	/**
-	 * key to decide if crop and resize functionality should be enabled 
+	 * key to decide if crop and resize functionality should be enabled
 	 */
 	public final static String CROP_AND_RESIZE_MODE_KEY = "cropandresize";
 
@@ -191,6 +192,14 @@ public class GenticsImageStore {
 		this.jpegQuality = jpegQuality;
 	}
 
+	public void setWebpQuality(Double webpQuality) {
+		this.webpQuality = webpQuality;
+	}
+
+	public void setWebpLossless(Boolean webpLossless) {
+		this.webpLossless = webpLossless;
+	}
+
 	/**
 	 * Sets semaphore for locking (null for no locking)
 	 * @param semaphore semaphore
@@ -214,7 +223,7 @@ public class GenticsImageStore {
 
 	/**
 	 * Invokes the GIS and returns the resized image
-	 * 
+	 *
 	 * @param mode
 	 * @param width
 	 * @param height
@@ -254,6 +263,14 @@ public class GenticsImageStore {
 			filterChainProperties.put("JPEG_QUALITY", jpegQuality);
 		}
 
+		if (webpQuality != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_QUALITY, webpQuality);
+		}
+
+		if (webpLossless != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_LOSSLESS, webpLossless);
+		}
+
 		if (!StringUtils.isEmpty(filePath)) {
 			filterChainProperties.put("filePath", filePath);
 		}
@@ -287,7 +304,7 @@ public class GenticsImageStore {
 			if (useOriginalIfResizeFails) {
 				logger.error(msg + " - using original image data.");
 				// An error happened, so read in the file and store it in an FileInformation.
-				// Note: this is done, so we don't store a FileInformation object in the cache which 
+				// Note: this is done, so we don't store a FileInformation object in the cache which
 				// contains only a reference to a file..
 				File file = new File(filePath);
 				byte[] bytes = new byte[(int) file.length()];
@@ -327,19 +344,19 @@ public class GenticsImageStore {
 
 	/**
 	 * Resize the given image using the given arguments.
-	 * The file data can be located using the filePathValue, fileUri or by using the fileInputStream 
-	 * 
+	 * The file data can be located using the filePathValue, fileUri or by using the fileInputStream
+	 *
 	 * @param filePathValue
 	 * @param encoding
 	 * @param cropandresize
-	 * @param fileUri
+	 * @param fileURIValue
 	 * @param fileInputStream
 	 * @param originalFilename
 	 * @param filterChain
 	 * @param filterChainProperties The resize parameters
 	 * @param cropProperties The crop parameters
 	 * @return Never returns null
-	 * @throws NodeException 
+	 * @throws NodeException
 	 */
 	public static GenticsImageStoreResizeResponse handleResizeAction(String filePathValue, String fileURIValue, InputStream fileInputStream, String encoding, boolean cropandresize, String originalFilename, String filterChain, Properties filterChainProperties, Properties cropProperties) throws NodeException {
 		URI fileURI = null;
@@ -511,7 +528,6 @@ public class GenticsImageStore {
 	 * @param height (may also be "auto")
 	 * @param eDate edate, if already set (or -1 if not yet set)
 	 * @return cache key
-	 * @throws TransactionException 
 	 */
 	protected Object createCropCacheKey(String fileId, String mode, String width, String height, String topx, String topy, String cwidth, String cheight, int eDate) throws NodeException {
 		mode = transformMode(mode);
@@ -529,9 +545,8 @@ public class GenticsImageStore {
 	 * @param height (may also be "auto")
 	 * @param eDate edate, if already set (or -1 if not yet set)
 	 * @return cache key
-	 * @throws TransactionException 
 	 */
-	protected Object createCacheKey(String fileId, String mode, String width, String height, int eDate) throws NodeException {
+	protected Object createCacheKey(String fileId, String mode, String width, String height, int eDate) {
 		mode = transformMode(mode);
 		StringBuffer cacheKey = new StringBuffer();
 		cacheKey.append(fileId).append("|").append(eDate).append("|").append(mode).append("|").append(width).append("|").append(height);
@@ -576,7 +591,7 @@ public class GenticsImageStore {
 	 * @param cookies array of cookies to be sent to the URL when fetching the image (may be null or empty)
 	 * @return image content
 	 * @throws ServletException
-	 * @throws GenticsImageStoreException 
+	 * @throws GenticsImageStoreException
 	 */
 	protected FileInformation getImageFromURL(String fileURL, Cookie[] cookies, Map<String, String> headers) throws ServletException,
 				IOException, GenticsImageStoreException {
@@ -731,8 +746,8 @@ public class GenticsImageStore {
 				NodeException {
 		return doResizing(mode, width, height, cropandresize, topleftx, toplefty, cropwidth, cropheight, fileId + "", queryString, cookies, headers);
 	}
-	
-	
+
+
 	/**
 	 * Do the resizing of an image and return the image
 	 * @param mode resizing mode
@@ -754,7 +769,7 @@ public class GenticsImageStore {
 	public FileInformation doResizing(String mode, String width, String height, boolean cropandresize, String topleftx, String toplefty,
 			String cropwidth, String cropheight, String fileUrl, String queryString, Cookie[] cookies, Map<String, String> headers) throws ServletException, IOException,
 				NodeException {
-		
+
 		// first try to get the image from the cache
 		Object cacheKey = null;
 
@@ -764,12 +779,12 @@ public class GenticsImageStore {
 			cacheKey = createCacheKey(fileUrl, mode, width, height, 0);
 		}
 		return doResizing(cacheKey, mode, width, height, cropandresize, topleftx, toplefty, cropwidth, cropheight, fileUrl, fileUrl, queryString, cookies, headers);
-		
+
 	}
 
 	/**
 	 * Do the resizing of an image and return the image
-	 * 
+	 *
 	 * @param cacheKey The used cacheKey for the image
 	 * @param mode resizing mode
 	 * @param width new width
@@ -809,7 +824,7 @@ public class GenticsImageStore {
 		File srcImage = null;
 
 		try {
-	
+
 			FileInformation cachedImage = null;
 
 			// create the cachekey
@@ -856,10 +871,10 @@ public class GenticsImageStore {
 			RuntimeProfiler.endMark(JavaParserConstants.IMAGESTORE_DORESIZE);
 		}
 	}
-	
+
 	/**
 	 * Builds the fileurl
-	 * 
+	 *
 	 * @param queryString
 	 * @return
 	 */

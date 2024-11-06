@@ -10,8 +10,24 @@
     </iframe-wrapper>
 
     <div *ngIf="showButtons && !showError" class="footer">
-        <gtx-button class="cancel-button" type="secondary" (click)="onCancelClick()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-        <gtx-button class="ok-button" [disabled]="!allPropertiesValid" (click)="onOkClick()">{{ 'common.okay_button' | i18n }}</gtx-button>
+        <gtx-button
+            *ngIf="context?.withDelete"
+            class="delete-button"
+            type="alert"
+            (click)="onDeleteClick()"
+        >{{ 'common.delete_button' | i18n }}</gtx-button>
+
+        <gtx-button
+            class="cancel-button"
+            type="secondary"
+            (click)="onCancelClick()"
+        >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+        <gtx-button
+            class="ok-button"
+            [disabled]="!allPropertiesValid"
+            (click)="onOkClick()"
+        >{{ 'common.okay_button' | i18n }}</gtx-button>
     </div>
 
     <ng-container *ngIf="showError">

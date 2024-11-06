@@ -78,7 +78,7 @@ export type ItemNormalized = Page<Normalized> | FileModel<Normalized> | Folder<N
  * The base of the various content types.
  *
  * Corresponds to the REST API type `ContentNodeItem`:
- * https://www.gentics.com/Content.Node/guides/restapi/json_ContentNodeItem.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ContentNodeItem.html
  */
 export interface Item<T extends ModelType = DefaultModelType> extends NormalizableEntity<T> {
 

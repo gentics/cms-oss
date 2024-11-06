@@ -217,12 +217,13 @@ public interface PageResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of page ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found pages, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiPageLoadResponse load(MultiPageLoadRequest request);
+	MultiPageLoadResponse load(MultiPageLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Render given page in a preview (before actually saving it)
@@ -272,11 +273,12 @@ public interface PageResource extends AuthenticatedResource {
 	 * However you can delete an inherited page in the master and unlocalize a localized page.
 	 * @param id id of the Page to delete. This can either be a local or global id
 	 * @param nodeId channel id
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
 
 	/**
 	 * Remove the page denoted by the given id from the wastebin.

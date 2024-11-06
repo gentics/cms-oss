@@ -1,0 +1,94 @@
+h2. GCMSUI Bridge
+
+Overview of when and where to get and use the GCMSUI Bridge for custom UI implementation.
+
+endprologue.
+
+h3. Overview
+
+The GCMSUI Bridge is one of the implementation interfaces one can use, to access data from the Editor-UI/CMS, or make it perform certain tasks.
+In the case of the GCMSUI Bridge, it is available in the Aloha IFrame when opened via the Editor-UI in either the preview or edit mode.
+Accessing the Bridge is done by the IFrames global @GCMSUI@ object:
+
+<javascript>
+window.GCMSUI.openTagEditor(...).then(result => {
+    // Handle the result of the tag-editor
+}).catch(error => {
+    // Handle any error of the tag-editor
+});
+</javascript>
+
+Typings and documentation for all the properties and functions are available in the @@gentics/cms-integration-api-models@ package:
+
+<javascript filename="gcmsui-bridge.shim.d.ts">
+import { GcmsUiBridge } from "@gentics/cms-integration-api-models";
+
+declare global {
+    interface Window {
+        GCMSUI: GcmsUiBridge;
+    }
+}
+</javascript>
+
+h4. REST API Interactions
+
+Since custom implementations often times need to load data from the CMS, multiple ways to directly interact with the CMS REST API are provided.
+
+First are general purpose functions to perform generic @GET@, @POST@, and @DELETE@ requests:
+
+* @restRequestGET@
+* @restRequestPOST@
+* @restRequestDELETE@
+
+These are useful for calls to a custom proxy or for endpoints which aren't included in the rest-client.
+
+The most convenient way to use the REST API, is via the provided @restClient@ (CMS v6.1+), which has appropiate functions and typings for various endpoints.
+Please see the @@gentics/cms-rest-client@ package for more information.
+
+Please note, that the GCNJS-API which is also available, is deprecated and should be replaced with calls from the UI Bridge instead.
+
+h4. UI Actions
+
+One major feature of the UI Bridge, is triggering UI Actions.
+These actions are features which are commonly used in the UI, but aren't directly available in an IFrame.
+
+Such actions are for example:
+
+* @openRepositoryBrowser@: Opens a repository browser to let the user select certain CMS items.
+* @openTagEditor@: Opens the tag-editor for a specific tag, so the user can edit it's content.
+
+The Bridge also has a class reference in @closeErrorClass@, which should be used in the error handling of these actions.
+All actions are performed via Promises, and will most commonly reject with the @closeErrorClass@ reference class.
+
+Example error handling:
+
+<javascript>
+window.GCMSUI.openTagEditor(...).then(result => {
+    // Handle the result of the tag-editor
+}).catch(error => {
+    /*
+     * This checks if the error is from the UI and if it's an actual error.
+     * Errors like these are thrown when the user closes/rejects the modal/action, to make it possible to perform a proper cleanup.
+     * Adding a proper error handler to these actions is recommended,
+     * as unhandled errors like these are getting logged by the browser as actual errors,
+     * which makes debugging of custom implementations harder what they need to be.
+     */
+    if (error instanceof window.GCMSUI.closeErrorClass) {
+        if (error.reason !== 'error') {
+            // Ignore the error and just simply return.
+            // You may do whatever you need to do here if there's any need.
+            return;
+        }
+
+        // Get the actual error which was internally thrown if present
+        if (error.cause) {
+            error = error.cause;
+        }
+    }
+
+    // Handle or ignore the error however you want here
+    return;
+});
+</javascript>
+
+For the full list and up to date documentation of all actions, please refer to the @@gentics/cms-integration-api-models@ package.

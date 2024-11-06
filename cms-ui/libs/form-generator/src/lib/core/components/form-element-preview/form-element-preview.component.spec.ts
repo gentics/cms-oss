@@ -1,31 +1,31 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormElementPreviewComponent } from '..';
 
 describe('FormElementPreviewComponent', () => {
-  let component: FormElementPreviewComponent;
-  let fixture: ComponentFixture<FormElementPreviewComponent>;
+    let component: FormElementPreviewComponent;
+    let fixture: ComponentFixture<FormElementPreviewComponent>;
 
-  beforeEach(waitForAsync(() => {
+    beforeEach(waitForAsync(() => {
 
-    TestBed.configureTestingModule({
-      declarations: [
-        FormElementPreviewComponent,
-        MockI18nFgPipe,
-      ],
-    })
-    .compileComponents();
-  }));
+        TestBed.configureTestingModule({
+            declarations: [
+                FormElementPreviewComponent,
+                MockI18nFgPipe,
+            ],
+            schemas: [NO_ERRORS_SCHEMA],
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(FormElementPreviewComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(FormElementPreviewComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  xit('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    xit('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });
 
 @Pipe({ name: 'i18nfg$' })

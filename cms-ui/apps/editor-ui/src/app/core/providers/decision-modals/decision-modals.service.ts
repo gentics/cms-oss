@@ -12,7 +12,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { take } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import {
     FormLanguageVariantMap,
@@ -28,7 +28,6 @@ import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { I18nService } from '../i18n/i18n.service';
 import { LocalizationMap, LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
-
 
 /**
  * A shorthand service for modals displayed in multiple places
@@ -232,11 +231,24 @@ export class DecisionModalsService {
      * and show a list of inherited items which can not be deleted.
      */
     selectItemsToDelete(items: InheritableItem[]): Promise<MultiDeleteResult> {
+
+        // If there's no multichanneling enabled, we don't need any of this. Just simply delete the files
+        if (!this.appState.now.features[Feature.MULTICHANNELLING]) {
+            return this.modalService.fromComponent(MultiDeleteModal, null, {
+                otherItems: items,
+                localizedItems: [],
+                inheritedItems: [],
+                itemLocalizations: {},
+                pageLanguageVariants: this.createPageLanguageVariantsMap(items),
+                formLanguageVariants: this.createFormLanguageVariantsMap(items),
+            }).then(modal => modal.open());
+        }
+
         const inheritedItems = [] as InheritableItem[];
         const localizedItems = [] as InheritableItem[];
         const itemLocalizations = {} as LocalizationMap;
         const otherItems = [] as InheritableItem[];
-        for (let item of items) {
+        for (const item of items) {
             if (item.inherited) {
                 inheritedItems.push(item);
             } else if (itemIsLocalized(item)) {
@@ -257,14 +269,13 @@ export class DecisionModalsService {
             itemLocalizations,
         };
 
-
-        return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form'))
-            .switchMap((itemLocalizations)  => {
+        return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form')).pipe(
+            switchMap((itemLocalizations)  => {
                 injectedModalValues.itemLocalizations = itemLocalizations;
                 return this.modalService.fromComponent(MultiDeleteModal, null, injectedModalValues)
                     .then(modal => modal.open());
-            })
-            .toPromise();
+            }),
+        ).toPromise();
     }
 
     /**
@@ -313,7 +324,7 @@ export class DecisionModalsService {
     private createPageLanguageVariantsMap(items: InheritableItem[]): PageLanguageVariantMap {
         const variantsPerPageId: PageLanguageVariantMap = {};
         const pages = items.filter(item => item.type === 'page') as Page[];
-        for (let page of pages) {
+        for (const page of pages) {
             // Create an array (Page[]) from an ID hash ({ [lang: number]: number })
             const languageVariantsHash = page.languageVariants;
             const languageVariantsArray = Object.keys(languageVariantsHash)

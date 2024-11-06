@@ -283,6 +283,10 @@
         "en": "Okay",
         "de": "OK"
     },
+    "back_button": {
+        "en": "Back",
+        "de": "Zurück"
+    },
     "create_button": {
         "en": "Create",
         "de": "Erstellen"
@@ -319,6 +323,26 @@
         "en": "Reload",
         "de": "Neu laden"
     },
+    "reset_filter": {
+        "en": "Reset",
+        "de": "Zurücksetzen"
+    },
+    "object_filter_placeholder": {
+        "en": "Filter object",
+        "de": "Filtern Objekt"
+    },
+    "user_filter_placeholder": {
+        "en": "Filter user",
+        "de": "Filtern Benutzer"
+    },
+    "action_filter_placeholder": {
+        "en": "Filter action",
+        "de": "Filtern Aktion"
+    },
+    "date_filter_placeholder": {
+        "en": "Filter start date",
+        "de": "Filter Startdatum"
+    },
     "set_new_password_button": {
         "en": "Set new password",
         "de": "Neues Passwort setzen"
@@ -346,6 +370,10 @@
     "templateTag_singular": {
         "en": "Template Tag",
         "de": "Vorlagen-Tag"
+    },
+    "repository_plural": {
+        "en": "Repositories",
+        "de": "Repositories"
     },
     "contentRepository_singular": {
         "en": "ContentRepository",

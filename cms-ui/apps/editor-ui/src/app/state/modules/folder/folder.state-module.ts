@@ -36,7 +36,7 @@ import {
     plural,
 } from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { ApplicationStateService } from '../../providers';
+import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch, concatUnique, getNormalizrSchema } from '../../state-utils';
 import { FocusListAction } from '../editor/editor.actions';
 import { AddEntitiesAction, UpdateEntitiesAction } from '../entity/entity.actions';

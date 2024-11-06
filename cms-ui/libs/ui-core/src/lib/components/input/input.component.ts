@@ -23,7 +23,8 @@ import { generateFormProvider } from '../../utils';
  * @see https://github.com/angular/angular/blob/8.2.9/packages/forms/src/validators.ts#L60
  */
 const EMAIL_REGEXP =
-    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
+    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'+
+    '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
 
 /**
  * Telephone number validator regex
@@ -31,7 +32,7 @@ const EMAIL_REGEXP =
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/26516985
  */
-const TEL_REGEXP = '^([()\\- x+]*\d[()\\- x+]*){4,16}$';
+const TEL_REGEXP = '^([()\\- x+]*d[()\\- x+]*){4,16}$';
 
 /**
  * URL validator regex
@@ -130,6 +131,13 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     placeholder: string;
 
     /**
+     * Wether the element should be clearable or not
+     */
+    @Input()
+    public clearable = false;
+
+
+    /**
      * Sets the readonly state of the input
      */
     @Input()
@@ -177,11 +185,14 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     @Output()
     change = new EventEmitter<string | number>();
 
+    @Output()
+    valueCleared = new EventEmitter<void>();
+
     @ViewChild('inputElement', { static: true })
-    private inputElement: ElementRef;
+    public inputElement: ElementRef<HTMLInputElement>;
 
     @ViewChild('labelElement', { static: true })
-    private labelElement: ElementRef;
+    private labelElement: ElementRef<HTMLLabelElement>;
 
     private currentValue: string | number;
 
@@ -272,11 +283,18 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
         this.change.emit(value);
     }
 
+
+
     writeValue(valueToWrite: any): void {
         const value = this.normalizeValue(valueToWrite);
         if (value !== this.currentValue) {
             this.renderer.setProperty(this.inputElement.nativeElement, 'value', this.currentValue = value);
         }
+    }
+
+    clear(): void {
+        this.writeValue('');
+        this.valueCleared.emit();
     }
 
     // ValueAccessor members

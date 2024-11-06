@@ -1,24 +1,21 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
     EditableTag,
     Form,
     ItemInNode,
     Raw,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn ,
-    TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { merge, Observable } from 'rxjs';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Observable, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 /**
@@ -54,14 +51,14 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
     private onChangeFn: TagPropertiesChangedFn;
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private i18n: I18nService,
     ) { }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.selectedInternalForm = new SelectedItemHelper('form', context.node.id, this.api.folders);
+        this.selectedInternalForm = new SelectedItemHelper('form', context.node.id, this.client);
 
         this.internalFormDisplayValue$ = merge(
             this.selectedInternalForm.selectedItem$.pipe(
@@ -74,7 +71,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
                          * Also, null is emitted in case a referenced form got deleted and the tag property data was refetched.
                          * (Since the formId in tagProperty gets removed).
                          */
-                         return this.i18n.translate('editor.form_no_selection');
+                        return this.i18n.translate('editor.form_no_selection');
                     }
                 }),
             ),
@@ -123,7 +120,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
      * to newSelectedForm. This method must only be called in response to
      * user input.
      */
-     changeSelectedForm(newSelectedForm: ItemInNode<Form<Raw>>): void {
+    changeSelectedForm(newSelectedForm: ItemInNode<Form<Raw>>): void {
         let selectedInternalForm: ItemInNode<Form<Raw>>;
 
         if (typeof newSelectedForm === 'string') {
@@ -151,7 +148,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
     /**
      * Opens the repository browser to allow the user to select an internal form.
      */
-     browseForForm(): void {
+    browseForForm(): void {
         let contentLanguage: string;
         if (this.form) {
             contentLanguage = this.form.languages[0];
@@ -163,11 +160,11 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
     /**
      * Used to update the currently edited TagProperty with external changes.
      */
-     private updateTagProperty(newValue: TagPartProperty): void {
+    private updateTagProperty(newValue: TagPartProperty): void {
         if (newValue.type !== TagPropertyType.CMSFORM) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FormUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as CmsFormTagPartProperty;
+        this.tagProperty = newValue ;
 
         this.selectedInternalForm.setSelectedItem(this.tagProperty.formId || null);
 

@@ -8,7 +8,6 @@ import {
     AccessControlledType,
     GcmsNormalizer,
     GcmsPermission,
-    GcmsTestData,
     Group,
     GroupCreateRequest,
     GroupPermissionsListOptions,
@@ -26,14 +25,16 @@ import {
     PermissionsSet,
     Raw,
     RecursivePartial,
+    ResponseCode,
     User,
 } from '@gentics/cms-models';
+import { getExampleEntityStore, getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService, NodeOperations } from '../..';
+import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { TranslatedNotificationOptions } from '../../i18n-notification';
@@ -161,12 +162,12 @@ describe('GroupOperations', () => {
         addEntitySpy = spyOn(entityManager, 'addEntity').and.callThrough();
         addEntitiesSpy = spyOn(entityManager, 'addEntities').and.callThrough();
 
-        mockUserRaw = GcmsTestData.getExampleFolderData({ id: 1, userId: 1 }).editor;
+        mockUserRaw = getExampleFolderData({ id: 1, userId: 1 }).editor;
         mockGroups = createGroups(MOCKED_GROUPS_COUNT);
 
         appState.mockState({
             entity: {
-                group: GcmsTestData.getExampleEntityStore().group,
+                group: getExampleEntityStore().group,
             },
         });
     });
@@ -445,7 +446,7 @@ describe('GroupOperations', () => {
                 .reduce((result, current) => ({ ...result, [current]: groupsFromStateRaw[1][current] }), {}) as Group<Raw>;
             mockUserRaw.groups = [ creatingUserGroup ];
             const mockResponse: GroupUserCreateResponse = {
-                responseInfo: { responseCode: 'OK' },
+                responseInfo: { responseCode: ResponseCode.OK },
                 user: mockUserRaw,
                 messages: [],
             };

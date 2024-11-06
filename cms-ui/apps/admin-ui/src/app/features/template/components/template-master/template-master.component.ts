@@ -1,30 +1,58 @@
-import { AdminUIModuleRoutes, BO_PERMISSIONS, NodeBO, TemplateBO } from '@admin-ui/common';
+import {
+    AdminUIEntityDetailRoutes,
+    AdminUIModuleRoutes,
+    BO_PERMISSIONS,
+    NodeBO,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_ENTITY_LOADED,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    TemplateBO,
+} from '@admin-ui/common';
 import {
     ErrorHandler,
     I18nNotificationService,
     I18nService,
     NodeOperations,
     PermissionsService,
+    TemplateOperations,
     TemplateTableLoaderService,
 } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Raw, Template } from '@gentics/cms-models';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
+import {
+    AnyModelType,
+    Feature,
+    GcmsPermission,
+    LocalizeRequest,
+    Node,
+    NormalizableEntityTypesMap,
+    Raw,
+    Response,
+    Template,
+    UnlocalizeRequest,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { ModalService, TableAction, TableActionClickEvent, TableRow } from '@gentics/ui-core';
-import { of } from 'rxjs';
+import { ModalService, TableAction, TableActionClickEvent, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
+import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 import { AssignTemplatesToNodesModalComponent } from '../assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
-import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
 import { CreateTemplateModalComponent } from '../create-template-modal/create-template-modal.component';
 
 const NODE_ID_PARAM = 'nodeId';
-const LINK_TO_FOLDER_ACTION = 'linkToFolder';
-const LINK_TO_NODE_ACTION = 'linkToNode';
-const COPY_ACTION = 'copy';
+const OPERATION_FOREGROUND_TIME_MS = 2_0000;
+
+enum Action {
+    LINK_TO_FOLDER = 'linkToFolder',
+    LINK_TO_NODE = 'linkToNode',
+    COPY = 'copy',
+    LOCALIZE = 'localize',
+    UNLOCALIZE = 'unlocalize',
+}
+
 
 @Component({
     selector: 'gtx-template-master',
@@ -49,10 +77,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         protected nodeOperations: NodeOperations,
         protected modalService: ModalService,
         protected loader: TemplateTableLoaderService,
+        protected operations: TemplateOperations,
         protected i18n: I18nService,
         protected notification: I18nNotificationService,
         protected permissions: PermissionsService,
-        protected templateTableLoader: TemplateTableLoaderService,
         protected errorHandler: ErrorHandler,
         protected copyTemplateComponent: CopyTemplateService,
     ) {
@@ -89,8 +117,9 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         this.actions = [
             {
-                id: COPY_ACTION,
+                id: Action.COPY,
                 icon: 'content_copy',
+                iconHollow: true,
                 label: this.i18n.instant('shared.copy'),
                 type: 'secondary',
                 enabled: (template) => template[BO_PERMISSIONS].includes(GcmsPermission.EDIT),
@@ -98,7 +127,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
             {
-                id: LINK_TO_NODE_ACTION,
+                id: Action.LINK_TO_NODE,
                 icon: 'device_hub',
                 label: this.i18n.instant('template.assign_to_nodes'),
                 type: 'primary',
@@ -107,7 +136,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
             {
-                id: LINK_TO_FOLDER_ACTION,
+                id: Action.LINK_TO_FOLDER,
                 icon: 'folder',
                 label: this.i18n.instant('template.assign_to_folders'),
                 type: 'secondary',
@@ -116,10 +145,31 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
         ];
+
+        if (this.appState.now.features.global[Feature.MULTICHANNELLING]) {
+            this.actions.push({
+                id: Action.LOCALIZE,
+                icon: 'insert_drive_file',
+                label: this.i18n.instant('template.localize'),
+                type: 'secondary',
+                enabled: template => template == null || (template.inherited),
+                multiple: true,
+                single: true,
+            },
+            {
+                id: Action.UNLOCALIZE,
+                icon: 'restore_page',
+                label: this.i18n.instant('template.unlocalize'),
+                type: 'warning',
+                enabled: template => template == null || (!template.inherited && !template.master),
+                multiple: true,
+                single: true,
+            })
+        }
     }
 
     public handleNodeSelect(row: TableRow<NodeBO>): void {
-        this.router.navigate([`/${AdminUIModuleRoutes.TEMPLATES}`, { [NODE_ID_PARAM]: row.item.id }], { relativeTo: this.route });
+        this.router.navigate([`/${AdminUIModuleRoutes.TEMPLATES}/${row.item.id}`], { relativeTo: this.route });
     }
 
     public navigateBack(): void {
@@ -150,26 +200,45 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 .map(template => this.loader.mapToBusinessObject(template));
         }
 
-        switch (event.actionId) {
-            case COPY_ACTION:
+        switch (event.actionId as Action) {
+            case Action.COPY:
                 this.copyTemplate(event.item);
                 return;
 
-            case LINK_TO_FOLDER_ACTION:
+            case Action.LINK_TO_FOLDER:
                 this.linkTemplatesToFolders(getTemplates());
                 return;
 
-            case LINK_TO_NODE_ACTION:
+            case Action.LINK_TO_NODE:
                 this.linkTemplatesToNodes(getTemplates());
+                return;
+
+            case Action.LOCALIZE:
+                this.localizeTemplate(getTemplates());
+                return;
+
+            case Action.UNLOCALIZE:
+                this.unlocalizeTemplate(getTemplates());
                 return;
         }
     }
 
-    protected override async navigateToEntityDetails(entityId: string | number): Promise<void> {
-        await this.router.navigate(
-            ['./', { outlets: { detail: [this.detailPath || this.entityIdentifier, this.activeNode.id, entityId] } }],
-            { relativeTo: this.route },
-        );
+    protected override async navigateToEntityDetails(row: TableRow<TemplateBO>): Promise<void> {
+        const fullUrl = getFullPrimaryPath(this.route);
+        const commands: any[] = [
+            fullUrl,
+            { outlets: { [ROUTE_DETAIL_OUTLET]: [AdminUIEntityDetailRoutes.TEMPLATE, this.activeNode?.id, row.id] } },
+        ];
+        const extras: NavigationExtras = { relativeTo: this.route };
+
+        if (this.navigateWithEntity()) {
+            extras.state = {
+                [ROUTE_ENTITY_LOADED]: true,
+                [ROUTE_ENTITY_RESOLVER_KEY]: row.item,
+            };
+        }
+
+        await this.router.navigate(commands, extras);
         this.appState.dispatch(new FocusEditor());
     }
 
@@ -189,8 +258,8 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         const created = await this.copyTemplateComponent.createCopy(this.activeNode, loadedTemplate);
 
         if (created) {
-            this.templateTableLoader.reload();
-            this.navigateToEntityDetails(created.id);
+            this.loader.reload();
+            this.navigateToEntityDetails({ item: created, id: `${created?.id as string}` });
         }
     }
 
@@ -287,4 +356,57 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         await dialog.open();
     }
+
+    protected localizeTemplate(templates: TemplateBO[]): void {
+        this.executeTemplateOperation(templates.filter(template => template.inherited),
+            (templateId, options) => this.operations.localizeTemplate(templateId, options), 'template.localize_success');
+    }
+
+    protected unlocalizeTemplate(templates: TemplateBO[]): void {
+        this.executeTemplateOperation(templates.filter(template => !template.inherited && !template.master),
+            (templateId, options) => this.operations.unlocalizeTemplate(templateId, options), 'template.unlocalize_success');
+    }
+
+
+    private executeTemplateOperation(
+        templates: TemplateBO[],
+        operation: (id: number, options: LocalizeRequest | UnlocalizeRequest) => Observable<Response>,
+        i18nMessage: string,
+    ): void {
+        if (!this.isChannel()) {
+            return;
+        }
+        const channelId = this.activeNode.id;
+
+        Promise.all(
+            templates.map(template => {
+                return operation(template.id, {
+                    channelId,
+                    foregroundTime: OPERATION_FOREGROUND_TIME_MS,
+                }).toPromise().then(_success => {
+                    this.notification.show({
+                        type: 'success',
+                        message: i18nMessage,
+                        translationParams: {
+                            templateName: template.name,
+                        },
+                    });
+                })
+            }),
+        ).then(_success => {
+            this.selected = [];
+            this.loader.reload();
+        });
+    }
+
+
+    private isChannel(): boolean {
+        if (this.activeNode?.masterNodeId === this.activeNode?.id) {
+            return false;
+        }
+
+        return true;
+    }
+
+
 }

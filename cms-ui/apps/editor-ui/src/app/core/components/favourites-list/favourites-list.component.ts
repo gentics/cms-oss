@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
+import { distinctUntilChanged, filter, map, skip, take } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FavouritesService } from '../../providers/favourites/favourites.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
@@ -13,15 +15,14 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     selector: 'favourites-list',
     templateUrl: './favourites-list.component.html',
     styleUrls: ['./favourites-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
-export class FavouritesList {
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FavouritesListComponent {
 
-    @Output() navigate = new EventEmitter<Favourite>(false);
+    @Output()
+    public navigate = new EventEmitter<Favourite>(false);
+
     favourites$: Observable<FavouriteWithDisplayDetails[]>;
-
-    private canSeeMultipleNodes$: Observable<boolean>;
-    private iconForItemType = iconForItemType;
 
     constructor(
         private favourites: FavouritesService,
@@ -31,20 +32,24 @@ export class FavouritesList {
         private route: ActivatedRoute,
         private router: Router,
     ) {
-
         this.favourites$ = this.favourites.list$;
-
-        this.canSeeMultipleNodes$ = this.appState
-            .select(state => state.folder.nodes.list.length > 1);
     }
 
     public favouriteClicked(item: Favourite): void {
         this.navigate.emit(item);
         switch (item.type) {
-            case 'folder': this.openFolder(item); break;
-            case 'page': this.openPage(item); break;
-            case 'image': this.openImage(item); break;
-            case 'file': this.openFile(item); break;
+            case 'folder':
+                this.openFolder(item);
+                break;
+            case 'page':
+                this.openPage(item);
+                break;
+            case 'image':
+                this.openImage(item);
+                break;
+            case 'file':
+                this.openFile(item);
+                break;
             default:
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`Invalid item type ${item.type} in FavouritesList.navigateTo`);
@@ -56,7 +61,7 @@ export class FavouritesList {
     }
 
     reorder(e: ISortableEvent): void {
-        let newOrder = e.sort(this.favourites.getList());
+        const newOrder = e.sort(this.favourites.getList());
         this.favourites.reorder(newOrder);
     }
 
@@ -75,21 +80,19 @@ export class FavouritesList {
 
         return this.router.navigate(newRoute)
             .then(success => {
-                if (!success) { return false; }
+                if (!success) {
+                    return false;
+                }
+
                 // Wait until loaded
-                return this.appState
-                    .select(state => state.folder)
-                    .map(folderState =>
-                        folderState.folders.fetching ||
-                        folderState.pages.fetching ||
-                        folderState.files.fetching ||
-                        folderState.images.fetching)
-                    .distinctUntilChanged(isEqual)
-                    .skip(1)
-                    .filter(fetching => fetching === false)
-                    .take(1)
-                    .mapTo(true)
-                    .toPromise();
+                return this.appState.select(state => state.folder).pipe(
+                    map(state => areItemsLoading(state)),
+                    distinctUntilChanged(isEqual),
+                    skip(1),
+                    filter(fetching => fetching === false),
+                    take(1),
+                    map(() => true),
+                ).toPromise();
             });
     }
 
@@ -114,7 +117,7 @@ export class FavouritesList {
             .then(parentFolderId => this.navigateToFolder(parentFolderId, item.nodeId))
             .then(succeeded => {
                 if (succeeded) {
-                    const editMode = type === 'page' ? 'preview' : 'editProperties';
+                    const editMode = type === 'page' ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
                     this.navigate.emit(item);
                     this.navigationService
                         .detailOrModal(item.nodeId, type, item.id, editMode)

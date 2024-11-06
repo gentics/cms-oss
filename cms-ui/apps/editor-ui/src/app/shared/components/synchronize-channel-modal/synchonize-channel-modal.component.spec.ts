@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Injectable, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Injectable, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ChannelSyncRequest, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
+import { ChannelSyncRequest, Feature, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { componentTest } from '../../../../testing/component-test';
 import { mockPipes } from '../../../../testing/mock-pipe';
@@ -10,10 +10,10 @@ import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
-import { replaceInState, REPLACE_MOCK_OBJECT, TestApplicationState } from '../../../state/test-application-state.mock';
+import { replaceInState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { SynchronizeChannelModal } from './synchonize-channel-modal.component';
 
-describe('SynchronizeChannelModal:', () => {
+describe('SynchronizeChannelModal', () => {
 
     let apiBase: MockApiBase;
     let appState: TestApplicationState;
@@ -40,6 +40,7 @@ describe('SynchronizeChannelModal:', () => {
                 MockProgressBar,
                 mockPipes('capitalize', 'i18n', 'truncatePath', 'itemIsLocal', 'itemIsLocalized'),
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         });
 
         apiBase = TestBed.get(ApiBase);
@@ -223,6 +224,11 @@ describe('SynchronizeChannelModal:', () => {
 
     it('fetches a list of sync nodes from the server when opened for an inherited folder',
         componentTest(() => SynchronizeChannelModal, (fixture, modal) => {
+            appState.mockState({
+                features: {
+                    [Feature.MULTICHANNELLING]: true,
+                },
+            });
             modal.channel = channelOneLevelDeep;
             modal.item = {
                 type: 'folder',
@@ -238,6 +244,11 @@ describe('SynchronizeChannelModal:', () => {
 
     it('fetches the child elements from the server when opened for a folder',
         componentTest(() => SynchronizeChannelModal, (fixture, modal) => {
+            appState.mockState({
+                features: {
+                    [Feature.MULTICHANNELLING]: true,
+                },
+            });
             modal.channel = channelOneLevelDeep;
             modal.item = { type: 'folder', id: 1234 } as Folder;
 
@@ -248,6 +259,11 @@ describe('SynchronizeChannelModal:', () => {
 
     it('re-fetches the child elements from the server when "recursive" is checked',
         componentTest(() => SynchronizeChannelModal, (fixture, modal) => {
+            appState.mockState({
+                features: {
+                    [Feature.MULTICHANNELLING]: true,
+                },
+            });
             modal.channel = channelOneLevelDeep;
             modal.item = { type: 'folder', id: 1234 } as Folder;
 
@@ -391,7 +407,7 @@ describe('SynchronizeChannelModal:', () => {
 
             getConfirmButton(fixture).click.emit();
 
-            let expected: ChannelSyncRequest = {
+            const expected: ChannelSyncRequest = {
                 channelId: channelOneLevelDeep.id,
                 masterId: masterNode.id,
                 recursive: false,

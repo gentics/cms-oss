@@ -1,24 +1,34 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, forwardRef, Inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewEncapsulation } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
-import { ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
-import { merge, Observable, Subscription } from 'rxjs';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Inject,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    Output,
+    SimpleChanges,
+    ViewEncapsulation,
+} from '@angular/core';
+import { AbstractControl, ControlValueAccessor, UntypedFormControl, ValidationErrors, Validator } from '@angular/forms';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { ItemInNode } from '@gentics/cms-models';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { GcmsUiServices, GCMS_UI_SERVICES_PROVIDER, I18nService } from '../../core';
+import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../core';
 
 export type ItemWithNode = { id: number; nodeId: number; } | null;
 @Component({
     selector: 'gtx-form-browse-box',
     templateUrl: './form-browse-box.component.html',
     styleUrls: ['./form-browse-box.component.scss'],
-    providers: [{
-        provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
-        useExisting: forwardRef(() => FormBrowseBoxComponent), // tells Angular to use the existing instance
-        multi: true,
-    }, {
-        provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-        useExisting: forwardRef(() => FormBrowseBoxComponent), // for now validation will be put into the component, but can be separated
-        multi: true,
-    }],
+    providers: [
+        generateFormProvider(FormBrowseBoxComponent),
+        generateValidatorProvider(FormBrowseBoxComponent),
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
 })
@@ -53,7 +63,7 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
     ) {}
 
     ngOnInit(): void {
-        this.selectedItemHelper = this.gcmsUiServices.createSelectedItemsHelper(this.options.allowedSelection as "page" | "folder" | "file" | "image" | "form");
+        this.selectedItemHelper = this.gcmsUiServices.createSelectedItemsHelper(this.options.allowedSelection as 'page' | 'folder' | 'file' | 'image' | 'form');
         this.itemDisplayValue$ = this.trackDisplayValue(this.itemControl);
 
         this.valueChangesSubscription = this.itemControl.valueChanges.subscribe((value: ItemWithNode) => {
@@ -187,15 +197,15 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
         }
 
         return this.gcmsUiServices.openRepositoryBrowser({ contentLanguage: this.activeContentLanguage, ...options })
-        .then((selectedItem: ItemInNode) => {
-            this.setValue(selectedItem);
-        });
+            .then((selectedItem: ItemInNode) => {
+                this.setValue(selectedItem);
+            });
     }
 
     /**
      * @returns A string with the breadcrumbs path of the specified Page.
      */
-     private generateBreadcrumbsPath(item: ItemInNode<any>): string {
+    private generateBreadcrumbsPath(item: ItemInNode<any>): string {
         let breadcrumbsPath = '';
         if (item?.path) {
             breadcrumbsPath = item.path.replace('/', '');
@@ -205,9 +215,9 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
             breadcrumbsPath = breadcrumbsPath.split('/').join(' > ');
         }
         return breadcrumbsPath;
-     }
+    }
 
-     private trackDisplayValue(control: UntypedFormControl): Observable<any> {
+    private trackDisplayValue(control: UntypedFormControl): Observable<any> {
         return merge(
             this.selectedItemHelper.selectedItem$.pipe(
                 tap((item: ItemInNode) => this.selectedItemBreadCrumbs = this.generateBreadcrumbsPath(item)),
@@ -247,12 +257,12 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
                     } else {
                         return '';
                     }
-                    
+
                 }),
-            )
+            ),
         ).pipe(
             tap(() => this.changeDetector.markForCheck()),
         );
-     }
+    }
 
 }

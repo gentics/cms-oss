@@ -1,4 +1,4 @@
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 import { deepFreeze } from './deep-freeze';
 
 const TEST_OBJ = {

@@ -1,0 +1,36 @@
+<div class="modal-title">
+    <h5>{{ configuration?.title | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <div class="form-wrapper" [formGroup]="control">
+        <ng-container *ngFor="let ctl of (configuration.controls | gtxEntries)">
+            <gtx-aloha-component-renderer
+                class="dynamic-control"
+                [renderContext]="RENDERING_CONTEXT_MODAL"
+                [type]="configuration.controls[ctl.key].type"
+                [settings]="configuration.controls[ctl.key].options"
+                [formControlName]="ctl.key"
+            ></gtx-aloha-component-renderer>
+        </ng-container>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="handleAbortClick()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="primary"
+        class="confirm-button"
+        [disabled]="!control.valid"
+        (click)="handleConfirmClick()"
+    >
+        {{ 'common.apply_button' | i18n }}
+    </gtx-button>
+</div>

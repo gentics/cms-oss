@@ -1,5 +1,7 @@
 package com.gentics.contentnode.render;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -87,7 +89,7 @@ public class RenderUtils {
 			Node masterNode = node.getMaster();
 			if (masterNode.doPublishContentmap()) {
 				ContentRepository cr = masterNode.getContentRepository();
-				String meshPreviewUrl = masterNode.getMeshPreviewUrl();
+				String meshPreviewUrl = masterNode.getEffectiveMeshPreviewUrl();
 
 				if (cr != null && cr.getCrType() == Type.mesh && !StringUtils.isEmpty(meshPreviewUrl)) {
 					String previewUrl = FilePublisher.getPath(false, true, meshPreviewUrl, node.getPublishDir(), ObjectTransformer.getString(page.getFolder().get("path"), null));
@@ -109,7 +111,7 @@ public class RenderUtils {
 						meshNode.setParentNode(new NodeReference().setUuid(MeshPublisher.getMeshUuid(page.getFolder())).setSchema(new SchemaReferenceImpl().setName(mp.getSchemaName(Folder.TYPE_FOLDER))));
 						meshNode.setSchema(new SchemaReferenceImpl().setName(mp.getSchemaName(Page.TYPE_PAGE)));
 						meshNode.setFields(new FieldMapImpl());
-						mp.handleRenderedEntries(true, masterNode.getId(), () -> meshNode.getFields(), mp.render(mp.getEntries(Page.TYPE_PAGE), null, language, false), null, null, null, null);
+						mp.handleRenderedEntries(true, masterNode.getId(), page.getId(), page.getTType(), () -> meshNode.getFields(), mp.render(mp.getEntries(Page.TYPE_PAGE), null, language, false), null, null, null, null, null);
 
 						HttpPost postMethod = new HttpPost(getPreviewUrl(previewUrl, getMode(renderMode), node));
 
@@ -273,7 +275,6 @@ public class RenderUtils {
 			return "publish";
 		case RenderType.EM_LIVEPREVIEW:
 			return "live";
-		case RenderType.EM_EDIT:
 		case RenderType.EM_ALOHA:
 			return "edit";
 		case RenderType.EM_PREVIEW:

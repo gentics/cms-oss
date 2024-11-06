@@ -1,7 +1,8 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { createDelayedError, createDelayedObservable } from '@admin-ui/testing';
-import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { Folder, GcmsTestData, Raw, RecursivePartial } from '@gentics/cms-models';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Folder, Raw, RecursivePartial } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { takeUntil } from 'rxjs/operators';
 import { FolderOperations } from '.';
@@ -51,7 +52,7 @@ describe('FolderOperations', () => {
     describe('get()', () => {
 
         it('fetches a folder and adds it to the EntityState', fakeAsync(() => {
-            const mockFolder = GcmsTestData.getExampleFolderData({ id: 1 });
+            const mockFolder = getExampleFolderData({ id: 1 });
             api.folders.getItem.and.returnValue(
                 createDelayedObservable({ folder: mockFolder }),
             );

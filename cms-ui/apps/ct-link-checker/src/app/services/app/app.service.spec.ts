@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';

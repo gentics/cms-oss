@@ -1,55 +1,53 @@
-import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter,
     Input,
-    OnDestroy,
+    OnChanges,
     OnInit,
-    Output,
+    SimpleChanges,
 } from '@angular/core';
 import {
     AbstractControl,
-    ControlValueAccessor,
-    UntypedFormControl,
-    UntypedFormGroup,
+    FormControl,
+    FormGroup,
     ValidationErrors,
     ValidatorFn,
     Validators,
 } from '@angular/forms';
-import { GtxJsonValidator } from '@gentics/cms-components';
-import { ContentRepositoryBO, ContentRepositoryType, Feature, Normalized } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
+import {
+    BasepathType,
+    CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX,
+    CONTENT_REPOSITORY_URL_PROPERTY_PREFIX,
+    ContentRepositoryPasswordType,
+    ContentRepositoryType,
+    EditableContentRepositoryProperties,
+    Feature,
+    UrlType,
+    UsernameType,
+} from '@gentics/cms-models';
+import {
+    FormProperties,
+    createPropertyPatternValidator,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+    setControlsValidators,
+} from '@gentics/ui-core';
 
-export interface ContentRepositoryPropertiesFormData {
-    basepath: string;
-    crType: ContentRepositoryType;
-    dbType: string;
-    defaultPermission: string;
-    diffDelete: boolean;
-    elasticsearch: string;
-    instantPublishing: boolean;
-    languageInformation: boolean;
-    name: string;
-    password: string;
-    repeat_password: string;
-    permissionInformation: boolean;
-    permissionProperty: string;
-    projectPerNode: boolean;
-    version: string;
-    url: string;
-    usePassword: boolean;
-    username: string;
-}
-
-export enum ContentRepositoryPropertiesComponentMode {
+export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
     UPDATE = 'update',
+}
+
+export interface ContentRepositoryPropertiesFormData extends EditableContentRepositoryProperties {
+    urlType: UrlType;
+    basepathType: BasepathType;
+    usernameType: UsernameType;
 }
 
 type CRDisplayType = {
@@ -57,52 +55,119 @@ type CRDisplayType = {
     label: string;
 };
 
-/**
- * Defines the data editable by the `ContentRepositoryPropertiesComponent`.
- *
- * To convey the validity state of the user's input, the onChange callback will
- * be called with `null` if the form data is currently invalid.
- */
+const DB_CONTROLS: (keyof EditableContentRepositoryProperties)[] =  [
+    'dbType',
+    'diffDelete',
+    'languageInformation',
+];
+
+const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
+    'defaultPermission',
+    'elasticsearch',
+    'permissionProperty',
+    'projectPerNode',
+    'http2',
+    'noFoldersIndex',
+    'noFilesIndex',
+    'noPagesIndex',
+    'noFormsIndex',
+    'version',
+];
+
 @Component({
     selector: 'gtx-content-repository-properties',
     templateUrl: './content-repository-properties.component.html',
     styleUrls: ['./content-repository-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ContentRepositoryPropertiesComponent)],
+    providers: [
+        generateFormProvider(ContentRepositoryPropertiesComponent),
+        generateValidatorProvider(ContentRepositoryPropertiesComponent),
+    ],
 })
-export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnInit, OnDestroy, ControlValueAccessor {
+export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepositoryPropertiesFormData> implements OnInit, OnChanges {
+
+    public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
     @Input()
-    mode: ContentRepositoryPropertiesComponentMode;
+    public mode: ContentRepositoryPropertiesMode;
 
     @Input()
-    value: ContentRepositoryBO<Normalized>;
-
-    @Output()
-    valueChange = new EventEmitter<ContentRepositoryBO<Normalized>>();
-
-    @Output()
-    isValidChange = new EventEmitter<boolean>();
-
-    fgProperties: UntypedFormGroup;
+    public crType?: ContentRepositoryType;
 
     /** selectable options for contentRepository input crtype */
     public crTypes: CRDisplayType[] = [];
 
-    isModeUpdate: boolean;
-    isCrTypeMesh: boolean;
-    usePassword: boolean;
-    meshCrEnabled = false;
+    public passwordRepeat = '';
+    public meshCrEnabled = false;
 
-    private subscriptions: Subscription[] = [];
+    public showBasepath = false;
+
+    /** selectable options for contentRepository input passwordType */
+    public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
+        {
+            id: ContentRepositoryPasswordType.NONE,
+            label: 'contentRepository.passwordType_none',
+        },
+        {
+            id: ContentRepositoryPasswordType.VALUE,
+            label: 'contentRepository.passwordType_value',
+        },
+        {
+            id: ContentRepositoryPasswordType.PROPERTY,
+            label: 'contentRepository.passwordType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input usernameType */
+    public readonly USERNAME_TYPES: { id: UsernameType; label: string; }[] = [
+        {
+            id: UsernameType.VALUE,
+            label: 'contentRepository.usernameType_value',
+        },
+        {
+            id: UsernameType.PROPERTY,
+            label: 'contentRepository.usernameType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input urlType */
+    public readonly URL_TYPES: { id: UrlType; label: string; }[] = [
+        {
+            id: UrlType.VALUE,
+            label: 'contentRepository.urlType_value',
+        },
+        {
+            id: UrlType.PROPERTY,
+            label: 'contentRepository.urlType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input basepathType */
+    public readonly BASEPATH_TYPES: { id: BasepathType; label: string; }[] = [
+        {
+            id: BasepathType.VALUE,
+            label: 'contentRepository.basepathType_value',
+        },
+        {
+            id: BasepathType.PROPERTY,
+            label: 'contentRepository.basepathType_property',
+        },
+    ];
 
     constructor(
-        private changeDetector: ChangeDetectorRef,
+        changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
-    ) { }
+    ) {
+        super(changeDetector);
+    }
 
     private validatorPasswordsDontMatch: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-        const error = control.value !== this.fgProperties?.get('repeat_password')?.value;
+        if (control.value == null || control.value === '') {
+            return null;
+        }
+
+        const error = control.value !== this.passwordRepeat;
+
         if (error) {
             return { passwordsDontMatch: true };
         } else {
@@ -110,8 +175,9 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
         }
     }
 
-    ngOnInit(): void {
-        this.fgPropertiesInit();
+    public ngOnInit(): void {
+        super.ngOnInit();
+
         this.updateCRTypes();
 
         this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
@@ -121,19 +187,30 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
         }));
     }
 
-    ngAfterViewInit(): void {
-        // Set FormGroup logic and rendering dependencies from external value
-        this.isModeUpdate = this.mode === ContentRepositoryPropertiesComponentMode.UPDATE;
-        this.isCrTypeMesh = this.fgProperties.get('crType').value === ContentRepositoryType.MESH;
-        this.usePassword = this.value.usePassword;
-        // refresh form with not null dependencies
-        this.configureFormControls(this.value);
-        this.fgProperties.updateValueAndValidity();
-        this.changeDetector.markForCheck();
+    public ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.mode && this.form) {
+            setControlsEnabled(this.form, ['crType'], this.mode !== ContentRepositoryPropertiesMode.UPDATE, { emitEvent: true });
+        }
     }
 
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+    protected override onValueReset(): void {
+        super.onValueReset();
+        if (this.form) {
+            this.form.controls.password.setValue(null);
+        }
+        this.passwordRepeat = '';
+    }
+
+    public updatePasswordRepeat(value: string): void {
+        this.passwordRepeat = value;
+        if (this.form) {
+            const ctl = this.form.controls.password;
+            if (ctl) {
+                ctl.updateValueAndValidity();
+            }
+        }
     }
 
     protected updateCRTypes(): void {
@@ -154,177 +231,105 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
         this.crTypes = types;
     }
 
-    writeValue(value: ContentRepositoryBO<Normalized>): void {
-        if (!value || !this.fgProperties) {
-            return;
-        }
-        this.value = value;
-        this.fgPropertiesUpdate(value);
-    }
-
-    registerOnChange(fn: FormControlOnChangeFn<ContentRepositoryBO<Normalized>>): void {
-        this.subscriptions.push(this.fgProperties.valueChanges.pipe(
-            map((formData: ContentRepositoryPropertiesFormData) => {
-                this.value = this.assembleValue(formData);
-
-                // Set FormGroup logic and rendering dependencies from internal value
-                this.isCrTypeMesh = this.fgProperties.get('crType').value === ContentRepositoryType.MESH;
-                this.usePassword = this.fgProperties.value.usePassword;
-
-                this.configureFormControls(formData);
-
-                return this.value;
-            }),
-            tap(() => this.isValidChange.emit(this.fgProperties.valid)),
-        ).subscribe(fn))
-    }
-
-    registerOnTouched(fn: FormControlOnTouchedFn): void { }
-
-    /**
-     * Alter FormGroup depending from values, which input fields appear and disappear or change validation logic.
-     *
-     * @param value values of active fields to be to (re-)initialized
-     */
-    private configureFormControls(value: ContentRepositoryBO<Normalized> | ContentRepositoryPropertiesFormData): void {
-        const _options = { emitEvent: false };
-
-        // handle JSON data
-        let _elasticsearch: string;
-        if (value.elasticsearch instanceof Object) {
-            try {
-                _elasticsearch = JSON.stringify(value.elasticsearch, null, 4);
-            } catch (error) {
-                _elasticsearch = String(value.elasticsearch);
-            }
-        } else if (typeof value.elasticsearch === 'string') {
-            _elasticsearch = value.elasticsearch;
-        } else {
-            _elasticsearch = '';
-        }
-
-        if (this.isCrTypeMesh) {
-            this.fgProperties.removeControl('basepath', _options);
-            this.fgProperties.removeControl('dbType', _options);
-            this.fgProperties.setControl('defaultPermission', new UntypedFormControl(value.defaultPermission), _options);
-            this.fgProperties.removeControl('diffDelete', _options);
-            this.fgProperties.setControl('elasticsearch', new UntypedFormControl(_elasticsearch, GtxJsonValidator), _options);
-            this.fgProperties.removeControl('languageInformation', _options);
-            this.fgProperties.setControl('permissionProperty', new UntypedFormControl(value.permissionProperty), _options);
-            this.fgProperties.setControl('projectPerNode', new UntypedFormControl(value.projectPerNode), _options);
-            this.fgProperties.setControl('version', new UntypedFormControl(value.version), _options);
-        } else {
-            this.fgProperties.setControl('basepath', new UntypedFormControl(value.basepath), _options);
-            this.fgProperties.setControl('dbType', new UntypedFormControl(value.dbType, Validators.required), _options);
-            this.fgProperties.removeControl('defaultPermission', _options);
-            this.fgProperties.setControl('diffDelete', new UntypedFormControl(value.diffDelete), _options);
-            this.fgProperties.removeControl('elasticsearch', _options);
-            this.fgProperties.setControl('languageInformation', new UntypedFormControl(value.languageInformation), _options);
-            this.fgProperties.removeControl('permissionProperty', _options);
-            this.fgProperties.removeControl('projectPerNode', _options);
-            this.fgProperties.removeControl('version', _options);
-        }
-
-        if (this.usePassword) {
-            this.fgProperties.setControl('password', new UntypedFormControl(value.password, this.validatorPasswordsDontMatch), _options);
-            this.fgProperties.setControl('repeat_password', new UntypedFormControl((value as any).repeat_password ?? ''), _options);
-        } else {
-            this.fgProperties.removeControl('password', _options);
-            this.fgProperties.removeControl('repeat_password', _options);
-        }
-    }
-
-    /**
-     * Initialize form 'Properties'
-     */
-    private fgPropertiesInit(): void {
-        // Set FormGroup logic and rendering dependencies initially.
-        this.isModeUpdate = this.mode === ContentRepositoryPropertiesComponentMode.UPDATE;
-        this.isCrTypeMesh = this.value ? this.value.crType === ContentRepositoryType.MESH : false;
-        this.usePassword = this.value ? this.value.usePassword : false;
-
-        this.fgProperties = new UntypedFormGroup({
-            ...(!this.isCrTypeMesh && { basepath: new UntypedFormControl('') }),
-            // once a contentRepository is created it cannot change its type
-            crType: new UntypedFormControl({ value: null, disabled: this.isModeUpdate }, Validators.required),
-            ...(!this.isCrTypeMesh && { dbType: new UntypedFormControl('', Validators.required) }),
-            ...(this.isCrTypeMesh && { defaultPermission: new UntypedFormControl('') }),
-            ...(!this.isCrTypeMesh && { diffDelete: new UntypedFormControl(false) }),
-            ...(this.isCrTypeMesh && { elasticsearch: new UntypedFormControl('', GtxJsonValidator) }),
-            instantPublishing: new UntypedFormControl(false),
-            ...(!this.isCrTypeMesh && { languageInformation: new UntypedFormControl(false) }),
-            name: new UntypedFormControl('', Validators.required),
-            ...(this.usePassword && { password: new UntypedFormControl('', this.validatorPasswordsDontMatch) }),
-            ...(this.usePassword && { repeat_password: new UntypedFormControl('') }),
-            permissionInformation: new UntypedFormControl(''),
-            ...(this.isCrTypeMesh && { permissionProperty: new UntypedFormControl(false) }),
-            ...(this.isCrTypeMesh && { projectPerNode: new UntypedFormControl(false) }),
-            ...(this.isCrTypeMesh && { version: new UntypedFormControl('') }),
-            url: new UntypedFormControl('', Validators.required),
-            usePassword: new UntypedFormControl(false),
-            username: new UntypedFormControl('', Validators.required),
+    protected createForm(): FormGroup<FormProperties<ContentRepositoryPropertiesFormData>> {
+        return new FormGroup<FormProperties<ContentRepositoryPropertiesFormData>>({
+            basepathType: new FormControl(this.value?.basepathType ?? this.value?.basepathProperty
+                ? BasepathType.PROPERTY
+                : BasepathType.VALUE,
+            ),
+            basepath: new FormControl(this.value?.basepath || ''),
+            basepathProperty: new FormControl(this.value?.basepathProperty || '', [
+                createPropertyPatternValidator(CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX),
+            ]),
+            crType: new FormControl(this.value?.crType || null, Validators.required),
+            dbType: new FormControl(this.value?.dbType || null, Validators.required),
+            defaultPermission: new FormControl(this.value?.defaultPermission || ''),
+            diffDelete: new FormControl(this.value?.diffDelete ?? false),
+            elasticsearch: new FormControl<any>(this.value?.elasticsearch || '', GtxJsonValidator),
+            instantPublishing: new FormControl(this.value?.instantPublishing ?? false),
+            languageInformation: new FormControl(this.value?.languageInformation ?? false),
+            name: new FormControl(this.value?.name || '', Validators.required),
+            passwordType: new FormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
+            password: new FormControl('', this.validatorPasswordsDontMatch),
+            passwordProperty: new FormControl(this.value?.passwordProperty || '', [
+                createPropertyPatternValidator(CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX),
+            ]),
+            permissionProperty: new FormControl(this.value?.permissionProperty || ''),
+            permissionInformation: new FormControl(this.value?.permissionInformation ?? false),
+            projectPerNode: new FormControl(this.value?.projectPerNode ?? false),
+            version: new FormControl(this.value?.version || ''),
+            url: new FormControl(this.value?.url || '', Validators.required),
+            urlType: new FormControl(this.value?.urlType ?? this.value?.urlProperty
+                ? UrlType.PROPERTY
+                : UrlType.VALUE,
+            ),
+            urlProperty: new FormControl(this.value?.urlProperty || '', [
+                Validators.required,
+                createPropertyPatternValidator(CONTENT_REPOSITORY_URL_PROPERTY_PREFIX),
+            ]),
+            usernameType: new FormControl(this.value?.usernameType ?? this.value?.usernameProperty
+                ? UsernameType.PROPERTY
+                : UsernameType.VALUE,
+            ),
+            username: new FormControl(this.value?.username || '', Validators.required),
+            usernameProperty: new FormControl(this.value?.usernameProperty || '', [
+                Validators.required,
+                createPropertyPatternValidator(CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX),
+            ]),
+            http2: new FormControl(this.value?.http2 ?? false),
+            noFoldersIndex: new FormControl(this.value?.noFoldersIndex ?? false),
+            noFilesIndex: new FormControl(this.value?.noFilesIndex ?? false),
+            noPagesIndex: new FormControl(this.value?.noPagesIndex ?? false),
+            noFormsIndex: new FormControl(this.value?.noFormsIndex ?? false),
         });
     }
 
-    private fgPropertiesUpdate(value: Partial<ContentRepositoryBO<Normalized>>): void {
-        const _value: ContentRepositoryPropertiesFormData = {
-            ...(!this.isCrTypeMesh && { basepath: value.basepath }),
-            crType: value.crType,
-            ...(!this.isCrTypeMesh && { dbType: value.dbType }),
-            ...(this.isCrTypeMesh && { defaultPermission: value.defaultPermission }),
-            ...(!this.isCrTypeMesh && { diffDelete: value.diffDelete }),
-            ...(this.isCrTypeMesh && { elasticsearch: value.elasticsearch ? JSON.stringify(value.elasticsearch, null, 4) : '' }),
-            instantPublishing: value.instantPublishing,
-            ...(!this.isCrTypeMesh && { languageInformation: value.languageInformation }),
-            name: value.name,
-            ...(this.usePassword && { password: value.password ?? '' }),
-            ...(this.usePassword && { repeat_password: value.password ?? '' }),
-            permissionInformation: value.permissionInformation,
-            ...(this.isCrTypeMesh && { permissionProperty: value.permissionProperty }),
-            ...(this.isCrTypeMesh && { projectPerNode: value.projectPerNode }),
-            ...(this.isCrTypeMesh && { version: value.version }),
-            url: value.url,
-            usePassword: value.usePassword,
-            username: value.username,
-        };
-        this.fgProperties.setValue(_value);
-        this.fgProperties.markAsPristine();
-    }
+    protected configureForm(value: ContentRepositoryPropertiesFormData, loud?: boolean): void {
+        const options = { emitEvent: !!loud };
 
-    private assembleValue(formData: ContentRepositoryPropertiesFormData): ContentRepositoryBO<Normalized> {
-        const _output: ContentRepositoryBO<Normalized> = {
-            globalId: this.value.globalId,
-            id: this.value.id,
-            name: formData.name,
-            usePassword: formData.usePassword,
-            version: this.value.version,
-            checkDate: this.value.checkDate,
-            checkStatus: this.value.checkStatus,
-            checkResult: this.value.checkResult,
-            statusDate: this.value.statusDate,
-            dataStatus: this.value.dataStatus,
-            dataCheckResult: this.value.dataCheckResult,
-            basepath: formData.basepath,
-            crType: formData.crType,
-            dbType: formData.dbType,
-            defaultPermission: formData.defaultPermission,
-            diffDelete: formData.diffDelete,
-            elasticsearch: null,
-            instantPublishing: formData.instantPublishing,
-            languageInformation: formData.languageInformation,
-            password: formData.password,
-            permissionInformation: formData.permissionInformation,
-            permissionProperty: formData.permissionProperty,
-            projectPerNode: formData.projectPerNode,
-            url: formData.url,
-            username: formData.username,
-        };
-        try {
-            _output.elasticsearch = JSON.parse(formData.elasticsearch);
-        } catch (error) {
-            _output.elasticsearch = null;
+        setControlsEnabled(this.form, ['crType'], this.crType == null || this.mode !== ContentRepositoryPropertiesMode.UPDATE, options);
+        setControlsEnabled(
+            this.form,
+            ['password'],
+            value?.passwordType === ContentRepositoryPasswordType.VALUE ?? false,
+            options,
+        );
+        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY ?? false, options);
+
+        const crType = this.mode === ContentRepositoryPropertiesMode.UPDATE
+            ? this.crType || value?.crType
+            : value?.crType;
+
+        // If no type is selected, disable all options
+        if (crType == null) {
+            setControlsEnabled(this.form, [...DB_CONTROLS, ...MESH_CONTROLS] as any, false, options);
+        } else {
+            setControlsEnabled(this.form, DB_CONTROLS, crType !== ContentRepositoryType.MESH, options);
+            setControlsEnabled(this.form, MESH_CONTROLS, crType === ContentRepositoryType.MESH, options);
         }
-        return _output;
+        if (crType === ContentRepositoryType.MESH) {
+            setControlsValidators(this.form, ['username'], null);
+        } else {
+            setControlsValidators(this.form, ['username'], Validators.required);
+        }
+
+        this.showBasepath = crType !== ContentRepositoryType.MESH;
+
+        setControlsEnabled(this.form, ['url'], value?.urlType === UrlType.VALUE, options);
+        setControlsEnabled(this.form, ['urlProperty'], value?.urlType === UrlType.PROPERTY, options);
+
+        setControlsEnabled(this.form, ['username'], value?.usernameType === UsernameType.VALUE, options);
+        setControlsEnabled(this.form, ['usernameProperty'], value?.usernameType === UsernameType.PROPERTY, options);
+
+        setControlsEnabled(this.form, ['basepath'], value?.basepathType === BasepathType.VALUE, options);
+        setControlsEnabled(this.form, ['basepathProperty'], value?.basepathType === BasepathType.PROPERTY, options);
     }
 
+    protected assembleValue(value: ContentRepositoryPropertiesFormData): ContentRepositoryPropertiesFormData {
+        if (this.mode === ContentRepositoryPropertiesMode.UPDATE) {
+            value.crType = this.crType;
+        }
+
+        return value;
+    }
 }

@@ -1,12 +1,12 @@
 import { RoleBO } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
+import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Raw, Role } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { RoleTableLoaderService } from '../../providers';
 
 @Component({

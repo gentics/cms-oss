@@ -7,7 +7,11 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import { ItemInNode, Language, Page, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { ItemInNode, Language, Page, Raw } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import {
     FormEditorConfiguration,
     FormEditorConfigurationService,
@@ -16,7 +20,6 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExamplePageData } from '../../../../testing/test-data.mock';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
 import { FormPropertiesFormComponent } from '../form-properties-form/form-properties-form.component';
@@ -35,6 +38,7 @@ describe('FormPropertiesForm', () => {
                 { provide: FormEditorService, useClass: MockFormEditorService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: I18nService, useClass: TestI18nService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
             declarations: [
                 TestComponent,
@@ -131,7 +135,10 @@ describe('FormPropertiesForm', () => {
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
             componentTest(() => FormPropertiesFormComponent, (fixture, instance) => {
-                instance.properties.mailtemp_i18n = undefined;
+                if (instance.properties.data == null) {
+                    instance.properties.data = {};
+                }
+                instance.properties.data.mailtemp_i18n = undefined;
                 spyOn(instance, 'initSelectedItemHelper').and.returnValue(new MockSelectedItemHelper() as any);
                 spyOn(instance, 'trackDisplayValue').and.returnValue(of('page'));
 
@@ -144,9 +151,9 @@ describe('FormPropertiesForm', () => {
                         instance.setEmailTemplatePage(selectedTemplatePage);
                     });
                 tick();
-                expect(instance.formGroup.get('useEmailPageTemplate').value).toBeTruthy();
+                expect(instance.useEmailPageTemplate).toBeTruthy();
 
-                instance.properties.mailtemp_i18n = null;
+                instance.properties.data.mailtemp_i18n = null;
 
                 callRepositoryBrowser(TEST_PAGE_WITH_NO_VALUES);
                 repositoryBrowserClient.openRepositoryBrowser(options)
@@ -156,7 +163,7 @@ describe('FormPropertiesForm', () => {
                 tick();
                 fixture.detectChanges();
 
-                expect(instance.formGroup.get('useEmailPageTemplate').value).toBeFalsy();
+                expect(instance.useEmailPageTemplate).toBeFalsy();
                 flush();
             }),
         );
@@ -173,7 +180,7 @@ describe('FormPropertiesForm', () => {
                         instance.setEmailTemplatePage(selectedTemplatePage);
                     });
                 tick();
-                expect(instance.formGroup.get('mailsource_pageid').value).toBe(111);
+                expect(instance.dataGroup.controls.mailsource_pageid.value).toBe(111);
             }),
         );
     })
@@ -187,7 +194,7 @@ describe('FormPropertiesForm', () => {
             [languages]="languages"
         ></form-properties-form>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
     propertiesForm: FormPropertiesFormComponent;

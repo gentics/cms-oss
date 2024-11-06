@@ -1,4 +1,4 @@
-import { BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, PermissionsService, ScheduleOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -31,6 +31,8 @@ const DEACTIVATE_SCHEDULE_ACTION = 'deactivateSchedule';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, ScheduleBO> implements OnInit {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Output()
     public taskClick = new EventEmitter<number>();

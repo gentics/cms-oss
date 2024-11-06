@@ -1,5 +1,5 @@
 import { EventEmitter } from '@angular/core';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 
 export interface ObjectWithEvents<T extends object> {
     events$: EventEmitter<T> | undefined;

@@ -1,0 +1,94 @@
+<div class="overview-wrapper">
+    <gtx-accordion
+        *ngIf="serverInfo || serverStatus"
+        open="true"
+        triggerToggle="true"
+        class="overview-accordion"
+        [text]="'mesh.serverInfo' | i18n"
+    >
+        <div class="overview-table-wrapper">
+            <table  class="overview-table">
+                <tbody>
+                    <tr *ngFor="let entry of (serverInfo | gtxEntries)">
+                        <td>{{ ('mesh.serverInfo_' + entry.key) | i18n }}</td>
+                        <td>{{ entry.value }}</td>
+                    </tr>
+
+                    <tr *ngIf="serverStatus?.status">
+                        <td>{{ 'mesh.serverStatus' | i18n }}</td>
+                        <td>{{ ('mesh.serverStatus_' + serverStatus.status) | i18n }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </gtx-accordion>
+
+    <gtx-accordion
+        *ngIf="serverConfig"
+        triggerToggle="true"
+        class="overview-accordion"
+        [text]="'mesh.serverConfig' | i18n"
+    >
+        <div class="overview-table-wrapper">
+            <table class="overview-table">
+                <tbody>
+                    <tr *ngFor="let entry of (serverConfig | gtxEntries)">
+                        <td>{{ entry.key }}</td>
+                        <td>{{ entry.value }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </gtx-accordion>
+
+    <gtx-accordion
+        *ngIf="coordConfig"
+        open="true"
+        triggerToggle="true"
+        class="overview-accordion"
+        [text]="'mesh.clustering' | i18n"
+    >
+        <div class="overview-table-wrapper">
+            <table class="overview-table">
+                <tbody>
+                    <tr>
+                        <td>{{ 'mesh.coordinatorMode' | i18n }}</td>
+                        <td>{{ ('mesh.coordinatorMode_' + coordConfig.mode) | i18n }}</td>
+                    </tr>
+
+                    <ng-container *ngIf="coordConfig?.mode !== CoordinatorMode.DISABLED">
+                    </ng-container>
+                </tbody>
+            </table>
+        </div>
+    </gtx-accordion>
+
+    <gtx-accordion
+        *ngIf="plugins"
+        open="false"
+        triggerToggle="true"
+        class="overview-accordion"
+        [text]="'mesh.plugins' | i18n"
+    >
+        <div class="overview-table-wrapper">
+            <table class="overview-table">
+                <thead>
+                    <tr>
+                        <th>{{ 'mesh.plugin_id' | i18n }}</th>
+                        <th>{{ 'common.name' | i18n }}</th>
+                        <th>{{ 'mesh.version' | i18n }}</th>
+                        <th>{{ 'mesh.status' | i18n }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let plugin of plugins">
+                        <td>{{ plugin.id }}</td>
+                        <td>{{ plugin.name }}</td>
+                        <td>{{ plugin.manifest.version }}</td>
+                        <td>{{ ('mesh.plugin_status_' + plugin.status) | i18n }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </gtx-accordion>
+</div>

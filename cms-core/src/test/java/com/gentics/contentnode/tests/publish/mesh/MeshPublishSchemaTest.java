@@ -23,6 +23,8 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Form;
+import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
@@ -243,6 +245,45 @@ public class MeshPublishSchemaTest {
 				schema.validate();
 
 				assertThat(schema.getElasticsearch()).as("Elasticsearch config").isNotNull().isEqualTo(new JsonObject());
+			}
+		});
+	}
+
+	/**
+	 * Test setting a generic searchindex configuration
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNoIndexConfiguration() throws NodeException {
+		long currentTimeMillis = System.currentTimeMillis();
+		boolean noIndex = (currentTimeMillis % 3) == 0;
+
+		contentRepository = Trx.supply(() -> ContentNodeTestDataUtils.update(contentRepository, cr -> {
+			cr.addEntry("tagname", "testfield", objectType, 0, AttributeType.text, false, false, true, true, false);
+
+			switch (objectType) {
+			case Page.TYPE_PAGE:
+				cr.setNoPagesIndex(noIndex);
+				break;
+			case File.TYPE_FILE:
+			case ImageFile.TYPE_IMAGE:
+				cr.setNoFilesIndex(noIndex);
+				break;
+			case Folder.TYPE_FOLDER:
+				cr.setNoFoldersIndex(noIndex);
+				break;
+			case Form.TYPE_FORM:
+				cr.setNoFormsIndex(noIndex);
+				break;
+			}
+		}));
+
+		Trx.operate(trx -> {
+			try (MeshPublisher mp = new MeshPublisher(contentRepository, false)) {
+				SchemaModel schema = mp.getSchema(objectType, new SchemaModelImpl());
+				schema.validate();
+
+				assertThat(schema.getNoIndex()).as("Elasticsearch config").isNotNull().isEqualTo(noIndex);
 			}
 		});
 	}

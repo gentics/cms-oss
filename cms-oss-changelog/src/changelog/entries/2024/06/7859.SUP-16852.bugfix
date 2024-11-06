@@ -1,0 +1,1 @@
+A new boolean query parameter, @disableInstantDelete@, has been added to the page/file/image REST delete API, to prevent automatic removal of the item from the content repository. This may come in hand in the case of mass deletion. A content repository republishing process has to be started afterwards manually, to remove all the deleted entries. 

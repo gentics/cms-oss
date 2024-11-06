@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IModalInstance } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Subscription, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMapTo } from 'rxjs/operators';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';

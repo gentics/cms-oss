@@ -5,6 +5,7 @@ import static com.gentics.contentnode.i18n.I18NHelper.toI18nMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -123,10 +124,10 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 			nodeDefinition.getObjectTag().setConstructId(restModel.getConstructId());
 		} else if (restModel.getConstruct() != null) {
 			nodeDefinition.getObjectTag().setConstructId(restModel.getConstruct().getId());
-		}		
+		}
 		if (restModel.getKeyword() != null) {
 			nodeDefinition.getObjectTag().setName(restModel.getKeyword());
-		}		
+		}
 		if (restModel.getType() != null) {
 			nodeDefinition.getObjectTag().setObjType(restModel.getType());
 		}
@@ -227,6 +228,12 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 			to.setCategory(ObjectTagDefinitionCategory.NODE2DEVTOOL.apply(category, new ObjectTagDefinitionCategoryModel()));
 		}
 
+		List<Node> nodes = from.getNodes();
+
+		if (nodes != null) {
+			to.setNodeIds(nodes.stream().map(node -> node.getGlobalId().toString()).collect(Collectors.toList()));
+		}
+
 		return to;
 	};
 
@@ -274,14 +281,14 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 
 	/**
 	 * Get the locale-backed name
-	 * 
+	 *
 	 * @return
 	 */
 	public abstract I18nString getNameI18n();
 
 	/**
 	 * Get the locale-backed description
-	 * 
+	 *
 	 * @return
 	 */
 	public abstract I18nString getDescriptionI18n();

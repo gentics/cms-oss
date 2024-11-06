@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
-import { TranslateService } from '@ngx-translate/core';
 import { ModalService } from '@gentics/ui-core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 import { AppState, AppStateService, LogoutSuccess } from '../../../state';
 import { I18nNotificationService } from '../i18n-notification/i18n-notification.service';
+import { AdminUIModuleRoutes } from '@admin-ui/common';
 
+/* TODO: Modernize the serialization and deserialization. Usage of atob/btoa is depreacted and may cause errors with utf-8 content */
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -98,6 +100,9 @@ export class ErrorHandler extends ServiceBase {
                         this.userWasLoggedOut();
                         return returnValue;
                     }
+
+                // eslint-disable-next-line no-fallthrough
+                case 'invalid_data':
                 case 'permissions':
                     returnValue = error.message || error.toString();
                     if (showNotification && !isInvalidSid) {
@@ -205,6 +210,7 @@ export class ErrorHandler extends ServiceBase {
         const escapedUnicode = atob(serializedBase64String);
 
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const json = decodeURIComponent(Array.prototype.map.call(escapedUnicode,
             (char: string) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2)).join(''));
 
@@ -213,7 +219,7 @@ export class ErrorHandler extends ServiceBase {
 
     private userWasLoggedOut(): void {
         this.appState.dispatch(new LogoutSuccess());
-        this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

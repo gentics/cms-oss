@@ -9,7 +9,7 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 const STRING_TYPES = [TagPropertyType.RICHTEXT, TagPropertyType.STRING];
 const LIST_TYPES = [TagPropertyType.LIST, TagPropertyType.ORDEREDLIST, TagPropertyType.UNORDEREDLIST];

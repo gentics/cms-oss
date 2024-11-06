@@ -1,8 +1,7 @@
-import { ObjectPropertyCategoryOperations } from '@admin-ui/core';
+import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
-import { ObjectPropertyCategoryBO } from '@gentics/cms-models';
+import { ObjectPropertyCategory } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { ObjectPropertyCategoryPropertiesMode } from '../object-property-category-properties/object-property-category-properties.component';
 
@@ -11,14 +10,14 @@ import { ObjectPropertyCategoryPropertiesMode } from '../object-property-categor
     templateUrl: './create-object-property-category-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateObjectPropertyCategoryModalComponent extends BaseModal<ObjectPropertyCategoryBO> implements OnInit {
+export class CreateObjectPropertyCategoryModalComponent extends BaseModal<ObjectPropertyCategory> implements OnInit {
 
     public readonly ObjectPropertyCategoryPropertiesMode = ObjectPropertyCategoryPropertiesMode;
 
     public form: UntypedFormControl;
 
     constructor(
-        private entityOperations: ObjectPropertyCategoryOperations,
+        private handler: ObjectPropertyCategoryHandlerService,
     ) {
         super();
     }
@@ -27,7 +26,7 @@ export class CreateObjectPropertyCategoryModalComponent extends BaseModal<Object
         // instantiate form
         this.form = new UntypedFormControl({
             nameI18n: null,
-        }, createNestedControlValidator());
+        });
     }
 
     /**
@@ -38,8 +37,8 @@ export class CreateObjectPropertyCategoryModalComponent extends BaseModal<Object
             .then(created => this.closeFn(created));
     }
 
-    private createEntity(): Promise<ObjectPropertyCategoryBO> {
-        return this.entityOperations.create(this.form.value).toPromise();
+    private createEntity(): Promise<ObjectPropertyCategory> {
+        return this.handler.createMapped(this.form.value).toPromise();
     }
 
 }

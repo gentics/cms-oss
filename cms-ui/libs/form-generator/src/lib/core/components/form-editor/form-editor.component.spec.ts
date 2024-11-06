@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { IconDirective } from '@gentics/ui-core';
@@ -61,8 +61,8 @@ describe('FormEditorComponent', () => {
                 { provide: FormEditorConfigurationService, useValue: formEditorConfigurationServiceMock },
                 { provide: FormEditorMappingService, useValue: formEditorMappingServiceMock },
             ],
-        })
-            .compileComponents();
+            schemas: [NO_ERRORS_SCHEMA],
+        }).compileComponents();
     }));
 
     beforeEach(() => {

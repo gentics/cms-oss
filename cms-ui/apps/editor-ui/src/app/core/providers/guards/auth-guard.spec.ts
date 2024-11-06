@@ -62,11 +62,18 @@ describe('AuthGuard', () => {
         expect(folderActions.navigateToDefaultNode).not.toHaveBeenCalled();
     }
 
-    function assertNavigatingToRouteIsAllowed(url: string): void {
+    async function assertNavigatingToRouteIsAllowed(url: string): Promise<void> {
         const mockRoute = mockRouterState(url);
         const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-        expect(result).toBe(true);
+        if (typeof result === 'boolean') {
+            expect(result).toBe(true);
+        } else if (result instanceof Promise) {
+            expect(await result).toBe(true);
+        } else if (typeof result === 'object' && typeof result.subscribe === 'function') {
+            expect(await result.toPromise()).toBe(true);
+        }
+
         assertNoRedirectAction();
     }
 
@@ -82,7 +89,7 @@ describe('AuthGuard', () => {
         });
 
         it('canActivate() allows accessing the /login route', () => {
-            assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
+            return assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
         });
 
         it('canActivate() redirects the user from a privileged route to /login, appending the return URL as a parameter', () => {
@@ -108,17 +115,22 @@ describe('AuthGuard', () => {
             });
         });
 
-        it('canActivate() allows accessing the /login route', () => {
-            assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
+        it('canActivate() allows accessing the /login route if the login fails', () => {
+            appState.mockState({
+                auth: {
+                    loggingIn: false,
+                },
+            });
+            return assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
         });
 
         it('canActivate() allows accessing a priviliged URL if the login succeeds', fakeAsync(() => {
             const mockRoute = mockRouterState(ITEM_LIST_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             tick();
             expect(accessGranted).toBeUndefined('The promise should not resolve before `loggingIn` changes.');
 
@@ -139,9 +151,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(ITEM_LIST_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
 
             // Signal a failed login.
             appState.mockState({
@@ -181,7 +193,7 @@ describe('AuthGuard', () => {
         });
 
         it('canActivate() allows accessing a privileged route', () => {
-            assertNavigatingToRouteIsAllowed(ITEM_LIST_ROUTE);
+            return assertNavigatingToRouteIsAllowed(ITEM_LIST_ROUTE);
         });
 
         it('canActivate() redirects from /login to the default node if there is no activeNode in the AppState', () => {

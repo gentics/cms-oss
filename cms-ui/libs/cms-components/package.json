@@ -1,22 +1,21 @@
-
 {
-    "name": "@gentics/cms-components",
-    "version": "6.0.0-beta.0",
-    "dependencies": {},
-    "peerDependencies": {
-      "@angular/common": "15.2.5",
-      "@angular/core": "15.2.5",
-      "@gentics/ui-core": "^6.0.0",
-      "@gentics/cms-models": "^6.0.0",
-      "@ngx-translate/core": "^14.0.0",
-      "@ngx-translate/http-loader": "^7.0.0",
-      "@gentics/image-editor": "^6.0.0",
-      "lodash-es": "^4.17.15",
-      "ngx-pagination": "^6.0.3",
-      "rxjs": "^6.6.3",
-      "rxjs-compat": "^6.6.3"
-    },
-    "publishConfig": {
-      "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
-    }
+  "name": "@gentics/cms-components",
+  "version": "6.1.16",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@gentics/cms-models": "6.1.16",
+    "@gentics/cms-integration-api-models": "6.1.16",
+    "lodash-es": "^4.17.15"
+  },
+  "peerDependencies": {
+    "@angular/common": "^16.0.0",
+    "@angular/core": "^16.0.0",
+    "@gentics/ui-core": "^6.1.0",
+    "@ngx-translate/core": "^14.0.0",
+    "@ngx-translate/http-loader": "^7.0.0",
+    "ngx-pagination": "^6.0.3"
+  },
+  "publishConfig": {
+    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
+}

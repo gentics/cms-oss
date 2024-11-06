@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.createNodeConflictMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
@@ -19,9 +19,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.SetUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -300,7 +306,13 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				I18nString m = new CNI18nString("rest.folder.pub_dir.maxlength");
 				return new FolderLoadResponse(new Message(Message.Type.CRITICAL, m.toString()), new ResponseInfo(ResponseCode.FAILURE, m.toString()), null);
 			}
-			message = updatePublishDir(nodeFolder, request.getPublishDir(), request.getPublishDirI18n(), request.isFailOnDuplicate());
+
+			Set<String> translations = new HashSet<>();
+			translations.addAll(Optional.ofNullable(request.getNameI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+			translations.addAll(Optional.ofNullable(request.getDescriptionI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+			translations.addAll(Optional.ofNullable(request.getPublishDirI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+
+			message = updatePublishDir(nodeFolder, request.getPublishDir(), request.getPublishDirI18n(), request.isFailOnDuplicate(), translations);
 			if (message != null) {
 				return new FolderLoadResponse(message, new ResponseInfo(ResponseCode.INVALIDDATA,
 						"Error while creating folder: " + message.getMessage(), "publishDir"), null);
@@ -650,14 +662,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#load(com.gentics.contentnode.rest.model.request.MultiFolderLoadRequest)
-	 */
 	@Override
 	@POST
 	@Path("/load")
-	public MultiFolderLoadResponse load(MultiFolderLoadRequest request) {
+	public MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
 		Transaction t = getTransaction();
 		Set<Reference> references = new HashSet<>();
 
@@ -672,22 +680,22 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<com.gentics.contentnode.object.Folder> allFolders =
 				t.getObjects(com.gentics.contentnode.object.Folder.class, request.getIds());
-			List<Folder> returnedFolders = new ArrayList<>(allFolders.size());
 
-			for (com.gentics.contentnode.object.Folder folder: allFolders) {
-				if (ObjectPermission.view.checkObject(folder)
-						&& (!forUpdate || ObjectPermission.edit.checkObject(folder))) {
-					if (forUpdate) {
-						folder = t.getObject(folder, true);
-					}
-
-					Folder restFolder = ModelBuilder.getFolder(folder, null, references);
-
-					if (restFolder != null) {
-						returnedFolders.add(restFolder);
-					}
+			List<Folder> returnedFolders = getItemList(request.getIds(), allFolders, folder -> {
+				Set<Integer> ids = new HashSet<>();
+				ids.add(folder.getId());
+				ids.addAll(folder.getChannelSet().values());
+				return ids;
+			}, folder -> {
+				if (forUpdate) {
+					folder = t.getObject(folder, true);
 				}
-			}
+				return ModelBuilder.getFolder(folder, null, references);
+			}, folder -> {
+				return ObjectPermission.view.checkObject(folder)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(folder));
+			}, fillWithNulls);
+
 			MultiFolderLoadResponse response = new MultiFolderLoadResponse(returnedFolders);
 
 			// TODO make for filtered folders
@@ -2314,8 +2322,13 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 
 			// set the updated publish directories and possibly check for duplicates
+			Set<String> translations = new HashSet<>();
+			translations.addAll(Optional.ofNullable(restFolder.getNameI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+			translations.addAll(Optional.ofNullable(restFolder.getDescriptionI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+			translations.addAll(Optional.ofNullable(restFolder.getPublishDirI18n()).map(Map::keySet).orElse(Collections.emptySet()));
+
 			message = updatePublishDir(folder, restFolder.getPublishDir(), restFolder.getPublishDirI18n(),
-					ObjectTransformer.getBoolean(request.getFailOnDuplicate(), false));
+					ObjectTransformer.getBoolean(request.getFailOnDuplicate(), false), translations);
 			if (message != null) {
 				return new GenericResponse(message, new ResponseInfo(ResponseCode.INVALIDDATA,
 						"Error while saving folder " + id + ": " + message.getMessage(), "publishDir"));
@@ -2538,8 +2551,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 */
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
-		try {
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) {
+		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
+		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// set the channel ID if given
 			boolean isChannelIdset = setChannelToTransaction(nodeId);
 
@@ -2974,9 +2988,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	public GenericResponse move(@PathParam("id") String id, FolderMoveRequest request) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		com.gentics.contentnode.object.Folder folder = getFolder(id, false);
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
 				request.getFolderId(), request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 	/* (non-Javadoc)
@@ -2992,9 +3006,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
 			localIds.add(folder.getId());
 		}
-		MoveJob moveJob = new MoveJob(getSessionId(), t.getUserId(), com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
+		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
 				request.getNodeId());
-		return executeJob(moveJob, request.getForegroundTime());
+		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 
@@ -3256,12 +3270,14 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 * @param pubDir optional publish directory to update
 	 * @param pubDirI18n optional translated publish directories to update
 	 * @param uniquenessCheck true to make uniqueness checks, if something was modified
+	 * @param requiredLanguages set of language codes, for which translations exist
 	 * @return error message or null, if everything is ok
 	 * @throws NodeException
 	 */
 	protected Message updatePublishDir(com.gentics.contentnode.object.Folder folder, String pubDir,
-			Map<String, String> pubDirI18n, boolean uniquenessCheck) throws NodeException {
+			Map<String, String> pubDirI18n, boolean uniquenessCheck, Set<String> requiredLanguages) throws NodeException {
 		boolean checkDuplicatePubDir = false;
+		Node node = folder.getNode();
 		if (pubDir != null) {
 			if (uniquenessCheck && !StringUtils.isEqual(folder.getPublishDir(), pubDir)) {
 				checkDuplicatePubDir = true;
@@ -3270,7 +3286,6 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			// When pub dir segments is active, the segment is only allowed to
 			// be empty for the root folder of the node.
-			Node node = folder.getNode();
 			boolean pubDirSegmentRequired = node.isPubDirSegment() && !folder.equals(node.getFolder());
 
 			// setPublishDir will sanitize the name and remove slashes if pub
@@ -3282,8 +3297,19 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 		}
 
+		if (!CollectionUtils.isEmpty(requiredLanguages) && MapUtils.isEmpty(pubDirI18n) && node.isPubDirSegment()) {
+			pubDirI18n = new HashMap<>();
+		}
+
 		// set the updated translated publish directories
 		if (pubDirI18n != null) {
+			if (node.isPubDirSegment()) {
+				// make sure that the map contains all required translations
+				for (String lang : requiredLanguages) {
+					pubDirI18n.computeIfAbsent(lang, k -> folder.getPublishDir());
+				}
+			}
+
 			if (uniquenessCheck
 					&& !Objects.deepEquals(I18nMap.TRANSFORM2REST.apply(folder.getPublishDirI18n()), pubDirI18n)) {
 				checkDuplicatePubDir = true;

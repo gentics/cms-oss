@@ -9,6 +9,7 @@ import {
     OnDestroy,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -22,8 +23,8 @@ import { PublishableStateUtil } from '../../util/entity-states';
     selector: 'page-versions-modal',
     templateUrl: './page-versions-modal.tpl.html',
     styleUrls: ['./page-versions-modal.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterContentInit, OnDestroy {
 
     @Input() page: Page;
@@ -101,7 +102,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                     }
 
                     const languageVariants: { [index: number]: Page } = res.page.languageVariants as any;
-                    let variants = Object.keys(languageVariants)
+                    const variants = Object.keys(languageVariants)
                         .map(key => languageVariants[Number(key)])
                         .sort(this.sortVariantsByLanguageName)
                         .map(variant => {
@@ -128,7 +129,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                         return;
                     }
 
-                    let languageVariant = variants.filter(variant => variant.language === res.page.language)[0];
+                    const languageVariant = variants.filter(variant => variant.language === res.page.language)[0];
                     if (languageVariant) {
                         this.selectVariant(languageVariant);
                         resolve(this.selectedPageVariant.currentVersion);
@@ -136,7 +137,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                     }
 
                     // Node has no languages configured
-                    let page = res.page;
+                    const page = res.page;
                     page.versions.sort(this.sortVersionsByDate);
                     if (page.currentVersion) {
                         page.currentVersion = page.versions.filter(v => v.timestamp === page.currentVersion.timestamp)[0];
@@ -174,14 +175,14 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
     }
 
     previewVersion(version: PageVersion): void {
-        let pageId = this.page.id;
-        let nodeId = this.nodeId;
-        this.navigationService.detailOrModal(nodeId, 'page', pageId, 'previewVersion', { version }).navigate();
+        const pageId = this.page.id;
+        const nodeId = this.nodeId;
+        this.navigationService.detailOrModal(nodeId, 'page', pageId, EditMode.PREVIEW_VERSION, { version }).navigate();
         this.closeFn();
     }
 
     restoreVersion(version: PageVersion): void {
-        let versionBeforeRestore = this.selectedPageVariant.currentVersion.number;
+        const versionBeforeRestore = this.selectedPageVariant.currentVersion.number;
         this.backgroundActivity = true;
         this.folderActions.restorePageVersion(this.selectedPageVariant.id, version, false)
             .then(() => this.fetchFromServer())
@@ -200,7 +201,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                     message: `Version ${version.number} was restored as version ${currentVersion.number}.`,
                 });
                 this.navigationService
-                    .detailOrModal(this.nodeId, 'page', this.page.id, 'preview')
+                    .detailOrModal(this.nodeId, 'page', this.page.id, EditMode.PREVIEW)
                     .navigate()
                     .then(navigated => {
                         this.closeFn();
@@ -223,8 +224,8 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
     }
 
     compareWithVersion(version: PageVersion): void {
-        let pageId = this.page.id;
-        let nodeId = this.nodeId;
+        const pageId = this.page.id;
+        const nodeId = this.nodeId;
         let oldVersion = this.compareBaseVersion;
 
         if (+oldVersion.number > +version.number) {
@@ -234,7 +235,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
         }
 
         this.navigationService
-            .detailOrModal(nodeId, 'page', pageId, 'compareVersionContents', { version, oldVersion })
+            .detailOrModal(nodeId, 'page', pageId, EditMode.COMPARE_VERSION_CONTENTS, { version, oldVersion })
             .navigate();
         this.closeFn();
     }

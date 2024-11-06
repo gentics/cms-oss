@@ -1,8 +1,6 @@
-import { RoleOperations } from '@admin-ui/core';
-import { LanguageDataService } from '@admin-ui/shared';
+import { LanguageHandlerService, RoleOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, RoleBO, RoleCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -15,9 +13,6 @@ import { Observable } from 'rxjs';
 })
 export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnInit {
 
-    /** Current step (tab) of the entity creation wizzard */
-    currentTab = String(1);
-
     public supportedLanguages$: Observable<Language[]>;
 
     /** form instance */
@@ -25,29 +20,16 @@ export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnIni
 
     constructor(
         private roleOperations: RoleOperations,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.form = new UntypedFormControl({});
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
-
-    /** Programmatic tab set */
-    setActiveTab(index: string): void {
-        this.currentTab = String(index);
-    }
-
-    /**
-     * Returns TRUE if parameter index is index of active tab
-     */
-    tabIndexIsActive(index: number): boolean {
-        return this.currentTab === String(index);
-    }
-
     /**
      * If user clicks to create a new role
      */

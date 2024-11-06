@@ -1,9 +1,10 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
-import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { Node, Page, Raw } from '@gentics/cms-models';
-import { defer, iif, of } from 'rxjs';
-import { Observable } from 'rxjs/Observable';
+import { Observable, defer, iif, of } from 'rxjs';
 import { catchError, mergeMap, take, tap } from 'rxjs/operators';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
@@ -71,7 +72,7 @@ export class ListSearchService {
                             nodeId: page.inheritedFromId,
                             itemType: 'page',
                             itemId: page.id,
-                            editMode: 'preview',
+                            editMode: EditMode.PREVIEW,
                         },
                     }).navigate();
                     return;
@@ -84,7 +85,7 @@ export class ListSearchService {
             }),
             catchError(error => {
                 this.errorHandler.catch(error);
-                return of(null).take(1);
+                return of(null);
             }),
         );
     }
@@ -127,7 +128,7 @@ export class ListSearchService {
                         nodeId: page.nodeId,
                         itemType: 'page',
                         itemId: page.page.id,
-                        editMode: 'preview',
+                        editMode: EditMode.PREVIEW,
                     },
                 }).navigate();
             });

@@ -1,6 +1,5 @@
-import { ContentRepositoryOperations } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ContentRepositoryFragmentBO, Normalized } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { delay } from 'rxjs/operators';
 
@@ -23,16 +22,16 @@ export class AssignCRFragmentsToContentRepositoryModal extends BaseModal<string[
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        private contentRepositoryOperations: ContentRepositoryOperations,
+        private handler: ContentRepositoryHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.contentRepositoryOperations.getAssignedFragments(this.contentRepositoryId).pipe(
+        this.handler.getAssignedFragments(this.contentRepositoryId).pipe(
             delay(0),
-        ).subscribe((crfragment: ContentRepositoryFragmentBO<Normalized>[]) => {
-            this.crfragmentIdsSelected = crfragment.map(n => String(n.id));
+        ).subscribe(crFragments => {
+            this.crfragmentIdsSelected = crFragments.map(n => String(n.id));
             this.crfragmentIdsInitial = this.crfragmentIdsSelected.slice();
             this.changeDetector.markForCheck();
         });
@@ -42,7 +41,7 @@ export class AssignCRFragmentsToContentRepositoryModal extends BaseModal<string[
      * If user clicks "assign"
      */
     buttonAssignContentRepositoryToCrfragmentsClicked(): void {
-        this.contentRepositoryOperations
+        this.handler
             .changeFragmentsOfContentRepository(this.contentRepositoryId, this.crfragmentIdsSelected)
             .toPromise()
             .then(() => this.closeFn(this.crfragmentIdsSelected));

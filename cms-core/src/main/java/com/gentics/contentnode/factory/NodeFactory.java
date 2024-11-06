@@ -468,11 +468,18 @@ public class NodeFactory {
 				registerObjectFactory(dbTable.clazz(), factory);
 			}
 		}
+	}
 
-		try {
-			factory.initialize();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+	/**
+	 * Initialize all registered object factories
+	 */
+	public void initializeObjectFactories() {
+		for (ObjectFactory factory : factorySet) {
+			try {
+				factory.initialize();
+			} catch (NodeException e) {
+				logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+			}
 		}
 	}
 
@@ -1578,7 +1585,7 @@ public class NodeFactory {
 		if (!isInitialized()) {
 			throw new NodeException("Could not start dirt queue worker, factory is not initialized");
 		}
-		if (dirtQueueWorkerThread != null) {
+		if (isDirtQueueWorkerRunning()) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Dirt queue worker is already running, no need to start it");
 			}
@@ -1592,6 +1599,18 @@ public class NodeFactory {
 		dirtQueueWorkerThread.start();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Started dirt queue worker thread");
+		}
+	}
+
+	/**
+	 * Check whether the dirtqueue worker thread is up and running
+	 * @return true, iff thread is alive
+	 */
+	public boolean isDirtQueueWorkerRunning() {
+		if (dirtQueueWorkerThread == null) {
+			return false;
+		} else {
+			return dirtQueueWorkerThread.isAlive();
 		}
 	}
 

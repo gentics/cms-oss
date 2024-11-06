@@ -19,6 +19,8 @@
         </gtx-optgroup>
     </gtx-select>
 
+    <gtx-checkbox [label]="('modal.send_message_instant' | i18n)" formControlName="isInstant"/>
+
     <gtx-textarea
         [label]="'modal.send_message_message' | i18n"
         formControlName="message"

@@ -12,7 +12,6 @@
   "mayBeSubtag" : true,
   "mayContainsSubtags" : false,
   "autoEnable" : true,
-  "newEditor" : true,
   "parts" : [ {
     "name" : {
       "de" : "Text Teil",

@@ -1,4 +1,5 @@
 import {
+    ContentRepositoryHandlerService,
     EntityManagerService,
     ErrorHandler,
     GroupOperations,
@@ -9,14 +10,14 @@ import {
     UserOperations,
 } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
-import { Component, Pipe, PipeTransform } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { getExampleNodeData } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
-import { GcmsTestData } from '../../../../../../../libs/cms-models/src/lib/testing';
 import { componentTest } from '../../../../testing';
 import { createDelayedObservable } from '../../../../testing/utils/rxjs-utils';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../common/user-action-permissions/user-action-permissions';
@@ -28,15 +29,15 @@ import { OPTIONS_CONFIG } from '../../../state/state-store.config';
 import { STATE_MODULES } from '../../../state/state.module';
 import { TestAppState } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { ActionAllowedDirective } from '../../directives';
-import { ContentRepositoryDataService, GroupDataService, GroupUserDataService, NodeDataService, NotificationService, WizardService } from '../../providers';
+import { GroupDataService, GroupUserDataService, NodeDataService, NotificationService, WizardService } from '../../providers';
 import { BooleanIconComponent } from '../boolean-icon/boolean-icon.component';
 import { IconComponent } from '../icon/icon.component';
 import { NodeTableComponent } from '../node-table/node-table.component';
 import { AssignNodeRestrictionsToUsersModalComponent } from './assign-node-restriction-to-users-modal.component';
 
 const MOCK_NODES = [
-    GcmsTestData.getExampleNodeData({ id: 1 }),
-    GcmsTestData.getExampleNodeData({ id: 2 }),
+    getExampleNodeData({ id: 1 }),
+    getExampleNodeData({ id: 2 }),
 ];
 
 const MOCK_USER_RESTRICTIONS = [
@@ -47,10 +48,6 @@ const MOCK_USER_RESTRICTIONS = [
 ];
 
 class MockActivatedRoute {}
-
-class MockContentRepositoryDataService {
-    ensureEntitiesLoaded = jasmine.createSpy('ensureEntitiesLoaded').and.callFake(() => createDelayedObservable(true));
-}
 
 class MockErrorHandler {}
 
@@ -123,7 +120,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
             providers: [
                 { provide: ActivatedRoute, useClass: MockActivatedRoute },
                 { provide: AppStateService, useClass: TestAppState },
-                { provide: ContentRepositoryDataService, useClass: MockContentRepositoryDataService },
+                ContentRepositoryHandlerService,
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 GroupDataService,
@@ -140,6 +137,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
                 { provide: UserOperations, useClass: MockUserOperations },
                 { provide: WizardService, useClass: MockWizardService },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TestComponent);
@@ -154,7 +152,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
 
     it('should return the right data after calling buttonAssignNodeRestrictonsClicked()',
         componentTest(() => TestComponent, (fixture, instance) => {
-            let groupUserDataSpy = spyOn(groupUserData, 'changeUserNodeRestrictions').and.returnValue(
+            const groupUserDataSpy = spyOn(groupUserData, 'changeUserNodeRestrictions').and.returnValue(
                 of(MOCK_USER_RESTRICTIONS) as any,
             );
 

@@ -198,7 +198,7 @@ public class ObjTagDefinitionResourceImpl {
 				if (handledIds.contains(tag.getId())) {
 					continue;
 				}
-				List<Pair<NodeObject, ObjectTag>> syncVariants = new ArrayList<>(tag.getSyncVariants());
+				List<Pair<NodeObject, ObjectTag>> syncVariants = new ArrayList<>(tag.getSyncVariants(false));
 				Collections.sort(syncVariants, (pair1, pair2) ->  {
 					NodeObject o1 = pair1.getKey();
 					NodeObject o2 = pair2.getKey();

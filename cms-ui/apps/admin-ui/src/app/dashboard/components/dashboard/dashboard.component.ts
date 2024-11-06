@@ -1,6 +1,6 @@
 import { AdminUIModuleRoutes } from '@admin-ui/common';
 import { AuthOperations, PermissionsService } from '@admin-ui/core';
-import { AppStateService, CloseEditor } from '@admin-ui/state';
+import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccessControlledType, Feature, GcmsPermission } from '@gentics/cms-models';
@@ -37,6 +37,7 @@ export class DashboardComponent implements OnInit {
     public contentMaintenanceModuleEnabled$: Observable<boolean>;
     public objectPropertiesModuleEnabled$: Observable<boolean>;
     public constructsModuleEnabled$: Observable<boolean>;
+    public meshBrowserModuleEnabled$: Observable<boolean>;
 
     constructor(
         private appState: AppStateService,
@@ -46,6 +47,9 @@ export class DashboardComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        // In case that any item is still focused, we need to clear it
+        this.appState.dispatch(new SetUIFocusEntity(null, null, null));
+
         this.contentRepositoriesModuleEnabled$ = this.permissions.checkPermissions({
             type: AccessControlledType.CONTENT_ADMIN,
             permissions: GcmsPermission.READ,
@@ -115,6 +119,12 @@ export class DashboardComponent implements OnInit {
             type: AccessControlledType.SYSTEM_MAINTANANCE,
             permissions: GcmsPermission.READ,
         });
+        this.meshBrowserModuleEnabled$ = combineLatest([
+            this.appState.select(state => state.features.global[Feature.MESH_CR]),
+            this.permissions.checkPermissions({ type: AccessControlledType.CONTENT_REPOSITORY_ADMIN, permissions: GcmsPermission.READ }),
+        ]).pipe(
+            map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
+        );
 
         // Just for testing.
         this.testingModuleEnabled$ = this.permissions.checkPermissions([
@@ -131,7 +141,7 @@ export class DashboardComponent implements OnInit {
     onLogoutClick(): void {
         this.authOps.logout(this.appState.now.auth.sid)
             .then(() => {
-                this.router.navigate(['/login']);
+                this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`]);
             });
     }
 

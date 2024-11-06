@@ -1,5 +1,5 @@
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable, Subscriber } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 

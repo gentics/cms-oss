@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { PageVersion } from '@gentics/cms-models';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -32,7 +33,7 @@ export class EditorActionsService {
             itemType: 'page',
             itemId: id,
             nodeId: nodeId,
-            editMode: 'preview',
+            editMode: EditMode.PREVIEW,
         }));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
@@ -42,7 +43,7 @@ export class EditorActionsService {
             itemType: 'form',
             itemId: id,
             nodeId: nodeId,
-            editMode: 'preview',
+            editMode: EditMode.PREVIEW,
         }));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
@@ -78,12 +79,13 @@ export class EditorActionsService {
     editPage(id: number, nodeId: number, compareWith?: number): void {
         this.appState.dispatch(new EditItemAction({
             compareWithId: compareWith,
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
             itemId: id,
             nodeId: nodeId,
             itemType: 'page',
+            focusMode: true,
         }));
-        this.appState.dispatch(new LockItemAction('page', id, 'edit'));
+        this.appState.dispatch(new LockItemAction('page', id, EditMode.EDIT));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
 
@@ -92,12 +94,13 @@ export class EditorActionsService {
      */
     editForm(id: number, nodeId: number, compareWith?: number): void {
         this.appState.dispatch(new EditItemAction({
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
             itemId: id,
             nodeId: nodeId,
             itemType: 'form',
+            focusMode: true,
         }));
-        this.appState.dispatch(new LockItemAction('form', id, 'edit'));
+        this.appState.dispatch(new LockItemAction('form', id, EditMode.EDIT));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
 
@@ -122,7 +125,7 @@ export class EditorActionsService {
 
     editImage(id: number, nodeId: number): void {
         this.appState.dispatch(new EditItemAction({
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
             itemId: id,
             itemType: 'image',
             nodeId: nodeId,
@@ -141,14 +144,14 @@ export class EditorActionsService {
         propertiesTab?: PropertiesTab,
     ): void {
         this.appState.dispatch(new EditItemAction({
-            editMode: 'editProperties',
+            editMode: EditMode.EDIT_PROPERTIES,
             itemId: id,
             itemType: type,
             nodeId: nodeId,
             openTab: defaultTab || (type === 'image' || type === 'file' ? 'preview' : 'properties'),
             openPropertiesTab: propertiesTab || ITEM_PROPERTIES_TAB,
         }));
-        this.appState.dispatch(new LockItemAction(type as any, id, 'editProperties'));
+        this.appState.dispatch(new LockItemAction(type as any, id, EditMode.EDIT_PROPERTIES));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
 

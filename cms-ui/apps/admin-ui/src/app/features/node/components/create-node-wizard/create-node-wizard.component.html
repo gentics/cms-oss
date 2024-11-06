@@ -10,11 +10,10 @@
     >
         <ng-template>
             <div>
-                <form [formGroup]="fgProperties" class="gtx-entity-details-form">
+                <form class="gtx-entity-details-form">
                     <gtx-node-properties
-                        formControlName="data"
-                        [allowChangingInheritedFrom]="true"
-                        [allowEditingDefaultUploadFolders]="false"
+                        [formControl]="fgProperties"
+                        [mode]="NodePropertiesMode.CREATE"
                     ></gtx-node-properties>
                 </form>
             </div>
@@ -24,12 +23,13 @@
     <gtx-wizard-step
         [title]="'node.create_node_wizard_step_publishing' | i18n"
         [nextEnabled]="fgPublishingValid$ | async"
-        (activate)="onPublishingStepActivate()"
     >
         <ng-template>
             <div>
-                <form [formGroup]="fgPublishing" class="gtx-entity-details-form">
-                    <gtx-node-publishing-properties formControlName="data"></gtx-node-publishing-properties>
+                <form class="gtx-entity-details-form">
+                    <gtx-node-publishing-properties
+                        [formControl]="fgPublishing"
+                    ></gtx-node-publishing-properties>
                 </form>
             </div>
         </ng-template>
@@ -42,8 +42,11 @@
     >
         <ng-template>
             <div>
-                <form [formGroup]="fgNodeFeatures" class="gtx-entity-details-form">
-                    <gtx-node-features formControlName="data" [availableFeatures]="nodeFeatures$ | async"></gtx-node-features>
+                <form class="gtx-entity-details-form">
+                    <gtx-node-features
+                        [formControl]="fgNodeFeatures"
+                        [availableFeatures]="nodeFeatures$ | async"
+                    ></gtx-node-features>
                 </form>
             </div>
         </ng-template>

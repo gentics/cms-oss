@@ -1,10 +1,10 @@
-import { MaintenanceModeResponse } from '@gentics/cms-models';
 import { TestBed } from '@angular/core/testing';
+import { MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { MaintenanceModeState } from '../../../common/models';
+import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { STATE_MODULES } from '../state-modules';
-import { ApplicationStateService } from '../../providers';
 import { MaintenanceModeFetchErrorAction, MaintenanceModeFetchSuccessAction, StartMaintenanceModeFetchingAction } from './maintenance-mode.actions';
 
 describe('MaintenanceModeStateModule', () => {
@@ -46,7 +46,7 @@ describe('MaintenanceModeStateModule', () => {
         const response: MaintenanceModeResponse = {
             messages: [],
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
             },
             maintenance: true,
             banner: false,

@@ -1,32 +1,33 @@
 import { TestBed } from '@angular/core/testing';
-import { GtxVersion, GtxVersionCompatibility, UsersnapSettings } from '@gentics/cms-models';
+import { Variant, Version, VersionCompatibility, UsersnapSettings } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { FALLBACK_LANGUAGE } from '../../../common/config/config';
-import { UIMode, UIState } from '../../../common/models';
+import { UIMode } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { STATE_MODULES } from '../state-modules';
 import { SetCMPVersionAction, SetUILanguageAction, SetUIOverridesAction, SetUIVersionAction, SetUsersnapSettingsAction } from './ui.actions';
 
-const CMP_VERSION: GtxVersion = {
+const CMP_VERSION: Version = {
     cmpVersion: '7.8',
     version: '5.38.0',
+    variant: Variant.OPEN_SOURCE,
     nodeInfo: {
         'CMPNode Java 2': {
             meshVersion: '1.5.0',
             portalType: 'Gentics Portal | java',
             portalVersion: '1.2.9',
-            compatibility: GtxVersionCompatibility.NOT_SUPPORTED,
+            compatibility: VersionCompatibility.NOT_SUPPORTED,
         },
         'CMPNode PHP': {
             meshVersion: '1.6.0',
             portalType: 'Gentics Portal | php',
             portalVersion: '1.2.0',
-            compatibility: GtxVersionCompatibility.SUPPORTED,
+            compatibility: VersionCompatibility.SUPPORTED,
         },
         'CMPNode Java': {
             meshVersion: '1.6.0',
-            compatibility: GtxVersionCompatibility.UNKNOWN,
+            compatibility: VersionCompatibility.UNKNOWN,
         },
     },
 };
@@ -61,7 +62,11 @@ describe('UIStateModule', () => {
             usersnap: { key: undefined },
             hideExtras: false,
             mode: UIMode.EDIT,
-        } as UIState);
+            overlayCount: 0,
+            constructFavourites: [],
+            tagEditorOpen: false,
+            nodesLoaded: false,
+        });
     });
 
     it('setCmsVersion works', () => {

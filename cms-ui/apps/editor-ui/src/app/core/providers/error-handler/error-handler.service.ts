@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { LogoutSuccessAction, UpdateSearchFilterAction } from '@editor-ui/app/state';
+import { LogoutSuccessAction } from '@editor-ui/app/state/modules/auth/auth.actions';
+import { UpdateSearchFilterAction } from '@editor-ui/app/state/modules/folder/folder.actions';
+import { ResponseCode } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ApplicationStateService } from '../../../state';
-import { ApiError } from '../api';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -62,6 +66,11 @@ export class ErrorHandler {
      * Can be extended later to log client-side errors to the server.
      */
     catch = (error: Error, options?: { notification: boolean }): void => {
+        // Ignore errors which are from modals which have been closed by the user
+        if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+            return;
+        }
+
         if (!error || (error as any).reason !== 'auth') {
             console.error('Error details: ', error);
         }
@@ -83,50 +92,9 @@ export class ErrorHandler {
         }
 
         if (error instanceof ApiError) {
-            switch (error.reason) {
-                case 'failed':
-                case 'invalid_data':
-                case 'http':
-                case 'permissions':
-                    // Invalid SID always display the login screen, or tries to login with SSO
-                    // So it can mislead the user, therefore we not display it.
-                    const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
-                    const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
-
-                    if (showNotification && !isInvalidSid) {
-                        this.notification.show({
-                            message: error.message || error.toString(),
-                            type: 'alert',
-                            delay: 10_000,
-                        });
-                    }
-
-                    // If the user has been signed out (usually due to activating the maintanance-mode),
-                    // but the state still isn't updated yet, then we do this now.
-                    // Additionally, send the User back to the Login with the proper return URL.
-                    if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
-                        this.userWasLoggedOut();
-                    }
-
-                    break;
-
-                case 'auth':
-                    // User should be logged in but is not - he was logged out by the backend.
-                    if (this.appState.now.auth.isLoggedIn) {
-                        this.userWasLoggedOut();
-                    } else if (showNotification) {
-                        this.notification.show({
-                            message: error.message,
-                            type: 'alert',
-                            delay: 10_000,
-                        });
-                    }
-                    break;
-
-                default:
-                    console.error(`Need to handle: ApiError(reason = "${error.reason}")`);
-                    break;
-            }
+            this.handleApiError(error, showNotification);
+        } else if (error instanceof GCMSRestClientRequestError) {
+            this.handleRestClientError(error, showNotification);
         } else {
             // TODO: If we need to handle other errors, here's the spot for it.
             // debugger;
@@ -144,15 +112,114 @@ export class ErrorHandler {
         this.errorList.next(this.errorList.value.concat(error));
     }
 
+    private handleApiError(error: ApiError, showNotification: boolean): void {
+        switch (error.reason) {
+            case 'failed':
+            case 'invalid_data':
+            case 'http':
+            case 'permissions': {
+                // Invalid SID always display the login screen, or tries to login with SSO
+                // So it can mislead the user, therefore we not display it.
+                const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
+                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+
+                if (showNotification && !isInvalidSid) {
+                    this.notification.show({
+                        message: error.message || error.toString(),
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+
+                // If the user has been signed out (usually due to activating the maintanance-mode),
+                // but the state still isn't updated yet, then we do this now.
+                // Additionally, send the User back to the Login with the proper return URL.
+                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                }
+
+                break;
+            }
+
+            case 'auth':
+                // User should be logged in but is not - he was logged out by the backend.
+                if (this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                } else if (showNotification) {
+                    this.notification.show({
+                        message: error.message,
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+                break;
+
+            default:
+                console.error(`Need to handle: ApiError(reason = "${error.reason}")`);
+                break;
+        }
+    }
+
+    private handleRestClientError(error: GCMSRestClientRequestError, showNotification: boolean): void {
+        switch (error.data?.responseInfo?.responseCode) {
+            case ResponseCode.AUTH_REQUIRED:
+            case ResponseCode.MAINTENANCE_MODE:
+                // User should be logged in but is not - he was logged out by the backend.
+                if (this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                } else if (showNotification) {
+                    this.notification.show({
+                        message: error.message,
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+                break;
+
+            case ResponseCode.OK:
+                // No idea how we got here
+                // Throw a new error for each non-success/info message
+                (error.data?.messages || [])
+                    .filter(msg => msg.type !== 'INFO' && msg.type !== 'SUCCESS')
+                    .forEach(msg => this.catch(new Error(msg.message), { notification: true }));
+                break;
+
+            default: {
+                // All other codes have the message simply in them
+                // Invalid SID always display the login screen, or tries to login with SSO
+                // So it can mislead the user, therefore we not display it.
+                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || '').toLowerCase();
+                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+
+                if (showNotification && !isInvalidSid) {
+                    this.notification.show({
+                        message: error.message || error.toString(),
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+
+                // If the user has been signed out (usually due to activating the maintanance-mode),
+                // but the state still isn't updated yet, then we do this now.
+                // Additionally, send the User back to the Login with the proper return URL.
+                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                }
+
+                break;
+            }
+        }
+    }
+
     /**
      * Serializes the current application state and all occurred errors
      * to a base64-encoded string which can be used to reproduce the error.
      */
     serialize(): string {
-        let state = this.appState.now;
+        const state = this.appState.now;
 
         // Do not serialize entities and messages
-        let stateToSerialize = {
+        const stateToSerialize = {
             auth: state.auth,
             editor: state.editor,
             favourites: state.favourites,
@@ -163,17 +230,17 @@ export class ErrorHandler {
             user: state.user,
         };
 
-        let json = JSON.stringify({
+        const json = JSON.stringify({
             state: stateToSerialize,
             errors: this.errorList.value,
             url: this.router.url,
         });
 
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        let escapedUnicode = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g,
+        const escapedUnicode = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g,
             (all: string, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
 
-        let base64 = btoa(escapedUnicode);
+        const base64 = btoa(escapedUnicode);
 
         return base64;
     }
@@ -184,10 +251,10 @@ export class ErrorHandler {
      * To get the complete application state, the entities need to be requested from the server.
      */
     deserialize(serializedBase64String: string): { state: any, errors: Error[], url: string } {
-        let escapedUnicode = atob(serializedBase64String);
+        const escapedUnicode = atob(serializedBase64String);
 
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        let json = decodeURIComponent(Array.prototype.map.call(escapedUnicode,
+        const json = decodeURIComponent(Array.prototype.map.call(escapedUnicode,
             (char: string) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2)).join(''));
 
         return JSON.parse(json);

@@ -1,17 +1,23 @@
 import { Injectable } from '@angular/core';
 import { StateContext } from '@ngxs/store';
-import { patch } from '@ngxs/store/operators';
+import { iif, patch } from '@ngxs/store/operators';
 import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { Alert, Alerts, UIMode, UIState } from '../../../common/models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {
     BreadcrumbLocation,
+    DecreaseOverlayCountAction,
+    IncreaseOverlayCountAction,
+    ResetOverlayCountAction,
     SetAvailableUILanguageAction,
     SetBackendLanguageAction,
     SetBreadcrumbExpandedAction,
     SetBrokenLinksCountAction,
     SetCMPVersionAction,
+    SetConstructFavourites,
     SetHideExtrasAction,
+    SetNodesLoadedAction,
+    SetTagEditorOpenAction,
     SetUILanguageAction,
     SetUIModeAction,
     SetUIOverridesAction,
@@ -37,6 +43,10 @@ const INITIAL_UI_STATE: UIState = {
         key: undefined,
     },
     hideExtras: false,
+    overlayCount: 0,
+    constructFavourites: [],
+    tagEditorOpen: false,
+    nodesLoaded: false,
 };
 
 @AppStateBranch<UIState>({
@@ -114,9 +124,12 @@ export class UIStateModule {
 
     @ActionDefinition(SetBrokenLinksCountAction)
     handleSetBrokenLinksCountAction(ctx: StateContext<UIState>, action: SetBrokenLinksCountAction): void {
+        const state = ctx.getState();
         ctx.setState(patch<UIState>({
             alerts: patch<Alerts>({
-                linkChecker: patch<Alert>({
+                linkChecker: iif(state.alerts.linkChecker != null, patch<Alert>({
+                    brokenLinksCount: action.count,
+                }), {
                     brokenLinksCount: action.count,
                 }),
             }),
@@ -141,6 +154,48 @@ export class UIStateModule {
     handleSetUIModeAction(ctx: StateContext<UIState>, action: SetUIModeAction): void {
         ctx.patchState({
             mode: action.mode,
+        });
+    }
+
+    @ActionDefinition(SetConstructFavourites)
+    handleSetConstructFavourites(ctx: StateContext<UIState>, action: SetConstructFavourites): void {
+        ctx.patchState({
+            constructFavourites: action.favourites,
+        });
+    }
+
+    @ActionDefinition(IncreaseOverlayCountAction)
+    handleIncreaseOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: ctx.getState().overlayCount + 1,
+        });
+    }
+
+    @ActionDefinition(DecreaseOverlayCountAction)
+    handleDecreaseOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: Math.max(0, ctx.getState().overlayCount - 1),
+        });
+    }
+
+    @ActionDefinition(ResetOverlayCountAction)
+    handleResetOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: 0,
+        });
+    }
+
+    @ActionDefinition(SetTagEditorOpenAction)
+    handleSetTagEditorOpenAction(ctx: StateContext<UIState>, action: SetTagEditorOpenAction): void {
+        ctx.patchState({
+            tagEditorOpen: action.isOpen,
+        });
+    }
+
+    @ActionDefinition(SetNodesLoadedAction)
+    handleSetNodesLoadedAction(ctx: StateContext<UIState>, action: SetNodesLoadedAction): void {
+        ctx.patchState({
+            nodesLoaded: action.loaded,
         });
     }
 }

@@ -1,9 +1,9 @@
-import { ObjectPropertyCategoryBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyCategoryBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertyCategory } from '@gentics/cms-models';
+import { ObjectPropertyCategory } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { ObjectPropertyCategoryTableLoaderService } from '../../providers';
 import { CreateObjectPropertyCategoryModalComponent } from '../create-object-property-category-modal/create-object-property-category-modal.component';
@@ -16,8 +16,8 @@ import { CreateObjectPropertyCategoryModalComponent } from '../create-object-pro
 })
 export class ObjectPropertyCategoryMasterComponent extends BaseTableMasterComponent<ObjectPropertyCategory, ObjectPropertyCategoryBO> {
 
-    protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType>= 'objectPropertyCategory';
-    protected detailPath = 'object-property-category';
+    protected entityIdentifier = EditableEntity.OBJECT_PROPERTY_CATEGORY;
+    protected detailPath = AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

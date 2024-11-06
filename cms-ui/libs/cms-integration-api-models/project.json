@@ -1,0 +1,56 @@
+{
+    "name": "cms-integration-api-models",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/cms-integration-api-models/src",
+    "projectType": "library",
+    "tags": ["lib", "models", "publish"],
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/cms-integration-api-models",
+                "tsConfig": "libs/cms-integration-api-models/tsconfig.lib.json",
+                "packageJson": "libs/cms-integration-api-models/package.json",
+                "main": "libs/cms-integration-api-models/src/public-api.ts",
+                "assets": []
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["libs/cms-integration-api-models/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/libs/cms-integration-api-models"],
+            "options": {
+                "jestConfig": "libs/cms-integration-api-models/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true,
+                    "color": false
+                }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/cms-integration-api-models"
+            }
+        }
+    }
+}

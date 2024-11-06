@@ -9,7 +9,7 @@ import { generateFormProvider } from '@gentics/ui-core';
     selector: 'gtx-message-properties',
     templateUrl: './message-properties.component.html',
     styleUrls: ['./message-properties.component.scss'],
-    providers: [generateFormProvider(MessagePropertiesComponent)]
+    providers: [generateFormProvider(MessagePropertiesComponent)],
 })
 export class MessagePropertiesComponent extends BasePropertiesComponent<SendMessageForm> {
 
@@ -23,6 +23,7 @@ export class MessagePropertiesComponent extends BasePropertiesComponent<SendMess
         return new UntypedFormGroup({
             recipientIds: new UntypedFormControl([], Validators.required),
             message: new UntypedFormControl(''),
+            isInstant: new UntypedFormControl(false),
         });
     }
 

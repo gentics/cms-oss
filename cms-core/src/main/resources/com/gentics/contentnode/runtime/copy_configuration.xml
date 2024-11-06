@@ -735,6 +735,11 @@
 			<!-- add default values for columns, that are not present on all systems -->
 			<property id="instant_publishing_default">0</property>
 			<property id="language_information_default">0</property>
+			<property id="http2">0</property>
+			<property id="nofoldersindex">0</property>
+			<property id="nofilesindex">0</property>
+			<property id="nopagesindex">0</property>
+			<property id="noformsindex">0</property>
 			<property id="permission_information_default">0</property>
 			<property id="multichannelling_default">0</property>
 			<property id="nondatacolumns">checkdate,checkstatus,checkresult,statusdate,datastatus,datacheckresult</property>

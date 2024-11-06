@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { GcmsUiLanguage, TagPart } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { TagPart } from '@gentics/cms-models';
 
 /**
  * Transforms a TagPart into the string that should be used for

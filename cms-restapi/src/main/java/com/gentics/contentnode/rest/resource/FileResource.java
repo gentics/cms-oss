@@ -147,12 +147,13 @@ public interface FileResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of file ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found files, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiFileLoadResponse load(MultiObjectLoadRequest request);
+	MultiFileLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Create a new file handling simple post data
@@ -299,11 +300,12 @@ public interface FileResource extends AuthenticatedResource {
 	 * @param id
 	 *            id of the File to delete
 	 * @param nodeId id of the node (channel) of the file
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
 
 	/**
 	 * Remove the file denoted by the given id from the wastebin.

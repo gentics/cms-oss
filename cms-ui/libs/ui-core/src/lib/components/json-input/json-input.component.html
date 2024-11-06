@@ -1,0 +1,14 @@
+<gtx-textarea
+    class="input"
+    [label]="label"
+    [required]="required"
+    [autofocus]="autofocus"
+    [readonly]="readonly"
+    [disabled]="disabled"
+    [placeholder]="placeholder"
+    [name]="name"
+    [id]="id"
+    [value]="rawValue"
+    (blur)="handleBlur()"
+    (valueChange)="updateRawValue($event)"
+></gtx-textarea>

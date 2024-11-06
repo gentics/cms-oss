@@ -1,15 +1,14 @@
 {
   "globalId" : "A547.69478",
   "keyword" : "textshort",
-  "icon" : "text.gif",
   "name" : {
     "de" : "Text (kurz)",
     "en" : "Text (short)"
   },
   "mayBeSubtag" : false,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.69484",
     "name" : {

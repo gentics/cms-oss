@@ -116,6 +116,16 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	protected IWorkPhase offlinePhase;
 
 	/**
+	 * Collect image data workphase
+	 */
+	protected IWorkPhase collectImageDataPhase;
+
+	/**
+	 * Image Variants workphase
+	 */
+	protected IWorkPhase imageVariantsPhase;
+
+	/**
 	 * State of the publish controller
 	 */
 	protected State state = State.init;
@@ -295,10 +305,14 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		foldersAndFilesPhase = new CNWorkPhase(meshWorkPhase, "mesh.foldersfiles", PublishWorkPhaseConstants.PHASE_NAME_MESH_FOLDERS_FILES);
 		postponedPhase = new CNWorkPhase(meshWorkPhase, "mesh.postponed", PublishWorkPhaseConstants.PHASE_NAME_MESH_POSTPONED);
 		offlinePhase = new CNWorkPhase(meshWorkPhase, "mesh.offline", PublishWorkPhaseConstants.PHASE_NAME_MESH_OFFLINE);
+		collectImageDataPhase = new CNWorkPhase(meshWorkPhase, "mesh.collectimagedata", PublishWorkPhaseConstants.PHASE_NAME_MESH_COLLECTIMAGEDATA);
+		imageVariantsPhase = new CNWorkPhase(meshWorkPhase, "mesh.imagevariants", PublishWorkPhaseConstants.PHASE_NAME_MESH_IMAGEVARIANTS);
 
 		initWorkPhase.addWork(publishers.size());
 		waitWorkPhase.addWork(publishers.size());
 		offlinePhase.addWork(publishers.size());
+		collectImageDataPhase.addWork(publishers.size());
+		imageVariantsPhase.addWork(publishers.size());
 
 		// set the counts of dirted objects
 		for (MeshPublisher mp : publishers) {
@@ -381,6 +395,20 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	}
 
 	/**
+	 * Collect image data for variants creation, if applicable.
+	 * 
+	 * @throws NodeException
+	 */
+	public void collectImageData() throws NodeException {
+		state = State.collectImageData;
+		try (WorkPhaseHandler phase = new WorkPhaseHandler(collectImageDataPhase)) {
+			for (MeshPublisher mp : publishers) {
+				mp.collectImageData();
+			}
+		}
+	}
+
+	/**
 	 * Publish folders and files
 	 * @throws NodeException
 	 */
@@ -401,6 +429,20 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		state = State.publishPages;
 		for (MeshPublisher mp : publishers) {
 			mp.info(String.format("Publish pages into '%s'", mp.getCr().getName()));
+		}
+	}
+
+	/**
+	 * Publish folders and files
+	 * @throws NodeException
+	 */
+	public void createImageVariants() throws NodeException {
+		state = State.createImageVariants;
+		try (WorkPhaseHandler phase = new WorkPhaseHandler(imageVariantsPhase)) {
+			for (MeshPublisher mp : publishers) {
+				mp.createImageVariants();
+				phase.work();
+			}
 		}
 	}
 
@@ -599,6 +641,6 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * States of the publish controller
 	 */
 	public static enum State {
-		init, checkSchemas, waitForMigrations, publishFoldersAndFiles, publishPages, checkOfflineFiles, handlePostponedTasks, removeOfflineObjects, waitForRenderers, waitForWriteTasks, done
+		init, checkSchemas, waitForMigrations, collectImageData, publishFoldersAndFiles, publishPages, createImageVariants, checkOfflineFiles, handlePostponedTasks, removeOfflineObjects, waitForRenderers, waitForWriteTasks, done
 	}
 }

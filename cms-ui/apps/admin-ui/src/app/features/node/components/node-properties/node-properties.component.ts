@@ -1,30 +1,37 @@
-import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Feature, Node, Normalized } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { EntityManagerService } from '../../../../core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import {
+    Feature,
+    NODE_HOSTNAME_PROPERTY_PREFIX,
+    NODE_PREVIEW_URL_PROPERTY_PREFIX,
+    Node,
+    NodeHostnameType,
+    NodePreviewurlType,
+    Raw,
+} from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import {
+    FormProperties,
+    generateFormProvider,
+    setControlsEnabled,
+    createPropertyPatternValidator,
+    VALIDATOR_REGEX_ERROR_PROPERTY,
+    generateValidatorProvider,
+} from '@gentics/ui-core';
 
-/**
- * Defines the data editable by the `NodePropertiesComponent`.
- *
- * To convey the validity state of the user's input, the onChange callback will
- * be called with `null` if the form data is currently invalid.
- */
-export interface NodePropertiesFormData {
-    name: string;
-    inheritedFromId?: number;
-    description: string;
-    https: boolean;
-    hostname: string;
-    meshPreviewUrl: string;
-    insecurePreviewUrl: boolean;
-    defaultFileFolderId: number;
-    defaultImageFolderId: number;
-    pubDirSegment: boolean;
+export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
+'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
+'pubDirSegment' | 'publishImageVariants'> & {
+    description?: string;
+    previewType: NodePreviewurlType;
+    hostType: NodeHostnameType;
+};
+
+export enum NodePropertiesMode {
+    CREATE = 'create',
+    UPDATE = 'update',
 }
 
 @Component({
@@ -32,60 +39,74 @@ export interface NodePropertiesFormData {
     templateUrl: './node-properties.component.html',
     styleUrls: ['./node-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(NodePropertiesComponent)],
+    providers: [
+        generateFormProvider(NodePropertiesComponent),
+        generateValidatorProvider(NodePropertiesComponent),
+    ],
 })
-export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor {
+export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
 
-    /**
-     * Determines if changing the `inheritedFromId` is allowed.
-     * This is normally only the case when creating a new node.
-     */
-    @Input()
-    public allowChangingInheritedFrom = false;
+    public readonly NodePropertiesMode = NodePropertiesMode;
+    public readonly VALIDATOR_REGEX_ERROR_PROPERTY = VALIDATOR_REGEX_ERROR_PROPERTY;
+
+    /** selectable options for node input hostnameType */
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+        {
+            id: NodeHostnameType.VALUE,
+            label: 'node.hostnameType_value',
+        },
+        {
+            id: NodeHostnameType.PROPERTY,
+            label: 'node.hostnameType_property',
+        },
+    ];
+
+    /** selectable options for node input meshPreviewUrlType */
+    public readonly MESH_PREVIEWURL_TYPES: { id: NodePreviewurlType; label: string; }[] = [
+        {
+            id: NodePreviewurlType.VALUE,
+            label: 'node.mesh_preview_url_type_value',
+        },
+        {
+            id: NodePreviewurlType.PROPERTY,
+            label: 'node.mesh_preview_url_type_property',
+        },
+    ];
 
     @Input()
-    public disabled = false;
+    public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
 
-    /**
-     * Determines if changing the default upload folders for files and images is allowed.
-     *
-     * For an existing node, this is normally allowed, while in the create node wizard it is not.
-     */
-    @Input()
-    public allowEditingDefaultUploadFolders = true;
+    public nodes: Node<Raw>[];
+    protected nodesLoading = false;
+    protected nodesLoaded = false;
 
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
      *
-     * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
+     * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
-    @Input()
     public pubDirSegmentActivated: boolean;
-
-    isChildNode: boolean;
-
-    fgProperties: UntypedFormGroup;
-
-    nodes$: Observable<Node<Normalized>[]>;
-
-    /**
-     * The node, from which the current node is inherited (if it is a channel).
-     */
-    inheritedFromNode$?: Observable<Node>;
-
-    multiChannelingEnabled = false;
-    meshCrEnabled = false;
-
-    private subscriptions: Subscription[] = [];
+    public multiChannelingEnabled = false;
+    public meshCrEnabled = false;
 
     constructor(
-        private changeDetector: ChangeDetectorRef,
-        private entityManager: EntityManagerService,
+        changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
-    ) { }
+        private client: GCMSRestClientService,
+    ) {
+        super(changeDetector);
+    }
 
-    ngOnInit(): void {
-        this.nodes$ = this.entityManager.watchNormalizedEntitiesList('node');
+    public override ngOnInit(): void {
+        super.ngOnInit();
+
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.PUB_DIR_SEGMENT]).subscribe(featureEnabled => {
+            this.pubDirSegmentActivated = featureEnabled;
+            if (this.form) {
+                this.form.controls.pubDirSegment.enable();
+            }
+            this.changeDetector.markForCheck();
+        }));
 
         this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(featureEnabled => {
             this.multiChannelingEnabled = featureEnabled;
@@ -96,81 +117,105 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
             this.meshCrEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));
-
-        this.fgPropertiesInit();
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.disabled) {
-            this.setDisabledState(this.disabled);
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.mode) {
+            this.loadNodesIfNeeded();
         }
     }
 
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
-    }
-
-    writeValue(value: NodePropertiesFormData): void {
-        if (value) {
-            this.fgProperties.patchValue(value);
-            if (typeof value.inheritedFromId === 'number') {
-                this.inheritedFromNode$ = this.entityManager.getEntity('node', value.inheritedFromId);
-            } else {
-                this.inheritedFromNode$ = null;
-            }
-        } else {
-            this.fgProperties.reset();
+    protected loadNodesIfNeeded(): void {
+        if (this.mode !== NodePropertiesMode.CREATE || this.nodesLoaded || this.nodesLoading) {
+            return;
         }
-        this.fgProperties.markAsPristine();
+
+        this.nodesLoading = true;
+        this.subscriptions.push(this.client.node.list().subscribe(nodes => {
+            this.nodes = nodes.items;
+            this.nodesLoading = false;
+            this.nodesLoaded = true;
+            this.changeDetector.markForCheck();
+        }));
     }
 
-    registerOnChange(fn: FormControlOnChangeFn<NodePropertiesFormData>): void {
-        this.subscriptions.push(this.fgProperties.valueChanges.pipe(
-            map((formData: NodePropertiesFormData) => {
-                if (formData && typeof formData.inheritedFromId === 'number') {
-                    this.isChildNode = true;
-                } else {
-                    this.isChildNode = false;
-                }
-                return this.fgProperties.valid ? formData : null;
+    protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
+        return new FormGroup<FormProperties<NodePropertiesFormData>>({
+            name: new FormControl(this.value?.name, [
+                Validators.required,
+                Validators.maxLength(50),
+            ]),
+            description: new FormControl(this.value?.description, Validators.maxLength(200)),
+            inheritedFromId: new FormControl({
+                value: this.value?.inheritedFromId,
+                disabled: this.mode !== NodePropertiesMode.CREATE,
             }),
-        ).subscribe(fn));
-    }
 
-    registerOnTouched(fn: FormControlOnTouchedFn): void { }
+            previewType: new FormControl<NodePreviewurlType>(this.value?.previewType ?? this.value?.meshPreviewUrlProperty
+                ? NodePreviewurlType.PROPERTY
+                : NodePreviewurlType.VALUE,
+            ),
+            meshPreviewUrl: new FormControl(this.value?.meshPreviewUrl, Validators.maxLength(255)),
+            meshPreviewUrlProperty: new FormControl(this.value?.meshPreviewUrlProperty, [
+                Validators.maxLength(255),
+                createPropertyPatternValidator(NODE_PREVIEW_URL_PROPERTY_PREFIX),
+            ]),
 
-    setDisabledState(isDisabled: boolean): void {
-        if (isDisabled) {
-            this.fgProperties.disable({ emitEvent: false });
-        } else {
-            this.fgProperties.enable({ emitEvent: false });
-        }
+            https: new FormControl(this.value?.https),
+            insecurePreviewUrl: new FormControl(this.value?.insecurePreviewUrl),
+            publishImageVariants: new FormControl(this.value?.publishImageVariants),
 
-        // ToDo: GTXPE-845
-        // Until we have the repository browser in the Admin UI, we need to disable the default upload folders.
-        this.fgProperties.controls.defaultFileFolderId.disable({ emitEvent: false });
-        this.fgProperties.controls.defaultImageFolderId.disable({ emitEvent: false });
-    }
+            hostType: new FormControl<NodeHostnameType>(this.value?.hostType ?? this.value?.hostProperty
+                ? NodeHostnameType.PROPERTY
+                : NodeHostnameType.VALUE,
+            ),
+            host: new FormControl(this.value?.host, Validators.maxLength(255)),
+            hostProperty: new FormControl(this.value?.hostProperty, [
+                Validators.required,
+                Validators.maxLength(255),
+                createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
+            ]),
 
-    /**
-     * Initialize form 'Properties'
-     */
-    private fgPropertiesInit(): void {
-        this.fgProperties = new UntypedFormGroup({
-            name: new UntypedFormControl(null, [ Validators.required ]),
-            inheritedFromId: new UntypedFormControl(null),
-            description: new UntypedFormControl(null),
-            https: new UntypedFormControl(null),
-            hostname: new UntypedFormControl(null, [ Validators.required ]),
-            meshPreviewUrl: new UntypedFormControl(null),
-            insecurePreviewUrl: new UntypedFormControl(null),
-            pubDirSegment: new UntypedFormControl(null),
-
-            // ToDo: GTXPE-845
-            // Until we have the repository browser in the Admin UI, we need to disable the default upload folders.
-            defaultFileFolderId: new UntypedFormControl({ value: null, disabled: true }),
-            defaultImageFolderId: new UntypedFormControl({ value: null, disabled: true }),
+            pubDirSegment: new FormControl({
+                value: this.value?.pubDirSegment,
+                disabled: !this.pubDirSegmentActivated,
+            }),
+            defaultFileFolderId: new FormControl(this.value?.defaultFileFolderId),
+            defaultImageFolderId: new FormControl(this.value?.defaultImageFolderId),
         });
     }
 
+    protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
+        if (!value) {
+            return;
+        }
+
+        if (value.previewType) {
+            setControlsEnabled(this.form, ['meshPreviewUrl'], value.previewType !== NodePreviewurlType.PROPERTY, {
+                emitEvent: loud,
+            });
+            setControlsEnabled(this.form, ['meshPreviewUrlProperty'], value.previewType === NodePreviewurlType.PROPERTY, {
+                emitEvent: loud,
+            });
+        }
+
+        if (value.hostType) {
+            setControlsEnabled(this.form, ['host'], value.hostType !== NodeHostnameType.PROPERTY, {
+                emitEvent: loud,
+            });
+            setControlsEnabled(this.form, ['hostProperty'], value.hostType === NodeHostnameType.PROPERTY, {
+                emitEvent: loud,
+            });
+        }
+    }
+
+    protected assembleValue(value: NodePropertiesFormData): NodePropertiesFormData {
+        return {
+            ...value,
+            hostProperty: value.hostProperty || '',
+            meshPreviewUrlProperty: value.meshPreviewUrlProperty || '',
+        };
+    }
 }

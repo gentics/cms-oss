@@ -20,6 +20,8 @@ public class ObjectTag extends Tag {
 
 	private Boolean inheritable;
 
+	private Integer categoryId;
+
 	private String categoryName;
 
 	private Integer sortOrder;
@@ -88,6 +90,22 @@ public class ObjectTag extends Tag {
 	 */
 	public void setInheritable(Boolean inheritable) {
 		this.inheritable = inheritable;
+	}
+
+	/**
+	 * Category ID
+	 * @return category ID
+	 */
+	public Integer getCategoryId() {
+		return categoryId;
+	}
+
+	/**
+	 * Set the category ID
+	 * @param categoryId category ID
+	 */
+	public void setCategoryId(Integer categoryId) {
+		this.categoryId = categoryId;
 	}
 
 	/**

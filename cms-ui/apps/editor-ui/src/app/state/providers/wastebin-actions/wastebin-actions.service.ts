@@ -10,7 +10,8 @@ import {
     Page,
     SortField,
 } from '@gentics/cms-models';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Api, ApiError } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -101,16 +102,17 @@ export class WastebinActionsService {
         type: 'folder' | 'page' | 'file' | 'image' | 'form',
         ids: number[],
         nodeId: number,
+        disableInstantDelete?: boolean,
     ): Promise<{ succeeded: number; failed: number; error: ApiError }> {
         if (!ids.length) {
             return;
         }
 
-        let requests = ids.map((id) =>
-            this.api.folders
-                .deleteItem(type, id, nodeId)
-                .map((res) => Object.assign(res, { id, error: null }))
-                .catch((error) => Observable.of({ id, error })),
+        const requests = ids.map((id) =>
+            this.api.folders.deleteItem(type, id, nodeId, disableInstantDelete).pipe(
+                map((res) => Object.assign(res, { id, error: null })),
+                catchError((error) => of({ id, error })),
+            ),
         );
 
         this.appState.dispatch(new StartWasteBinItemsDeletionAction(type, ids));
@@ -118,12 +120,12 @@ export class WastebinActionsService {
         return forkJoin(requests)
             .toPromise()
             .then((results) => {
-                let succeeded = results
+                const succeeded = results
                     .filter((res) => !res.error)
                     .map((res) => res.id);
-                let badResponses = results.filter((res: any) => res.error);
-                let failed = badResponses.map((res) => res.id);
-                let error = badResponses.length && badResponses[0].error;
+                const badResponses = results.filter((res: any) => res.error);
+                const failed = badResponses.map((res) => res.id);
+                const error = badResponses.length && badResponses[0].error;
 
                 if (failed.length) {
                     this.appState.dispatch(new WasteBinItemsDeletionErrorAction(type, failed, error.message));
@@ -296,8 +298,8 @@ export class WastebinActionsService {
                 case 'folder':
                     return this.api.folders.getFolders(parentId, options);
                 case 'page': {
-                    let languageId = this.appState.now.folder.activeLanguage;
-                    let language = this.entityResolver.getLanguage(languageId);
+                    const languageId = this.appState.now.folder.activeLanguage;
+                    const language = this.entityResolver.getLanguage(languageId);
                     let pageListOptions: GtxCmsQueryOptions = options;
                     if (language) {
                         pageListOptions = Object.assign(options, {

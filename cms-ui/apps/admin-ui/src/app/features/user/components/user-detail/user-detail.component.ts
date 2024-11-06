@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE, UserDetailTabs } from '@admin-ui/common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
@@ -23,11 +23,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     AccessControlledType,
     GcmsPermission,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
     User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
@@ -35,13 +33,6 @@ import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/detail-loading.operator';
-
-export enum UserDetailTabs {
-    properties = 'properties',
-    permissionsContent = 'permissions-content',
-    permissionsAdmin = 'permissions-admin',
-    userGroups = 'user-groups',
-}
 
 // *************************************************************************************************
 /**
@@ -87,7 +78,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<UserDetailTabs, FormTabHandle>;
+    private tabHandles: Record<UserDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -149,7 +140,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         });
 
         this.permissionGroupsRead$ = this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
@@ -212,7 +203,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
     /**
      * Set new value of form 'Properties'
      */
-    protected fgPropertiesUpdate(user: User<Normalized | Raw>): void {
+    protected fgPropertiesUpdate(user: User<Normalized | Raw>): void {
         this.fgProperties.setValue({
             firstName: user.firstName,
             lastName: user.lastName,
@@ -227,12 +218,12 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         this.fgPropertiesInit();
 
         this.tabHandles = {
-            [UserDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [UserDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateUser(),
             }),
-            [UserDetailTabs.userGroups]: NULL_FORM_TAB_HANDLE,
-            [UserDetailTabs.permissionsAdmin]: NULL_FORM_TAB_HANDLE,
-            [UserDetailTabs.permissionsContent]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.USER_GROUPS]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.PERMISSIONS_ADMIN]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.PEROMSSIONS_CONTENT]: NULL_FORM_TAB_HANDLE,
         };
     }
 

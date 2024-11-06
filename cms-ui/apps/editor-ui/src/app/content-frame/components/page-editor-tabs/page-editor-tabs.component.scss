@@ -1,0 +1,80 @@
+@import 'variables';
+
+:host {
+    display: block;
+}
+
+.gtx-editor-tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+
+    .editor-tab {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        border: none;
+        outline: none;
+        padding: 0.25rem 0.75rem;
+        color: $gtx-color-dark-gray;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        align-items: center;
+        cursor: pointer;
+        transition: 200ms;
+        overflow: visible;
+
+        &:hover {
+            color: $gtx-color-off-black;
+        }
+
+        &.active {
+            border-bottom-color: $gtx-color-primary;
+            color: $gtx-color-primary;
+        }
+
+        .tab-icon {
+            height: 24px;
+            position: relative;
+            user-select: none;
+            color: inherit;
+            transition: 200ms;
+
+            .icon-badge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background: $gtx-color-alert;
+                color: #fff;
+                font-size: 0.6rem;
+                padding: 2px 4px;
+                border-radius: 3px;
+                margin-top: -0.25rem;
+                margin-right: -0.25rem;
+                text-align: center;
+            }
+        }
+
+        .tab-label {
+            margin-left: 0.5rem;
+            transition: 200ms;
+            user-select: none;
+            color: inherit;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+    }
+
+    &.stable.overflowing {
+        // Make the tabs visible even if overflowing
+        .editor-tab.is-overflowing-element {
+            display: flex;
+        }
+        .editor-tab .tab-label {
+            display: none;
+        }
+    }
+}

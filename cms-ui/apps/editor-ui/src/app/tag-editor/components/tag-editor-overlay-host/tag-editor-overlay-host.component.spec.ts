@@ -3,12 +3,12 @@ import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { TagEditorResult } from '@gentics/cms-integration-api-models';
 import { StringTagPartProperty } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
-import { EditableTag } from '../../common';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -74,12 +74,16 @@ describe('TagEditorOverlayHostComponent', () => {
             // Make sure that the promise is resolved correctly.
             let origPromiseResolved = false;
             let resultResolved = false;
-            result.then(actualEditedTag => {
+            result.then(editorResult => {
                 expect(origPromiseResolved).toBe(true);
-                expect(actualEditedTag).toEqual(expectedEditedTag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(expectedEditedTag);
                 resultResolved = true;
             }).catch(() => fail('result promise should not be rejected.'));
-            tagEditorHost.editTagResolveFn(expectedEditedTag);
+            tagEditorHost.editTagResolveFn({
+                doDelete: false,
+                tag: expectedEditedTag,
+            });
             origPromiseResolved = true;
             tick();
             expect(resultResolved).toBe(true);
@@ -159,12 +163,16 @@ describe('TagEditorOverlayHostComponent', () => {
             // Make sure that the original promise still resolves correctly.
             let origPromiseResolved = false;
             let resultResolved = false;
-            result.then(actualEditedTag => {
+            result.then(editorResult => {
                 expect(origPromiseResolved).toBe(true);
-                expect(actualEditedTag).toEqual(tag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(tag);
                 resultResolved = true;
             }).catch(() => fail('result promise should not be rejected.'));
-            tagEditorHost.editTagResolveFn(tag);
+            tagEditorHost.editTagResolveFn({
+                doDelete: false,
+                tag: tag,
+            });
             origPromiseResolved = true;
             tick();
             expect(resultResolved).toBe(true);
@@ -181,15 +189,15 @@ describe('TagEditorOverlayHostComponent', () => {
 
 @Component({
     selector: 'tag-editor-host',
-    template: ``,
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    template: '',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 class MockTagEditorHostComponent {
-    editTagResolveFn: (value?: EditableTag | PromiseLike<EditableTag>) => void;
+    editTagResolveFn: (value?: TagEditorResult | PromiseLike<TagEditorResult>) => void;
     editTagRejectFn: (reason?: any) => void;
 
     editTag = jasmine.createSpy('editTag').and.callFake(() => {
-        return new Promise<EditableTag>((resolve, reject) => {
+        return new Promise<TagEditorResult>((resolve, reject) => {
             this.editTagResolveFn = resolve;
             this.editTagRejectFn = reject;
         });
@@ -199,8 +207,8 @@ class MockTagEditorHostComponent {
 @Component({
     template: `
         <tag-editor-overlay-host #tagEditorOverlayHost></tag-editor-overlay-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('tagEditorOverlayHost', { static: true })
     tagEditorOverlayHost: TagEditorOverlayHostComponent;

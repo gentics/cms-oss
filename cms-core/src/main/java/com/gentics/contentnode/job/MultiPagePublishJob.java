@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.apache.logging.log4j.Level;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionException;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -55,43 +53,7 @@ import com.gentics.lib.i18n.CNI18nString;
  *
  * @author clemens
  */
-public class MultiPagePublishJob extends AbstractUserActionJob {
-
-	/**
-	 * Parameter that specifies the objects to localize
-	 */
-	public static final String PARAM_IDS = "ids";
-
-	/**
-	 * publish all languages
-	 */
-	public static final String PARAM_ISALLLANG = "isAlllang";
-
-	/**
-	 * publish at timestamp
-	 */
-	public static final String PARAM_AT = "at";
-
-	/**
-	 * publish message for workflows
-	 */
-	public static final String PARAM_MESSAGE = "message";
-
-	/**
-	 * keep the page's internal "publish at" time
-	 */
-	public static final String PARAM_KEEPPUBLISHAT = "keepPublishAt";
-
-	/**
-	 * keep the current "publishAt" version
-	 */
-	public static final String PARAM_KEEP_VERSION = "keepVersion";
-
-	/**
-	 * publish pages in a node/channel
-	 */
-	public static final String PARAM_NODEID = "nodeId";
-
+public class MultiPagePublishJob extends AbstractBackgroundJob {
 	/**
 	 * collection of page ids to be published
 	 */
@@ -129,48 +91,84 @@ public class MultiPagePublishJob extends AbstractUserActionJob {
 	 */
 	protected Integer nodeId;
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.job.AbstractUserActionJob#getJobDescription()
+	/**
+	 * Set the page IDs to be published
+	 * @param ids collection of page IDs
+	 * @return fluent API
 	 */
+	public MultiPagePublishJob setIds(Collection<String> ids) {
+		this.ids = ids;
+		return this;
+	}
+
+	/**
+	 * Set flag isAlllang
+	 * @param isAlllang true to publish all language variants
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setAlllang(boolean isAlllang) {
+		this.isAlllang = isAlllang;
+		return this;
+	}
+
+	/**
+	 * Set the timestamp for publish at
+	 * @param at timestamp
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setAt(int at) {
+		this.at = at;
+		return this;
+	}
+
+	/**
+	 * Set the workflow message
+	 * @param message message
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setMessage(String message) {
+		this.message = message;
+		return this;
+	}
+
+	/**
+	 * Set flag to keep publish at
+	 * @param keepPublishAt flag
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setKeepPublishAt(boolean keepPublishAt) {
+		this.keepPublishAt = keepPublishAt;
+		return this;
+	}
+
+	/**
+	 * Set flag to keep the version
+	 * @param keepVersion flag
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setKeepVersion(boolean keepVersion) {
+		this.keepVersion = keepVersion;
+		return this;
+	}
+
+	/**
+	 * Set the node ID
+	 * @param nodeId node ID
+	 * @return fluent API
+	 */
+	public MultiPagePublishJob setNodeId(Integer nodeId) {
+		this.nodeId = nodeId;
+		return this;
+	}
+
 	@Override
 	public String getJobDescription() {
 		return new CNI18nString("multipagepublishjob").toString();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.job.AbstractUserActionJob#getJobParameters(org.quartz.JobDataMap)
-	 */
-	@SuppressWarnings("unchecked")
 	@Override
-	protected boolean getJobParameters(JobDataMap map) {
-		ids = ObjectTransformer.getCollection(map.get(PARAM_IDS), null);
-		isAlllang = ObjectTransformer.getBoolean(map.get(PARAM_ISALLLANG), false);
-		at = ObjectTransformer.getInt(map.get(PARAM_AT), 0);
-		message = ObjectTransformer.getString(map.get(PARAM_MESSAGE), null);
-		keepPublishAt = map.getBoolean(PARAM_KEEPPUBLISHAT);
-		keepVersion = map.getBoolean(PARAM_KEEP_VERSION);
-		nodeId = ObjectTransformer.getInteger(map.get(PARAM_NODEID), null);
-
-		// the only thing that really matters to us is having a list of ids
-		return ids != null;
-	}
-
-	// TODO test if everything works fine from the queue
-	// NOPE, it doesnt! yay!
-	// 1. add a parameter to the rest api that tells the api to check for a
-	// publish date itself, rather than
-	// use the provided timestamp
-	// 2. modify page.cmd.php#cmd_page_timepub to be able to use this parameter
-
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.job.AbstractUserActionJob#processAction()
-	 */
-	@Override
-	protected void processAction() throws InsufficientPrivilegesException,
-				NodeException,
-				JobExecutionException {
+	protected void processAction() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		if (ObjectTransformer.isEmpty(ids)) {
 			return;
 		}

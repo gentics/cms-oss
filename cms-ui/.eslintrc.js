@@ -15,6 +15,7 @@ module.exports = {
         tsconfigRootDir: __dirname,
     },
     plugins: [
+        '@nx/eslint-plugin',
         'eslint-plugin-import',
         'eslint-plugin-jsdoc',
         '@angular-eslint/eslint-plugin',
@@ -95,7 +96,7 @@ module.exports = {
         '@typescript-eslint/naming-convention': [
             'warn',
             {
-                selector: ['variable'],
+                selector: ['variable', 'parameter'],
                 modifiers: ['unused'],
                 format: ['camelCase'],
                 custom: {
@@ -381,6 +382,16 @@ module.exports = {
             rules: {
                 '@typescript-eslint/naming-convention': 'off',
                 'id-blacklist': 'off',
+            },
+        },
+        {
+            files: ['./tools/**/*.js', '**/karma.conf.js'],
+            rules: {
+                'import/no-nodejs-modules': 'off',
+                '@typescript-eslint/no-use-before-define': 'off',
+                '@typescript-eslint/restrict-template-expressions': 'off',
+                '@typescript-eslint/no-unsafe-call': 'off',
+                '@typescript-eslint/unbound-method': 'off',
             },
         },
     ],

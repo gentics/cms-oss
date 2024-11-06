@@ -1,4 +1,4 @@
-import { Translator } from '@gentics/cms-models';
+import { Translator } from '@gentics/cms-integration-api-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 

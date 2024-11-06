@@ -1,0 +1,9 @@
+devtools:
+  synchronizer:
+    class: com.gentics.contentnode.devtools.FileMonitorWatcher
+    interval: 100
+max_filesize: "4G"
+no_max_filesize:
+  - "Node Super Admin"
+  - "Editor"
+gis_requests: 3

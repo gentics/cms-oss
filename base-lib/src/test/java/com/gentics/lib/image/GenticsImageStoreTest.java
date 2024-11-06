@@ -5,6 +5,7 @@
  */
 package com.gentics.lib.image;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -12,23 +13,25 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
 
-import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
 
-import com.gentics.contentnode.tests.category.BaseLibTest;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.TestFileProvider;
 import com.gentics.testutils.fs.FileUtils;
-import org.junit.experimental.categories.Category;
 
 @Category(BaseLibTest.class)
 public class GenticsImageStoreTest {
@@ -99,17 +102,20 @@ public class GenticsImageStoreTest {
 	private void assertEqualsImage(String fn, String mode, int[] referencedim)
 			throws IOException {
 		File imagefile = new File(this.imagetargetdirectory.getAbsoluteFile() + "/Resized_" + mode + "_" + fn);
+		File referenceFile = new File(this.imagetargetdirectory.getAbsoluteFile() + "/Reference_" + mode + "_" + fn);
 
-		InputStream referenceFileStream = GenericTestUtils.getPictureResource("Reference_" + mode + "_" + fn);
+		try (FileOutputStream out = new FileOutputStream(referenceFile)) {
+			IOUtils.copy(GenericTestUtils.getPictureResource("Reference_" + mode + "_" + fn), out);
+		}
 
 		int[] sourcedim = utils.getDimensions(imagefile);
 
 		logger.info("" + sourcedim[0] + " x " + sourcedim[1]);
-		assertTrue("Result doesn't match reference dimensions", sourcedim[0] == referencedim[0] && sourcedim[1] == referencedim[1]);
+		assertThat(sourcedim).as("Image dimensions").isEqualTo(referencedim);
 
 		try {
-			BufferedImage img1 = ImageIO.read(imagefile);
-			BufferedImage img2 = ImageIO.read(referenceFileStream);
+			BufferedImage img1 = utils.getBufferedImage(imagefile);
+			BufferedImage img2 = utils.getBufferedImage(referenceFile);
 			assertTrue(utils.compareImage(img1, img2));
 		} catch (Exception e) {
 			logger.info("IOException", e);
@@ -123,6 +129,13 @@ public class GenticsImageStoreTest {
 		int[] referencedim = { 200, 188 };
 
 		executeTestCase(fn, md5sum, mode, targetdim, referencedim);
+	}
+
+	@Test
+	public void TestSimpleWebP() throws ServletException, IOException {
+		String fn = "blume.webp";
+
+		assertTrue(utils.doOperation(fn, 200, 200, "smart"));
 	}
 
 	@Test
@@ -163,6 +176,15 @@ public class GenticsImageStoreTest {
 		int[] referencedim = { 158, 188 };
 
 		executeTestCase(fn, "255bc97f387c372f2a5e92667dc76441", "prop", targetdim, referencedim);
+	}
+
+	@Test
+	public void testPropWebP() throws Exception {
+		String fn = "blume.webp";
+		int[] targetdim = { 200, 188 };
+		int[] referencedim = { 158, 188 };
+
+		executeTestCase(fn, "18b7214aa55c9e1b313d02c018ade264", "prop", targetdim, referencedim);
 	}
 
 	@Test
@@ -215,6 +237,13 @@ public class GenticsImageStoreTest {
 		String fn = "blume2.jpeg";
 
 		executeTestCase(fn, "de680238edf7b47b1f4b3ae0563eef68", "force");
+	}
+
+	@Test
+	public void testForceWebP() throws Exception {
+		String fn = "blume.webp";
+
+		executeTestCase(fn, "8ad3aa0c8d1ec4a56e38b1b14737cff6", "force");
 	}
 
 	@Test

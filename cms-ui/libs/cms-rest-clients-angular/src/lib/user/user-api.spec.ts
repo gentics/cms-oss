@@ -4,6 +4,7 @@ import { UserApi } from './user-api';
 
 const USER_ID = 4711;
 const GROUP_ID = 815;
+const NODE_ID = 32;
 
 describe('UserApi', () => {
 
@@ -17,15 +18,15 @@ describe('UserApi', () => {
 
     it('getUsers() sends the correct GET request', () => {
         userApi.getUsers();
-        expect(apiBase.get).toHaveBeenCalledWith(`user/list`, undefined);
+        expect(apiBase.get).toHaveBeenCalledWith('user', undefined);
     });
 
     it('getUsers() sends the correct GET request with query parameters', () => {
         const options: UserListOptions = {
-            firstname: 'Test',
+            q: 'Test',
         };
         userApi.getUsers(options);
-        expect(apiBase.get).toHaveBeenCalledWith(`user/list`, options);
+        expect(apiBase.get).toHaveBeenCalledWith('user', options);
     });
 
     it('getUser() sends the correct GET request', () => {
@@ -79,13 +80,13 @@ describe('UserApi', () => {
     });
 
     it('addUserNodeRestrictions() sends the correct PUT request', () => {
-        userApi.addUserNodeRestrictions(USER_ID, GROUP_ID);
-        expect(apiBase.put).toHaveBeenCalledWith(`user/${USER_ID}/groups/${GROUP_ID}/nodes`, {});
+        userApi.addUserNodeRestrictions(USER_ID, GROUP_ID, NODE_ID);
+        expect(apiBase.put).toHaveBeenCalledWith(`user/${USER_ID}/groups/${GROUP_ID}/nodes/${NODE_ID}`, {});
     });
 
     it('removeUserNodeRestrictions() sends the correct DELETE request', () => {
-        userApi.removeUserNodeRestrictions(USER_ID, GROUP_ID);
-        expect(apiBase.delete).toHaveBeenCalledWith(`user/${USER_ID}/groups/${GROUP_ID}/nodes`);
+        userApi.removeUserNodeRestrictions(USER_ID, GROUP_ID, NODE_ID);
+        expect(apiBase.delete).toHaveBeenCalledWith(`user/${USER_ID}/groups/${GROUP_ID}/nodes/${NODE_ID}`);
     });
 
 });

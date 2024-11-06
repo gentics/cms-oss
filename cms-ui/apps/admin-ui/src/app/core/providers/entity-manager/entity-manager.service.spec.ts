@@ -8,25 +8,37 @@ import { Injectable } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
     GcmsNormalizer,
-    GcmsTestData,
     IS_NORMALIZED,
     NormalizableEntity,
+    NormalizableEntityType,
+    NormalizableEntityTypesMapBO,
     Normalized,
     NormalizedEntityStore,
     Page,
     Raw,
     User,
 } from '@gentics/cms-models';
-import { cloneDeep} from 'lodash-es';
+import {
+    getExampleEntityStore,
+    getExampleFolderData,
+    getExampleFolderDataNormalized,
+    getExamplePageData,
+    getExamplePageDataNormalized,
+} from '@gentics/cms-models/testing';
+import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { EntityManagerService } from './entity-manager.service';
-import { NormalizationWorkerRequest } from './normalization-worker/worker-task';
+
+interface NormalizationWorkerRequest<T extends NormalizableEntityType, E extends NormalizableEntityTypesMapBO<Raw>[T]> {
+    id: number;
+    entityType: T;
+    rawEntities: E[];
+}
 
 @Injectable()
 class EntityManagerWithAccessibleInternals extends EntityManagerService {
     normalizer: GcmsNormalizer;
-    normalizationWorker: Worker;
     createDenormalizedCacheSpy;
 
     constructor(appState: AppStateService) {
@@ -34,8 +46,7 @@ class EntityManagerWithAccessibleInternals extends EntityManagerService {
         this.createDenormalizedCacheSpy = spyOn(this, 'createDenormalizedCache' as any).and.callThrough();
     }
 
-    readonly maxSyncBatchSize: number;
-    readonly cleanupDebounceTimeMs: number;
+    readonly CLEANUP_DEBOUNCE: number;
 
     createDenormalizedCache(): any {
         return super.createDenormalizedCache();
@@ -63,7 +74,7 @@ const NEW_FOLDER_ID = 4321;
 
 describe('EntityManagerService', () => {
 
-    const MOCK_ENTITIES = GcmsTestData.getExampleEntityStore();
+    const MOCK_ENTITIES = getExampleEntityStore();
     deepFreeze(MOCK_ENTITIES);
 
     let appState: TestAppState;
@@ -102,7 +113,7 @@ describe('EntityManagerService', () => {
 
         it('test data is set up correctly', () => {
             // Make sure that the entity IDs used for testing exist or don't exist in the test data as expected.
-            // This guards us against problems from changes to GcmsTestData.getExampleEntityStore().
+            // This guards us against problems from changes to getExampleEntityStore().
 
             expect(MOCK_ENTITIES.page[PAGE_A_ID]).toBeTruthy();
             expect(MOCK_ENTITIES.page[PAGE_B_ID]).toBeTruthy();
@@ -116,24 +127,11 @@ describe('EntityManagerService', () => {
             expect(MOCK_ENTITIES.folder[NEW_FOLDER_ID]).toBeUndefined();
         });
 
-        it('starts the normalization web worker upon init and stops it upon destruction', () => {
-            const accessibleEntityManager = new EntityManagerWithAccessibleInternals(appState);
-            expect(accessibleEntityManager.normalizationWorker).toBeFalsy();
-
-            accessibleEntityManager.init();
-            expect(accessibleEntityManager.normalizationWorker instanceof Worker).toBe(true);
-            const terminateSpy = spyOn(accessibleEntityManager.normalizationWorker, 'terminate').and.callThrough();
-
-            accessibleEntityManager.ngOnDestroy();
-            expect(terminateSpy).toHaveBeenCalledTimes(1);
-            expect(accessibleEntityManager.normalizationWorker).toBeNull();
-        });
-
         describe('getEntity() returns an observable, which', () => {
 
             beforeEach(() => {
                 appState.mockState({
-                    entity: GcmsTestData.getExampleEntityStore(),
+                    entity: getExampleEntityStore(),
                 });
             });
 
@@ -217,7 +215,7 @@ describe('EntityManagerService', () => {
                 expect(emissionCount).toBe(1);
                 expect(page).toBe(undefined);
 
-                const newPage = GcmsTestData.getExamplePageDataNormalized({ id: NEW_PAGE_ID });
+                const newPage = getExamplePageDataNormalized({ id: NEW_PAGE_ID });
                 appState.dispatch(new AddEntities({
                     page: {
                         [NEW_PAGE_ID]: newPage,
@@ -260,7 +258,7 @@ describe('EntityManagerService', () => {
 
                 expect(emissionCount).toBe(1);
 
-                const newPage = GcmsTestData.getExamplePageDataNormalized({ id: NEW_PAGE_ID });
+                const newPage = getExamplePageDataNormalized({ id: NEW_PAGE_ID });
                 appState.dispatch(new AddEntities({
                     page: {
                         [NEW_PAGE_ID]: newPage,
@@ -302,7 +300,7 @@ describe('EntityManagerService', () => {
 
                 expect(emissionCount).toBe(1);
 
-                const newFolder = GcmsTestData.getExampleFolderDataNormalized({ id: NEW_FOLDER_ID });
+                const newFolder = getExampleFolderDataNormalized({ id: NEW_FOLDER_ID });
                 appState.dispatch(new AddEntities({
                     folder: {
                         [NEW_FOLDER_ID]: newFolder,
@@ -331,7 +329,7 @@ describe('EntityManagerService', () => {
             denormalizeSpy = spyOn(normalizer, 'denormalize').and.callThrough();
 
             appState.mockState({
-                entity: GcmsTestData.getExampleEntityStore(),
+                entity: getExampleEntityStore(),
             });
         });
 
@@ -358,7 +356,7 @@ describe('EntityManagerService', () => {
         function generateTestPages(count: number): EntityNormalizationPair<Page<Raw>> {
             const rawPages: Page<Raw>[] = new Array(count);
             for (let i = 0; i < count; ++i) {
-                rawPages[i] = GcmsTestData.getExamplePageData({ id: i + 1 });
+                rawPages[i] = getExamplePageData({ id: i + 1 });
             }
             const normalized = normalizer.normalize('page', rawPages).entities;
             return {
@@ -377,7 +375,7 @@ describe('EntityManagerService', () => {
             normalizer = new GcmsNormalizer();
             entityManager.init();
             denormalizeEntitySpy = spyOn(entityManager, 'denormalizeEntity').and.callThrough();
-            cleanupDebounceTime = (entityManager ).cleanupDebounceTimeMs + 1;
+            cleanupDebounceTime = (entityManager ).CLEANUP_DEBOUNCE + 1;
 
             const entities = generateTestPages(ENTITIES_COUNT);
             appState.mockState({
@@ -467,8 +465,8 @@ describe('EntityManagerService', () => {
             const firstNewEntityId = actualResult.length + 1;
             const secondNewEntityId = actualResult.length + 2;
             const newEntities = [
-                GcmsTestData.getExamplePageData({ id: firstNewEntityId, idVariant1: firstNewEntityId }),
-                GcmsTestData.getExamplePageData({ id: secondNewEntityId, idVariant1: secondNewEntityId }),
+                getExamplePageData({ id: firstNewEntityId, idVariant1: firstNewEntityId }),
+                getExamplePageData({ id: secondNewEntityId, idVariant1: secondNewEntityId }),
             ];
             entityManager.addEntities('page', newEntities);
             tick();
@@ -659,8 +657,8 @@ describe('EntityManagerService', () => {
         function generateTestPages(count: number): EntityNormalizationPair<Page<Raw>> {
             const rawPages: Page<Raw>[] = new Array(count);
             for (let i = 0; i < count; i += 2) {
-                rawPages[i] = GcmsTestData.getExamplePageData({ id: i + 1, idVariant1: i + 2 });
-                rawPages[i + 1] = GcmsTestData.getExamplePageData({ id: i + 2, idVariant1: i + 1 });
+                rawPages[i] = getExamplePageData({ id: i + 1, idVariant1: i + 2 });
+                rawPages[i + 1] = getExamplePageData({ id: i + 2, idVariant1: i + 1 });
             }
             const normalized = normalizer.normalize('page', rawPages).entities;
             return {
@@ -741,7 +739,7 @@ describe('EntityManagerService', () => {
 
             // Add a new entity.
             const newEntityId = actualResult.length + 1;
-            const newEntity = GcmsTestData.getExamplePageData({ id: newEntityId, idVariant1: newEntityId });
+            const newEntity = getExamplePageData({ id: newEntityId, idVariant1: newEntityId });
             newEntity.name = 'newEntity';
             entityManager.addEntity('page', newEntity);
             expectedNormalizedPages.push(normalizer.normalize('page', newEntity).result);
@@ -783,8 +781,7 @@ describe('EntityManagerService', () => {
         let folderIds: number[];
         let userIds: number[];
         let expectedEntityState: EntityStateModel;
-        let maxSyncBatchSize: number;
-        let normalizationWorkerPostMsgSpy: jasmine.Spy;
+        const maxSyncBatchSize = 20;
 
         /**
          * Generates `count` raw pages, each with a folder and a page variant;
@@ -804,12 +801,12 @@ describe('EntityManagerService', () => {
                 userIdsSet.add(userId);
                 folderIds.push(folderId);
 
-                const page = GcmsTestData.getExamplePageData({
+                const page = getExamplePageData({
                     id: pageId,
                     userId,
                     idVariant1: variantId,
                 });
-                page.folder = GcmsTestData.getExampleFolderData({ id: pageId, userId });
+                page.folder = getExampleFolderData({ id: pageId, userId });
                 Object.freeze(page);
                 rawPages.push(page);
             }
@@ -864,9 +861,6 @@ describe('EntityManagerService', () => {
             expectedEntityState = null;
 
             entityManager.init();
-            normalizationWorkerPostMsgSpy = spyOn(entityManager.normalizationWorker, 'postMessage').and.callThrough();
-
-            maxSyncBatchSize = entityManager.maxSyncBatchSize;
         });
 
         it('test data is initialized correctly', () => {
@@ -912,7 +906,6 @@ describe('EntityManagerService', () => {
 
             it('works for undefined', done => {
                 const done$ = entityManager.addEntities('page', undefined);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     expect(appState.now.entity).toEqual(INITIAL_ENTITY_STATE);
@@ -922,7 +915,6 @@ describe('EntityManagerService', () => {
 
             it('works for null', done => {
                 const done$ = entityManager.addEntities('page', null);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     expect(appState.now.entity).toEqual(INITIAL_ENTITY_STATE);
@@ -932,7 +924,6 @@ describe('EntityManagerService', () => {
 
             it('works for an empty array', done => {
                 const done$ = entityManager.addEntities('page', []);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     expect(appState.now.entity).toEqual(INITIAL_ENTITY_STATE);
@@ -943,7 +934,6 @@ describe('EntityManagerService', () => {
             it('works for a single entity without using the web worker', done => {
                 generateTestPages(1);
                 const done$ = entityManager.addEntities('page', rawPages);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     expect(Object.keys(appState.now.entity.page).length).toBe(2);
@@ -961,7 +951,6 @@ describe('EntityManagerService', () => {
                 generateTestPages(count);
 
                 const done$ = entityManager.addEntities('page', rawPages);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     assertEntitiesCountInState(count);
@@ -974,7 +963,6 @@ describe('EntityManagerService', () => {
             it('works for an array that has exactly maxSyncBatchSize', done => {
                 generateTestPages(maxSyncBatchSize);
                 const done$ = entityManager.addEntities('page', rawPages);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$.then(() => {
                     assertEntitiesCountInState(maxSyncBatchSize);
@@ -994,9 +982,6 @@ describe('EntityManagerService', () => {
                     entityType: 'page',
                     rawEntities: rawPages,
                 };
-
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledTimes(1);
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledWith(expectedRequest);
 
                 const expectedEntityStateIds: EntityIds = { pages: pageIds, users: userIds, folders: folderIds };
 
@@ -1020,8 +1005,6 @@ describe('EntityManagerService', () => {
                     entityType: 'page',
                     rawEntities: rawPages1,
                 };
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledTimes(1);
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledWith(expectedRequest1);
 
                 const done2$ = entityManager.addEntities('page', rawPages2);
                 const expectedRequest2: NormalizationWorkerRequest<'page', Page<Raw>> = {
@@ -1029,8 +1012,6 @@ describe('EntityManagerService', () => {
                     entityType: 'page',
                     rawEntities: rawPages2,
                 };
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledTimes(2);
-                expect(normalizationWorkerPostMsgSpy.calls.argsFor(1)).toEqual([ expectedRequest2 ]);
 
                 const expectedFinalEntityStateIds: EntityIds = { pages: pageIds, users: userIds, folders: folderIds };
 
@@ -1054,7 +1035,6 @@ describe('EntityManagerService', () => {
                 spyOn(entityManager.normalizer, 'normalize').and.callFake(() => { throw expectedError; });
 
                 const done$ = entityManager.addEntities('page', rawPages);
-                expect(normalizationWorkerPostMsgSpy).not.toHaveBeenCalled();
 
                 done$
                     .then(() => fail('normalization should have failed here.'))
@@ -1063,27 +1043,6 @@ describe('EntityManagerService', () => {
                         done();
                     });
             });
-
-            it('forwards errors during normalization when using the web worker', done => {
-                const count = 2 * maxSyncBatchSize;
-                generateTestPages(count);
-                normalizationWorkerPostMsgSpy.and.stub();
-
-                const done$ = entityManager.addEntities('page', rawPages);
-                expect(normalizationWorkerPostMsgSpy).toHaveBeenCalledTimes(1);
-
-                const expectedError = new Error('Expected Error');
-                (entityManager ).normalizationWorker
-                    .dispatchEvent(new MessageEvent('message', { data: { id: 0, result: null, error: expectedError } } as any));
-
-                done$
-                    .then(() => fail('normalization should have failed here.'))
-                    .catch(error => {
-                        expect(error).toBe(expectedError);
-                        done();
-                    });
-            });
-
         });
 
         describe('deleteEntities()', () => {

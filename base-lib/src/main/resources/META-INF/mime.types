@@ -546,6 +546,7 @@ image/vnd.ms-modi				mdi
 image/vnd.net-fpx				npx
 image/vnd.wap.wbmp				wbmp
 image/vnd.xiff					xif
+image/webp						webp
 image/x-cmu-raster				ras
 image/x-cmx					cmx
 image/x-freehand				fh fhc fh4 fh5 fh7

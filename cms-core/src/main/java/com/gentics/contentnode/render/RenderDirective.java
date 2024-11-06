@@ -120,7 +120,7 @@ public class RenderDirective extends Directive {
 	protected String renderTag(Tag tag, RenderType renderType, RenderResult result) throws NodeException {
 		int editMode = renderType.getEditMode();
 
-		if ((editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+		if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
 			StringBuffer source = new StringBuffer();
 			List<ParserTag> omitTags = new ArrayList<ParserTag>();
 			List<ParserTag> omitTagsEdit = new ArrayList<ParserTag>();

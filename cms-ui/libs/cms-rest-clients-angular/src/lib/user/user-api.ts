@@ -21,7 +21,7 @@ export type UserSearchFilterMap = { [P in keyof User]?: User[P] | null; };
  * API methods related to the user resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_UserResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_UserResource.html
  *
  * Note: Creating new users is done via the `/group` endpoint.
  */

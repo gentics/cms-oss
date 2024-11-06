@@ -1,4 +1,4 @@
-import { BO_ID, detailLoading, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { detailLoading, FolderDetailTabs, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import { EditorTabTrackerService, FolderOperations, FolderTrableLoaderService, PermissionsService } from '@admin-ui/core';
 import { BaseDetailComponent, FolderDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
@@ -9,20 +9,13 @@ import {
     AccessControlledType,
     Folder,
     GcmsPermission,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
-    TypePermissions,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-
-export enum FolderDetailTabs {
-    PROPERTIES = 'properties',
-    GROUP_PERMISSIONS = 'groupPermissions',
-}
 
 // *************************************************************************************************
 /**
@@ -60,7 +53,7 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<FolderDetailTabs, FormTabHandle>;
+    private tabHandles: Record<FolderDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -101,7 +94,7 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
         });
 
         this.permissionContentRead$ = this.permissionsService.getPermissions(AccessControlledType.CONTENT_ADMIN).pipe(
-            map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
+            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);

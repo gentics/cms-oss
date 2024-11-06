@@ -1,7 +1,6 @@
 {
   "globalId" : "A547.69527",
   "keyword" : "pageurl",
-  "icon" : "url.gif",
   "name" : {
     "de" : "[URL] Seite",
     "en" : "[URL] Page"
@@ -9,7 +8,6 @@
   "mayBeSubtag" : false,
   "mayContainsSubtags" : false,
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.69533",
     "name" : {

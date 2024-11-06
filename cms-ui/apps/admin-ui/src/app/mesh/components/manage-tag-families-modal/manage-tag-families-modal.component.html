@@ -1,0 +1,19 @@
+<div class="modal-title">
+    <h5>{{ 'mesh.manage_tags' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-tag-family-table
+        [project]="project.name"
+    ></gtx-mesh-tag-family-table>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn()"
+    >
+        {{ 'common.close_button' | i18n }}
+    </gtx-button>
+</div>

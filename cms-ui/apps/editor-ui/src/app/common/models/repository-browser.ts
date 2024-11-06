@@ -1,4 +1,5 @@
 import {
+    AllowedSelection,
     AllowedSelectionType,
     File,
     Folder,
@@ -9,13 +10,19 @@ import {
     Page,
     Raw,
     RepoItem,
-    RepositoryBrowserDataServiceOptions,
     RepositoryBrowserSorting,
+    SerializableRepositoryBrowserOptions,
     SortField,
     Tag,
-    Template
+    Template,
 } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
+
+export interface RepositoryBrowserDataServiceOptions extends Omit<SerializableRepositoryBrowserOptions, 'allowedSelection'> {
+    allowedSelection: AllowedSelection;
+    /** Function that can be passed in to checks for permissions on an item */
+    requiredPermissions?(selected: ItemInNode[], parent: Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>, node: Node<Raw>): Observable<boolean>;
+}
 
 /** The public API of {@link RepositoryBrowserDataService} that the {@link RepositoryBrowser} uses. */
 export interface RepositoryBrowserDataServiceAPI {

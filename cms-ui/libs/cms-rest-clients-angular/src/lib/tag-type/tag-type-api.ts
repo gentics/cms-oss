@@ -22,7 +22,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to TagTypes.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ConstructResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ConstructResource.html
  */
 export class TagTypeApi {
 
@@ -34,7 +34,7 @@ export class TagTypeApi {
      * Get all constructs.
      * **Important:** This method only works for Admin users.
      */
-    getTagTypes(options: PagedConstructListRequestOptions): Observable<PermissionListResponse<TagType>> {
+    getTagTypes(options?: PagedConstructListRequestOptions): Observable<PermissionListResponse<TagType>> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);

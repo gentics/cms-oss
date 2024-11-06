@@ -1,0 +1,77 @@
+{
+    "name": "form-generator",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "libs/form-generator/src",
+    "tags": ["lib", "angular", "publish"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/form-generator/tsconfig.lib.json",
+                "project": "libs/form-generator/ng-package.json"
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/form-generator/**/*.ts",
+                    "libs/form-generator/**/*.html"
+                ]
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": ".",
+                "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular"
+            },
+            "configurations": {
+                "watch": {
+                    "command": "node tools/ng-test-runner form-generator --watch=true --forceAngular"
+                },
+                "ci": {
+                    "command": "node tools/ng-test-runner form-generator --watch=false --forceAngular --configuration=ci",
+                    "color": false
+                }
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "libs/form-generator/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "editor-ui:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "quiet": true,
+                    "devServerTarget": "editor-ui:build:ci",
+                    "reporterOptions": {
+                        "color": false,
+                        "reporter": "min"
+                    }
+                }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/form-generator"
+            }
+        }
+    }
+}

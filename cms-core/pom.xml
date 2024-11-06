@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.0.23-SNAPSHOT</version>
+		<version>6.1.17-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -51,15 +51,6 @@
 		</testResources>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<compilerVersion>1.8</compilerVersion>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -276,59 +267,10 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.3</version>
-				<executions>
-					<execution>
-						<id>pre-unit-test</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-						<configuration>
-							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<propertyName>surefireArgLine</propertyName>
-						</configuration>
-					</execution>
-					<execution>
-						<id>post-unit-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<jvm>${test.jvm.home}/bin/java</jvm>
-					<forkCount>${surefire.forkcount}</forkCount>
-					<reuseForks>false</reuseForks>
-					<argLine>-Xms64m -Xmx256m ${surefireArgLine}</argLine>
-					<trimStackTrace>false</trimStackTrace>
-					<testFailureIgnore>true</testFailureIgnore>
-					<runOrder>random</runOrder>
-					<rerunFailingTestsCount>${surefire.rerunFailingTestsCount}</rerunFailingTestsCount>
-					<!-- 45min -->
-					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
-					<excludes>
-						<!-- Exclude integration tests within (unit) test phase. -->
-						<exclude>**/*AbstractTest.java</exclude>
-						<exclude>**/AbstractMetaDataCompareTest</exclude>
-						<exclude>**/AbstractMetaDataCompareTest*</exclude>
-						<exclude>**/*Abstract*Test.java</exclude>
-						<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
-						<exclude>**/MeshPortalPreviewSslTest.java</exclude>
-					</excludes>
-				</configuration>
 				<executions>
 					<execution>
 						<?m2e ignore?>
@@ -431,23 +373,29 @@
 		<dependency>
 			<groupId>com.gentics.mesh</groupId>
 			<artifactId>mesh-rest-client</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>stax</groupId>
+					<artifactId>stax-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.tautua.markdownpapers</groupId>
 			<artifactId>markdownpapers-core</artifactId>
-			<version>1.4.3</version>
+			<version>1.4.4</version>
 		</dependency>
 
-		<dependency>
+		<!--dependency>
 			<groupId>javax.xml.ws</groupId>
 			<artifactId>jaxws-api</artifactId>
 			<version>2.2</version>
-		</dependency>
+		</dependency -->
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.21</version>
+			<version>1.26.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -472,6 +420,12 @@
 			<groupId>httpunit</groupId>
 			<version>1.7</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>jtidy</groupId>
+					<artifactId>jtidy</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -498,7 +452,6 @@
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
-			<version>2.2.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -514,7 +467,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-inline</artifactId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -527,7 +480,17 @@
 		<dependency>
 			<groupId>org.owasp.antisamy</groupId>
 			<artifactId>antisamy</artifactId>
-			<version>1.5.2</version>
+			<version>1.6.8</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.xmlgraphics</groupId>
+					<artifactId>batik-ext</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
@@ -566,7 +529,7 @@
 		<dependency>
 			<groupId>de.jkeylockmanager</groupId>
 			<artifactId>jkeylockmanager</artifactId>
-			<version>1.1.0</version>
+			<version>2.1.0</version>
 		</dependency>
 
 		<!-- Diff -->
@@ -597,27 +560,32 @@
 		</dependency>
 
 		<!-- Batik -->
-		<dependency>
+		<!--dependency>
 			<groupId>batik</groupId>
 			<artifactId>batik-css</artifactId>
 			<version>1.7+r608262</version>
-		</dependency>
-		<dependency>
+		</dependency -->
+		<!-- dependency>
 			<groupId>batik</groupId>
 			<artifactId>batik-util</artifactId>
 			<version>1.7+r608262</version>
-		</dependency>
-		<dependency>
-			<!-- required by batik-css -->
+		</dependency -->
+		<!--dependency>
 			<groupId>org.w3c.css</groupId>
 			<artifactId>sac</artifactId>
 			<version>1.3</version>
-		</dependency>
+		</dependency -->
 
 		<!-- XML -->
 		<dependency>
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Bcrypt -->
@@ -660,7 +628,7 @@
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
-			<version>1.5.0</version>
+			<version>1.8.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -668,11 +636,11 @@
 			<version>3.8.1</version>
 		</dependency>
 
-		<dependency>
+		<!--dependency>
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 			<version>1.5.2</version>
-		</dependency>
+		</dependency -->
 
 		<!-- https://github.com/jwtk/jjwt -->
 		<dependency>

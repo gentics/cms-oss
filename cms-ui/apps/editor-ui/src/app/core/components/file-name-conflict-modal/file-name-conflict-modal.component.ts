@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { File as FileModel } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 
 /**
  * A modal for the user to
@@ -9,7 +8,7 @@ import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 @Component({
     selector: 'file-name-conflict-modal',
     templateUrl: './file-name-conflict-modal.tpl.html',
-    styleUrls: ['./file-name-conflict-modal.scss']
+    styleUrls: ['./file-name-conflict-modal.scss'],
 })
 export class FileNameConflictModal implements IModalDialog, OnInit {
     closeFn: (files: FileModel[]) => void;
@@ -18,7 +17,6 @@ export class FileNameConflictModal implements IModalDialog, OnInit {
     conflictingFiles: FileModel[] = [];
     totalFileCount = 0;
     selected: { [key: string]: boolean } = {};
-    iconForItemType = iconForItemType;
 
     constructor() { }
 
@@ -64,7 +62,7 @@ export class FileNameConflictModal implements IModalDialog, OnInit {
     }
 
     confirm(): void {
-        let filesToReplace = this.conflictingFiles.filter(file => this.isSelected(file));
+        const filesToReplace = this.conflictingFiles.filter(file => this.isSelected(file));
         this.closeFn(filesToReplace);
     }
 

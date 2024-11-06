@@ -833,15 +833,6 @@ public class ModelBuilder {
 	 * @return REST Model
 	 * @throws NodeException
 	 */
-	/**
-	 * Transform the given tag into its REST Model
-	 *
-	 * @param nodeTag
-	 *            Node Object
-	 * @param addConstruct true to add construct info
-	 * @return REST Model
-	 * @throws NodeException
-	 */
 	public static com.gentics.contentnode.rest.model.Tag getTag(Tag nodeTag, boolean addConstruct) throws NodeException {
 		return getTag(nodeTag, addConstruct, true);
 	}
@@ -873,14 +864,8 @@ public class ModelBuilder {
 		com.gentics.contentnode.rest.model.ObjectTag restTag = new com.gentics.contentnode.rest.model.ObjectTag();
 
 		applyTagProperties(nodeTag, restTag, addConstruct, addPrivateData);
-		ObjectTagDefinition def = nodeTag.getDefinition();
-		if (def != null) {
-			restTag.setDisplayName(def.getName());
-			restTag.setDescription(def.getDescription());
-			ObjectTagDefinitionCategory category = def.getCategory();
-			if (category != null) {
-				restTag.setCategoryName(category.getName());
-			}
+		if (addConstruct) {
+			fillObjectTagDefinition(nodeTag, restTag);
 		} else {
 			restTag.setDisplayName(nodeTag.getName());
 		}
@@ -893,6 +878,28 @@ public class ModelBuilder {
 			restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
 		}
 		return restTag;
+	}
+
+	/**
+	 * Fills the objectTagDefinition into the rest model
+	 *
+	 * @param nodeTag the entity from where the definition is loaded
+	 * @param restTag the rest model where the definition is added to
+	 * @throws NodeException
+	 */
+	private static void fillObjectTagDefinition(ObjectTag nodeTag, com.gentics.contentnode.rest.model.ObjectTag restTag)
+			throws NodeException {
+		ObjectTagDefinition def = nodeTag.getDefinition();
+
+		if (def != null) {
+			restTag.setDisplayName(def.getName());
+			restTag.setDescription(def.getDescription());
+			ObjectTagDefinitionCategory category = def.getCategory();
+			if (category != null) {
+				restTag.setCategoryId(category.getId());
+				restTag.setCategoryName(category.getName());
+			}
+		}
 	}
 
 	/**
@@ -1967,6 +1974,7 @@ public class ModelBuilder {
 		}
 		node.setHttps(nodeNode.isHttps());
 		node.setHost(nodeNode.getHostname());
+		node.setHostProperty(nodeNode.getHostnameProperty());
 		node.setUtf8(nodeNode.isUtf8());
 		node.setPublishFs(nodeNode.doPublishFilesystem());
 		node.setPublishFsPages(nodeNode.doPublishFilesystemPages());
@@ -1988,8 +1996,10 @@ public class ModelBuilder {
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 			node.setMeshPreviewUrl(nodeNode.getMeshPreviewUrl());
+			node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
+			node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		}
 
 		List<ContentLanguage> languages = nodeNode.getLanguages();

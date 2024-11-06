@@ -1,0 +1,34 @@
+{
+  "version": "6.1.0",
+  "date": "26.04.2024",
+  "changeLogEntryFileNames": [
+    "7578.GPU-676.enhancement",
+    "7765.SUP-16648.bugfix",
+    "7763.SUP-16644.bugfix",
+    "7768.GPU-1116.enhancement",
+    "7767.GPU-943.optional-manualchange",
+    "7523.GPU-1059.enhancement",
+    "7730.GPU-1465.optional-manualchange",
+    "7781.GPU-1253.enhancement",
+    "7783.GPU-933.enhancement",
+    "7576.GPU-895.enhancement",
+    "7786.GPU-938.enhancement",
+    "7760.SUP-16632.bugfix",
+    "7575.GPU-937.enhancement",
+    "7505.GPU-1159.enhancement",
+    "7762.SUP-16644.bugfix",
+    "7561.GPU-1115.enhancement",
+    "7782.GPU-1252.documentation",
+    "7776.SUP-15801.bugfix",
+    "7766.GPU-353.enhancement",
+    "7732.GPU-1465.enhancement",
+    "7785.GPU-1543.enhancement",
+    "7771.SUP-16646.bugfix",
+    "7514.GPU-1159.enhancement",
+    "7784.GPU-942.enhancement"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "26.04.2024",
+    "alohaeditor-version": "2.0.0"
+  }
+}

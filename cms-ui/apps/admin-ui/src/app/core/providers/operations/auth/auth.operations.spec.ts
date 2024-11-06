@@ -1,11 +1,11 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { GcmsTestData, LoginResponse, Raw, Response, User, ValidateSidResponse } from '@gentics/cms-models';
+import { LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of as observableOf } from 'rxjs';
 import { delay, map, takeUntil } from 'rxjs/operators';
-
 import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
 import {
     AppStateService,
@@ -22,7 +22,7 @@ import {
     ValidateStart,
     ValidateSuccess,
 } from '../../../../state';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE } from '../../../../state/utils/test-app-state';
+import { assembleTestAppStateImports, TestAppState } from '../../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
@@ -51,7 +51,7 @@ class MockEditorUiLocalStorage {
 }
 
 const SID = 1234;
-const MOCK_USER: User<Raw> = GcmsTestData.getExampleFolderData().editor;
+const MOCK_USER: User<Raw> = getExampleFolderData().editor;
 Object.freeze(MOCK_USER);
 const ERROR_MSG = 'Auth Error';
 
@@ -138,7 +138,7 @@ describe('AuthOperations', () => {
             editorUiLocalStorage.getSid.and.returnValue(null);
             api.auth.validate.and.returnValue(
                 observableOf<ValidateSidResponse>({
-                    responseInfo: { responseCode: 'OK' },
+                    responseInfo: { responseCode: ResponseCode.OK },
                     user: MOCK_USER,
                 }).pipe(delay(0)), // We use delay() to make the response asynchronous.
             );
@@ -178,7 +178,7 @@ describe('AuthOperations', () => {
         const validateSpy = spyOn(authOps, 'validateSessionId').and.callThrough();
         api.auth.validate.and.returnValue(
             observableOf<ValidateSidResponse>({
-                responseInfo: { responseCode: 'OK' },
+                responseInfo: { responseCode: ResponseCode.OK },
                 user: MOCK_USER,
             }).pipe(delay(0)),
         );
@@ -232,7 +232,7 @@ describe('AuthOperations', () => {
             const router = TestBed.get(Router) as MockRouter;
             api.auth.login.and.returnValue(
                 observableOf<LoginResponse>({
-                    responseInfo: { responseCode: 'OK' },
+                    responseInfo: { responseCode: ResponseCode.OK },
                     sid: SID,
                     user: MOCK_USER,
                 }).pipe(delay(0)),
@@ -304,7 +304,7 @@ describe('AuthOperations', () => {
         it('works for a success response', fakeAsync(() => {
             api.auth.logout.and.returnValue(
                 observableOf<Response>({
-                    responseInfo: { responseCode: 'OK' },
+                    responseInfo: { responseCode: ResponseCode.OK },
                 }).pipe(delay(0)),
             );
 
@@ -371,7 +371,7 @@ describe('AuthOperations', () => {
         it('works for a success response', fakeAsync(() => {
             api.auth.changePassword.and.returnValue(
                 observableOf<Response>({
-                    responseInfo: { responseCode: 'OK' },
+                    responseInfo: { responseCode: ResponseCode.OK },
                 }).pipe(delay(0)),
             );
 

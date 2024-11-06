@@ -1,6 +1,8 @@
 import { DisplayFields } from '@editor-ui/app/common/models';
-import { Favourite, GcmsUiLanguage, SortField } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { Favourite, SortField } from '@gentics/cms-models';
 import { FALLBACK_LANGUAGE } from '../../common/config/config';
+import { SETTING_LAST_NODE_ID } from '../../common/models';
 
 export interface UserSettings {
     activeLanguage: number;
@@ -30,7 +32,7 @@ export interface UserSettings {
     imageShowPath: boolean;
     imageSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
     itemListBreadcrumbsExpanded: boolean;
-    lastNodeId: number;
+    [SETTING_LAST_NODE_ID]: number;
     openObjectPropertyGroups: string[];
     focusMode: boolean;
     pageDisplayFields: string[];
@@ -41,6 +43,7 @@ export interface UserSettings {
     pageSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
     repositoryBrowserBreadcrumbsExpanded: boolean;
     uiLanguage: GcmsUiLanguage;
+    constructFavourites: string[];
 }
 
 export type UserSettingName = keyof UserSettings;
@@ -73,7 +76,7 @@ export const defaultUserSettings: UserSettings = {
     imageShowPath: true,
     imageSorting: { sortBy: 'name', sortOrder: 'asc' },
     itemListBreadcrumbsExpanded: false,
-    lastNodeId: -1,
+    [SETTING_LAST_NODE_ID]: -1,
     openObjectPropertyGroups: [],
     focusMode: false,
     pageDisplayFields: [],
@@ -84,6 +87,7 @@ export const defaultUserSettings: UserSettings = {
     pageSorting: { sortBy: 'name', sortOrder: 'asc' },
     repositoryBrowserBreadcrumbsExpanded: false,
     uiLanguage: FALLBACK_LANGUAGE,
+    constructFavourites: [],
 };
 
 export const userSettingNames = Object.keys(defaultUserSettings) as UserSettingName[];

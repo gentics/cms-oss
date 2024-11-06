@@ -10,6 +10,7 @@ import {
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
     EntityIdType,
+    TagmapEntryCheckResponse,
     TagmapEntryCreateRequest,
     TagmapEntryCreateResponse,
     TagmapEntryListOptions,
@@ -18,6 +19,7 @@ import {
     TagmapEntryUpdateRequest,
     TagmapEntryUpdateResponse,
 } from '@gentics/cms-models';
+import type { LoginResponse } from '@gentics/mesh-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiBase } from '../base/api-base.service';
@@ -27,7 +29,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to the content repository resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ContentRepositoryResource.html#resource_ContentRepositoryResource_get_GET
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ContentRepositoryResource.html#resource_ContentRepositoryResource_get_GET
  */
 export class ContentrespositoryApi {
 
@@ -132,7 +134,7 @@ export class ContentrespositoryApi {
      */
     checkContentRepositoryTagmapEntries(
         contentRepositoryId: EntityIdType,
-    ): Observable<TagmapEntryListResponse> {
+    ): Observable<TagmapEntryCheckResponse> {
         return this.apiBase.get(`contentrepositories/${contentRepositoryId}/entries/check`);
     }
 
@@ -204,7 +206,7 @@ export class ContentrespositoryApi {
      */
     addContentRepositoryToFragment(
         contentRepositoryId: EntityIdType,
-        crFragmentId: string,
+        crFragmentId: EntityIdType,
     ): Observable<void> {
         return this.apiBase.put(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`, {}).pipe(
             map(() => {}),
@@ -216,12 +218,18 @@ export class ContentrespositoryApi {
      */
     removeContentRepositoryFromFragment(
         contentRepositoryId: EntityIdType,
-        crFragmentId: string,
+        crFragmentId: EntityIdType,
     ): Observable<void> {
         return this.apiBase.delete(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`);
     }
 
-    /** MESH ROLES ************************************************************************************ */
+    /** MESH ACCESS ************************************************************************************ */
+
+    loginToMeshInstance(
+        contentRepositoryId: EntityIdType,
+    ): Observable<LoginResponse> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/proxylogin`, null) as any;
+    }
 
     getAvailableContentRepositoryRoles(contentRepositoryId: EntityIdType): Observable<ContentRepositoryListRolesResponse> {
         return this.apiBase.get(`contentrepositories/${contentRepositoryId}/availableroles`);

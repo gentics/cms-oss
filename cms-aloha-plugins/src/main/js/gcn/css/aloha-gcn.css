@@ -1,102 +1,7 @@
-.aloha-editicon-delete {
-	display: none;
-}
-
-.aloha-editable .aloha-editicon-delete {
-	display: inline-block;
-}
-
-.GENTICS_block .aloha-block-draghandle {
-	border: 0px;
-	cursor: move;
-	border-radius: 5px;
-}
-
-.ui-draggable-dragging.GENTICS_block .aloha-editicons {
-	opacity: 0.1;
-	-webkit-opacity: 0.1;
-	-moz-opacity: 0.1;
-	filter: alpha(opacity='10'); 
-}
-
-.GENTICS_block .aloha-editicons {
-	z-index: 10000;
-	position: relative;
-	top: 3px;
-	display: none;
-	background: rgb(100, 100, 100);
-	border: 1px solid rgb(150, 150, 150);
-	height: 26px;
-	width: 52px;
-	background-repeat: no-repeat;
-	background-position: 3px 4px;
-}
-
-.GENTICS_block .aloha-editicons-small {
-	width: 26px;
-}
-
-/* Draghandles are displayed only if Aloha.settings.plugins.block.dragdrop != false */
-.GENTICS_block .aloha-block-draghandle {
-	padding-left: 24px;
-	background-image: url('../images/drag-handle.png');
-}
-
-.aloha-table-wrapper .aloha-block-draghandle {
-	background: rgb(100, 100, 100);
-	border: 1px solid rgb(150, 150, 150);
-	height: 26px;
-	min-width: 26px;
-	background-image: url('../images/drag-handle.png');
-	background-repeat: no-repeat;
-	background-position: 3px 4px;
-	margin-top: -15px;
-	padding-left: initial;
-}
-
-.aloha-editable div.aloha-table-wrapper.ui-draggable {
-	margin-top: 32px;
-}
-
-.GENTICS_block .aloha-editicons button {
-	width: 24px;
-	height: 24px;
-	padding: 2px;
-	margin: 1px;
-	border: 1px solid #999;
-	border-radius: 2px;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
-	cursor: pointer;
-	background: -moz-linear-gradient(center bottom , #BFBFBF 0%, white 100%) repeat scroll 0 0 transparent;
-	background: -webkit-gradient(linear,left bottom,left top,color-stop(0, #BFBFBF),color-stop(1, white));
-	background: progid:DXImageTransform.Microsoft.Gradient (startColorstr='#ffffff', endColorstr='#bfbfbf', gradientType='0');
-}
-
-.GENTICS_block .aloha-editicons button img {
-	width: 18px;
-	height: 18px;
-	border: 0px;
-}
-
-.aloha-block .aloha-block .aloha-editicon {
-	margin-top: 15px;
-}
-
-.aloha-block .aloha-block .aloha-block .aloha-editicon {
-	margin-top: 30px;
-}
-
-.aloha-block .aloha-block .aloha-block .aloha-block .aloha-editicon {
-	margin-top: 45px;
-}
-
-.aloha-browser-search-field, .aloha-browser-search-btn {
-	display: block !important; 
-}
-
-.aloha-block .aloha-block-handle, .aloha-block:hover .aloha-block-handle {
-	display: inline-block;
+/* Always hide the toolbar - Everything is getting rendered via GCMSUI surface */
+.aloha.aloha-surface.aloha-toolbar,
+.aloha-ui.aloha-sidebar-bar {
+	display: none !important;
 }
 
 .gcn-link-uri-warning .aloha .ui-widget input {
@@ -125,4 +30,112 @@
 .gcn-stop-scrolling {
 	height: 100%;
 	overflow: hidden;
+}
+
+/* --------------- */
+
+.GENTICS_block {
+	--gtx-block-handle-gap: 4px;
+	position: relative;
+}
+
+.GENTICS_block .aloha-construct-buttons-container {
+	display: flex !important;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	position: absolute;
+	top: 0;
+	left: 0;
+
+	width: unset;
+	height: unset;
+	background: none;
+	border: none;
+	border-radius: 0;
+	transition: 200ms;
+}
+
+.GENTICS_block .aloha-construct-buttons-container {
+	--gtx-block-handle-item-width: 30px;
+	--gtx-block-handle-item-height: 30px;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button,
+.GENTICS_block .aloha-construct-buttons-container .gcn-construct-drag-handle {
+	width: var(--gtx-block-handle-item-width);
+	height: var(--gtx-block-handle-item-height);
+	padding: 4px;
+	margin: 0;
+	border: 1px solid #d6d6d6;
+	outline: none;
+	display: flex;
+	box-sizing: border-box;
+	transition: 200ms;
+	z-index: 100;
+	user-select: none;
+	overflow: hidden;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit {
+	background: #0096DC;
+	color: #fff;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit:hover {
+	background: #00a7f6;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-delete {
+	background: #c9302c;
+	color: #fff;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-delete:hover {
+	background: #d9534f;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-construct-drag-handle {
+	cursor: move;
+	position: relative;
+	background: none;
+	left: unset;
+	top: unset;
+	border-radius: 0;
+	background: #f5f5f5;
+	color: #222;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-construct-drag-handle:not(.aloha-block-draghandle) {
+	display: none;
+}
+
+.GENTICS_block .aloha-construct-buttons-container .gcn-block-button .aloha-block-button-icon,
+.GENTICS_block .aloha-construct-buttons-container .gcn-construct-drag-handle .aloha-block-button-icon {
+	font-size: 22px;
+	width: 22px;
+	height: 22px;
+	text-align: center;
+	margin: auto;
+}
+
+.GENTICS_block[data-gcn-construct-ctl-style="above"]:not([data-gcn-construct-ctl-inside="true"]) {
+	margin-top: calc(var(--gtx-block-handle-height) + (var(--gtx-block-handle-gap) * 2));
+}
+
+.GENTICS_block[data-gcn-construct-ctl-style="above"]:not([data-gcn-construct-ctl-inside="true"]) .aloha-construct-buttons-container {
+	margin-top: calc((var(--gtx-block-handle-height) + var(--gtx-block-handle-gap)) * -1);
+	margin-left: -2px;
+}
+
+.GENTICS_block[data-gcn-construct-ctl-style="aside"] .aloha-construct-buttons-container {
+	flex-direction: column;
+}
+
+.GENTICS_block[data-gcn-construct-ctl-style="aside"]:not([data-gcn-construct-ctl-inside="true"]) .aloha-construct-buttons-container,
+.GENTICS_block[data-gcn-construct-ctl-style="click"]:not([data-gcn-construct-ctl-inside="true"]) .aloha-construct-buttons-container {
+	margin-left: calc((var(--gtx-block-handle-width) + var(--gtx-block-handle-gap)) * -1);
+}
+
+.GENTICS_block[data-gcn-construct-ctl-style="click"] .aloha-construct-buttons-container .gcn-block-button {
+	display: none;
 }

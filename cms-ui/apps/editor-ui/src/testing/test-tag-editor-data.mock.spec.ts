@@ -5,14 +5,14 @@ import {
     TagPartProperty,
     TagPartType,
     TagPropertyType,
-    TagType
+    TagType,
 } from '@gentics/cms-models';
 import {
     mockEditableObjectTag,
     mockEditableTag,
     MockObjectTagInfo,
     MockTagPropertyInfo,
-    MockTagTypeInfo
+    MockTagTypeInfo,
 } from './test-tag-editor-data.mock';
 
 describe('TagEditor Test Helper Functions', () => {
@@ -23,33 +23,33 @@ describe('TagEditor Test Helper Functions', () => {
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
-                stringValue: 'test'
+                stringValue: 'test',
             },
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.TextShort,
                 stringValue: '',
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
                 stringValue: 'test non editable',
-                editable: false
+                editable: false,
             },
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
                 stringValue: 'test hidden',
                 keyword: 'customKeyword',
-                hidden: true
+                hidden: true,
             },
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
                 stringValue: 'test hide in editor',
-                hideInEditor: true
-            }
+                hideInEditor: true,
+            },
         ];
 
         const expectedTagProperties: TagPartProperty[] = [
@@ -57,32 +57,32 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 0,
                 type: TagPropertyType.STRING,
                 partId: 0,
-                stringValue: 'test'
+                stringValue: 'test',
             },
             {
                 id: 1,
                 type: TagPropertyType.STRING,
                 partId: 1,
-                stringValue: ''
+                stringValue: '',
             },
             {
                 id: 2,
                 type: TagPropertyType.STRING,
                 partId: 2,
-                stringValue: 'test non editable'
+                stringValue: 'test non editable',
             },
             {
                 id: 3,
                 type: TagPropertyType.STRING,
                 partId: 3,
-                stringValue: 'test hidden'
+                stringValue: 'test hidden',
             },
             {
                 id: 4,
                 type: TagPropertyType.STRING,
                 partId: 4,
-                stringValue: 'test hide in editor'
-            }
+                stringValue: 'test hide in editor',
+            },
         ];
 
         const tagType: TagType = {
@@ -102,7 +102,7 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property0',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
+                    typeId: TagPartType.Text,
                 },
                 {
                     defaultProperty: { ...expectedTagProperties[1] },
@@ -116,7 +116,7 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property1',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.TextShort
+                    typeId: TagPartType.TextShort,
                 },
                 {
                     defaultProperty: { ...expectedTagProperties[2] },
@@ -130,7 +130,7 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property2',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
+                    typeId: TagPartType.Text,
                 },
                 {
                     defaultProperty: { ...expectedTagProperties[3] },
@@ -144,7 +144,7 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'customKeyword',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
+                    typeId: TagPartType.Text,
                 },
                 {
                     defaultProperty: { ...expectedTagProperties[4] },
@@ -158,10 +158,9 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property4',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
-                }
+                    typeId: TagPartType.Text,
+                },
             ],
-            icon: 'tag.gif'
         };
 
         const expectedTag: EditableTag = {
@@ -175,10 +174,10 @@ describe('TagEditor Test Helper Functions', () => {
                 property1: { ...expectedTagProperties[1] },
                 property2: { ...expectedTagProperties[2] },
                 customKeyword: { ...expectedTagProperties[3] },
-                property4: { ...expectedTagProperties[4] }
+                property4: { ...expectedTagProperties[4] },
             },
             type: 'CONTENTTAG',
-            tagType: tagType
+            tagType: tagType,
         };
 
         const actualTag = mockEditableTag(tagPropInfos);
@@ -192,8 +191,8 @@ describe('TagEditor Test Helper Functions', () => {
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const expectedTagProperties: TagPartProperty[] = [
@@ -201,8 +200,8 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 0,
                 type: TagPropertyType.STRING,
                 partId: 0,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const tagTypeInfo: MockTagTypeInfo = {
@@ -228,10 +227,9 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property0',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
-                }
+                    typeId: TagPartType.Text,
+                },
             ],
-            icon: 'tag.gif',
         };
 
         const expectedTag: EditableTag = {
@@ -241,10 +239,10 @@ describe('TagEditor Test Helper Functions', () => {
             construct: tagType,
             name: 'test0',
             properties: {
-                property0: { ...expectedTagProperties[0] }
+                property0: { ...expectedTagProperties[0] },
             },
             type: 'CONTENTTAG',
-            tagType: tagType
+            tagType: tagType,
         };
 
         const actualTag = mockEditableTag(tagPropInfos, tagTypeInfo);
@@ -257,14 +255,14 @@ describe('TagEditor Test Helper Functions', () => {
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
-                stringValue: 'test'
+                stringValue: 'test',
             },
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.TextShort,
                 stringValue: '',
-                mandatory: true
-            }
+                mandatory: true,
+            },
         ];
 
         const expectedTagProperties: TagPartProperty[] = [
@@ -272,14 +270,14 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 0,
                 type: TagPropertyType.STRING,
                 partId: 0,
-                stringValue: 'test'
+                stringValue: 'test',
             },
             {
                 id: 1,
                 type: TagPropertyType.STRING,
                 partId: 1,
-                stringValue: ''
-            }
+                stringValue: '',
+            },
         ];
 
         const tagType: TagType = {
@@ -299,7 +297,7 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property0',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
+                    typeId: TagPartType.Text,
                 },
                 {
                     defaultProperty: { ...expectedTagProperties[1] },
@@ -313,10 +311,9 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property1',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.TextShort
-                }
+                    typeId: TagPartType.TextShort,
+                },
             ],
-            icon: 'tag.gif'
         };
 
         const expectedTag: EditableObjectTag = {
@@ -327,17 +324,18 @@ describe('TagEditor Test Helper Functions', () => {
             name: 'object.test0',
             properties: {
                 property0: { ...expectedTagProperties[0] },
-                property1: { ...expectedTagProperties[1] }
+                property1: { ...expectedTagProperties[1] },
             },
             type: 'OBJECTTAG',
             displayName: 'object.test0',
             description: '',
+            categoryId: 1,
             categoryName: 'CategoryA',
             inheritable: false,
             required: false,
             sortOrder: 0,
             tagType: tagType,
-            readOnly: false
+            readOnly: false,
         };
 
         const actualTag = mockEditableObjectTag(tagPropInfos);
@@ -351,8 +349,8 @@ describe('TagEditor Test Helper Functions', () => {
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const expectedTagProperties: TagPartProperty[] = [
@@ -360,8 +358,8 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 0,
                 type: TagPropertyType.STRING,
                 partId: 0,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const objTagInfo: MockObjectTagInfo = {
@@ -373,6 +371,7 @@ describe('TagEditor Test Helper Functions', () => {
             name: 'object.customName',
             displayName: 'Display Name Test',
             description: 'Description',
+            categoryId: 5,
             categoryName: 'Custom Category',
             inheritable: true,
             required: false,
@@ -396,10 +395,9 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property0',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
-                }
+                    typeId: TagPartType.Text,
+                },
             ],
-            icon: 'tag.gif',
         };
 
         const expectedTag: EditableObjectTag = {
@@ -409,17 +407,18 @@ describe('TagEditor Test Helper Functions', () => {
             construct: tagType,
             name: objTagInfo.name,
             properties: {
-                property0: { ...expectedTagProperties[0] }
+                property0: { ...expectedTagProperties[0] },
             },
             type: 'OBJECTTAG',
             displayName: objTagInfo.displayName,
             description: objTagInfo.description,
+            categoryId: objTagInfo.categoryId,
             categoryName: objTagInfo.categoryName,
             inheritable: objTagInfo.inheritable,
             required: objTagInfo.required,
             sortOrder: objTagInfo.sortOrder,
             tagType: tagType,
-            readOnly: false
+            readOnly: false,
         };
 
         const actualTag = mockEditableObjectTag(tagPropInfos, objTagInfo);
@@ -432,8 +431,8 @@ describe('TagEditor Test Helper Functions', () => {
             {
                 type: TagPropertyType.STRING,
                 typeId: TagPartType.Text,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const expectedTagProperties: TagPartProperty[] = [
@@ -441,13 +440,14 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 0,
                 type: TagPropertyType.STRING,
                 partId: 0,
-                stringValue: 'test'
-            }
+                stringValue: 'test',
+            },
         ];
 
         const objTagInfo: MockObjectTagInfo = {
             displayName: 'Display Name Test',
             description: 'Description',
+            categoryId: 123,
             categoryName: 'Custom Category',
             inheritable: true,
             required: false,
@@ -471,10 +471,9 @@ describe('TagEditor Test Helper Functions', () => {
                     name: 'property0',
                     nameI18n: {},
                     type: TagPropertyType.STRING,
-                    typeId: TagPartType.Text
-                }
+                    typeId: TagPartType.Text,
+                },
             ],
-            icon: 'tag.gif',
         };
 
         const expectedTag: EditableObjectTag = {
@@ -484,17 +483,18 @@ describe('TagEditor Test Helper Functions', () => {
             construct: tagType,
             name: 'object.test0',
             properties: {
-                property0: { ...expectedTagProperties[0] }
+                property0: { ...expectedTagProperties[0] },
             },
             type: 'OBJECTTAG',
             displayName: objTagInfo.displayName,
             description: objTagInfo.description,
+            categoryId: objTagInfo.categoryId,
             categoryName: objTagInfo.categoryName,
             inheritable: objTagInfo.inheritable,
             required: objTagInfo.required,
             sortOrder: objTagInfo.sortOrder,
             tagType: tagType,
-            readOnly: false
+            readOnly: false,
         };
 
         const actualTag = mockEditableObjectTag(tagPropInfos, objTagInfo);

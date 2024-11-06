@@ -3,7 +3,7 @@ export type NodeFeatures = Record<NodeFeature, string>;
 
 /**
  * Contains a subset of the available CMS features listed at
- * https://www.gentics.com/Content.Node/guides/feature_overview.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/feature_overview.html
  *
  * For compatibility with the current FeaturesState implementation in the GCMS UI, the names use kebap_case.
  */
@@ -17,6 +17,9 @@ export enum Feature {
     FOCAL_POINT_EDITING = 'focal_point_editing',
     IMAGE_MANIPULATION2 = 'imagemanipulation2',
     ENABLE_UPLOAD_IN_TAGFILL = 'enable_image_upload_in_tagfill',
+    /**
+     * @deprecated Feature will be removed in the future
+     */
     TAGFILL_LIGHT = 'tagfill_light',
     WASTEBIN = 'wastebin',
     DEVTOOLS = 'devtools',
@@ -24,7 +27,7 @@ export enum Feature {
      * If this feature is activated, it is allowed to define how the publish directories of objects in folders are constructed.
      * I. e. in modal `CreateFolderModal` input `directory`'s string will be interpreted as an URL path segment to the publishing portal.
      *
-     * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
+     * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
     PUB_DIR_SEGMENT = 'pub_dir_segment',
     USERSNAP = 'usersnap',
@@ -38,14 +41,14 @@ export enum Feature {
 
 /**
  * Contains a subset of the available node features listed at
- * https://www.gentics.com/Content.Node/guides/restapi/json_NodeFeature.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_NodeFeature.html
  */
 export enum NodeFeature {
     /**
      * If this feature is activated, buttons for uploading images/files to CMS will
      * display multiple asset sources configured in `$NODE_SETTINGS -> "asset_management"`.
      *
-     * @see https://gentics.com/Content.Node/guides/asset_management.html
+     * @see https://gentics.com/Content.Node/cmp8/guides/asset_management.html
      */
     ASSET_MANAGEMENT = 'asset_management',
     /**
@@ -84,6 +87,20 @@ export enum NodeFeature {
      */
     FORMS = 'forms',
 
+    /**
+     * If this feature is activated, uploaded images are automatically converted to WebP.
+     */
+    WEBP_CONVERSION = 'webp_conversion',
+
+    /*
+     * If this feature is activated a modal dialog with the files properties is opened immediately after the upload.
+     */
+    UPLOAD_FILE_PROPERTIES = 'upload_file_properties',
+
+    /**
+     * If this feature is activated a modal dialog with the images properties is opened immediately after the upload.
+     */
+    UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
 }
 
 /**

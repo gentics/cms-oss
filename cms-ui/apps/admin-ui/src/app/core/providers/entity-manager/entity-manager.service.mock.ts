@@ -1,5 +1,4 @@
 import { InterfaceOf } from '@admin-ui/common';
-import { Omit } from '@gentics/cms-models';
 import { EntityManagerService } from './entity-manager.service';
 
 /**

@@ -33,7 +33,7 @@
                 formControlName="markupLanguage"
             >
                 <gtx-option
-                    *ngFor="let markupLang of (markupLanguages | values)"
+                    *ngFor="let markupLang of (markupLanguages | gtxValues)"
                     [value]="(markupLang.id + '')"
                 >
                     {{ markupLang.name }}

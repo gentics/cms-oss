@@ -116,6 +116,7 @@ public class FileLoadSandboxTest {
 	public void testLoadContentType() throws Exception {
 		FileResource fileResource = getFileResource();
 		Response response = fileResource.loadContent(ObjectTransformer.getString(file.getId(), null), null);
+
 		String responseContentType = ObjectTransformer.getString(response.getMetadata().get("Content-Type").get(0), null);
 		assertEquals("Check Content-Type", contentType, responseContentType);
 	}
@@ -145,7 +146,7 @@ public class FileLoadSandboxTest {
 		for (Class<? extends File> clazz : clazzes) {
 			Object o = t.getObject(clazz, (Integer) file.getId());
 			assertNotNull("File fetched with Class " + clazz.getName() + "should be not null", o);
-		}	
+		}
 	}
 
 	/**
@@ -163,7 +164,7 @@ public class FileLoadSandboxTest {
 		protected String contentType;
 
 		/**
-		 * The data resource 
+		 * The data resource
 		 */
 		private String dataResource;
 
@@ -182,7 +183,7 @@ public class FileLoadSandboxTest {
 		 * Gets an Input Stream from the data resource depending on the content type:
 		 * if the content type is an image the method will try to load the image with the GenericTestUtils
 		 * if the content type is text the method will convert the dataResource to an InputStream
-		 * 
+		 *
 		 * @return the InputStream containing the dataResource
 		 * @throws Exception
 		 */

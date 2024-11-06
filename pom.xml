@@ -5,25 +5,23 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms-oss</artifactId>
-	<version>6.0.23-SNAPSHOT</version>
+	<version>6.1.17-SNAPSHOT</version>
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
-	<url>http://www.gentics.com/</url>
+	<url>https://www.gentics.com/</url>
 
 	<licenses>
 		<license>
 			<name>Gentics Software GmbH - Commercial License</name>
-			<!-- TODO license -->
-			<url>http://www.gentics.com/licenses/LICENSE.txt</url>
+			<url>https://www.gentics.com/licenses/LICENSE.txt</url>
 		</license>
 	</licenses>
 
-	<!-- TODO: do we need this?-->
 	<scm>
-		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
-		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
-		<url>http://git.gentics.com/psc/contentnode</url>
+		<connection>scm:git:git@github.com:gentics/cms-oss.git</connection>
+		<developerConnection>scm:git:git@github.com:gentics/cms-oss.git</developerConnection>
+		<url>https://github.com/gentics/cms-oss</url>
 	</scm>
 
 	<modules>
@@ -41,54 +39,49 @@
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
-
-		<!--
-		<module>static</module>
-		-->
-
-		<!--module>contentnode-manual</module>
-		<module>contentnode-doc</module>
-		<module>contentnode-changelog</module -->
-
+		<module>cms-integration-tests</module>
 	</modules>
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>1.5.1</alohaeditor.version>
+		<alohaeditor.version>2.0.5</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>03.04.2024</alohaeditor.date>
+		<alohaeditor.date>10.07.2024</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>2.0.14</mesh.version>
-		<mesh.forms.plugin.version>1.10.0</mesh.forms.plugin.version>
+		<mesh.version>2.1.9</mesh.version>
+		<mesh.forms.plugin.version>2.1.0</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
-		<jersey.version>2.39</jersey.version>
-		<jetty.version>9.4.49.v20220914</jetty.version>
-		<jackson.version>2.14.1</jackson.version>
+		<jersey.version>2.42</jersey.version>
+		<jetty.version>9.4.54.v20240208</jetty.version>
+		<jackson.version>2.17.0</jackson.version>
 
-		<enunciate.version>2.14.0</enunciate.version>
+		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
-		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
-		<mockito.version>3.7.7</mockito.version>
+		<nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
+		<mockito.version>5.0.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.6.0</jsonpath.version>
-		<log4j.version>2.17.1</log4j.version>
+		<log4j.version>2.23.1</log4j.version>
 		<xerces.version>2.12.2</xerces.version>
 		<xalan.version>2.7.3</xalan.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
 		<imageio.version>3.9.4</imageio.version>
+		<scrimage.webp.version>4.1.3</scrimage.webp.version>
 		<tika.version>1.28.5</tika.version>
 		<commons.fileupload.version>1.5</commons.fileupload.version>
 		<commons.beanutils.version>1.9.4</commons.beanutils.version>
+		<commons.codec.version>1.16.1</commons.codec.version>
 		<nekohtml.version>1.9.22</nekohtml.version>
-		<spring.version>5.7.10</spring.version>
-		<org.json.version>20230227</org.json.version>
+		<spring.version>6.2.3</spring.version>
+		<org.json.version>20240303</org.json.version>
 		<commons-text.version>1.11.0</commons-text.version>
+		<commons-io.version>2.16.1</commons-io.version>
 
 		<!-- TODO: integrate generic-testutils -->
-		<generic-testutils.version>1.15.7</generic-testutils.version>
+		<generic-testutils.version>1.15.8</generic-testutils.version>
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -98,10 +91,12 @@
 		<assertj.version>3.4.1</assertj.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
 
+		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
+		<surefireArgLine>-Xms128m -Xmx512m --add-opens=java.base/java.lang=ALL-UNNAMED</surefireArgLine>
 	</properties>
 
 	<build>
@@ -122,6 +117,21 @@
 					<goals>deploy -Dskip.unit.tests=true</goals>
 					<completionGoals>scm:checkin -Dmessage="Added generated changelog mapping" -Dbasedir=${project.basedir}/ -Dincludes=contentnode-changelog/src/changelog/mappings/**</completionGoals>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>dependency-updates-aggregate-report</goal>
+						</goals>
+						<configuration>
+							<formats>xml</formats>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -195,6 +205,11 @@
 					<version>2.3.8</version>
 				</plugin>
 				<plugin>
+					<groupId>com.gentics</groupId>
+					<artifactId>dependency-reporting-plugin</artifactId>
+					<version>1.0.0</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-assembly-plugin</artifactId>
 					<version>2.4</version>
@@ -227,14 +242,12 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.5.1</version>
+					<version>3.11.0</version>
 					<configuration>
 						<executable>${env.JAVA_HOME}/bin/javac</executable>
 						<verbose>true</verbose>
 						<fork>true</fork>
-						<compilerVersion>1.8</compilerVersion>
-						<source>11</source>
-						<target>11</target>
+						<release>17</release>
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>
@@ -281,7 +294,7 @@
 				<plugin>
 					<groupId>ro.isdc.wro4j</groupId>
 					<artifactId>wro4j-maven-plugin</artifactId>
-					<version>1.4.1</version>
+					<version>1.9.0</version>
 				</plugin>
 				<plugin>
 					<groupId>nl.windgazer</groupId>
@@ -291,9 +304,27 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.22.0</version>
+					<version>${surefire.version}</version>
 					<configuration>
-						<skipTests>${skip.unit.tests}</skipTests>
+						<argLine>@{argLine} ${surefireArgLine}</argLine>
+						<jvm>${test.jvm.home}/bin/java</jvm>
+						<skip>${skip.unit.tests}</skip>
+						<forkCount>${surefire.forkcount}</forkCount>
+						<reuseForks>false</reuseForks>
+						<!-- Don't execute more than one test per jvm fork! -->
+						<testFailureIgnore>true</testFailureIgnore>
+						<runOrder>random</runOrder>
+						<trimStackTrace>false</trimStackTrace>
+						<rerunFailingTestsCount>${surefire.rerunFailingTestsCount}</rerunFailingTestsCount>
+						<excludes>
+							<!-- Exclude integration tests within (unit) test phase. -->
+							<exclude>**/*AbstractTest.java</exclude>
+							<exclude>**/*Abstract*.java</exclude>
+							<exclude>**/Abstract*.java</exclude>
+							<exclude>**/*Abstract*Test.java</exclude>
+							<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
+							<exclude>**/MeshPortalPreviewSslTest.java</exclude>
+						</excludes>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -324,7 +355,7 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>versions-maven-plugin</artifactId>
-					<version>2.13.0</version>
+					<version>2.16.2</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -342,9 +373,37 @@
 			<url>https://repository.mulesoft.org/nexus/content/groups/public</url>
 		</pluginRepository>
 		<pluginRepository>
-			<id>lan.internal</id>
-			<name>LAN Internal Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-internal</url>
+			<id>gentics.nexus.releases</id>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>gentics.nexus.thirdparty</id>
+			<name>Gentics Nexus Thirdparty Repository</name>
+			<url>https://repo.gentics.com/repository/maven-thirdparty/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</pluginRepository>
 		<pluginRepository>
 			<id>maven-repository.dev.java.net</id>
@@ -360,9 +419,42 @@
 
 	<repositories>
 		<repository>
-			<id>maven.gentics.com</id>
-			<name>Gentics Maven Repository</name>
-			<url>https://maven.gentics.com/maven2</url>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.releases</id>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.snapshots</id>
+			<name>Gentics Snapshots Repository</name>
+			<url>https://repo.gentics.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.thirdparty</id>
+			<name>Gentics Nexus Thirdparty Repository</name>
+			<url>https://repo.gentics.com/repository/maven-thirdparty/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -381,29 +473,18 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>gtx-commercial</id>
-			<name>Gentics Maven Commercial Repository</name>
-			<url>https://maven.gentics.com/maven2-commercial</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
 
 	<distributionManagement>
 		<repository>
-			<id>lan.releases.staging.gcn</id>
-			<name>Gentics Releases Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-releases-staging-cms</url>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
 		</repository>
 		<snapshotRepository>
-			<id>lan.snapshots</id>
+			<id>gentics.nexus.snapshots</id>
 			<name>Gentics Snapshots Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-snapshots</url>
+			<url>https://repo.gentics.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { EditMode, ExposedGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions, ToolBreadcrumb } from '@gentics/cms-integration-api-models';
 import {
-    EditMode,
     FileResponse,
     Folder,
     FolderItemType,
@@ -15,7 +15,7 @@ import {
     TagInContainer,
 } from '@gentics/cms-models';
 import { IDialogConfig, INotificationOptions, ModalService, NotificationService } from '@gentics/ui-core';
-import { ToolBreadcrumb } from '../../../../../embedded-tools-api/exposed-gcmsui-api';
+import { map } from 'rxjs/operators';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
 import { WastebinModal } from '../../../core/components/wastebin-modal/wastebin-modal.component';
@@ -26,13 +26,12 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import { ExposableGCMSUIAPI, NotificationOptions, RepositoryBrowserOptions } from '../tool-api-channel/exposable-gcmsui-api';
 
 /**
  * All methods declared on this class are callable from tool iframes / tabs.
  */
 @Injectable()
-export class ExposedUIAPI implements ExposableGCMSUIAPI {
+export class ExposedUIAPI implements ExposedGCMSUIAPI {
 
     /** Create a copy of an instance with all services injected. */
     static clone(instance: ExposedUIAPI): ExposedUIAPI {
@@ -69,18 +68,20 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
         return this.navigation.list(nodeId, folderId).navigate();
     }
 
-    refreshCurrentFolder(itemType?: 'folder' | 'form' | 'page' | 'file' | 'image'): void {
+    refreshCurrentFolder(itemType?: 'folder' | 'form' | 'page' | 'file' | 'image'): Promise<boolean> {
         if (itemType) {
-            this.folderActions.refreshList(itemType);
-        } else {
-            this.folderActions.refreshList('folder');
-            this.folderActions.refreshList('page');
-            this.folderActions.refreshList('file');
-            this.folderActions.refreshList('image');
-            if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-                this.folderActions.refreshList('form');
-            }
+            return this.folderActions.refreshList(itemType).then(() => true);
         }
+
+        this.folderActions.refreshList('folder');
+        this.folderActions.refreshList('page');
+        this.folderActions.refreshList('file');
+        this.folderActions.refreshList('image');
+        if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
+            return this.folderActions.refreshList('form').then(() => true);
+        }
+
+        return Promise.resolve(false);
     }
 
     nodeProperties(nodeId: number): Promise<boolean> {
@@ -91,7 +92,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
                 folderId: node.folderId,
             },
             detail: {
-                editMode: 'editProperties',
+                editMode: EditMode.EDIT_PROPERTIES,
                 itemId: nodeId,
                 itemType: 'node',
                 nodeId,
@@ -112,14 +113,15 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
         propertiesTab?: PropertiesTab,
     ): Promise<boolean> {
 
-        return this.api.folders.getItem(itemId, itemType)
-            .map(response =>
+        return this.api.folders.getItem(itemId, itemType).pipe(
+            map(response =>
                 (response as FolderResponse).folder ||
                 (response as PageResponse).page ||
                 (response as FileResponse).file ||
                 (response as ImageResponse).image ||
                 (response as unknown as FormResponse).item,
-            )
+            ),
+        )
             .toPromise()
             .then(item => {
                 nodeId = nodeId || (item as Folder).nodeId || item.inheritedFromId;
@@ -155,32 +157,32 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
     }
 
     folderProperties(folderId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'folder', folderId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'folder', folderId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     folderObjectProperties(folderId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'folder', folderId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'folder', folderId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     previewPage(pageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('preview', 'page', pageId, nodeId);
+        return this.internalNavigate(EditMode.PREVIEW, 'page', pageId, nodeId);
     }
 
     pageProperties(pageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'page', pageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'page', pageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     pageObjectProperties(pageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'page', pageId, nodeId, 'properties');
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'page', pageId, nodeId, 'properties');
     }
 
     editPage(pageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('edit', 'page', pageId, nodeId);
+        return this.internalNavigate(EditMode.EDIT, 'page', pageId, nodeId);
     }
 
     previewForm(formId: number, nodeId?: number): Promise<boolean> {
         if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-            return this.internalNavigate('preview', 'form', formId, nodeId);
+            return this.internalNavigate(EditMode.PREVIEW, 'form', formId, nodeId);
         } else {
             throw new Error(`Cannot previewForm of Form with
                 ID ${formId}, because Node
@@ -190,7 +192,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
 
     formProperties(formId: number, nodeId?: number): Promise<boolean> {
         if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-            return this.internalNavigate('editProperties', 'form', formId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+            return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'form', formId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
         } else {
             throw new Error(`Cannot formProperties of Form with
                 ID ${formId}, because Node
@@ -200,7 +202,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
 
     editForm(formId: number, nodeId?: number): Promise<boolean> {
         if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-            return this.internalNavigate('edit', 'form', formId, nodeId);
+            return this.internalNavigate(EditMode.EDIT, 'form', formId, nodeId);
         } else {
             throw new Error(`Cannot editForm of Form with
                 ID ${formId}, because Node
@@ -209,31 +211,31 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
     }
 
     previewFile(fileId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'file', fileId, nodeId, 'preview');
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'file', fileId, nodeId, 'preview');
     }
 
     fileProperties(fileId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'file', fileId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'file', fileId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     fileObjectProperties(fileId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'file', fileId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'file', fileId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     previewImage(imageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'image', imageId, nodeId, 'preview');
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'image', imageId, nodeId, 'preview');
     }
 
     imageProperties(imageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'image', imageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'image', imageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     imageObjectProperties(imageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('editProperties', 'image', imageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
+        return this.internalNavigate(EditMode.EDIT_PROPERTIES, 'image', imageId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
     }
 
     editImage(imageId: number, nodeId?: number): Promise<boolean> {
-        return this.internalNavigate('edit', 'image', imageId, nodeId);
+        return this.internalNavigate(EditMode.EDIT, 'image', imageId, nodeId);
     }
 
     openPublishQueue(): Promise<void> {
@@ -249,14 +251,15 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
             .then(() => {});
     }
 
-    openMessageComposer(): void {
-        this.modalService.fromComponent(SendMessageModal)
+    openMessageComposer(): Promise<void> {
+        return this.modalService.fromComponent(SendMessageModal)
             .then(modal => modal.open())
             .then(() => {});
     }
 
-    openMessageInbox(): void {
+    openMessageInbox(): Promise<void> {
         this.messageService.openInbox();
+        return Promise.resolve();
     }
 
     openRepositoryBrowser(options: RepositoryBrowserOptions): Promise<(ItemInNode | TagInContainer)[]> {
@@ -281,6 +284,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
                 timeout = setTimeout(() => resolve(undefined), options.delay || 3000);
             }
 
+            // eslint-disable-next-line prefer-const
             let toast: { dismiss(): void };
 
             const optionsToUse: INotificationOptions = { ...options };
@@ -306,13 +310,17 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
     }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    close(): void { }
+    close(): Promise<void> {
+        return Promise.resolve();
+    }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    navigated(path: string): void { }
+    navigated(_path: string): Promise<void> {
+        return Promise.resolve();
+    }
 
     // Call should do different things depending on which tool called => Overwrite in a clone
-    provideBreadcrumbs(breadcrumbs: ToolBreadcrumb[]): void { }
+    provideBreadcrumbs(_breadcrumbs: ToolBreadcrumb[]): void { }
 
     private nodeFeatureIsActive(nodeFeature: NodeFeature): boolean {
         const activeNodeId = this.state.now.folder.activeNode;

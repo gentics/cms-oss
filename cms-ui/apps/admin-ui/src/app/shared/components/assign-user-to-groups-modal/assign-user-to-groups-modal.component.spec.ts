@@ -7,15 +7,15 @@ import {
     PermissionsService,
     UserOperations,
 } from '@admin-ui/core';
-import { Component, Pipe, PipeTransform } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Group, ModelType } from '@gentics/cms-models';
+import { getExampleUserData } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
-import { Group, ModelType } from '../../../../../../../libs/cms-models/src/lib/models';
-import { GcmsTestData } from '../../../../../../../libs/cms-models/src/lib/testing/gcms-test-data.mock';
 import { componentTest } from '../../../../testing';
 import { createDelayedObservable } from '../../../../testing/utils/rxjs-utils';
 import { InterfaceOf } from '../../../common/utils/util-types/util-types';
@@ -36,13 +36,13 @@ import {
     UserDataService,
 } from '../../providers';
 import { GroupTrableComponent } from '../group-trable/group-trable.component';
-import { AssignUserToGroupsModalComponent } from './assign-user-to-groups-modal.component';
+import { AssignUserToGroupsModal } from './assign-user-to-groups-modal.component';
 
 const PARENT_NODE_ID = 2;
 const FIRST_PARENT_NODE_ID = 4;
 const SECOND_PARENT_NODE_ID = 5;
 
-const MOCK_USER = GcmsTestData.getExampleUserData({ id: 1 });
+const MOCK_USER = getExampleUserData({ id: 1 });
 
 const MOCK_PARENT_GROUPS: Group<ModelType>[] = [
     {
@@ -150,7 +150,7 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
             ],
             declarations: [
                 ActionAllowedDirective,
-                AssignUserToGroupsModalComponent,
+                AssignUserToGroupsModal,
                 GroupTrableComponent,
                 MockI18nPipe,
                 TestComponent,
@@ -173,6 +173,7 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
                 UserDataService,
                 { provide: UserOperations, useClass: MockUserOperations },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TestComponent);

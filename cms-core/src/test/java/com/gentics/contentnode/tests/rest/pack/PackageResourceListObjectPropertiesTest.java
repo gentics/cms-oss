@@ -55,7 +55,6 @@ public class PackageResourceListObjectPropertiesTest extends AbstractListSortAnd
 		operate(() -> Synchronizer.addPackage(packageName));
 		construct = Builder.create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword(randomStringGenerator.generate(5, 10));
 			c.setName(randomStringGenerator.generate(5, 10), 1);
 			c.setName(randomStringGenerator.generate(5, 10), 2);

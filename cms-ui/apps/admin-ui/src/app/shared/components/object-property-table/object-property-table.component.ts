@@ -1,23 +1,24 @@
-import { ObjectPropertyBO, typeIdsToName } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
     I18nService,
     ObjectPropertyTableLoaderOptions,
     ObjectPropertyTableLoaderService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
-import { ContextMenuService, DELETE_ACTION, UNASSIGN_FROM_PACKAGE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { typeIdsToName } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import {
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
 } from '../assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';
-import { BasePackageEntityTableComponent } from '../base-package-entity-table/base-package-entity-table.component';
+import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
+import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 
 const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
 
@@ -26,10 +27,12 @@ const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
     templateUrl: './object-property-table.component.html',
     styleUrls: ['./object-property-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ObjectPropertyTableComponent
     extends BasePackageEntityTableComponent<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>
     implements OnChanges {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public type?: ObjectPropertiesObjectType;
@@ -65,6 +68,7 @@ export class ObjectPropertyTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'objectProperty';
+    protected focusEntityType = EditableEntity.OBJECT_PROPERTY;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -73,7 +77,6 @@ export class ObjectPropertyTableComponent
         loader: ObjectPropertyTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -81,10 +84,9 @@ export class ObjectPropertyTableComponent
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

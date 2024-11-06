@@ -1,4 +1,5 @@
-import { EditMode, FolderItemType, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderItemType, PageVersion } from '@gentics/cms-models';
 import { AppState, EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { ActionDeclaration } from '../../state-utils';
 
@@ -27,12 +28,19 @@ export interface EditSettings {
     nodeId: number,
     openTab?: EditorTab,
     openPropertiesTab?: PropertiesTab,
+    focusMode?: boolean;
 }
 
 export const EDITOR_STATE_KEY: keyof AppState = 'editor';
 
 @ActionDeclaration(EDITOR_STATE_KEY)
 export class ChangeTabAction {
+    /**
+     * Changes to the specified `EditorTab`.
+     *
+     * @param tab The `EditorTab` that should be switched to.
+     * @param propertiesTab (optional) The properties tab to switch to; if this is omitted, `ITEM_PROPERTIES_TAB` will be used as the default value.
+     */
     constructor(
         public tab: EditorTab,
         public propertiesTab: PropertiesTab = ITEM_PROPERTIES_TAB,

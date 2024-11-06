@@ -7,6 +7,7 @@ import static com.gentics.contentnode.i18n.I18NHelper.forI18nMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -20,6 +21,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -28,7 +30,10 @@ import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.ObjectTagDefinitionCategory;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.model.devtools.ObjectPropertyInPackage;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
 /**
@@ -132,6 +137,32 @@ public class ObjectTagDefinitionSynchronizer extends AbstractSynchronizer<Object
 		}
 
 		editable.save();
+
+		List<String> nodesIds = model.getNodeIds();
+		List<Node> nodesToUpdate = new ArrayList<>();
+
+		// Load nodes to which the object property should be linked and
+		// check permissions to edit the node.
+		if (nodesIds != null) {
+			for (String nodeId : nodesIds) {
+				Node node = MiscUtils.load(Node.class, nodeId, false, ObjectPermission.edit);
+
+				if (node == null) {
+					continue;
+				}
+
+				nodesToUpdate.add(t.getObject(node, true));
+			}
+		}
+
+		// Commit the transaction so that the new object property gets an ID,
+		// otherwise node.addObjectTagDefinition() will not work.
+		t.commit(false);
+
+		for (Node node : nodesToUpdate) {
+			node.addObjectTagDefinition(editable);
+			node.save();
+		}
 
 		return t.getObject(editable);
 	}
@@ -237,7 +268,7 @@ public class ObjectTagDefinitionSynchronizer extends AbstractSynchronizer<Object
 	 */
 	protected ObjectTagDefinitionCategory transform(ObjectTagDefinitionCategoryModel from, ObjectTagDefinitionCategory to) throws NodeException {
 		Synchronizer.checkNotNull(from, to);
-	
+
 		if (from.getGlobalId() != null) {
 			to.setGlobalId(new GlobalId(from.getGlobalId()));
 		}

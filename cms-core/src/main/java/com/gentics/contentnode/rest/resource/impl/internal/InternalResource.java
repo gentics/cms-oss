@@ -9,7 +9,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.xml.ws.spi.http.HttpContext;
 
 import com.gentics.contentnode.security.AccessControlService;
 
@@ -34,12 +33,6 @@ public abstract class InternalResource {
 	 */
 	@Context
 	private HttpServletResponse response;
-
-	/**
-	 * Jersey HTTP Context
-	 */
-	@Context
-	private HttpContext context;
 
 	@PostConstruct
 	public void initialize() {

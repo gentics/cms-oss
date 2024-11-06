@@ -2,21 +2,23 @@ import { Component, ComponentRef, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import {
-    EditableTag,
     MultiValidationResult,
-    StringTagPartProperty,
     TagChangedFn,
     TagEditorContext,
-    TagPartProperty,
     TagPropertiesChangedFn,
     TagPropertyEditor,
+    ValidationResult,
+} from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    StringTagPartProperty,
+    TagPartProperty,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult,
 } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
@@ -31,7 +33,7 @@ import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-conte
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
 import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TextTagPropertyEditor } from '../tag-property-editors/text-tag-property-editor/text-tag-property-editor.component';
 import { GenticsTagEditorComponent } from './gentics-tag-editor.component';
@@ -50,6 +52,7 @@ describe('GenticsTagEditorComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 GenticsTagEditorComponent,
@@ -58,17 +61,9 @@ describe('GenticsTagEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 TextTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
                 mockPipes('objTagName'),
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    GenticsTagEditorComponent,
-                    TextTagPropertyEditor,
-                ],
-            },
         });
     });
 
@@ -216,10 +211,11 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(finalTag => {
+            result.then(editorResult => {
                 expect(promiseResolved).toBe(false);
-                expect(finalTag).toEqual(tag);
-                expect(finalTag).not.toBe(tag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(tag);
+                expect(editorResult.tag).not.toBe(tag);
                 promiseResolved = true;
             }).catch(() => fail('The openTagEditor() promise should not be rejected'));
             tick();
@@ -309,7 +305,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // Try to change the non-editable TagProperty by firing the TagPropertiesChanged event from another property.
             const onTagPropChangeFn: TagPropertiesChangedFn = registerOnChangeSpies[0].calls.argsFor(0)[0];
-            let changes: Partial<TagPropertyMap> = { };
+            const changes: Partial<TagPropertyMap> = { };
             changes[nonEditableTagPart.keyword] = {
                 ...nonEditableTagProperty,
                 stringValue: 'Property changed',
@@ -425,9 +421,10 @@ describe('GenticsTagEditorComponent', () => {
 
         // Click the OK button and make sure that the promise resolves with the expected edits.
         let promiseResolved = false;
-        result.then(finalTag => {
+        result.then(editorResult => {
             expect(promiseResolved).toBe(false);
-            expect(finalTag).toEqual(expectedFinalTag);
+            expect(editorResult.doDelete).toEqual(false);
+            expect(editorResult.tag).toEqual(expectedFinalTag);
             promiseResolved = true;
         }).catch(() => fail('The openTagEditor() promise should not be rejected'));
         tick();
@@ -517,6 +514,7 @@ describe('GenticsTagEditorComponent', () => {
             expect(validatorSpy.calls.count()).toBe(1);
             expect(validatorSpy.calls.argsFor(0)[0]).toEqual(change[tagPart1Key]);
             expect(actualValidationResults).toEqual(expectedValidationResults);
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             writeChangedValuesSpies.forEach(spy => expect(spy.calls.count()).toBe(0));
             validatorSpy.calls.reset();
 
@@ -608,9 +606,10 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(finalTag => {
+            result.then(editorResult => {
                 expect(promiseResolved).toBe(false);
-                expect(finalTag).toEqual(expectedFinalTag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(expectedFinalTag);
                 promiseResolved = true;
             }).catch(() => fail('The openTagEditor() promise should not be rejected'));
             tick();
@@ -651,12 +650,12 @@ describe('GenticsTagEditorComponent', () => {
             const onTagProp1ChangeFn: TagPropertiesChangedFn = registerOnChangeSpies[1].calls.argsFor(0)[0];
 
             // Change the value of tagProperty1.
-            let change: Partial<TagPropertyMap> = { };
+            const change: Partial<TagPropertyMap> = { };
             change[tagPart1Key] = {
                 ...origTag.properties[tagPart1Key],
                 stringValue: 'modified value',
             } as StringTagPartProperty;
-            let changeClone = cloneDeep(change);
+            const changeClone = cloneDeep(change);
             onTagProp1ChangeFn(change);
             fixture.detectChanges();
             tick();
@@ -742,7 +741,7 @@ describe('GenticsTagEditorComponent', () => {
             });
 
             // Change the value of tagProperty1.
-            let change: Partial<TagPropertyMap> = { };
+            const change: Partial<TagPropertyMap> = { };
             change[tagPart1Key] = {
                 ...origTag.properties[tagPart1Key],
                 stringValue: 'modified value',
@@ -769,7 +768,7 @@ describe('GenticsTagEditorComponent', () => {
                     const index = currPropEditorIndex;
                     let onChangeSpy = spyOn(componentInstance.instance, 'registerOnChange');
 
-                    let writeChangedValuesSpy = spyOn(componentInstance.instance, 'writeChangedValues').and.callFake(() => {
+                    const writeChangedValuesSpy = spyOn(componentInstance.instance, 'writeChangedValues').and.callFake(() => {
                         if (writeChangedValuesSpy.calls.count() > 1) {
                             fail('onTagPropertyChanged() call should not be allowed during initialization');
                         }
@@ -1123,8 +1122,8 @@ function validateMockedTag(tag: EditableTag): void {
 @Component({
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })
     tagEditorHost: TagEditorHostComponent;
@@ -1137,4 +1136,10 @@ class MockTagEditorService {
 
 class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
+}
+
+class MockI18nService implements Partial<I18nService> {
+    translate(key: string | string[], params?: any): string {
+        return key as string;
+    }
 }

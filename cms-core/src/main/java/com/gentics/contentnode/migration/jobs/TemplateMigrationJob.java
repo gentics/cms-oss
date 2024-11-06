@@ -10,23 +10,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionException;
-
 import com.gentics.api.contentnode.migration.IMigrationPostprocessor;
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor;
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor.Result;
 import com.gentics.api.contentnode.migration.MigrationException;
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.migration.MigrationDBLogger;
 import com.gentics.contentnode.migration.MigrationHelper;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.NodeObjectVersion;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Template;
@@ -62,14 +60,23 @@ public class TemplateMigrationJob extends AbstractMigrationJob {
 	 */
 	private TemplateMigrationMapping mapping;
 
-	@Override
-	protected boolean getJobParameters(JobDataMap map) {
-		request = (TemplateMigrationRequest) map.get(PARAM_REQUEST);
-		jobId = (Integer) map.get(PARAM_JOBID);
-		mapping = request.getMapping();
+	/**
+	 * Create instance
+	 * @throws NodeException
+	 */
+	public TemplateMigrationJob() throws NodeException {
+		super();
+	}
 
-		// Check that all parameters were set
-		return (jobId != 0);
+	/**
+	 * Set the request
+	 * @param request request
+	 * @return fluent API
+	 */
+	public TemplateMigrationJob setRequest(TemplateMigrationRequest request) {
+		this.request = request;
+		this.mapping = request.getMapping();
+		return this;
 	}
 
 	/*
@@ -84,7 +91,8 @@ public class TemplateMigrationJob extends AbstractMigrationJob {
 	/**
 	 * Execute the template migration job
 	 */
-	protected void processAction() throws InsufficientPrivilegesException, NodeException, JobExecutionException {
+	protected void processAction() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		try {
 			// Set up loggers
@@ -370,6 +378,7 @@ public class TemplateMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private Result migratePage(Page page, Template fromTemplate, Template toTemplate) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// Iterate over all content tags in the current page
 		for (Tag tag : page.getTags().values()) {
@@ -442,6 +451,7 @@ public class TemplateMigrationJob extends AbstractMigrationJob {
 	 * @throws NodeException
 	 */
 	private void updateTagReferences(Page page, Template fromTemplate, Template toTemplate) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		logger.info("Checking for references to migrated tags in page {" + page.getName() + "}.");
 
 		// Retrieve all editable and noneditable tags in the mapping

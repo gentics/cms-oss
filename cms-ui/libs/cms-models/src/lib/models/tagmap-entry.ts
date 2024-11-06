@@ -1,9 +1,9 @@
 import { NormalizableEntityTypesMap } from './gcms-normalizer/gcms-normalizer-types';
-import { DefaultModelType, ModelType } from './type-util';
+import { DefaultModelType, ModelType, Raw } from './type-util';
 
 export type TagmapEntryParentType = keyof Pick<NormalizableEntityTypesMap<DefaultModelType>, 'contentRepository' | 'contentRepositoryFragment'> ;
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_TagmapEntryModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_TagmapEntryModel.html */
 export interface TagmapEntryBase<T extends ModelType> {
     /** Global ID */
     globalId: string;
@@ -39,6 +39,8 @@ export interface TagmapEntryBase<T extends ModelType> {
     displayfield: boolean;
     /** True when the entry is a urlfield (of a Mesh ContentRepository) */
     urlfield: boolean;
+    /** True when the data of an entry should be excluded from the indexing (in a Mesh ContentRepository) */
+    noIndex: boolean;
     /** Get the elasticsearch specific configuration of a Mesh CR */
     elasticsearch: object;
     /** Get the micronode filter (for entries of type "micronode") */
@@ -47,13 +49,20 @@ export interface TagmapEntryBase<T extends ModelType> {
     fragmentName: string;
 }
 
+export type EditableTagmapEntry = Pick<TagmapEntryBase<Raw>,
+'tagname' | 'mapname' | 'objType' | 'attributeType' | 'targetType' | 'multivalue' | 'optimized' | 'filesystem' | 'foreignlinkAttribute' |
+'foreignlinkAttributeRule' | 'segmentfield' | 'displayfield' | 'urlfield' | 'noIndex' | 'elasticsearch' | 'micronodeFilter' | 'category'>;
+
 /** Data model as defined by backend. */
 export interface TagmapEntry<T extends ModelType = DefaultModelType> extends TagmapEntryBase<T> {
     /** Internal ID of the object property definition */
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface TagmapEntryBO<T extends ModelType = DefaultModelType> extends TagmapEntryBase<T> {
     /** Internal ID of the object property definition */
     id: string;
@@ -63,7 +72,7 @@ export enum TagmapEntryPropertiesObjectType {
     FOLDER = 10002,
     PAGE = 10007,
     FILE = 10008,
-};
+}
 
 export enum MeshTagmapEntryAttributeTypes {
     TEXT = 1,
@@ -73,7 +82,7 @@ export enum MeshTagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
-};
+}
 
 export enum SQLTagmapEntryAttributeTypes {
     TEXT = 1,
@@ -82,7 +91,7 @@ export enum SQLTagmapEntryAttributeTypes {
     TEXT_LONG = 5,
     BINARY = 6,
     FOREIGN_LINK = 7,
-};
+}
 
 export enum TagmapEntryAttributeTypes {
     TEXT = 1,
@@ -94,4 +103,10 @@ export enum TagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
-};
+}
+
+export interface TagmapEntryError {
+    description: string;
+    entries: string[];
+}
+

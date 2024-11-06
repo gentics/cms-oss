@@ -17,7 +17,7 @@ import { stringifyEmbedOptions, stringifyPagingSortOptions } from '../util/sort-
  * API methods related to the content repository resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ObjectPropertyResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ObjectPropertyResource.html
  */
 export class ObjectPropertyApi {
 
@@ -42,8 +42,8 @@ export class ObjectPropertyApi {
     /**
      * Get a single contentrepository by id.
      */
-    getObjectProperty(crId: string): Observable<ObjectPropertyLoadResponse> {
-        return this.apiBase.get(`objectproperty/${crId}`, {});
+    getObjectProperty(objPropId: string | number): Observable<ObjectPropertyLoadResponse> {
+        return this.apiBase.get(`objectproperty/${objPropId}`);
     }
 
     /**

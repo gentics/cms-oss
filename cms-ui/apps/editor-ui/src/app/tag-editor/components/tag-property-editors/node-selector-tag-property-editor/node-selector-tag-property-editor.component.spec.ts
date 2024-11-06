@@ -2,8 +2,8 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
-import { Node, NodeTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, Node, NodeTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
 import { DropdownContentWrapperComponent, GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest, configureComponentTest } from '../../../../../testing';
@@ -18,10 +18,9 @@ import { EntityResolver } from '../../../../core/providers/entity-resolver/entit
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
-import { EditableTag, TagEditorContext } from '../../../common';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { NodeSelectorTagPropertyEditor } from './node-selector-tag-property-editor.component';
 
@@ -44,15 +43,8 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 NodeSelectorTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    NodeSelectorTagPropertyEditor,
-                ],
-            },
         });
     });
 
@@ -152,7 +144,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
             instance: TestComponent, tag: EditableTag, initialValue?: number): void {
             const context = getMockedTagEditorContext(tag);
 
-            let state: TestApplicationState = fixture.debugElement.injector.get(ApplicationStateService) as any;
+            const state: TestApplicationState = fixture.debugElement.injector.get(ApplicationStateService) as any;
 
             state.mockState({
                 folder: {
@@ -204,7 +196,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
 
             const dropdownContent = fixture.nativeElement.query(By.directive(DropdownContentWrapperComponent));
 
-            let selectOption = dropdownContent.queryAll(By.css('.select-option'))[1].nativeElement;
+            const selectOption = dropdownContent.queryAll(By.css('.select-option'))[1].nativeElement;
 
             selectOption.click();
             fixture.detectChanges();
@@ -326,7 +318,7 @@ function getMockedTag(): EditableTag {
         <gtx-overlay-host></gtx-overlay-host>
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;
@@ -338,7 +330,7 @@ class MockEntityResolver {
     getNode(id: number): Node {
         return {
             id: id,
-            name: 'Node' + id,
+            name: `Node ${id}`,
         } as any;
     }
 }

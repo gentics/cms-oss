@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { File, Folder, Image, Page } from '@gentics/cms-models';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { DisplayFields } from '../../../common/models';
 
 /**
@@ -28,7 +27,5 @@ export class RepositoryBrowserListItem {
 
     @ViewChild('itemPrimary', { read: ElementRef, static: true })
     itemPrimary: ElementRef;
-
-    iconForItemType = iconForItemType;
 
 }

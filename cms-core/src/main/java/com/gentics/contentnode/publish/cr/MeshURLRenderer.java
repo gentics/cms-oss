@@ -2,20 +2,17 @@ package com.gentics.contentnode.publish.cr;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
-import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
-import com.gentics.contentnode.render.RenderUrl;
-import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.resolving.StackResolvable;
 
 /**
@@ -97,6 +94,17 @@ public class MeshURLRenderer implements TagmapEntryRenderer {
 	@Override
 	public boolean canSkip() {
 		return true;
+	}
+
+	@Override
+	public boolean skip(Set<String> attributes) {
+		if (objType == File.TYPE_FILE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("name")) {
+			return false;
+		}
+		if (objType == Page.TYPE_PAGE && !ObjectTransformer.isEmpty(attributes) && attributes.contains("filename")) {
+			return false;
+		}
+		return TagmapEntryRenderer.super.skip(attributes);
 	}
 
 	@Override

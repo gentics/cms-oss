@@ -2,8 +2,8 @@ import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { Page } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExamplePageData } from '../../../../testing/test-data.mock';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { MessageBody } from './message-body.component';
@@ -24,7 +24,7 @@ describe('MessageBody', () => {
 
     it('does not process an already-parsed message',
         componentTest(() => TestComponent, (fixture, instance) => {
-            let messageBody = instance.messageBody;
+            const messageBody = instance.messageBody;
             messageBody.parseMessage = jasmine.createSpy('parseMessage')
                 .and.returnValue({ links: [], textAfterLinks: '' });
 
@@ -58,7 +58,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {spans, links} = getChildren(fixture);
+            const {spans, links} = getChildren(fixture);
             expect(links.length).toBe(0);
             expect(spans.length).toBe(1);
             expect(spans[0].textContent).toBe('Please have a look at this!');
@@ -73,7 +73,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {spans, links} = getChildren(fixture);
+            const {spans, links} = getChildren(fixture);
             expect(links.length).toBe(1);
             expect(spans.length).toBe(2);
             expect(spans[0].textContent).toBe('The page ');
@@ -91,7 +91,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {spans, links} = getChildren(fixture);
+            const {spans, links} = getChildren(fixture);
             expect(links.length).toBe(1);
             expect(spans.length).toBe(2);
             expect(spans[0].textContent).toBe('Die Seite ');
@@ -109,7 +109,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {spans, links} = getChildren(fixture);
+            const {spans, links} = getChildren(fixture);
             expect(links.length).toBe(1);
             expect(spans.length).toBe(2);
             expect(spans[0].textContent).toBe('Without Publish wants to publish the page ');
@@ -126,7 +126,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {spans, links} = getChildren(fixture);
+            const {spans, links} = getChildren(fixture);
             expect(links.length).toBe(1);
             expect(spans.length).toBe(2);
             expect(spans[0].textContent).toBe('Without Publish möchte die Seite ');
@@ -143,7 +143,7 @@ describe('MessageBody', () => {
             tick();
             fixture.detectChanges();
 
-            let {links} = getChildren(fixture);
+            const {links} = getChildren(fixture);
             expect(links.length).toBe(1);
             links[0].click();
 
@@ -170,8 +170,8 @@ const getChildren = (fixture: any): { spans: HTMLSpanElement[], links: HTMLAncho
         <message-body
             [body]="message"
             (linkClick)="clickedLink = $event">
-        </message-body>`
-    })
+        </message-body>`,
+})
 class TestComponent {
     message = 'Message text';
     clickedLink: any;

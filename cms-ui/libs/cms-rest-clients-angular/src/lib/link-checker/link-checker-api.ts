@@ -4,10 +4,9 @@ import {
     LinkCheckerExternalLinkList,
     LinkCheckerOptions,
     LinkCheckerPageList,
+    LinkCheckerReplaceRequest,
     LinkCheckerUpdateResponse,
     LinkResponse,
-    Page,
-    ReplaceExternalLinkRequest,
     Response,
     UpdateExternalLinkRequestOptions,
 } from '@gentics/cms-models';
@@ -95,7 +94,7 @@ export class LinkCheckerApi {
     updateLink(
         id: number,
         pageId: number,
-        payload: ReplaceExternalLinkRequest,
+        payload: LinkCheckerReplaceRequest,
         requestOptions?: UpdateExternalLinkRequestOptions,
     ): Observable<Response> {
         return this.apiBase.post(`linkChecker/pages/${pageId}/links/${id}`, payload, requestOptions);

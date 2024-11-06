@@ -1,9 +1,12 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick, flush } from '@angular/core/testing';
+import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { EditMode, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
-    EditableObjectTag, File,
+    EditableObjectTag,
+    Feature,
+    File,
     Folder,
     FolderSaveRequestOptions,
     Image,
@@ -17,18 +20,11 @@ import {
     Raw,
     StringTagPartProperty,
     Tag,
-    TagChangedFn,
-    TagEditorContext,
     TagPartType,
     TagPropertyType,
     Tags,
     Template,
 } from '@gentics/cms-models';
-import { GenticsUICoreModule } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
-import { BehaviorSubject, of as observableOf, of } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import {
     getExampleFileData,
     getExampleFolderData,
@@ -36,10 +32,16 @@ import {
     getExampleLanguageData,
     getExampleNodeData,
     getExamplePageData,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { cloneDeep } from 'lodash-es';
+import { BehaviorSubject, of as observableOf, of } from 'rxjs';
+import { componentTest, configureComponentTest } from '../../../../testing';
+import { mockPipes } from '../../../../testing/mock-pipe';
 import { getExampleEditableTag, mockEditableObjectTag } from '../../../../testing/test-tag-editor-data.mock';
 import { ITEM_PROPERTIES_TAB } from '../../../common/models';
-import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
@@ -54,12 +56,17 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { EditTagInfo, TagEditorHostComponent, TagEditorService } from '../../../tag-editor';
 import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wrapper/iframe-wrapper.component';
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
-import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesForm } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
-import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
+import { generateContentTagList } from '../../utils';
+import {
+    CombinedPropertiesEditorComponent,
+    groupObjectPropertiesByCategory,
+    ID_OBJ_PROP_CATEGORY_OTHERS,
+    NAME_OBJ_PROP_CATEGORY_OTHERS,
+} from './combined-properties-editor.component';
 
 const CONTENT_TAG_NAME = 'contenttag0';
 const TAG0_NAME = 'object.tag0';
@@ -83,10 +90,10 @@ describe('CombinedPropertiesEditorComponent', () => {
     let mockObjProps: { [name: string]: EditableObjectTag };
     let mockObjPropsSorted: EditableObjectTag[];
 
-    let editorActions: MockEditorActions;
     let entityResolver: MockEntityResolver;
     let folderActions: MockFolderActions;
     let state: TestApplicationState;
+    let client: GCMSTestRestClientService;
     let validateTagSpy: jasmine.Spy;
 
     function applyObjectProperties(item: ItemWithObjectTags, objProps: { [name: string]: EditableObjectTag }): void {
@@ -115,7 +122,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         configureComponentTest({
             providers: [
-                { provide: Api, useClass: MockApi },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: CustomScriptHostService, useClass: MockCustomScriptHostService },
                 { provide: EditorActionsService, useClass: MockEditorActions },
@@ -137,9 +144,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesForm,
+                NodePropertiesFormComponent,
                 ObjectTagNamePipe,
-                TagTypeIconPipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),
             ],
@@ -151,13 +157,14 @@ describe('CombinedPropertiesEditorComponent', () => {
             ],
         });
 
-        editorActions = TestBed.get(EditorActionsService);
-        entityResolver = TestBed.get(EntityResolver);
-        folderActions = TestBed.get(FolderActionsService);
-        state = TestBed.get(ApplicationStateService);
+        entityResolver = TestBed.inject(EntityResolver) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
+        client = TestBed.inject(GCMSRestClientService) as any;
+
         state.mockState({
             editor: {
-                editMode: 'editProperties',
+                editMode: EditMode.EDIT_PROPERTIES,
                 itemId: mockPage.id,
                 itemType: 'page',
                 nodeId: mockNode.id,
@@ -171,7 +178,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 nodeFeatures: {
                     [mockNode.id]: [ NodeFeature.ASSET_MANAGEMENT ],
                 },
-                tagfill_light: true,
+                [Feature.TAGFILL_LIGHT]: true,
             },
             folder: {
                 activeNode: mockNode.id,
@@ -233,7 +240,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 multiDetectChanges(fixture, 3);
 
                 const changes = { change: 'some change' };
-                testComponent.combinedPropertiesEditor.propertiesEditor.changes.next(changes as any);
+                testComponent.combinedPropertiesEditor.handlePropChanges(changes as any);
 
                 let promiseResolved = false;
                 testComponent.combinedPropertiesEditor.saveChanges()
@@ -259,6 +266,82 @@ describe('CombinedPropertiesEditorComponent', () => {
 
     describe('object properties', () => {
 
+        it('should correctly group object-properties by their category', () => {
+            let counter = 1;
+            const categories: Record<number, string> = {
+                1: 'Group 1',
+                2: 'Hello World!',
+                3: 'Example',
+            };
+
+            function mockObjProp(categoryId?: number): EditableObjectTag {
+                const prop: EditableObjectTag = {
+                    id: counter,
+                    active: true,
+                    constructId: 123,
+                    displayName: `Mock #${counter}`,
+                    categoryId,
+                    categoryName: categories[categoryId],
+                    name: `Mock #${counter}`,
+                    inheritable: false,
+                    properties: {},
+                    readOnly: false,
+                    required: false,
+                    sortOrder: counter,
+                    type: 'OBJECTTAG',
+                    construct: {
+                        id: 123,
+                        keyword: 'example',
+                        parts: [],
+                    },
+                    description: 'Hello World!',
+                    tagType: null,
+                };
+                counter++;
+                return prop;
+            }
+
+            const objectProperties = [
+                mockObjProp(),
+                mockObjProp(1),
+                mockObjProp(1),
+                mockObjProp(3),
+                mockObjProp(1),
+                mockObjProp(),
+                mockObjProp(2),
+                mockObjProp(2),
+            ];
+            const grouping = groupObjectPropertiesByCategory(objectProperties)
+                .map(group => ({
+                    id: group.id,
+                    name: group.name,
+                    properties: group.objProperties.map(prop => prop.id),
+                }));
+
+            expect(grouping).toEqual([
+                {
+                    id: '1',
+                    name: categories[1],
+                    properties: [2, 3, 5],
+                },
+                {
+                    id: '3',
+                    name: categories[3],
+                    properties: [4],
+                },
+                {
+                    id: '2',
+                    name: categories[2],
+                    properties: [7, 8],
+                },
+                {
+                    id: ID_OBJ_PROP_CATEGORY_OTHERS,
+                    name: NAME_OBJ_PROP_CATEGORY_OTHERS,
+                    properties: [1, 6],
+                },
+            ])
+        });
+
         it('displays one tab for the item properties and one tab for each object property',
             componentTest(() => TestComponent, (fixture, testComponent) => {
                 testComponent.item = mockPage;
@@ -271,7 +354,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect((tabs[0].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.general_properties_label');
                 expect((tabs[1].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.tag_list_label');
                 // 'code' and 'info' in this is the material icon name which is being rendered before.
-                const expectedTabLabels = mockObjPropsSorted.map(tag => `codeinfo${tag.displayName}`);
+                const expectedTabLabels = mockObjPropsSorted.map(tag => `info${tag.displayName}`);
                 const actualTabLabels = tabs.slice(2).map(tab => tab.nativeElement.textContent.toLowerCase().trim());
                 expect(actualTabLabels).toEqual(expectedTabLabels);
             }),
@@ -288,6 +371,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
 
                 testComponent.item = mockPage;
@@ -339,6 +423,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -381,6 +466,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -472,6 +558,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: editedObjProp,
                     tagType: editedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -1021,7 +1108,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1077,7 +1165,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem0 = cloneDeep(mockFolder);
-                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem0.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem0.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem0);
                     const editedItem1 = cloneDeep(editedItem0);
@@ -1152,7 +1241,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1314,6 +1404,13 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('displays no tab for the tag list for folder items',
             componentTest(() => TestComponent, (fixture, testComponent) => {
+                spyOn(client.folder, 'templates').and.returnValue(of({
+                    templates: [],
+                    hasMoreItems: false,
+                    messages: [],
+                    numItems: 0,
+                    responseInfo: null,
+                }));
                 testComponent.item = mockFolder;
                 multiDetectChanges(fixture, 2);
 
@@ -1329,6 +1426,13 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('displays no tab for the tag list for file items',
             componentTest(() => TestComponent, (fixture, testComponent) => {
+                spyOn(client.folder, 'templates').and.returnValue(of({
+                    templates: [],
+                    hasMoreItems: false,
+                    messages: [],
+                    numItems: 0,
+                    responseInfo: null,
+                }));
                 testComponent.item = mockFile;
                 multiDetectChanges(fixture, 2);
 
@@ -1361,59 +1465,69 @@ describe('CombinedPropertiesEditorComponent', () => {
             componentTest(() => TestComponent, (fixture, testComponent) => {
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
-                tick();
+                const contentTags: Tag[] = generateContentTagList(mockPage);
+                tick(1000);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
 
         it('updated accordingly when switching from a page to an item that does not have content tags',
             componentTest(() => TestComponent, (fixture, testComponent) => {
+                spyOn(client.folder, 'templates').and.returnValue(of({
+                    templates: [],
+                    hasMoreItems: false,
+                    messages: [],
+                    numItems: 0,
+                    responseInfo: null,
+                }));
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                let contentTags: Tag[] = generateContentTagList(mockPage);
                 tick(100);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
 
                 // switch to folder item
                 testComponent.item = mockFolder;
                 fixture.detectChanges();
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                contentTags = generateContentTagList(mockFolder as any);
                 tick(100);
                 expect(contentTags).toEqual([]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
 
         it('updated accordingly when switching from an item that does not have content tags to a page',
             componentTest(() => TestComponent, (fixture, testComponent) => {
+                spyOn(client.folder, 'templates').and.returnValue(of({
+                    templates: [],
+                    hasMoreItems: false,
+                    messages: [],
+                    numItems: 0,
+                    responseInfo: null,
+                }));
                 testComponent.item = mockFolder;
                 fixture.detectChanges();
-                let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                let contentTags: Tag[] = generateContentTagList(mockFolder as any);
                 tick(100);
                 expect(contentTags).toEqual([]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows).toEqual([]);
 
                 // switch to page item
                 testComponent.item = mockPage;
                 fixture.detectChanges();
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
-                    contentTags = itemWithContentTags.properties;
-                });
+                contentTags = generateContentTagList(mockPage);
                 tick(100);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
             }),
         );
     });
@@ -1565,12 +1679,6 @@ function multiDetectChanges(fixture: ComponentFixture<any>, count: number, delay
         fixture.detectChanges();
         flush();
         tick(delay);
-    }
-}
-
-class MockApi {
-    folders = {
-        getTemplates: jasmine.createSpy('getTemplates').and.returnValue(of({ templates: [] })),
     }
 }
 

@@ -1,156 +1,365 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.gentics</groupId>
-		<artifactId>cms-oss</artifactId>
-		<version>6.0.23-SNAPSHOT</version>
-	</parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.gentics</groupId>
+        <artifactId>cms-oss</artifactId>
+        <version>6.1.17-SNAPSHOT</version>
+    </parent>
 
-	<groupId>com.gentics.cms-oss</groupId>
+    <groupId>com.gentics.cms-oss</groupId>
     <artifactId>cms-ui</artifactId>
-	<name>Gentics CMS UI</name>
-	<packaging>pom</packaging>
-	<description>This is the Gentics CMS UI monorepo module</description>
-	<url>http://www.gentics.com</url>
+    <packaging>pom</packaging>
+
+    <name>Gentics CMS UI</name>
+    <description>This is the Gentics CMS UI monorepo module</description>
+    <url>http://www.gentics.com</url>
 
     <properties>
         <!-- Dynamic third party dependencies -->
         <frontend-maven-plugin.version>1.10.0</frontend-maven-plugin.version>
-        <nodejs.version>v20.12.1</nodejs.version>
+        <!-- The directory where the nodejs installation resides in -->
+        <nodejs.npm.bin>ASSIGN_ME</nodejs.npm.bin>
         <npm.workingDirectory></npm.workingDirectory>
-
-        <!-- If the UI module is an application -->
-        <ui.application>false</ui.application>
-        <!-- If the UI module is a library -->
-        <ui.library>false</ui.library>
 
         <!-- If the UI should skip npm install -->
         <ui.skip.install>false</ui.skip.install>
         <!-- If the UI module should skip the build process -->
-        <ui.skip.build>true</ui.skip.build>
+        <ui.skip.build>false</ui.skip.build>
         <!-- If the UI module should skip the assembly step -->
-        <ui.skip.assembly>true</ui.skip.assembly>
-        <!-- If the UI module should skip testing -->
-        <ui.skip.test>true</ui.skip.test>
-
-        <!-- The browsers to use when executing the tests -->
-        <ui.test.browsers>ChromeDocker</ui.test.browsers>
+        <ui.skip.assembly>false</ui.skip.assembly>
+        <!-- If the UI module should skip unit/component testing -->
+        <ui.skip.test>false</ui.skip.test>
+        <!-- If the UI module should skip e2e tests -->
+        <ui.skip.integrationTest>false</ui.skip.integrationTest>
+        <!-- If the UI module should skip reporting -->
+        <ui.skip.report>false</ui.skip.report>
+        <!-- If the UI module should skip the publishing to the registry -->
+        <ui.skip.publish>false</ui.skip.publish>
+        <!-- In which phase the report-assembly should be executed -->
+        <ui.report.assemply.phase>package</ui.report.assemply.phase>
 
         <!-- Internally stored phase for the assembly, because the plugin has no skip option -->
         <ui.assembly.phase></ui.assembly.phase>
     </properties>
 
-	<modules>
-        <module>libs/cms-models</module>
-        <module>libs/cms-rest-clients-angular</module>
-        <module>libs/image-editor</module>
-        <module>libs/ui-core</module>
-        <module>libs/cms-components</module>
-        <module>libs/form-generator</module>
-        <module>apps/admin-ui</module>
-        <module>apps/editor-ui</module>
-        <module>apps/ct-link-checker</module>
-	</modules>
-
     <build>
-		<plugins>
-			<plugin>
-				<groupId>com.github.eirslett</groupId>
-				<artifactId>frontend-maven-plugin</artifactId>
-				<version>${frontend-maven-plugin.version}</version>
-
-				<executions>
-                    <execution>
-						<?m2e ignore?>
-						<id>install node and npm</id>
-						<goals>
-							<goal>install-node-and-npm</goal>
-						</goals>
-
-						<phase>generate-resources</phase>
-
-                        <configuration>
-                            <skip>${ui.skip.install}</skip>
-                        </configuration>
-					</execution>
-
-                    <execution>
-						<?m2e ignore?>
-						<id>npm install</id>
-						<goals>
-							<goal>npm</goal>
-						</goals>
-
-						<phase>generate-resources</phase>
-
-						<configuration>
-                            <skip>${ui.skip.install}</skip>
-							<arguments>install --no-audit --no-fund</arguments>
-                            <workingDirectory>${npm.workingDirectory}</workingDirectory>
-						</configuration>
-					</execution>
-
-					<execution>
-						<?m2e ignore?>
-						<id>npm test</id>
-						<goals>
-							<goal>npm</goal>
-						</goals>
-
-						<phase>test</phase>
-
-						<configuration>
-                            <skip>${ui.skip.test}</skip>
-							<arguments>test ${project.artifactId} -- --browsers=${ui.test.browsers} --reporters=junit</arguments>
-                            <workingDirectory>${npm.workingDirectory}</workingDirectory>
-						</configuration>
-					</execution>
-
-					<execution>
-						<?m2e ignore?>
-						<id>npm run build</id>
-						<goals>
-							<goal>npm</goal>
-						</goals>
-
-						<phase>generate-resources</phase>
-
-						<configuration>
-                            <skip>${ui.skip.build}</skip>
-							<arguments>run build ${project.artifactId}</arguments>
-                            <workingDirectory>${npm.workingDirectory}</workingDirectory>
-						</configuration>
-					</execution>
-				</executions>
-
-				<configuration>
-					<nodeVersion>${nodejs.version}</nodeVersion>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
+        <plugins>
+            <plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-
 				<executions>
-					<execution>
-						<?m2e ignore?>
-						<id>make-assembly</id>
-						<phase>${ui.assembly.phase}</phase>
+                    <execution>
+						<id>apps</id>
+						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/apps.xml</descriptor>
+							</descriptors>
+						</configuration>
 					</execution>
-				</executions>
 
-				<configuration>
-					<appendAssemblyId>false</appendAssemblyId>
-					<descriptors>
-						<descriptor>assembly.xml</descriptor>
-					</descriptors>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+					<execution>
+						<id>docs</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/docs.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+
+                    <execution>
+						<id>custom-tools</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/assembly/custom-tools.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <target name="Setup target directory">
+                                <mkdir dir="${project.build.directory}" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>initialize</phase>
+
+                        <configuration>
+                            <target name="Install node dependencies" unless="${ui.skip.install}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="ci --no-audit --no-fund" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm set version</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>compile</phase>
+
+                        <configuration>
+                            <target name="Set UI Version" unless="${ui.skip.publish}">
+                                <!-- Apply the correct build/release version to the UI package.json files before build -->
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>compile</phase>
+
+                        <configuration>
+                            <target name="Build UI modules" unless="${ui.skip.build}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- run-many --target=build --configuration=ci --output-style=static" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm test</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>test</phase>
+
+                        <configuration>
+                            <target name="Test UI modules" unless="${ui.skip.test}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- run-many --targets=test --configuration=ci --output-style=static" />
+                                </exec>
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <!-- Parallel has to be disabled, otherwise it'll break, as the port is already used -->
+                                    <arg line="run nx -- run-many --targets=component-test --configuration=ci --parallel=false --output-style=static" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm e2e</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>integration-test</phase>
+
+                        <configuration>
+                            <target name="E2E/Integration Tests for UI" unless="${ui.skip.integrationTest}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --output-style=static" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm report list</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>generate-resources</phase>
+
+                        <configuration>
+                            <target name="Report dependencies" unless="${ui.skip.report}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run report:list" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm report outdated</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>generate-resources</phase>
+
+                        <configuration>
+                            <target name="Report outdated dependencies" unless="${ui.skip.report}">
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run report:outdated" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>npm publish</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <phase>deploy</phase>
+
+                        <configuration>
+                            <target name="Publish UI Modules" unless="${ui.skip.publish}">
+                                <!-- Ppublish all publishable projects -->
+                                <exec
+                                    dir="${npm.workingDirectory}"
+                                    executable="${nodejs.npm.bin}"
+                                    failonerror="true"
+                                >
+                                    <arg line="run nx -- release publish --projects=tag:publish --output-style=static" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.gentics</groupId>
+                <artifactId>dependency-reporting-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>npm-transform</id>
+                        <goals>
+                            <goal>npm-transform</goal>
+                        </goals>
+
+                        <configuration>
+                            <skip>${ui.skip.report}</skip>
+                            <dependenciesFile>${project.build.directory}/dependencies.json</dependenciesFile>
+                            <outdatedFile>${project.build.directory}/outdated.json</outdatedFile>
+                            <componentName>CMS OSS</componentName>
+                            <moduleName>User Interface</moduleName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <?m2e ignore?>
+                        <id>make-assembly</id>
+                        <phase>${ui.assembly.phase}</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <?m2e ignore?>
+                        <id>make-report-assembly</id>
+                        <phase>${ui.report.assemply.phase}</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <descriptors>
+                                <descriptor>report-assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

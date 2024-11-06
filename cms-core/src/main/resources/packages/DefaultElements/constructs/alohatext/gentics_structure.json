@@ -1,15 +1,14 @@
 {
   "globalId" : "A547.75403",
   "keyword" : "alohatext",
-  "icon" : "text.gif",
   "name" : {
     "de" : "Aloha Text (lang)",
     "en" : "Aloha Text (long)"
   },
   "mayBeSubtag" : false,
   "mayContainsSubtags" : true,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.75407",
     "name" : {

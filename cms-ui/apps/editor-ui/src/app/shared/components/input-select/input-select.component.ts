@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { UntypedFormControl, SelectControlValueAccessor } from '@angular/forms';
 import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual as _isEqual } from 'lodash';
+import { isEqual as _isEqual } from'lodash-es'
 import { takeUntil } from 'rxjs/operators';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 

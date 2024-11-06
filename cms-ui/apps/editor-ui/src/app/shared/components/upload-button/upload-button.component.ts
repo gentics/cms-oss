@@ -22,7 +22,7 @@ interface GtxNodeSettingsAssetManagementConfigBO extends GtxNodeSettingsAssetMan
     key: string;
 }
 
-const DOCS_URL = 'https://gentics.com/Content.Node/guides/feature_asset_management.html';
+const DOCS_URL = 'https://gentics.com/Content.Node/cmp8/guides/feature_asset_management.html';
 
 /**
  * An upload component enabling local file system upload by default.

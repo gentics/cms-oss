@@ -5,7 +5,7 @@
     <gtx-tabs pure [activeId]="activeTab">
         <gtx-tab
             *ngFor="let itemType of typesToDisplay"
-            [icon]="iconForItemType(itemType.slice(0, -1))"
+            [icon]="itemType.slice(0, -1) | gtxTypeIcon"
             [id]="itemType"
             title="{{ 'modal.' + itemType | i18n }}"
             [class.active]="activeTab === itemType"

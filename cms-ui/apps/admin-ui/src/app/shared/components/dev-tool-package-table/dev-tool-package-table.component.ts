@@ -1,5 +1,11 @@
-import { DevToolPackageBO } from '@admin-ui/common';
-import { DevToolPackageTableLoaderOptions, DevToolPackageTableLoaderService, I18nService, PackageOperations, PermissionsService } from '@admin-ui/core';
+import { DevToolPackageBO, EditableEntity } from '@admin-ui/common';
+import {
+    DevToolPackageHandlerService,
+    DevToolPackageTableLoaderOptions,
+    DevToolPackageTableLoaderService,
+    I18nService,
+    PermissionsService,
+} from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
@@ -12,6 +18,7 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
 const SYNC_FROM_FILE_SYSTEM_ACTION = 'syncFromFs';
 const SYNC_TO_FILE_SYSTEM_ACTION = 'syncToFs';
 const UNASSIGN_FROM_NODE_ACTION = 'unassignFromNode';
+const PACKAGE_CHECK = 'packageCheck';
 
 @Component({
     selector: 'gtx-dev-tool-package-table',
@@ -26,6 +33,9 @@ export class DevToolPackageTableComponent
     @Input()
     public nodeId: number;
 
+    @Input()
+    public isMasterNode: boolean;
+
     /**
      * If it should hide the sync options
      */
@@ -34,8 +44,6 @@ export class DevToolPackageTableComponent
 
     private syncCheck$ = new BehaviorSubject<boolean>(null);
     private canEditSub = new BehaviorSubject<boolean>(false);
-    private isMasterNode$ = new BehaviorSubject<number>(null);
-
 
     public syncEnabled = false;
     public syncLoading = true;
@@ -88,6 +96,7 @@ export class DevToolPackageTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'package';
+    protected focusEntityType = EditableEntity.DEV_TOOL_PACKAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -96,7 +105,7 @@ export class DevToolPackageTableComponent
         loader: DevToolPackageTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
-        protected operations: PackageOperations,
+        protected handler: DevToolPackageHandlerService,
     ) {
         super(
             changeDetector,
@@ -127,27 +136,12 @@ export class DevToolPackageTableComponent
                 this.changeDetector.markForCheck();
             }),
             debounceTime(1_000),
-            switchMap(() => this.operations.getSyncState()),
+            switchMap(() => this.handler.getSyncState()),
         ).subscribe(res => {
             this.syncEnabled = res.enabled;
             this.syncLoading = false;
             this.changeDetector.markForCheck();
         }));
-
-
-        const disabled$ = this.isMasterNode$.pipe(
-            tap((nodeId) => {
-                this.operations.getMasterNodeId(nodeId).subscribe((masterNodeId) => {
-                    if(masterNodeId !== this.nodeId) {
-                        this.disabled = true;
-                    }
-                    else {
-                        this.disabled = false;
-                    }
-                });
-            }),
-        )
-        this.subscriptions.push(disabled$.subscribe());
 
         this.subscriptions.push(
             this.permissions.checkPermissions(
@@ -162,8 +156,11 @@ export class DevToolPackageTableComponent
         super.ngOnChanges(changes);
 
         if (changes.nodeId) {
-            this.isMasterNode$.next(this.nodeId);
             this.loadTrigger.next();
+            this.actionRebuildTrigger.next();
+        }
+
+        if (changes.isMasterNode) {
             this.actionRebuildTrigger.next();
         }
 
@@ -188,7 +185,7 @@ export class DevToolPackageTableComponent
                         icon: 'link_off',
                         label: this.i18n.instant('shared.remove_packages_from_node'),
                         type: 'alert',
-                        enabled: true,
+                        enabled: this.isMasterNode,
                         multiple: true,
                         single: true,
                     });
@@ -212,9 +209,18 @@ export class DevToolPackageTableComponent
                         multiple: true,
                     },
                     {
+                        id: PACKAGE_CHECK,
+                        icon: 'offline_pin',
+                        label: this.i18n.instant('package.consistency_check_title'),
+                        type: 'secondary',
+                        enabled: true,
+                        single: true,
+                        multiple: true,
+                    },
+                    {
                         id: DELETE_ACTION,
                         icon: 'delete',
-                        label: this.i18n.instant('package.package_deletes_singular'),
+                        label: this.i18n.instant('package.package_delete_singular'),
                         type: 'alert',
                         enabled: canDelete,
                         single: true,
@@ -240,9 +246,9 @@ export class DevToolPackageTableComponent
 
         let op: Observable<PackageSyncResponse>;
         if (this.syncEnabled) {
-            op = this.operations.stopSync();
+            op = this.handler.stopSync();
         } else {
-            op = this.operations.startSync();
+            op = this.handler.startSync();
         }
 
         this.syncLoading = true;
@@ -268,6 +274,10 @@ export class DevToolPackageTableComponent
             case UNASSIGN_FROM_NODE_ACTION:
                 this.unassignPackageFromNode(this.getAffectedEntityIds(event));
                 return;
+
+            case PACKAGE_CHECK:
+                this.performPackageCheck(this.getAffectedEntityIds(event));
+                return;
         }
 
         super.handleAction(event);
@@ -287,18 +297,22 @@ export class DevToolPackageTableComponent
     }
 
     protected syncPackageToFilesystem(packageName: string | string[]): Promise<void> {
-        return this.operations.syncPackageToFilesystem(packageName, { wait: 5_000 });
+        return this.handler.syncPackageToFilesystem(packageName, { wait: 5_000 });
     }
 
     protected syncPackageFromFilesystem(packageName: string | string[]): Promise<void> {
-        return this.operations.syncPackageFromFilesystem(packageName, { wait: 5_000 });
+        return this.handler.syncPackageFromFilesystem(packageName, { wait: 5_000 });
     }
 
     protected unassignPackageFromNode(packageName: string | string[]): Promise<void> {
-        return this.operations.removePackageFromNode(this.nodeId, packageName).toPromise()
+        return this.handler.unassignFromNode(this.nodeId, packageName).toPromise()
             .then(() => {
                 this.removeFromSelection(packageName);
                 this.loadTrigger.next();
             });
+    }
+
+    protected performPackageCheck(packageName: string | string[]): Promise<void> {
+        return this.handler.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000, checkAll: true }).toPromise()
     }
 }

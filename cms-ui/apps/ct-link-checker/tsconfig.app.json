@@ -1,5 +1,8 @@
 {
     "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": ["node", "jquery"]
+    },
     "files": [
         "src/main.ts",
         "src/polyfills.ts"
@@ -12,6 +15,12 @@
     ],
     "exclude": [
         "src/test.ts",
-        "**/*.spec.ts"
+        "**/*.spec.ts",
+        "cypress/**/*",
+        "cypress.config.ts",
+        "**/*.cy.ts",
+        "**/*.cy.js",
+        "**/*.cy.tsx",
+        "**/*.cy.jsx"
     ]
 }

@@ -1,5 +1,7 @@
 package com.gentics.lib.image;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -15,6 +17,7 @@ import com.gentics.lib.image.GenticsImageStoreVariationTest.ResizeMode;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.fs.FileUtils;
+import com.sksamuel.scrimage.ImmutableImage;
 
 public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
@@ -34,33 +37,63 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imageFileStream
 	 * @return
 	 * @throws IOException
 	 */
 	public int[] getDimensions(InputStream imageFileStream) throws IOException {
-		BufferedImage img1 = ImageIO.read(imageFileStream);
-
-		return getDimensions(img1);
+		return getDimensions(getBufferedImage(imageFileStream));
 	}
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imageFileStream
 	 * @return
 	 * @throws IOException
 	 */
 	public int[] getDimensions(File imageFile) throws IOException {
-		BufferedImage img1 = ImageIO.read(imageFile);
+		return getDimensions(getBufferedImage(imageFile));
+	}
 
-		return getDimensions(img1);
+	/**
+	 * Get a {@link BufferedImage} instance from the given input stream
+	 * @param imageFileStream input stream
+	 * @return BufferedImage
+	 * @throws IOException
+	 */
+	public BufferedImage getBufferedImage(InputStream imageFileStream) throws IOException {
+		BufferedImage buffered = ImageIO.read(imageFileStream);
+		if (buffered == null) {
+			ImmutableImage immutable = ImmutableImage.loader().fromStream(imageFileStream);
+			if (immutable != null) {
+				buffered = immutable.awt();
+			}
+		}
+		return buffered;
+	}
+
+	/**
+	 * Get a {@link BufferedImage} instance from the given file
+	 * @param imageFile file
+	 * @return BufferedImage
+	 * @throws IOException
+	 */
+	public BufferedImage getBufferedImage(File imageFile) throws IOException {
+		BufferedImage buffered = ImageIO.read(imageFile);
+		if (buffered == null) {
+			ImmutableImage immutable = ImmutableImage.loader().fromFile(imageFile);
+			if (immutable != null) {
+				buffered = immutable.awt();
+			}
+		}
+		return buffered;
 	}
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imagefile
 	 * @return
 	 */
@@ -111,7 +144,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Remove files in directory. This method creates the directory if it does not exist.
-	 * 
+	 *
 	 * @param directory
 	 * @return
 	 */
@@ -187,6 +220,14 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 		logger.info("writing to: " + target);
 		this.writeImage(targetimageinfo, target);
+
+		File resizedFile = new File(target);
+
+		if (width > 0 && height > 0) {
+			assertThat(resizedFile.length())
+				.as("Result file size")
+				.isGreaterThan(0);
+		}
 
 		return true;
 

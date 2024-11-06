@@ -1,18 +1,18 @@
-import { GcmsNormalizationSchemas } from '@gentics/cms-models/lib/models/gcms-normalizer/schemas';
-
-/**
- * In order not to rewrite all imports, we export all model types here as well.
- * The '@gentics/cms-models' path is defined in the root tsconfig.json.
- */
-export * from '@gentics/cms-models';
+import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normalizer/schemas';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { FileCreateRequest, FileUploadResponse, Image, File as CMSFile } from '@gentics/cms-models';
 
 export * from './actions';
 export * from './chip-search';
 export * from './events';
-export * from './page';
-export * from './repository-browser';
-export * from './staging';
+export * from './list';
 export * from './message';
+export * from './page';
+export * from './permissions';
+export * from './page-controls';
+export * from './repository-browser';
+export * from './settings';
+export * from './staging';
 
 // State models
 export * from './auth-state';
@@ -27,7 +27,9 @@ export * from './maintenance-mode-state';
 export * from './message-state';
 export * from './node-settings-state';
 export * from './page-language-indicators-state';
+export * from './properties';
 export * from './publish-queue-state';
+export * from './rendering';
 export * from './tools-state';
 export * from './ui-state';
 export * from './usage-state';
@@ -51,3 +53,15 @@ export const nodeSchema = schemas.node;
 export const pageSchema = schemas.page;
 export const templateSchema = schemas.template;
 export const userSchema = schemas.user;
+
+export interface UploadResponse {
+    /** The file/blob that was attempted to be uploaded. May be optimized away. */
+    file?: File | Blob;
+    /** The request for creating a file/image. */
+    request?: FileCreateRequest;
+    /** If it was successfull. */
+    successfull: boolean;
+    error?: GCMSRestClientRequestError;
+    response?: FileUploadResponse;
+    item?: CMSFile | Image;
+}

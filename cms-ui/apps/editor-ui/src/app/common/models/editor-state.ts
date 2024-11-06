@@ -1,6 +1,13 @@
-import { EditMode, FolderItemType, PageVersion } from '@gentics/cms-models';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { FolderItemType, PageVersion } from '@gentics/cms-models';
 
 export type EditorTab = 'preview' | 'properties';
+
+export enum EditorOutlet {
+    LIST = 'list',
+    DETAIL = 'detail',
+    MODAL = 'modal',
+}
 
 /** Defines the properties tab: either the item's properties or one of its object properties. */
 export type PropertiesTab = string;

@@ -3,7 +3,7 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { Page, Raw } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { configureComponentTest } from '../../../../testing';
-import { getExampleFormData, getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExampleFormData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { getFormattedTimeMgmtValue } from './i18n-utils';

@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
-import { ItemWithObjectTags, ObjectTag } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ItemWithObjectTags } from '@gentics/cms-models';
+import { BaseModal } from '@gentics/ui-core';
 
 /**
  * A modal for the user to confirm that he wants to apply an object property to all subitems of a certain type.
@@ -9,25 +8,14 @@ import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 @Component({
     selector: 'confirm-apply-to-subitems-modal',
     templateUrl: './confirm-apply-to-subitems-modal.component.html',
-    styleUrls: ['./confirm-apply-to-subitems-modal.component.scss']
+    styleUrls: ['./confirm-apply-to-subitems-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConfirmApplyToSubitemsModalComponent implements IModalDialog {
-    closeFn: (result: boolean) => void;
-    cancelFn: (val?: any) => void;
+export class ConfirmApplyToSubitemsModalComponent extends BaseModal<boolean> {
 
-    item: ItemWithObjectTags;
-    objPropId: string;
-    iconForItemType = iconForItemType;
+    @Input()
+    public item: ItemWithObjectTags;
 
-    get objPropName(): string {
-        return this.item && this.objPropId ? (this.item.tags[this.objPropId] as ObjectTag).displayName : '';
-    }
-
-    registerCloseFn(close: (val: boolean) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
-    }
+    @Input()
+    public objPropId: string;
 }

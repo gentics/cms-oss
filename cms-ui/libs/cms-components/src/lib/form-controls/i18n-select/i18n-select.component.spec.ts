@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -32,6 +32,7 @@ describe('I18nSelectComponent', () => {
                     GenticsUICoreModule.forRoot(),
                 ],
                 providers: [],
+                schemas: [NO_ERRORS_SCHEMA],
             }).compileComponents();
         }),
     );

@@ -2,8 +2,8 @@ import { LocationStrategy } from '@angular/common';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { File as FileModel, Folder, Form, Image, Node, Normalized, Page } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
-import { Observable, Subscription, combineLatest } from 'rxjs';
+import { isEqual } from'lodash-es'
+import { Observable, Subscription, combineLatest, merge } from 'rxjs';
 import {
     debounceTime,
     distinctUntilChanged,
@@ -143,19 +143,24 @@ export class ListService implements OnDestroy {
         // Updates the internal state from the route
         const locationHandling$ = routeParams$.pipe(
             map((params) => ({
-                nodeId: Number(params.nodeId),
-                folderId: Number(params.folderId),
+                nodeId: parseInt(params.nodeId as any, 10),
+                folderId: parseInt(params.folderId as any, 10),
             })),
             // distinctUntilChanged(isEqual),
             tap(({ nodeId, folderId }) => {
                 const { activeNode, activeFolder } = this.state.now.folder;
 
                 // Only update if the node has changed
-                if (activeNode !== nodeId) {
+                if (!Number.isInteger(nodeId)) {
+                    this.folderActions.setActiveNode(activeNode);
+                } else if (activeNode !== nodeId) {
                     this.folderActions.setActiveNode(nodeId);
                 }
+
                 // Only update if the folder has changed
-                if (activeFolder !== folderId) {
+                if (!Number.isInteger(folderId)) {
+                    this.folderActions.setActiveFolder(activeFolder);
+                } else if (activeFolder !== folderId) {
                     this.folderActions.setActiveFolder(folderId);
                 }
             }),
@@ -188,14 +193,14 @@ export class ListService implements OnDestroy {
             this.state.select(state => state.folder.activeFolder),
         ]).pipe(
             map(([locationData, searchTerm, searchFilters, activeNode, activeFolder]) => ({
-                nodeId: locationData.nodeId,
-                folderId: locationData.folderId,
+                nodeId: Number.isInteger(locationData.nodeId) ? locationData.nodeId : activeNode,
+                folderId: Number.isInteger(locationData.folderId) ? locationData.folderId : activeFolder,
                 searchTerm,
                 searchFilters,
                 activeNode,
                 activeFolder,
             })),
-            distinctUntilChanged((x, y) =>  isEqual(x, y)),
+            distinctUntilChanged(isEqual),
             map(params => {
                 this.updatingByUrlParams = true;
 
@@ -257,7 +262,7 @@ export class ListService implements OnDestroy {
             );
 
         /* eslint-disable @typescript-eslint/unbound-method */
-        const sortingStreams$ = Observable.merge(
+        const sortingStreams$ = merge(
             sortStream(state => state.folder.folders, this.folderActions.getFolders),
             sortStream(state => state.folder.pages, this.folderActions.getPages),
             sortStream(state => state.folder.files, this.folderActions.getFiles),
@@ -293,7 +298,9 @@ export class ListService implements OnDestroy {
             filter(() => !this.updatingByUrlParams),
             debounceTime(50),
             withLatestFrom(
-                activeFolderId$.filter(activeFolderId => !!activeFolderId),
+                activeFolderId$.pipe(
+                    filter(activeFolderId => !!activeFolderId),
+                ),
             ),
             skip(1),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {

@@ -1,4 +1,5 @@
-import { RegexValidationInfo, StringTagPartProperty, TagPart, TagPropertyValidator, ValidationResult } from '@gentics/cms-models';
+import { TagPropertyValidator, ValidationResult } from '@gentics/cms-integration-api-models';
+import { RegexValidationInfo, StringTagPartProperty, TagPart } from '@gentics/cms-models';
 
 interface RegExpMap {
     [expression: string]: RegExp;
@@ -18,13 +19,13 @@ export class StringTagPropertyValidator implements TagPropertyValidator<StringTa
             } else {
                 return {
                     isSet: true,
-                    success: true
+                    success: true,
                 };
             }
         } else {
             return {
                 isSet: false,
-                success: !tagPart.mandatory
+                success: !tagPart.mandatory,
             };
         }
     }
@@ -33,7 +34,7 @@ export class StringTagPropertyValidator implements TagPropertyValidator<StringTa
         const regExp = this.getRegExp(regexInfo);
         const result: ValidationResult = {
             isSet: true,
-            success: regExp.test(value)
+            success: regExp.test(value),
         };
         if (!result.success) {
             result.errorMessage = regexInfo.description;

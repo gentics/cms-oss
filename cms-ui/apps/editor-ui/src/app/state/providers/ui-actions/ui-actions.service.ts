@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ExternalLinkStatistics, GcmsUiLanguage, GtxVersion, I18nLanguage, NodeFeature } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { ExternalLinkStatistics, I18nLanguage, NodeFeature, Version } from '@gentics/cms-models';
 import { of } from 'rxjs';
 import { filter, map, switchMap, take, tap } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
@@ -122,9 +123,10 @@ export class UIActionsService {
 
     getCmsVersion(): void {
         this.api.admin.getVersion().subscribe(res => {
-            const version: GtxVersion = {
+            const version: Version = {
                 cmpVersion: res.cmpVersion,
                 version: res.version,
+                variant: res.variant,
                 nodeInfo: res.nodeInfo,
             };
             this.appState.dispatch(new SetCMPVersionAction(version));

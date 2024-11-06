@@ -28,35 +28,46 @@ import { Image } from '@gentics/cms-models';
     selector: 'icon-checkbox',
     templateUrl: './icon-checkbox.tpl.html',
     styleUrls: ['./icon-checkbox.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IconCheckbox {
+
     /**
      * Whether the checkbox is selected or not.
      */
-    @Input() selected: boolean = false;
+    @Input()
+    public selected = false;
+
     /**
      * A Material Icon string, e.g. "folder". See https://design.google.com/icons/
      * If both icon and image are set, then the icon is displayed.
      */
-    @Input() icon: string = '';
+    @Input()
+    public icon = '';
+
     /**
      * A CMS Image object, of which a thumbnail should be displayed.
      */
-    @Input() image: Image;
+    @Input()
+    public image: Image;
+
     /**
      * The id of the node the image is requested from. Only needed when an image is provided.
      */
-    @Input() nodeId?: number;
+    @Input()
+    public nodeId?: number;
+
     /**
      * Whether the checkbox is disabled or not.
      */
-    @Input() disabled: boolean = false;
+    @Input()
+    public disabled = false;
 
     /**
      * When the checkbox is clicked, emits the opposite of the current check state.
      */
-    @Output() change = new EventEmitter<boolean>();
+    @Output()
+    public change = new EventEmitter<boolean>();
 
     checkboxClicked(checkState: boolean): void {
         this.change.emit(checkState);

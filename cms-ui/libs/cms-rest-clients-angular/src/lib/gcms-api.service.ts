@@ -38,10 +38,11 @@ import { UserDataApi } from './user-data/user-data-api';
 /**
  * This is the GcmsApi service that should be used throughout an app making use of the GCMS REST API.
  * It simply collects together the various api classes into a single object.
+ * @deprecated Use the new GCMSRestClientService from \@gentics/cms-rest-client-angular instead.
  */
 @Injectable({
     providedIn: 'root',
-    })
+})
 export class GcmsApi {
 
     admin: AdminApi;

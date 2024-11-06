@@ -1,21 +1,16 @@
-import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission, ScheduleTaskDetailTabs } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, EditorTabTrackerService, ResolveBreadcrumbFn, ScheduleTaskOperations } from '@admin-ui/core';
 import { BaseDetailComponent, ScheduleTaskDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
-import { Index, NormalizableEntityType, Raw, ScheduleTaskBO, SingleInstancePermissionType } from '@gentics/cms-models';
+import { NormalizableEntityType, Raw, ScheduleTaskBO, SingleInstancePermissionType } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { delay, map, repeat, takeUntil } from 'rxjs/operators';
-import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule-task-properties.component';
 import { ScheduleTableLoaderService, ScheduleTaskTableLoaderService } from '../../providers';
-
-export enum ScheduleTaskDetailTabs {
-    PROPERTIES = 'properties',
-}
+import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule-task-properties.component';
 
 @Component({
     selector: 'gtx-schedule-task-detail',
@@ -40,7 +35,7 @@ export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTa
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<ScheduleTaskDetailTabs, FormTabHandle>;
+    private tabHandles: Record<ScheduleTaskDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -124,7 +119,7 @@ export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTa
         if (this.fgProperties) {
             this.fgProperties.setValue(this.currentEntity);
         } else {
-            this.fgProperties = new UntypedFormControl(this.currentEntity, [Validators.required, createNestedControlValidator()]);
+            this.fgProperties = new UntypedFormControl(this.currentEntity, Validators.required);
             this.fgPropertiesSaveDisabled$ = combineLatest([
                 this.currentEntity$.pipe(
                     map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),

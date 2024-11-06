@@ -68,7 +68,7 @@ public class NodeConfigRuntimeConfiguration {
 	/**
 	 * Configuration instance
 	 */
-	private NodeConfig nodeConfig;
+	private PropertyNodeConfig nodeConfig;
 
 	/**
 	 * Get the singleton instance
@@ -107,15 +107,15 @@ public class NodeConfigRuntimeConfiguration {
 	 */
 	protected final void initConfigurationProperties() throws NodeException {
 		try {
-			if (nodeConfig != null) {
-				nodeConfig.close();
-				MBeanRegistry.unregisterMBean("System", "SessionInfo");
-			}
-
 			// load data
 			Map<String, Object> data = loadConfiguration();
 
-			nodeConfig = new PropertyNodeConfig(data);
+			if (nodeConfig == null) {
+				nodeConfig = new PropertyNodeConfig(data);
+				MBeanRegistry.registerMBean(new SessionInfo(), "System", "SessionInfo");
+			} else {
+				nodeConfig.setProperties(data);
+			}
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
 
 			// check features
@@ -139,8 +139,6 @@ public class NodeConfigRuntimeConfiguration {
 			} else {
 				InstantCRPublishing.set(0, 0);
 			}
-
-			MBeanRegistry.registerMBean(new SessionInfo(), "System", "SessionInfo");
 		} catch (Exception e) {
 			throw new NodeException("Error while loading Gentics Content.Node configuration", e);
 		}

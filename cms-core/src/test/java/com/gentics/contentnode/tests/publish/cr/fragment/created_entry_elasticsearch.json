@@ -15,5 +15,6 @@
 	"urlfield": false,
 	"elasticsearch": {
 		"bla": true
-	}
+	},
+	"noIndex": false
 }

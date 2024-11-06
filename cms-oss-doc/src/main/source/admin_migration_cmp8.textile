@@ -198,6 +198,14 @@ h5. HTTP_PORT
 |_. Configuration   | @server.port@                       |
 |_. Default         | 8080                                |
 
+h5. HTTP2
+
+|_. Description     | Use HTTP/2 protocol version         |
+|_. Env             | @HTTP2@                              |
+|_. System Property | @com.gentics.contentnode.http2@      |
+|_. Configuration   | @server.http2@                      |
+|_. Default         | 8080                                |
+
 h5. CONF_PATH
 
 |_. Description     | Path to configuration files           |

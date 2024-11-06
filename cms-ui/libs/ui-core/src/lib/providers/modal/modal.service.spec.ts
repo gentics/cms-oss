@@ -1,35 +1,38 @@
-import {Component, ComponentRef} from '@angular/core';
-import {BrowserDynamicTestingModule} from '@angular/platform-browser-dynamic/testing';
-import {By} from '@angular/platform-browser';
-import {discardPeriodicTasks, ComponentFixture, TestBed, tick, fakeAsync} from '@angular/core/testing';
-import {componentTest} from '../../testing';
-import {OverlayHostService} from '../overlay-host/overlay-host.service';
-import {ModalService} from './modal.service';
-import { OverlayHostComponent } from '../../components/overlay-host/overlay-host.component';
+import { Component, ComponentRef } from '@angular/core';
+import { ComponentFixture, TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { IDialogConfig, IModalDialog } from '../../common';
+import { ButtonComponent } from '../../components/button/button.component';
 import { DynamicModal } from '../../components/dynamic-modal/dynamic-modal.component';
 import { ModalDialogComponent } from '../../components/modal-dialog/modal-dialog.component';
-import { ButtonComponent } from '../../components/button/button.component';
+import { OverlayHostComponent } from '../../components/overlay-host/overlay-host.component';
+import { componentTest } from '../../testing';
+import { OverlayHostService } from '../overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../user-agent/user-agent-ref';
-import { IDialogConfig, IModalDialog } from '../../common';
+import { ModalService } from './modal.service';
 
 let modalService: ModalService;
 
-describe('ModalService:', () => {
+describe('ModalService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-    declarations: [OverlayHostComponent, DynamicModal, ModalDialogComponent, TestComponent, ButtonComponent],
-    providers: [
-        ModalService,
-        OverlayHostService,
-        { provide: UserAgentProvider, useClass: MockUserAgentRef }
-    ],
-    teardown: { destroyAfterEach: false }
-});
+            declarations: [OverlayHostComponent, DynamicModal, ModalDialogComponent, TestComponent, ButtonComponent],
+            providers: [
+                ModalService,
+                OverlayHostService,
+                SizeTrackerService,
+                { provide: UserAgentProvider, useClass: MockUserAgentRef },
+            ],
+            teardown: { destroyAfterEach: false },
+        });
         TestBed.overrideModule(BrowserDynamicTestingModule, {
             set: {
-                declarations: [DynamicModal, ModalDialogComponent]
-            }
+                declarations: [DynamicModal, ModalDialogComponent],
+            },
         });
     });
 
@@ -38,7 +41,7 @@ describe('ModalService:', () => {
         it('use of the hostViewContainer should be deferred until one is available', fakeAsync(() => {
             const overlayHostService: OverlayHostService = TestBed.inject(OverlayHostService);
             const modalService: ModalService = TestBed.inject(ModalService);
-            const dialogConfig = { title: 'Test', buttons: [{label: 'okay'}]};
+            const dialogConfig = { title: 'Test', buttons: [{ label: 'okay' }] };
 
             let promise: Promise<any>;
             let resolved = false;
@@ -57,12 +60,12 @@ describe('ModalService:', () => {
                 createComponent(): any {
                     return {
                         instance: {
-                            setOptions(): void {},
+                            setOptions(): void { },
                             injectContent(): ComponentRef<IModalDialog> {
                                 return TestBed.createComponent(ModalDialogComponent).componentRef;
-                            }
+                            },
                         },
-                        destroy(): void {}
+                        destroy(): void { },
                     };
                 }
             }
@@ -84,33 +87,35 @@ describe('ModalService:', () => {
         it('returns a promise',
             componentTest(() => TestComponent, fixture => {
                 fixture.detectChanges();
-                let result = modalService.dialog({ title: 'Test', buttons: []});
+                const result = modalService.dialog({ title: 'Test', buttons: [] });
 
                 expect(result.then).toBeDefined();
-            })
+            }),
         );
 
         it('displays a title and body',
             componentTest(() => TestComponent, fixture => {
                 fixture.detectChanges();
-                modalService.dialog({ title: 'Test', body: 'This is a modal', buttons: []});
+                modalService.dialog({ title: 'Test', body: 'This is a modal', buttons: [] });
                 tick();
                 fixture.detectChanges();
 
                 expect(getElement(fixture, '.modal-title').innerText).toContain('Test');
                 expect(getElement(fixture, '.modal-body').innerText).toContain('This is a modal');
-            })
+            }),
         );
 
         describe('buttons:', () => {
 
             function setupButtonsTest<T>(fixture: ComponentFixture<T>): void {
                 fixture.detectChanges();
-                modalService.dialog({ title: 'Test', buttons: [
-                    { label: 'okay', type: 'default', returnValue: true },
-                    { label: 'cancel', type: 'secondary', returnValue: false },
-                    { label: 'not sure', type: 'alert', returnValue: 'not sure' }
-                ] });
+                modalService.dialog({
+                    title: 'Test', buttons: [
+                        { label: 'okay', type: 'default', returnValue: true },
+                        { label: 'cancel', type: 'secondary', returnValue: false },
+                        { label: 'not sure', type: 'alert', returnValue: 'not sure' },
+                    ],
+                });
                 tick();
                 fixture.detectChanges();
             }
@@ -118,31 +123,31 @@ describe('ModalService:', () => {
             xit('displays configured buttons in the modal footer',
                 componentTest(() => TestComponent, fixture => {
                     setupButtonsTest(fixture);
-                    let buttons = getElements(fixture, '.modal-footer button');
+                    const buttons = getElements(fixture, '.modal-footer button');
                     expect(buttons.length).toBe(3);
-                })
+                }),
             );
 
             xit('labels buttons correctly',
                 componentTest(() => TestComponent, fixture => {
                     setupButtonsTest(fixture);
-                    let buttons = getElements(fixture, '.modal-footer button');
+                    const buttons = getElements(fixture, '.modal-footer button');
 
                     expect(buttons[0].innerHTML).toContain('okay');
                     expect(buttons[1].innerHTML).toContain('cancel');
                     expect(buttons[2].innerHTML).toContain('not sure');
-                })
+                }),
             );
 
             xit('assigns correct classes to buttons',
                 componentTest(() => TestComponent, fixture => {
                     setupButtonsTest(fixture);
-                    let buttons = getElements(fixture, '.modal-footer button');
+                    const buttons = getElements(fixture, '.modal-footer button');
 
                     expect(buttons[0].classList).toContain('default');
                     expect(buttons[1].classList).toContain('secondary');
                     expect(buttons[2].classList).toContain('alert');
-                })
+                }),
             );
         });
 
@@ -151,11 +156,11 @@ describe('ModalService:', () => {
                 fixture.detectChanges();
                 return modalService.dialog({
                     title: 'Test', buttons: [
-                        { label: 'okay', type: 'default', returnValue: 'okay' }
-                    ]
+                        { label: 'okay', type: 'default', returnValue: 'okay' },
+                    ],
                 })
-                .then<string>(modal => {
-                    let promise = modal.open();
+                    .then<string>(modal => {
+                    const promise = modal.open();
                     tick(50);
                     fixture.detectChanges();
 
@@ -164,10 +169,10 @@ describe('ModalService:', () => {
 
                     return promise;
                 })
-                .then(result => {
-                    expect(result).toBe('okay');
-                });
-            })
+                    .then(result => {
+                        expect(result).toBe('okay');
+                    });
+            }),
         );
 
         xit('rejects with returnValue when a button with shouldReject: true is clicked',
@@ -175,45 +180,46 @@ describe('ModalService:', () => {
                 fixture.detectChanges();
                 return modalService.dialog({
                     title: 'Test', buttons: [
-                        {label: 'okay', type: 'default', returnValue: 'cancelled', shouldReject: true}
-                    ]
+                        { label: 'okay', type: 'default', returnValue: 'cancelled', shouldReject: true },
+                    ],
                 })
-                .then(modal => {
-                    let promise = modal.open()
-                        .then(
-                            () => fail('Promise resolved but should reject'),
-                            reason => expect(reason).toContain('cancelled')
-                        );
+                    .then(modal => {
+                        const promise = modal.open()
+                            .then(
+                                () => fail('Promise resolved but should reject'),
+                                reason => expect(reason).toContain('cancelled'),
+                            );
 
-                    tick(50);
-                    fixture.detectChanges();
+                        tick(50);
+                        fixture.detectChanges();
 
-                    getElement(fixture, '.modal-footer button').click();
-                    tick();
+                        getElement(fixture, '.modal-footer button').click();
+                        tick();
 
-                    return promise;
-                });
-            })
+                        return promise;
+                    });
+            }),
         );
 
-        it('does not reject when the overlay is clicked', () => {
-            let testWithPendingPromise = componentTest(
+        it('does reject when the overlay is clicked', () => {
+            const testWithPendingPromise = componentTest(
                 () => TestComponent,
                 fixture => {
                     fixture.detectChanges();
 
-                    let modalPromise = modalService.dialog({ title: 'Test', buttons: [{ label: 'okay' }] })
+                    let error: ModalCloseError;
+
+                    modalService.dialog({ title: 'Test', buttons: [{ label: 'okay' }] })
                         .then(modal => modal.open())
-                        .then(
-                            () => fail('Promise resolved but should not be'),
-                            () => fail('Promise rejected but should not be')
-                        );
+                        .then(() => fail('Promise resolved but should not be'))
+                        .catch(err => error = err);
 
                     tick(100);
                     fixture.detectChanges();
 
                     getElement(fixture, '.gtx-modal-overlay').click();
                     tick();
+                    expect(error).toBeDefined();
                     tick();
                 });
             expect(testWithPendingPromise).not.toThrow();
@@ -229,24 +235,24 @@ describe('ModalService:', () => {
         const testDialogConfig: IDialogConfig = {
             title: 'Test',
             body: 'This is a modal',
-            buttons: [{ label: 'okay' }]
+            buttons: [{ label: 'okay' }],
         };
 
         it('calls the onOpen callback when the modal is opened',
             componentTest(() => TestComponent, fixture => {
-                let onOpen = jasmine.createSpy('onOpen');
+                const onOpen = jasmine.createSpy('onOpen');
                 fixture.detectChanges();
                 return modalService.dialog(testDialogConfig, { onOpen: onOpen })
                     .then(modal => {
                         modal.open();
                         expect(onOpen).toHaveBeenCalled();
                     });
-            })
+            }),
         );
 
         xit('calls the onClose callback when the modal is closed',
             componentTest(() => TestComponent, fixture => {
-                let onClose = jasmine.createSpy('onClose');
+                const onClose = jasmine.createSpy('onClose');
                 fixture.detectChanges();
                 return modalService.dialog(testDialogConfig, { onClose: onClose })
                     .then(modal => {
@@ -257,17 +263,17 @@ describe('ModalService:', () => {
                         tick();
                         expect(onClose).toHaveBeenCalled();
                     });
-            })
+            }),
         );
 
         xit('closes when clicking the overlay with closeOnOverlayClick = true', () => {
-            let testWithPendingPromise = componentTest(
+            const testWithPendingPromise = componentTest(
                 () => TestComponent,
                 fixture => {
                     fixture.detectChanges();
 
                     let modalInstance!: IModalDialog;
-                    let modalPromise = modalService.dialog(testDialogConfig, { closeOnOverlayClick: true })
+                    const modalPromise = modalService.dialog(testDialogConfig, { closeOnOverlayClick: true })
                         .then(modal => {
                             modalInstance = modal.instance;
                             return modal.open();
@@ -295,7 +301,7 @@ describe('ModalService:', () => {
                 fixture.detectChanges();
 
                 let modalComponentInstance!: IModalDialog;
-                let modalPromise = modalService.dialog(testDialogConfig, { closeOnOverlayClick: false })
+                const modalPromise = modalService.dialog(testDialogConfig, { closeOnOverlayClick: false })
                     .then(modal => {
                         modalComponentInstance = modal.instance;
                         return modal.open();
@@ -311,7 +317,7 @@ describe('ModalService:', () => {
                 tick();
 
                 expect(modalComponentInstance.cancelFn).not.toHaveBeenCalled();
-            })
+            }),
         );
 
         it('sets a width when passed in the modal options',
@@ -321,9 +327,9 @@ describe('ModalService:', () => {
                 tick();
                 fixture.detectChanges();
 
-                let dialog = getElement(fixture, '.gtx-modal-dialog');
+                const dialog = getElement(fixture, '.gtx-modal-dialog');
                 expect(dialog.style.width).toBe('400px');
-            })
+            }),
         );
 
         it('does not set any padding by adding a "nopad" class with padding: false',
@@ -333,9 +339,9 @@ describe('ModalService:', () => {
                 tick();
                 fixture.detectChanges();
 
-                let dialog = getElement(fixture, '.gtx-modal-dialog');
+                const dialog = getElement(fixture, '.gtx-modal-dialog');
                 expect(dialog.classList).toContain('nopad');
-            })
+            }),
         );
 
         it('sets padding by not adding a "nopad" class with padding: true',
@@ -345,9 +351,9 @@ describe('ModalService:', () => {
                 tick();
                 fixture.detectChanges();
 
-                let dialog = getElement(fixture, '.gtx-modal-dialog');
+                const dialog = getElement(fixture, '.gtx-modal-dialog');
                 expect(dialog.classList).not.toContain('nopad');
-            })
+            }),
         );
 
     });
@@ -358,7 +364,7 @@ describe('ModalService:', () => {
             selector: 'test-modal-cmp',
             template: `<div>TestModalCmp</div>
                 <div>{{ localValue }}</div>
-                <button class="modal-button" (click)="localFn('bar')"></button>`
+                <button class="modal-button" (click)="localFn('bar')"></button>`,
         })
         class TestModalCmp implements IModalDialog {
             closeFn: (val: any) => void;
@@ -366,7 +372,7 @@ describe('ModalService:', () => {
             errorFn: (err: Error) => void;
 
             localValue: string;
-            localFn: Function;
+            localFn: (val: string) => void;
 
             registerCloseFn(close: (val: any) => void): void {
                 this.closeFn = close;
@@ -383,15 +389,15 @@ describe('ModalService:', () => {
 
         @Component({
             selector: 'bad-modal-cmp',
-            template: `<div>BadModalCmp</div>`
+            template: '<div>BadModalCmp</div>',
         })
-        class BadModalCmp {}
+        class BadModalCmp { }
 
         beforeEach(() => {
             TestBed.overrideModule(BrowserDynamicTestingModule, {
                 add: {
-                    declarations: [TestModalCmp, BadModalCmp]
-                }
+                    declarations: [TestModalCmp, BadModalCmp],
+                },
             });
 
             modalService = TestBed.inject(ModalService);
@@ -407,16 +413,16 @@ describe('ModalService:', () => {
                 }
 
                 expect(run).toThrow();
-            })
+            }),
         );
 
         it('returns a promise',
             componentTest(() => TestComponent, fixture => {
                 fixture.detectChanges();
-                let result = modalService.fromComponent(TestModalCmp);
+                const result = modalService.fromComponent(TestModalCmp);
 
                 expect(typeof result.then).toBe('function');
-            })
+            }),
         );
 
         it('resolves the returned promise when the modal is closed',
@@ -425,30 +431,30 @@ describe('ModalService:', () => {
 
                 modalService.fromComponent(TestModalCmp)
                     .then<string>(modal => {
-                        let promise = modal.open();
+                    const promise = modal.open();
 
-                        let cmp: TestModalCmp = <any> modal.instance;
-                        cmp.closeFn('some result');
+                    const cmp: TestModalCmp = <any>modal.instance;
+                    cmp.closeFn('some result');
 
-                        return promise;
-                    })
+                    return promise;
+                })
                     .then(
                         result => { expect(result).toBe('some result'); },
-                        () => { fail('Promise should resolve but rejected'); }
+                        () => { fail('Promise should resolve, but rejected'); },
                     );
                 tick();
-            })
+            }),
         );
 
-        it('does not resolve or reject the returned promise when the modal is cancelled',
+        it('rejects the returned promise when the modal is cancelled, with the correct reason',
             componentTest(() => TestComponent, fixture => {
                 fixture.detectChanges();
 
                 modalService.fromComponent(TestModalCmp)
                     .then(modal => {
-                        let promise = modal.open();
+                        const promise = modal.open();
 
-                        let cmp: TestModalCmp = <any> modal.instance;
+                        const cmp: TestModalCmp = <any>modal.instance;
                         cmp.cancelFn('reason');
 
                         setTimeout(() => {
@@ -459,12 +465,15 @@ describe('ModalService:', () => {
                         return promise;
                     })
                     .then(
-                        () => { fail('Promise should not resolve but did'); },
-                        () => { fail('Promise should not reject but did'); }
+                        () => { fail('Promise should not resolve, but did'); },
+                        (err: ModalCloseError) => {
+                            expect(err).toBeInstanceOf(ModalCloseError);
+                            expect(err.reason).toEqual(ModalClosingReason.CANCEL);
+                        },
                     );
 
                 tick(500);
-            })
+            }),
         );
 
         it('rejects the returned promise when the passed error handler is called',
@@ -473,19 +482,19 @@ describe('ModalService:', () => {
 
                 modalService.fromComponent(TestModalCmp)
                     .then(modal => {
-                        let promise = modal.open();
+                        const promise = modal.open();
 
-                        let cmp: TestModalCmp = <any> modal.instance;
+                        const cmp: TestModalCmp = <any>modal.instance;
                         cmp.errorFn(new Error('a test error'));
 
                         return promise;
                     })
                     .then(
                         () => fail('Promise should reject but resolved'),
-                        (err: Error) => expect(err.message).toBe('a test error')
+                        (err: ModalCloseError) => expect(err.cause.message).toBe('a test error'),
                     );
                 tick();
-            })
+            }),
         );
 
         it('contains an instance of the passed component',
@@ -494,11 +503,11 @@ describe('ModalService:', () => {
                 modalService.fromComponent(TestModalCmp);
                 tick();
 
-                let testModalCmp = getElement(fixture, 'test-modal-cmp');
+                const testModalCmp = getElement(fixture, 'test-modal-cmp');
 
                 expect(testModalCmp).toBeDefined();
                 expect(testModalCmp.innerText).toContain('TestModalCmp');
-            })
+            }),
         );
 
         it('injects local properties (string)',
@@ -507,12 +516,12 @@ describe('ModalService:', () => {
                 modalService.fromComponent(TestModalCmp, {}, { localValue: 'Foo' });
                 tick();
 
-                let testModalCmp = getElement(fixture, 'test-modal-cmp');
+                const testModalCmp = getElement(fixture, 'test-modal-cmp');
                 fixture.detectChanges();
 
                 expect(testModalCmp).toBeDefined();
                 expect(testModalCmp.innerText).toContain('Foo');
-            })
+            }),
         );
 
         it('injects local properties (function)',
@@ -527,7 +536,7 @@ describe('ModalService:', () => {
                 tick();
 
                 expect(spy).toHaveBeenCalledWith('bar');
-            })
+            }),
         );
     });
 
@@ -543,7 +552,7 @@ describe('ModalService:', () => {
 
         it('contains ComponentRef once dialog opened', componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let result = modalService.dialog({ title: 'Test', buttons: []});
+            const result = modalService.dialog({ title: 'Test', buttons: [] });
 
             expect(modalService.openModals).toEqual([]);
             return result.then(modal => {
@@ -556,12 +565,12 @@ describe('ModalService:', () => {
 
         it('is empty after dialog is closed', componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let result = modalService.dialog({ title: 'Test', buttons: []});
+            const result = modalService.dialog({ title: 'Test', buttons: [] });
 
             expect(modalService.openModals).toEqual([]);
             return result.then(modal => {
                 modal.open();
-                const cmp: ModalDialogComponent = <any> modal.instance;
+                const cmp: ModalDialogComponent = <any>modal.instance;
                 tick(50);
 
                 expect(modalService.openModals.length).toBe(1);
@@ -573,18 +582,18 @@ describe('ModalService:', () => {
 
         it('works with multiple dialogs open at once', componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let result1 = modalService.dialog({ title: 'Test1', buttons: []});
-            let result2 = modalService.dialog({ title: 'Test2', buttons: []});
+            const result1 = modalService.dialog({ title: 'Test1', buttons: [] });
+            const result2 = modalService.dialog({ title: 'Test2', buttons: [] });
 
             expect(modalService.openModals).toEqual([]);
             return Promise.all([result1, result2]).then(([modal1, modal2]) => {
                 modal1.open();
-                const cmp1: ModalDialogComponent = <any> modal1.instance;
+                const cmp1: ModalDialogComponent = <any>modal1.instance;
                 tick(50);
                 expect(modalService.openModals.length).toBe(1);
 
                 modal2.open();
-                const cmp2: ModalDialogComponent = <any> modal2.instance;
+                const cmp2: ModalDialogComponent = <any>modal2.instance;
                 expect(modalService.openModals.length).toBe(2);
 
                 expect(modalService.openModals[0].instance).toBe(cmp1);
@@ -618,9 +627,9 @@ function getElements(fixture: ComponentFixture<any>, selector: string): HTMLElem
 }
 
 @Component({
-    template: `<gtx-overlay-host></gtx-overlay-host>`
+    template: '<gtx-overlay-host></gtx-overlay-host>',
 })
-class TestComponent {}
+class TestComponent { }
 
 
 class MockUserAgentRef {

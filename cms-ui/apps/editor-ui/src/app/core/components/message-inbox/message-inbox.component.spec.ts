@@ -15,9 +15,9 @@ import { NavigationService } from '../../providers/navigation/navigation.service
 import { PermissionService } from '../../providers/permissions/permission.service';
 import { MessageBody } from '../message-body/message-body.component';
 import { MessageList } from '../message-list/message-list.component';
-import { MessageInbox } from './message-inbox.component';
+import { MessageInboxComponent } from './message-inbox.component';
 
-describe('MessageInbox', () => {
+describe('MessageInboxComponent', () => {
 
     let appState: TestApplicationState;
     let modalService: MockModalService;
@@ -41,7 +41,7 @@ describe('MessageInbox', () => {
                 IconDirective,
                 CheckboxComponent,
                 MessageBody,
-                MessageInbox,
+                MessageInboxComponent,
                 MessageList,
                 IconCheckbox,
                 ImageThumbnailComponent,
@@ -76,10 +76,10 @@ describe('MessageInbox', () => {
 @Component({
     template: `
         <message-inbox (navigate)="navigate($event)">
-        </message-inbox>`
+        </message-inbox>`,
 })
 class TestComponent {
-    @ViewChild(MessageInbox, { static: true }) messageInbox: MessageInbox;
+    @ViewChild(MessageInboxComponent, { static: true }) messageInbox: MessageInboxComponent;
 
     navigate(): void { }
 }

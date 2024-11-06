@@ -1,18 +1,19 @@
 import { Component, Injectable } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Resolve, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { IndexByKey } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
 import { Observable, of as observableOf } from 'rxjs';
 import { delay, takeUntil } from 'rxjs/operators';
-import { GcmsAdminUiRoute } from '../../../common/routing/gcms-admin-ui-route';
+import { GcmsAdminUiRoute } from '../../../common/models/routing';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 import { GenericRouterOutletComponent } from '../../../shared/components/generic-router-outlet/generic-router-outlet.component';
 import { AppStateService } from '../../../state';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { I18nService } from '../i18n/i18n.service';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
+import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
 import { BreadcrumbInfo } from './breadcrumb-info';
 import { BreadcrumbsService } from './breadcrumbs.service';
 
@@ -39,7 +40,7 @@ class RootComponent { }
 class TestComponent { }
 
 @Injectable()
-class DelayedResolver implements Resolve<BreadcrumbInfo> {
+class DelayedResolver  {
     resolve(): Observable<BreadcrumbInfo> {
         return observableOf({
             title: 'main.resolvedTitle',
@@ -182,6 +183,8 @@ const EXPECTED_BREADCRUMBS: IndexByKey<IBreadcrumbRouterLink> = {
 };
 Object.freeze(EXPECTED_BREADCRUMBS);
 
+class MockRouteEntityResolverService {}
+
 describe('BreadcrumbsService', () => {
 
     let breadcrumbs: BreadcrumbsService;
@@ -206,6 +209,7 @@ describe('BreadcrumbsService', () => {
                 BreadcrumbsService,
                 DelayedResolver,
                 TestAppState,
+                { provide: RouteEntityResolverService, useClass: MockRouteEntityResolverService },
                 { provide: AppStateService, useExisting: TestAppState },
                 MockI18nServiceWithSpies,
                 { provide: I18nService, useExisting: MockI18nServiceWithSpies },

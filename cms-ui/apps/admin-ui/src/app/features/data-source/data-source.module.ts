@@ -1,17 +1,31 @@
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-import { DataSourceDetailComponent, DataSourceMasterComponent } from './components';
+import {
+    CreateDataSourceEntryModalComponent,
+    CreateDataSourceModalComponent,
+    DataSourceEditorComponent,
+    DataSourceEntryPropertiesComponent,
+    DataSourceEntryTableComponent,
+    DataSourceMasterComponent,
+    DataSourcePropertiesComponent,
+} from './components';
 import { DATA_SOURCE_ROUTES } from './data-source.routes';
-import { CanActivateDataSourceGuard } from './providers';
+import { DataSourceEntryTableLoaderService } from './providers';
 
 @NgModule({
     declarations: [
+        CreateDataSourceEntryModalComponent,
+        CreateDataSourceModalComponent,
+        DataSourceEditorComponent,
         DataSourceMasterComponent,
-        DataSourceDetailComponent,
+        DataSourceEntryPropertiesComponent,
+        DataSourceEntryTableComponent,
+        DataSourcePropertiesComponent,
     ],
     providers: [
-        CanActivateDataSourceGuard,
+        DataSourceEntryTableLoaderService,
+        provideRouter(DATA_SOURCE_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

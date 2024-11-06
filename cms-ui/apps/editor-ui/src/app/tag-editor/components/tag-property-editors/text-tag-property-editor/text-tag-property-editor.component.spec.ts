@@ -1,11 +1,11 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { EditableTag, StringTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
 import { GenticsUICoreModule, InputComponent, TextareaComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest, configureComponentTest } from '../../../../../testing';
@@ -19,7 +19,7 @@ import {
 } from '../../../../../testing/test-tag-editor-data.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { TextTagPropertyEditor } from './text-tag-property-editor.component';
 
@@ -43,15 +43,8 @@ describe('TextTagPropertyEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 TextTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    TextTagPropertyEditor,
-                ],
-            },
         });
     });
 
@@ -84,6 +77,7 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that an InputField is used for Text(short) and that there is no Textarea
             const inputElement = editorElement.query(By.directive(InputComponent));
             expect(inputElement).toBeTruthy();
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             expect(editorElement.query(By.directive(TextareaComponent))).toBeFalsy;
 
             // Make sure that the initial values are correct.
@@ -156,6 +150,7 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that a Textarea is used for Text and that there is no InputField.
             const textAreaElement = editorElement.query(By.directive(TextareaComponent));
             expect(textAreaElement).toBeTruthy();
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             expect(editorElement.query(By.directive(InputComponent))).toBeFalsy;
 
             // Make sure that the initial values are correct.
@@ -368,7 +363,7 @@ describe('TextTagPropertyEditorComponent', () => {
 
             // Get the actual textBox element (input or textarea, depending on TagPartType) and the ValidationErrorInfo element.
             const textBoxElement = editorElement.query(By.css('input, textarea')).nativeElement as HTMLInputElement;
-            const validationInfoElement = editorElement.query(By.directive(ValidationErrorInfo));
+            const validationInfoElement = editorElement.query(By.directive(ValidationErrorInfoComponent));
 
             // Simulate the entering of some valid text.
             onChangeSpy.and.returnValue(getMultiValidationResult(tagPart, getExampleValidationSuccess()));
@@ -602,7 +597,7 @@ function triggerBlurEvent(element: HTMLElement): void {
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;

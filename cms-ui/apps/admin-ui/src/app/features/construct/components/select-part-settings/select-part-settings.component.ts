@@ -1,10 +1,9 @@
-import { DataSourceDataService } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
-import { DataSource, IndexById, Raw, SelectSetting } from '@gentics/cms-models';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import { DataSource, DataSourceEntry, IndexById, Raw, SelectOption, SelectSetting } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -12,34 +11,35 @@ import { Subscription } from 'rxjs';
     templateUrl: './select-part-settings.component.html',
     styleUrls: ['./select-part-settings.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(SelectPartSettingsComponent)],
+    providers: [
+        generateFormProvider(SelectPartSettingsComponent),
+        generateValidatorProvider(SelectPartSettingsComponent),
+    ],
 })
-export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnInit, OnDestroy {
+export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
+
+    @Input()
+    public dataSources: DataSource<Raw>[] = [];
 
     public dataSourceMap: IndexById<DataSource<Raw>> = {};
+    public entryMap: Record<number, DataSourceEntry> = {};
 
     private entriesSubscription: Subscription;
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private dataSourceData: DataSourceDataService,
         private api: GcmsApi,
     ) {
         super(changeDetector);
     }
 
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        this.subscriptions.push(this.dataSourceData.watchAllEntities().subscribe(dataSources => {
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.dataSources) {
             this.dataSourceMap = {};
-            dataSources.forEach((ds: any) => {
-                // the dataSource-data service converts the ids to strings.
-                // the select does strict checking however, so we have to convert them back to numbers
-                ds.id = Number(ds.id);
+            (this.dataSources || []).forEach(ds => {
                 this.dataSourceMap[ds.id] = ds;
             });
-        }));
+        }
     }
 
     ngOnDestroy(): void {
@@ -67,7 +67,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
     }
 
     protected override onValueChange(): void {
-        if (!this.form || (this.value as any) === CONTROL_INVALID_VALUE) {
+        if (!this.form) {
             return;
         }
         // If the datasourceId has been changed, we need to reload the entries
@@ -75,7 +75,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
             this.loadEntries(this.value?.datasourceId);
         }
 
-        this.form.setValue({
+        this.form.patchValue({
             ...this.form.value,
             // datasourceId: this.value?.datasourceId || null,
             template: this.value?.template || '',
@@ -105,11 +105,26 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
          * Potentially abstract the APi again as EntityOperations should be for BOs only?
          */
         this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe(res => {
-            this.form.setValue({
-                ...this.form.value,
-                datasourceId: dsId,
-                options: res.items,
+            this.entryMap = {};
+            const options: SelectOption[] = [];
+
+            res.items.forEach(entry => {
+                this.entryMap[entry.dsId] = entry;
+                options.push({
+                    // "id" in the response context is the ID in the global CMS, while dsId is the one inside the Datasource
+                    id: entry.dsId,
+                    key: entry.key,
+                    value: entry.value,
+                })
             });
+
+            this.form.patchValue({
+                datasourceId: dsId as number,
+                options: options,
+            }, { emitEvent: false });
+            this.form.controls.datasourceId.markAsDirty();
+            this.form.controls.options.markAsDirty();
+
             this.form.updateValueAndValidity();
             this.changeDetector.markForCheck();
         });

@@ -1,8 +1,8 @@
-import { Image } from '../models';
+import { Image } from '@gentics/cms-models';
 
-const nonEditableImageTypes = [
+const NON_EDITABLE_IMAGE_TYPES = [
     'image/svg+xml',
-    'image/gif'
+    'image/gif',
 ];
 
 /**
@@ -10,8 +10,8 @@ const nonEditableImageTypes = [
  */
 export function isEditableImage(image: Image): boolean {
     if (image.type === 'image') {
-        return nonEditableImageTypes.indexOf(image.fileType) === -1;
+        return NON_EDITABLE_IMAGE_TYPES.indexOf(image.fileType) === -1;
     } else {
         return true;
-    } 
+    }
 }

@@ -59,5 +59,11 @@ export class FormGroupTabHandle implements FormTabHandle {
         return this.config.save();
     }
 
+    reset(): Promise<void> {
+        if (this.config.reset) {
+            return this.config.reset();
+        }
+        return Promise.resolve();
+    }
 }
 

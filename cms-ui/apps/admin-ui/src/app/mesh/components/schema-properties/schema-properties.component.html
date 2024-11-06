@@ -1,0 +1,122 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <ng-template #propertiesTpl>
+        <div class="row">
+            <gtx-input
+                class="columns small-12"
+                [label]="('common.name' | i18n) + ' *'"
+                formControlName="name"
+            ></gtx-input>
+        </div>
+
+        <div class="row">
+            <gtx-input
+                class="columns small-12"
+                [label]="('common.description' | i18n) + ' *'"
+                formControlName="description"
+            ></gtx-input>
+        </div>
+
+        <div class="row">
+            <gtx-select
+                class="columns small-4"
+                [label]="'mesh.schema_displayField' | i18n"
+                [clearable]="true"
+                [disableUnknownValues]="true"
+                formControlName="displayField"
+            >
+                <gtx-option *ngFor="let name of fieldNames" [value]="name">{{ name }}</gtx-option>
+            </gtx-select>
+
+            <gtx-select
+                class="columns small-4"
+                [label]="'mesh.schema_segmentField' | i18n"
+                [clearable]="true"
+                [disableUnknownValues]="true"
+                formControlName="segmentField"
+            >
+                <gtx-option *ngFor="let name of fieldNames" [value]="name">{{ name }}</gtx-option>
+            </gtx-select>
+
+            <gtx-select
+                class="columns small-4"
+                [label]="'mesh.schema_urlFields' | i18n"
+                [clearable]="true"
+                [multiple]="true"
+                [disableUnknownValues]="true"
+                formControlName="urlFields"
+            >
+                <gtx-option *ngFor="let name of fieldNames" [value]="name">{{ name }}</gtx-option>
+            </gtx-select>
+        </div>
+
+        <div class="row">
+            <gtx-checkbox
+                class="columns small-6"
+                [label]="'mesh.schema_autoPurge' | i18n"
+                formControlName="autoPurge"
+            ></gtx-checkbox>
+
+            <gtx-checkbox
+                class="columns small-6"
+                [label]="'mesh.schema_noIndex' | i18n"
+                formControlName="noIndex"
+            ></gtx-checkbox>
+
+            <gtx-checkbox
+                class="columns small-6"
+                [label]="'mesh.schema_container' | i18n"
+                formControlName="container"
+            ></gtx-checkbox>
+        </div>
+    </ng-template>
+
+    <ng-template #elasticsearchTpl>
+        <div class="row">
+            <div class="columns small-12">
+                <gtx-json-input
+                    [label]="'mesh.elasticsearch' | i18n"
+                    formControlName="elasticsearch"
+                ></gtx-json-input>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #fieldsTpl>
+        <gtx-mesh-schema-fields-manager
+            class="fields-manager"
+            [label]="'mesh.schema_fields' | i18n"
+            [type]="SchemaFieldPropertiesType.SCHEMA"
+            [ownName]="form.value.name"
+            [schemaNames]="schemaNames"
+            [microschemaNames]="microschemaNames"
+            formControlName="fields"
+        ></gtx-mesh-schema-fields-manager>
+    </ng-template>
+
+    <gtx-tabs *ngIf="tabs; else regularLayout" class="schema-tabs">
+        <gtx-tab id="properties" [title]="'shared.title_properties' | i18n">
+            <div class="detail-tab-wrapper">
+                <ng-container [ngTemplateOutlet]="propertiesTpl"></ng-container>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab id="elasticsearch" [title]="'mesh.elasticsearch' | i18n">
+            <ng-container [ngTemplateOutlet]="elasticsearchTpl"></ng-container>
+        </gtx-tab>
+
+        <gtx-tab id="fields" [title]="'mesh.schema_fields' | i18n">
+            <div class="detail-tab-wrapper">
+                <ng-container [ngTemplateOutlet]="fieldsTpl"></ng-container>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+
+    <ng-template #regularLayout>
+        <ng-container [ngTemplateOutlet]="propertiesTpl"></ng-container>
+        <ng-container [ngTemplateOutlet]="elasticsearchTpl"></ng-container>
+        <ng-container [ngTemplateOutlet]="fieldsTpl"></ng-container>
+    </ng-template>
+</form>

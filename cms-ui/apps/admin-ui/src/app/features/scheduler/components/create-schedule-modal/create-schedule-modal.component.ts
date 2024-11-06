@@ -1,7 +1,6 @@
 import { I18nNotificationService, ScheduleOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { UntypedFormControl, Validators } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
+import { UntypedFormControl } from '@angular/forms';
 import { ScheduleBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -39,7 +38,7 @@ export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> 
             active: true,
             parallel: false,
             notificationEmail: [],
-        }, [createNestedControlValidator()]);
+        });
     }
 
     public ngOnDestroy(): void {

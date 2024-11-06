@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import {
     CustomTagPropertyEditor,
-    EditableTag,
     TagEditorContext,
-    TagPart,
-    TagPartProperty,
     TagPropertiesChangedFn,
     TagPropertyEditor,
+    WindowWithCustomTagPropertyEditor,
+} from '@gentics/cms-integration-api-models';
+import {
+    EditableTag,
+    TagPart,
+    TagPartProperty,
     TagPropertyMap,
-    WindowWithCustomTagPropertyEditor
 } from '@gentics/cms-models';
 import { ReplaySubject, Subscription } from 'rxjs';
+import { publish, refCount } from 'rxjs/operators';
 
 /**
  * Used to host a custom TagPropertyEditor in an IFrame and handle communication with it.
@@ -19,7 +22,7 @@ import { ReplaySubject, Subscription } from 'rxjs';
     selector: 'custom-tag-property-editor-host',
     templateUrl: './custom-tag-property-editor-host.component.html',
     styleUrls: ['./custom-tag-property-editor-host.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CustomTagPropertyEditorHostComponent implements TagPropertyEditor, OnDestroy {
 
@@ -51,19 +54,19 @@ export class CustomTagPropertyEditorHostComponent implements TagPropertyEditor, 
         this.changeDetector.markForCheck();
 
         this.tagPropEditorCalls$.next(
-            tagPropEditor => tagPropEditor.initTagPropertyEditor(tagPart, tag, tagProperty, context)
+            tagPropEditor => tagPropEditor.initTagPropertyEditor(tagPart, tag, tagProperty, context),
         );
     }
 
     registerOnChange(fn: TagPropertiesChangedFn): void {
         this.tagPropEditorCalls$.next(
-            tagPropEditor => tagPropEditor.registerOnChange(fn)
+            tagPropEditor => tagPropEditor.registerOnChange(fn),
         );
     }
 
     writeChangedValues(values: Partial<TagPropertyMap>): void {
         this.tagPropEditorCalls$.next(
-            tagPropEditor => tagPropEditor.writeChangedValues(values)
+            tagPropEditor => tagPropEditor.writeChangedValues(values),
         );
     }
 
@@ -95,10 +98,11 @@ export class CustomTagPropertyEditorHostComponent implements TagPropertyEditor, 
      */
     private registerCustomTagPropEditor(customEditor: CustomTagPropertyEditor): void {
         this.customTagPropEditor = customEditor;
-        const sub = this.tagPropEditorCalls$
-            .publish()
-            .refCount()
-            .subscribe(fn => fn(this.customTagPropEditor));
+        const sub = this.tagPropEditorCalls$.pipe(
+            publish(),
+            refCount(),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        ).subscribe(fn => fn(this.customTagPropEditor));
         this.subscriptions.add(sub);
 
         this.customTagPropEditor.registerOnSizeChange(newSize => {

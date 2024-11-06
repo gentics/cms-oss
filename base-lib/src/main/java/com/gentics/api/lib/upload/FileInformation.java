@@ -6,6 +6,9 @@
  */
 package com.gentics.api.lib.upload;
 
+import com.gentics.api.lib.resolving.ResolvableBean;
+import com.gentics.lib.log.NodeLogger;
+import javax.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,13 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.activation.MimetypesFileTypeMap;
-
 import org.apache.commons.fileupload.FileItem;
-
-import com.gentics.api.lib.resolving.ResolvableBean;
-import com.gentics.lib.log.NodeLogger;
 
 /**
  * Provides information about an uploaded file.

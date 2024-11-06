@@ -10,10 +10,10 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
+import { UploadResponse } from '@editor-ui/app/common/models';
 import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
-import { UploadResponse } from '@gentics/cms-rest-clients-angular';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
-import { Observable, Subscription, of } from 'rxjs';
+import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -133,8 +133,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
     }
 
@@ -154,9 +153,9 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
+
         if (this.itemType !== 'image' && this.selectionToUpload.fileCategory === 'image') {
             this.modalService.dialog({
                 title: this.i18nService.translate('tag_editor.not_allowed'),
@@ -164,8 +163,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
 
         this.uploadPossible.emit(true);
@@ -181,14 +179,14 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     onUploadClick(): void {
         if (this.fileToUpload) {
-            this.handleFileToUpload();
+            this.handleUploadClick();
         }
         if (this.selectionToUpload) {
-            this.handleAssetUpload();
+            this.handleAssetsUploadClick();
         }
     }
 
-    private handleFileToUpload(): void {
+    private handleUploadClick(): void {
         const upload$ = this.uploadFileOrImage(this.fileToUpload, this.destinationFolder, this.removeUnsetProperties(this.fileProperties));
         if (upload$) {
             const sub = upload$.subscribe(uploadedItem => {
@@ -203,7 +201,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         }
     }
 
-    private handleAssetUpload(): void {
+    private handleAssetsUploadClick(): void {
         const fileCategory = this.selectionToUpload.fileCategory === 'image' ? 'image' : 'file';
         const payload: FileCreateRequest = {
             overwriteExisting: false,
@@ -253,24 +251,24 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
     uploadFileOrImage(file: File, destFolder: Folder, properties: EditableFileProps): Observable<FileOrImage<Raw> | void> {
         this.uploadInProgress = true;
         return this.uploadConflictService.uploadFilesWithConflictsCheck([file], destFolder.nodeId, destFolder.id).pipe(
-            switchMap((uploadResponses: UploadResponse[][]) => {
+            switchMap((uploadResponses: UploadResponse[]) => {
                 const uploadResponse = [].concat(...uploadResponses)[0]; // Since only one file was uploaded, there can only be one response.
                 const uploadedItem = uploadResponse.response.file;
-                if (uploadedItem) {
-                    const uploadedItemId = uploadedItem.id;
-                    let updatePropertiesRequest: Promise<FileOrImage<Raw> | void>;
-                    if (this.itemType === 'file') {
-                        updatePropertiesRequest = this.folderActions
-                            .updateFileProperties(uploadedItemId, properties, { showNotification: true, fetchForUpdate: false });
-                    } else {
-                        updatePropertiesRequest = this.folderActions
-                            .updateImageProperties(uploadedItemId, properties, { showNotification: true, fetchForUpdate: false });
-                    }
-                    return Observable.fromPromise(updatePropertiesRequest);
-                } else {
+                if (!uploadedItem) {
                     // emit undefined instead of throwing an error to be consistent with the folder actions used above
                     return of(undefined);
                 }
+
+                const uploadedItemId = uploadedItem.id;
+                let updatePropertiesRequest: Promise<FileOrImage<Raw> | void>;
+                if (this.itemType === 'file') {
+                    updatePropertiesRequest = this.folderActions
+                        .updateFileProperties(uploadedItemId, properties, { showNotification: true, fetchForUpdate: false });
+                } else {
+                    updatePropertiesRequest = this.folderActions
+                        .updateImageProperties(uploadedItemId, properties, { showNotification: true, fetchForUpdate: false });
+                }
+                return from(updatePropertiesRequest);
             }),
         );
     }

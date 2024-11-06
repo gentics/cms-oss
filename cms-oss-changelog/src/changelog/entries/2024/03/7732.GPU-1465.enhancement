@@ -1,0 +1,3 @@
+The default object properties @object.navsortorder@ and @obect.startpage@ where changed to not be inheritable.
+This only affects new CMS instances, where the default elements will be imported. Existing CMS instances, which are
+updated are not affected.

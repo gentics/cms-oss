@@ -1,14 +1,15 @@
+/* eslint-disable no-underscore-dangle */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
+    EditableTag,
     Folder,
     Page,
     PageTagTagPartProperty,
     Raw,
-    RepositoryBrowserOptions,
     Tag,
-    TagEditorError,
     TagInContainer,
     TagPart,
     TagPartProperty,
@@ -16,13 +17,12 @@ import {
     TagPropertyType,
     TagType,
     Template,
-    TemplateTagTagPartProperty
+    TemplateTagTagPartProperty,
 } from '@gentics/cms-models';
-import { BehaviorSubject, merge, Observable, of, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, merge, of } from 'rxjs';
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Api } from '../../../../core/providers/api/api.service';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
-import { EditableTag, TagEditorContext, TagPropertiesChangedFn, TagPropertyEditor } from '../../../common';
 
 /**
  * Helper class for fetching a Page or a Template depending on the TagPropertyType
@@ -83,7 +83,7 @@ class ContainerWrapper {
         }
 
         const tags = this.tags;
-        for (let key of Object.keys(tags)) {
+        for (const key of Object.keys(tags)) {
             const tag = tags[key];
             if (tag.id === id) {
                 return tag;
@@ -94,24 +94,24 @@ class ContainerWrapper {
 
     private getOrFetchPage(pageId: number): Observable<Page<Raw>> {
         if (!pageId) {
-            return Observable.of(null);
+            return of(null);
         }
         if (this.container && this.container.type === 'page' && this.container.id === pageId) {
-            return Observable.of(this.container);
+            return of(this.container);
         } else {
             return this.api.folders
-            .getItem(pageId, 'page', {folder: false, template: false}).pipe(
-                map(response => response.page),
-            );
+                .getItem(pageId, 'page', {folder: false, template: false}).pipe(
+                    map(response => response.page),
+                );
         }
     }
 
     private getOrFetchTemplate(templateId: number): Observable<Template<Raw>> {
         if (!templateId) {
-            return Observable.of(null);
+            return of(null);
         }
         if (this.container && this.container.type === 'template' && this.container.id === templateId) {
-            return Observable.of(this.container);
+            return of(this.container);
         } else {
             return this.api.folders.getItem(templateId, 'template').pipe(
                 map(response => response.template),
@@ -281,7 +281,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                                 tap((folder: Folder<Raw>) => {
                                     this.uploadDestination = folder;
                                     this.changeDetector.markForCheck();
-                                })
+                                }),
                             )
                     }
 
@@ -292,10 +292,10 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                             tap((folder: Folder<Raw>) => {
                                 this.uploadDestination = folder;
                                 this.changeDetector.markForCheck();
-                            })
+                            }),
                         );
                 }),
-                takeUntil(this.stopper.stopper$)
+                takeUntil(this.stopper.stopper$),
             )
             .subscribe();
     }
@@ -374,7 +374,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
         if (newValue.type !== TagPropertyType.PAGETAG && newValue.type !== TagPropertyType.TEMPLATETAG) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by TagRefTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as PageTagTagPartProperty | TemplateTagTagPartProperty;
+        this.tagProperty = newValue ;
 
         const sub = this.selectedContainerWrapper.fetchAndUpdateContainer(this.tagProperty)
             .subscribe(
@@ -402,7 +402,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                 map((response) => response.construct),
             );
         } else {
-            tagType$ = Observable.of(null);
+            tagType$ = of(null);
         }
 
         return tagType$.pipe(

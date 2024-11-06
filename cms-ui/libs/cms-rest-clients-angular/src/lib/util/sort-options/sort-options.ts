@@ -1,9 +1,9 @@
-import { PagingSortOption, EmbedListOptions } from "@gentics/cms-models";
+import { PagingSortOption, EmbedListOptions } from '@gentics/cms-models';
 
 /**
-     * Stringifies the `sort` property of a `BaseListOptionsWithPaging` for use
-     * as a query parameter with the GCMS REST API.
-     */
+ * Stringifies the `sort` property of a `BaseListOptionsWithPaging` for use
+ * as a query parameter with the GCMS REST API.
+ */
 export function stringifyPagingSortOptions<T>(sort: PagingSortOption<T> | PagingSortOption<T>[] | string): string {
     if (typeof sort === 'string') {
         return sort;

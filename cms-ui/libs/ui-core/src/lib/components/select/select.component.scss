@@ -23,10 +23,6 @@ label {
         gtx-dropdown-trigger {
             width: 100%;
         }
-
-        .with-label {
-            margin-top: 19px;
-        }
     }
 
     .placeholder {
@@ -46,11 +42,18 @@ label {
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        > icon {
+            margin-top: -1px;
+        }
     }
 
     @include input-label-styles;
 
-    &.ng-touched.ng-invalid .view-value {
+    &.ng-touched.ng-invalid .view-value,
+    &.ng-invalid .view-value.has-disabled-unknowns,
+    &.ng-touched.ng-invalid .addon-button,
+    &.ng-invalid .addon-button.has-disabled-unknowns {
         border-color: $gtx-color-alert;
     }
 
@@ -66,12 +69,17 @@ label {
         flex-direction: column;
         height: 2.5rem;
         justify-content: center;
-        margin-top: 20px;
+        margin-top: 1px;
         transition: 300ms;
 
         icon {
             color: inherit;
         }
+    }
+
+    .with-label .view-value,
+    .with-label ~ .addon-button  {
+        margin-top: 20px;
     }
 }
 
@@ -162,4 +170,3 @@ label {
         }
     }
 }
-

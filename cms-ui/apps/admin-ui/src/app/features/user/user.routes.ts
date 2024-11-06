@@ -1,6 +1,7 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { ROUTE_DETAIL_OUTLET, UserDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/models/routing';
+import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { UserDetailComponent, UserMasterComponent } from './components';
 import { CanActivateUserGuard } from './providers';
@@ -11,8 +12,8 @@ export const USER_ROUTES: GcmsAdminUiRoute[] = [
         component: UserMasterComponent,
     },
     {
-        path: 'user',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.USER,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },
@@ -31,14 +32,14 @@ export const USER_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateUserGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },
             },
             {
                 path: ':id',
-                redirectTo: ':id/properties',
+                redirectTo: `:id/${UserDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

@@ -6,6 +6,7 @@ import { ToastComponent } from '../../components/toast/toast.component';
 import { IconDirective } from '../../directives/icon/icon.directive';
 import { componentTest } from '../../testing';
 import { OverlayHostService } from '../overlay-host/overlay-host.service';
+import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import { NotificationService } from './notification.service';
 
 let notificationService: NotificationService;
@@ -23,6 +24,7 @@ describe('Notification Service', () => {
             providers: [
                 NotificationService,
                 OverlayHostService,
+                SizeTrackerService,
             ],
             teardown: { destroyAfterEach: false },
         });

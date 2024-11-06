@@ -88,7 +88,7 @@ public class FormatParserTag implements ParserTag {
 			// rendering in edit mode is not allowed, so eventually disable it
 			RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 			int oldEditMode = renderType.getEditMode();
-			boolean editMode = oldEditMode == RenderType.EM_EDIT;
+			boolean editMode = false;
 
 			// when editmode, switch to preview mode
 			if (editMode) {
@@ -113,7 +113,7 @@ public class FormatParserTag implements ParserTag {
 			// rendering in edit mode is not allowed, so eventually disable it
 			RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 			int oldEditMode = renderType.getEditMode();
-			boolean editMode = oldEditMode == RenderType.EM_EDIT;
+			boolean editMode = false;
 
 			// when editmode, switch to preview mode
 			if (editMode) {

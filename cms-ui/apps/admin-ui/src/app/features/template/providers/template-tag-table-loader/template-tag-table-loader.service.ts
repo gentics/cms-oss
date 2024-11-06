@@ -27,8 +27,8 @@ export class TemplateTagTableLoaderService extends BaseTableLoaderService<Templa
         return Promise.resolve(true);
     }
 
-    public deleteEntity(templateId: string | number, tagId?: string): Promise<void> {
-        return this.operations.delete(templateId, tagId).toPromise();
+    public deleteEntity(tagId: string, additionalOptions?: TemplateTagTableLoaderOptions): Promise<void> {
+        return this.operations.delete(additionalOptions.templateId, tagId).toPromise();
     }
 
     protected loadEntities(

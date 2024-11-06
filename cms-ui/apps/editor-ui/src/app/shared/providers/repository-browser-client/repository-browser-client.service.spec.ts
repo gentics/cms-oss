@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
+import { StateModule } from '@editor-ui/app/state/state.module';
+import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { ItemInNode } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { RepositoryBrowser } from '../../components';
@@ -8,7 +12,6 @@ import { RepositoryBrowserClient } from './repository-browser-client.service';
 let service: RepositoryBrowserClient;
 
 describe('RepositoryBrowserClientService', () => {
-    let modalService: MockModalService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -16,11 +19,14 @@ describe('RepositoryBrowserClientService', () => {
                 RepositoryBrowserClient,
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: ModalService, useClass: MockModalService },
+                { provide: ApplicationStateService, useClass: TestApplicationState },
+            ],
+            imports: [
+                StateModule,
             ],
         });
 
-        modalService = TestBed.get(ModalService);
-        service = TestBed.get(RepositoryBrowserClient);
+        service = TestBed.inject(RepositoryBrowserClient);
     });
 
     it('can be created ', () => {
@@ -29,79 +35,61 @@ describe('RepositoryBrowserClientService', () => {
 
     describe('openRepositoryBrowser()', () => {
 
+        let modalService: MockModalService;
         const selected: ItemInNode | ItemInNode[] = [];
 
         beforeEach(() => {
+            modalService = TestBed.inject(ModalService) as any;
             modalService.fromComponent = jasmine.createSpy('fromComponent')
                 .and.returnValue(Promise.resolve({
                     open: (): any => Promise.resolve(selected),
                 }));
         });
 
-        it('works fine for single folder', () => {
+        it('works fine for single folder', (async () => {
             const options: RepositoryBrowserOptions = { allowedSelection: 'folder', selectMultiple: false };
+            await service.openRepositoryBrowser(options);
+            expect(modalService.fromComponent).toHaveBeenCalledWith(
+                RepositoryBrowser,
+                jasmine.objectContaining({ padding: true, width: '1000px' }),
+                { options },
+            );
+        }));
 
-            serviceSetupForSingleFolder();
-
-            expect(modalService.fromComponent).toHaveBeenCalledWith(RepositoryBrowser, { padding: true, width: '1000px' }, { options });
-        });
-
-        it('works fine for multiple folders', () => {
+        it('works fine for multiple folders', (async () => {
             const options: RepositoryBrowserOptions = { allowedSelection: 'folder', selectMultiple: true };
+            await service.openRepositoryBrowser(options);
+            expect(modalService.fromComponent).toHaveBeenCalledWith(
+                RepositoryBrowser,
+                jasmine.objectContaining({ padding: true, width: '1000px' }),
+                { options },
+            );
+        }));
 
-            serviceSetupForMultipleFolders();
-
-            expect(modalService.fromComponent).toHaveBeenCalledWith(RepositoryBrowser, { padding: true, width: '1000px' }, { options });
-        });
-
-        it('works fine for single page', () => {
+        it('works fine for single page', (async () => {
             const options: RepositoryBrowserOptions = { allowedSelection: 'page', selectMultiple: false };
+            await service.openRepositoryBrowser(options);
+            expect(modalService.fromComponent).toHaveBeenCalledWith(
+                RepositoryBrowser,
+                jasmine.objectContaining({ padding: true, width: '1000px' }),
+                { options },
+            );
+        }));
 
-            serviceSetupForSinglePage();
-
-            expect(modalService.fromComponent).toHaveBeenCalledWith(RepositoryBrowser, { padding: true, width: '1000px' }, { options });
-        });
-
-        it('works fine for multiple pages', () => {
+        it('works fine for multiple pages', (async () => {
             const options: RepositoryBrowserOptions = { allowedSelection: 'page', selectMultiple: true};
-
-            serviceSetupForMultiplePages();
-
-            expect(modalService.fromComponent).toHaveBeenCalledWith(RepositoryBrowser, { padding: true, width: '1000px' }, { options });
-        });
+            await service.openRepositoryBrowser(options);
+            expect(modalService.fromComponent).toHaveBeenCalledWith(
+                RepositoryBrowser,
+                jasmine.objectContaining({ padding: true, width: '1000px' }),
+                { options },
+            );
+        }));
     });
 });
 
 class MockErrorHandler {}
 
 class MockModalService {
-    fromComponent = jasmine.createSpy('fromComponent');
-}
-
-function serviceSetupForSingleFolder(): void {
-    service.openRepositoryBrowser({
-        allowedSelection: 'folder',
-        selectMultiple: false,
-    });
-}
-
-function serviceSetupForMultipleFolders(): void {
-    service.openRepositoryBrowser({
-        allowedSelection: 'folder',
-        selectMultiple: true,
-    });
-}
-
-function serviceSetupForSinglePage(): void {
-    service.openRepositoryBrowser({
-        allowedSelection: 'page',
-        selectMultiple: false,
-    });
-}
-
-function serviceSetupForMultiplePages(): void {
-    service.openRepositoryBrowser({
-        allowedSelection: 'page',
-        selectMultiple: true,
-    });
+    fromComponent = (...args: any[]) => Promise.resolve({});
 }

@@ -1,0 +1,2 @@
+The REST Endpoint to delete single Folders, Pages, Files, and Images, now have an additional query parameter @disableInstantDelete@, which will skip the Instant-Publishing feature.
+Additionally, the Editor User Interface will use this flag now, when deleting multiple elements.

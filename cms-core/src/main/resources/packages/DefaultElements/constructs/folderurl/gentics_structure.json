@@ -1,15 +1,14 @@
 {
   "globalId" : "B230.93539",
   "keyword" : "folderurl",
-  "icon" : "link.gif",
   "name" : {
     "de" : "[URL] Folder",
     "en" : "[URL] Folder"
   },
   "mayBeSubtag" : false,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "B230.93547",
     "name" : {

@@ -1,0 +1,7 @@
+<div class="gtx-loading-overlay" [class.visible]="visible" [style.--gtx-msg-delay]="longerDelay + 'ms'">
+    <div class="gtx-loading-overlay-loader">Loading...</div>
+    <h5 class="gtx-loading-overlay-message" [class.active]="message">
+        <small *ngIf="displayLonger && longerMessage">{{ longerMessage }}</small>
+        {{ message }}
+    </h5>
+</div>

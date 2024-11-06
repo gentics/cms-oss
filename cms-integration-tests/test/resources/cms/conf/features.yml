@@ -1,0 +1,17 @@
+feature:
+  activiti_integration: false
+  aloha_annotate_editables: true
+  contentfile_auto_offline: true
+  contentgroup3_pagefilename: true
+  copy_tags: true
+  customform_resolve_nodetags: true
+  devtools: true
+  focal_point_editing: true
+  force_javaparser_post: true
+  live_urls: true
+  mesh_contentrepository: true
+  nice_urls: true
+  pub_dir_segment: true
+  publish_cache: false
+  recent_items: true
+  resumable_publish_process: true

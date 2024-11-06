@@ -3,13 +3,14 @@ import { Component, EventEmitter, Injectable, NO_ERRORS_SCHEMA, Pipe, PipeTransf
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule } from '@gentics/cms-components';
+import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
+import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 import { componentTest } from '../testing';
 import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
@@ -21,9 +22,10 @@ import {
     ErrorHandler,
     FeatureOperations,
     GtxActivityManagerActivity,
-    LanguageOperations,
+    LanguageHandlerService,
     MarkupLanguageOperations,
     MessageService,
+    NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
@@ -42,7 +44,6 @@ import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cle
 import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './core/providers/operations/admin/admin.operations';
 import { AuthOperations } from './core/providers/operations/auth';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-checkbox.component';
 import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
@@ -82,7 +83,7 @@ class MockAdminOperations implements Partial<InterfaceOf<AdminOperations>> {
 }
 
 class MockLoggingHelperService extends InitializableService { }
-class MockLanguageOperations implements Partial<InterfaceOf<LanguageOperations>> {
+class MockLanguageHandlerService implements Partial<InterfaceOf<LanguageHandlerService>> {
     getBackendLanguages = jasmine.createSpy('getBackendLanguages').and.stub();
 }
 
@@ -107,6 +108,12 @@ class MockUserSettingsService implements Partial<InterfaceOf<UserSettingsService
 class MockUsersnapService extends InitializableService {}
 
 class MockDebugToolService extends InitializableService {}
+
+class MockNodeOperations implements Partial<InterfaceOf<NodeOperations>> {
+    getAll(options?: NodeListRequestOptions): Observable<Node<ModelType.Raw>[]> {
+        return of([]);
+    }
+}
 
 class MockActivityManagerService {
     get activities$(): Observable<GtxActivityManagerActivity[]> {
@@ -148,7 +155,7 @@ class MockI18nPipe implements PipeTransform {
 }
 
 @Component({
-    template: `<gtx-app-root></gtx-app-root>`,
+    template: '<gtx-app-root></gtx-app-root>',
 })
 class TestComponent { }
 
@@ -197,23 +204,23 @@ describe('AppComponent', () => {
                 { provide: EntityManagerService, useClass: MockEntityManager },
                 { provide: FeatureOperations, useClass: MockFeatureOperations },
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
-                { provide: LanguageOperations, useClass: MockLanguageOperations },
+                { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
                 { provide: LoggingHelperService, useClass: MockLoggingHelperService },
                 { provide: LogoutCleanupService, useClass: MockLogoutCleanupService },
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },
                 MessageService,
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
+                { provide: KeycloakService },
                 { provide: UsersnapService, useClass: MockUsersnapService },
                 { provide: AdminOperations, useClass: MockAdminOperations },
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
-                { provide: KeycloakService },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
                 { provide: MarkupLanguageOperations, useClass: MockMarkupLanguageOperations },
+                { provide: NodeOperations, useClass: MockNodeOperations },
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        })
-        .compileComponents();
+        }).compileComponents();
 
         appState = TestBed.get(AppStateService);
 

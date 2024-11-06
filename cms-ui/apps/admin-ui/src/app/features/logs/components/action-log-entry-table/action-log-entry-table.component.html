@@ -1,12 +1,3 @@
-<gtx-search-bar
-    *ngIf="showSearch"
-    class="search-bar"
-    [query]="query"
-    [placeholder]="'shared.search' | i18n"
-    (search)="updateSearchQuery($event)"
-    (clear)="updateSearchQuery('')"
-></gtx-search-bar>
-
 <div *ngIf="!hideActions" class="entity-table-actions-bar">
     <gtx-button
         class="table-action-button reload-button"
@@ -17,6 +8,17 @@
         (click)="reload()"
     >
         <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="clear()"
+    >
+        <icon right>filter_alt</icon> {{ 'common.reset_filter' | i18n }}
     </gtx-button>
 </div>
 
@@ -51,6 +53,14 @@
         timestamp: dateRenderer
     }"
 
+    [filters]="{
+        object: objectFilter,
+        objId: textFilter,
+        action: actionFilter,
+        user: textFilter,
+        timestamp: dateFilter,
+    }"
+
     (pageChange)="changePageTo($event)"
     (sortByChange)="updateSortBy($event)"
     (sortOrderChange)="updateSortOrder($event)"
@@ -64,8 +74,7 @@
 <ng-template #typeRenderer let-row="row">
     <div class="name-wrapper">
         <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
-        <a
-            *ngIf="row.item?.type?.name !== 'template'"
+        <a *ngIf="row.item?.type?.name !== 'template'"
             class="gtx-table-cell-link name"
             [routerLink]="row.item | gtxEntityDetailRouterLink"
         >{{ row.item?.type?.label || row.item?.action?.label }}</a>
@@ -75,6 +84,73 @@
 
 <ng-template #dateRenderer let-value="value">
     <span class="gtx-table-cell-text">
-        {{ value | i18nDate }}
+        {{ value | i18nDate:'dateTimeDetailed' }}
     </span>
+</ng-template>
+
+<ng-template #objectFilter>
+    <gtx-table-filter-wrapper [hasValue]="filters?.object?.length > 0" (clear)="applyFilterValue('object', null)">
+        <gtx-select
+            class="object-filter"
+            [placeholder]="'common.object_filter_placeholder' | i18n"
+            [multiple]="true"
+            [value]="filters.object"
+            (valueChange)="applyFilterValue('object', $event)"
+        >
+            <gtx-option
+                *ngFor="let item of logTypes"
+                [value]="item.name"
+            >{{ item.label }}</gtx-option>
+        </gtx-select>
+    </gtx-table-filter-wrapper>
+</ng-template>
+
+<ng-template #actionFilter>
+    <gtx-table-filter-wrapper [hasValue]="filters?.action?.length > 0" (clear)="applyFilterValue('action', null)">
+        <gtx-select
+            class="object-filter"
+            [placeholder]="'common.action_filter_placeholder' | i18n"
+            [multiple]="true"
+            [value]="filters.action"
+            (valueChange)="applyFilterValue('action', $event)"
+        >
+            <gtx-option
+                *ngFor="let item of logActions"
+                [value]="item.name"
+            >{{ item.label }}</gtx-option>
+
+        </gtx-select>
+    </gtx-table-filter-wrapper>
+</ng-template>
+
+<ng-template #textFilter let-column="column">
+    <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
+        <gtx-input
+            [type]="'text'"
+            [placeholder]="'Filter '+ column.label"
+            [value]="filters[column.id]"
+            (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
+        />
+    </gtx-table-filter-wrapper>
+</ng-template>
+
+<ng-template #dateFilter let-column="column">
+    <gtx-table-filter-wrapper [hasValue]="!!filters?.['start']" [hasClear]="false">
+        <gtx-date-time-picker
+            [displayTime]="true"
+            [clearable]="false"
+            [placeholder]="'common.date_filter_placeholder' | i18n"
+            [value]="filters['start']"
+            [max]="getMaxFilterDate()"
+            (valueChange)="applyFilterValue('start', $event)"
+        />
+        <gtx-date-time-picker
+            [displayTime]="true"
+            [clearable]="false"
+            [placeholder]="'common.date_filter_placeholder' | i18n"
+            [value]="filters['end']"
+            [min]="getMinFilterDate()"
+            (valueChange)="applyFilterValue('end', $event)"
+        />
+    </gtx-table-filter-wrapper>
 </ng-template>

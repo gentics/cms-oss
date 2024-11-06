@@ -1,0 +1,58 @@
+{
+    "name": "aloha-models",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/aloha-models/src",
+    "projectType": "library",
+    "tags": ["lib", "models", "publish"],
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/aloha-models",
+                "tsConfig": "libs/aloha-models/tsconfig.lib.json",
+                "packageJson": "libs/aloha-models/package.json",
+                "main": "libs/aloha-models/src/public-api.ts",
+                "assets": []
+            },
+            "configurations": {
+                "production": {},
+                "development": {},
+                "ci": {}
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/aloha-models/**/*.ts"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/libs/aloha-models"],
+            "options": {
+                "jestConfig": "libs/aloha-models/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true,
+                    "color": false
+                }
+            }
+        },
+        "nx-release-publish": {
+            "executor": "@nx/js:release-publish",
+            "options": {
+                "packageRoot": "{workspaceRoot}/dist/libs/aloha-models"
+            }
+        }
+    }
+}

@@ -1,4 +1,5 @@
-import { StringTagPartProperty, TagChangedFn, TagEditorContext, TagPropertyMap } from '@gentics/cms-models';
+import { TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
+import { StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { getExampleValidationFailed, getExampleValidationSuccess } from '../../../../testing/test-tag-editor-data.mock';
 

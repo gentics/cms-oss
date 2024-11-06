@@ -1,17 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { SendMessageForm } from '@editor-ui/app/common/models';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
+
+
+const DEFAULT_INSTANT_TIME_MINUTES = 2;
 
 @Component({
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
-    styleUrls: ['./send-message-modal.scss']
+    styleUrls: ['./send-message-modal.scss'],
 })
 export class SendMessageModal extends BaseModal<any> implements OnInit {
 
@@ -28,16 +31,23 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.users$ = this.api.user.getUsers().map(response => response.items);
-        this.groups$ = this.api.group.getGroupsTree().map(response => response.groups);
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.users$ = this.api.user.getUsers().pipe(
+            map(response => response.items),
+        );
+        this.groups$ = this.api.group.getGroupsTree().pipe(
+            map(response => response.groups),
+        );
+        this.form = new UntypedFormControl({});
     }
 
     okayClicked(): void {
-        this.api.messages.sendMessage(this.transformValuesForApi(this.form.value)).subscribe(() => {
+        const messageRequest = this.transformValuesForApi(this.form.value);
+
+        this.api.messages.sendMessage(messageRequest).subscribe(() => {
             this.notification.show({
                 message: 'message.message_sent',
                 type: 'success',
+                delay: 5000,
             });
         }, error => {
             this.notification.show({
@@ -45,22 +55,24 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
                 type: 'alert',
                 delay: 5000,
             });
-            console.error('Error while sending message', error);
-        }, () => {
             this.closeFn(true);
-        });
+        }, () => this.closeFn(true),
+        );
     }
 
     transformValuesForApi(formValues: SendMessageForm): SendMessageRequest {
+        const INSTANT_TIME = formValues.isInstant ? DEFAULT_INSTANT_TIME_MINUTES : 0;
+
         return formValues.recipientIds.reduce((acc: any, selectedId: string) => {
             const [key, value] = selectedId.split('_');
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             acc[key].push(value);
             return acc;
         }, {
-            message:  formValues.message,
+            message: formValues.message,
             toGroupId: [],
             toUserId: [],
+            instantTimeMinutes: INSTANT_TIME,
         });
     }
 }

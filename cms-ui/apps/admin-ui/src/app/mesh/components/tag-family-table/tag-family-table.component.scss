@@ -1,0 +1,42 @@
+@import '../../../shared/components/base-entity-table/base-entity-table.component.scss';
+@import 'variables';
+
+.tags-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.tag {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    border: 1px solid $gtx-color-secondary;
+    padding: 0px 5px;
+    border-radius: 3px;
+    height: 24px;
+    margin: 2px 4px;
+
+    &:hover {
+        background: $gtx-color-off-white
+    }
+
+    .tag-edit,
+    .tag-delete {
+        margin-left: 4px;
+
+        & + & {
+            margin-left: 0;
+        }
+
+        icon {
+            font-size: 18px;
+        }
+    }
+}
+
+.add-tag {
+    margin: 2px 4px;
+}

@@ -1,24 +1,41 @@
-<input
-    #inputElement
+<div class="wrapper">
+    <input
+        #inputElement
 
-    [attr.autocomplete]="autocomplete || null"
-    [attr.id]="id"
-    [attr.max]="max"
-    [attr.maxlength]="maxlength"
-    [attr.min]="min"
-    [attr.name]="name"
-    [attr.pattern]="pattern"
-    [attr.placeholder]="placeholder"
-    [attr.step]="step"
+        class="input-element"
+        [attr.autocomplete]="autocomplete || null"
+        [attr.id]="id"
+        [attr.max]="max"
+        [attr.maxlength]="maxlength"
+        [attr.min]="min"
+        [attr.name]="name"
+        [attr.pattern]="pattern"
+        [attr.placeholder]="placeholder"
+        [attr.step]="step"
+        [class.clearable]="clearable"
+        [class.has-addon]="clearable"
 
-    [disabled]="disabled"
-    [readonly]="readonly"
-    [required]="required"
-    [type]="type"
+        [disabled]="disabled"
+        [readonly]="readonly"
+        [required]="required"
+        [type]="type"
 
-    (blur)="onBlur($event)"
-    (change)="onBlur($event)"
-    (focus)="onFocus($event)"
-    (input)="onInput($event)"
-/>
+        (blur)="onBlur($event)"
+        (change)="onBlur($event)"
+        (focus)="onFocus($event)"
+        (input)="onInput($event)"
+    />
+
+    <gtx-button
+        *ngIf="clearable"
+        icon
+        class="addon-button clear-button"
+        type="secondary"
+        [disabled]="disabled"
+        (click)="clear()"
+    >
+        <icon class="clear-icon">clear</icon>
+    </gtx-button>
+</div>
+
 <label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>

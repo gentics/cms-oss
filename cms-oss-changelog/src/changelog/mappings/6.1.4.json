@@ -1,0 +1,18 @@
+{
+  "version": "6.1.4",
+  "date": "28.05.2024",
+  "changeLogEntryFileNames": [
+    "7823.SUP-15661.bugfix",
+    "7810.SUP-16755.bugfix",
+    "7827.SUP-16764.bugfix",
+    "7814.SUP-15387.bugfix",
+    "7813.SUP-16125.bugfix",
+    "7826.SUP-16834.documentation",
+    "7797.SUP-15465.bugfix",
+    "7819.SUP-16773.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "26.04.2024",
+    "alohaeditor-version": "2.0.0"
+  }
+}

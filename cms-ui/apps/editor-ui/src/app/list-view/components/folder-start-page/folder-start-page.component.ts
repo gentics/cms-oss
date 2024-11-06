@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, OnInit
 import { EditorTab, UIMode } from '@editor-ui/app/common/models';
 import { getNestedObject } from '@editor-ui/app/common/utils/get-nested-object';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, Page, StagedItemsMap } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -12,9 +13,9 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 type StartPage = Page | string;
 enum StartPageType {
-    Internal = 'internal',
-    External = 'external',
-    Deleted = 'deleted',
+    INTERNAL = 'internal',
+    EXTERNAL = 'external',
+    DELETED = 'deleted',
 }
 
 /**
@@ -25,8 +26,8 @@ enum StartPageType {
     selector: 'folder-start-page',
     templateUrl: './folder-start-page.component.html',
     styleUrls: ['./folder-start-page.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
@@ -43,12 +44,12 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
     startPage$ = new BehaviorSubject<StartPage>(null);
 
     get getStartPageType(): StartPageType {
-        if (this.startPage$.value === StartPageType.Deleted) {
-            return StartPageType.Deleted;
+        if (this.startPage$.value === StartPageType.DELETED) {
+            return StartPageType.DELETED;
         } else if (!!this.startPage$.value && !!(this.startPage$.value as any).name) {
-            return StartPageType.Internal;
+            return StartPageType.INTERNAL;
         } else {
-            return StartPageType.External;
+            return StartPageType.EXTERNAL;
         }
     }
 
@@ -118,7 +119,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
      * @param page The page to preview
      */
     previewPage(page: Page): void {
-        this.navigationService.detailOrModal(this.folder.nodeId, 'page', page.id, 'preview').navigate();
+        this.navigationService.detailOrModal(this.folder.nodeId, 'page', page.id, EditMode.PREVIEW).navigate();
     }
 
     /**
@@ -127,7 +128,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
      * @param page The page to edit
      */
     editPage(page: Page): void {
-        this.navigationService.detailOrModal(this.folder.nodeId, 'page', page.id, 'edit').navigate();
+        this.navigationService.detailOrModal(this.folder.nodeId, 'page', page.id, EditMode.EDIT).navigate();
     }
 
     /**
@@ -137,7 +138,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
      */
     reassignStartPage(folder: Folder): void {
         const options = { openTab: 'properties' as EditorTab, propertiesTab: 'object.startpage' };
-        this.navigationService.detailOrModal(folder.nodeId, folder.type, folder.id, 'editProperties', options).navigate();
+        this.navigationService.detailOrModal(folder.nodeId, folder.type, folder.id, EditMode.EDIT_PROPERTIES, options).navigate();
     }
 
     /**
@@ -194,7 +195,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     private getStartPageItem(pageId: number): void {
         const languageId = this.appState.now.folder.activeLanguage;
-        let page = this.entityResolver.getEntity('page', pageId);
+        const page = this.entityResolver.getEntity('page', pageId);
 
         if (page && !page.deleted?.by) {
             if (!page.languageVariants ||
@@ -221,7 +222,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
                 }
             })
             .catch(err => {
-                this.startPage$.next(StartPageType.Deleted);
+                this.startPage$.next(StartPageType.DELETED);
             });
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { fromEventPattern, Observable } from 'rxjs';
 import { filter, map, publishReplay, refCount } from 'rxjs/operators';
 import { LocalStorageChange } from './local-storage-change';

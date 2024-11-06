@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, NodeBO, TableLoadOptions } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, NodeBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Node, NodeListRequestOptions, Raw } from '@gentics/cms-models';
@@ -44,7 +44,7 @@ export class NodeTableLoaderService extends BaseTableLoaderService<Node, NodeBO>
         return this.api.node.getNodes(loadOptions).pipe(
             map(response => {
                 const entities = response.items.map(node => this.mapToBusinessObject(node));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
 
                 return {
                     entities,

@@ -3,7 +3,10 @@ package com.gentics.contentnode.tools;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.client.Entity;
@@ -15,11 +18,19 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.rest.client.ObjectMapperProvider;
 import com.gentics.contentnode.rest.client.RestClient;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.ContentMaintenanceAction;
@@ -28,12 +39,17 @@ import com.gentics.contentnode.rest.model.ContentNodeItem.ItemType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
+import com.gentics.contentnode.rest.model.devtools.TemplateInPackage;
 import com.gentics.contentnode.rest.model.request.ContentMaintenanceActionRequest;
 import com.gentics.contentnode.rest.model.request.MaintenanceModeRequest;
+import com.gentics.contentnode.rest.model.request.TemplateSaveRequest;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.MaintenanceResponse;
 import com.gentics.contentnode.rest.model.response.NodeList;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.model.response.TagStatusResponse;
+import com.gentics.contentnode.rest.model.response.devtools.PagedTemplateInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.scheduler.SchedulerStatus;
 import com.gentics.contentnode.rest.model.response.scheduler.SchedulerStatusResponse;
 import com.gentics.contentnode.tools.update.Config;
@@ -81,6 +97,8 @@ public class UpdateImplementation implements AutoCloseable {
 
 			tool.syncPackages();
 
+			tool.triggerSyncPages();
+
 			tool.repairCr();
 
 			tool.republishObjects();
@@ -117,6 +135,9 @@ public class UpdateImplementation implements AutoCloseable {
 		options.addOption(OptionBuilder.withDescription("republish files").withLongOpt(Config.REPUBLISH_FILES_LONG_PARAM).create(Config.REPUBLISH_FILES_SHORT_PARAM));
 		options.addOption(OptionBuilder.withDescription("republish folders").withLongOpt(Config.REPUBLISH_FOLDERS_LONG_PARAM).create(Config.REPUBLISH_FOLDERS_SHORT_PARAM));
 		options.addOption(OptionBuilder.hasArg().withDescription("resume scheduler").withLongOpt(Config.RESUME_SCHEDULER_LONG_PARAM).create(Config.RESUME_SCHEDULER_SHORT_PARAM));
+		options.addOption(OptionBuilder.withDescription("trigger page sync for synchronized templates").withLongOpt(Config.TRIGGER_SYNC_PAGES_LONG_PARAM).create(Config.TRIGGER_SYNC_PAGES_SHORT_PARAM));
+		options.addOption(OptionBuilder.withDescription("await page sync for synchronized templates").withLongOpt(Config.AWAIT_SYNC_PAGES_LONG_PARAM).create(Config.AWAIT_SYNC_PAGES_SHORT_PARAM));
+		options.addOption(OptionBuilder.hasArg().withDescription("await page sync timeout in ms").withLongOpt(Config.AWAIT_SYNC_PAGES_TIMEOUT_LONG_PARAM).create(Config.AWAIT_SYNC_PAGES_TIMEOUT_SHORT_PARAM));
 		options.addOption(OptionBuilder.hasArg().withDescription("configuration file").withLongOpt(Config.FILE_LONG_PARAM).create(Config.FILE_SHORT_PARAM));
 		options.addOption(OptionBuilder.withDescription("print usage help").withLongOpt(Config.HELP_LONG_PARAM).create());
 		return options;
@@ -157,7 +178,13 @@ public class UpdateImplementation implements AutoCloseable {
 		System.out.println(String.format("Updating implementation on CMS with base URL %s as user %s", config.getBase(),
 				config.getUser()));
 
-		client = new RestClient(config.getBase() + "/rest");
+		client = new RestClient(() -> {
+			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
+					.property(ClientProperties.CONNECT_TIMEOUT, config.getTimeout())
+					.property(ClientProperties.READ_TIMEOUT, config.getTimeout());
+			return JerseyClientBuilder.createClient(clientConfig).register(ObjectMapperProvider.class).register(JacksonFeature.class)
+					.register(MultiPartFeature.class);
+		}, config.getBase() + "/rest");
 
 		client.login(config.getUser(), config.getPassword());
 
@@ -260,6 +287,106 @@ public class UpdateImplementation implements AutoCloseable {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Trigger page sync (and optionally wait, until done)
+	 * @throws Exception
+	 */
+	protected void triggerSyncPages() throws Exception {
+		if (config.isTriggerSyncPages()) {
+			TemplateSaveRequest syncPages = new TemplateSaveRequest();
+			syncPages.setUnlock(true);
+			syncPages.setSyncPages(true);
+
+			// first collect all templates, which are contained in the packages
+			Set<TemplateInPackage> templates = new LinkedHashSet<>();
+
+			for (String pack : config.getPackages()) {
+				PagedTemplateInPackageListResponse response = client.base().path("devtools").path("packages").path(pack)
+						.path("templates").request().get(PagedTemplateInPackageListResponse.class);
+				client.assertResponse(response);
+				for (TemplateInPackage templateInPackage : response.getItems()) {
+					if (templateInPackage.getId() != null) {
+						templates.add(templateInPackage);
+					}
+				}
+			}
+
+			// now iterate over all templates and check the tag status
+			if (!CollectionUtils.isEmpty(templates)) {
+				System.out.println(String.format("Need to check %d template(s) for page sync", templates.size()));
+
+				int num = 0;
+				for (TemplateInPackage template : templates) {
+					num++;
+					System.out.println(String.format("%d/%d: Checking template %s (%d)", num, templates.size(),
+							template.getName(), template.getId()));
+					if (requiresSyncPages(template)) {
+						try (Logger log = new Logger(String.format("%d/%d: Trigger page sync for template %s (%d)", num,
+								templates.size(), template.getName(), template.getId()))) {
+							GenericResponse syncResponse = client.base().path("template").path(template.getGlobalId())
+									.request().post(Entity.json(syncPages), GenericResponse.class);
+							client.assertResponse(syncResponse);
+							Optional.ofNullable(syncResponse.getResponseInfo()).map(ResponseInfo::getResponseMessage)
+									.ifPresent(msg -> System.out.print(msg));
+						}
+
+						if (config.isAwaitSyncPages()) {
+							try (Logger log = new Logger(String.format("%d/%d: Await page sync for template %s (%d)",
+									num, templates.size(), template.getName(), template.getId()))) {
+								long startWait = System.currentTimeMillis();
+								while (requiresSyncPages(template)
+										&& ((System.currentTimeMillis() - startWait) < config.getAwaitSyncPagesTimeout())) {
+									log.dot();
+									Thread.sleep(1000);
+								}
+								
+								int tagsToSync = getTagsToSync(template);
+								if (tagsToSync > 0) {
+									throw new Exception(String.format(
+											"Failed to synchronize all pages with template %s (%d) in %d milliseconds",
+											template.getName(), template.getId(), config.getAwaitSyncPagesTimeout()));
+								}
+							}
+						}
+					} else {
+						System.out.println(String.format("%d/%d: Template %s (%d) does not require page sync", num,
+								templates.size(), template.getName(), template.getId()));
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Get the tag status of the given template and count the total number of tags to be synchronized (excluding the incompatible tags)
+	 * @param template template
+	 * @return number of tags to be synchronized
+	 * @throws RestException
+	 */
+	protected int getTagsToSync(TemplateInPackage template) throws RestException {
+		TagStatusResponse tagStatusResponse = client.base().path("template").path(template.getGlobalId()).path("tagstatus").request()
+				.get(TagStatusResponse.class);
+		client.assertResponse(tagStatusResponse);
+
+		AtomicInteger count = new AtomicInteger();
+		tagStatusResponse.getItems().forEach(tagStatus -> {
+			count.addAndGet(tagStatus.getMissing());
+			count.addAndGet(tagStatus.getOutOfSync() - tagStatus.getIncompatible());
+		});
+
+		return count.get();
+	}
+
+	/**
+	 * Check whether the pages of the template need to be synchronized
+	 * @param template template
+	 * @return true iff pages need to be synchronized
+	 * @throws RestException
+	 */
+	protected boolean requiresSyncPages(TemplateInPackage template) throws RestException {
+		return getTagsToSync(template) > 0;
 	}
 
 	/**

@@ -1,0 +1,12 @@
+{
+  "name": "@gentics/aloha-models",
+  "version": "6.1.16",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@types/jquery": "^3.5.19"
+  },
+  "peerDependencies": {},
+  "publishConfig": {
+    "registry": "https://repo.gentics.com/repository/npm-products/"
+  }
+}

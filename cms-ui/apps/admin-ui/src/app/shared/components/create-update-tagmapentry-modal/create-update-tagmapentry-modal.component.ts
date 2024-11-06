@@ -1,8 +1,14 @@
 import { ContentRepositoryFragmentTagmapEntryOperations, ContentRepositoryTagmapEntryOperations } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
-import { Normalized, TagmapEntryBO, TagmapEntryCreateRequest, TagmapEntryParentType, TagmapEntryUpdateRequest } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import {
+    Normalized,
+    TagmapEntry,
+    TagmapEntryBO,
+    TagmapEntryCreateRequest,
+    TagmapEntryParentType,
+    TagmapEntryUpdateRequest,
+} from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
 export enum CreateTagmapEntryModalComponentMode {
@@ -23,28 +29,35 @@ export enum TagmapEntryDisplayFields {
 })
 export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntryBO<Normalized>> implements OnInit {
 
-    @Input()
-    value: TagmapEntryBO<Normalized>;
+    public readonly CreateTagmapEntryModalComponentMode = CreateTagmapEntryModalComponentMode;
 
     @Input()
-    mode: CreateTagmapEntryModalComponentMode;
+    public value: TagmapEntryBO<Normalized>;
+
+    @Input({ required: true })
+    public mode: CreateTagmapEntryModalComponentMode;
+
+    @Input({ required: true })
+    public displayFields: TagmapEntryDisplayFields;
+
+    @Input({ required: true })
+    public parentType: TagmapEntryParentType;
+
+    @Input({ required: true })
+    public parentId: string;
 
     @Input()
-    displayFields: TagmapEntryDisplayFields;
+    public tagmapId?: string | number;
 
     @Input()
-    parentType: TagmapEntryParentType;
-
-    @Input()
-    parentId: string;
-
-    @Input()
-    tagmapId?: string | number;
+    public reserved = false;
 
     /** form instance */
-    form: UntypedFormControl;
+    public form: FormControl<TagmapEntryCreateRequest | TagmapEntryUpdateRequest>;
+    public loading = false;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private crOperations: ContentRepositoryTagmapEntryOperations,
         private fragmentOperations: ContentRepositoryFragmentTagmapEntryOperations,
     ) {
@@ -68,20 +81,26 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             segmentfield: this.value?.segmentfield ?? null,
             displayfield: this.value?.displayfield ?? null,
             urlfield: this.value?.urlfield ?? null,
+            noIndex: this.value?.noIndex ?? null,
             elasticsearch: this.value?.elasticsearch ?? null,
             micronodeFilter: this.value?.micronodeFilter ?? '',
             fragmentName: this.value?.fragmentName ?? '',
         };
         // instantiate form
-        this.form = new UntypedFormControl(payload, createNestedControlValidator());
+        this.form = new FormControl<TagmapEntryCreateRequest | TagmapEntryUpdateRequest>(payload);
     }
 
     /**
-     * If user clicks to create a new tagmapEntry
+     * If user clicks to create/update a tagmapEntry
      */
-    buttonCreateEntityClicked(): void {
-        this.createEntity()
-            .then(tagmapEntryCreated => this.closeFn(tagmapEntryCreated));
+    async confirmButtonClicked(): Promise<void> {
+        if (this.mode === CreateTagmapEntryModalComponentMode.CREATE) {
+            const created = await this.createEntity();
+            this.closeFn(created);
+        } else {
+            const updated = await this.updateEntity();
+            this.closeFn(updated);
+        }
     }
 
     /**
@@ -92,8 +111,8 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             .then(tagmapEntryUpdated => this.closeFn(tagmapEntryUpdated));
     }
 
-    private getFormValue(): TagmapEntryBO {
-        const formData: TagmapEntryBO = this.form.value;
+    private getFormValue(): TagmapEntry {
+        const formData: TagmapEntryCreateRequest | TagmapEntryUpdateRequest = this.form.value;
 
         if (formData?.elasticsearch) {
             if (typeof formData.elasticsearch === 'string') {
@@ -105,12 +124,12 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             }
         }
 
-        return formData;
+        return formData as any;
     }
 
-    private createEntity(): Promise<TagmapEntryBO<Normalized>> {
+    private async createEntity(): Promise<TagmapEntryBO<Normalized>> {
         if (!this.parentId) {
-            throw new Error('Missing input: contentRepositoryId');
+            throw new Error('Missing input: parentId');
         }
 
         if (this.parentType === 'contentRepositoryFragment') {
@@ -122,12 +141,21 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
         payload.object = payload.objType;
         delete payload.objType;
 
-        return this.crOperations.create(this.parentId, payload as any).toPromise();
+        this.form.disable();
+        this.loading = true;
+
+        try {
+            return await this.crOperations.create(this.parentId, payload as any).toPromise();
+        } finally {
+            this.loading = false;
+            this.form.enable();
+            this.changeDetector.markForCheck();
+        }
     }
 
-    private updateEntity(): Promise<TagmapEntryBO<Normalized>> {
+    private async updateEntity(): Promise<TagmapEntryBO<Normalized>> {
         if (!this.parentId) {
-            throw new Error('Missing input: contentRepositoryId');
+            throw new Error('Missing input: parentId');
         }
         if (!this.tagmapId) {
             throw new Error('Missing input: tagmapId');
@@ -142,7 +170,16 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
         payload.object = payload.objType;
         delete payload.objType;
 
-        return this.crOperations.update(this.parentId, this.tagmapId, payload).toPromise();
+        this.form.disable();
+        this.loading = true;
+
+        try {
+            return await this.crOperations.update(this.parentId, this.tagmapId, payload).toPromise();
+        } finally {
+            this.loading = false;
+            this.form.enable();
+            this.changeDetector.markForCheck();
+        }
     }
 
 }

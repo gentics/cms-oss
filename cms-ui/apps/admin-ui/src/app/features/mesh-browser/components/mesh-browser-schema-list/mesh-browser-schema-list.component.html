@@ -1,0 +1,19 @@
+<div class="schema-list-wrapper">
+    <ng-container *ngFor="let schema of schemas">
+            <gtx-mesh-browser-schema-items
+                [currentProject]="currentProject"
+                [schemaName]="schema.name"
+                [currentNodeUuid]="currentNodeUuid"
+                [currentBranch]="currentBranch"
+                [languages]="languages"
+                [currentLanguage]="currentLanguage"
+                (nodeChanged)="nodeChanged($event)"
+                (elementsLoaded)="elementsLoaded($event)"
+            />
+    </ng-container>
+
+    <div *ngIf="noSchemaElements" class="no-schema-elements">
+        {{ 'mesh.browser_no_schema_elements' | i18n}}
+    </div>
+
+</div>

@@ -2,14 +2,17 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { IntervalScheduleData, IntervalUnit } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-interval-schedule-data-properties',
     templateUrl: './interval-schedule-data-properties.component.html',
     styleUrls: ['./interval-schedule-data-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(IntervalScheduleDataPropertiesComponent)],
+    providers: [
+        generateFormProvider(IntervalScheduleDataPropertiesComponent),
+        generateValidatorProvider(IntervalScheduleDataPropertiesComponent),
+    ],
 })
 export class IntervalScheduleDataPropertiesComponent extends BasePropertiesComponent<IntervalScheduleData> {
 

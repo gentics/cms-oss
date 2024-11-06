@@ -1,6 +1,7 @@
 import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { Response } from '@gentics/cms-models';
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT, HTTP_HEADER_CONTENT_TYPE } from '@gentics/cms-rest-clients-angular';
 
 export const API_BASE_URL = '/rest';
 
@@ -32,7 +33,7 @@ export function respondTo<T extends Response | string>(req: TestRequest, mockRes
         status: status,
         statusText: mockRes.statusText || `HTTP/1.1 ${status}`,
         headers: mockRes.headers || new HttpHeaders({
-            'Content-Type': typeof mockRes.body === 'object' ? 'application/json' : 'text/plain',
+            [HTTP_HEADER_CONTENT_TYPE]: typeof mockRes.body === 'object' ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT,
         }),
     });
 }
@@ -44,16 +45,18 @@ export function respondTo<T extends Response | string>(req: TestRequest, mockRes
  * @param url The URL (without `API_BASE_URL` and query parameters) that is expected to be requested.
  * @param method The HTTP method of the request.
  * @param queryParams (optional) The parameters contained in the HTTP query string (`sid` is automatically appended to all requests,
- *      the `gcms_ts` parameter is appended to GET requests).
+ * the `gcms_ts` parameter is appended to GET requests).
  * @returns The `TestRequest` returned by `HttpTestingController.expectOne()`.
  */
 export function expectOneRequest(httpTestingController: HttpTestingController, url: string, method: HttpVerb, queryParams?: HttpParams): TestRequest {
     const expectedUrl = `${API_BASE_URL}/${url}`;
     const req = httpTestingController.expectOne(
         // We need to implement the matcher manually, because by default expectOne() doesn't know about the gcms_ts query parameter.
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         req => req.url === expectedUrl && checkHttpParamsEqual(req.params, queryParams, method === 'GET'),
         `${expectedUrl}?sid=<any>${method === 'GET' ? '&gcms_ts=<any>' : ''}${queryParams ? '&' + queryParams.toString() : ''}`,
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     expect(req.request.method).toEqual(method);
     return req;
 }
@@ -68,7 +71,7 @@ function checkHttpParamsEqual(actual: HttpParams, expected: HttpParams, isGetReq
         return false;
     }
 
-    for (let key of expectedKeys) {
+    for (const key of expectedKeys) {
         const actualValues = actual.getAll(key);
         const expectedValues = expected.getAll(key);
         if (!actualValues || actualValues.length !== expectedValues.length) {
@@ -79,7 +82,7 @@ function checkHttpParamsEqual(actual: HttpParams, expected: HttpParams, isGetReq
             return false;
         }
     }
-    for (let key of defaultParams) {
+    for (const key of defaultParams) {
         if (!actual.get(key)) {
             return false;
         }

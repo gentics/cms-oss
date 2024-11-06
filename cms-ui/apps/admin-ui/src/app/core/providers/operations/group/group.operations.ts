@@ -13,7 +13,6 @@ import {
     GroupUserCreateRequest,
     GroupUserCreateResponse,
     GroupUsersListOptions,
-    Index,
     Normalized,
     PermissionInfo,
     PermissionsSet,
@@ -349,7 +348,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         const parentGroup = this.appState.now.entity.group[parentId];
         const children = parentGroup.children ? [ ...parentGroup.children ] : [];
         children.push(subGroup.id);
-        const update: Index<EntityIdType, RecursivePartial<Group<Normalized>>> = {
+        const update: Record<EntityIdType, RecursivePartial<Group<Normalized>>> = {
             [parentId]: { children },
         };
 
@@ -360,7 +359,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         this.entities.deleteEntities(this.entityIdentifier, [deletedGroupId]);
         const allGroups = this.appState.now.entity.group;
         const allGroupIds = Object.keys(allGroups) as any as number[];
-        const updatedParentGroups: Index<EntityIdType, RecursivePartial<Group<Normalized>>> = {};
+        const updatedParentGroups: Record<EntityIdType, RecursivePartial<Group<Normalized>>> = {};
 
         allGroupIds.forEach(currGroupId => {
             const currGroup = allGroups[currGroupId];

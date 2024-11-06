@@ -17,8 +17,49 @@ The Client can easily be included in any maven project by adding the following d
 
 <javascript filename="pom.xml">
 <dependency>
-	<groupId>com.gentics</groupId>
-	<artifactId>contentnode-restapi</artifactId>
+	<groupId>com.gentics.cms-oss</groupId>
+	<artifactId>cms-restapi</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+</javascript>
+
+Optional dependencies for "licensed CMS Features":https://www.gentics.com/Content.Node/cmp8/guides/ee-feature_overview.html :
+
+<javascript filename="pom.xml">
+<!--Clustering-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-cluster-api</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+<!--Content Staging-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-contentstaging-api</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+<!--Forms-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-forms-api</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+<!--Linkchecker-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-linkchecker-api</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+<!--Multichanneling / Channel Synchronisation-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-multichannelling-api</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+<!--Elasticsearch-->
+<dependency>
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-search-api</artifactId>
 	<version>[Gentics CMS Version]</version>
 </dependency>
 </javascript>
@@ -39,6 +80,23 @@ initialized by specifying the URI pointing to the base-location of the RESTful s
 
 <javascript>
 RestClient client = new RestClient("http:/[host]/rest/");
+</javascript>
+
+h4. Initialization with custom configuration
+
+If the REST API Java Client needs to be created with custom configuration (for instance connect and read timeout),
+this can be done in the following way:
+
+<javascript>
+int connectTimeoutMs = 10_000;
+int readTimeoutMs = 30_000;
+RestClient client = new RestClient(() -> {
+	ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
+		.property(ClientProperties.CONNECT_TIMEOUT, connectTimeoutMs)
+		.property(ClientProperties.READ_TIMEOUT, readTimeoutMs);
+	return JerseyClientBuilder.createClient(clientConfig).register(ObjectMapperProvider.class).register(JacksonFeature.class)
+					.register(MultiPartFeature.class);
+		}, "http:/[host]/CNPortletapp/rest/");
 </javascript>
 
 h4. Login

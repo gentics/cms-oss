@@ -43,6 +43,11 @@ public class RestCallable implements Callable<GenericResponse> {
 	private static final KeyLockManager lockManager = KeyLockManagers.newLock();
 
 	/**
+	 * Internal jobId
+	 */
+	protected long jobId;
+
+	/**
 	 * Job description
 	 */
 	protected String description;
@@ -116,6 +121,7 @@ public class RestCallable implements Callable<GenericResponse> {
 	 * @throws NodeException
 	 */
 	public RestCallable(String description, Lock lock, Callable<GenericResponse> wrapped) throws NodeException {
+		this.jobId = Operator.jobIdGenerator.getAndIncrement();
 		this.description = description;
 		this.wrapped = wrapped;
 		this.lock = lock;
@@ -151,6 +157,14 @@ public class RestCallable implements Callable<GenericResponse> {
 		this.queueResult = queueResult;
 	}
 
+	/**
+	 * Get the wrapped callable
+	 * @return wrapped callable
+	 */
+	public Callable<GenericResponse> getWrapped() {
+		return wrapped;
+	}
+
 	@Override
 	public GenericResponse call() throws Exception {
 		if (lock != null) {
@@ -183,6 +197,7 @@ public class RestCallable implements Callable<GenericResponse> {
 		ContentNodeHelper.setLanguageId(languageId);
 		try (Trx trx = new Trx(sessionId, userId)) {
 			try {
+				Operator.jobIsStarting(this);
 				GenericResponse result = wrapped.call();
 				trx.success();
 				return handleResponse(result);
@@ -229,6 +244,8 @@ public class RestCallable implements Callable<GenericResponse> {
 				}
 
 				throw e;
+			} finally {
+				Operator.jobFinished(this);
 			}
 		}
 	}

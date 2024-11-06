@@ -1,0 +1,2 @@
+The UpdateImplementation command-line tool will now set the configured timeout also as connect and read timeout for the
+RestClient, which is used for executing tasks in the CMS.

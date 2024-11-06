@@ -18,28 +18,35 @@ import {
 import {
     ExposedPartialState,
     GcmsUiBridge,
+    ModalCloseError,
+    RepositoryBrowserOptions,
+    StateChangedHandler,
+    TagEditorOptions,
+} from '@gentics/cms-integration-api-models';
+import {
     ItemInNode,
     Page,
     Raw,
-    RepositoryBrowserOptions,
-    StateChangedHandler,
     Tag,
     TagType,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
-import { Subscription, of as observableOf } from 'rxjs';
+import { Subscription, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
-import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../components/content-frame/common';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
+import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
+import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
+import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 
-const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const gcmsui_debugTool = (window as any).gcmsui_debugTool;
 
 /**
@@ -62,11 +69,14 @@ export class CustomerScriptService implements OnDestroy {
         private http: HttpClient,
         private state: ApplicationStateService,
         private apiBase: ApiBase,
+        private client: GCMSRestClientService,
         private entityResolver: EntityResolver,
         private tagEditorService: TagEditorService,
         private editorOverlayService: EditorOverlayService,
         private errorHandlerService: ErrorHandler,
         private repositoryBrowserClient: RepositoryBrowserClient,
+        private aloha: AlohaIntegrationService,
+        private overlays: DynamicOverlayService,
         private modals: ModalService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
@@ -79,7 +89,7 @@ export class CustomerScriptService implements OnDestroy {
             },
         });
 
-        const iFrameStylesStr = IFRAME_STYLES && IFRAME_STYLES.default ? IFRAME_STYLES.default : IFRAME_STYLES;
+        const iFrameStylesStr = '';
         this.gcmsUiStylesForIFrameBlob = new Blob([iFrameStylesStr], { type: 'text/css' });
         this.gcmsUiStylesForIFrameBlobUrl = window.URL.createObjectURL(this.gcmsUiStylesForIFrameBlob);
     }
@@ -96,22 +106,27 @@ export class CustomerScriptService implements OnDestroy {
      * Check to see if a customer script has been defined in the customer-config/scripts folder, and if so attempt to
      * load and parse it.
      */
-    loadCustomerScript(): void {
+    loadCustomerScript(): Promise<void> {
         const customerScriptPath = CUSTOMER_CONFIG_PATH + 'index.js';
         const sourceMapComment = `//# sourceURL=${customerScriptPath}`;
 
-        this.http.get(customerScriptPath, { responseType: 'text' }).pipe(
-            catchError(err => observableOf(null) /* script not found, don't throw error */),
-            map(script => {
-                if (script) {
-                    // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
-                    // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
-                    return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
-                } else {
-                    return null;
-                }
-            }),
-        ).subscribe(script => this.customerScript = script);
+        return new Promise<void>((resolve) => {
+            this.http.get(customerScriptPath, { responseType: 'text' }).pipe(
+                catchError(() => of(null) /* script not found, don't throw error */),
+                map(script => {
+                    if (script) {
+                        // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
+                        // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
+                        return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
+                    } else {
+                        return null;
+                    }
+                }),
+            ).subscribe(script => {
+                this.customerScript = script;
+                resolve();
+            });
+        });
     }
 
     /**
@@ -147,13 +162,12 @@ export class CustomerScriptService implements OnDestroy {
         }
     }
 
-
     /**
      * Create an instance of the GCMSUI object for use by customer scripts.
      */
-    createGCMSUIObject(scriptHost: CustomScriptHostService, window: CNWindow, document: CNIFrameDocument): GcmsUiBridge {
-        if (window.GCMSUI) {
-            return window.GCMSUI;
+    createGCMSUIObject(scriptHost: CustomScriptHostService, iFrameWindow: CNWindow, document: CNIFrameDocument): GcmsUiBridge {
+        if (iFrameWindow.GCMSUI) {
+            return iFrameWindow.GCMSUI;
         }
 
         let preLoadScriptExecuted = false;
@@ -161,13 +175,13 @@ export class CustomerScriptService implements OnDestroy {
 
         const executePreLoadScript = () => {
             if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(window, document, scriptHost);
+                this.runPreLoadScript(iFrameWindow, document);
                 preLoadScriptExecuted = true;
             }
         };
         const executePostLoadScript = () => {
             if (!postLoadScriptExecuted) {
-                this.runPostLoadScript(window, document, scriptHost);
+                this.runPostLoadScript(iFrameWindow, document, scriptHost);
                 postLoadScriptExecuted = true;
             }
         };
@@ -178,8 +192,8 @@ export class CustomerScriptService implements OnDestroy {
             this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
         const restRequestDELETE = (endpoint: string, params?: object): Promise<void | object> =>
             this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise();
-        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>) =>
-            this.tagEditorService.openTagEditor(tag, tagType, page);
+        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>, options?: TagEditorOptions) =>
+            this.tagEditorService.openTagEditor(tag, tagType, page, options);
         const openRepositoryBrowser = (options: RepositoryBrowserOptions): Promise<ItemInNode | ItemInNode[]> =>
             this.repositoryBrowserClient.openRepositoryBrowser(options);
 
@@ -192,10 +206,14 @@ export class CustomerScriptService implements OnDestroy {
                 subscription.unsubscribe();
                 subscription = null;
             }
-            window.GCMSUI = null;
-            window.removeEventListener('unload', onUnload);
+
+            this.aloha.clearReferences();
+            this.overlays.closeRemaining();
+
+            iFrameWindow.GCMSUI = null;
+            iFrameWindow.removeEventListener('unload', onUnload);
         };
-        window.addEventListener('unload', onUnload);
+        iFrameWindow.addEventListener('unload', onUnload);
 
         subscription = this.state.select(state => this.mapToPartialState(state)).pipe(
             distinctUntilChanged(deepEqual),
@@ -206,7 +224,7 @@ export class CustomerScriptService implements OnDestroy {
         });
 
         // Make sure that child IFrames also have access to the GCMSUI init method.
-        window.GCMSUI_childIFrameInit = (window.parent as CNParentWindow).GCMSUI_childIFrameInit;
+        iFrameWindow.GCMSUI_childIFrameInit = (iFrameWindow.parent as CNParentWindow).GCMSUI_childIFrameInit;
 
         const gcmsUi: GcmsUiBridge = {
             runPreLoadScript: executePreLoadScript,
@@ -223,6 +241,8 @@ export class CustomerScriptService implements OnDestroy {
             restRequestGET,
             restRequestPOST,
             restRequestDELETE,
+            restClient: this.client.getClient(),
+
             setContentModified(modified: any): void {
                 if (typeof modified !== 'boolean') {
                     console.warn('setContentModified expects a boolean value as its argument');
@@ -235,6 +255,25 @@ export class CustomerScriptService implements OnDestroy {
             },
             callDebugTool: gcmsui_debugTool,
             openTagEditor,
+            openDynamicDropdown: (configuration, slot) => {
+                return this.overlays.openDynamicDropdown(configuration, slot);
+            },
+            openDynamicModal: (configuration) => {
+                return this.overlays.openDynamicModal(configuration);
+            },
+            openDialog: (configuration) => {
+                return this.overlays.openDialog(configuration);
+            },
+            closeErrorClass: ModalCloseError,
+            registerComponent: (slot, component) => {
+                this.aloha.registerComponent(slot, component);
+            },
+            unregisterComponent: (slot) => {
+                this.aloha.unregisterComponent(slot);
+            },
+            focusEditorTab: (tabId) => {
+                this.aloha.changeActivePageEditorTab(tabId);
+            },
             openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
                 return this.modals.fromComponent(
                     UploadWithPropertiesModalComponent,
@@ -248,7 +287,7 @@ export class CustomerScriptService implements OnDestroy {
             },
         };
 
-        window.GCMSUI = gcmsUi;
+        iFrameWindow.GCMSUI = gcmsUi;
         return gcmsUi;
     }
 
@@ -271,9 +310,9 @@ export class CustomerScriptService implements OnDestroy {
     }
 
     /** Runs the pre-load script */
-    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
+    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument): void {
         try {
-            const script = new PreLoadScript(window, document, scriptHost);
+            const script = new PreLoadScript(window, document);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });
@@ -283,7 +322,7 @@ export class CustomerScriptService implements OnDestroy {
     /** Runs the post-load script and the customer script, if it exists. */
     private runPostLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
         try {
-            const script = new PostLoadScript(window, document, scriptHost);
+            const script = new PostLoadScript(window, document, scriptHost, this.aloha);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });

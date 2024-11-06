@@ -11,11 +11,10 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { createPatternValidator } from '@gentics/cms-components';
 import {
     EditablePageProps,
-    EditorPermissions,
     Feature,
     Language,
     Normalized,
@@ -24,6 +23,7 @@ import {
     SuggestPageFileNameResponse,
     Template,
 } from '@gentics/cms-models';
+import { createMultiValuePatternValidator } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, Subject, Subscription, of } from 'rxjs';
 import { catchError, debounceTime, map, mergeMap, publishLast, refCount, switchMap } from 'rxjs/operators';
@@ -150,8 +150,8 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
             fileName: new UntypedFormControl(this.properties.fileName || ''),
             description: new UntypedFormControl(this.properties.description || ''),
             templateId: new UntypedFormControl(this.properties.templateId || null, Validators.required),
-            niceUrl: new UntypedFormControl(this.properties.niceUrl || '', createPatternValidator(this.urlPattern, true)),
-            alternateUrls: new UntypedFormControl(this.properties.alternateUrls || [], createPatternValidator(this.urlPattern, true)),
+            niceUrl: new UntypedFormControl(this.properties.niceUrl || '', createMultiValuePatternValidator(this.urlPattern)),
+            alternateUrls: new UntypedFormControl(this.properties.alternateUrls || [], createMultiValuePatternValidator(this.urlPattern)),
             language: new UntypedFormControl(this.properties.language || null),
             customCdate: new UntypedFormControl(this.getCustomCdateDisplayValue(this.properties, this.page)),
             customEdate: new UntypedFormControl(this.getCustomEdateDisplayValue(this.properties, this.page)),
@@ -230,10 +230,6 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
-        if (this.form && this.languages && this.languages.length > 0) {
-            this.form.get('language').setValue(this.properties.language || this.languages[0], { emitEvent: false });
-        }
-
         if (changes.properties) {
             this.updateForm(this.properties);
         }
@@ -265,12 +261,7 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
             customCdate: this.getCustomCdateDisplayValue(properties, this.page),
             customEdate: this.getCustomEdateDisplayValue(properties, this.page),
         };
-        this.form.reset({ ...properties, suggestedOrRequestedFileName: properties.fileName }, { onlySelf: true, emitEvent: false });
-        if (this.properties.fileName) {
-            this.form.get('suggestedOrRequestedFileName').markAsDirty();
-        } else {
-            this.form.get('suggestedOrRequestedFileName').markAsPristine();
-        }
+        this.form.patchValue({ ...properties }, { onlySelf: true, emitEvent: false });
     }
 
     onCustomDateEnabledChange(enabledStateVar: 'customCdateEnabled' | 'customEdateEnabled', newValue: boolean): void {
@@ -356,10 +347,10 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
     }
 
     assembleFileNameSuggestionRequest(): SuggestPageFileNameRequest {
-        let pageName = this.form.get('pageName').value;
-        let suggestedOrRequestedFileName = this.form.get('suggestedOrRequestedFileName').value;
-        let templateId = this.form.get('templateId').value;
-        let language = this.form.get('language').value;
+        const pageName = this.form.get('pageName').value;
+        const suggestedOrRequestedFileName = this.form.get('suggestedOrRequestedFileName').value;
+        const templateId = this.form.get('templateId').value;
+        const language = this.form.get('language').value;
 
         return {
             folderId: this.folderId,

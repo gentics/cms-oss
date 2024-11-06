@@ -44,8 +44,6 @@ import com.gentics.lib.datasource.CNDatasource;
 import com.gentics.lib.datasource.DatasourceFactory;
 import com.gentics.lib.datasource.DatasourceFactoryImpl;
 import com.gentics.lib.datasource.DatasourceSTRUCT;
-import com.gentics.lib.datasource.LDAPDatasource;
-import com.gentics.lib.datasource.LDAPHandle;
 import com.gentics.lib.datasource.RoundRobinHandlePool;
 import com.gentics.lib.datasource.SQLHandle;
 import com.gentics.lib.datasource.SimpleHandlePool;
@@ -703,8 +701,6 @@ public final class PortalConnectorFactory {
 	 */
 	private static Class<? extends DatasourceHandle> getImplementationClass(HandleType type) throws NodeException {
 		switch (type) {
-		case ldap:
-			return LDAPHandle.class;
 		case sql:
 			return SQLHandle.class;
 		default:
@@ -792,9 +788,6 @@ public final class PortalConnectorFactory {
 				}
 				return consistencyCheck;
 			}
-		} else if (LDAPDatasource.class.isAssignableFrom(datasourceClass)) {
-			// LDAPDatasource requires LDAPHandles
-			return (handle instanceof LDAPHandle);
 		} else {
 			// all other datasources cannot be checked
 			return true;

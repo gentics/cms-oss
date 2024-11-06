@@ -8,7 +8,8 @@
         *ngIf="itemType !== 'image'; else imageCheckbox"
         [disabled]="!canBeSelected"
         [selected]="selected"
-        (change)="toggleSelect()" [icon]="icon"
+        [icon]="icon"
+        (change)="toggleSelect()"
     ></icon-checkbox>
 
     <ng-template #imageCheckbox>

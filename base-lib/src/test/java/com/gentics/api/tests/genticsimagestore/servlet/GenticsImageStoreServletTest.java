@@ -3,32 +3,14 @@ package com.gentics.api.tests.genticsimagestore.servlet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.security.MessageDigest;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-
-import com.gentics.contentnode.tests.category.BaseLibTest;
-import org.apache.commons.httpclient.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.gentics.api.imagestore.GenticsImageStoreRequest;
 import com.gentics.api.imagestore.RequestDecorator;
 import com.gentics.api.lib.cache.PortalCache;
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.image.GenticsImageStore;
-import com.gentics.api.tests.genticsimagestore.servlet.ImageHandler;
 import com.meterware.httpunit.GetMethodWebRequest;
 import com.meterware.httpunit.HttpException;
 import com.meterware.httpunit.WebRequest;
@@ -36,6 +18,19 @@ import com.meterware.httpunit.WebResponse;
 import com.meterware.servletunit.ServletRunner;
 import com.meterware.servletunit.ServletUnitClient;
 import com.sun.net.httpserver.HttpServer;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.httpclient.HttpStatus;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -97,7 +92,7 @@ public class GenticsImageStoreServletTest {
 		server.setExecutor(null);
 		server.start();
 
-        runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/Portal.Node");
+		runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/Portal.Node");
 	}
 
 	@After

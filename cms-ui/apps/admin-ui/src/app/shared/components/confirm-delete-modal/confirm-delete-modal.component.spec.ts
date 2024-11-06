@@ -1,6 +1,6 @@
 import { I18nService } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
-import { Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -30,6 +30,7 @@ xdescribe('ConfirmDeleteModalComponent', () => {
             providers: [
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
             ],
+            schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
         i18n = TestBed.get(I18nService);

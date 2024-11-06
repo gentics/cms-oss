@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Feature, Index, IndexById, NodeFeature } from '@gentics/cms-models';
+import { Feature, IndexById, NodeFeature } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import { patch } from '@ngxs/store/operators';
 import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils';
@@ -8,12 +8,12 @@ import { SetGlobalFeature, SetNodeFeatures } from './features.actions';
 /**
  * A map that indicates if a certain global feature is enabled.
  */
-export type GlobalFeaturesMap = Partial<Index<Feature, boolean>>;
+export type GlobalFeaturesMap = Partial<Record<Feature, boolean>>;
 
 /**
  * A map that indicates if a certain node feature is enabled.
  */
-export type NodeFeaturesMap = Partial<Index<NodeFeature, boolean>>;
+export type NodeFeaturesMap = Partial<Record<NodeFeature, boolean>>;
 
 export interface FeaturesStateModel {
 

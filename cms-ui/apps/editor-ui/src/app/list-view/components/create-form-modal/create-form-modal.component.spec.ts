@@ -11,7 +11,7 @@ import { ApplicationStateService, FeaturesActionsService, FolderActionsService }
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import { Page, Template } from '@gentics/cms-models';
+import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
@@ -160,8 +160,8 @@ xdescribe('CreateFormModalComponent', () => {
     template: `
         <create-page-modal *ngIf="showModal"></create-page-modal>
         <gtx-overlay-host></gtx-overlay-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     showModal = false;
 }
@@ -177,12 +177,23 @@ class MockApi {
 
 class MockErrorHandler {}
 
-class MockFolderActions {
+class MockFolderActions implements Partial<FolderActionsService> {
     constructor() {
         spyOn(this as any, 'createNewPage').and.callThrough();
     }
-    createNewPage(page: Page): Promise<Page> {
-        return Promise.resolve(page);
+    createNewPage(page: {
+        pageName: string;
+        fileName: string;
+        description: string;
+        language: string;
+        priority: number;
+        templateId: number;
+        folderId: number;
+        nodeId: number;
+        niceUrl: string;
+        alternateUrls?: string[];
+    }): Promise<Page<Raw> | void> {
+        return Promise.resolve(page as any);
     }
     getAllTemplatesOfNode(): Observable<Template[]> {
         return of([]);

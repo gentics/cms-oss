@@ -1,4 +1,5 @@
-import { EditableTag, StringTagPartProperty, TagPart, ValidationResult } from '@gentics/cms-models';
+import { ValidationResult } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPart } from '@gentics/cms-models';
 import { getExampleEditableTag, getExampleNaturalNumberValidationInfo } from '../../../../testing/test-tag-editor-data.mock';
 import { StringTagPropertyValidator } from './string-tag-property-validator';
 
@@ -20,7 +21,7 @@ describe('StringTagPropertyValidator', () => {
         tagPart.mandatory = false;
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: true
+            success: true,
         };
 
         tagProperty.stringValue = '';
@@ -40,7 +41,7 @@ describe('StringTagPropertyValidator', () => {
         tagPart.mandatory = true;
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: false
+            success: false,
         };
 
         tagProperty.stringValue = '';
@@ -60,7 +61,7 @@ describe('StringTagPropertyValidator', () => {
         tagProperty.stringValue = 'Value is set';
         const expectedResult: ValidationResult = {
             isSet: true,
-            success: true
+            success: true,
         };
 
         tagPart.mandatory = true;
@@ -75,7 +76,7 @@ describe('StringTagPropertyValidator', () => {
         tagProperty.stringValue = '100';
         const expectedResult: ValidationResult = {
             isSet: true,
-            success: true
+            success: true,
         };
 
         tagPart.mandatory = true;
@@ -91,7 +92,7 @@ describe('StringTagPropertyValidator', () => {
         const expectedResult: ValidationResult = {
             isSet: true,
             success: false,
-            errorMessage: tagPart.regex.description
+            errorMessage: tagPart.regex.description,
         };
 
         tagPart.mandatory = true;
@@ -106,7 +107,7 @@ describe('StringTagPropertyValidator', () => {
         tagProperty.stringValue = '';
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: true
+            success: true,
         };
 
         tagPart.mandatory = false;

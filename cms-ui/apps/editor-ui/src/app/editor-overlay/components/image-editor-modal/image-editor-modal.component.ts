@@ -4,6 +4,7 @@ import { File as FileModel, Folder, Image, Node, Page } from '@gentics/cms-model
 import { AspectRatio, AspectRatios, GenticsImageEditorComponent, ImageTransformParams } from '@gentics/image-editor';
 import { ModalService } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService } from '../../../state';
 import { EditorOverlayModal } from '../editor-overlay-modal/editor-overlay-modal.component';
@@ -19,8 +20,8 @@ const BUILTIN_ASPECT_RATIOS = new Set(Object.keys(AspectRatios).map(key => (<any
 @Component({
     selector: 'image-editor-modal',
     templateUrl: './image-editor-modal.component.html',
-    styleUrls: ['./image-editor-modal.component.scss']
-    })
+    styleUrls: ['./image-editor-modal.component.scss'],
+})
 export class ImageEditorModalComponent extends EditorOverlayModal implements OnInit, OnDestroy, AfterViewInit {
     nodeId: number;
     image: Image;
@@ -47,7 +48,7 @@ export class ImageEditorModalComponent extends EditorOverlayModal implements OnI
         return this.image;
     }
 
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
 
     @ViewChild('imageEditor', { static: true }) editor: GenticsImageEditorComponent;
 
@@ -65,11 +66,11 @@ export class ImageEditorModalComponent extends EditorOverlayModal implements OnI
         this.nodeSettings$ = this.appState.select(state => state.nodeSettings.node[this.nodeId]);
         this.imageUrl = this.resourceUrlBuilder.imageFullsize(this.image.id, this.nodeId, this.image.edate || this.image.cdate);
 
-        this.subscriptions.add(
-            this.nodeSettings$
-                .filter(settings => !!settings && !!settings.image_editor)
-                .map(settings => settings.image_editor)
-                .subscribe(settings => this.updateAspectRatios(settings)),
+        this.subscriptions.push(
+            this.nodeSettings$.pipe(
+                filter(settings => !!settings && !!settings.image_editor),
+                map(settings => settings.image_editor),
+            ).subscribe(settings => this.updateAspectRatios(settings)),
         );
     }
 
@@ -95,14 +96,14 @@ export class ImageEditorModalComponent extends EditorOverlayModal implements OnI
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     ngAfterViewInit(): void {
         this.editor.focalPointX = this.initialFocalPoints.focalPointX || 0.5;
         this.editor.focalPointY = this.initialFocalPoints.focalPointY || 0.5;
 
-        this.subscriptions.add(
+        this.subscriptions.push(
             this.editor.transformChange.subscribe((transformed: ImageTransformParams) => {
                 if (transformed) {
                     transformed.height = Math.round(transformed.height);

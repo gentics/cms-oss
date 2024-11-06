@@ -17,7 +17,20 @@
         [gtxActionAllowed]="'user.createUser'"
         (click)="handleCreateButton()"
     >
-        <icon left>add</icon> {{ (groupId ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | i18n }}
+        <icon left>add</icon> {{ (group ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="group"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'user.assignUserToGroup'"
+        (click)="handleAssignUsersButton()"
+    >
+        <icon left>link</icon> {{ 'shared.assign_users' | i18n }}
     </gtx-button>
 
     <gtx-button
@@ -79,7 +92,7 @@
             <a
                 *ngIf="linkGroups; else groupNameTemplate"
                 class="gtx-entity-grid-link group-link"
-                [routerLink]="group | gtxEntityDetailRouterLink"
+                [routerLink]="AdminUIEntityDetailRoutes.GROUP | gtxEntityDetailRouterLink:group.id"
                 (click)="cancelEvent($event)"
             >{{ group.name }}</a>{{ !last ? ',&nbsp;' : '' }}
         </ng-container>

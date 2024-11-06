@@ -2,13 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonComponent } from '@gentics/ui-core';
+import { KeycloakService } from '@gentics/cms-components';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { KeycloakService } from '../../providers/keycloak/keycloak.service';
 import { SingleSignOn } from './single-sign-on.component';
 
 class MockActivatedRoute {}
@@ -27,8 +27,8 @@ class MockLocalStorage {}
 class MockRouter {}
 
 @Component({
-    template: `<single-sign-on></single-sign-on>`,
-    })
+    template: '<single-sign-on></single-sign-on>',
+})
 class TestComponent implements OnInit {
     ngOnInitSpy = jasmine.createSpy('ngOnInit');
     attemptSsoWithKeycloakSpy = jasmine.createSpy('attemptSsoWithKeycloak');

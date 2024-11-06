@@ -29,16 +29,6 @@ public class ConstructAssert extends AbstractNodeObjectAssert<ConstructAssert, C
 	}
 
 	/**
-	 * Assert icon
-	 * @param icon icon
-	 * @return fluent API
-	 */
-	public ConstructAssert hasIcon(String icon) {
-		assertThat(actual.getIconName()).as(descriptionText() + " icon").isEqualTo(icon);
-		return this;
-	}
-
-	/**
 	 * Assert name
 	 * @param code language code
 	 * @param name name

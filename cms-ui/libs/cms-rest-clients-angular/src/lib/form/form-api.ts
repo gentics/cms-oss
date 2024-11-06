@@ -15,7 +15,7 @@ import { ApiBase } from '../base/api-base.service';
  * API methods related to the form resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_FormResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_FormResource.html
  */
 export class FormApi {
 

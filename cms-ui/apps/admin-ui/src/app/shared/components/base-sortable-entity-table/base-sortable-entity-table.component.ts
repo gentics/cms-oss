@@ -1,6 +1,6 @@
 import { BO_ID, BO_NEW_SORT_ORDER, SortableBusinessObject, TableSortEvent } from '@admin-ui/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { coerceToBoolean, TableActionClickEvent, TableRow } from '@gentics/ui-core';
+import { TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
 type MoveFn = (idx: number, total: number) => number;

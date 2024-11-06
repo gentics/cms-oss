@@ -1,12 +1,9 @@
-import { blacklistValidator } from '@admin-ui/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { createBlacklistValidator } from '@admin-ui/common';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { SelectOption } from '@gentics/cms-models';
-import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
-import { combineLatest } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { FormProperties, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-select-option-input',
@@ -15,52 +12,32 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SelectOptionInputComponent)],
 })
-export class SelectOptionInputComponent extends BaseFormElementComponent<SelectOption> implements OnInit, OnChanges {
+export class SelectOptionInputComponent extends BasePropertiesComponent<SelectOption> implements OnChanges {
 
     @Input()
     public keyBlacklist: string[] = [];
-
-    public form: UntypedFormGroup;
-
-    ngOnInit(): void {
-        this.form = new UntypedFormGroup({
-            id: new UntypedFormControl(null),
-            key: new UntypedFormControl(null, [Validators.required, blacklistValidator(this.keyBlacklist)]),
-            value: new UntypedFormControl(null, Validators.required),
-        });
-
-        this.subscriptions.push(combineLatest([
-            this.form.valueChanges,
-            this.form.statusChanges,
-        ]).pipe(
-            map(([value, status]) => status === 'VALID' ? value : null),
-            distinctUntilChanged(isEqual),
-        ).subscribe(value => {
-            this.triggerChange(value);
-        }));
-    }
 
     ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.keyBlacklist && this.form) {
-            this.form.get('key').setValidators([Validators.required, blacklistValidator(this.keyBlacklist)]);
+            this.form.controls.key.updateValueAndValidity();
         }
     }
 
-    protected onValueChange(): void {
-        if ((this.value as any) === CONTROL_INVALID_VALUE) {
-            return;
-        }
+    protected createForm(): FormGroup<any> {
+        return new FormGroup<FormProperties<SelectOption>>({
+            id: new FormControl(this.value?.id),
+            key: new FormControl(this.value?.key, [Validators.required, createBlacklistValidator(() => this.keyBlacklist)]),
+            value: new FormControl(this.value?.value, Validators.required),
+        });
+    }
 
-        try {
-            this.form.setValue({
-                id: this.value?.id,
-                key: this.value?.key,
-                value: this.value?.value,
-            });
-        } catch (err) {
-            console.warn('Error while updating select-option-input form', err);
-        }
+    protected configureForm(value: SelectOption, loud?: boolean): void {
+        // no-op
+    }
+
+    protected assembleValue(value: SelectOption): SelectOption {
+        return value;
     }
 }

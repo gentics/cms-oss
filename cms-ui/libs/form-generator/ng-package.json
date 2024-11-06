@@ -6,5 +6,11 @@
     "styleIncludePaths": [
         "../"
     ]
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@gentics/cms-components",
+    "@gentics/cms-models",
+    "lodash-es",
+    "uuid"
+  ]
 }

@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs/operators';
-
 import { of } from 'rxjs';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
-import { GCMS_COMMON_LANGUAGE, I18nService, UILanguage } from './i18n.service';
+import { GCMS_COMMON_LANGUAGE, I18nService } from './i18n.service';
 import { LocalTranslateLoader } from './local-translate-loader';
 
 describe('I18nService', () => {
@@ -21,7 +21,7 @@ describe('I18nService', () => {
             providers: [
                 I18nService,
                 LocalTranslateLoader,
-                { provide: GCMS_COMMON_LANGUAGE, useValue: of<UILanguage>('en') },
+                { provide: GCMS_COMMON_LANGUAGE, useValue: of<GcmsUiLanguage>('en') },
             ],
         });
 
@@ -67,17 +67,17 @@ describe('I18nService', () => {
 
         it('correctly pluralizes key for common types with count param', () => {
             i18n.instant('folder', { count: -1 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folders`, { count: -1 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folders', { count: -1 });
             i18n.instant('folder', { count: 0 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folders`, { count: 0 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folders', { count: 0 });
             i18n.instant('folder', { count: 1 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folder`, { count: 1 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folder', { count: 1 });
             i18n.instant('folder', { count: 2 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folders`, { count: 2 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folders', { count: 2 });
             i18n.instant('folder', { count: 100 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folders`, { count: 100 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folders', { count: 100 });
             i18n.instant('folder', { count: 1e34 });
-            expect(ngxTranslate.instant).toHaveBeenCalledWith(`common.type_folders`, { count: 1e34 });
+            expect(ngxTranslate.instant).toHaveBeenCalledWith('common.type_folders', { count: 1e34 });
         });
 
         it('does not translate params with no leading underscore', () => {

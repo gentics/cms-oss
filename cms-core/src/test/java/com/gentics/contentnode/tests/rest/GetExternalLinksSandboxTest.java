@@ -190,7 +190,6 @@ public class GetExternalLinksSandboxTest {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("icon");
 		construct.setKeyword(constructKeyword);
 		construct.setName(constructKeyword, 1);
 //		construct.getNodes().add(node);

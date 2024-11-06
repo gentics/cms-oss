@@ -1,0 +1,113 @@
+@import '../../../styles/base-import';
+
+.pagination {
+    width: 100%;
+    display: flex;
+    padding: 0 1rem;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: nowrap;
+    margin-bottom: 3px;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+
+    .previous,
+    .next {
+        flex: 0 0 auto;
+        margin-top: auto;
+        margin-bottom: auto;
+        background: 0;
+        border: none;
+        outline: none;
+        height: 24px;
+        cursor: pointer;
+        user-select: none;
+
+        &[disabled] {
+            cursor: default;
+        }
+
+        &:focus,
+        &:hover {
+            outline: none;
+        }
+    }
+
+    .pages {
+        flex: 0 0 auto;
+        margin: 0 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+
+        .page {
+            padding: 5px 10px;
+            margin: 0 5px;
+            display: inline-block;
+            background: none;
+            transition: 200ms;
+            border-radius: 3px;
+            border: none;
+            outline: none;
+            user-select: none;
+            padding: 5px 11px;
+
+            &:hover,
+            &:focus {
+                outline: none;
+                background: $gtx-color-very-light-gray;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+            }
+
+            .page-text {
+                text-align: center;
+            }
+
+            &.link {
+                cursor: pointer;
+            }
+
+            &.current {
+                background: $gtx-color-primary;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                border-radius: 3px;
+                color: #fff;
+
+                .page-text {
+                    color: #fff;
+                }
+            }
+        }
+    }
+
+    @media (max-width: 768px) {
+        flex-wrap: wrap;
+
+        .previous,
+        .next {
+            order: 10;
+            flex: 1 1 auto;
+            margin: 10px 0;
+            height: auto;
+            text-align: center;
+            padding: 5px 10px 0 10px;
+            background: $gtx-color-very-light-gray;
+            display: inline-block;
+            transition: 200ms;
+            border-radius: 3px;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .pages {
+            margin: 0;
+            order: 1;
+            flex-basis: 100%;
+            justify-content: space-between;
+
+            .page {
+                margin: 0;
+            }
+        }
+    }
+}

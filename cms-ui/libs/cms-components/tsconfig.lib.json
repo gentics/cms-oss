@@ -1,11 +1,21 @@
 {
     "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
+        "declaration": true,
+        "declarationMap": true,
+        "inlineSources": true,
+        "types": ["node", "jquery"]
+    },
+    "include": ["src/**/*.ts"],
     "exclude": [
         "src/test.ts",
-        "**/*.spec.ts",
-        "**/*.mock.ts"
-    ],
-    "include": [
-        "**/*.ts"
+        "src/**/*.spec.ts",
+        "cypress/**/*",
+        "cypress.config.ts",
+        "**/*.cy.ts",
+        "**/*.cy.js",
+        "**/*.cy.tsx",
+        "**/*.cy.jsx"
     ]
 }

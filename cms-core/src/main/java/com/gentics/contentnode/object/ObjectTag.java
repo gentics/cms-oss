@@ -170,8 +170,8 @@ public abstract class ObjectTag extends Tag {
 	public abstract NodeObject getNodeObject() throws NodeException;
 
 	/**
-	 * Get the object tag definition
-	 * @return object tag definition
+	 * Get the object tag definition. This method will return null if the tag does not have a proper object tag definition.
+	 * @return object tag definition (may be null)
 	 * @throws NodeException
 	 */
 	public abstract ObjectTagDefinition getDefinition() throws NodeException;
@@ -284,10 +284,11 @@ public abstract class ObjectTag extends Tag {
 
 	/**
 	 * When this object tag has to be synchronized with variants, get all variants with the respective object tags.
+	 * @param lookIntoWastebin true to also look into the wastebin, false to ignore objects in the wastebin
 	 * @return set of pairs of node object and object tag
 	 * @throws NodeException
 	 */
-	public abstract Set<Pair<NodeObject, ObjectTag>> getSyncVariants() throws NodeException;
+	public abstract Set<Pair<NodeObject, ObjectTag>> getSyncVariants(boolean lookIntoWastebin) throws NodeException;
 
 	/**
 	 * Check whether this object tag has the same content as the other

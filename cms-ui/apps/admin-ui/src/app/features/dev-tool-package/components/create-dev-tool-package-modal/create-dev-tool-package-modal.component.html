@@ -1,0 +1,44 @@
+<div class="gtx-modal-datagrid-in-tab">
+    <div class="modal-title">
+        <h5>{{ 'modal.create_package_title' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content row">
+        <form
+            *ngIf="form"
+            autocomplete="off"
+            [formGroup]="form"
+            class="gtx-create-user-modal-tab-content-body-form"
+            style="width: 100%"
+        >
+            <div class="input-container small-12 medium-12 columns">
+                <gtx-input
+                    type="text"
+                    maxlength="50"
+                    [required]="true"
+                    [label]="('package.package_name' | i18n) + ' *'"
+                    [placeholder]="'package.package_name' | i18n"
+                    formControlName="name"
+                ></gtx-input>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            (click)="buttonCreatePackageClicked()"
+            [disabled]="!form.valid"
+        >
+            {{ 'modal.create_package_button' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

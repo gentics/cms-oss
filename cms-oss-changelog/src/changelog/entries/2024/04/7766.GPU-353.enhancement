@@ -1,0 +1,6 @@
+Devtool Packages can now be checked for completeness/consistency. 
+
+* @GET /packages/{name}/check@
+* @GET /packages/{name}/check/result@
+
+This feature has also been added to the Administrator User Interface to a dedicated tab in the Package module.

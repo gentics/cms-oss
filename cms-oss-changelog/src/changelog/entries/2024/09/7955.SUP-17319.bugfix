@@ -1,0 +1,2 @@
+Editor User Interface: The state from a URL is now again correctly restored.
+Additionally, the UI will remember the last selected Node and navigate there on default.

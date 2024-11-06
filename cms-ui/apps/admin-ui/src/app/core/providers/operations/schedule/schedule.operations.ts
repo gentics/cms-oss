@@ -8,6 +8,7 @@ import {
     Raw,
     Schedule,
     ScheduleBO,
+    ScheduleCreateReqeust,
     ScheduleExecution,
     ScheduleExecutionListOptions,
     ScheduleListOptions,
@@ -62,7 +63,7 @@ export class ScheduleOperations extends ExtendedEntityOperationsBase<'schedule'>
         );
     }
 
-    create(body: ScheduleSaveReqeust, notification: boolean = true): Observable<ScheduleBO<Raw>> {
+    create(body: ScheduleCreateReqeust, notification: boolean = true): Observable<ScheduleBO<Raw>> {
         return this.api.scheduler.createSchedule(body).pipe(
             map(res => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,

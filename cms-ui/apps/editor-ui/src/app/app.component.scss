@@ -11,7 +11,24 @@
         flex: 1 1 auto;
         min-height: 1px;
         width: 100%;
-        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+
+    .top-bar,
+    .user-menu {
+        transition: 200ms;
+    }
+
+    &.focus-mode {
+        .top-bar,
+        .user-menu {
+            transform: translateY(-100%);
+            position: absolute;
+        }
+
+        .user-menu::ng-deep .toggle-button {
+            display: none;
+        }
     }
 }
 
@@ -19,9 +36,15 @@
     position: absolute;
     top: 10px;
     left: 20px;
-    @media screen and (max-width: $small-screen) {
+
+    @media (max-width: $medium-screen) {
+        left: 14px;
+    }
+
+    @media (max-width: $small-screen) {
         left: 10px;
     }
+
     img {
         width: 37px;
     }
@@ -34,21 +57,20 @@ gtx-top-bar {
 
 .search-container {
     flex: 1 1 100% !important;
-    // margin-right: 30px;
+    margin-right: 0px;
 
-    // @media screen and (max-width: $large-screen) and (min-width: $tiny-screen) {
-    //     margin-right: 85px;
-    // }
-    // @media screen and (max-width: $medium-screen) and (min-width: $tiny-screen) {
-    //     margin-right: 205px;
-    // }
-    @media screen and (max-width: $small-screen) and (min-width: $tiny-screen) {
-        margin-left: 32px;
-        margin-right: 54px;
+    @media (max-width: $medium-screen) and (min-width: $small-screen) {
+        margin-right: 120px;
     }
-    @media screen and (max-width: $tiny-screen) {
+
+    @media (max-width: $small-screen) and (min-width: $tiny-screen) {
         margin-left: 32px;
-        margin-right: 84px;
+        margin-right: 120px;
+    }
+
+    @media (max-width: $tiny-screen) {
+        margin-left: 48px;
+        margin-right: 90px;
     }
 }
 
@@ -79,7 +101,7 @@ advanced-search-bar {
             }
         }
 
-        &.content-staging > icon {
+        &.content-staging>icon {
             font-size: 1.1rem;
             margin-left: -2px;
         }
@@ -100,10 +122,47 @@ advanced-search-bar {
         margin-left: 10px;
     }
 
+    &:not(.show-messages) {
+        .unread-messages {
+            display: none;
+        }
+
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 90px;
+            }
+        }
+    }
+
+    &:not(.show-alerts) {
+        .alert-center {
+            display: none;
+        }
+
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 90px;
+            }
+
+            @media (max-width: $small-screen) and (min-width: $tiny-screen) {
+                margin-right: 80px;
+            }
+        }
+    }
+
+    &:not(.show-alerts):not(.show-messages) {
+        + .search-container {
+            @media (max-width: $medium-screen) and (min-width: $small-screen) {
+                margin-right: 52px;
+            }
+        }
+    }
+
     .unread-messages {
         @media screen and (max-width: $small-screen) {
             display: none;
         }
+
         animation: AnimateMessageEnvelope 300ms ease both;
         position: relative;
 
@@ -136,6 +195,7 @@ advanced-search-bar {
 }
 
 :host(.maintenance-mode) {
+
     .gentics-logo,
     ::ng-deep user-menu-toggle .toggle-icon.user {
         filter: hue-rotate(165deg) saturate(3) brightness(0.85);
@@ -165,12 +225,14 @@ advanced-search-bar {
 
 @keyframes PulsateAlertCenter {
     0% {
-      transform: scale(1);
+        transform: scale(1);
     }
+
     50% {
-      transform: scale(1.3);
+        transform: scale(1.3);
     }
+
     100% {
-      transform: scale(1);
+        transform: scale(1);
     }
 }

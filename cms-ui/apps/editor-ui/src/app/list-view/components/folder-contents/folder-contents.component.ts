@@ -9,7 +9,15 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AppState, GtxChipSearchPropertyNumber, GtxChipSearchSearchFilterMap, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import {
+    AppState,
+    EditorPermissions,
+    GtxChipSearchPropertyNumber,
+    GtxChipSearchSearchFilterMap,
+    ItemsInfo,
+    UIMode,
+    getNoPermissions,
+} from '@editor-ui/app/common/models';
 import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { UploadProgressReporter } from '@editor-ui/app/core/providers/api';
@@ -32,7 +40,6 @@ import {
     SetUIModeAction,
 } from '@editor-ui/app/state';
 import {
-    EditorPermissions,
     Folder,
     FolderItemType,
     FolderItemTypePlural,
@@ -41,10 +48,9 @@ import {
     Node,
     NodeFeature,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
@@ -65,6 +71,7 @@ import {
     skip,
     startWith,
     switchMap,
+    take,
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
@@ -85,7 +92,7 @@ export interface ShowPathStatus {
     templateUrl: './folder-contents.component.html',
     styleUrls: ['./folder-contents.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class FolderContentsComponent implements OnInit, OnDestroy {
 
     /**
@@ -316,7 +323,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
 
         this.searchFiltersNodeNames$ = this.appState.select(state => state.folder.searchFilters).pipe(
             switchMap(searchFilters => {
-                let currentNodeFilter: GtxChipSearchSearchFilterMap[keyof GtxChipSearchSearchFilterMap] = searchFilters['nodeId'];
+                const currentNodeFilter: GtxChipSearchSearchFilterMap[keyof GtxChipSearchSearchFilterMap] = searchFilters['nodeId'];
                 // if search filter is set for a specific node, get it to display in search results headline
                 if (
                     Array.isArray(currentNodeFilter) &&
@@ -353,10 +360,10 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
 
         // check if active node contains active folder
         this.folderNotFoundInNode$ = combineLatest([
-            this.folderNotFound$.startWith(false),
-            this.nodeNotFound$.startWith(false),
-            activeNodeId$.startWith(null),
-            activeFolderId$.startWith(null),
+            this.folderNotFound$.pipe(startWith(false)),
+            this.nodeNotFound$.pipe(startWith(false)),
+            activeNodeId$.pipe(startWith(null)),
+            activeFolderId$.pipe(startWith(null)),
         ]).pipe(
             mergeMap(([folderNotFound, nodeNotFound, activeNodeId, activeFolderId]) => {
                 // if both active node and active folder exist
@@ -385,7 +392,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             }),
         );
 
-        let activeFolderSub = activeFolderId$.subscribe(id => {
+        const activeFolderSub = activeFolderId$.subscribe(id => {
             this.currentFolderId = id;
             this.splitViewContainer.scrollLeftPanelTo(0);
         });
@@ -419,7 +426,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         const clearSelectionSub = this.loading$.pipe(
             skip(1),
             filter(loading => !loading),
-            switchMap(() => activeFolderId$.take(1)),
+            switchMap(() => activeFolderId$.pipe(take(1))),
             distinctUntilChanged(isEqual),
         ).subscribe(() => {
             this.setEmptySelection();
@@ -513,17 +520,19 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             this.displayErrorFolderNotFound$,
             this.displayErrorFolderNotFoundInNode$,
             this.displayErrorFolderNotFoundAndNodeNotFound$,
-        ]).map(([
-            displayErrorNodeNotFound,
-            displayErrorFolderNotFound,
-            displayErrorFolderNotFoundInNode,
-            displayErrorFolderNotFoundAndNodeNotFound,
-        ]) => (
-            !displayErrorNodeNotFound &&
+        ]).pipe(
+            map(([
+                displayErrorNodeNotFound,
+                displayErrorFolderNotFound,
+                displayErrorFolderNotFoundInNode,
+                displayErrorFolderNotFoundAndNodeNotFound,
+            ]) => (
+                !displayErrorNodeNotFound &&
             !displayErrorFolderNotFound &&
             !displayErrorFolderNotFoundInNode &&
             !displayErrorFolderNotFoundAndNodeNotFound
-        ));
+            )),
+        );
 
         this.showPath$ = this.appState.select(state => state.folder).pipe(
             map(folderState => {
@@ -557,9 +566,9 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
      * of the parent overlay. I was not able to find a pure css way to do this.
      */
     setFileDropLabelLeft(): void {
-        let overlayWidth = this.fileDropTextOverlay.nativeElement.offsetWidth;
-        let overlayLeft = this.fileDropTextOverlay.nativeElement.getBoundingClientRect().left;
-        let labelLeft = overlayWidth / 2 - 100 + overlayLeft;
+        const overlayWidth = this.fileDropTextOverlay.nativeElement.offsetWidth;
+        const overlayLeft = this.fileDropTextOverlay.nativeElement.getBoundingClientRect().left;
+        const labelLeft = overlayWidth / 2 - 100 + overlayLeft;
         this.fileDropLabelLeft = `${labelLeft}px`;
     }
 
@@ -686,13 +695,16 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     }
 
     uploadFiles(files: File[]): void {
-        this.uploadConflictService.uploadFilesWithConflictsCheck(files, this.activeNodeId, this.currentFolderId);
+        this.subscriptions.push(this.uploadConflictService
+            .uploadFilesWithConflictsCheck(files, this.activeNodeId, this.currentFolderId)
+            .subscribe(),
+        );
     }
 
     goToBaseFolder(): void {
         const currentNode = this.entityResolver.getNode(this.activeNodeId);
         if (currentNode) {
-            this.navigationService.list(currentNode.id, currentNode.folderId).navigate();
+            this.navigationService.list(currentNode.id, currentNode.folderId || currentNode.id).navigate();
         }
     }
 

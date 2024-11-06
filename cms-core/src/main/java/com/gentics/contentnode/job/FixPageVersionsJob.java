@@ -3,18 +3,13 @@ package com.gentics.contentnode.job;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
-
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Page;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.log.NodeLogger;
@@ -22,7 +17,7 @@ import com.gentics.lib.log.NodeLogger;
 /**
  * Background job that fixes the version numbers of pages
  */
-public class FixPageVersionsJob extends BackgroundJob {
+public class FixPageVersionsJob extends AbstractBackgroundJob {
 
 	/**
 	 * Name of the nodesetup entry for this job
@@ -35,7 +30,12 @@ public class FixPageVersionsJob extends BackgroundJob {
 	protected NodeLogger logger = NodeLogger.getNodeLogger(getClass());
 
 	@Override
-	public void executeJob(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+	public String getJobDescription() {
+		return getClass().getName();
+	}
+
+	@Override
+	protected void processAction() throws NodeException {
 		if (logger.isInfoEnabled()) {
 			logger.info("Starting job " + getClass().getName());
 		}
@@ -102,8 +102,6 @@ public class FixPageVersionsJob extends BackgroundJob {
 			if (logger.isInfoEnabled()) {
 				logger.info("Job " + getClass().getName() + " finished successfully");
 			}
-		} catch (NodeException e) {
-			throw new JobExecutionException("Error while fixing page versions", e, false);
 		} finally {
 			if (t != null) {
 				try {
@@ -112,8 +110,4 @@ public class FixPageVersionsJob extends BackgroundJob {
 			}
 		}
 	}
-
-	@Override
-	public void finishedInBackground(Map jobDataMap, List exceptions,
-			Object jobResult, List<NodeMessage> messages) {}
 }

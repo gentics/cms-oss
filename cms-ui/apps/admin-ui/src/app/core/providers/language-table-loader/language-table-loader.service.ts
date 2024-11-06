@@ -1,23 +1,20 @@
 import {
-    BO_DISPLAY_NAME,
     BO_ID,
     BO_NEW_SORT_ORDER,
-    BO_ORIGINAL_SORT_ORDER,
-    BO_PERMISSIONS,
+    EntityList,
     EntityPageResponse,
     LanguageBO,
     TableLoadOptions,
 } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Language, LanguageListResponse, NodeLanguageListRequest } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import {ItemDeleteResponse, Language, NodeLanguageListRequest} from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../entity-manager';
-import { LanguageOperations } from '../operations';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 
 export interface LanguageLoaderOptions {
     nodeId?: number;
@@ -29,8 +26,7 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
-        protected operations: LanguageOperations,
+        protected handler: LanguageHandlerService,
     ) {
         super('language', entityManager, appState);
     }
@@ -39,7 +35,7 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
         options: TableLoadOptions,
         additionalOptions?: LanguageLoaderOptions,
     ): Observable<EntityPageResponse<LanguageBO>> {
-        let loader: Observable<LanguageListResponse>;
+        let loader: Observable<EntityList<LanguageBO>>;
 
         if (additionalOptions?.nodeId) {
             // When loading via node id, we want to load all languages, as they are used for sorting.
@@ -49,19 +45,17 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
                 loadOptions.q = options.query;
             }
 
-            loader = this.api.node.getNodeLanguageList(additionalOptions.nodeId, loadOptions);
+            loader = this.handler.listFromNodeMapped(additionalOptions.nodeId, null as never, loadOptions);
         } else {
             const loadOptions = this.createDefaultOptions(options);
-            loader = this.api.language.getLanguages(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map((lang, index) => this.mapToBusinessObject(lang, index));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
@@ -72,22 +66,11 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.deleteLanguage(Number(entityId)).toPromise();
+        return this.handler.delete(entityId).toPromise();
     }
 
-    public unassignLanguageFromNode(nodeId: number, entityId: string | number): void {
-        this.operations.unassignLanguage(nodeId, Number(entityId)).toPromise();
-    }
-
-    public mapToBusinessObject(lang: Language, index: number = -1): LanguageBO {
-        return {
-            ...lang,
-            [BO_ID]: String(lang.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: lang.name,
-            [BO_ORIGINAL_SORT_ORDER]: index,
-            [BO_NEW_SORT_ORDER]: index,
-        };
+    public unassignLanguageFromNode(nodeId: number, entityId: string | number): Promise<ItemDeleteResponse> {
+        return this.handler.unassignLanguage(nodeId, Number(entityId)).toPromise();
     }
 
     public override mapToTableRow(bo: LanguageBO): TableRow<LanguageBO> {

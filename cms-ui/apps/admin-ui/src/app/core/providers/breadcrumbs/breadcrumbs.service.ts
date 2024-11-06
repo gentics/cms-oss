@@ -1,14 +1,22 @@
-import { RouteData } from '@admin-ui/common';
+import {
+    ROUTE_BREADCRUMB_KEY,
+    ROUTE_CHILD_BREADCRUMB_OUTLET_KEY,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_SKIP_BREADCRUMB,
+    RouteData,
+} from '@admin-ui/common';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router, UrlSegment } from '@angular/router';
-import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
-import { has as _has, isEqual as _isEqual } from 'lodash';
-import { BehaviorSubject, combineLatest, Observable, of as observableOf } from 'rxjs';
+import { has as _has, isEqual as _isEqual } from 'lodash-es';
+import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { I18nService } from '../i18n/i18n.service';
+import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
 import { BreadcrumbInfo } from './breadcrumb-info';
 
 interface RouteSegment {
@@ -28,6 +36,8 @@ export class BreadcrumbsService extends InitializableServiceBase {
 
     private currBreadcrumbs$ = new BehaviorSubject<IBreadcrumbRouterLink[]>([]);
 
+    private reloadTrigger$ = new BehaviorSubject<void>(null);
+
     /**
      * Gets an observable for the array of `IBreadcrumbRouterLink`s that should be
      * displayed as breadcrumbs. When the route or the UI language changes,
@@ -41,16 +51,23 @@ export class BreadcrumbsService extends InitializableServiceBase {
         private activatedRoute: ActivatedRoute,
         private i18n: I18nService,
         private router: Router,
+        private routeEntityResolver: RouteEntityResolverService,
     ) {
         super();
+    }
+
+    public reload(): void {
+        this.reloadTrigger$.next();
     }
 
     protected onServiceInit(): void {
         const breadcrumbChanges$ = this.router.events.pipe(
             filter(event => event instanceof NavigationEnd),
+            filter(() => !this.shouldSkipBreadcrumb()),
             switchMap(() => combineLatest([
                 this.collectBreadcrumbsFromRoute(this.activatedRoute),
                 this.uiLanguage$,
+                this.reloadTrigger$,
             ])),
             map(([segments, uiLang]) => this.assembleRouterLinks(segments)),
             map(routerLinks => routerLinks.filter(
@@ -64,6 +81,26 @@ export class BreadcrumbsService extends InitializableServiceBase {
         breadcrumbChanges$.subscribe(breadcrumbs => this.currBreadcrumbs$.next(breadcrumbs));
     }
 
+    private shouldSkipBreadcrumb(): boolean {
+        const routeSnapshot =  this.activatedRoute.snapshot;
+        let shouldSkip = routeSnapshot.data[ROUTE_SKIP_BREADCRUMB] ?? false;
+
+        let child = routeSnapshot.firstChild;
+
+        while (child && !shouldSkip) {
+            shouldSkip = child.data[ROUTE_SKIP_BREADCRUMB]
+            child = child.firstChild;
+        }
+
+        return shouldSkip;
+    }
+
+    public setBreadcrumbs(breadcrumbs: IBreadcrumbRouterLink[]): void {
+        this.currBreadcrumbs$.next([
+            ...breadcrumbs,
+        ])
+    }
+
     private collectBreadcrumbsFromRoute(activatedRoute: ActivatedRoute): Observable<RouteSegment[]> {
         const routeSegments: Observable<RouteSegment>[] = [];
         const parentUrl: UrlSegment[] = [];
@@ -72,9 +109,9 @@ export class BreadcrumbsService extends InitializableServiceBase {
         do {
             const currSnapshot = currRoute.snapshot;
             const childOutlets = [].concat(
-                _has(currSnapshot, 'data.childOutletsForBreadcrumbs') ?
-                currSnapshot.data.childOutletsForBreadcrumbs :
-                PRIMARY_OUTLET,
+                _has(currSnapshot, `data.${ROUTE_CHILD_BREADCRUMB_OUTLET_KEY}`)
+                    ? currSnapshot.data[ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]
+                    : PRIMARY_OUTLET,
             );
             const childRoutes = currRoute.children;
             currRoute = null;
@@ -124,14 +161,31 @@ export class BreadcrumbsService extends InitializableServiceBase {
             return observableOf(undefined);
         }
         const routerLink = this.convertUrlToRouterCommands(parentUrl, snapshot.url, snapshot.outlet);
+
         return route.data.pipe(
             map((data: RouteData) => {
+                if (!data) {
+                    return;
+                }
+
                 let ret: RouteSegment;
-                if (data && data.breadcrumb) {
+
+                if (data[ROUTE_BREADCRUMB_KEY]) {
                     ret = {
                         routerCommands: routerLink,
-                        breadcrumb: data.breadcrumb,
+                        breadcrumb: data[ROUTE_BREADCRUMB_KEY],
                     };
+                } else if (data[ROUTE_ENTITY_RESOLVER_KEY] && data[ROUTE_ENTITY_TYPE_KEY]) {
+                    const handler = this.routeEntityResolver.getHandler(data[ROUTE_ENTITY_TYPE_KEY]);
+                    if (handler) {
+                        ret = {
+                            routerCommands: routerLink,
+                            breadcrumb: {
+                                title: handler.displayName(data[ROUTE_ENTITY_RESOLVER_KEY]),
+                                doNotTranslate: true,
+                            },
+                        }
+                    }
                 }
                 return ret;
             }),

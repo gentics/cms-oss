@@ -6,5 +6,13 @@
     "language": {
         "en": "Language",
         "de": "Sprache"
+    },
+    "confirm_addition": {
+        "de": "{{ label }} bestätigen",
+        "en": "Confirm {{ label }}"
+    },
+    "password_missmatch": {
+        "en": "Passwords don not match",
+        "de": "Passwörter nicht ident"
     }
 }

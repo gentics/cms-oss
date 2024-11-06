@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
+import { Feature, Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
+import { ApplicationStateService } from '@editor-ui/app/state';
 
 export interface MultiDeleteResult {
     delete: InheritableItem[];
@@ -49,8 +49,6 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
     /** Meaning: `{ formId: languageCodesOfForm[] }` */
     selectedFormLanguageVariants: { [formId: number]: string[] } = {};
 
-    iconForItemType = iconForItemType;
-
     deleteCount: number;
 
     private subscriptions: Subscription[] = [];
@@ -58,6 +56,7 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
     constructor(
         private changeDetector: ChangeDetectorRef,
         private localizationService: LocalizationsService,
+        private appState: ApplicationStateService,
     ) {
         super();
     }
@@ -117,7 +116,7 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
      * get it from the server.
      */
     onPageLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
-        if (!checkLocalizations) {
+        if (!checkLocalizations || !this.appState.now.features[Feature.MULTICHANNELLING]) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
             return;
         }

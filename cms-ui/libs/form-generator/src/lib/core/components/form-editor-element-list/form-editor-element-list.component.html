@@ -13,23 +13,22 @@
             <div
                 class="form-editor-element-container"
                 [@slideAnim]
-                [draggable]="!formEditorIsReadOnly()"
+                [draggable]="!readonly"
                 (dragstart)="onElementDragStart({ event: $event, element: element }, i)"
             >
                 <div class="form-editor-element-container-inner">
                     <gtx-form-editor-element
                         [isInEditor]="true"
-                        [formEditMode]="formEditMode"
+                        [readonly]="readonly"
                         [element]="element"
-                        (elementChange)="onElementChange($event, i)"
                         [isPreview]="isPreview"
                         [hideDropZones]="hideDropZones"
-                        (propertiesEditorOpen)="propertiesEditorOpenMap[i] = $event"
+                        (openPropertiedEditor)="openPropertiesEditor(i, $event)"
+                        (elementChange)="onElementChange($event, i)"
                         (remove)="onElementRemove(i)"
                         (beforeFormElementInsert)="onFormElementInsert($event)"
                         (propertiesErrorChange)="onPropertiesErrorChange($event)"
-                    >
-                    </gtx-form-editor-element>
+                    ></gtx-form-editor-element>
                 </div>
             </div>
             <gtx-form-element-drop-zone

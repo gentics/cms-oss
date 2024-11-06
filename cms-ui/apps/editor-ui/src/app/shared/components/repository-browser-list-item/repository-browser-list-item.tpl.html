@@ -7,7 +7,7 @@
             (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
     </div>
     <div class="item-icon" *ngIf="!canBeSelected">
-        <icon>{{ iconForItemType(item.type) }}</icon>
+        <icon>{{ item.type | gtxTypeIcon }}</icon>
     </div>
 
     <div #itemPrimary class="item-primary" [class.selected]="isSelected">

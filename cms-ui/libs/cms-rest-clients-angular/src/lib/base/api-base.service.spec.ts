@@ -1,14 +1,13 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { PagingSortOption, PagingSortOrder, User } from '@gentics/cms-models';
+import { PagingSortOption, PagingSortOrder, ResponseCode, User } from '@gentics/cms-models';
 import { BehaviorSubject, NEVER, Observable } from 'rxjs';
-
 import { ApiError } from '../error/api-error';
 import { FileUploaderFactory } from '../util/file-uploader/file-uploader.factory';
 import { API_BASE_URL, expectOneRequest, respondTo } from '../util/http-test-utils/http-test-utils';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
-import { ApiBase, HttpRequestOptions } from './api-base.service';
+import { ApiBase, CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE, HttpRequestOptions } from './api-base.service';
 
 const TEST_SID = 1234;
 const TEST_URL = 'some/url';
@@ -66,9 +65,9 @@ describe('ApiBase', () => {
                 (url: string, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
 
                     return NEVER;
                 });
@@ -98,9 +97,9 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.get(TEST_URL).subscribe(done, done.fail);
+            apiBase.get(TEST_URL).subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
-            respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
+            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
         });
 
         it('returns the result as a JavaScript object', () => {
@@ -113,7 +112,7 @@ describe('ApiBase', () => {
                     b: 'two',
                     c: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                 },
             });
@@ -123,7 +122,7 @@ describe('ApiBase', () => {
                 b: 'two',
                 c: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
         });
@@ -135,7 +134,7 @@ describe('ApiBase', () => {
                 const sub = apiBase.get(TEST_URL).subscribe({ error: e => error = e });
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
                 respondTo(req, {
-                    body: { responseInfo: { responseCode: 'FAILURE' } },
+                    body: { responseInfo: { responseCode: ResponseCode.FAILURE } },
                 });
                 sub.unsubscribe();
 
@@ -143,7 +142,7 @@ describe('ApiBase', () => {
                 expect(error.reason).toBe('failed');
                 expect(error.request.method).toBe('GET');
                 expect(error.request.url).toBe(TEST_URL);
-                expect(error.response).toEqual({ responseInfo: { responseCode: 'FAILURE' } });
+                expect(error.response).toEqual({ responseInfo: { responseCode: ResponseCode.FAILURE } });
             });
 
             xit('the response has no responseCode', () => {
@@ -181,7 +180,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
                 respondTo(req, {
                     status: 404,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 404': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 404': true },
                 });
                 sub.unsubscribe();
 
@@ -196,7 +195,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
                 respondTo(req, {
                     status: 500,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 500': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 500': true },
                 });
                 sub.unsubscribe();
 
@@ -212,7 +211,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -254,7 +253,7 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'NOTFOUND', responseMessage: 'Not found error:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Not found error:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
@@ -270,7 +269,7 @@ describe('ApiBase', () => {
                     const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
                     respondTo(req, {
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -296,7 +295,7 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'NOTFOUND', responseMessage: 'Not found error:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Not found error:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
@@ -313,7 +312,7 @@ describe('ApiBase', () => {
                     respondTo(req, {
                         status: 400,
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -336,9 +335,9 @@ describe('ApiBase', () => {
                 (url: string, body: any, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
                     expect(body).toBe('post body');
 
                     return NEVER;
@@ -392,9 +391,9 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.post(TEST_URL, 'body').subscribe(done, done.fail);
+            apiBase.post(TEST_URL, 'body').subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
-            respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
+            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
         });
 
         it('parses the result as JSON', () => {
@@ -407,7 +406,7 @@ describe('ApiBase', () => {
                     b: 'two',
                     c: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                 },
             });
@@ -417,7 +416,7 @@ describe('ApiBase', () => {
                 b: 'two',
                 c: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
         });
@@ -428,14 +427,14 @@ describe('ApiBase', () => {
                 let error: ApiError;
                 const sub = apiBase.post(TEST_URL, 'body').subscribe({ error: e => error = e });
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
-                respondTo(req, {body: {responseInfo: {responseCode: 'FAILURE'}}});
+                respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.FAILURE}}});
                 sub.unsubscribe();
 
                 expect(error).toEqual(jasmine.any(ApiError));
                 expect(error.reason).toBe('failed');
                 expect(error.request.method).toBe('POST');
                 expect(error.request.url).toBe('some/url');
-                expect(error.response).toEqual({ responseInfo: { responseCode: 'FAILURE' } });
+                expect(error.response).toEqual({ responseInfo: { responseCode: ResponseCode.FAILURE } });
             });
 
             xit('the response has no responseCode', () => {
@@ -472,7 +471,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
                 respondTo(req, {
                     status: 404, statusText: 'File not Found',
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 404': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 404': true },
                 });
                 sub.unsubscribe();
 
@@ -487,7 +486,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
                 respondTo(req, {
                     status: 500,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 500': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 500': true },
                 });
                 sub.unsubscribe();
 
@@ -503,7 +502,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -545,13 +544,13 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(200);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('A page with Nice URL exists:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -561,7 +560,7 @@ describe('ApiBase', () => {
                     const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
                     respondTo(req, {
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -587,7 +586,7 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
@@ -604,7 +603,7 @@ describe('ApiBase', () => {
                     respondTo(req, {
                         status: 400,
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -627,9 +626,9 @@ describe('ApiBase', () => {
                 (url: string, body: any, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
                     expect(body).toBe('put body');
 
                     return NEVER;
@@ -683,9 +682,9 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.put(TEST_URL, 'body').subscribe(done, done.fail);
+            apiBase.put(TEST_URL, 'body').subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'PUT');
-            respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
+            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
         });
 
         it('parses the result as JSON', () => {
@@ -698,7 +697,7 @@ describe('ApiBase', () => {
                     b: 'two',
                     c: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                 },
             });
@@ -708,7 +707,7 @@ describe('ApiBase', () => {
                 b: 'two',
                 c: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
         });
@@ -719,14 +718,14 @@ describe('ApiBase', () => {
                 let error: ApiError;
                 const sub = apiBase.put(TEST_URL, 'body').subscribe({ error: e => error = e });
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'PUT');
-                respondTo(req, {body: {responseInfo: {responseCode: 'FAILURE'}}});
+                respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.FAILURE}}});
                 sub.unsubscribe();
 
                 expect(error).toEqual(jasmine.any(ApiError));
                 expect(error.reason).toBe('failed');
                 expect(error.request.method).toBe('PUT');
                 expect(error.request.url).toBe('some/url');
-                expect(error.response).toEqual({ responseInfo: { responseCode: 'FAILURE' } });
+                expect(error.response).toEqual({ responseInfo: { responseCode: ResponseCode.FAILURE } });
             });
 
             xit('the response has no responseCode', () => {
@@ -763,7 +762,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'PUT');
                 respondTo(req, {
                     status: 404, statusText: 'File not Found',
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 404': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 404': true },
                 });
                 sub.unsubscribe();
 
@@ -778,7 +777,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'PUT');
                 respondTo(req, {
                     status: 500,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 500': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 500': true },
                 });
                 sub.unsubscribe();
 
@@ -794,7 +793,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -837,13 +836,13 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(201);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('A page with Nice URL exists:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -854,7 +853,7 @@ describe('ApiBase', () => {
                     respondTo(req, {
                         status: 201,
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -880,7 +879,7 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Error, page exists:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
@@ -897,7 +896,7 @@ describe('ApiBase', () => {
                     respondTo(req, {
                         status: 400,
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -920,9 +919,9 @@ describe('ApiBase', () => {
                 (url: string, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
 
                     return NEVER;
                 });
@@ -962,7 +961,7 @@ describe('ApiBase', () => {
             const req = expectOneRequest(httpTestingController, TEST_URL, 'DELETE');
             respondTo(req, {
                 status: 204,
-                body: {responseInfo: {responseCode: 'OK'}},
+                body: {responseInfo: {responseCode: ResponseCode.OK}},
             });
         });
 
@@ -977,7 +976,7 @@ describe('ApiBase', () => {
                     b: 'two',
                     c: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                 },
             });
@@ -987,7 +986,7 @@ describe('ApiBase', () => {
                 b: 'two',
                 c: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
         });
@@ -999,7 +998,7 @@ describe('ApiBase', () => {
                 const sub = apiBase.delete(TEST_URL).subscribe({ error: e => error = e });
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'DELETE');
                 respondTo(req, {
-                    body: { responseInfo: { responseCode: 'FAILURE' } },
+                    body: { responseInfo: { responseCode: ResponseCode.FAILURE } },
                 });
                 sub.unsubscribe();
 
@@ -1007,7 +1006,7 @@ describe('ApiBase', () => {
                 expect(error.reason).toBe('failed');
                 expect(error.request.method).toBe('DELETE');
                 expect(error.request.url).toBe(TEST_URL);
-                expect(error.response).toEqual({ responseInfo: { responseCode: 'FAILURE' } });
+                expect(error.response).toEqual({ responseInfo: { responseCode: ResponseCode.FAILURE } });
             });
 
             xit('the response with statusCode 200 has no responseCode', () => {
@@ -1046,7 +1045,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'DELETE');
                 respondTo(req, {
                     status: 404,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 404': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 404': true },
                 });
                 sub.unsubscribe();
 
@@ -1061,7 +1060,7 @@ describe('ApiBase', () => {
                 const req = expectOneRequest(httpTestingController, TEST_URL, 'DELETE');
                 respondTo(req, {
                     status: 500,
-                    body: { responseInfo: { responseCode: 'OK' }, 'but server has 500': true },
+                    body: { responseInfo: { responseCode: ResponseCode.OK }, 'but server has 500': true },
                 });
                 sub.unsubscribe();
 
@@ -1077,7 +1076,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -1119,13 +1118,13 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Permissions error:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Permissions error:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(200);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('No permissions on page:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -1135,7 +1134,7 @@ describe('ApiBase', () => {
                     const req = expectOneRequest(httpTestingController, TEST_URL, 'DELETE');
                     respondTo(req, {
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -1161,7 +1160,7 @@ describe('ApiBase', () => {
                                 { message: 'This info message should not be displayed to the user.', type: 'INFO', timestamp: 1582124908184 },
                                 { message: 'Second Error message.', type: 'CRITICAL', timestamp: 1582124908184 },
                             ],
-                            responseInfo: { responseCode: 'INVALIDDATA', responseMessage: 'Permissions error:<br/> /GCN5Demo/News/bdfb' },
+                            responseInfo: { responseCode: ResponseCode.INVALID_DATA, responseMessage: 'Permissions error:<br/> /GCN5Demo/News/bdfb' },
                         },
                     });
                     sub.unsubscribe();
@@ -1178,7 +1177,7 @@ describe('ApiBase', () => {
                     respondTo(req, {
                         status: 400,
                         body: {
-                            responseInfo: {responseCode: 'NOTFOUND', responseMessage: 'Did not find a user with given credentials'},
+                            responseInfo: {responseCode: ResponseCode.NOT_FOUND, responseMessage: 'Did not find a user with given credentials'},
                         },
                     });
                     sub.unsubscribe();
@@ -1203,7 +1202,7 @@ describe('ApiBase', () => {
         ] as any[];
 
         it('creates a new FileUploader with the passed options', () => {
-            let uploader = apiBase.upload([], 'file/create', {
+            const uploader = apiBase.upload([], 'file/create', {
                 fileField: 'fileToUpload',
                 fileNameField: 'uploadName',
                 params: {
@@ -1222,7 +1221,7 @@ describe('ApiBase', () => {
         });
 
         it('adds the SID to the passed url parameters', () => {
-            let uploader = apiBase.upload([], 'file/create', { fileField: 'files' });
+            const uploader = apiBase.upload([], 'file/create', { fileField: 'files' });
 
             expect(uploader.setOptions).toHaveBeenCalledWith(jasmine.objectContaining({
                 parameters: jasmine.objectContaining({
@@ -1232,8 +1231,8 @@ describe('ApiBase', () => {
         });
 
         it('adds all files to the uploader via upload()', () => {
-            let uploader = apiBase.upload(mockFiles, 'file/create', { fileField: 'files' });
-            let firstArgs = (uploader.upload as jasmine.Spy).calls.allArgs().map(args => args[0]);
+            const uploader = apiBase.upload(mockFiles, 'file/create', { fileField: 'files' });
+            const firstArgs = (uploader.upload as jasmine.Spy).calls.allArgs().map(args => args[0]);
 
             expect(uploader.upload).toHaveBeenCalledTimes(mockFiles.length);
             expect(firstArgs).toEqual(mockFiles);

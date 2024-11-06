@@ -12,18 +12,13 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-
 import org.apache.commons.fileupload.FileUploadException;
 
 import com.gentics.lib.upload.FileUploadProviderImpl;
 
 /**
  * The Interface FileUploadProvider defines the API for retrieving files that
- * were uploaded via a HTTP POST. Gentics portlets and plugins may obtain an
- * instance of a FileUploadProvider via
- * com.gentics.api.portalnode.portlet.GenticsPortlet#getFileUploadProvider() or
- * com.gentics.api.portalnode.plugin.GenticsPlugin#getFileUploadProvider() respectively.
+ * were uploaded via a HTTP POST.
  */
 public interface FileUploadProvider {
 
@@ -79,31 +74,27 @@ public interface FileUploadProvider {
 				FileUploadException;
 
 	/**
-	 * Get the value of a non-file parameter (similar to
-	 * {@link javax.portlet.PortletRequest#getParameter(java.lang.String)})
+	 * Get the value of a non-file parameter
 	 * @param fieldName name of the field
 	 * @return value of the "normal" form field
 	 */
 	String getParameter(String fieldName);
 
 	/**
-	 * Get values of a non-file parameter (similar to
-	 * {@link javax.portlet.PortletRequest#getParameterValues(java.lang.String)})
+	 * Get values of a non-file parameter
 	 * @param fieldName name of the field
 	 * @return String array of values
 	 */
 	String[] getParameterValues(String fieldName);
 
 	/**
-	 * Get all non-file parameters as map (similar to
-	 * {@link javax.portlet.PortletRequest#getParameterMap()})
+	 * Get all non-file parameters as map
 	 * @return parameter map
 	 */
 	Map getParameterMap();
 
 	/**
-	 * Get all parameter names of non-file parameters (similar to
-	 * {@link javax.portlet.PortletRequest#getParameterNames()})
+	 * Get all parameter names of non-file parameters
 	 * @return enumeration of parameter names
 	 */
 	Enumeration getParameterNames();

@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { map } from 'rxjs/operators';
 import { ResourceUrlBuilder } from '../resource-url-builder/resource-url-builder';
 
 /** The target item of a quick jump operation */
@@ -29,21 +30,21 @@ export class QuickJumpService {
      * `undefined` if no page with `pageId` could be found.
      */
     searchPageById(pageId: number, currNodeId: number): Promise<QuickJumpTarget | undefined> {
-        let url = this.resourceUrlBuilder.autocomplete(pageId);
-        return this.http.get(url, { responseType: 'text'})
-            .map(text => {
+        const url = this.resourceUrlBuilder.autocomplete(pageId);
+        return this.http.get(url, { responseType: 'text'}).pipe(
+            map(text => {
                 const html = this.toHtml(text);
                 const pages = this.extractPages(html);
                 return this.findJumpTarget(pageId, currNodeId, pages);
-            })
-            .toPromise();
+            }),
+        ).toPromise();
     }
 
     /**
      * Takes a string of HTML markup and returns an HTML div containg that markup parsed into HTML objects.
      */
     private toHtml(source: string): HTMLElement {
-        let htmlElement = document.createElement('div');
+        const htmlElement = document.createElement('div');
         htmlElement.innerHTML = source;
         return htmlElement;
     }
@@ -54,7 +55,7 @@ export class QuickJumpService {
      */
     private extractPages(html: HTMLElement): QuickJumpTarget[] {
         const extractNumber = (el: Element, attr: string): number => Number.parseInt(el.getAttribute(attr), 10);
-        let pages = Array.from(html.querySelectorAll('.ac_page'));
+        const pages = Array.from(html.querySelectorAll('.ac_page'));
         return pages.map(pageDiv => {
             return {
                 id: extractNumber(pageDiv, 'page_id'),

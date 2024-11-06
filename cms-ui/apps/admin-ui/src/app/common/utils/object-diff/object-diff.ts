@@ -1,4 +1,4 @@
-import { isEqual, transform } from 'lodash';
+import { isEqual, transform } from'lodash-es'
 
 /**
  * Computes the differences (deep equality) between two objects.

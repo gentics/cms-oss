@@ -1,15 +1,20 @@
 package com.gentics.contentnode.rest.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import javax.ws.rs.WebApplicationException;
@@ -18,6 +23,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
@@ -43,11 +49,26 @@ public class Operator {
 	protected static int poolSize = 10;
 
 	/**
+	 * Thread factory
+	 */
+	protected static ThreadFactory threadFactory = new PrefixedThreadFactory("operator");
+
+	/**
+	 * Generator for the internal "jobId"
+	 */
+	protected static AtomicLong jobIdGenerator = new AtomicLong();
+
+	/**
+	 * Map of currently running jobs, keys are the internal jobIds
+	 */
+	protected static Map<Long, RestCallable> runningJobs = new HashMap<>();
+
+	/**
 	 * Executor instance TODO make pool size configurable
 	 */
-	protected static ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+	protected static ExecutorService executor = Executors.newFixedThreadPool(poolSize, threadFactory);
 
-	protected static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+	protected static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1, new PrefixedThreadFactory("scheduled-operator"));
 
 	/**
 	 * Logger
@@ -70,7 +91,7 @@ public class Operator {
 		ExecutorService oldExecutor = executor;
 
 		// start a new executorservice (which will be used from now on)
-		executor = Executors.newFixedThreadPool(poolSize);
+		executor = Executors.newFixedThreadPool(poolSize, threadFactory);
 
 		// shut the old executor service down.
 		if (oldExecutor != null && !oldExecutor.isShutdown()) {
@@ -87,7 +108,7 @@ public class Operator {
 	 * @return either the response from the callable (if executed in foreground) or a response containing a message, that the job is done in background
 	 */
 	public static GenericResponse execute(String description, long timeout, Callable<GenericResponse> callable) {
-		return executeLocked(description, timeout, null, callable, null);
+		return executeLocked(description, timeout, null, callable, null, null);
 	}
 
 	/**
@@ -99,7 +120,7 @@ public class Operator {
 	 * @return response
 	 */
 	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable) {
-		return executeLocked(description, timeout, lock, callable, null);
+		return executeLocked(description, timeout, lock, callable, null, null);
 	}
 
 	/**
@@ -112,6 +133,22 @@ public class Operator {
 	 * @return response
 	 */
 	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler) {
+		return executeLocked(description, timeout, lock, callable, errorHandler, null);
+	}
+
+	/**
+	 * Version of {@link #execute(String, long, Callable)} that will lock access to the callable with the given lock
+	 * @param description Job description
+	 * @param timeout timeout in ms
+	 * @param lock optional lock
+	 * @param callable callable to execute
+	 * @param errorHandler optional error handler
+	 * @param backgroundCallback optional callback that is called when the operation is sent to background
+	 * @return response
+	 */
+	public static GenericResponse executeLocked(String description, long timeout, Lock lock,
+			Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler,
+			Runnable backgroundCallback) {
 		try {
 			RestCallable wrapper = new RestCallable(description, lock, callable);
 			Future<GenericResponse> futureResult = executor.submit(wrapper);
@@ -126,6 +163,9 @@ public class Operator {
 				wrapper.sendToBackground();
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
+				if (backgroundCallback != null) {
+					backgroundCallback.run();
+				}
 				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
 			}
 		} catch (Exception e) {
@@ -335,6 +375,30 @@ public class Operator {
 	}
 
 	/**
+	 * Called, when the given job is about to be called
+	 * @param job job
+	 */
+	protected static void jobIsStarting(RestCallable job) {
+		runningJobs.put(job.jobId, job);
+	}
+
+	/**
+	 * Called, when the give job finished execution
+	 * @param job job
+	 */
+	protected static void jobFinished(RestCallable job) {
+		runningJobs.remove(job.jobId);
+	}
+
+	/**
+	 * Get the currently running jobs
+	 * @return collection of {@link RestCallable} wrappers for the currently running jobs
+	 */
+	public static Collection<RestCallable> getCurrentlyRunningJobs() {
+		return new ArrayList<>(runningJobs.values());
+	}
+
+	/**
 	 * Queue Builder for building queues of operators.
 	 */
 	public static class QueueBuilder {
@@ -500,6 +564,6 @@ public class Operator {
 	 * Enum of possible lock types
 	 */
 	public static enum LockType {
-		channelSet, contentSet, contentPackage
+		channelSet, contentSet, contentPackage, devtoolPackage
 	}
 }

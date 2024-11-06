@@ -162,7 +162,7 @@ create_page_variations_submit:
     de: Erstellen
 create_page_variation_submit:
     en: Create here
-    de: Erstellen hier
+    de: Hier erstellen
 create_page_variation_title:
     en: Create Page Variant
     de: Seitenvariante erstellen
@@ -172,7 +172,10 @@ create_page_variations_title:
 confirmation_message_delete_title:
     en: Delete messages
     de: Nachrichten löschen
-confirmation_tag_delete_title:
+confirmation_tag_delete_singular_title:
+    en: Delete tag
+    de: Tag löschen
+confirmation_tag_delete_plural_title:
     en: Delete tags
     de: Tags löschen
 datepicker_hours:
@@ -280,11 +283,11 @@ delete_message_confirm_unread:
     en: Are you sure you want to delete {{count}} unread messages?
     de: Sind Sie sicher, dass Sie {{count}} ungelesene Nachrichten löschen möchten?
 delete_tag_confirm_plural:
-    en: Are you sure you want to delete {{count}} tags?
-    de: Sind Sie sicher, dass Sie {{count}} Tags löschen möchten?
+    en: "Are you sure you want to delete these {{count}} tags?{{names}}"
+    de: "Sind Sie sicher, dass Sie diese {{count}} Tags löschen möchten?{{names}}"
 delete_tag_confirm_singular:
-    en: Are you sure you want to delete one tag?
-    de: Sind Sie sicher, dass Sie 1 Tag löschen möchten?
+    en: Are you sure you want to delete the tag "{{name}}"?
+    de: Sind Sie sicher, dass Sie den Tag "{{name}}" löschen möchten?
 dependencies:
     en: Dependencies
     de: Beziehungen
@@ -888,6 +891,21 @@ version_info_modal_compatibility_supported:
 version_info_modal_compatibility_unknown:
     en: unknown
     de: unbekannt
+version_info_label_system:
+    en: System
+    de: System
+version_info_label_nodes:
+    en: Nodes
+    de: Nodes
+version_info_label_mesh:
+    en: Mesh Version
+    de: Mesh Version
+version_info_label_portal_type:
+    en: Portal Type
+    de: Portal Typ
+version_info_label_portal_version:
+    en: Portal Version
+    de: Portal Version
 validation_password_too_short:
     en: Passwords must contain at least 4 characters
     de: Mindestens 4 Zeichen
@@ -921,3 +939,6 @@ link_template_body:
 select_content_package_title:
     en: Select Content Package
     de: Contentpaket auswählen
+image_properties_title:
+    en: 'Properties of "{{fileName}}"'
+    de: 'Eigenschaften von "{{fileName}}"'

@@ -1,0 +1,9 @@
+@import '../aloha-button-renderer/aloha-button-renderer.component.scss';
+
+.gtx-editor-toggle-button {
+    @extend .gtx-editor-button;
+
+    &.active {
+        @include gtxActiveToggleButton;
+    }
+}

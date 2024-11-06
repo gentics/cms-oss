@@ -4,7 +4,7 @@ import { StateContext } from '@ngxs/store';
 import { patch } from '@ngxs/store/operators';
 import { NormalizedSchema } from 'normalizr';
 import { MessageState } from '../../../common/models';
-import { ApplicationStateService } from '../../providers';
+import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch, concatUnique } from '../../state-utils';
 import { AddEntitiesAction, SetMessageEntitiesAction, UpdateEntitiesAction } from '../entity/entity.actions';
 import {

@@ -10,16 +10,24 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { EditorState, EditorTab, ITEM_PROPERTIES_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
+import {
+    EditorState,
+    EditorTab,
+    ITEM_PROPERTIES_TAB,
+    ITEM_TAG_LIST_TAB,
+    PropertiesTab,
+    SaveBehaviour,
+    noItemPermissions,
+} from '@editor-ui/app/common/models';
+import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
-    EditMode,
     File as FileModel,
     Folder,
     FolderItemOrNodeType,
     FolderItemType,
     Form,
-    FormPermissions,
     Image,
     InheritableItem,
     ItemNormalized,
@@ -29,55 +37,42 @@ import {
     Node,
     Normalized,
     Page,
-    PageVersion,
     Raw,
-    noItemPermissions,
+    User,
 } from '@gentics/cms-models';
-import { FilePickerComponent, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { debounce as _debounce, isEqual } from 'lodash';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { FilePickerComponent, ModalService } from '@gentics/ui-core';
+import { debounce, isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
     SubscribableOrPromise,
     Subscription,
     combineLatest,
-    defer,
     forkJoin,
-    iif,
     of,
 } from 'rxjs';
 import {
     catchError,
-    debounceTime,
-    delay,
     distinctUntilChanged,
     filter,
     map,
     mergeMap,
     publishReplay,
     refCount,
-    startWith,
     switchMap,
-    switchMapTo,
-    take,
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { areItemsSaving } from '../../../common/utils/are-items-saving';
-import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
-import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { PageVersionsModal } from '../../../shared/components/page-versions-modal/page-versions-modal.component';
 import { PublishTimeManagedPagesModal } from '../../../shared/components/publish-time-managed-pages-modal/publish-time-managed-pages-modal.component';
 import { TimeManagementModal } from '../../../shared/components/time-management-modal/time-management-modal.component';
-import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.service';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import {
     AddEditedEntityToRecentItemsAction,
@@ -89,7 +84,6 @@ import {
     EditorActionsService,
     EditorStateUrlOptions,
     EditorStateUrlParams,
-    FocusListAction,
     FolderActionsService,
     ListSavingErrorAction,
     MarkContentAsModifiedAction,
@@ -98,44 +92,18 @@ import {
     ResetPageLockAction,
     SaveErrorAction,
     SaveSuccessAction,
-    SetFocusModeAction,
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
+import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe/iframe-manager.service';
+import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-import { CNParentWindow, CNWindow } from './common';
 
-/**
- * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
- * CSS (see the /custom-styles folder). However, this may have the unwanted effect of overwriting user implementations
- * (e.g. custom-styled tag fill dialogs). Therefore we will use the value of this constant to control whether or not
- * our custom styles are being applied or not.
- *
- * TODO: actual implementation of styles toggle still needs to be done. This flag is just there in case it is needed.
- */
-const APPLY_CUSTOM_STYLES = true;
-
-/** Used to define which buttons are visible at a certain moment. */
-export interface AvailableButtons {
-    compareContents?: boolean;
-    compareSources?: boolean;
-    editItem?: boolean;
-    edit?: boolean;
-    editProperties?: boolean;
-    lockedEdit?: boolean;
-    previewPage?: boolean;
-    publish?: boolean;
-    save?: boolean;
-    saveAsCopy?: boolean;
-    takeOffline?: boolean;
-    timeManagement?: boolean;
-    versionHistory?: boolean;
-}
 
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
@@ -147,20 +115,23 @@ export interface AvailableButtons {
     styleUrls: ['./content-frame.component.scss'],
     providers: [IFrameManager, CustomScriptHostService],
 })
-export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
+export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     /**
      * Lodash debounce function used by the ContentFrame.
      * It is stored as a static property to allow overriding in unit tests.
      */
-    static _debounce = _debounce;
-
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    static _debounce = debounce;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly APPLY_CUSTOM_STYLES = APPLY_CUSTOM_STYLES;
     public readonly CMS_FORM_TYPE = CmsFormType;
+    public readonly EditMode = EditMode;
 
     @ViewChild('iframe', { static: true })
     private iframe: ElementRef<HTMLIFrameElement>;
+
+    @ViewChild('diffFrame', { static: true })
+    private diffFrame: ElementRef<HTMLIFrameElement>;
 
     @ViewChild(CombinedPropertiesEditorComponent)
     private combinedPropertiesEditor: CombinedPropertiesEditorComponent;
@@ -181,48 +152,51 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     editorIsOpen = false;
     isImageLoading = false;
     editMode: EditMode;
-    version: PageVersion;
     // currently only used by form editor (not properties editing)
     itemValid = false;
 
-    uploadInProgress$: Observable<boolean>;
-    multilineExpanded$: Observable<boolean>;
-    breadcrumbs$ = new BehaviorSubject<IBreadcrumbRouterLink[]>([]);
+    comparePageId = -1;
+    comparePageUrl: string;
+    // Flags if it should ignore scroll events
+    ignoreNextDiffScroll = false;
+    ignoreNextMasterScroll = false;
+
     activeNode$: Observable<Node>;
     isInherited$: Observable<boolean>;
     editorState$: Observable<EditorState>;
     propertiesTab$: Observable<EditorTab>;
     openPropertiesTab: PropertiesTab;
-    requesting: boolean;
-    buttons: AvailableButtons = {};
-    focusModeEnabled$: Observable<boolean>;
+    alohaReady = false;
+    alohaWindowLoaded = false;
+    windowLoaded = false;
+
     currentItemPath = '';
-    activeNodeLanguages$: Observable<Language[]>;
-    oldVersion: PageVersion;
-    saving$: Observable<boolean>;
-    currentItem$: Observable<ItemNormalized | undefined>;
 
     activeUiLanguageCode$: Observable<string>;
     activeFormLanguageCode$: Observable<string>;
 
     itemLanguage: Language | undefined = undefined;
     pageComparisonLanguage: Language | undefined = undefined;
-    previewLink: any[] = [];
+
     saveAsCopyButtonIsDisabled = false;
+    saveButtonVisible = true;
     saveButtonIsDisabled = false;
+    isLocked = false;
+
     /** If has permission to publish and state is planned return true */
     isInQueue$: Observable<boolean> = undefined;
 
     private forceItemRefresh$ = new BehaviorSubject<void>(undefined);
-    private openTab: EditorTab;
     private onLoadListener: EventListener;
-    private itemPermissions: ItemPermissions = noItemPermissions;
+    public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
     private masterFrameLoaded = false;
-    private alohaReady = false;
     private contentModifiedByExternalScript = false;
+    private childFrameInitTimer: any;
+    private childFrameInitialized = false;
 
-    private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrame._debounce(
+    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
+    private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
                 this.appState.dispatch(new CancelEditingAction());
@@ -233,7 +207,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
 
     constructor(
         private appState: ApplicationStateService,
-        private breadcrumbsService: BreadcrumbsService,
         private route: ActivatedRoute,
         private navigationService: NavigationService,
         private modalService: ModalService,
@@ -247,27 +220,41 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         private permissions: PermissionService,
         private iframeManager: IFrameManager,
         private notification: I18nNotification,
-        private userSettings: UserSettingsService,
         private customScriptHostService: CustomScriptHostService,
         private customerScriptService: CustomerScriptService,
-        private api: Api,
+        private client: GCMSRestClientService,
         private tagEditorService: TagEditorService,
+        private aloha: AlohaIntegrationService,
+        private urlBuilder: ResourceUrlBuilder,
     ) { }
 
     ngOnInit(): void {
         this.customScriptHostService.initialize(this);
-        (window as unknown as CNParentWindow).GCMSUI_childIFrameInit =
-            (iFrameWindow, iFrameDocument) => this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
+        (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = (iFrameWindow, iFrameDocument) => {
+            if (this.childFrameInitTimer != null) {
+                window.clearTimeout(this.childFrameInitTimer);
+            }
+            this.childFrameInitialized = true;
+            return this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
+        };
 
         this.subscriptions.push(
-            this.appState.select(state => state.editor.contentModified)
-                .subscribe(modified => this.contentModified = modified),
-            this.appState.select(state => state.editor.objectPropertiesModified)
-                .subscribe(modified => this.objectPropertyModified = modified),
-            this.appState.select(state => state.editor.modifiedObjectPropertiesValid)
-                .subscribe(valid => this.modifiedObjectPropertyValid = valid),
-            this.appState.select(state => state.editor.openPropertiesTab)
-                .subscribe(openPropertiesTab => this.openPropertiesTab = openPropertiesTab),
+            this.appState.select(state => state.editor.contentModified).subscribe(modified => {
+                this.contentModified = modified;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.objectPropertiesModified).subscribe(modified => {
+                this.objectPropertyModified = modified;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.modifiedObjectPropertiesValid).subscribe(valid => {
+                this.modifiedObjectPropertyValid = valid;
+                this.changeDetector.markForCheck();
+            }),
+            this.appState.select(state => state.editor.openPropertiesTab).subscribe(openPropertiesTab => {
+                this.openPropertiesTab = openPropertiesTab;
+                this.changeDetector.markForCheck();
+            }),
         );
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
@@ -279,15 +266,21 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         let prevItemID: number = null;
         let prevItemType: FolderItemType = null;
         this.subscriptions.push(onLogin$.pipe(
-            switchMapTo(this.route.params),
+            switchMap(state => this.route.params),
             switchMap((params: EditorStateUrlParams) => {
                 // We always fetch the item to make sure that we have the current state,
                 // except if the item is already open in the content-frame and we have not switched to edit mode.
                 const reqItemId = Number(params.itemId);
                 const reqNodeId = Number(params.nodeId);
+
+                // IDs are invalid, skip
+                if (!Number.isInteger(reqItemId) || !Number.isInteger(reqNodeId)) {
+                    return of(false);
+                }
+
                 const requireLoadForUpdate = (params.type as FolderItemOrNodeType) !== 'node' &&
                     (prevEditMode !== params.editMode || prevItemID !== reqItemId || prevItemType !== params.type) &&
-                    (params.editMode === 'edit' || params.editMode === 'editProperties');
+                    (params.editMode === EditMode.EDIT || params.editMode === EditMode.EDIT_PROPERTIES);
                 prevEditMode = params.editMode;
                 prevItemID = reqItemId;
                 prevItemType = params.type;
@@ -298,8 +291,12 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                     && reqItemId === this.currentItem.id
                     && ((params.type as FolderItemOrNodeType) !== 'node' || (this.currentNode && reqNodeId === this.currentNode.id))
                 ) {
-                    return [params];
+                    return of(params);
                 }
+
+                // Set the window as unloaded, as we're reloading everything here.
+                this.windowLoaded = false;
+                this.changeDetector.markForCheck();
 
                 const options = { nodeId: params.nodeId };
 
@@ -314,6 +311,11 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
+                    this.cancelEditingDebounced(this.currentItem);
+                    this.currentItem = item as any;
+                    this.onItemUpdate();
+                    this.changeDetector.markForCheck();
+
                     if (item) {
                         return params;
                     } else {
@@ -336,7 +338,11 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                             .then(itemLoaded);
                     });
             }),
-        ).subscribe(params => params && this.updateEditorState(params)));
+        ).subscribe(params => {
+            if (typeof params !== 'boolean') {
+                this.updateEditorState(params);
+            }
+        }));
 
         this.activeNode$ = combineLatest([
             this.appState.select(state => state.editor.nodeId),
@@ -349,11 +355,14 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         this.isInherited$ = this.activeNode$
             .pipe(map(activeNode => activeNode && activeNode.inheritedFromId !== activeNode.id));
 
-        const requestingSubscription = this.iframeManager.requesting$.subscribe(val => {
-            this.requesting = val;
+        this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
+            this.alohaReady = ready;
             this.changeDetector.markForCheck();
-        });
-        this.subscriptions.push(requestingSubscription);
+        }));
+        this.subscriptions.push(this.aloha.windowLoaded$.subscribe(loaded => {
+            this.alohaWindowLoaded = loaded;
+            this.changeDetector.markForCheck();
+        }))
 
         this.iframeManager.onMasterFrameClosed(() => {
             this.cancelEditingDebounced(this.currentItem);
@@ -366,87 +375,27 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             refCount(),
         );
 
-        this.uploadInProgress$ = this.appState.select(state => state.editor).pipe(
-            map(editorState => editorState.uploadInProgress),
-            publishReplay(1),
-            refCount(),
-        );
-
-        this.propertiesTab$ = editorState$.map(state => state.openTab).pipe(
+        this.propertiesTab$ = editorState$.pipe(
+            map(state => state.openTab),
             distinctUntilChanged(isEqual),
         );
 
-        this.currentItem$ = editorState$.pipe(
-            distinctUntilChanged((a, b) =>
-                a.itemId === b.itemId &&
-                a.itemType === b.itemType &&
-                a.nodeId === b.nodeId,
-            ),
-            switchMap(editorState => this.forceItemRefresh$.pipe(
-                map(() => editorState),
-            )),
-            switchMap(({ itemId, itemType }) => {
-                // forceItemRefresh$ and copying of the item in the subsequent map() is necessary
-                // to force the UI to reset if a saveRequest resulted in an unchanged item.
-                let forceRefresh = true;
-                const item$ = (itemId && itemType) ? this.appState.select(state => state.entities[itemType][itemId]) : of(undefined);
-                return item$.pipe(
-                    distinctUntilChanged(isEqual),
-                    map(item => {
-                        if (forceRefresh) {
-                            item = { ...item };
-                            forceRefresh = false;
-                        }
-                        return item;
-                    }),
-                );
-            }),
-            publishReplay(1),
-            refCount(),
-        );
-
-        this.isInQueue$ = this.currentItem$.pipe(
-            debounceTime(100),
-            switchMap((item: ItemNormalized | undefined) =>
-                iif(
-                    () => item && item.type === 'page',
-                    defer(() => {
-                        const page = item as Page;
-                        return this.permissions.forItem(page.id, 'page', this.currentNode.id)
-                            .map(permissions => permissions.publish)
-                            .pipe(map(permissions => permissions && PublishableStateUtil.stateInQueue(page)));
-                    }),
-                    of(false).pipe(take(1)),
-                ),
-            ),
-        );
-
-        this.focusModeEnabled$ = this.appState
-            .select(state => state.editor.focusMode);
-
-        this.multilineExpanded$ = this.appState.select(state => state.ui.contentFrameBreadcrumbsExpanded);
-
-        const itemSub = this.currentItem$.pipe(
-            delay(0),
-            withLatestFrom(this.activeNode$),
-        ).subscribe(([item, editorNode]) => {
-            this.tagEditorService.forceCloseTagEditor();
-            this.setUpBreadcrumbs(item, editorNode.id);
-            this.currentItemPath = this.getItemPath(item);
-            this.changeDetector.detectChanges();
-        });
-        this.subscriptions.push(itemSub);
-
-        let localStateSubscription = editorState$.pipe(
+        const localStateSubscription = editorState$.pipe(
             switchMap(state => {
                 if (!state.editorIsOpen || !state.itemId) {
                     return of(state);
                 }
 
+                this.comparePageId = state.compareWithId;
+                if (this.comparePageId) {
+                    this.comparePageUrl = this.urlBuilder.pagePreview(this.comparePageId, state.nodeId);
+                    this.updateDiffFrame();
+                }
+
                 // If the entity is not yet in the app store, we need to fetch it first.
-                let entity = this.entityResolver.getEntity(state.itemType, state.itemId);
-                let node = this.entityResolver.getEntity('node', state.nodeId);
-                let fetchEntities: SubscribableOrPromise<any>[] = [];
+                const entity = this.entityResolver.getEntity(state.itemType, state.itemId);
+                const node = this.entityResolver.getEntity('node', state.nodeId);
+                const fetchEntities: SubscribableOrPromise<any>[] = [];
 
                 if (!entity) {
                     if (state.itemType === 'node') {
@@ -457,14 +406,13 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 }
                 if (!node) {
                     fetchEntities.push(
-                        this.appState.select(state => state.entities.node).pipe(
-                            filter(node => !!node[state.nodeId]),
-                            take(1),
-                        ),
+                        this.folderActions.getNode(state.nodeId),
                     );
                 }
                 if (0 < fetchEntities.length) {
-                    return forkJoin(fetchEntities).mapTo(state);
+                    return forkJoin(fetchEntities).pipe(
+                        map(() => state),
+                    );
                 }
 
                 return of(state);
@@ -474,7 +422,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                     this.cancelEditingDebounced(this.currentItem);
                 }
                 this.setLocalStateVars(state);
-                this.buttons = this.determineVisibleButtons();
             }),
             // Permissions need to be fetched for a specific language, node, folder and item type
             distinctUntilChanged((a, b) =>
@@ -505,18 +452,9 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             }),
         ).subscribe(fetchedPermissions => {
             this.itemPermissions = fetchedPermissions;
-            this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         });
         this.subscriptions.push(localStateSubscription);
-
-        // TODO: this is wrong - the contentFrame may be open when another node is navigated to,
-        // so the list of languages would be wrong. Need another way to get the list for the current editor node.
-        this.activeNodeLanguages$ = this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
-            map(languageIds => languageIds.map(id => this.entityResolver.getLanguage(id))),
-        );
-
-        this.saving$ = this.appState.select(areItemsSaving);
 
         this.activeUiLanguageCode$ = this.appState.select(state => state.ui.language);
 
@@ -527,15 +465,69 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit(): void {
-        let masterFrame = this.iframe.nativeElement;
+        const masterFrame = this.iframe.nativeElement;
         this.iframeManager.initialize(masterFrame, this);
+        this.updateDiffFrame();
+
+        masterFrame.addEventListener('error', error => {
+            console.log('Error while loading Aloha-Page', error);
+            this.windowLoaded = true;
+            // We also have to set this one here manually, because the window is never getting initialized
+            this.alohaWindowLoaded = true;
+            this.changeDetector.markForCheck();
+        });
+
+        masterFrame.addEventListener('load', () => {
+            this.windowLoaded = true;
+
+            // We only need to wait/check for Aloha, if we're in the edit-mode.
+            if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
+                // Similiar to the error handler above, but with a timeout instead
+                this.childFrameInitTimer = window.setTimeout(() => {
+                    console.warn('UI was not properly initialized in the Aloha-Page!');
+                    this.alohaWindowLoaded = true;
+                    this.changeDetector.markForCheck();
+                }, 10_000);
+            } else {
+                // Clear the timeout just in case it's still here
+                if (this.childFrameInitTimer != null) {
+                    window.clearTimeout(this.childFrameInitTimer);
+                    this.childFrameInitTimer = null;
+                }
+                this.alohaWindowLoaded = true;
+            }
+
+            const styleElem = masterFrame.contentDocument.createElement('style');
+            styleElem.textContent = `
+del.gtx-diff {
+  background: rgba(255, 0, 0, 0.2);
+}
+ins.gtx-diff {
+  background: rgba(0, 255, 0, 0.2);
+}`;
+            masterFrame.contentDocument.head.appendChild(styleElem);
+
+            this.changeDetector.markForCheck();
+
+            masterFrame.contentDocument.addEventListener('scroll', () => {
+                if (!this.comparePageId) {
+                    return;
+                }
+                if (this.ignoreNextMasterScroll) {
+                    this.ignoreNextMasterScroll = false;
+                    return;
+                }
+                this.ignoreNextDiffScroll = true;
+                this.diffFrame.nativeElement.contentWindow.scroll({ top: masterFrame.contentWindow.scrollY });
+            });
+        });
     }
 
     /**
      * Remove the iframe's load event listener, unsubscribe from streams.
      */
     ngOnDestroy(): void {
-        let iframe = this.iframe.nativeElement;
+        const iframe = this.iframe.nativeElement;
         iframe.removeEventListener('load', this.onLoadListener);
         this.subscriptions.forEach(s => s.unsubscribe());
         this.iframeManager.destroy();
@@ -552,12 +544,25 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     @HostListener('window:beforeunload', ['$event'])
     windowBeforeUnload(e: BeforeUnloadEvent): string | undefined {
         if (this.contentModified || this.objectPropertyModified) {
-            let message = 'Leave page without saving?';
+            const message = 'Leave page without saving?';
             e.returnValue = message;
             return message;
         }
         this.cancelEditingDebounced(this.currentItem);
         return;
+    }
+
+    formChange(form: Form): void {
+        this.currentItem = form;
+        this.onItemUpdate();
+        this.setContentModified(true, false);
+    }
+
+    onItemUpdate(): void {
+        this.tagEditorService.forceCloseTagEditor();
+        this.isLocked = this.isLockedByAnother();
+        this.currentItemPath = this.getItemPath(this.currentItem);
+        this.changeDetector.detectChanges();
     }
 
     getItemPath(item: Page | FileModel | Folder | Form | Image | Node): string {
@@ -566,14 +571,28 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             if (item.type === 'folder') {
                 return currentPath.slice(0, -1);
             } else {
-                return currentPath + this.currentItem.name;
+                return currentPath + item.name;
             }
         }
         return '';
     }
 
-    changeFocus(): void {
-        this.appState.dispatch(new FocusListAction());
+    updateDiffFrame(): void {
+        if (!this.diffFrame || !this.comparePageUrl) {
+            return;
+        }
+        const frame = this.diffFrame.nativeElement;
+        frame.contentWindow.location.replace(this.comparePageUrl);
+        frame.addEventListener('load', () => {
+            frame.contentDocument.addEventListener('scroll', () => {
+                if (this.ignoreNextDiffScroll) {
+                    this.ignoreNextDiffScroll = false;
+                    return;
+                }
+                this.ignoreNextMasterScroll = true;
+                this.iframe.nativeElement.contentWindow.scroll({ top: frame?.contentWindow?.scrollY });
+            });
+        });
     }
 
     /**
@@ -622,27 +641,12 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         return fallbackLanguages[0];
     }
 
-    expandedChanged(multilineExpanded: boolean): void {
-        this.userSettings.setContentFrameBreadcrumbsExpanded(multilineExpanded);
-        this.changeDetector.detectChanges();
-    }
-
     /**
      * Gets the current item async, which guarantees that the value will always be available
      * by the time the promise resolves.
      */
     getCurrentItem(): Promise<Page | FileModel | Folder | Form | Image | Node> {
-        if (this.currentItem) {
-            return Promise.resolve(this.currentItem);
-        }
-
-        const editorState = this.appState.now.editor;
-        return this.currentItem$.pipe(
-            filter(item => item &&
-                item.id === editorState.itemId &&
-                item.type === editorState.itemType),
-            take(1),
-        ).toPromise();
+        return Promise.resolve(this.currentItem);
     }
 
     /**
@@ -665,39 +669,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         this.masterFrameLoaded = val;
     }
 
-    setUpBreadcrumbs(item: Page | FileModel | Folder | Form | Image | Node | undefined, nodeId: number): void {
-        let folderId: number = null;
-        if (!item) {
-            this.breadcrumbs$.next([]);
-            return;
-        }
-        if (item.type === 'image' || item.type === 'page' || item.type === 'form') {
-            folderId = item.folderId;
-        } else if (item.type === 'folder') {
-            // If the folder does not have a motherId, it is the root folder of a node, so we use its ID.
-            folderId = item.motherId || item.id;
-        }
-        if (folderId !== null && nodeId) {
-            this.api.folders.getBreadcrumbs(folderId, { nodeId }).pipe(
-                map(response => response.folders.map((folder) => ({
-                    text: folder.name,
-                    route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] }} ],
-                }))),
-                withLatestFrom(this.multilineExpanded$.pipe(startWith(false))),
-                map(([breadcrumbs, isMultilineExpanded]) => !isMultilineExpanded ? this.breadcrumbsService.addTooltip(breadcrumbs) : breadcrumbs),
-                take(1),
-            ).subscribe(breadcrumbs => this.breadcrumbs$.next(breadcrumbs));
-        }
-    }
-
-    /**
-     * Used by the IFrameManager to signal that the "aloha-ready" event has fired in the master frame.
-     */
-    setAlohaReady(val: boolean): void {
-        this.alohaReady = val;
-        this.changeDetector.markForCheck();
-    }
-
     /**
      * Set the value of contentModified and run change detection.
      *
@@ -706,7 +677,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
      * script from within the iframe via the GCMSUI.setContentModified() method.
      */
     setContentModified(modified: boolean, modifiedByExternalScript: boolean = false): void {
-        if (this.editMode === 'edit' || this.editMode === 'editProperties') {
+        if (this.editMode === EditMode.EDIT || this.editMode === EditMode.EDIT_PROPERTIES) {
             if (modified && modifiedByExternalScript) {
                 this.contentModifiedByExternalScript = true;
             }
@@ -714,8 +685,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 this.imageResizedOrCropped = false;
             }
             this.markContentAsModifiedInState(modified);
-            this.buttons = this.determineVisibleButtons();
-            this.runChangeDetection();
+            this.changeDetector.markForCheck();
         }
     }
 
@@ -739,11 +709,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(modified, true));
     }
 
-    setFocusMode(enabled: boolean): void {
-        this.appState.dispatch(new SetFocusModeAction(enabled));
-        this.userSettings.setFocusMode(enabled);
-    }
-
     /**
      * Used by IFrame scripts to trigger a change detection cycle when one of this component's properties
      * get updated.
@@ -758,60 +723,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Tell the IFrameManager that the user initiated a close action.
-     */
-    closeEditor(): void {
-        this.iframeManager.initiateUserClose();
-        this.navigationService.instruction({ detail: null }).navigate();
-    }
-
-    /**
-     * Switch the state to preview mode.
-     */
-    createPreviewLink(): any[] | undefined {
-        return this.currentItem
-            ? this.navigationService
-                .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, 'preview')
-                .commands()
-            : undefined;
-    }
-
-    /**
-     * Switch the state to edit mode.
-     */
-    editItem(): void {
-        switch (this.currentItem.type) {
-            case 'page':
-                this.decisionModals.showInheritedDialog(this.currentItem, this.currentNode.id)
-                    .then(({item, nodeId}) => this.navigationService.detailOrModal(nodeId, 'page', item.id, 'edit').navigate());
-                break;
-            case 'form':
-                this.editForm();
-                break;
-            case 'image':
-                this.navigationService.detailOrModal(this.currentNode.id, 'image', this.currentItem.id, 'edit').navigate();
-                break;
-            default:
-                throw new Error('Incompatible item to edit.');
-        }
-    }
-
-    /**
-     * Switch the state to form edit mode.
-     */
-    editForm(): void {
-        this.navigationService.detailOrModal(this.currentNode.id, 'form', this.currentItem.id, 'edit').navigate();
-    }
-
-    /**
-     * Switch the state to edit object properties mode.
-     */
-    editProperties(): void {
-        this.decisionModals.showInheritedDialog(this.currentItem, this.currentNode.id)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, 'editProperties').navigate());
-    }
-
-    /**
      * User wants to switch tabs of item properties.
      * If the item is inherited, we need to ask the user which item they want to edit. The inheritance check only
      * makes sense for images or files, where they can be previewed in an inherited state and then transitioned to
@@ -823,34 +734,33 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             this.decisionModals.showInheritedDialog(this.currentItem, this.currentNode.id)
                 .then(({ item, nodeId }) =>
                     this.navigationService
-                        .detailOrModal(nodeId, itemType, item.id, 'editProperties', { openTab: newTab })
+                        .detailOrModal(nodeId, itemType, item.id, EditMode.EDIT_PROPERTIES, { openTab: newTab })
                         .navigate(),
                 );
         } else {
             this.navigationService
-                .detailOrModal(this.currentNode.id, itemType, this.currentItem.id, 'editProperties', { openTab: newTab })
+                .detailOrModal(this.currentNode.id, itemType, this.currentItem.id, EditMode.EDIT_PROPERTIES, { openTab: newTab })
                 .navigate();
         }
-
     }
 
-    isSaveAsCopyButtonIsDisabled(): boolean {
-        return this.isSaveButtonIsDisabled()
+    determineSaveAsCopyButtonIsDisabled(): boolean {
+        return this.determineSaveButtonIsDisabled()
             || (this.currentItem && this.currentItem.type === 'image' && !this.imageResizedOrCropped);
     }
 
-    isSaveButtonIsDisabled(): boolean {
+    determineSaveButtonIsDisabled(): boolean {
 
         /** If properties of any entity is being edited: */
         if (
-            this.editMode === 'editProperties'
+            this.editMode === EditMode.EDIT_PROPERTIES
             && (!this.modifiedObjectPropertyValid || !this.combinedPropertiesEditor)
         ) {
             return true;
         }
 
         /** If entity is being edited: */
-        if (this.editMode !== 'editProperties' && this.currentItem) {
+        if (this.editMode !== EditMode.EDIT_PROPERTIES && this.currentItem) {
 
             /**
              * Implementation explanation:
@@ -887,14 +797,38 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
      * If this is the case, the item should not be editable.
      */
     isLockedByAnother(): boolean {
-        const currentUserId = this.appState.now.auth.currentUserId;
-        if (this.currentItem && (this.currentItem.type === 'page' || this.currentItem.type === 'form')) {
-            let item = this.currentItem as Page | Form;
-            if (item.locked && item.lockedBy !== currentUserId) {
-                return true;
-            }
+        // Invalid item/type
+        if (!this.currentItem || (this.currentItem.type !== 'page' && this.currentItem.type !== 'form')) {
+            return false;
         }
-        return false;
+
+        const item = this.currentItem as Page | Form;
+
+        if (!item.locked || item.lockedBy == null) {
+            return false;
+        }
+
+        const currentUserId = this.appState.now.auth.currentUserId;
+
+        return typeof item.lockedBy === 'number'
+            ? item.lockedBy !== currentUserId
+            : (item.lockedBy as User)?.id !== currentUserId;
+    }
+
+    public handleItemSave(behaviour: SaveBehaviour): Promise<void> | undefined {
+        switch (behaviour) {
+            case SaveBehaviour.REGULAR:
+                return this.saveChanges();
+            case SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS:
+                return this.saveChangesAndApplyToLanguageVariants();
+            case SaveBehaviour.APPLY_TO_SUBFOLDERS:
+                return this.saveChangesAndApplyToSubfolders();
+            case SaveBehaviour.SAVE_AS_COPY:
+                return this.cropAndResizeImage(true);
+            case SaveBehaviour.SAVE_AND_PUBLISH:
+                this.saveAndPublishItem();
+                break;
+        }
     }
 
     /**
@@ -902,7 +836,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
      */
     saveChanges(): Promise<void> | undefined {
         const itemId = this.currentItem.id;
-        if (this.editMode === 'editProperties') {
+        if (this.editMode === EditMode.EDIT_PROPERTIES) {
             if (this.appState.now.editor.modifiedObjectPropertiesValid) {
                 return this.combinedPropertiesEditor.saveChanges()
                     .then(() => this.forceItemRefresh$.next());
@@ -914,7 +848,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             });
 
             return;
-        } else if (this.editMode !== 'edit') {
+        } else if (this.editMode !== EditMode.EDIT) {
             return;
         }
 
@@ -999,7 +933,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     saveAndPublishItem(): void {
         switch (this.currentItem.type) {
             case 'page':
-                if (this.editMode === 'edit' || (this.editMode === 'editProperties' && this.contentModified === true)) {
+                if (this.editMode === EditMode.EDIT || (this.editMode === EditMode.EDIT_PROPERTIES && this.contentModified === true)) {
                     this.saveChanges()
                         .then<Page>(() => {
                         if (this.contentModifiedByExternalScript) {
@@ -1020,7 +954,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 break;
 
             case 'form':
-                if (this.editMode === 'edit' || (this.editMode === 'editProperties' && this.contentModified === true)) {
+                if (this.editMode === EditMode.EDIT || (this.editMode === EditMode.EDIT_PROPERTIES && this.contentModified === true)) {
                     this.saveChanges()
                         .then<Form>(() => this.folderActions.getForm(this.currentItem.id))
                         .then(() => this.publishForm(true));
@@ -1031,35 +965,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             default:
                 throw new Error(`Undefined entity type "${this.currentItem.type}" with ID ${this.currentItem.id}.`);
         }
-    }
-
-    takeItemOffline(): void {
-        switch (this.currentItem.type) {
-            case 'page':
-                this.decisionModals.selectPagesToTakeOffline([this.currentItem as Page<Normalized>])
-                    .then(result => this.folderActions.takePagesOffline(result));
-                break;
-
-            case 'form':
-                this.folderActions.takeFormsOffline([this.currentItem.id]);
-                break;
-            default:
-                throw new Error(`Undefined entity type "${this.currentItem.type}" with ID ${this.currentItem.id}.`);
-        }
-    }
-
-    /**
-     * Show an error message toast from GCMS UI code running form inside the iframe
-     */
-    showErrorMessage(message: string, duration: number = 10000): void {
-        this.ngZone.runGuarded(() => {
-            this.notification.show({
-                message,
-                type: 'alert',
-                delay: duration,
-            });
-            this.errorHandler.catch(new Error(message), { notification: false });
-        });
     }
 
     navigateToParentFolder(): Promise<boolean> {
@@ -1123,13 +1028,14 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
      * Takes the "detail" aux route params and uses these to call the correct editorActions method.
      */
     private updateEditorState(urlParams: EditorStateUrlParams): void {
+        // eslint-disable-next-line prefer-const
         let { itemId, nodeId, type, editMode } = urlParams;
         itemId = Number(itemId);
         nodeId = Number(nodeId);
 
         const options = this.navigationService.deserializeOptions<EditorStateUrlOptions>(urlParams.options);
         switch (editMode) {
-            case 'preview':
+            case EditMode.PREVIEW:
                 switch (type) {
                     case 'page':
                         this.editorActions.previewPage(itemId, nodeId);
@@ -1142,26 +1048,26 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 }
                 break;
 
-            case 'editProperties':
+            case EditMode.EDIT_PROPERTIES:
                 this.editorActions.editProperties(itemId, type, nodeId, options.openTab, options.propertiesTab);
                 break;
 
-            case 'previewVersion':
+            case EditMode.PREVIEW_VERSION:
                 this.appState.dispatch(new PreviewPageVersionAction(itemId, nodeId, options.version));
                 this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
                 break;
 
-            case 'compareVersionContents':
+            case EditMode.COMPARE_VERSION_CONTENTS:
                 this.appState.dispatch(new ComparePageVersionsAction(itemId, nodeId, options.oldVersion, options.version));
                 this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
                 break;
 
-            case 'compareVersionSources':
+            case EditMode.COMPARE_VERSION_SOURCES:
                 this.appState.dispatch(new ComparePageVersionSourcesAction(itemId, nodeId, options.oldVersion, options.version));
                 this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
                 break;
 
-            case 'edit':
+            case EditMode.EDIT:
                 switch (type) {
                     case 'page':
                         this.editorActions.editPage(itemId, nodeId, options.compareWithId);
@@ -1183,6 +1089,14 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             default:
                 break;
         }
+    }
+
+    /**
+     * Tell the IFrameManager that the user initiated a close action.
+     */
+    closeEditor(): void {
+        this.iframeManager.initiateUserClose();
+        this.navigationService.instruction({ detail: null }).navigate();
     }
 
     /**
@@ -1211,16 +1125,19 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                         type: 'success',
                         action: {
                             label: 'common.publish_button',
-                            onClick: () => this.publishPage(true),
+                            onClick: () => {
+                                this.publishPage(true);
+                            },
                         },
                     });
 
                     resolve(returnValue);
                 },
-                onfailure: (data: any, error: any) => {
+                onfailure: (_data: any, error: any) => {
                     this.appState.dispatch(new ListSavingErrorAction('page', error.errorMessage));
                     this.appState.dispatch(new SaveErrorAction(error.errorMessage));
                     this.errorHandler.catch(error, { notification: true });
+                    reject(error);
                 },
             });
         });
@@ -1231,10 +1148,18 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
      */
     private saveForm(): Promise<any> {
         const id = this.currentItem.id;
-        const payload = this.entityResolver.denormalizeEntity('form', this.currentItem as Form<Normalized>);
+        const currentForm = this.currentItem as Form<Normalized>;
+        const payload = {
+            name: currentForm.name,
+            description: currentForm.description,
+            successPageId: currentForm.successPageId,
+            successNodeId: currentForm.successNodeId,
+            languages: currentForm.languages,
+            data: currentForm.data,
+        };
         this.appState.dispatch(new StartSavingAction());
 
-        return this.api.forms.updateForm(id, payload).pipe(
+        return this.client.form.update(id, payload).pipe(
             tap(() => {
                 this.appState.dispatch(new SaveSuccessAction());
                 this.folderActions.refreshList('form');
@@ -1244,7 +1169,9 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                     type: 'success',
                     action: {
                         label: 'common.publish_button',
-                        onClick: () => this.publishForm(true),
+                        onClick: () => {
+                            this.publishForm(true);
+                        },
                     },
                 });
             }),
@@ -1255,53 +1182,6 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 return of(error);
             }),
         ).toPromise();
-    }
-
-    /**
-     * Save the manipulated image as a copy.
-     */
-    saveAsCopy(): void {
-        this.cropAndResizeImage(true);
-    }
-
-    /**
-     * Opens the "page version" modal for the current page.
-     */
-    showPageVersionsModal(): void {
-        const options = { page: this.currentItem as Page, nodeId: this.currentNode.id };
-        this.modalService.fromComponent(PageVersionsModal, null, options)
-            .then(modal => modal.open());
-    }
-
-    /**
-     * Switch from "compare sources" view to "compare contents".
-     */
-    switchToCompareSources(): void {
-        const options = {
-            version: this.version,
-            oldVersion: this.oldVersion,
-        };
-        this.navigationService
-            .detailOrModal(this.currentNode.id, 'page', this.currentItem.id, 'compareVersionSources', options)
-            .navigate();
-    }
-
-    /**
-     * Switch from "compare sources" view to "compare contents".
-     */
-    switchToCompareContents(): void {
-        const options = {
-            version: this.version,
-            oldVersion: this.oldVersion,
-        };
-        this.navigationService
-            .detailOrModal(this.currentNode.id, 'page', this.currentItem.id, 'compareVersionContents', options)
-            .navigate();
-    }
-
-    approve(): void {
-        const page = this.currentItem as Page;
-        this.folderActions.pageQueuedApprove([page]);
     }
 
     /**
@@ -1354,22 +1234,23 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         }
 
         promise.then(result => {
-            if (typeof result === 'boolean') {
-
-                setTimeout(() => {
-                    this.modalService.fromComponent(TimeManagementModal, {}, { item, currentNodeId: this.currentNode.id })
-                        .then(modal => modal.open())
-                        .then(() => {
-                            // prevent ConfirmNavigationModal pop up a second time triggered by route guard when TimeManagementModal closes editor
-                            this.contentModified = false;
-                            this.markContentAsModifiedInState(false);
-                            // refresh folder content list to display new TimeManagement settings
-                            this.folderActions.refreshList('page');
-                            // then close content frame
-                            this.navigationService.instruction({ detail: null }).navigate();
-                        });
-                }, 1);
+            if (typeof result !== 'boolean') {
+                return;
             }
+
+            setTimeout(() => {
+                this.modalService.fromComponent(TimeManagementModal, {}, { item, currentNodeId: this.currentNode.id })
+                    .then(modal => modal.open())
+                    .then(() => {
+                        // prevent ConfirmNavigationModal pop up a second time triggered by route guard when TimeManagementModal closes editor
+                        this.contentModified = false;
+                        this.markContentAsModifiedInState(false);
+                        // refresh folder content list to display new TimeManagement settings
+                        this.folderActions.refreshList('page');
+                        // then close content frame
+                        this.navigationService.instruction({ detail: null }).navigate();
+                    });
+            }, 1);
         });
     }
 
@@ -1381,87 +1262,35 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
         this.editorNodeId = state.nodeId;
         this.currentNode = this.entityResolver.getNode(state.nodeId);
         this.editMode = state.editMode;
-        this.version = state.version;
-        this.oldVersion = state.oldVersion;
-        this.openTab = state.openTab;
 
         this.itemLanguage = this.getItemLanguage();
         this.pageComparisonLanguage = this.getPageComparisonLanguage();
-        this.saveAsCopyButtonIsDisabled = this.isSaveAsCopyButtonIsDisabled();
-        this.saveButtonIsDisabled = this.isSaveButtonIsDisabled();
+        this.saveAsCopyButtonIsDisabled = this.determineSaveAsCopyButtonIsDisabled();
+        this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
+        this.saveButtonVisible = this.editMode === EditMode.EDIT
+            || (this.editMode === EditMode.EDIT_PROPERTIES
+                && state.openTab === 'properties'
+                && state.openPropertiesTab !== ITEM_TAG_LIST_TAB
+            );
 
-        if (state.editorIsOpen && state.itemId) {
-            const item = this.entityResolver.getEntity(state.itemType, state.itemId);
-            // Without the following check, saving a change that results in no update (e.g., deleting a file's extension)
-            // would cause the first subsequent change to be restored immediately because of the following assignment.
-
-            // Specific logic for Form entity
-            // In 'edit' mode we do not update the form properties, just in 'editProperties' mode.
-            if (
-                this.currentItem && this.currentItem.id === state.itemId &&
-                // ( this.contentModified || this.editorIsOpen ) &&
-                this.currentItem.type === 'form' && state.editMode === 'edit'
-            ) {
-                return;
-            }
-
-            if (this.currentItem !== item && !deepEqual(this.currentItem, item)) {
-                this.currentItem = item;
-            }
-        }
-
-        this.previewLink = this.createPreviewLink();
+        this.isLocked = this.isLockedByAnother();
         this.changeDetector.markForCheck();
     }
 
-    /**
-     * Shifts the logic for determining which buttons to display out of the template.
-     */
-    private determineVisibleButtons(): AvailableButtons {
-        const type = this.currentItem && this.currentItem.type;
-        const isPage = type === 'page';
-        const isForm = type === 'form';
-        const editMode = this.editMode;
-        const previewing = editMode === 'preview';
-        const editing = editMode === 'edit';
-        const propertiesTab = editMode === 'editProperties' && this.openTab;
-        const isInherited = this.currentItem && (this.currentItem as InheritableItem).inherited;
-        const userCan = this.itemPermissions || { edit: false, view: false };
-        const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions).publish));
-        const isLockedByOtherUser = this.isLockedByAnother();
-
-        return {
-            compareContents: (isPage || isForm) && editMode === 'compareVersionSources',
-            compareSources: (isPage || isForm) && editMode === 'compareVersionContents',
-            editItem: editMode === 'editProperties' && (isPage || isForm) && userCan.edit && !isLockedByOtherUser,
-            edit: (isPage || isForm) && previewing && userCan.edit && !isLockedByOtherUser,
-            editProperties: editMode !== 'editProperties' && userCan.view && !isLockedByOtherUser,
-            lockedEdit: (isPage || isForm) && isLockedByOtherUser && userCan.edit,
-            previewPage: (isPage || isForm) && !previewing && userCan.view,
-            publish: (editing || previewing || propertiesTab) && canPublish && userCan.edit && !isInherited,
-            /** Since hard-to-track permission state inconsistencies occur, it has been decided to always display `save`button. */
-            save: (editing || (propertiesTab === 'properties' && this.openPropertiesTab !== ITEM_TAG_LIST_TAB)),
-            saveAsCopy: editing && type === 'image' && userCan.edit,
-            takeOffline: canPublish && (this.currentItem as Page | Form).online && !isInherited,
-            timeManagement: userCan.edit && canPublish,
-            versionHistory: isPage,
-        };
-    }
-
     private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form<Normalized> | Node<Normalized>): boolean {
-        let constructs = [];
+        const constructs = [];
         if (item.type === 'node' || item.type === 'form') {
             return true;
-        } else {
-            if ((item as ItemWithObjectTags).tags) {
-                const itemWithTags = item as ItemWithObjectTags;
-                for (let key of Object.keys(itemWithTags.tags)) {
-                    const tag = itemWithTags.tags[key];
-                    if (tag.construct) {
-                        constructs.push(true);
-                    } else {
-                        constructs.push(false);
-                    }
+        }
+
+        if ((item as ItemWithObjectTags).tags) {
+            const itemWithTags = item as ItemWithObjectTags;
+            for (const key of Object.keys(itemWithTags.tags)) {
+                const tag = itemWithTags.tags[key];
+                if (tag.construct) {
+                    constructs.push(true);
+                } else {
+                    constructs.push(false);
                 }
             }
         }

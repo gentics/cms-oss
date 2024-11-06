@@ -15,9 +15,13 @@
         "en": "Assign to package",
         "de": "Zu Paket zuweisen"
     },
+    "assign_group_to_users_title": {
+        "en": "Assign Users to Group \"{{ entityName }}\"",
+        "de": "Benutzer der Gruppe „{{ entityName }} zuweisen"
+    },
     "assign_group_to_users_button": {
-        "en": "Assign Group to Users",
-        "de": "Gruppe zu Benutzer zuweisen"
+        "en": "Assign Users to Group",
+        "de": "Benutzer der Gruppe zuweisen"
     },
     "assign_user_to_groups_title": {
         "en": "Assign User \"{{ entityName }}\" to Groups",
@@ -27,13 +31,13 @@
         "en": "Assign User to Groups",
         "de": "Benutzer zu Gruppen zuweisen"
     },
-    "assign_group_to_users": {
-        "en": "Assign Group to Users",
-        "de": "Gruppe zu Benutzer zuweisen"
-    },
     "assign_users_to_groups": {
         "en": "Assign Users to Groups",
         "de": "Benutzer zu Gruppen zuweisen"
+    },
+    "assign_users": {
+        "en": "Assign Users",
+        "de": "Benutzer zuweisen"
     },
     "assign_user_to_groups_button": {
         "en": "Assign User to Groups",
@@ -226,6 +230,10 @@
     "entity": {
         "en": "Entity",
         "de": "Entität"
+    },
+    "type" : {
+        "en": "Type",
+        "de": "Typ"
     },
     "element": {
         "en": "Element",
@@ -519,6 +527,10 @@
         "en": "Datacheck result of \"{{ entityName }}\"",
         "de": "Datenprüfergebnis von „{{ entityName }}“"
     },
+    "title_management_of_entity": {
+        "en": "Management of \"{{ entityName }}\"",
+        "de": "Verwaltung von „{{ entityName }}“"
+    },
     "title_properties_of_folder": {
         "en": "Properties of Folder \"{{ entityName }}\"",
         "de": "Eigenschaften von Ordner „{{ entityName }}“"
@@ -803,8 +815,24 @@
         "en": "Value",
         "de": "Wert"
     },
+    "confirm_button": {
+        "en": "Confirm",
+        "de": "Bestätigen"
+    },
     "confirm_selection": {
         "en": "Confirm",
         "de": "Bestätigen"
+    },
+    "message_send": {
+        "en": "Message has been sent",
+        "de": "Nachricht wurde gesendet"
+    },
+    "message_sent_error": {
+        "en": "Error sending message",
+        "de": "Die Nachricht konnte nicht gesendet werden"
+    },
+    "keycloak_not_available": {
+        "en": "Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.",
+        "de": "Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
     }
 }

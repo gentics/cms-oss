@@ -7,10 +7,11 @@ import {
     EntityManagerService,
     ErrorHandler,
     FeatureOperations,
-    LanguageOperations,
+    LanguageHandlerService,
     LoggingHelperService,
     MarkupLanguageOperations,
     MessageService,
+    NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
@@ -21,16 +22,18 @@ import { DebugToolService } from '@admin-ui/core/providers/debug-tool/debug-tool
 import { LogoutCleanupService } from '@admin-ui/core/providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from '@admin-ui/core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
-import { selectLoginEventOrIsLoggedIn, SelectState } from '@admin-ui/state';
+import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission, GcmsUiLanguage, GtxVersion, I18nLanguage, Normalized, User } from '@gentics/cms-models';
+import { KeycloakService } from '@gentics/cms-components';
+import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
-import { KeycloakService } from './login/providers/keycloak/keycloak.service';
+import { AdminUIModuleRoutes } from './common';
 import { SetBackendLanguage } from './state/ui/ui.actions';
 
 @Component({
@@ -63,7 +66,9 @@ export class AppComponent implements OnDestroy, OnInit {
     userMenuTabIdActivities = 'activities';
     userMenuActiveTab = this.userMenuTabIdMessages;
 
-    cmpVersion$: Observable<GtxVersion>;
+    loadedNodes: Node[] = [];
+
+    cmpVersion$: Observable<Version>;
     uiVersion$: Observable<string>;
 
     featureHideManual$: Observable<boolean>;
@@ -73,13 +78,14 @@ export class AppComponent implements OnDestroy, OnInit {
     private stopper = new ObservableStopper();
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private authOps: AuthOperations,
         private breadcrumbs: BreadcrumbsService,
         private debugToolService: DebugToolService,
         private editorUiLocalStorage: EditorUiLocalStorageService,
         private entityManager: EntityManagerService,
-        private languageOperations: LanguageOperations,
+        private languageHandler: LanguageHandlerService,
         private features: FeatureOperations,
         private logger: NGXLogger,
         private loggingHelper: LoggingHelperService,
@@ -96,6 +102,7 @@ export class AppComponent implements OnDestroy, OnInit {
         private errorHandler: ErrorHandler,
         private keycloakService: KeycloakService,
         private markupLangOperations: MarkupLanguageOperations,
+        private nodeOperations: NodeOperations,
     ) {
         this.loggingHelper.init();
     }
@@ -142,7 +149,7 @@ export class AppComponent implements OnDestroy, OnInit {
             takeUntil(this.stopper.stopper$),
         ).subscribe(() => {
             this.onLogin();
-            this.supportedLanguages$ = this.languageOperations.getBackendLanguages();
+            this.supportedLanguages$ = this.languageHandler.getBackendLanguages();
         });
 
         this.debugToolService.init();
@@ -169,6 +176,14 @@ export class AppComponent implements OnDestroy, OnInit {
         this.cmpVersion$ = this.appState.select(state => state.ui.cmpVersion);
         this.uiVersion$ = this.appState.select(state => state.ui.uiVersion);
         this.featureHideManual$ = this.appState.select(state => state.features.global[Feature.HIDE_MANUAL] || false);
+
+        this.isLoggedIn$.pipe(
+            filter(loggedIn => loggedIn),
+            switchMap(() => this.nodeOperations.getAll()),
+        ).subscribe(nodes => {
+            this.loadedNodes = nodes;
+            this.changeDetector.markForCheck();
+        });
     }
 
     ngOnDestroy(): void {
@@ -188,7 +203,7 @@ export class AppComponent implements OnDestroy, OnInit {
                 })
                 .then(() => {
                     this.userMenuOpened = false;
-                    this.router.navigate(['/login']);
+                    this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`]);
                 });
         });
     }
@@ -198,7 +213,7 @@ export class AppComponent implements OnDestroy, OnInit {
             .then(modal => modal.open())
             .then(value => {
                 if (value) {
-                    this.languageOperations.setActiveUiLanguage(language).subscribe(() => {
+                    this.languageHandler.setActiveUiLanguage(language).subscribe(() => {
                         this.appState.dispatch(new SetBackendLanguage(language));
                         location.reload(); // changing language requires application reload
                     });
@@ -223,7 +238,7 @@ export class AppComponent implements OnDestroy, OnInit {
     }
 
     private onLogin(): void {
-        let loginOperations: any[] = [
+        const loginOperations: any[] = [
             // Get all features
             this.features.checkAllGlobalFeatures(),
 

@@ -1,5 +1,5 @@
 <ng-container *ngIf="tagProperty">
-    <div class="row column">
+    <div class="tag-part-editor">
 
         <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
 
@@ -115,15 +115,35 @@
                 >
                     <ng-template let-item="item" let-index="index">
                         <span *ngIf="item.type" class="item-icon" [ngClass]="item.type || ''">
-                            <icon>{{ iconForItemType(item.type) }}</icon>
+                            <icon>{{ item.type | gtxTypeIcon }}</icon>
                         </span>
 
-                        <span class="item-path" [ngSwitch]="item.type">
-                            <ng-container *ngSwitchCase="'folder'">{{ item.path }}</ng-container>
-                            <ng-container *ngSwitchCase="'channel'">{{ item.name }}</ng-container>
-                            <ng-container *ngSwitchCase="'node'">{{ item.name }}</ng-container>
-                            <ng-container *ngSwitchDefault>{{ item.path || '' }}{{ item.name }}</ng-container>
-                        </span>
+                        <ng-template #itemPathTpl let-path="path">
+                            <span class="item-path" [title]="path">{{ path }}</span>
+                        </ng-template>
+
+                        <ng-container [ngSwitch]="item.type">
+                            <ng-container
+                                *ngSwitchCase="'folder'"
+                                [ngTemplateOutlet]="itemPathTpl"
+                                [ngTemplateOutletContext]="{ path: item.path }"
+                            ></ng-container>
+                            <ng-container
+                                *ngSwitchCase="'channel'"
+                                [ngTemplateOutlet]="itemPathTpl"
+                                [ngTemplateOutletContext]="{ path: item.name}"
+                            ></ng-container>
+                            <ng-container
+                                *ngSwitchCase="'node'"
+                                [ngTemplateOutlet]="itemPathTpl"
+                                [ngTemplateOutletContext]="{ path: item.name }"
+                            ></ng-container>
+                            <ng-container
+                                *ngSwitchDefault
+                                [ngTemplateOutlet]="itemPathTpl"
+                                [ngTemplateOutletContext]="{ path: (item.path || '') + item.name }"
+                            ></ng-container>
+                        </ng-container>
                     </ng-template>
                 </sortable-array-list>
             </div>

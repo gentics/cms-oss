@@ -56,7 +56,7 @@ public class NodeLogger {
 		if (loggerFactory != null) {
 			return loggerFactory.getLogger(clazz);
 		}
-		return LogManager.getLogger(clazz);
+		return LogManager.getContext(NodeLogger.class.getClassLoader(), true).getLogger(clazz);
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class NodeLogger {
 		if (loggerFactory != null) {
 			return loggerFactory.getLogger(name);
 		}
-		return LogManager.getLogger(name);
+		return LogManager.getContext(NodeLogger.class.getClassLoader(), true).getLogger(name);
 	}
 
 	/**
@@ -100,14 +100,16 @@ public class NodeLogger {
 	 * @return root logger
 	 */
 	public static NodeLogger getRootLogger() {
-		return getNodeLogger(LogManager.getRootLogger());
+		return getNodeLogger(
+				LogManager.getContext(NodeLogger.class.getClassLoader(), true).getLogger(LogManager.ROOT_LOGGER_NAME));
 	}
 
 	/**
-	 * Add the appender to the configuration
+	 * Add the appender to the configuration of the given node logger
 	 * @param appender appender
+	 * @param nodeLogger node logger
 	 */
-	public static void addAppenderToConfig(Appender appender) {
+	public static void addAppenderToConfig(Appender appender, NodeLogger nodeLogger) {
 		Configuration configuration = getConfiguration();
 		configuration.addAppender(appender);
 		if (!appender.isStarted()) {
@@ -118,8 +120,9 @@ public class NodeLogger {
 	/**
 	 * Remove the appender with the given name
 	 * @param appenderName appender name
+	 * @param nodeLogger node logger
  	 */
-	public static void removeAppenderFromConfig(String appenderName) {
+	public static void removeAppenderFromConfig(String appenderName, NodeLogger nodeLogger) {
 		Configuration configuration = getConfiguration();
 		// remove the appender from all logger configs
 		for (LoggerConfig loggerConfig : configuration.getLoggers().values()) {
@@ -152,10 +155,11 @@ public class NodeLogger {
 
 	/**
 	 * Get the current configuration
+	 * @param loader class loader
 	 * @return configuration
 	 */
 	protected static Configuration getConfiguration() {
-		LoggerContext context = LoggerContext.getContext(false);
+		LoggerContext context = LoggerContext.getContext(NodeLogger.class.getClassLoader(), true, null);
 		return context.getConfiguration();
 	}
 
@@ -332,7 +336,11 @@ public class NodeLogger {
 	 * @param level level
 	 */
 	public void setLevel(Level level) {
-		Configurator.setLevel(logger.getName(), level);
+		LoggerConfig loggerConfig = getLoggerConfig();
+		loggerConfig.setLevel(level);
+
+		LoggerContext context = LoggerContext.getContext(NodeLogger.class.getClassLoader(), true, null);
+		context.updateLoggers();
 	}
 
 	/**
@@ -349,7 +357,7 @@ public class NodeLogger {
 	 * @param level level
 	 */
 	public void addAppender(Appender appender, Level level) {
-		addAppenderToConfig(appender);
+		addAppenderToConfig(appender, this);
 		getLoggerConfig().addAppender(appender, level, null);
 		LoggerContext context = LoggerContext.getContext(false);
 		context.updateLoggers();
@@ -386,7 +394,8 @@ public class NodeLogger {
 	 * @return logger config
 	 */
 	protected LoggerConfig getLoggerConfig() {
-		Configuration config = getConfiguration();
+		LoggerContext context = LoggerContext.getContext(NodeLogger.class.getClassLoader(), true, null);
+		Configuration config = context.getConfiguration();
 		LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
 
 		if (StringUtils.equals(loggerConfig.getName(), logger.getName())) {
@@ -396,6 +405,7 @@ public class NodeLogger {
 		loggerConfig = new LoggerConfig(logger.getName(), loggerConfig.getLevel(), loggerConfig.isAdditive());
 		config.addLogger(logger.getName(), loggerConfig);
 
+		context.updateLoggers();
 		return loggerConfig;
 	}
 }

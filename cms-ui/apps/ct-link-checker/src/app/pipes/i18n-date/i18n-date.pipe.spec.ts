@@ -69,6 +69,14 @@ class MockDateTimeFormat implements Intl.DateTimeFormat {
         this.constructorArgs = Array.from(arguments);
     }
 
+    formatRange(startDate: number | bigint | Date, endDate: number | bigint | Date): string {
+        return '';
+    }
+
+    formatRangeToParts(startDate: number | bigint | Date, endDate: number | bigint | Date): Intl.DateTimeRangeFormatPart[] {
+        return [];
+    }
+
     format(): string {
         return '';
     }

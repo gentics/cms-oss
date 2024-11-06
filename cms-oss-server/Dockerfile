@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:x86_64-alpine-jdk-11.0.18_10
+FROM eclipse-temurin:17-jdk-alpine
 
 ENV CONF_FILES="" \
     KEYS_PATH="keys" \

@@ -2,10 +2,6 @@ import { EventEmitter } from '@angular/core';
 import { LangChangeEvent } from '@ngx-translate/core';
 import { GtxI18nDatePipe } from './i18n-date.pipe';
 
-declare var window: Window & {
-    Intl: typeof Intl,
-};
-
 const originalIntl = (<any> window).Intl;
 const originalNavigator = window.navigator;
 
@@ -20,14 +16,15 @@ const leadingZeroesDate = new Date(2016, 1, 1, 3, 4, 5);
 
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string { return this.lang; }
     set currentLang(lang: string) {
+        this.lang = lang;
         this.onLangChange.emit({
-            lang: this._lang = lang,
+            lang: this.lang,
             translations: {},
         });
     }
-    private _lang: string;
+    private lang: string;
 }
 
 class MockChangeDetectorRef {
@@ -35,20 +32,20 @@ class MockChangeDetectorRef {
 }
 
 class MockNavigator {
-    private _languages = ['en'];
+    private internalLangs = ['en'];
 
     userAgent = originalNavigator.userAgent;
 
     get language(): string {
-        return this._languages[0];
+        return this.internalLangs[0];
     }
 
     get languages(): string[] {
-        return this._languages;
+        return this.internalLangs;
     }
 
     mockUserAgentLanguages(...languages: string[]): void {
-        this._languages = languages;
+        this.internalLangs = languages;
     }
 }
 
@@ -64,6 +61,14 @@ class MockDateTimeFormat implements Intl.DateTimeFormat {
 
     constructor() {
         this.constructorArgs = Array.from(arguments);
+    }
+
+    formatRange(startDate: number | bigint | Date, endDate: number | bigint | Date): string {
+        return '';
+    }
+
+    formatRangeToParts(startDate: number | bigint | Date, endDate: number | bigint | Date): Intl.DateTimeRangeFormatPart[] {
+        return [];
     }
 
     format(): string {
@@ -117,10 +122,10 @@ describe('I18nDatePipe', () => {
     it('transforms Date objects and timestamps with seconds and milliseconds equally', () => {
         mockTranslateService.currentLang = 'en';
 
-        for (let date of [newYears2016, fiveBeforeTwelve, leadingZeroesDate]) {
-            let fromDate = pipe.transform(date, 'longDateTime');
-            let fromMilliseconds = pipe.transform(date.getTime(), 'longDateTime');
-            let fromSeconds = pipe.transform(date.getTime() / 1000, 'longDateTime');
+        for (const date of [newYears2016, fiveBeforeTwelve, leadingZeroesDate]) {
+            const fromDate = pipe.transform(date, 'longDateTime');
+            const fromMilliseconds = pipe.transform(date.getTime(), 'longDateTime');
+            const fromSeconds = pipe.transform(date.getTime() / 1000, 'longDateTime');
 
             expect(fromDate).toBe(fromMilliseconds);
             expect(fromDate).toBe(fromSeconds);

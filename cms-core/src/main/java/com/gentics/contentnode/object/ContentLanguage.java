@@ -95,26 +95,6 @@ public interface ContentLanguage extends GCNRenderable, NodeObject, Resolvable, 
 	void setCode(String code) throws ReadOnlyException;
 
 	/**
-	 * get an icon for this language.
-	 * @return an icon of this language.
-	 */
-	public default Icon getIcon() {
-		// TODO get icon
-		return null;
-	}
-
-	/**
-	 * Adds a language-icon to the given icon.
-	 *
-	 * @param base the icon to use as background.
-	 * @return the base icon with an overlay icon of this language.
-	 */
-	public default Icon getIcon(Icon base) {
-		// TODO overlay
-		return base;
-	}
-
-	/**
 	 * Get the nodes to which this contentlanguage is assigned to
 	 * @return list of nodes
 	 * @throws NodeException

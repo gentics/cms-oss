@@ -11,7 +11,7 @@ import { SharedModule } from '@editor-ui/app/shared/shared.module';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { FormDownloadInfo } from '@gentics/cms-models';
-import { getExampleFormDataNormalized, getExampleReports } from '@gentics/cms-models/lib/testing/test-data.mock';
+import { getExampleFormDataNormalized, getExampleReports } from '@gentics/cms-models/testing/test-data.mock';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { of } from 'rxjs';

@@ -1,8 +1,26 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { InheritableItem, ItemPermissions, ItemType, LocalizationsResponse, Node, Normalized, Page } from '@gentics/cms-models';
+import {
+    Feature,
+    File,
+    Folder,
+    FolderItemType,
+    FolderListOptions,
+    Image,
+    InheritableItem,
+    ItemPermissions,
+    ItemType,
+    LocalizationsResponse,
+    Node,
+    Normalized,
+    Page,
+    PageListOptions,
+    Raw,
+    ResponseCode,
+} from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import { MultiDeleteModal, MultiDeleteResult } from '../../../shared/components/multi-delete-modal/multi-delete-modal.component';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -320,19 +338,23 @@ describe('DecisionModalsService', () => {
 
         beforeEach(() => {
             // Item which is not localized in other channels
-            api.folders.getLocalizations = (type, itemId) => Observable.of(<LocalizationsResponse> {
+            api.folders.getLocalizations = (type, itemId) => of(<LocalizationsResponse> {
                 masterId: itemId,
                 masterNodeId: MASTERNODE,
                 nodeIds: {
                     [itemId]: MASTERNODE,
                 },
             });
-
+            state.mockState({
+                features: {
+                    [Feature.MULTICHANNELLING]: true,
+                },
+            });
         });
 
         it('requests a list of localized items in derived channels', fakeAsync(() => {
             api.folders.getLocalizations = jasmine.createSpy('FolderApi.getLocalizations')
-                .and.returnValue(Observable.never());
+                .and.returnValue(NEVER);
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                 .and.returnValue(Promise.resolve({ open(): void {} }));
 
@@ -502,7 +524,7 @@ describe('DecisionModalsService', () => {
 
             // Return data as if the page was localized in a channel
             api.folders.getLocalizations = jasmine.createSpy('FolderApi.getLocalizations')
-                .and.returnValue(Observable.of(<LocalizationsResponse> {
+                .and.returnValue(of({
                     masterId: MASTERNODE,
                     masterNodeId: MASTERNODE,
                     nodeIds: {
@@ -510,10 +532,10 @@ describe('DecisionModalsService', () => {
                         [OTHERPAGE]: OTHERNODE,
                     },
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                         responseMessage: '',
                     },
-                }));
+                } as any as LocalizationsResponse));
 
             modalService.mockResult(<MultiDeleteResult> {
                 delete: [],
@@ -579,7 +601,7 @@ describe('DecisionModalsService', () => {
 
         it('does display confirmation modal for pages with only one language variant if the user has wastebin permissions',
             fakeAsync(() => {
-                permissionService.wastebin$ = Observable.of(true);
+                permissionService.wastebin$ = of(true);
 
                 modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                     .and.returnValue(Promise.resolve({ open: (): void => {} }));
@@ -601,7 +623,7 @@ describe('DecisionModalsService', () => {
 
         it('does display confirmation modal for pages with only one language variant if the user does not have wastebin permissions',
             fakeAsync(() => {
-                permissionService.wastebin$ = Observable.of(false);
+                permissionService.wastebin$ = of(false);
 
                 modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                     .and.returnValue(Promise.resolve({ open: (): void => { } }));
@@ -703,7 +725,7 @@ describe('DecisionModalsService', () => {
         }));
 
         it('localizes the item if the user does not have permission to edit original', fakeAsync(() => {
-            permissionService.forItem = jasmine.createSpy('PermissionService.forItem').and.returnValue(Observable.of({
+            permissionService.forItem = jasmine.createSpy('PermissionService.forItem').and.returnValue(of({
                 edit: false,
             } as ItemPermissions));
             folderActions.getItems = jasmine.createSpy('FolderActionsService.getItems');
@@ -861,9 +883,9 @@ class MockModalService {
 }
 
 class MockPermissionService {
-    wastebin$: Observable<boolean> = Observable.of(true);
+    wastebin$: Observable<boolean> = of(true);
     forItem(): Observable<ItemPermissions> {
-        return Observable.of({
+        return of({
             edit: true,
         } as ItemPermissions);
     }
@@ -893,11 +915,18 @@ class MockApi {
     };
 }
 
-class MockFolderActions {
-    localizeItem(): Promise<any> {
+class MockFolderActions implements Partial<FolderActionsService> {
+    localizeItem(type: 'folder', itemId: number, channelId: number): Promise<Folder<Raw>>;
+    localizeItem(type: 'page', itemId: number, channelId: number): Promise<Page<Raw>>;
+    localizeItem(type: 'file', itemId: number, channelId: number): Promise<File<Raw>>;
+    localizeItem(type: 'image', itemId: number, channelId: number): Promise<Image<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw> | void>{
         throw new Error('localizeItem called but not mocked');
     }
-    getItems(): void {
+    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
+    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
+    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
         throw new Error('getItems called but not mocked');
     }
 }

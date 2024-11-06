@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { TypeIconPipe } from '@editor-ui/app/shared/pipes';
 import { Folder, Normalized } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
@@ -44,6 +45,7 @@ describe('WastebinModal', () => {
                 DetailChip,
                 I18nDatePipe,
                 PagingControls,
+                TypeIconPipe,
             ],
         });
 

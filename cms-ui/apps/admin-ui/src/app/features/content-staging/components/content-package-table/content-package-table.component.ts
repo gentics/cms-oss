@@ -50,7 +50,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: ContentPackageTableLoaderService,
+        protected loader: ContentPackageTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
         protected operations: ContentPackageOperations,
@@ -154,7 +154,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
             }
 
             return this.loader.getEntitiesByIds(this.selected)
-                .map(pkg => (this.loader as ContentPackageTableLoaderService).mapToBusinessObject(pkg));
+                .map(pkg => this.loader.mapToBusinessObject(pkg));
         }
 
         switch (event.actionId) {

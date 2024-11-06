@@ -1,7 +1,7 @@
-import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-models';
+import { getExampleEditableTag, getMockTagEditorTranslator } from '@editor-ui/testing/test-tag-editor-data.mock';
+import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { getExampleFolderData, getExampleImageData, getExampleNodeData, getExamplePageData } from '../../../../testing/test-data.mock';
-import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { TagEditorContextImpl } from './tag-editor-context-impl';
 
 const READ_ONLY = false;
@@ -12,10 +12,10 @@ const VAR_CONTEXTS: VariableTagEditorContext[] = [
     { uiLanguage: 'de' },
 ];
 
-const TAG = getExampleEditableTag();
 const PAGE = getExamplePageData();
-const FOLDER = getExampleFolderData();
-const IMAGE = getExampleImageData();
+const TAG = getExampleEditableTag();
+// const FOLDER = getExampleFolderData();
+// const IMAGE = getExampleImageData();
 const NODE = getExampleNodeData();
 
 /** Asserts that the specified TagEditorContexts are equal. */
@@ -37,11 +37,6 @@ export function assertTagEditorContextsEqual(expected: TagEditorContext, actual:
     expect(!!expected.variableContext).toBe(!!actual.variableContext);
 }
 
-/** Returns a mocked Translator that will always return the key for instant() and Observable.of(key) for get(). */
-export function getMockTagEditorTranslator(): Translator {
-    return new MockTranslator() as any;
-}
-
 describe('TagEditorContextImpl', () => {
 
     let variableContext$: BehaviorSubject<VariableTagEditorContext>;
@@ -55,6 +50,12 @@ describe('TagEditorContextImpl', () => {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
             openImageEditor: jasmine.createSpy('openImageEditor'),
             openUploadModal: jasmine.createSpy('openUploadModal'),
+            restClient: jasmine.createSpyObj('restClient', [
+                'executeMappedJsonRequest',
+                'executeMappedFormRequest',
+                'executeRawRequest',
+                'executeBlobRequest',
+            ]),
             restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
             restRequestGET: jasmine.createSpy('restRequestGET'),
             restRequestPOST: jasmine.createSpy('restRequestPOST'),
@@ -62,7 +63,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('TagEditorContext.create() works', () => {
-        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
         expect(context.editedTag).toBe(TAG);
         expect(context.readOnly).toBe(READ_ONLY);
         expect(context.page).toBe(PAGE);
@@ -72,6 +73,7 @@ describe('TagEditorContextImpl', () => {
         expect(context.validator).toBeTruthy();
         expect(context.variableContext).toBe(variableContext$);
         expect(context.gcmsUiServices).toBe(gcmsUiServices);
+        expect(context.withDelete).toBe(false);
         expect(context.file).toBeUndefined();
         expect(context.folder).toBeUndefined();
         expect(context.image).toBeUndefined();
@@ -81,7 +83,8 @@ describe('TagEditorContextImpl', () => {
         let emissionsCount = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, true);
+        expect(context.withDelete).toBe(true);
         context.variableContext.subscribe(varContext => {
             ++emissionsCount;
             expect(varContext).toBe(expectedVarContext);
@@ -98,7 +101,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('clone() works', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, true);
         const clone = src.clone();
 
         // The following properties should be deep copies.
@@ -119,13 +122,14 @@ describe('TagEditorContextImpl', () => {
         expect(clone.translator).toBe(translator);
         expect(clone.gcmsUiServices).toEqual(gcmsUiServices);
         expect(clone.gcmsUiServices).not.toBe(gcmsUiServices);
+        expect(clone.withDelete).toEqual(src.withDelete);
         expect(clone.file).toBeUndefined();
         expect(clone.folder).toBeUndefined();
         expect(clone.image).toBeUndefined();
     });
 
     it('openRepositoryBrowser() works in a clone', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
         const clone = src.clone();
 
         clone.gcmsUiServices.openRepositoryBrowser({ allowedSelection: 'page', selectMultiple: false });
@@ -134,7 +138,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('openImageEditor() works in a clone', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
         const clone = src.clone();
 
         clone.gcmsUiServices.openImageEditor({ nodeId: 1, imageId: 415 });
@@ -148,7 +152,7 @@ describe('TagEditorContextImpl', () => {
         let emissionsCountClone2 = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
         const clone1 = src.clone();
         const clone2 = clone1.clone();
 
@@ -191,7 +195,7 @@ describe('TagEditorContextImpl', () => {
         let emissionsCountClone2 = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
         const clone1 = src.clone();
         const clone2 = clone1.clone();
 
@@ -231,12 +235,3 @@ describe('TagEditorContextImpl', () => {
     });
 
 });
-
-class MockTranslator {
-    instant(key: string): string {
-        return key;
-    }
-    get(key: string): Observable<string> {
-        return Observable.of(key);
-    }
-}

@@ -1,0 +1,32 @@
+@import '../aloha-button-renderer/aloha-button-renderer.component.scss';
+
+.gtx-editor-button.context-button {
+    &::after {
+        display: block;
+        content: '\e5c5';
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 20px;
+        width: 16px;
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
+        -moz-font-feature-settings: 'liga';
+        -moz-osx-font-smoothing: grayscale;
+        font-variation-settings: 'FILL' 1;
+    }
+
+    &.icon-only {
+        padding-right: 2.5rem;
+
+        @media (max-width: $aloha-size-mobile-max) {
+            width: 3.75rem;
+            padding-right: 0.25rem;
+        }
+    }
+}

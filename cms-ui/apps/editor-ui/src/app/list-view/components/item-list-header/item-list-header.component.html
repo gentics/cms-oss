@@ -41,7 +41,7 @@
             [activeLanguage]="folderLanguage"
             [disabled]="elasticsearchQueryActive"
             [title]="'editor.language_context_selector_disabled_search' | i18n"
-            (selectLanguage)="languageChanged($event)"
+            (languageChange)="selectLanguage($event)"
         ></language-context-selector>
 
         <ng-container *ngIf="uiMode === UIMode.EDIT">
@@ -110,7 +110,7 @@
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
                         *ngIf="(itemType === 'page' || itemType === 'form')"
-                        (click)="toggleDisplayStatusIcons($event)"
+                        (click)="toggleDisplayStatusIcons()"
                         class="page-language-toggle"
                     >
                         <gtx-checkbox
@@ -123,7 +123,7 @@
                     <gtx-dropdown-item
                         *ngIf="wastebinEnabled"
                         class="show-deleted-toggle"
-                        (click)="toggleDisplayDeleted($event)"
+                        (click)="toggleDisplayDeleted()"
                     >
                         <gtx-checkbox
                             [checked]="showDeleted"
@@ -160,7 +160,10 @@
         </ng-container>
 
         <gtx-dropdown-list
-            *ngIf="uiMode === UIMode.STAGING || folderPermissions[itemType]?.delete || (selectedItems | anyPageUnpublished) || (selectedItems | anyItemPublished)"
+            *ngIf="uiMode === UIMode.STAGING
+                || folderPermissions[itemType]?.delete
+                || (selectedItems | anyPageUnpublished)
+                || (selectedItems | anyItemPublished)"
             align="right"
         >
             <gtx-dropdown-trigger>
@@ -190,7 +193,7 @@
                         {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="selectedItems | anyItemInherited" (click)="localizeSelected()">
+                    <gtx-dropdown-item *ngIf="multiChannelingEnabled && selectedItems | anyItemInherited" (click)="localizeSelected()">
                         <icon left>insert_drive_file</icon>
                         {{ 'editor.localize_label' | i18n }}
                     </gtx-dropdown-item>

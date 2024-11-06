@@ -188,7 +188,7 @@ public class VelocityDirectivesTest {
 				TemplateTagPartType.class, HTMLPartType.class, HTMLTextPartType.class, LongHTMLPartType.class, LongHTMLTextPartType.class,
 				NormalTextPartType.class, ShortTextPartType.class, FileURLPartType.class, FolderURLPartType.class, ImageURLPartType.class,
 				PageURLPartType.class, JavaEditorPartType.class, DHTMLPartType.class, TablePartType.class, DatasourcePartType.class, NodePartType.class)) {
-			for (int renderMode : Arrays.asList(RenderType.EM_ALOHA, RenderType.EM_ALOHA_READONLY, RenderType.EM_EDIT, RenderType.EM_LIVEPREVIEW,
+			for (int renderMode : Arrays.asList(RenderType.EM_ALOHA, RenderType.EM_ALOHA_READONLY, RenderType.EM_LIVEPREVIEW,
 					RenderType.EM_PREVIEW, RenderType.EM_PUBLISH)) {
 				for (String vtl : Arrays.asList("gtx_render_name.vm", "gtx_edit_name.vm", "gtx_render_ref.vm", "gtx_edit_ref.vm")) {
 					data.add(new Object[] {clazz, RenderType.renderEditMode(renderMode), vtl});

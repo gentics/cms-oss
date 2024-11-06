@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
-import { EditorPermissions, Page, Template } from '@gentics/cms-models';
+import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -164,8 +165,8 @@ xdescribe('CreatePageModal', () => {
     template: `
         <create-page-modal *ngIf="showModal"></create-page-modal>
         <gtx-overlay-host></gtx-overlay-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     showModal = false;
 }
@@ -181,12 +182,23 @@ class MockApi {
 
 class MockErrorHandler {}
 
-class MockFolderActions {
+class MockFolderActions implements Partial<FolderActionsService> {
     constructor() {
         spyOn(this as any, 'createNewPage').and.callThrough();
     }
-    createNewPage(page: Page): Promise<Page> {
-        return Promise.resolve(page);
+    createNewPage(page: {
+        pageName: string;
+        fileName: string;
+        description: string;
+        language: string;
+        priority: number;
+        templateId: number;
+        folderId: number;
+        nodeId: number;
+        niceUrl: string;
+        alternateUrls?: string[];
+    }): Promise<Page<Raw> | void> {
+        return Promise.resolve(page as any);
     }
     getAllTemplatesOfNode(): Observable<Template[]> {
         return of([]);

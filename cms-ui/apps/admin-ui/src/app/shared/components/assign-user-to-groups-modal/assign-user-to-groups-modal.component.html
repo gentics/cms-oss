@@ -1,44 +1,38 @@
-<div class="gtx-modal-datagrid">
-    <div class="modal-title">
-        <h5>{{ getModalTitle() | async }}</h5>
-    </div>
+<div class="modal-title">
+    <h5>{{ userIds?.length > 1
+        ? ('shared.assign_users_to_groups' | i18n)
+        : ('shared.assign_user_to_groups_title' | i18n: { entityName: user.login })
+    }}</h5>
+</div>
 
-    <div class="modal-content">
-        <gtx-group-table
-            class="group-table"
-            [hideActions]="true"
-            [extraActions]="actions"
-            [(selected)]="userGroupIds"
-            (actionClick)="handleActionClick($event)"
-        ></gtx-group-table>
-    </div>
+<div class="modal-content">
+    <gtx-progress-bar *ngIf="loading"></gtx-progress-bar>
 
-    <div class="modal-footer">
-        <!-- NOTE: `gtxActionAllowed` will override any `disabled` directive, thus the code below is a workaround -->
-        <gtx-button
-            *ngIf="userGroupIds?.length < 1"
-            type="primary"
-            (click)="buttonAssignUserToGroupsClicked()"
-            [disabled]="true"
-        >
-            {{ 'shared.assign_users_to_groups' | i18n }}
-        </gtx-button>
+    <gtx-group-table
+        class="group-table modal-table"
+        [hideActions]="true"
+        [extraActions]="actions"
+        [disabled]="loading"
+        [(selected)]="selected"
+        (actionClick)="handleActionClick($event)"
+    ></gtx-group-table>
+</div>
 
-        <gtx-button
-            *ngIf="userGroupIds?.length > 0"
-            type="primary"
-            (click)="buttonAssignUserToGroupsClicked()"
-            gtxActionAllowed="group.userassignment"
-        >
-            {{ 'shared.assign_users_to_groups' | i18n }}
-        </gtx-button>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="loading"
+        (click)="handleConfirm()"
+    >
+        {{ (userIds?.length > 1 ? 'shared.assign_users_to_groups' : 'shared.assign_user_to_groups') | i18n }}
+    </gtx-button>
 
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="cancelFn()"
-        >
-            {{ 'common.cancel_button' | i18n }}
-        </gtx-button>
-    </div>
+    <gtx-button
+        type="secondary"
+        flat
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
 </div>

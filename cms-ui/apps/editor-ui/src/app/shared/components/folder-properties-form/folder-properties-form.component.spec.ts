@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule } from '@angular/forms';
 import {
     ContentRepositoryType,
     Feature,
@@ -8,46 +8,27 @@ import {
     FolderListResponse,
     FolderPublishDirSanitizeResponse,
     FolderResponse,
-    GcmsTestData,
     Raw,
+    ResponseCode,
 } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFolderData } from '../../../../testing/test-data.mock';
-import { emptyItemInfo } from '../../../common/models';
-import { EditableProperties } from '../../../content-frame/components/properties-editor/properties-editor.component';
+import { EditableProperties, emptyItemInfo } from '../../../common/models';
 import { Api } from '../../../core/providers/api/api.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
 import { FolderPropertiesForm } from './folder-properties-form.component';
 
-function getInput<T>(fixture: ComponentFixture<T>, formcontrolname: string): any {
-    const input = fixture.nativeElement.querySelector(`[formcontrolname=${formcontrolname}] input`);
-    const throwNotDetectableError = (formcontrolname: string) => {
-        throw new Error(`Element valid state not detectable identfied via formcontrolname "${formcontrolname}"`);
-    };
-    const getValidState = (input: HTMLInputElement): boolean => {
-        if (!input.parentElement.classList) {
-            throwNotDetectableError(formcontrolname);
-        }
-        switch (input.parentElement.classList.contains('ng-invalid')) {
-            case true:
-                return false;
-            case false:
-                return true;
-            default:
-                throwNotDetectableError(formcontrolname);
-        }
-    };
-    if (!input || !input.attributes) {
-        throw new Error(`Element not found identified via formcontrolname "${formcontrolname}"`);
+function getInput<T>(fixture: ComponentFixture<TestComponent>, controlName: string): AbstractControl {
+    const comp = fixture.componentInstance.form;
+    if (comp?.form == null) {
+        return null;
     }
-    return {
-        value: input.value,
-        valid: getValidState(input),
-    };
+
+    return comp.form.get(controlName);
 }
 
 function triggerInputEvent(element: HTMLElement): void {
@@ -141,6 +122,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
 @Component({
     template: `
         <folder-properties-form
+            #form
             [nodeId]="nodeId"
             [folderId]="folderId"
             [properties]="properties"
@@ -150,8 +132,11 @@ const SANITIZATION_RESULT = 'sanitizationResult';
         >
         </folder-properties-form>
     `,
-    })
+})
 class TestComponent {
+    @ViewChild('form')
+    form: FolderPropertiesForm;
+
     nodeId: number;
     folderId: number;
     properties: EditableProperties;
@@ -170,16 +155,16 @@ class MockApiService {
         messages: [],
         numItems: 3,
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
     };
 
     private folder: FolderResponse = {
-        folder: GcmsTestData.getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
+        folder: getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
         messages: [],
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
     }
@@ -187,7 +172,7 @@ class MockApiService {
     private folderPublishDirSanitize: FolderPublishDirSanitizeResponse = {
         messages: [],
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
         publishDir: SANITIZATION_RESULT,
@@ -565,10 +550,16 @@ describe('FolderPropertiesForm', () => {
                 contentRepositoryType,
             );
 
+            tick(1_000);
             fixture.detectChanges();
+            tick(1_000);
 
             setInputValue(fixture, 'name', '');
             setInputValue(fixture, 'directory', '');
+
+            tick(1_000);
+            fixture.detectChanges();
+            tick(1_000);
 
             // check if form input values are equal to data provided via parent component input
             expect(getInput(fixture, 'name').value).toBe('');

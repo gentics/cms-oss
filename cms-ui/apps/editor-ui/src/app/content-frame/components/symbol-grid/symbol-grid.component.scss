@@ -1,0 +1,45 @@
+@import 'variables';
+
+.gtx-symbol-grid {
+    width: 100%;
+    max-height: inherit;
+    display: flex;
+
+    .symbol-grid-content {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow: hidden auto;
+        width: 100%;
+        min-height: 1px;
+    }
+
+    .symbol-grid-cell {
+        border: 1px solid $gtx-color-light-gray;
+        text-align: center;
+        width: 40px;
+        aspect-ratio: 1/1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 200ms;
+        background: $gtx-color-very-light-gray;
+        user-select: none;
+
+        &:hover,
+        &:focus {
+            background: $gtx-color-off-white;
+            border-color: $gtx-color-primary;
+        }
+
+        &.active {
+            background: rgba($gtx-color-primary, 20%);
+            border-color: $gtx-color-dark-gray;
+
+            &:hover {
+                background: rgba($gtx-color-primary, 40%);
+                border-color: $gtx-color-very-dark-gray;
+            }
+        }
+    }
+}

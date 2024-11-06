@@ -24,13 +24,23 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected String username;
 
+	protected String usernameProperty;
+
 	protected String password;
 
-	protected Boolean usePassword;
+	protected String passwordProperty;
+
+	protected PasswordType passwordType;
+
+	protected Boolean http2;
 
 	protected String url;
 
+	protected String urlProperty;
+
 	protected String basepath;
+
+	protected String basepathProperty;
 
 	protected Boolean instantPublishing;
 
@@ -61,6 +71,14 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	protected Status dataStatus;
 
 	protected String dataCheckResult;
+
+	protected Boolean noFoldersIndex;
+
+	protected Boolean noFilesIndex;
+
+	protected Boolean noPagesIndex;
+
+	protected Boolean noFormsIndex;
 
 	/**
 	 * Create empty instance
@@ -133,7 +151,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Username for accessing the ContentRepository
+	 * Username for accessing the ContentRepository.
 	 * @return username
 	 */
 	public String getUsername() {
@@ -149,7 +167,23 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Password for accessing the ContentRepository
+	 * Username property for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return username property
+	 */
+	public String getUsernameProperty() {
+		return usernameProperty;
+	}
+
+	/**
+	 * Set the username property
+	 * @param usernameProperty username property
+	 */
+	public void setUsernameProperty(String usernameProperty) {
+		this.usernameProperty = usernameProperty;
+	}
+
+	/**
+	 * Password for accessing the ContentRepository.
 	 * @return password
 	 */
 	public String getPassword() {
@@ -165,23 +199,57 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * True when a password is set
-	 * @return true for password
+	 * Property, which will resolve to the password.
+	 * This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return
 	 */
-	public Boolean getUsePassword() {
-		return usePassword;
+	public String getPasswordProperty() {
+		return passwordProperty;
 	}
 
 	/**
-	 * Set whether a password is set
-	 * @param usePassword true for password
+	 * Set the password property
+	 * @param passwordProperty
 	 */
-	public void setUsePassword(Boolean usePassword) {
-		this.usePassword = usePassword;
+	public void setPasswordProperty(String passwordProperty) {
+		this.passwordProperty = passwordProperty;
+	}
+
+	/**
+	 * True when a HTTP/2 is used
+	 * @return true for HTTP/2
+	 */
+	public Boolean getHttp2() {
+		return http2;
+	}
+
+	/**
+	 * Set whether HTTP/2 version should be used
+	 * @param http2 true for HTTP/2
+	 */
+	public void setHttp2(Boolean http2) {
+		this.http2 = http2;
 	}
 
 	/**
 	 * URL for accessing the ContentRepository
+	 * Type of password
+	 * @return password type
+	 */
+	public PasswordType getPasswordType() {
+		return passwordType;
+	}
+
+	/**
+	 * Set the type of how the password is set
+	 * @param passwordType type if the password
+	 */
+	public void setPasswordType(PasswordType passwordType) {
+		this.passwordType = passwordType;
+	}
+
+	/**
+	 * URL for accessing the ContentRepository.
 	 * @return url
 	 */
 	public String getUrl() {
@@ -197,7 +265,23 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Basepath for filesystem attributes
+	 * URL property for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return url property
+	 */
+	public String getUrlProperty() {
+		return urlProperty;
+	}
+
+	/**
+	 * Set the URL property
+	 * @param urlProperty url property
+	 */
+	public void setUrlProperty(String urlProperty) {
+		this.urlProperty = urlProperty;
+	}
+
+	/**
+	 * Basepath for filesystem attributes.
 	 * @return basepath
 	 */
 	public String getBasepath() {
@@ -210,6 +294,22 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 */
 	public void setBasepath(String basepath) {
 		this.basepath = basepath;
+	}
+
+	/**
+	 * Basepath property for filesystem attributes. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return basepath property
+	 */
+	public String getBasepathProperty() {
+		return basepathProperty;
+	}
+
+	/**
+	 * Set the basepath property
+	 * @param basepathProperty basepath property
+	 */
+	public void setBasepathProperty(String basepathProperty) {
+		this.basepathProperty = basepathProperty;
 	}
 
 	/**
@@ -453,6 +553,69 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
+	 * Get 'exclude folders from indexing' flag.
+	 */
+	public Boolean getNoFoldersIndex() {
+		return noFoldersIndex;
+	}
+
+	/**
+	 * Set 'exclude folders from indexing' flag.
+	 * @param noFolderIndex
+	 */
+	public void setNoFoldersIndex(Boolean noFolderIndex) {
+		this.noFoldersIndex = noFolderIndex;
+	}
+
+	/**
+	 * Get 'exclude files from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoFilesIndex() {
+		return noFilesIndex;
+	}
+
+	/**
+	 * Set 'exclude files from indexing' flag.
+	 * @param noFilesIndex
+	 */
+	public void setNoFilesIndex(Boolean noFilesIndex) {
+		this.noFilesIndex = noFilesIndex;
+	}
+
+	/**
+	 * Get 'exclude pages from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoPagesIndex() {
+		return noPagesIndex;
+	}
+
+	/**
+	 * Set 'exclude pages from indexing' flag.
+	 * @param noPagesIndex
+	 */
+	public void setNoPagesIndex(Boolean noPagesIndex) {
+		this.noPagesIndex = noPagesIndex;
+	}
+
+	/**
+	 * Get 'exclude forms from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoFormsIndex() {
+		return noFormsIndex;
+	}
+
+	/**
+	 * Set 'exclude forms from indexing' flag.
+	 * @param noFormsIndex
+	 */
+	public void setNoFormsIndex(Boolean noFormsIndex) {
+		this.noFormsIndex = noFormsIndex;
+	}
+
+	/**
 	 * Possible ContentRepository types
 	 */
 	public static enum Type {
@@ -470,6 +633,26 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 		 * Mesh CR
 		 */
 		mesh
+	}
+
+	/**
+	 * Possible values for how the password is set
+	 */
+	public static enum PasswordType {
+		/**
+		 * No password is set
+		 */
+		none,
+
+		/**
+		 * The password is set as value
+		 */
+		value,
+
+		/**
+		 * The password is set as property
+		 */
+		property
 	}
 
 	/**

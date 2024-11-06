@@ -1,9 +1,9 @@
 import { AuthOperations } from '@admin-ui/core';
 import { SelectState } from '@admin-ui/state';
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { GtxVersion } from '@gentics/cms-models';
+import { ActivatedRoute, Router } from '@angular/router';
+import { KEYCLOAK_ERROR_KEY } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -18,10 +18,19 @@ export class LoginComponent implements OnInit {
 
     loginForm: UntypedFormGroup;
 
+    public keycloakError?: string;
+
     constructor(
+        private router: Router,
         private route: ActivatedRoute,
         private authOps: AuthOperations,
-    ) {}
+    ) {
+        const navigation = this.router.getCurrentNavigation();
+
+        if (navigation?.extras?.state) {
+            this.keycloakError = navigation?.extras?.state[KEYCLOAK_ERROR_KEY];
+        }
+    }
 
     ngOnInit(): void {
         this.loginForm = new UntypedFormGroup({

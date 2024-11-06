@@ -11,7 +11,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ItemsInfo } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
 import {
     ApplicationStateService,
     FolderActionsService,
@@ -21,15 +21,15 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
-import { EditorPermissions, Favourite, File, Folder, Image, Page, getNoPermissions } from '@gentics/cms-models';
+import { Favourite, File, Folder, Image, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
-import { componentTest, configureComponentTest } from '../../../../testing';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -38,7 +38,7 @@ import { FavouritesService } from '../../../core/providers/favourites/favourites
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import {
-    FavouriteToggle,
+    FavouriteToggleComponent,
     FileStatusLabel,
     IconCheckbox,
     InheritedLocalizedIcon,
@@ -87,7 +87,7 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
         [itemsInfo]="itemsInfo"
     >
     </item-list-row>`,
-    })
+})
 
 class TestComponent {
     itemType = 'file';
@@ -155,6 +155,7 @@ class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         return {
             ...getNoPermissions(),
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
         } as any;
     }
@@ -169,14 +170,15 @@ class MockI18nService {}
 
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string { return this.lang; }
     set currentLang(lang: string) {
+        this.lang = lang;
         this.onLangChange.emit({
-            lang: this._lang = lang,
+            lang: lang,
             translations: {},
         });
     }
-    private _lang: string;
+    private lang: string;
 }
 
 class MockWindowRef { }
@@ -232,7 +234,7 @@ describe('ItemListRow', () => {
                 EntityResolver,
             ],
             declarations: [
-                FavouriteToggle,
+                FavouriteToggleComponent,
                 FileSizePipe,
                 HighlightPipe,
                 I18nDatePipe,
@@ -1112,7 +1114,7 @@ describe('ItemListRow', () => {
         });
 
         function getIconButton(text: string, fixture: ComponentFixture<TestComponent>): HTMLElement {
-            let iconButton: any = fixture.nativeElement.querySelector('favourite-toggle gtx-button');
+            const iconButton: any = fixture.nativeElement.querySelector('favourite-toggle gtx-button');
             return iconButton;
         }
 
@@ -1126,7 +1128,7 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                let addFavButton = getIconButton('star_border', fixture);
+                const addFavButton = getIconButton('star_border', fixture);
                 expect(addFavButton).toBeDefined('"Add to favourites" button is not visible.');
                 addFavButton.click();
 
@@ -1152,7 +1154,7 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                let removeFavButton = getIconButton('star', fixture);
+                const removeFavButton = getIconButton('star', fixture);
                 expect(removeFavButton).toBeDefined('"Remove from favourites" button is not visible.');
                 removeFavButton.click();
 

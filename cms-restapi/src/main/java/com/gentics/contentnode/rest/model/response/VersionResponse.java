@@ -21,6 +21,11 @@ public class VersionResponse extends GenericResponse {
 	private String version;
 
 	/**
+	 * CMS Variant
+	 */
+	private String variant;
+
+	/**
 	 * The respective CMP version for this CMS version.
 	 */
 	private String cmpVersion;
@@ -62,6 +67,23 @@ public class VersionResponse extends GenericResponse {
 	 */
 	public void setVersion(String version) {
 		this.version = version;
+	}
+
+	/**
+	 * Server Variant (OSS for the Open Source Variant, EE for the Enterprise Edition Variant)
+	 * @documentationExample OSS
+	 * @return Server variant
+	 */
+	public String getVariant() {
+		return variant;
+	}
+
+	/**
+	 * Set the server variant
+	 * @param variant variant
+	 */
+	public void setVariant(String variant) {
+		this.variant = variant;
 	}
 
 	/**

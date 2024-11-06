@@ -1,7 +1,13 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { ContentRepositoryFragmentDetailTabs, createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import { discard } from '@admin-ui/common/utils/rxjs-discard-operator/discard.opertator';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
-import { BREADCRUMB_RESOLVER, ContentRepositoryFragmentOperations, CRFragmentTableLoaderService, EditorTabTrackerService, ResolveBreadcrumbFn } from '@admin-ui/core';
+import {
+    BREADCRUMB_RESOLVER,
+    ContentRepositoryFragmentOperations,
+    CRFragmentTableLoaderService,
+    EditorTabTrackerService,
+    ResolveBreadcrumbFn,
+} from '@admin-ui/core';
 import { BaseDetailComponent, ContentRepositoryFragmentDataService, TagmapEntryDisplayFields } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
@@ -10,7 +16,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     ContentRepositoryFragmentBO,
     ContentRepositoryFragmentUpdateRequest,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
@@ -18,11 +23,6 @@ import {
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { delay, repeat, takeUntil } from 'rxjs/operators';
-
-export enum ContentRepositoryFragmentDetailTabs {
-    PROPERTIES = 'properties',
-    ENTRIES = 'entries',
-}
 
 @Component({
     selector: 'gtx-content-repository-fragment-detail',
@@ -49,7 +49,7 @@ export class ContentRepositoryFragmentDetailComponent
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<ContentRepositoryFragmentDetailTabs, FormTabHandle>;
+    private tabHandles: Record<ContentRepositoryFragmentDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

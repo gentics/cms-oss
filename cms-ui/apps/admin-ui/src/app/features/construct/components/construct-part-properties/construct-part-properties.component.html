@@ -44,7 +44,7 @@
                 [clearable]="true"
                 formControlName="markupLanguageId"
             >
-                <gtx-option *ngFor="let item of markupLanguages$ | async" [value]="item.id">{{ item.name }}</gtx-option>
+                <gtx-option *ngFor="let item of markupLanguages" [value]="item.id">{{ item.name }}</gtx-option>
             </gtx-select>
 
             <!-- regex -->
@@ -67,6 +67,7 @@
                 class="settings-group"
                 [label]="'construct.overviewSettings' | i18n"
                 [initialValue]="initialValue"
+                [pureInitialValue]="true"
                 (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="overviewSettings"
             ></gtx-overview-part-settings>
@@ -75,7 +76,9 @@
             <gtx-select-part-settings
                 *ngIf="form.get('selectSettings').enabled"
                 [label]="'construct.selectSettings' | i18n"
+                [dataSources]="dataSources"
                 [initialValue]="initialValue"
+                [pureInitialValue]="true"
                 (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="selectSettings"
             ></gtx-select-part-settings>

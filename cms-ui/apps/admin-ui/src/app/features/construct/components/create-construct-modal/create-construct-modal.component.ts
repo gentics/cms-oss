@@ -1,9 +1,7 @@
-import { ConstructOperations, I18nNotificationService } from '@admin-ui/core';
+import { ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
-import { LanguageDataService } from '@admin-ui/shared/providers/language-data';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -26,18 +24,18 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private entityOperations: ConstructOperations,
-        private languageData: LanguageDataService,
+        private handler: ConstructHandlerService,
+        private languageHandler: LanguageHandlerService,
         private notification: I18nNotificationService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl(null, createNestedControlValidator());
+        this.form = new UntypedFormControl(null);
 
         // get available system languages for i18n-properties
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
 
     ngOnDestroy(): void {
@@ -54,7 +52,7 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
         this.changeDetector.markForCheck();
 
         const { nodeIds, ...value } = this.form.value;
-        this.subscription.add(this.entityOperations.create(value, nodeIds).subscribe({
+        this.subscription.add(this.handler.create(value, { nodeId: nodeIds }).subscribe({
             complete: () => {
                 this.closeFn(true);
             },

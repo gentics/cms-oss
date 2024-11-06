@@ -1,15 +1,15 @@
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { AppStateService, AuthStateModel, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { combineLatest, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, pairwise, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { isEqual } from 'lodash-es';
+import { Observable, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, pairwise, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { objectDiff } from '../../../common';
 import { SetBackendLanguage, SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
 import { INITIAL_USER_SETTINGS, UIStateModel, UIStateSettings } from '../../../state/ui/ui.state';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage/editor-ui-local-storage.service';
 import { I18nService } from '../i18n';
-import { LanguageOperations } from '../operations/language';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 
 export type UserSettingName = keyof UIStateSettings;
@@ -43,7 +43,7 @@ export class UserSettingsService extends InitializableServiceBase {
         private editorLocalStorage: EditorUiLocalStorageService,
         private i18n: I18nService,
         private serverStorage: ServerStorageService,
-        private languageOperations: LanguageOperations,
+        private languageHandler: LanguageHandlerService,
     ) {
         super();
     }
@@ -105,7 +105,7 @@ export class UserSettingsService extends InitializableServiceBase {
                  * This method fetches all available and current active UI language and stores it to state and localstorage.
                  * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
                  */
-                this.languageOperations.getActiveBackendLanguage().subscribe(language => {
+                this.languageHandler.getActiveBackendLanguage().subscribe(language => {
                     this.appState.dispatch(new SetUILanguage(language));
                     this.appState.dispatch(new SetBackendLanguage(language));
                 });

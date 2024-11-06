@@ -1,5 +1,4 @@
 import { denormalize, normalize, Schema, schema as SchemaNamespace } from 'normalizr';
-import { Form } from '../cms-form';
 import { FileOrImage } from '../file';
 import { Folder } from '../folder';
 import { Group } from '../group';
@@ -26,6 +25,8 @@ import { GcmsNormalizationSchemas } from './schemas';
  *
  * It should be used instead of the normalizr functions, because it adds
  * additional post-processing.
+ *
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export class GcmsNormalizer {
 
@@ -204,7 +205,7 @@ export class GcmsNormalizer {
             if (isNested) {
                 delete page.languageVariants;
             } else {
-                for (let key of Object.keys(page.languageVariants)) {
+                for (const key of Object.keys(page.languageVariants)) {
                     this.processDenormalizedPage(page.languageVariants[key], true);
                 }
             }
@@ -213,7 +214,7 @@ export class GcmsNormalizer {
             if (isNested) {
                 delete page.pageVariants;
             } else {
-                for (let key of Object.keys(page.pageVariants)) {
+                for (const key of Object.keys(page.pageVariants)) {
                     this.processDenormalizedPage(page.pageVariants[key], true);
                 }
             }

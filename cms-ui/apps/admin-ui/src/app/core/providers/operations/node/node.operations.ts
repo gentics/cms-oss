@@ -4,7 +4,6 @@ import {
     AccessControlledType,
     EntityIdType,
     GcmsPermission,
-    Index,
     ItemDeleteResponse,
     Language,
     Node,
@@ -201,7 +200,7 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
         );
     }
 
-    updateNodeFeatures(nodeId: number, update: Partial<Index<NodeFeature, boolean>>): Observable<(keyof NodeFeatures)[]> {
+    updateNodeFeatures(nodeId: number, update: Partial<Record<NodeFeature, boolean>>): Observable<(keyof NodeFeatures)[]> {
         const updateQueries = [];
 
         Object.keys(update).forEach((feature: NodeFeature) => {

@@ -1,7 +1,5 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Node } from '@gentics/cms-models';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NodeBranch, NodeHierarchyBuilder } from '../../../core/providers/node-hierarchy-builder/node-hierarchy-builder.service';
 
@@ -13,45 +11,45 @@ import { NodeBranch, NodeHierarchyBuilder } from '../../../core/providers/node-h
     templateUrl: './node-selector.tpl.html',
     styleUrls: ['./node-selector.scss'],
     providers: [NodeHierarchyBuilder],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodeSelector implements OnInit {
+export class NodeSelectorComponent implements OnChanges {
+
     /** An array of folders representing the root folder of each available node. */
-    @Input() set nodes(value: Node[]) {
-        this.nodes$.next(value);
-    }
-    nodes$ = new BehaviorSubject<Node[]>([]);
+    @Input()
+    public nodes: Node[] = []
 
     /** The ID of the selected node. */
-    @Input() set activeNodeId(value: number) {
-        this.activeNodeId$.next(value);
-    }
-    activeNodeId$ = new BehaviorSubject<number>(null);
-
-    /** Fired when a node has been selected. */
-    @Output() nodeSelected = new EventEmitter<Node>();
+    @Input()
+    public activeNodeId: number;
 
     /** Shows the name of the selected node or a small dropdown arrow (default). */
-    @Input() showName = false;
+    @Input()
+    public showName = false;
 
     /** Use router links inside the node selector (default) or only emit events. */
-    @Input() useLinks = true;
+    @Input()
+    public useLinks = true;
 
-    nodeBranches$: Observable<NodeBranch[]>;
-    currentSelectedNode$: Observable<Node>;
+    /** Fired when a node has been selected. */
+    @Output()
+    public nodeSelected = new EventEmitter<Node>();
+
+    public nodeBranches: NodeBranch[];
+    public currentSelectedNode: Node;
 
     constructor(
         private entityResolver: EntityResolver,
-        private hierarchyBuilder: NodeHierarchyBuilder
+        private hierarchyBuilder: NodeHierarchyBuilder,
     ) { }
 
-    ngOnInit(): void {
-
-        this.nodeBranches$ = this.nodes$
-            .pipe(map(nodes => this.hierarchyBuilder.getNodeHierarchy(nodes)));
-
-        this.currentSelectedNode$ = this.activeNodeId$
-            .pipe(map(activeNodeId => this.entityResolver.getNode(activeNodeId)));
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.nodes) {
+            this.nodeBranches = this.hierarchyBuilder.getNodeHierarchy(this.nodes);
+        }
+        if (changes.activeNodeId) {
+            this.currentSelectedNode = this.entityResolver.getNode(this.activeNodeId);
+        }
     }
 
     select(node: Node): void {

@@ -16,7 +16,7 @@
         <tbody *ngIf="pages.length > 0">
             <gtx-contents-list-item *ngFor="let item of pages" [ngClass]="item.type || ''">
                 <td class="item-icon">
-                    <icon>{{ iconForItemType(item.type) }}</icon>
+                    <icon>{{ item.type | gtxTypeIcon }}</icon>
                 </td>
                 <td class="item-primary">
                     <div class="item-name">{{ item.name }}</div>

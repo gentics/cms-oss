@@ -1,13 +1,14 @@
 import { AppStateService } from '@admin-ui/state';
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { AccessControlledType, TypePermissions, UniformTypePermissions } from '@gentics/cms-models';
+import { TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
+import { AccessControlledType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
-import { PermissionsService } from '../permissions/permissions.service';
 import { I18nService } from '../i18n';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
+import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
 
 class MockGcmsApi {}

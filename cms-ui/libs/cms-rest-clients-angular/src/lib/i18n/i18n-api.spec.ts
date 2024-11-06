@@ -10,18 +10,18 @@ describe('I18nApi', () => {
         i18nApi = new I18nApi(apiBase as any);
     });
 
-    it('getBackendLanguages() sends the correct GET request', () => {
-        i18nApi.getBackendLanguages();
-        expect(apiBase.post).toHaveBeenCalledWith('i18n/list');
+    it('getAvailableUiLanguages() sends the correct GET request', () => {
+        i18nApi.getAvailableUiLanguages();
+        expect(apiBase.get).toHaveBeenCalledWith('i18n/list');
     });
 
-    it('getActiveBackendLanguage() sends the correct GET request', () => {
-        i18nApi.getActiveBackendLanguage();
-        expect(apiBase.post).toHaveBeenCalledWith('i18n/get');
+    it('getActiveUiLanguage() sends the correct GET request', () => {
+        i18nApi.getActiveUiLanguage();
+        expect(apiBase.get).toHaveBeenCalledWith('i18n/get');
     });
 
-    it('setActiveBackendLanguage() sends the correct GET request', () => {
-        i18nApi.setActiveBackendLanguage({ code: 'de' });
+    it('setActiveUiLanguage() sends the correct GET request', () => {
+        i18nApi.setActiveUiLanguage({ code: 'de' });
         expect(apiBase.post).toHaveBeenCalledWith('i18n/set', { code: 'de' });
     });
 

@@ -40,5 +40,19 @@ public enum NodeFeature {
 	/**
 	 * With this feature, the node has additional asset management enabled (which must be configured)
 	 */
-	asset_management
+	asset_management,
+
+	/**
+	 * If this feature is activated, uploaded images are automatically converted to WebP.
+	 */
+	webp_conversion,
+	/*
+	 * With this feature, the properties editor will immediately open upon uploading a new file.
+	 */
+	upload_file_properties,
+
+	/**
+	 * With this feature, the properties editor will immediately open upon uploading a new image.
+	 */
+	upload_image_properties
 }

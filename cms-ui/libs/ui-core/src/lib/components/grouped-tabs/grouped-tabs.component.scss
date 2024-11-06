@@ -1,15 +1,8 @@
 @import '../../../styles/base-import';
-@import 'material-design-icons-iconfont/src/mixins';
-@import 'material-design-icons-iconfont/src/variables';
-
-$tab-active-icon: material-icons-content(map-get($material-icons-codepoints, 'radio_button_checked'));
-$tab-inactive-icon: material-icons-content(map-get($material-icons-codepoints, 'radio_button_unchecked'));
-$tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, 'not_interested'));
 
 @mixin is-active {
     border-left: 2px solid $gtx-tabs-active-border-color;
     border-right: 1px solid white;
-    margin-right: -1px;
 }
 
 @mixin inline-ellipsis-text {
@@ -21,7 +14,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
 }
 
 @mixin status-icon {
-    content: $tab-active-icon;
+    content: '\e836';
     position: absolute;
     left: -9px;
     top: 0;
@@ -29,7 +22,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
     margin: auto;
     width: 16px;
     height: 13px;
-    font-family: 'Material Icons';
+    font-family: 'Material Symbols';
     font-weight: 400;
     font-style: normal;
     font-size: 16px;
@@ -84,7 +77,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 cursor: pointer;
                 // text-transform: uppercase;
                 color: $gtx-color-dark-gray;
-                transition: border-left 0.3s, color 0.2s;
+                transition: 200ms;
                 border-right: 1px solid $gtx-color-light-gray;
                 vertical-align: middle;
                 position: relative;
@@ -117,7 +110,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 }
 
                 &.status-icon.inactive::before {
-                    content: $tab-inactive-icon;
+                    content: '\e837';
                 }
 
                 &.status-icon.is-active::before {
@@ -141,7 +134,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 }
 
                 &.status-icon.readonly.inactive::before {
-                    content: $tab-readonly-icon;
+                    content: '\e14b';
                     background: white;
                 }
 
@@ -188,6 +181,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                         width: 16px;
                         height: 16px;
                         font-size: 16px;
+                        transition: 200ms linear;
                     }
 
                     .tab-label {
@@ -198,8 +192,12 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 .collapsible-body {
                     display: block;
                     visibility: hidden;
+                    max-height: 0;
                     opacity: 0;
-                    transition: visibility 0s ease 0.15s, opacity 0.10s ease-out 0.05s, max-height 0.15s ease-out;
+                    transition:
+                        visibility 0s ease 0.15s,
+                        opacity 0.10s ease-out 0.05s,
+                        max-height 0.15s ease-out;
                     padding: 0;
                     border: none;
                     z-index: 0;
@@ -248,10 +246,18 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 }
 
                 &.expanded {
+                    .collapsible-header .header-icon {
+                        transform: rotateZ(90deg);
+                    }
+
                     .collapsible-body {
                         visibility: visible;
                         opacity: 1;
-                        transition: visibility 0s, opacity 0.15s ease-in 0.10s, max-height 0.25s ease-in;
+                        max-height: 100vh;
+                        transition:
+                            visibility 0s,
+                            opacity 0.15s ease-in 0.10s,
+                            max-height 0.25s ease-in;
                     }
                 }
             }

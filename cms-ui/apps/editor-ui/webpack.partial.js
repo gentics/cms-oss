@@ -4,7 +4,7 @@ const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
 
 function getNextVersion() {
     const gitRevisionPlugin = new GitRevisionPlugin();
-    commitHash = gitRevisionPlugin.commithash();
+    const commitHash = gitRevisionPlugin.commithash();
     const dateString = new Date().toISOString().slice(0, 10);
     return `${dateString}+${commitHash}`;
 }
@@ -21,6 +21,8 @@ module.exports = (config, options, targetOptions) => {
         loader: 'yaml-loader',
     });
 
+    // `precompile-scss` files, are for inline use, as these are styles which are
+    // getting injected into the aloha iframe when editing a page.
     config.module.rules.push({
         test: /\.precompile-scss$/,
         use: [

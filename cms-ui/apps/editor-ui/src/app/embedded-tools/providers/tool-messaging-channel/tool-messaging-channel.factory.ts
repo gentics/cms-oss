@@ -17,10 +17,11 @@ export class ToolMessagingChannelFactory {
         const initialPath = this.state.now.tools.subpath[toolKey] || '';
         const remoteApi = {};
 
+        // eslint-disable-next-line prefer-const
         let channel: ToolMessagingChannel;
         const exposedApi = ExposedUIAPI.clone(this.exposedApi);
-        exposedApi.close = () => channel.toolWantsToClose();
-        exposedApi.navigated = (path: string, replace?: boolean) => channel.toolWantsToNavigate(path, replace);
+        exposedApi.close = () => Promise.resolve(channel.toolWantsToClose());
+        exposedApi.navigated = (path: string, replace?: boolean) => Promise.resolve(channel.toolWantsToNavigate(path, replace));
         exposedApi.provideBreadcrumbs = breadcrumbs => {
             this.state.dispatch(new ToolBreadcrumbAction(toolKey, breadcrumbs));
         };

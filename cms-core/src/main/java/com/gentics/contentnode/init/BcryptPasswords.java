@@ -3,8 +3,6 @@ package com.gentics.contentnode.init;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.quartz.JobExecutionException;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
@@ -19,11 +17,6 @@ import com.gentics.lib.db.SQLExecutor;
  * the first time and bcrypt only hashing is applied.
  */
 public class BcryptPasswords extends InitJob {
-	/**
-	 * Flag to mark whether the job was interrupted
-	 */
-	private boolean interrupted = false;
-
 	@Override
 	public final void execute() throws NodeException {
 		if (logger.isInfoEnabled()) {
@@ -75,19 +68,6 @@ public class BcryptPasswords extends InitJob {
 					logger.warn("BcryptPasswords: TransactionException occured ");
 				}
 			}
-		}
-	}
-
-	/**
-	 * If the job was interrupted, throw an exception
-	 * @throws JobExecutionException When interrupted
-	 */
-	protected final void checkForInterruption() throws JobExecutionException {
-		if (interrupted) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Job was interrupted");
-			}
-			throw new JobExecutionException("Job was interrupted");
 		}
 	}
 }

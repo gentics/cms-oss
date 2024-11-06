@@ -1,1 +1,2 @@
-export * from './gcms-test-data.mock';
+export * from './entity-store-data.mock';
+export * from './test-data.mock';

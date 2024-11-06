@@ -1,5 +1,6 @@
 import {InjectionToken} from '@angular/core';
-export const environment = new InjectionToken('environment');
+
+export const ENVIRONMENT_TOKEN = new InjectionToken('environment');
 
 /**
  * In IE 11, the `console` object only exists after the devtools have been opened. Prior to that, any use of the

@@ -9,8 +9,15 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import { ItemLanguageClickEvent, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
-import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction, FolderActionsService, WastebinActionsService } from '@editor-ui/app/state';
+import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import {
+    ApplicationStateService,
+    ChangeListSelectionAction,
+    FocusEditorAction,
+    FolderActionsService,
+    WastebinActionsService,
+} from '@editor-ui/app/state';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
     Folder,
@@ -18,7 +25,6 @@ import {
     Form,
     Image,
     Item,
-    ItemListRowMode,
     Language,
     Node as NodeModel,
     Normalized,
@@ -215,6 +221,7 @@ export class ItemListRowComponent implements OnInit {
         const pageLanguageIds = item.languageVariants ? Object.keys(item.languageVariants).map(id => +id) : [];
         const languageVariantId = item.languageVariants && item.languageVariants[language.id];
         const pageTranslation = languageVariantId && this.entityResolver.getPage(languageVariantId);
+        const pageLanguageIsSet = item.language ?? false;
 
         if (restore) {
             const entityToBeRestoredId = languageVariantId;
@@ -232,10 +239,10 @@ export class ItemListRowComponent implements OnInit {
             } else {
                 const languageVariantId = item.languageVariants[language.id];
                 const languageVariant = this.entityResolver.getPage(languageVariantId);
-                this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, 'preview').navigate();
+                this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, EditMode.PREVIEW).navigate();
             }
             return;
-        } else if (source && pageTranslation && !isDeleted) {
+        } else if (source && !pageTranslation && !pageLanguageIsSet && !isDeleted) {
             this.folderActions.updatePageLanguage(item.id, language).then(() => {
                 this.folderActions.refreshList('page');
             });
@@ -292,14 +299,14 @@ export class ItemListRowComponent implements OnInit {
 
         if (source) {
             this.folderActions.setActiveFormLanguage(language.id);
-            this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'preview').navigate();
+            this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.PREVIEW).navigate();
             return;
         }
 
         await this.folderActions.updateFormLanguage(item, language);
         await this.folderActions.setActiveFormLanguage(language.id);
         await this.folderActions.refreshList('form');
-        this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'edit').navigate();
+        this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
     }
 
     isModeSelect(): boolean {
@@ -342,7 +349,7 @@ export class ItemListRowComponent implements OnInit {
      */
     private editPage(page: Page): void {
         const nodeId = page.inherited ? page.inheritedFromId : this.activeNode.id;
-        this.navigationService.detailOrModal(nodeId, 'page', page.id, 'edit').navigate();
+        this.navigationService.detailOrModal(nodeId, 'page', page.id, EditMode.EDIT).navigate();
     }
 
     /**
@@ -351,7 +358,7 @@ export class ItemListRowComponent implements OnInit {
     private editPageCompareWithLanguage(page: Page, compareWithId: number): void {
         const nodeId = page.inherited ? page.inheritedFromId : this.activeNode.id;
         const options = { compareWithId };
-        this.navigationService.detailOrModal(nodeId, 'page', page.id, 'edit', options).navigate();
+        this.navigationService.detailOrModal(nodeId, 'page', page.id, EditMode.EDIT, options).navigate();
     }
 
 }

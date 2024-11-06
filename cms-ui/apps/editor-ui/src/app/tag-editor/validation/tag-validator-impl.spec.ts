@@ -1,4 +1,10 @@
 import {
+    TagPropertyValidator,
+    TagValidationResult,
+    TagValidator,
+    ValidationResult,
+} from '@gentics/cms-integration-api-models';
+import {
     EditableTag,
     ListType,
     OrderBy,
@@ -12,11 +18,7 @@ import {
     TagPartProperty,
     TagPartType,
     TagPropertyType,
-    TagPropertyValidator,
     TagType,
-    TagValidationResult,
-    TagValidator,
-    ValidationResult
 } from '@gentics/cms-models';
 import { getExampleEditableTag, getExampleValidationFailed, getExampleValidationSuccess, mockEditableTag } from '../../../testing/test-tag-editor-data.mock';
 import { GenericTagPropertyValidator } from './generic-tag-property-validator/generic-tag-property-validator';
@@ -75,8 +77,8 @@ describe('TagValidatorImpl', () => {
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                pageId: 1234
-            }
+                pageId: 1234,
+            },
         ]);
         const tagPart = tag.tagType.parts[0];
         setUpTagValidator(tag);
@@ -110,9 +112,9 @@ describe('TagValidatorImpl', () => {
                     recursive: false,
                     selectedItemIds: null,
                     selectedNodeItemIds: [ { nodeId: 1, objectId: 1234 }, { nodeId: 1, objectId: 4711 } ],
-                    source: ''
-                }
-            }
+                    source: '',
+                },
+            },
         ]);
         createDefaultOverviewSettings(tag.tagType.parts);
         const tagPart = tag.tagType.parts[0];
@@ -142,27 +144,27 @@ describe('TagValidatorImpl', () => {
                     {
                         id: 1,
                         key: '1',
-                        value: '1'
+                        value: '1',
                     },
                     {
                         id: 2,
                         key: '2',
-                        value: '2'
-                    }
+                        value: '2',
+                    },
                 ],
                 selectedOptions: [
                     {
                         id: 1,
                         key: '1',
-                        value: '1'
+                        value: '1',
                     },
                     {
                         id: 2,
                         key: '2',
-                        value: '2'
-                    }
-                ]
-            }
+                        value: '2',
+                    },
+                ],
+            },
         ]);
         const tagPart = tag.tagType.parts[0];
         setUpTagValidator(tag);
@@ -187,37 +189,37 @@ describe('TagValidatorImpl', () => {
             {
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 mandatory: true,
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 editable: false,
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 hideInEditor: true,
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 hidden: true,
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
-            }
+                typeId: TagPartType.Text,
+            },
         ]);
         setUpTagValidator(tag);
 
@@ -225,11 +227,11 @@ describe('TagValidatorImpl', () => {
         const expectedResult: TagValidationResult = {
             allPropertiesValid: true,
             results: {
-                'property0': getExampleValidationSuccess(),
-                'property1': getExampleValidationSuccess(),
-                'property4': getExampleValidationSuccess(),
-                'property5': getExampleValidationSuccess()
-            }
+                property0: getExampleValidationSuccess(),
+                property1: getExampleValidationSuccess(),
+                property4: getExampleValidationSuccess(),
+                property5: getExampleValidationSuccess(),
+            },
         }
 
         const result = tagValidator.validateAllTagProperties(tag.properties);
@@ -246,27 +248,27 @@ describe('TagValidatorImpl', () => {
             {
                 stringValue: 'test',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
+                typeId: TagPartType.Text,
             },
             {
                 mandatory: true,
                 stringValue: '',
                 type: TagPropertyType.STRING,
-                typeId: TagPartType.Text
-            }
+                typeId: TagPartType.Text,
+            },
         ]);
         setUpTagValidator(tag);
 
         spyOn(tagValidator, 'validateTagProperty').and.returnValues(
             getExampleValidationSuccess(),
-            getExampleValidationFailed()
+            getExampleValidationFailed(),
         );
         const expectedResult: TagValidationResult = {
             allPropertiesValid: false,
             results: {
-                'property0': getExampleValidationSuccess(),
-                'property1': getExampleValidationFailed(),
-            }
+                property0: getExampleValidationSuccess(),
+                property1: getExampleValidationFailed(),
+            },
         }
 
         const result = tagValidator.validateAllTagProperties(tag.properties);

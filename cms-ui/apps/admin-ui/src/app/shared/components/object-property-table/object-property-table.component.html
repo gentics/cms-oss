@@ -94,7 +94,7 @@
     <a
         *ngIf="value > 0"
         class="gtx-table-cell-link"
-        [routerLink]="'construct' | gtxEntityDetailRouterLink:value"
+        [routerLink]="AdminUIEntityDetailRoutes.CONSTRUCT | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.construct?.name || value }}</a>
 </ng-template>
@@ -103,7 +103,7 @@
     <a
         *ngIf="value > 0"
         class="gtx-table-cell-link"
-        [routerLink]="'objectpropcategory' | gtxEntityDetailRouterLink:value"
+        [routerLink]="AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>
 </ng-template>

@@ -115,12 +115,13 @@ public interface ImageResource extends AuthenticatedResource {
 	 * permissions, are silently ignored.
 	 *
 	 * @param request The request with he list of image ids to load.
+	 * @param fillWithNulls flag to have items, which cannot be loaded returned as "null" objects in the response (instead of just omitting them)
 	 *
 	 * @return The list of found images, for which the user has enough permissions.
 	 */
 	@POST
 	@Path("/load")
-	MultiImageLoadResponse load(MultiObjectLoadRequest request);
+	MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
 
 	/**
 	 * Rotate by 90° (optionally), crop (optionally) and resize an image (in this order).
@@ -202,11 +203,12 @@ public interface ImageResource extends AuthenticatedResource {
 	 * Delete the image denoted by id
 	 * @param id id of the image to delete
 	 * @param nodeId id of the node (channel) of the image
+	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response object
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete);
 
 	/**
 	 * Remove the image denoted by the given id from the wastebin.

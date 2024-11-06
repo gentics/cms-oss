@@ -7,7 +7,7 @@
 <gtx-sortable-list (dragEnd)="reorder($event)">
     <gtx-sortable-item *ngFor="let fav of (favourites$ | async)">
         <div class="item-icon" [ngClass]="fav.type || ''">
-            <i class="material-icons" [attr.translate]="'no'">{{ iconForItemType(fav.type) }}</i>
+            <icon>{{ fav.type | gtxTypeIcon }}</icon>
         </div>
 
         <div

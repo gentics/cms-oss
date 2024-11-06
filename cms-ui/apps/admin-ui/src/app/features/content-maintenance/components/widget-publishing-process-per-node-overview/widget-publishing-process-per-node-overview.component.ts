@@ -2,7 +2,7 @@ import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
 import { AdminOperations, ErrorHandler, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ContentMaintenanceType, Node, PublishInfo, PublishObjectsCount, PublishQueue, Raw } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Subscription, forkJoin, timer } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, startWith, switchMap, tap } from 'rxjs/operators';
 

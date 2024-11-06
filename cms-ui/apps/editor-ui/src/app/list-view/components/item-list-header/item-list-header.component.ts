@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, Type } from '@angular/core';
-import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
+import { EditorPermissions, ItemsInfo, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     EditableFormProps,
     EditablePageProps,
-    EditorPermissions,
     Feature,
     FolderItemType,
     FolderItemTypePlural,
@@ -18,7 +18,6 @@ import {
     Page,
     SortField,
     StagedItemsMap,
-    getNoPermissions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';
@@ -112,6 +111,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
     isCollapsed = false;
     wastebinEnabled = false;
+    multiChannelingEnabled = false;
     folderLanguage: Language = null;
     elasticsearchQueryActive = false;
     searchQueryActive = false;
@@ -135,8 +135,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.itemsInfo$ = this.appState.select(state => state.folder)
-            .map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]);
+        this.itemsInfo$ = this.appState.select(state => state.folder).pipe(
+            map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]),
+        );
 
         const basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
             map(term => this.isValidString(term)),
@@ -171,8 +172,13 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.wastebin).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.WASTEBIN]).subscribe(enabled => {
             this.wastebinEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+            this.multiChannelingEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
     }
@@ -212,7 +218,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             map(itemsInfo => itemsInfo.hasMore),
             filter(hasMore => hasMore === false),
             take(1),
-            switchMap(() => this.itemsInfo$.map(itemsInfo => itemsInfo.list)),
+            switchMap(() => this.itemsInfo$.pipe(
+                map(itemsInfo => itemsInfo.list)),
+            ),
             // This debounce is required due to the batched update feature
             // (see folder-state-actions.ts, applyListBatch())
             debounceTime(Math.ceil(this.itemsInfo.total / 20) * 15),
@@ -261,10 +269,10 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             .then((newItem: Page | Form) => {
                 this.folderActions.refreshList(this.itemType);
                 if (isPage) {
-                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, EditMode.EDIT).navigate();
                 }
                 if (isForm) {
-                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, EditMode.EDIT).navigate();
                 }
             })
             .catch(this.errorHandler.catch);
@@ -273,42 +281,21 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * The language context for the pages has been changed.
      */
-    languageChanged(language: Language): void {
-        this.userSettings.setActiveLanguage(language.id);
+    selectLanguage(language: Language): void {
+        this.userSettings.setActiveLanguage(language?.id);
     }
 
-    toggleDisplayAllLanguages(event?: MouseEvent): void {
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayAllLanguages(): void {
         const currentVal = this.appState.now.folder.displayAllLanguages;
         this.userSettings.setDisplayAllLanguages(!currentVal);
     }
 
-    toggleDisplayStatusIcons(event?: MouseEvent): void {
-        /*
-         * Somewhat hacky fix. We have a click listener for the entire dropdown item which is required.
-         * A click on the checkbox will trigger a click as well (bubbles up).
-         * However, since it's not a "real" checkbox, but a click onto the label (as the label is styled like a checkbox),
-         * and it has the "for" attribute set, some (or all?) browsers will issue a second click
-         * event for the input element as well.
-         * This would revert the value again, which isn't what's intended.
-         * On checkbox change, the event is emitted completely.
-         */
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayStatusIcons(): void {
         const currentVal = this.appState.now.folder.displayStatusIcons;
         this.userSettings.setDisplayStatusIcons(!currentVal);
     }
 
-    toggleDisplayDeleted(event?: MouseEvent): void {
-        if (event && event.target !== event.currentTarget) {
-            return;
-        }
-
+    toggleDisplayDeleted(): void {
         const currentVal = this.appState.now.folder.displayDeleted;
         this.userSettings.setDisplayDeleted(!currentVal);
         // refresh list as refetch is required

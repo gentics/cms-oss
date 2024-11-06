@@ -1,11 +1,12 @@
 <form
     *ngIf="form"
     [formGroup]="form"
-    class="row"
+    class="gtx-form row"
 >
     <div class="input-container small-12 medium-6 columns">
 
-        <!-- mapname -->
+        <div class="gtx-form-section-title">{{ 'shared.title_general' | i18n }}</div>
+
         <gtx-input
             formControlName="mapname"
             type="text"
@@ -13,7 +14,6 @@
             [label]="('tagmapEntry.mapname' | i18n) + ' *'"
         ></gtx-input>
 
-        <!-- tagname -->
         <gtx-input
             formControlName="tagname"
             type="text"
@@ -37,20 +37,17 @@
             <gtx-option *ngFor="let attributeType of attributes" [value]="attributeType.id">{{ attributeType.label | i18n }}</gtx-option>
         </gtx-select>
 
-        <!-- multivalue - boolean -->
         <gtx-checkbox
             formControlName="multivalue"
             [label]="'tagmapEntry.multivalue' | i18n"
         ></gtx-checkbox>
 
-        <!-- optimized - boolean -->
         <gtx-checkbox
             *ngIf="form.get('optimized').enabled"
             formControlName="optimized"
             [label]="'tagmapEntry.optimized' | i18n"
         ></gtx-checkbox>
 
-        <!-- filesystem - boolean -->
         <gtx-checkbox
             *ngIf="form.get('filesystem').enabled"
             formControlName="filesystem"
@@ -60,73 +57,95 @@
 
     <div class="input-container small-12 medium-6 columns">
 
-        <!-- targetType select TagmapEntryPropertiesObjectType - required -->
-        <gtx-select
-            *ngIf="form.get('targetType').enabled"
-            formControlName="targetType"
-            [label]="('tagmapEntry.targettype' | i18n) + ' *'"
-            [clearable]="false"
+        <ng-container *ngIf="form.controls.targetType.enabled || form.controls.foreignlinkAttribute.enabled || form.controls.foreignlinkAttributeRule.enabled">
+            <div class="gtx-form-section-title">{{ 'tagmapEntry.title_reference_settings' | i18n }}</div>
+
+            <gtx-select
+                *ngIf="form.controls.targetType.enabled"
+                formControlName="targetType"
+                [label]="('tagmapEntry.targettype' | i18n) + ' *'"
+                [clearable]="false"
+            >
+                <gtx-option *ngFor="let objectType of OBJECT_TYPES" [value]="objectType.id">{{ objectType.label | i18n }}</gtx-option>
+            </gtx-select>
+
+            <gtx-input
+                *ngIf="form.controls.foreignlinkAttribute.enabled"
+                formControlName="foreignlinkAttribute"
+                type="text"
+                maxlength="255"
+                [label]="('tagmapEntry.foreignlinkattribute' | i18n) + ' *'"
+            ></gtx-input>
+
+            <gtx-textarea
+                *ngIf="form.controls.foreignlinkAttributeRule.enabled"
+                formControlName="foreignlinkAttributeRule"
+                maxlength="200"
+                [label]="'tagmapEntry.foreignlinkattributerule' | i18n"
+            ></gtx-textarea>
+        </ng-container>
+
+        <ng-container *ngIf="form.controls.elasticsearch.enabled || form.controls.noIndex.enabled">
+            <div class="gtx-form-section-title">{{ 'tagmapEntry.title_elasticsearch_settings' | i18n }}</div>
+
+            <gtx-textarea
+                *ngIf="form.controls.elasticsearch.enabled"
+                formControlName="elasticsearch"
+                [label]="'tagmapEntry.elasticsearch' | i18n"
+            ></gtx-textarea>
+            <span
+                *ngIf="form.controls.elasticsearch.hasError('errorIsInvalidJson')"
+                class="container-validator-errors"
+            >
+                {{ 'shared.error_is_invalid_json' | i18n }}
+            </span>
+
+            <gtx-checkbox
+                *ngIf="form.controls.noIndex.enabled"
+                formControlName="noIndex"
+                [label]="'tagmapEntry.noIndex' | i18n"
+            ></gtx-checkbox>
+        </ng-container>
+
+        <ng-container
+            *ngIf="form.controls.micronodeFilter.enabled
+                || form.controls.urlfield.enabled
+                || form.controls.segmentfield.enabled
+                || form.controls.displayfield.enabled"
         >
-            <gtx-option *ngFor="let objectType of OBJECT_TYPES" [value]="objectType.id">{{ objectType.label | i18n }}</gtx-option>
-        </gtx-select>
+            <div class="gtx-form-section-title">{{ 'tagmapEntry.title_misc_settings' | i18n }}</div>
 
-        <!-- foreignlinkAttribute - text - required -->
-        <gtx-input
-            *ngIf="form.get('foreignlinkAttribute').enabled"
-            formControlName="foreignlinkAttribute"
-            type="text"
-            maxlength="255"
-            [label]="('tagmapEntry.foreignlinkattribute' | i18n) + ' *'"
-        ></gtx-input>
+            <!-- <gtx-input
+                formControlName="category"
+                type="text"
+                maxlength="150"
+                [label]="'tagmapEntry.category' | i18n"
+            ></gtx-input> -->
 
-        <!-- foreignlinkAttributeRule - textarea - required -->
-        <gtx-textarea
-            *ngIf="form.get('foreignlinkAttributeRule').enabled"
-            formControlName="foreignlinkAttributeRule"
-            maxlength="200"
-            [label]="'tagmapEntry.foreignlinkattributerule' | i18n"
-        ></gtx-textarea>
+            <gtx-textarea
+                *ngIf="form.controls.micronodeFilter.enabled"
+                formControlName="micronodeFilter"
+                maxlength="200"
+                [label]="'tagmapEntry.micronodefilter' | i18n"
+            ></gtx-textarea>
 
-        <!-- elasticsearch - textarea -->
-        <gtx-textarea
-            *ngIf="form.get('elasticsearch').enabled"
-            formControlName="elasticsearch"
-            [label]="'tagmapEntry.elasticsearch' | i18n"
-        ></gtx-textarea>
-        <span
-            *ngIf="form.get('elasticsearch')?.hasError('errorIsInvalidJson')"
-            class="container-validator-errors"
-        >
-            {{ 'shared.error_is_invalid_json' | i18n }}
-        </span>
+            <gtx-checkbox
+                *ngIf="form.controls.urlfield.enabled"
+                formControlName="urlfield"
+                [label]="'tagmapEntry.urlfield' | i18n"
+            ></gtx-checkbox>
 
-        <!-- micronodeFilter - textarea -->
-        <gtx-textarea
-            *ngIf="form.get('micronodeFilter').enabled"
-            formControlName="micronodeFilter"
-            maxlength="200"
-            [label]="'tagmapEntry.micronodefilter' | i18n"
-        ></gtx-textarea>
+            <gtx-checkbox
+                *ngIf="form.controls.segmentfield.enabled"
+                formControlName="segmentfield"
+                [label]="'tagmapEntry.segmentfield' | i18n"
+            ></gtx-checkbox>
 
-        <!-- urlfield - boolean -->
-        <gtx-checkbox
-            *ngIf="form.get('urlfield').enabled"
-            formControlName="urlfield"
-            [label]="'tagmapEntry.urlfield' | i18n"
-        ></gtx-checkbox>
-
-        <!-- segmentfield - boolean -->
-        <gtx-checkbox
-            *ngIf="form.get('segmentfield').enabled"
-            formControlName="segmentfield"
-            [label]="'tagmapEntry.segmentfield' | i18n"
-        ></gtx-checkbox>
-
-        <!-- displayfield - boolean -->
-        <gtx-checkbox
-            *ngIf="form.get('displayfield').enabled"
-            formControlName="displayfield"
-            [label]="'tagmapEntry.displayfield' | i18n"
-        ></gtx-checkbox>
+            <gtx-checkbox
+                *ngIf="form.controls.displayfield.enabled"
+                formControlName="displayfield"
+                [label]="'tagmapEntry.displayfield' | i18n"
+            ></gtx-checkbox>
+        </ng-container>
     </div>
 </form>

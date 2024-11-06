@@ -1,23 +1,23 @@
-import { createFormSaveDisabledTracker, discard, FormTabHandle, Tab, TabGroup } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, discard, FormTabHandle, Tab, TabGroup, TemplateDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
-import { BREADCRUMB_RESOLVER, EditorTabTrackerService, NodeOperations, ResolveBreadcrumbFn, TemplateOperations, TemplateTableLoaderService } from '@admin-ui/core';
+import {
+    BREADCRUMB_RESOLVER,
+    EditorTabTrackerService,
+    NodeOperations,
+    ResolveBreadcrumbFn,
+    TemplateOperations,
+    TemplateTableLoaderService,
+} from '@admin-ui/core';
 import { BaseDetailComponent, TemplateDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Node, NormalizableEntityType, Normalized, Raw, TemplateBO, TemplateSaveRequest } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of, Subscription } from 'rxjs';
 import { delay, distinctUntilChanged, filter, first, map, repeat, startWith, switchMap, takeUntil } from 'rxjs/operators';
-
-export enum TemplateDetailTabs {
-    PROPERTIES = 'properties',
-    TAG_LIST = 'tag-list',
-    ASSIGNMENT = 'assign',
-    TAG_STATUS = 'tag-status',
-}
 
 export enum TemplatePropertiesTabs {
     PROPERTIES = 'properties',

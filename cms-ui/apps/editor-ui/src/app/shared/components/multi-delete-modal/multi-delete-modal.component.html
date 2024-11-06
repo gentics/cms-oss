@@ -28,7 +28,7 @@
             [class.none-selected]="isNoneSelected(item.id)"
         >
             <div class="item-icon">
-                <icon>{{ iconForItemType(item.type) }}</icon>
+                <icon>{{ item.type | gtxTypeIcon }}</icon>
             </div>
 
             <div class="item-primary">
@@ -102,7 +102,7 @@
             [class.none-selected]="selectedPageLanguageVariants[item.id]?.length === 0"
         >
             <div class="item-icon">
-                <icon>{{ iconForItemType(item.type) }}</icon>
+                <icon>{{ item.type | gtxTypeIcon }}</icon>
             </div>
 
             <div class="item-primary">
@@ -140,7 +140,7 @@
 
         <gtx-contents-list-item *ngFor="let item of inheritedItems" [ngClass]="item.type || ''">
             <div class="item-icon">
-                <icon>{{ iconForItemType(item.type) }}</icon>
+                <icon>{{ item.type | gtxTypeIcon }}</icon>
             </div>
 
             <div class="item-primary">

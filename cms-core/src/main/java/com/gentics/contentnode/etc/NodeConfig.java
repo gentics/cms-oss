@@ -3,8 +3,6 @@ package com.gentics.contentnode.etc;
 import java.sql.Connection;
 import java.util.Collection;
 
-import org.quartz.Scheduler;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.lib.datasource.SQLHandle;
 
@@ -27,11 +25,6 @@ public interface NodeConfig {
 	 * @throws NodeException 
 	 */
 	void close() throws NodeException;
-
-	/**
-	 * Gets a Scheduler which uses a persistant Jobstore (JDBCJobstore)
-	 */
-	Scheduler getPersistentScheduler() throws NodeException;
 
 	/**
 	 * Get the backend database connection. The connection is retrieved from a pool, so

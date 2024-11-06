@@ -2362,7 +2362,14 @@ public class MeshPublisher implements AutoCloseable {
 					}
 
 					if (cr.mustContain(object, checkedNode)) {
-						toDelete.remove(getMeshUuid(object));
+						String meshUuid = getMeshUuid(object);
+						if (toDelete.containsKey(meshUuid)) {
+							if (object instanceof Page) {
+								toDelete.getOrDefault(meshUuid, Collections.emptySet()).remove(getMeshLanguage(object));
+							} else {
+								toDelete.remove(meshUuid);
+							}
+						}
 					}
 				}
 			}

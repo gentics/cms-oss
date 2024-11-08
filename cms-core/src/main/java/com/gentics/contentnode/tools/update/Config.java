@@ -68,6 +68,18 @@ public class Config {
 
 	public final static String FILE_LONG_PARAM = "file";
 
+	public final static String TRIGGER_SYNC_PAGES_LONG_PARAM = "triggerSyncPages";
+
+	public final static String TRIGGER_SYNC_PAGES_SHORT_PARAM = "ts";
+
+	public final static String AWAIT_SYNC_PAGES_LONG_PARAM = "awaitSyncPages";
+
+	public final static String AWAIT_SYNC_PAGES_SHORT_PARAM = "as";
+
+	public final static String AWAIT_SYNC_PAGES_TIMEOUT_LONG_PARAM = "awaitSyncPagesTimeout";
+
+	public final static String AWAIT_SYNC_PAGES_TIMEOUT_SHORT_PARAM = "ast";
+
 	public final static String HELP_LONG_PARAM = "help";
 
 	protected String base = "http://localhost";
@@ -95,6 +107,12 @@ public class Config {
 	protected boolean republishFolders = false;
 
 	protected ResumeScheduler resumeScheduler = ResumeScheduler.always;
+
+	protected boolean triggerSyncPages = false;
+
+	protected boolean awaitSyncPages = false;
+
+	protected int awaitSyncPagesTimeout = 10 * 60 * 1000;
 
 	/**
 	 * Create instance with default values
@@ -307,6 +325,57 @@ public class Config {
 	}
 
 	/**
+	 * Flag to trigger page sync
+	 * @return flag value
+	 */
+	@JsonProperty(TRIGGER_SYNC_PAGES_LONG_PARAM)
+	public boolean isTriggerSyncPages() {
+		return triggerSyncPages;
+	}
+
+	/**
+	 * Set the flag to trigger page sync
+	 * @param triggerSyncPages flag value
+	 */
+	public void setTriggerSyncPages(boolean triggerSyncPages) {
+		this.triggerSyncPages = triggerSyncPages;
+	}
+
+	/**
+	 * Flag to await page sync
+	 * @return flag value
+	 */
+	@JsonProperty(AWAIT_SYNC_PAGES_LONG_PARAM)
+	public boolean isAwaitSyncPages() {
+		return awaitSyncPages;
+	}
+
+	/**
+	 * Set the flag to await page sync
+	 * @param awaitSyncPages flag value
+	 */
+	public void setAwaitSyncPages(boolean awaitSyncPages) {
+		this.awaitSyncPages = awaitSyncPages;
+	}
+
+	/**
+	 * Timeout for awaiting page sync with template (in ms)
+	 * @return timeout in ms
+	 */
+	@JsonProperty(AWAIT_SYNC_PAGES_TIMEOUT_LONG_PARAM)
+	public int getAwaitSyncPagesTimeout() {
+		return awaitSyncPagesTimeout;
+	}
+
+	/**
+	 * Set timeout for awaiting page sync in ms
+	 * @param awaitSyncPagesTimeout timeout in ms
+	 */
+	public void setAwaitSyncPagesTimeout(int awaitSyncPagesTimeout) {
+		this.awaitSyncPagesTimeout = awaitSyncPagesTimeout;
+	}
+
+	/**
 	 * Setting for resuming the publisher
 	 * @return resume publisher setting
 	 */
@@ -363,6 +432,15 @@ public class Config {
 		}
 		if (line.hasOption(REPUBLISH_FOLDERS_SHORT_PARAM)) {
 			republishFolders = true;
+		}
+		if (line.hasOption(TRIGGER_SYNC_PAGES_SHORT_PARAM)) {
+			triggerSyncPages = true;
+		}
+		if (line.hasOption(AWAIT_SYNC_PAGES_SHORT_PARAM)) {
+			awaitSyncPages = true;
+		}
+		if (line.hasOption(AWAIT_SYNC_PAGES_TIMEOUT_SHORT_PARAM)) {
+			awaitSyncPagesTimeout = Integer.parseInt(line.getOptionValue(AWAIT_SYNC_PAGES_TIMEOUT_SHORT_PARAM));
 		}
 	}
 

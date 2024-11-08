@@ -1,0 +1,1 @@
+Editor User Interface: The Object-Properties of Images/Files (@upload_image_properties@ and @upload_file_properties@) are being correctly validated, and will now require to be valid, before allowing the user to save.

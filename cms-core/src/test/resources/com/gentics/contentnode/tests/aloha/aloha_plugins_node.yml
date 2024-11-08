@@ -1,0 +1,5 @@
+aloha_plugins_node:
+  "Test Node":
+    - "common/characterpicker"
+    - "extra/cite"
+    - "common/format"

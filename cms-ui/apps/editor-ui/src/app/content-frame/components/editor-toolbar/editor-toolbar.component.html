@@ -87,7 +87,9 @@
                 </gtx-dropdown-item>
 
                 <gtx-dropdown-item
-                    *ngIf="editorState.editMode === EditMode.EDIT_PROPERTIES && currentItem?.type === 'page' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
+                    *ngIf="editorState.editMode === EditMode.EDIT_PROPERTIES
+                        && currentItem?.type === 'page'
+                        && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
                     (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
                 >
                     <icon left>save</icon>

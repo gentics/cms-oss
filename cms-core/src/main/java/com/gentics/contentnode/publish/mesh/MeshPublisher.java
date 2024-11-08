@@ -2362,7 +2362,14 @@ public class MeshPublisher implements AutoCloseable {
 					}
 
 					if (cr.mustContain(object, checkedNode)) {
-						toDelete.remove(getMeshUuid(object));
+						String meshUuid = getMeshUuid(object);
+						if (toDelete.containsKey(meshUuid)) {
+							if (object instanceof Page) {
+								toDelete.getOrDefault(meshUuid, Collections.emptySet()).remove(getMeshLanguage(object));
+							} else {
+								toDelete.remove(meshUuid);
+							}
+						}
 					}
 				}
 			}
@@ -3155,7 +3162,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		try (ContentLanguageTrx clTrx = new ContentLanguageTrx(language)) {
 			for (TagmapEntryRenderer entry : tagmapEntries) {
-				if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+				if (entry.skip(attributes)) {
 					renderType.preserveDependencies(entry.getMapname());
 				} else {
 					// set the rendered property
@@ -3450,7 +3457,7 @@ public class MeshPublisher implements AutoCloseable {
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
 			Object value = mapEntry.getValue();
-			if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+			if (entry.skip(attributes)) {
 				continue;
 			}
 

@@ -5,7 +5,6 @@ import java.util.function.Predicate;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
-import com.gentics.lib.db.TableVersion;
 
 /**
  * Extension to {@link TableVersion} that filters the returned data to be versioned
@@ -20,7 +19,7 @@ public class FilteringTableVersion extends TableVersion {
 	 * Create instance
 	 */
 	public FilteringTableVersion() {
-		super(false);
+		super();
 	}
 
 	/**

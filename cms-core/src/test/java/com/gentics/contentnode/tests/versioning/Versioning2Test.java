@@ -18,7 +18,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.ResultProcessor;
 import com.gentics.lib.db.SimpleResultProcessor;
-import com.gentics.lib.db.TableVersion.Diff;
+import com.gentics.contentnode.factory.object.TableVersion.Diff;
 import com.gentics.lib.etc.StringUtils;
 
 public class Versioning2Test extends AbstractVersioningTest {

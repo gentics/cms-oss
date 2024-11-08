@@ -1,0 +1,1 @@
+Now the channel languages are retrieved correctly, according to the master node. Also the update of the languages for the channel node now throws an error.

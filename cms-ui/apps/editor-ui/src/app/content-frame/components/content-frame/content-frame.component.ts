@@ -199,8 +199,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
-                this.appState.dispatch(new CancelEditingAction());
-                this.appState.dispatch(new ResetPageLockAction(item.id));
+                this.editorActions.cancelEditing(item.id);
             }
         }, 250, { leading: true, trailing: false },
     );
@@ -311,7 +310,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
-                    this.cancelEditingDebounced(this.currentItem);
+                    if (this.currentItem && this.currentItem?.id != item?.id) {
+                        this.cancelEditingDebounced(this.currentItem);
+                    }
                     this.currentItem = item as any;
                     this.onItemUpdate();
                     this.changeDetector.markForCheck();

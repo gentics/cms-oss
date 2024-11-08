@@ -107,13 +107,13 @@ public class NodeLanguageTest {
 	 */
 	@Test
 	public void testAddByLocalId() throws NodeException {
-		ContentLanguage dutch = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
-		operate(() -> assertResponseCodeOk(getNodeResource().addLanguage(Integer.toString(node.getId()), Integer.toString(dutch.getId()))));
+		ContentLanguage danish = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
+		operate(() -> assertResponseCodeOk(getNodeResource().addLanguage(Integer.toString(node.getId()), Integer.toString(danish.getId()))));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
 			assertResponseCodeOk(response);
-			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(dutch);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(danish);
 		});
 	}
 
@@ -153,6 +153,37 @@ public class NodeLanguageTest {
 			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(hungarian, italian, spanish);
 		});
 	}
+
+	/**
+	 * Test that adding a language adds it at the end of the language list
+	 * @throws NodeException
+	 */
+	@Test
+	public void testChannelLanguages() throws NodeException {
+		operate(() -> {
+			LanguageList response = getNodeResource().languages(Integer.toString(channel.getId()), null, null);
+			assertResponseCodeOk(response);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().isEmpty();
+		});
+		ContentLanguage french = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("fr")));
+		ContentLanguage danish = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
+		ContentLanguage bulgarian = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("bg")));
+		operate(() -> assertResponseCodeOk(getNodeResource().addLanguage(Integer.toString(node.getId()), french.getCode())));
+		operate(() -> assertResponseCodeOk(getNodeResource().addLanguage(Integer.toString(node.getId()), danish.getCode())));
+		operate(() -> assertResponseCodeOk(getNodeResource().addLanguage(Integer.toString(node.getId()), bulgarian.getCode())));
+
+		operate(() -> {
+			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
+			assertResponseCodeOk(response);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, danish, bulgarian);
+		});
+		operate(() -> {
+			LanguageList response = getNodeResource().languages(Integer.toString(channel.getId()), null, null);
+			assertResponseCodeOk(response);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, danish, bulgarian);
+		});
+	}
+
 
 	/**
 	 * Test that adding a language twice does not change the language order
@@ -231,17 +262,17 @@ public class NodeLanguageTest {
 	@Test
 	public void testRemoveByCode() throws NodeException {
 		ContentLanguage french = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("fr")));
-		ContentLanguage dutch = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
+		ContentLanguage danish = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
 		ContentLanguage bulgarian = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("bg")));
-		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, dutch, bulgarian))));
+		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, danish, bulgarian))));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
 			assertResponseCodeOk(response);
-			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, dutch, bulgarian);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, danish, bulgarian);
 		});
 
-		operate(() -> assertResponseCodeOk(getNodeResource().removeLanguage(Integer.toString(node.getId()), dutch.getCode())));
+		operate(() -> assertResponseCodeOk(getNodeResource().removeLanguage(Integer.toString(node.getId()), danish.getCode())));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
@@ -257,17 +288,17 @@ public class NodeLanguageTest {
 	@Test
 	public void testRemoveByLocalId() throws NodeException {
 		ContentLanguage french = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("fr")));
-		ContentLanguage dutch = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
+		ContentLanguage danish = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
 		ContentLanguage bulgarian = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("bg")));
-		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, dutch, bulgarian))));
+		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, danish, bulgarian))));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
 			assertResponseCodeOk(response);
-			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, dutch, bulgarian);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, danish, bulgarian);
 		});
 
-		operate(() -> assertResponseCodeOk(getNodeResource().removeLanguage(Integer.toString(node.getId()), Integer.toString(dutch.getId()))));
+		operate(() -> assertResponseCodeOk(getNodeResource().removeLanguage(Integer.toString(node.getId()), Integer.toString(danish.getId()))));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
@@ -284,14 +315,14 @@ public class NodeLanguageTest {
 	public void testRemoveByGlobalId() throws NodeException {
 		String globalId = supply(() -> getLanguage("da").getGlobalId().toString());
 		ContentLanguage french = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("fr")));
-		ContentLanguage dutch = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
+		ContentLanguage danish = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("da")));
 		ContentLanguage bulgarian = supply(() -> com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(getLanguage("bg")));
-		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, dutch, bulgarian))));
+		operate(() -> assertResponseCodeOk(getNodeResource().setLanguages(Integer.toString(node.getId()), Arrays.asList(french, danish, bulgarian))));
 
 		operate(() -> {
 			LanguageList response = getNodeResource().languages(Integer.toString(node.getId()), null, null);
 			assertResponseCodeOk(response);
-			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, dutch, bulgarian);
+			assertThat(response.getItems()).as("Assigned languages").usingFieldByFieldElementComparator().containsExactly(french, danish, bulgarian);
 		});
 
 		operate(() -> assertResponseCodeOk(getNodeResource().removeLanguage(Integer.toString(node.getId()), globalId)));

@@ -1767,7 +1767,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return aloha plugins to be loaded
 	 * @throws NodeException
 	 */
-	protected String getAlohaPlugins(Node node) throws NodeException {
+	public String getAlohaPlugins(Node node) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 

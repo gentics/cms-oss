@@ -55,6 +55,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         return this.onFinishClick();
     }
 
+    setChildNodeAction: WizardStepNextClickFn<void> = () => {
+        this.setChildNode();
+        return Promise.resolve();
+    }
+
     constructor(
         private appState: AppStateService,
         private nodeOps: NodeOperations,
@@ -70,6 +75,10 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             startWith(observableOf(true)),
             switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
         );
+    }
+
+    private setChildNode(): void {
+        this.isChildNode = typeof this.fgProperties.value.inheritedFromId === 'number';
     }
 
     private initForms(): void {

@@ -75,6 +75,8 @@ class MockApi {
         getBreadcrumbs: (): Observable<Partial<FolderListResponse>> => observableOf<Partial<FolderListResponse>>({
             folders: [],
         }),
+        cancelEditing: (): Observable<Partial<Response>> => observableOf<Partial<Response>>({
+        }),
     };
 }
 class MockActivatedRoute implements Partial<ActivatedRoute> {

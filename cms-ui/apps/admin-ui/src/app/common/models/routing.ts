@@ -52,6 +52,7 @@ export enum AdminUIModuleRoutes {
     TEMPLATES = 'templates',
     USERS = 'users',
     MESH_BROWSER =  'mesh-browser',
+    LICENSE = 'license',
 }
 
 export enum AdminUIEntityDetailRoutes {

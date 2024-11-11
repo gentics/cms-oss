@@ -488,6 +488,10 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconPrimary: 'hub',
         matIconSecondary: null,
     },
+    license: {
+        matIconPrimary: 'license',
+        matIconSecondary: null,
+    },
 
     [PERM_PREFIX + GcmsPermission.READ]: {
         matIconPrimary: 'remove_red_eye',

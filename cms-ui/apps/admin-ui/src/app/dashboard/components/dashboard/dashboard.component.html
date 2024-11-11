@@ -73,7 +73,16 @@
                 [title]="'dashboard.mesh_browser' | i18n"
                 [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
                 [disabled]="!(meshBrowserModuleEnabled$ | async)"
-        ></gtx-dashboard-item>
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.LICENSE"
+                icon="license"
+                [attr.data-id]="AdminUIModuleRoutes.LICENSE"
+                [title]="'dashboard.license_management' | i18n"
+                [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
+                [disabled]="!(meshBrowserModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
         <gtx-dashboard-item-group [title]="'dashboard.group_operations' | i18n">

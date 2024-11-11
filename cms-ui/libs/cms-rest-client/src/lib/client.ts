@@ -1,6 +1,5 @@
 import { BaseListOptionsWithPaging, PublishLogEntry } from '@gentics/cms-models';
-import { CONTENT_TYPE_FORM, CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
-
+import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
     GCMSAuthenticationAPI,
@@ -18,12 +17,12 @@ import {
     GCMSFileUploadManipulatorAPI,
     GCMSFolderAPI,
     GCMSFormAPI,
-    GCMSRootAPI,
     GCMSGroupAPI,
     GCMSI18nAPI,
     GCMSImageAPI,
     GCMSInfoAPI,
     GCMSLanguageAPI,
+    GCMSLicenseAPI,
     GCMSLinkCheckerAPI,
     GCMSMarkupLanguageAPI,
     GCMSMessagingAPI,
@@ -34,21 +33,22 @@ import {
     GCMSPartTypeAPI,
     GCMSPermissionAPI,
     GCMSPolicyMapAPI,
+    GCMSPublishProtocolAPI,
     GCMSRestClientConfig,
     GCMSRestClientInterceptorData,
-    GCMSRestClientRequestData,
     GCMSRestClientRequest,
+    GCMSRestClientRequestData,
     GCMSRoleAPI,
+    GCMSRootAPI,
     GCMSScheduleTaskAPI,
     GCMSSchedulerAPI,
     GCMSSearchIndexAPI,
     GCMSTemplateAPI,
+    GCMSTranslationAPI,
     GCMSUserAPI,
     GCMSUsersnapAPI,
     GCMSValidationAPI,
     RequestMethod,
-    GCMSPublishProtocolAPI,
-    GCMSTranslationAPI,
 } from './models';
 import { parseJSONSafe, stringifyEmbedOptions, stringifyPagingSortOptions, toRelativePath, trimTrailingSlash } from './utils';
 
@@ -898,4 +898,9 @@ export class GCMSRestClient implements GCMSRootAPI {
         translateText: (body) => this.executeMappedJsonRequest(POST, 'translation/text', body),
         translatePage: (pageId, params) => this.executeMappedJsonRequest(POST, `translation/page/${pageId}/`, null, params),
     } as const;
+
+    public license: GCMSLicenseAPI = {
+        info: () => this.executeMappedJsonRequest(GET, 'license/info'),
+        update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
+    }
 }

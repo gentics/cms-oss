@@ -1,167 +1,19 @@
 import { Injectable } from '@angular/core';
-import {
-    BranchReference,
-    GraphQLOptions,
-    Language,
-    NodeLoadOptions,
-    NodeResponse,
-    ProjectResponse,
-    UserResponse,
-} from '@gentics/mesh-models';
+import { GraphQLOptions } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { chunk } from 'lodash-es';
 import {
     MeshSchemaListParams,
-    MeshSchemaListResponse,
-    NumberOfSchemaElements,
-    SchemaContainer,
+    ResolvedParentNode,
     SchemaPage,
 } from '../models/mesh-browser-models';
 
 @Injectable()
 export class MeshBrowserLoaderService {
-    constructor(protected meshClient: MeshRestClientService) {}
 
-    public authMe(): Promise<UserResponse> {
-        return this.meshClient.auth.me().send();
-    }
-
-    public async getProjects(): Promise<ProjectResponse[]> {
-        const projectList = await this.meshClient.projects.list().send();
-        return projectList.data;
-    }
-
-    public async getBranches(project: string): Promise<BranchReference[]> {
-        const branchList = await this.meshClient.branches.list(project).send();
-        return branchList.data;
-    }
-
-    public async listSchemasWithRootNode(
-        project: string,
-    ): Promise<MeshSchemaListResponse> {
-        const response = await this.meshClient.graphql(project, {
-            query: `
-                {
-                    project{ rootNode {uuid}}
-                    schemas {
-                        elements {
-                            name
-                        }
-                    }
-                }
-            `,
-        }).send();
-
-        return {
-            rootNodeUuid: response.data.project.rootNode.uuid,
-            schemas: response.data.schemas.elements,
-        };
-    }
-
-    public async getProjectRootNodeUuid(project: string): Promise<string> {
-        const response = await this.meshClient.graphql(project, {
-            query: `
-                {
-                    project{ rootNode {uuid}}
-                }
-            `}).send();
-
-        return response.data.project.rootNode.uuid;
-    }
-
-    public async listProjectSchemas(
-        project: string,
-    ): Promise<SchemaContainer[]> {
-        const response = await this.meshClient.projects
-            .listSchemas(project)
-            .send();
-
-        return response.data.map((schemaItem) => {
-            return {
-                name: schemaItem.name,
-                fields: schemaItem.fields,
-            } as SchemaContainer;
-        });
-    }
-
-    public async listNonEmptyProjectSchemas(
-        project: string,
-        nodeUuid: string,
-    ): Promise<SchemaContainer[]> {
-        const projectSchemas = await this.listProjectSchemas(project);
-        const projectSchemaNames = projectSchemas.map(
-            (schemaItem) => schemaItem.name,
-        );
-        const projectLanguages = (await this.getProjectLanguages(project)).map(
-            (language) => language.languageTag,
-        );
-
-        // filter out all schemas with no elements
-        const schemasWithNumElements =
-            await this.getSchemasWithNumberOfElements(
-                project,
-                projectSchemaNames,
-                nodeUuid,
-                projectLanguages,
-            );
-
-        const schemasContainingElements = [];
-        for (const schemaName in schemasWithNumElements) {
-            if (schemasWithNumElements[schemaName]?.totalCount > 0) {
-                schemasContainingElements.push(schemaName);
-            }
-        }
-
-        const filteredProjectSchemas = projectSchemas.filter((schemaItem) =>
-            schemasContainingElements.includes(schemaItem.name),
-        );
-
-        return filteredProjectSchemas;
-    }
-
-    private async getSchemasWithNumberOfElements(
-        project: string,
-        schemas: string[],
-        nodeUuid: string,
-        languages: string[],
-    ): Promise<NumberOfSchemaElements> {
-        const response = await this.meshClient.graphql(project, {
-            query: `
-                query ($nodeUuid: String, $languages: [String]) {
-                    node(uuid: $nodeUuid) {
-                        ${this.constructSchemaFilterQuery(schemas)}
-                    }
-                }
-            `,
-            variables: {
-                nodeUuid: nodeUuid,
-                languages,
-            },
-        }).send();
-
-        return response.data?.node;
-    }
-
-    private constructSchemaFilterQuery(schemas: Array<string>): string {
-        const template =
-            `[schemaName]: children(lang: $languages, filter: {schema: {is: [schemaName]}}) {
-			totalCount
-		}` as string;
-
-        const query = schemas.reduce((query: string, schemaName: string) => {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-call
-            query += template.replaceAll('[schemaName]', schemaName) + '\n';
-            return query;
-        }, '');
-
-        return query;
-    }
-
-    public async getRootNodeUuid(project: string): Promise<string> {
-        const response = await this.meshClient.projects.list().send();
-
-        return response.data.find((schemaItem) => schemaItem.name === project)
-            .rootNode.uuid;
-    }
+    constructor(
+        protected meshClient: MeshRestClientService,
+    ) {}
 
     public async listNodeChildrenForSchema(
         project: string,
@@ -203,9 +55,7 @@ export class MeshBrowserLoaderService {
                                     created
                                 }
                                 language
-                                languages {
-                                    language
-                                }
+                                availableLanguages
                             }
                         }
                     }
@@ -214,46 +64,94 @@ export class MeshBrowserLoaderService {
             variables: params,
         }, queryPrams).send();
 
-        return response.data.node?.children;
+        return response.data?.node?.children || [];
     }
 
-    public async getSchemaNameForNode(
+    public async getParentNode(
         project: string,
-        nodeUuid: string,
-    ): Promise<string> {
-        const schemaFieldsFilter: NodeLoadOptions = {
-            fields: ['schema'],
-        };
+        params: MeshSchemaListParams,
+        branchUuid: string,
+    ): Promise<ResolvedParentNode> {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const response = await this.meshClient.graphql(
+            project,
+            {
+                query: `
+                query($nodeUuid: String, $lang: [String]) {
+                    node(uuid: $nodeUuid, lang: $lang) {
+                        uuid
+                        availableLanguages
+                        language
+                        displayName
 
-        const response = await this.meshClient.nodes
-            .get(project, nodeUuid, schemaFieldsFilter)
-            .send();
-        return response.schema.name;
+                        breadcrumb(lang: $lang) {
+                            uuid
+                            displayName
+                            isContainer
+                        }
+                    }
+                }
+            `,
+                variables: params,
+            },
+            {
+                branch: branchUuid,
+                version: 'draft',
+            },
+        ).send();
+
+        return response.data?.node;
     }
 
-    public async getNodeByUuid(
+    public async getSchemaNamesWithNodes(
         project: string,
-        uuid: string,
-        params?: NodeLoadOptions,
-    ): Promise<NodeResponse> {
-        // request for all project languages
-        if (params?.lang) {
-            const projectLanguages = await this.getProjectLanguages(project);
-            params.lang += ',' + projectLanguages
-                .filter(lang => lang.languageTag !== params.lang)
-                .map(lang => lang.languageTag)
-                .reduce((result, lang) => result += ',' + lang);
-        }
+        branch: string,
+        node: string,
+        languages: string[],
+        schemaNames: string[],
+    ): Promise<string[]> {
+        // Technically, it's possible that mesh has thousands of schemas
+        // We can't put them all into one gigantic graphql request however,
+        // as grpahql will just simply abort it (too many tokens).
+        // Therefore chunk them to max 150 at a time and process them in parallel
+        // as good as possible.
+        const schemaChunks = chunk(schemaNames, 150);
 
-        const response = await this.meshClient.nodes
-            .get(project, uuid, params)
-            .send();
+        const loaded = await Promise.all(schemaChunks.map(async singleChunk => {
+            let query = `
+                query ($nodeUuid: String, $lang: [String]) {
+                    node(uuid: $nodeUuid, lang: $lang) {
+                `;
 
-        return response;
-    }
+            for (const schema of singleChunk) {
+                query += `
+                    ${schema}: children(perPage: 0, lang: $lang, filter: {schema:{ name: { equals: "${schema}" }}}) {
+                        hasNextPage
+                    }`;
+            }
 
-    public async getProjectLanguages(project: string): Promise<Language[]> {
-        const response = await this.meshClient.language.list(project).send();
-        return response.data;
+            query += `
+                    }
+                }`;
+
+            const response = await this.meshClient.graphql(project, {
+                query,
+                variables: {
+                    nodeUuid: node,
+                    lang: languages,
+                },
+            }, {
+                branch,
+            }).send();
+
+            return Object.entries(response?.data?.node || {}).reduce((acc, [schemaName, info]: [string, any]) => {
+                if (info?.hasNextPage) {
+                    acc.push(schemaName);
+                }
+                return acc;
+            }, [] as string[]);
+        }));
+
+        return loaded.flatMap(names => names);
     }
 }

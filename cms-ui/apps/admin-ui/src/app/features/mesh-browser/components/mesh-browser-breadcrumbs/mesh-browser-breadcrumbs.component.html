@@ -1,8 +1,10 @@
-
 <div class="breadcrumb-container">
-    <ng-container *ngFor="let entry of breadcrumbEntries">
-        <a [routerLink]="['../..', entry.uuid , currentLanguage]" title="{{ entry.displayName }}" class="breadcrumb-item">
-            {{ entry.displayName }}
-        </a> 
+    <ng-container *ngFor="let entry of entries; let first = first">
+        <icon *ngIf="!first" class="separator">keyboard_arrow_right</icon>
+        <a
+            title="{{ entry.displayName }}"
+            class="breadcrumb-item"
+            [routerLink]="['../..', entry.uuid , language]"
+        >{{ entry.displayName }}</a>
     </ng-container>
 </div>

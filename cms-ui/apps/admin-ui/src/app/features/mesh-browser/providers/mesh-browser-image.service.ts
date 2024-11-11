@@ -23,7 +23,7 @@ export class MeshBrowserImageService {
         const request = this.meshClient.prepareRequest(RequestMethod.GET, basePath, {
             lang: language,
             branch: branchUuid,
-            ...this.createAdditionalImageParams(),
+            // ...this.createAdditionalImageParams(),
         }, {});
 
         let fullUrl = request.url;

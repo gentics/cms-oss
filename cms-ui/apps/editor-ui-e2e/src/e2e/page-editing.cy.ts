@@ -45,6 +45,7 @@ describe('Page Editing', () => {
     const ALIAS_SAVE = '@save';
     const ALIAS_CONTROLS = '@controls';
     const ALIAS_TABS = '@tabs';
+    const ALIAS_CANCEL_REQ = '@cancelRequest';
 
     before(async () => {
         cy.muteXHR();
@@ -520,6 +521,19 @@ describe('Page Editing', () => {
                     expect($elem.attr('target')).to.equal(LINK_TARGET);
                     expect($elem.attr('title')).to.equal(LINK_TITLE);
                 });
+        });
+
+        it('should cancel editing when the edit view is closed', () => {
+            cy.intercept({
+                method: 'POST',
+                pathname: '/rest/page/cancel/**',
+            }, req => {
+                req.alias = ALIAS_CANCEL_REQ;
+            });
+
+            cy.editorAction('close');
+
+            cy.wait(ALIAS_CANCEL_REQ);
         });
     });
 

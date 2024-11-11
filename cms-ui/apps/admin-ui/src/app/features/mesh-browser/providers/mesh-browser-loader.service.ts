@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GraphQLOptions } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { chunk } from 'lodash-es';
 import {
     MeshSchemaListParams,
     ResolvedParentNode,
@@ -109,37 +110,48 @@ export class MeshBrowserLoaderService {
         languages: string[],
         schemaNames: string[],
     ): Promise<string[]> {
-        let query = `
-            query ($nodeUuid: String, $lang: [String]) {
-                node(uuid: $nodeUuid, lang: $lang) {
-            `;
+        // Technically, it's possible that mesh has thousands of schemas
+        // We can't put them all into one gigantic graphql request however,
+        // as grpahql will just simply abort it (too many tokens).
+        // Therefore chunk them to max 150 at a time and process them in parallel
+        // as good as possible.
+        const schemaChunks = chunk(schemaNames, 150);
 
-        for (const schema of schemaNames) {
-            query += `
-                ${schema}: children(perPage: 0, lang: $lang, filter: {schema:{ name: { equals: "${schema}" }}}) {
-                    hasNextPage
-                }`;
-        }
+        const loaded = await Promise.all(schemaChunks.map(async singleChunk => {
+            let query = `
+                query ($nodeUuid: String, $lang: [String]) {
+                    node(uuid: $nodeUuid, lang: $lang) {
+                `;
 
-        query += `
-                }
-            }`;
-
-        const response = await this.meshClient.graphql(project, {
-            query,
-            variables: {
-                nodeUuid: node,
-                lang: languages,
-            },
-        }, {
-            branch,
-        }).send();
-
-        return Object.entries(response?.data?.node || {}).reduce((acc, [schemaName, info]: [string, any]) => {
-            if (info?.hasNextPage) {
-                acc.push(schemaName);
+            for (const schema of singleChunk) {
+                query += `
+                    ${schema}: children(perPage: 0, lang: $lang, filter: {schema:{ name: { equals: "${schema}" }}}) {
+                        hasNextPage
+                    }`;
             }
-            return acc;
-        }, []);
+
+            query += `
+                    }
+                }`;
+
+            const response = await this.meshClient.graphql(project, {
+                query,
+                variables: {
+                    nodeUuid: node,
+                    lang: languages,
+                },
+            }, {
+                branch,
+            }).send();
+
+            return Object.entries(response?.data?.node || {}).reduce((acc, [schemaName, info]: [string, any]) => {
+                if (info?.hasNextPage) {
+                    acc.push(schemaName);
+                }
+                return acc;
+            }, [] as string[]);
+        }));
+
+        return loaded.flatMap(names => names);
     }
 }

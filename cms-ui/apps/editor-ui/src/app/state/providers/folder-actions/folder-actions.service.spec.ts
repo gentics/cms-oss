@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import {
     File as FileModel,
     FileUploadResponse,
@@ -36,7 +37,6 @@ import { SetDisplayDeletedAction, STATE_MODULES } from '../../modules';
 import { MockAppState, TestApplicationState } from '../../test-application-state.mock';
 import { ApplicationStateService } from '../application-state/application-state.service';
 import { FolderActionsService } from './folder-actions.service';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 const ACTIVE_NODE_ID = 1;
 const RESPONSE_ITEM_LIST = [{}, {}, {}];
@@ -84,6 +84,7 @@ function fileToResponse(file: File): FileUploadResponse {
             fileType: file.type,
             fileSize: file.size,
             name: file.name,
+            type: /^image\//.test(file.type) ? 'image' : 'file',
         } as Partial<FileModel>,
     } as any;
 }

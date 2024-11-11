@@ -31,7 +31,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "2.1.6";
+	public final static String TESTED_MESH_VERSION = "2.1.10";
 
 	protected LogBuffer logBuffer = new LogBuffer();
 

@@ -105,6 +105,7 @@
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-language-table
                         *ngIf="langTab.active"
+                        [disabled]="isChildNode"
                         [rows]="languageRows"
                         [sorting]="true"
                         [nodeId]="currentNodeId"

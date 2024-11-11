@@ -1,0 +1,23 @@
+{
+  "version": "6.1.15",
+  "date": "25.10.2024",
+  "changeLogEntryFileNames": [
+    "8012.SUP-17472.bugfix",
+    "8015.SUP-16786.bugfix",
+    "8010.SUP-17202.bugfix",
+    "8004.SUP-17376.bugfix",
+    "8018.SUP-17587.bugfix",
+    "7926.SUP-16786.bugfix",
+    "8022.SUP-17188.bugfix",
+    "8035.SUP-17507.bugfix",
+    "8023.SUP-17586.bugfix",
+    "8021.SUP-17472.bugfix",
+    "8024.SUP-17615.bugfix",
+    "8014.SUP-16786.bugfix",
+    "8013.SUP-16786.optional-manualchange"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "10.07.2024",
+    "alohaeditor-version": "2.0.5"
+  }
+}

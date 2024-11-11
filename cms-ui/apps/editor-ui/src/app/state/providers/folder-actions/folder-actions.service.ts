@@ -2836,26 +2836,28 @@ export class FolderActionsService {
                     .flatMap(responses => responses)
                     .filter(response => response.successfull);
 
-                if (successfulUploads.length) {
-                    const onlyImages = successfulUploads
-                        .every(response => /^image\//.test(response.item?.type || ''));
+                if (!successfulUploads.length) {
+                    return;
+                }
 
-                    this.notification.show({
-                        message: 'message.file_uploads_success',
-                        translationParams: {
-                            count: successfulUploads.length,
-                            _type: onlyImages ? 'image' : 'file',
-                        },
-                        type: 'success',
-                    });
+                const onlyImages = successfulUploads
+                    .every(response => /^image\//.test(response.item?.type || ''));
 
-                    const features = this.appState.now.features.nodeFeatures[nodeId] || [];
-                    const showFileProperties = features.includes(NodeFeature.UPLOAD_FILE_PROPERTIES);
-                    const showImageProperties = features.includes(NodeFeature.UPLOAD_IMAGE_PROPERTIES);
+                this.notification.show({
+                    message: 'message.file_uploads_success',
+                    translationParams: {
+                        count: successfulUploads.length,
+                        _type: onlyImages ? 'image' : 'file',
+                    },
+                    type: 'success',
+                });
 
-                    if (showFileProperties || showImageProperties) {
-                        this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
-                    }
+                const features = this.appState.now.features.nodeFeatures[nodeId] || [];
+                const showFileProperties = features.includes(NodeFeature.UPLOAD_FILE_PROPERTIES);
+                const showImageProperties = features.includes(NodeFeature.UPLOAD_IMAGE_PROPERTIES);
+
+                if (showFileProperties || showImageProperties) {
+                    this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
                 }
             });
 

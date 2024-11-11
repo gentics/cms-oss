@@ -1,0 +1,12 @@
+Configuration:
+  status: error
+  name: CMS Configuration
+  monitorInterval: 1
+  Loggers:
+    logger:
+      -
+        name: com.gentics.contentnode.init.NodeLoggerConfigurationTest
+        level: {{level}}
+      -
+        name: testlogger
+        level: {{level}}

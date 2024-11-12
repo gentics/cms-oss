@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -552,18 +553,21 @@ public class InstantPublisher {
 
 			// now we probably need to check for offline files that were needed
 			if ((objType == Page.TYPE_PAGE || objType == Folder.TYPE_FOLDER) && prefs.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)) {
-				List<NodeObject> offlineObjects = null;
+				Map<Node, List<NodeObject>> offlineObjects = null;
 				if (dependencies != null) {
 					offlineObjects = InstantPublisher.handleOfflineDependencies(cr, node, dependencies);
 				} else {
 					offlineObjects = InstantPublisher.handleOfflineDependencies(cr, node, myRenderType.getDependencies());
 				}
 
-				for (NodeObject offline : offlineObjects) {
-					if (node.isChannel()) {
-						handleInstantPublishing(offline, Events.UPDATE, node, property);
-					} else {
-						handleInstantPublishing(offline, Events.UPDATE, null, property);
+				for (Entry<Node, List<NodeObject>> entry : offlineObjects.entrySet()) {
+					Node fileNode = entry.getKey();
+					for (NodeObject offline : entry.getValue()) {
+						if (fileNode.isChannel()) {
+							handleInstantPublishing(offline, Events.UPDATE, fileNode, property);
+						} else {
+							handleInstantPublishing(offline, Events.UPDATE, null, property);
+						}
 					}
 				}
 			}
@@ -621,46 +625,46 @@ public class InstantPublisher {
 	 * @param cr contentrepository
 	 * @param node for which the dependencies were calculated
 	 * @param dependencies list of dependencies
-	 * @return list of objects, that were offline, but need to be set online, because the current object depends on it
+	 * @return map of nodes to lists of objects, that were offline, but need to be set online for the node, because the current object depends on it
 	 * @throws NodeException
 	 */
-	protected static List<NodeObject> handleOfflineDependencies(ContentRepository cr, Node node, List<Dependency> dependencies) throws NodeException {
+	protected static Map<Node, List<NodeObject>> handleOfflineDependencies(ContentRepository cr, Node node, List<Dependency> dependencies) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		List<NodeObject> objects = new Vector<NodeObject>();
-		List<NodeObject> checked = new Vector<NodeObject>();
+		Map<Node, List<NodeObject>> objects = new HashMap<>();
+		List<NodeObject> checked = new ArrayList<>();
 		List<Node> crNodes = cr.getNodes();
+		Node channel = null;
+		if (node.isChannel()) {
+			channel = node;
+		}
 
 		for (Dependency dependency : dependencies) {
 			NodeObject sourceObject = dependency.getSource().getObject();
 
 			if (sourceObject instanceof com.gentics.contentnode.object.File) {
 				com.gentics.contentnode.object.File file = (com.gentics.contentnode.object.File) sourceObject;
+				Node fileNodeOrChannel = file.getOwningNode();
 
 				// omit files, that should not be published into the contentrepository
 				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					if (!crNodes.contains(file.getNode())) {
+					if (!crNodes.contains(fileNodeOrChannel)) {
 						continue;
 					}
 				}
 
-				Node channel = null;
-
-				if (node.isChannel()) {
-					file = file.getChannelVariant(node);
-					channel = node;
+				// when the root object is published into a channel, we need to check whether the file
+				// belongs to the same channel structure
+				if (channel != null) {
+					if (channel.isChannelOf(fileNodeOrChannel)) {
+						file = file.getChannelVariant(channel);
+						fileNodeOrChannel = channel;
+					}
 				}
 
 				if (file != null && !checked.contains(file)) {
-					if (channel != null) {
-						if (!FileOnlineStatus.isOnline(file, channel)) {
-							FileOnlineStatus.setOnline(file, channel, true);
-							objects.add(file);
-						}
-					} else {
-						if (!FileOnlineStatus.isOnline(file)) {
-							FileOnlineStatus.setOnline(file, true);
-							objects.add(file);
-						}
+					if (!FileOnlineStatus.isOnline(file, fileNodeOrChannel)) {
+						FileOnlineStatus.setOnline(file, fileNodeOrChannel, true);
+						objects.computeIfAbsent(fileNodeOrChannel, k -> new ArrayList<>()).add(file);
 					}
 					checked.add(file);
 				}

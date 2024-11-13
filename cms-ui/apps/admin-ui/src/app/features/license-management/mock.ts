@@ -20,13 +20,16 @@ const FEATURE_MAP: Record<string, string> = {
 };
 const FEATURES = Object.keys(FEATURE_MAP);
 
-export function createMockLicenseInfo(): { status: LicenseStatus, license: License } {
-    const earlier = new Date();
-    earlier.setDate(earlier.getDate() - 2);
+function randomDate(min: Date, max: Date): Date {
+    const diff = max.getTime() - min.getTime();
+    return new Date(min.getTime() + random(0, diff, false));
+}
 
+export function createMockLicenseInfo(): { status: LicenseStatus, license: License } {
     let mockLicense: License | null = null;
 
     if (Math.round(Math.random()) === 0) {
+        const issued = randomDate(dateInYears(-1), dateInYears(1));
         mockLicense = {
             uuid: window.crypto?.randomUUID?.() || v4(),
             features: shuffle(FEATURES)
@@ -35,8 +38,8 @@ export function createMockLicenseInfo(): { status: LicenseStatus, license: Licen
                     acc[feat] = FEATURE_MAP[feat];
                     return acc;
                 }, {}),
-            issuedAt: dateInYears(-1).toISOString(),
-            validUntil: Math.round(Math.random()) === 0 ? earlier.toISOString() : null,
+            issuedAt: issued.toISOString(),
+            validUntil: Math.round(Math.random()) === 0 ? randomDate(issued, dateInYears(4)).toISOString() : null,
             signature: '',
         };
         mockLicense.signature = mockLicense.uuid;

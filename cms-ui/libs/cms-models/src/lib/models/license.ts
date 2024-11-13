@@ -40,6 +40,8 @@ export interface ContentRepositoryLicense {
     name: string;
     /** URL of the CR */
     url: string;
+    /** If the CR is an open source version, and therefore doesn't have/need a license */
+    openSource: boolean;
     /** License of the CR */
     license?: License;
     /** Status of the License */

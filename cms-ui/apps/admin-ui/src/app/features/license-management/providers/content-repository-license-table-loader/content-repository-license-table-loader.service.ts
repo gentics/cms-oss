@@ -2,7 +2,7 @@ import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ContentRepositoryLicenseBO, Ent
 import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ContentRepositoryLicense } from '@gentics/cms-models';
+import { ContentRepositoryLicense, LicenseStatus } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { catchError, map, Observable, of } from 'rxjs';
 import { createMockLicenseInfo } from '../../mock';
@@ -40,11 +40,15 @@ export class ContentRepositoryLicenseTableLoaderService extends BaseTableLoaderS
                 const total = Math.trunc(Math.random() * 10);
                 const items: ContentRepositoryLicenseBO[] = [];
                 for (let i = 0; i < total; i++) {
+                    const { status, license } = createMockLicenseInfo();
+
                     items.push(this.mapToBusinessObject({
                         id: i,
                         name: `ContentRepository #${i}`,
                         url: 'example.com',
-                        ...createMockLicenseInfo(),
+                        openSource: (status === LicenseStatus.MISSING) && (Math.round(Math.random()) === 0),
+                        status,
+                        license,
                     }))
                 }
 

@@ -44,6 +44,13 @@ export class ContentRepositoryLicenseTableComponent
             clickable: true,
         },
         {
+            id: 'openSource',
+            label: 'license.openSource',
+            fieldPath: 'openSource',
+            sortable: false,
+            clickable: true,
+        },
+        {
             id: 'status',
             label: 'license.status',
             sortable: false,
@@ -115,7 +122,7 @@ export class ContentRepositoryLicenseTableComponent
                         type: 'warning',
                         icon: 'publish',
                         label: this.i18n.instant('license.push_license_to_cr_button'),
-                        enabled: () => this.license != null,
+                        enabled: (cr) => this.license != null && (cr == null || !cr.openSource),
                         single: true,
                         multiple: true,
                     },

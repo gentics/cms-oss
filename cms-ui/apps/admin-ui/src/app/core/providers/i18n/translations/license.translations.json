@@ -24,8 +24,12 @@
         "de": "Valide"
     },
     "status_INSUFFICIENT": {
-        "en": "insufficient",
+        "en": "Insufficient",
         "de": "Unzureichend"
+    },
+    "status_NOT_NEEDED": {
+        "en": "Not needed",
+        "de": "Nicht benötigt"
     },
     "uuid": {
         "en": "ID",
@@ -54,6 +58,10 @@
     "unlimitedValidity": {
         "en": "Unlimited",
         "de": "Unlimitiert"
+    },
+    "openSource": {
+        "en": "OpenSource",
+        "de": "OpenSource"
     },
     "featureName": {
         "en": "Product",

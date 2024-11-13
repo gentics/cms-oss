@@ -1,4 +1,8 @@
 {
+    "overview_title": {
+        "en": "Overview",
+        "de": "Übersicht"
+    },
     "status": {
         "en": "Status",
         "de": "Status"
@@ -82,5 +86,21 @@
     "pushToContentRepositories": {
         "en": "Forward license to ContentRepositories",
         "de": "Lizenz zu ContentRepositories weiterleiten"
+    },
+    "cr_license_differs": {
+        "en": "The license of the ContentRepository is different from the CMS",
+        "de": "Die Lizenz von dem ContentRepository eine andere, als die CMS verwendete"
+    },
+    "push_license_to_cr_button": {
+        "en": "Push license",
+        "de": "Lizenz übertragen"
+    },
+    "push_license_to_all_crs_button": {
+        "en": "Push license to all",
+        "de": "Lizenz auf alle übertragen"
+    },
+    "contentRepository_info_modal_title": {
+        "en": "License information of \"{{ entityName }}\"",
+        "de": "Lizenzinformationen von „{{ entityName }}“"
     }
 }

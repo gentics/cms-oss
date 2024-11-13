@@ -1,33 +1,23 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { License, LicenseCheckResult, LicenseStatus } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { v4 } from 'uuid';
+import { createMockLicenseInfo } from '../../mock';
+import { ContentRepositoryLicenseTableLoaderService } from '../../providers';
 import { LicenseUploadModal } from '../license-upload-modal/license-upload-modal.component';
 
-const mockLicense: License = {
-    uuid: window.crypto?.randomUUID?.() || v4(),
-    features: {
-        CN: 'Gentics Content.Node',
-        TTM: 'Feature Tag Type Migration / Template migration',
-    },
-    issuedAt: 1730733206.000000000,
-    validUntil: 0.0,
-}
-
-/*
-{ "uuid":"a76bf124-44e0-4c21-b5ee-49a71ec01a66","features":{"CN":"Gentics Content.Node","TTM":"Feature Tag Type Migration / Template migration"},"iat":1730733206,"exp":0,"iss":"Gentics","sub":"Example"}
-*/
-
 @Component({
-    selector: 'gtx-license-module-master',
-    templateUrl: './license-module-master.component.html',
-    styleUrls: ['./license-module-master.component.scss'],
+    selector: 'gtx-license-management',
+    templateUrl: './license-management.component.html',
+    styleUrls: ['./license-management.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LicenseModuleMasterComponent implements OnInit, OnDestroy {
+export class LicenseManagementComponent implements OnInit, OnDestroy {
+
+    @Output()
+    public licenseChange = new EventEmitter<License | null>();
 
     public loading = false;
     public status: LicenseStatus = LicenseStatus.MISSING;
@@ -39,6 +29,7 @@ export class LicenseModuleMasterComponent implements OnInit, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private client: GCMSRestClientService,
         private modals: ModalService,
+        private tableLoader: ContentRepositoryLicenseTableLoaderService,
     ) {}
 
     ngOnInit(): void {
@@ -64,13 +55,16 @@ export class LicenseModuleMasterComponent implements OnInit, OnDestroy {
                 this.license = info.checkResult.license;
                 this.loading = false;
                 this.changeDetector.markForCheck();
+                this.licenseChange.emit(this.license);
             },
             error: err => {
                 console.error(err);
-                this.status = LicenseStatus.VALID;
-                this.license = mockLicense;
+                const { status, license } = createMockLicenseInfo();
+                this.status = status;
+                this.license = license;
                 this.loading = false;
                 this.changeDetector.markForCheck();
+                this.licenseChange.emit(this.license);
             },
         }));
     }
@@ -85,6 +79,9 @@ export class LicenseModuleMasterComponent implements OnInit, OnDestroy {
             this.status = res.status;
             this.license = res.license;
             this.changeDetector.markForCheck();
+            this.licenseChange.emit(this.license);
+            // In case that the license was pushed to the CRs, we have to reload their info in the tables.
+            this.tableLoader.reload();
         } catch (err) {
             // Ignore closing notifications
             if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {

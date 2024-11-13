@@ -1,0 +1,14 @@
+@import '../../../../shared/components/base-entity-table/base-entity-table.component.scss';
+
+.status-content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+
+    .status-icon {
+        font-size: 1.25rem;
+        color: $gtx-color-warning;
+    }
+}

@@ -76,12 +76,12 @@
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
-                [routerLink]="'/' + AdminUIModuleRoutes.LICENSE"
+                [routerLink]="'/' + AdminUIModuleRoutes.LICENSE_MANAGEMENT"
                 icon="license"
-                [attr.data-id]="AdminUIModuleRoutes.LICENSE"
+                [attr.data-id]="AdminUIModuleRoutes.LICENSE_MANAGEMENT"
                 [title]="'dashboard.license_management' | i18n"
-                [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
-                [disabled]="!(meshBrowserModuleEnabled$ | async)"
+                [class.disabled]="!(licenseModuleEnabled$ | async)"
+                [disabled]="!(licenseModuleEnabled$ | async)"
             ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 

@@ -2361,7 +2361,6 @@ export interface UsageInTotalOptions {
     nodeId?: number;
 }
 
-
 // FILE UPLOAD MANIPULATOR (FUM) /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export enum FUMResultStatus {
@@ -2424,3 +2423,9 @@ export interface LicenseUpdateRequest {
     pushToContentRepositories?: boolean;
 }
 
+export interface LicenseContentRepositoryInfoOptions extends BaseListOptionsWithPaging<'name' | 'url' | 'status'> {}
+
+export interface PushLicenseRequest {
+    crIds?: (number | string)[];
+    all?: boolean;
+}

@@ -21,12 +21,27 @@ export interface License {
     /** The licensed features. Key is the Product/Feature ID, and the Value is the Name. */
     features: Record<string, string>;
     /** When the License was issued. */
-    issuedAt: number;
+    issuedAt: string;
     /** Until when the License is valid. If not set or 0, it doesn't expire. */
-    validUntil?: number;
+    validUntil?: string;
+    /** Signature of the license which acts as a hash */
+    signature: string;
 }
 
 export interface LicenseCheckResult {
     status: LicenseStatus;
     license: License;
+}
+
+export interface ContentRepositoryLicense {
+    /** ID of the CR */
+    id: number;
+    /** Name of the CR */
+    name: string;
+    /** URL of the CR */
+    url: string;
+    /** License of the CR */
+    license?: License;
+    /** Status of the License */
+    status: LicenseStatus;
 }

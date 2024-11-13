@@ -902,5 +902,7 @@ export class GCMSRestClient implements GCMSRootAPI {
     public license: GCMSLicenseAPI = {
         info: () => this.executeMappedJsonRequest(GET, 'license/info'),
         update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
+        contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
+        push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
     }
 }

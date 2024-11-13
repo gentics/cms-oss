@@ -1,0 +1,22 @@
+<gtx-tabs pure [activeId]="activeTab">
+    <gtx-tab
+        [id]="LicenseModuleTabs.OVERVIEW"
+        [title]="'license.overview_title' | i18n"
+        (select)="setTabAsActive($event)"
+    >
+        <gtx-license-management
+            (licenseChange)="setCurrentLicense($event)"
+        />
+    </gtx-tab>
+
+    <gtx-tab
+        [id]="LicenseModuleTabs.CONTENT_REPOSITORIES"
+        [title]="'common.contentRepository_plural' | i18n"
+        (select)="setTabAsActive($event)"
+    >
+        <gtx-content-repository-license-table
+            [compareLicense]="true"
+            [license]="currentLicense"
+        />
+    </gtx-tab>
+</gtx-tabs>

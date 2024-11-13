@@ -515,11 +515,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 },
             },
 
-            // License Module
+            // License-Management Module
             {
-                path: AdminUIModuleRoutes.LICENSE,
+                path: AdminUIModuleRoutes.LICENSE_MANAGEMENT,
                 component: SplitViewRouterOutletComponent,
-                loadChildren: () => import('./features/license/license.module').then(m => m.LicenseModeModule),
+                loadChildren: () => import('./features/license-management/license-management.module').then(m => m.LicenseManagementModeModule),
                 data: {
                     [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.license_management',

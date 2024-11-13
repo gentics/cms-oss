@@ -17,7 +17,7 @@ import { I18nLanguage } from './i18n-language';
 import { Image } from './image';
 import { FolderItemType, InheritableItem, Item, Usage } from './item';
 import { Language } from './language';
-import { LicenseCheckResult } from './license';
+import { ContentRepositoryLicense, LicenseCheckResult } from './license';
 import { MarkupLanguage } from './markup-language';
 import { MessageFromServer } from './message';
 import { Node } from './node';
@@ -1490,3 +1490,5 @@ export interface LicenseInfoResponse extends Response {
 }
 
 export interface LicenseUpdateResponse extends LicenseInfoResponse {}
+
+export type LicenseContentRepositoryInfoResponse = ListResponse<ContentRepositoryLicense>;

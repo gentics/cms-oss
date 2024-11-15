@@ -127,10 +127,10 @@ export class DashboardComponent implements OnInit {
         );
         this.licenseModuleEnabled$ = combineLatest([
             this.appState.select(state => state.ui.cmpVersion),
-            // this.permissions.checkPermissions({ type: AccessControlledType.LICENCE_ADMIN, permissions: GcmsPermission.READ }),
+            // this.permissions.checkPermissions({ type: AccessControlledType.LICENSING, permissions: GcmsPermission.READ }),
             of(true),
         ]).pipe(
-            map(([version, hasPermission]) => version.variant === Variant.ENTERPRISE && hasPermission),
+            map(([version, hasPermission]) => version?.variant === Variant.ENTERPRISE && hasPermission),
         );
 
         /* Needed for a UI bug where the detail view stays open if we open it

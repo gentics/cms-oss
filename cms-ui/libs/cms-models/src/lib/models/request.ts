@@ -2423,9 +2423,9 @@ export interface LicenseUpdateRequest {
     pushToContentRepositories?: boolean;
 }
 
-export interface LicenseContentRepositoryInfoOptions extends BaseListOptionsWithPaging<'name' | 'url' | 'status'> {}
+export interface LicenseContentRepositoryInfoOptions extends BaseListOptionsWithPaging<'name' | 'url'> {}
 
 export interface PushLicenseRequest {
-    crIds?: (number | string)[];
+    crIds?: number[];
     all?: boolean;
 }

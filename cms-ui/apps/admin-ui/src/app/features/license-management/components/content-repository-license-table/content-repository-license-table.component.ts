@@ -104,7 +104,9 @@ export class ContentRepositoryLicenseTableComponent
         switch (event.actionId) {
             case ACTION_PUSH:
                 this.pushLicense({
-                    crIds: event.selection ? this.selected : [event.item?.id],
+                    crIds: event.selection ?
+                        this.selected.map(Number).filter(id => Number.isInteger(id)) :
+                        [event.item?.id],
                 }, true);
                 break;
 

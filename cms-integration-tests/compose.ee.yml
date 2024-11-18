@@ -15,7 +15,7 @@ services:
     extends:
       file: compose.yml
       service: cms
-    image: docker.apa-it.at/gentics/cms:${CI_CMS_VERSION:-6.1.6}
+    image: docker.gentics.com/gentics/cms:${CI_CMS_VERSION:-ci-devtest}
 
     environment:
       ELASTICSEARCH_ENABLED: "false" # Disabled until ES 8 compat is ready

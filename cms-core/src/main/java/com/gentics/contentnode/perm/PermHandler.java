@@ -193,7 +193,7 @@ public class PermHandler {
 	public static final int PERM_SCHEDULER_SCHEDULE_UPDATE = 11;
 
 	public static final int PERM_LICENSING_VIEW = PERM_VIEW;
-	public static final int PERM_LICENSING_UPDATE = 2;
+	public static final int PERM_LICENSING_UPDATE = 1;
 
 	/**
 	 * Empty permission bits

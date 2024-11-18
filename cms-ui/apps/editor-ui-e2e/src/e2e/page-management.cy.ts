@@ -27,10 +27,13 @@ describe('Page Management', () => {
     const ALIAS_UPDATE_REQ = '@updateRequest';
 
     before(async () => {
-        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
+
+    beforeEach(() => {
+        cy.muteXHR();
+    })
 
     describe('Minimal Setup', () => {
         const OBJ_PROP_CAT_TESTS = '2';
@@ -61,14 +64,14 @@ describe('Page Management', () => {
                 .find('.header-controls [data-action="create-new-item"]')
                 .click({ force: true });
             cy.get('create-page-modal').as(ALIAS_MODAL);
-            cy.get(ALIAS_MODAL).find('page-properties-form').as(ALIAS_FORM);
+            cy.get(ALIAS_MODAL).find('gtx-page-properties').as(ALIAS_FORM);
 
             cy.get(ALIAS_FORM)
-                .find('[formcontrolname="pageName"] input')
+                .find('[formcontrolname="name"] input')
                 .type(NEW_PAGE_NAME);
 
             cy.get(ALIAS_FORM)
-                .find('[formcontrolname="suggestedOrRequestedFileName"] input')
+                .find('[formcontrolname="fileName"] input')
                 .type(NEW_PAGE_PATH)
             cy.get(ALIAS_FORM)
                 .find('[formcontrolname="language"]')
@@ -130,7 +133,7 @@ describe('Page Management', () => {
             cy.get(ALIAS_ITEM)
                 .itemAction('properties');
 
-            cy.get('content-frame combined-properties-editor .properties-content page-properties-form')
+            cy.get('content-frame combined-properties-editor .properties-content gtx-page-properties')
                 .as(ALIAS_FORM);
 
             cy.intercept({
@@ -143,7 +146,7 @@ describe('Page Management', () => {
             // Clear the name and enter the new one
             // eslint-disable-next-line cypress/unsafe-to-chain-command
             cy.get(ALIAS_FORM)
-                .find('[formcontrolname="pageName"] input')
+                .find('[formcontrolname="name"] input')
                 .clear()
                 .type(CHANGE_PAGE_NAME);
 
@@ -345,7 +348,7 @@ describe('Page Management', () => {
             cy.get(ALIAS_ITEM)
                 .itemAction('properties');
 
-            cy.get('content-frame combined-properties-editor .properties-content page-properties-form')
+            cy.get('content-frame combined-properties-editor .properties-content gtx-page-properties')
                 .as(ALIAS_FORM)
                 .find('[formcontrolname="language"]')
                 .selectValue(LANG);

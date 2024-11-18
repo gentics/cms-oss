@@ -9,8 +9,8 @@ import { arrayEqual, extractFormatting } from './utils';
  * * `included`
  */
 export function registerCommonAssertions(): void {
-    function validateElementObject(ref: Chai.AssertionStatic): HTMLElement | undefined {
-        let elem: HTMLElement;
+    function validateElementObject(ref: Chai.AssertionStatic): HTMLElement[] | undefined {
+        let elements: HTMLElement[] | null = null;
 
         if (ref._obj == null || typeof ref._obj !== 'object') {
             ref.assert(
@@ -33,24 +33,15 @@ export function registerCommonAssertions(): void {
                     ref._obj.length,
                 );
                 return;
-            } else if (ref._obj.length > 1) {
-                ref.assert(
-                    false,
-                    'expected #{this} jQuery element to reference a single HTMLElement',
-                    'expected #{this} jQuery element to reference a single HTMLElement',
-                    1,
-                    ref._obj.length,
-                );
-                return;
-            } else {
-                elem = ref._obj[0];
             }
+
+            elements = Array.from(ref._obj);
         } else {
-            elem = ref._obj;
+            elements = [ref._obj];
         }
 
         // Safety check
-        if (elem == null || typeof elem !== 'object') {
+        if (elements == null) {
             ref.assert(
                 false,
                 'expected #{this} to be a HTMLElement or jQuery element',
@@ -58,40 +49,42 @@ export function registerCommonAssertions(): void {
                 ref._obj,
             );
             return;
-        // Safety check
-        } else if (elem.nodeType !== Node.ELEMENT_NODE) {
-            ref.assert(
-                false,
-                'expected #{this} to be an HTMLElement',
-                'expected #{this} to be an HTMLElement',
-                ref._obj,
-            );
-            return;
         }
 
-        return elem;
+        for (const el of elements) {
+            ref.assert(
+                el.nodeType === Node.ELEMENT_NODE,
+                'expected #{this} to be an HTMLElement',
+                'expected #{this} to be an HTMLElement',
+                el,
+            );
+        }
+
+        return elements;
     }
 
     chai.use((ref, _utils) => {
         ref.Assertion.addMethod('formatting', function assertHaveFormatting(text: string, formats: string[]) {
-            const elem = validateElementObject(this);
-            if (elem == null) {
+            const elements = validateElementObject(this);
+            if (elements == null) {
                 return;
             }
 
-            const availableFormats = extractFormatting(elem);
-            const hasFormat = availableFormats.some(entry => {
-                return (entry.text === text || entry.text.trim() === text)
-                    && arrayEqual(entry.formats, formats);
-            });
+            for (const el of elements) {
+                const availableFormats = extractFormatting(el);
+                const hasFormat = availableFormats.some(entry => {
+                    return (entry.text === text || entry.text.trim() === text)
+                        && arrayEqual(entry.formats, formats);
+                });
 
-            this.assert(
-                hasFormat,
-                `expected #{act} to have a formatted text "${text}" with [${formats.join(', ')}]`,
-                `expected #{act} to not have a formatted text "${text}" with [${formats.join(', ')}]`,
-                { text, formats },
-                JSON.stringify(availableFormats),
-            );
+                this.assert(
+                    hasFormat,
+                    `expected #{act} to have a formatted text "${text}" with [${formats.join(', ')}]`,
+                    `expected #{act} to not have a formatted text "${text}" with [${formats.join(', ')}]`,
+                    { text, formats },
+                    el,
+                );
+            }
         });
 
         ref.Assertion.addMethod('included', function assertToBeIncluded(array: any[]) {
@@ -118,27 +111,32 @@ export function registerCommonAssertions(): void {
         });
 
         ref.Assertion.addMethod('displayed', function assertElementIsDislayed(options?: IntersectionObserverInit) {
-            const elem = validateElementObject(this);
-            if (elem == null) {
+            const elements = validateElementObject(this);
+            if (elements == null) {
                 return;
             }
 
-            const observer = new IntersectionObserver(snapshot => {
-                if (snapshot.length !== 1) {
+            const observer = new IntersectionObserver(snapshots => {
+                // Only validate once all snapshots are available
+                if (snapshots.length !== elements.length) {
                     return;
                 }
 
-                this.assert(
-                    snapshot[0].isIntersecting,
-                    'expected #{this} to be displayed/visible to the user',
-                    'expected #{this} to not be displayed/visible to the user',
-                    true,
-                );
+                for (const snap of snapshots) {
+                    this.assert(
+                        snap.isIntersecting,
+                        'expected #{act} to be displayed/visible to the user',
+                        'expected ${act} to not be displayed/visible to the user',
+                        snap.target,
+                    );
+                }
 
                 observer.disconnect();
             }, options);
 
-            observer.observe(elem);
+            for (const el of elements) {
+                observer.observe(el);
+            }
         });
     });
 }

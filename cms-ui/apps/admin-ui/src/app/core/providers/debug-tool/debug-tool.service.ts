@@ -1,5 +1,6 @@
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { downloadFromBlob } from '@gentics/cms-components';
 import { IndexByKey } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
@@ -8,7 +9,6 @@ import { Observable, of as observableOf, throwError, zip } from 'rxjs';
 import { catchError, map, take, timeout } from 'rxjs/operators';
 import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base';
 import { DebugToolModalComponent } from '../../components/debug-tool-modal/debug-tool-modal.component';
-import { ErrorHandler as CMSErrorHandler } from '../error-handler';
 import { I18nService } from '../i18n';
 
 /**
@@ -256,17 +256,7 @@ export class DebugToolService extends InitializableServiceBase {
         const json = JSON.stringify(data);
         const blob = new Blob([json], { type: 'application/octet-stream' });
 
-        if ((window.navigator as any).msSaveOrOpenBlob) {
-            (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
-        } else {
-            const url = (window.URL || (window as any).webkitURL).createObjectURL(blob);
-            const downloadLink = document.createElement('a');
-            downloadLink.download = fileName,
-            downloadLink.href = url;
-            const event = document.createEvent('MouseEvents');
-            event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-            downloadLink.dispatchEvent(event);
-        }
+        downloadFromBlob(blob, fileName);
     }
 
     get debug_currentDate(): any {

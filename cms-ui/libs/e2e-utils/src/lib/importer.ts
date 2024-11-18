@@ -241,6 +241,8 @@ export class EntityImporter {
 
         if (typeof sizeOrGlobalFeatures === 'object') {
             features = sizeOrGlobalFeatures;
+        } else {
+            size = sizeOrGlobalFeatures;
         }
 
         // Reset to initial config
@@ -256,6 +258,7 @@ export class EntityImporter {
         for (const entry of Object.entries(features || {})) {
             const [feature, enabled] = entry;
             if (Feature[feature]) {
+
                 try {
                     await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/features/${feature}`, null, {
                         enabled,

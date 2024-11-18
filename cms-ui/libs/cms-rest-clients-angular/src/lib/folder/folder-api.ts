@@ -256,7 +256,7 @@ export class FolderApi {
                 InheritableItem<Raw>
                 > = res as any;
                 const items = esResponse.hits.hits.map((hit) => hit._object);
-                const numItems = esResponse.hits.total;
+                const numItems = typeof esResponse.hits.total === 'number' ? esResponse.hits.total : esResponse.hits.total.value;
                 const hasMoreItems = items.length < numItems;
                 let stagingMap: StagedItemsMap = {};
 

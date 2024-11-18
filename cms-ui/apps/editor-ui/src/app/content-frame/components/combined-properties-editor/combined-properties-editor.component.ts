@@ -4,10 +4,12 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
+    Output,
     QueryList,
     SimpleChange,
     ViewChild,
@@ -27,6 +29,7 @@ import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
+import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import {
     AddExpandedTabGroupAction,
     ApplicationStateService,
@@ -38,7 +41,6 @@ import {
     RemoveExpandedTabGroupAction,
     SaveErrorAction,
     SaveSuccessAction,
-    SetOpenObjectPropertyGroupsAction,
     StartSavingAction,
 } from '@editor-ui/app/state';
 import {
@@ -105,7 +107,7 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators';
-import { generateContentTagList } from '../../utils';
+import { generateContentTagList, getItemProperties } from '../../utils';
 
 /** Allows to define additional options for saving. */
 export interface SaveChangesOptions {
@@ -114,11 +116,53 @@ export interface SaveChangesOptions {
 }
 
 export interface ObjectPropertiesCategory {
+    id: string;
     name: string;
     objProperties: EditableObjectTag[];
 }
 
-const OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label';
+function isObjectPropertyTag(tag: Tag): tag is ObjectTag {
+    return tag.type === 'OBJECTTAG';
+}
+
+export const ID_OBJ_PROP_CATEGORY_OTHERS = '_others_';
+export const NAME_OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label';
+
+export function groupObjectPropertiesByCategory(objectProperties: EditableObjectTag[]): ObjectPropertiesCategory[] {
+    const categories: ObjectPropertiesCategory[] = [];
+    const categoriesMap = new Map<string, ObjectPropertiesCategory>();
+    const othersCategory: ObjectPropertiesCategory = {
+        id: ID_OBJ_PROP_CATEGORY_OTHERS,
+        name: NAME_OBJ_PROP_CATEGORY_OTHERS,
+        objProperties: [],
+    };
+    categoriesMap.set(ID_OBJ_PROP_CATEGORY_OTHERS, othersCategory);
+
+    objectProperties.forEach(objProp => {
+        const categoryId = `${objProp.categoryId || ID_OBJ_PROP_CATEGORY_OTHERS}`;
+        const categoryName = objProp.categoryName || NAME_OBJ_PROP_CATEGORY_OTHERS;
+
+        let category = categoriesMap.get(categoryId);
+        if (!category) {
+            category = {
+                id: categoryId,
+                name: categoryName,
+                objProperties: [],
+            };
+            categories.push(category);
+            categoriesMap.set(categoryId, category);
+        }
+
+        category.objProperties.push(objProp);
+    });
+
+    if (othersCategory.objProperties.length) {
+        categories.push(othersCategory);
+    }
+
+    return categories;
+}
+
 const ACTION_DELETE = 'delete';
 const ACTION_ACTIVATE = 'activate';
 const ACTION_DEACTIVATE = 'deactivate';
@@ -152,7 +196,22 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     useRouter = true;
 
     @Input()
+    itemClean: boolean;
+
+    @Input()
     nodeId: number;
+
+    @Output()
+    itemCleanChange = new EventEmitter<boolean>();
+
+    @Output()
+    itemChange = new EventEmitter<ItemWithObjectTags | Form | Node>();
+
+    @ViewChild(GroupedTabsComponent, { static: false })
+    propertiesTabs: GroupedTabsComponent;
+
+    @ViewChildren(TagEditorHostComponent)
+    tagEditorHostList: QueryList<TagEditorHostComponent>;
 
     pointObjProp: any;
     position: string;
@@ -161,6 +220,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     public contentTagColumns: TableColumn<Tag>[] = [];
     public contentTagActions: TableAction<Tag>[] = [];
     public contentTagSelection: string[] = [];
+
+    /** The current properties of the item which are being edited. */
+    public editingProperties: EditableProperties;
 
     activeTabId$: Observable<string>;
     itemWithObjectProperties$: Observable<{ item: ItemWithObjectTags | Node, objProperties: EditableObjectTag[] }>;
@@ -174,19 +236,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }>;
     currentNode: Node;
 
-
-    @ViewChild(GroupedTabsComponent, { static: false })
-    propertiesTabs: GroupedTabsComponent;
-
-    @ViewChildren(TagEditorHostComponent)
-    tagEditorHostList: QueryList<TagEditorHostComponent>;
-
     get canSave(): boolean {
         return this.hasUpdatePermission !== false;
-    }
-
-    get expandedCategories(): string[] {
-        return this.appState.now.editor.openObjectPropertyGroups;
     }
 
     private hasUpdatePermission = false;
@@ -196,7 +247,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private activeTabId: PropertiesTab;
     private subscriptions: Subscription[] = [];
     private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
-    private latestPropChanges: EditableProperties;
     public tagFillLightEnabled = true;
 
     expandedState$: Observable<string[]>;
@@ -218,6 +268,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         private elementRef: ElementRef<HTMLElement>,
         private modalService: ModalService,
         private i18n: I18nService,
+        private userSettings: UserSettingsService,
     ) {}
 
     ngOnInit(): void {
@@ -283,7 +334,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         this.objectPropertiesGrouped$ = this.itemWithObjectProperties$.pipe(
             map(itemWithObjProps => itemWithObjProps.objProperties),
             distinctUntilChanged(isEqual),
-            map(objectProperties => this.groupObjectPropertiesByCategory(objectProperties)),
+            map(objectProperties => groupObjectPropertiesByCategory(objectProperties)),
             publishReplay(1),
             refCount(),
         );
@@ -414,18 +465,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
-        if (changes.item && !this.appState.now.editor.objectPropertiesModified) {
-            this.item$.next(changes.item.currentValue);
+        if (changes.item) {
+            this.editingProperties = getItemProperties(this.item);
+            if (!this.appState.now.editor.objectPropertiesModified) {
+                this.item$.next(this.item as any);
+            }
         }
     }
 
     handlePropChanges(changes: EditableProperties): void {
-        this.latestPropChanges = changes;
-        this.item = {
-            ...this.item,
-            ...changes,
-        } as any;
-        this.item$.next(this.item as any);
+        this.editingProperties = changes;
     }
 
     onTabChange(newTabId: string, readOnly: boolean = false): void {
@@ -545,6 +594,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
             this.item = updatedItem;
             this.item$.next(this.item);
+            this.itemChange.emit(this.item);
             this.contentTagSelection = [];
             this.changeDetector.markForCheck();
         } catch (err) {
@@ -592,9 +642,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ).then(updatedItem => {
                 this.item = updatedItem;
                 this.item$.next(this.item);
+                this.itemChange.emit(this.item);
                 this.contentTagSelection = [];
                 this.changeDetector.markForCheck();
             }));
+    }
+
+    forwardItemCleanChange(value: boolean): void {
+        this.itemCleanChange.emit(value);
     }
 
     toggleDisplayContent(): void {
@@ -650,54 +705,19 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
     }
 
-    tabGroupToggled(event: { id: string, expand: boolean }, name: string): void {
+    async tabGroupToggled(event: { id: string, expand: boolean }, name: string): Promise<void> {
         if (event.expand) {
-            this.appState.dispatch(new AddExpandedTabGroupAction(name));
+            await this.appState.dispatch(new AddExpandedTabGroupAction(name)).toPromise();
         } else {
-            this.appState.dispatch(new RemoveExpandedTabGroupAction(name));
+            await this.appState.dispatch(new RemoveExpandedTabGroupAction(name)).toPromise();
         }
-        this.appState.dispatch(new SetOpenObjectPropertyGroupsAction(this.expandedCategories));
+        this.userSettings.setOpenObjectPropertyGroups(this.appState.now.editor.openObjectPropertyGroups);
     }
 
     private generateObjectPropertiesList(item: ItemWithObjectTags | Node): ObjectTag[] {
-        const objectProperties: ObjectTag[] = [];
-        if (item && item.type !== 'node' && item.type !== 'channel' && (item as ItemWithObjectTags).tags) {
-            const itemWithTags = item as ItemWithObjectTags;
-            for (const key of Object.keys(itemWithTags.tags)) {
-                const tag = itemWithTags.tags[key];
-                if (tag.type === 'OBJECTTAG') {
-                    objectProperties.push(tag as ObjectTag);
-                }
-            }
-        }
-        objectProperties.sort((a, b) => a.sortOrder - b.sortOrder);
-        return objectProperties;
-    }
-
-    private groupObjectPropertiesByCategory(objectProperties: EditableObjectTag[]): ObjectPropertiesCategory[] {
-        const categories: ObjectPropertiesCategory[] = [];
-        const categoriesMap = new Map<string, ObjectPropertiesCategory>();
-        const othersCategory: ObjectPropertiesCategory = {
-            name: OBJ_PROP_CATEGORY_OTHERS,
-            objProperties: [],
-        };
-        categoriesMap.set(OBJ_PROP_CATEGORY_OTHERS, othersCategory);
-
-        objectProperties.forEach(objProp => {
-            const categoryName = objProp.categoryName || OBJ_PROP_CATEGORY_OTHERS;
-            let category = categoriesMap.get(categoryName);
-            if (!category) {
-                category = { name: categoryName, objProperties: [] };
-                categories.push(category);
-                categoriesMap.set(categoryName, category);
-            }
-            category.objProperties.push(objProp);
-        });
-
-        if (othersCategory.objProperties.length) {
-            categories.push(othersCategory);
-        }
-        return categories;
+        return Object.values((item as ItemWithObjectTags)?.tags || {})
+            .filter(isObjectPropertyTag)
+            .sort((a, b) => a.sortOrder - b.sortOrder);
     }
 
     private augmentObjPropertiesWithTagTypes(objectProperties: ObjectTag[]): Observable<EditableObjectTag[]> {
@@ -716,8 +736,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     public saveItemProperties(
         postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
     ): Promise<ItemWithObjectTags | Form | Node | void> {
-        // const formValue = this.item as any;
-        const formValue = this.latestPropChanges;
+        const formValue = this.editingProperties;
         if (!formValue) {
             return Promise.resolve(null);
         }
@@ -789,6 +808,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             )
                 .then(updatedItems => {
                     this.item = updatedItems.find(item => item.id === this.item.id);
+                    this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
                 });
         }
@@ -802,6 +822,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         )
             .then(updatedItem => {
                 this.item = updatedItem;
+                this.itemChange.emit(this.item);
                 this.changeDetector.markForCheck();
             });
     }
@@ -827,6 +848,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             .then(updatedItem => {
                 this.item = updatedItem;
                 this.item$.next(updatedItem);
+                this.itemChange.emit(this.item);
                 this.changeDetector.markForCheck();
             });
     }
@@ -951,6 +973,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ... (this.item as any).tags,
             [this.editedObjectProperty.name]: this.editedObjectProperty,
         }
+
+        this.itemChange.emit(this.item);
     }
 
     private checkIfReadOnly(objProp: ObjectTag): boolean {

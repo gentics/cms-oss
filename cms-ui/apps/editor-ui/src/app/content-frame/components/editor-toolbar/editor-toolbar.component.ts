@@ -10,7 +10,7 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
-import { EditorState, SaveBehaviour } from '@editor-ui/app/common/models';
+import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '@editor-ui/app/common/models';
 import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -68,6 +68,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     public readonly SaveBehaviour = SaveBehaviour;
     public readonly EditMode = EditMode;
+    public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
 
     @Input()
     public nodeInherited: boolean;

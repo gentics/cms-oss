@@ -10,7 +10,7 @@ import com.gentics.lib.log.NodeLogger;
 public class UnitTestNodeLogger extends NodeLogger {
 
 	protected UnitTestNodeLogger(String name) {
-		super(getLogger(UnitTestNodeLogger.class), UnitTestNodeLogger.class);
+		super(getLogger(UnitTestNodeLogger.class));
 	}
 
 }

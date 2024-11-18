@@ -1,0 +1,109 @@
+@use 'sass:color';
+@import "../../../../styles/variables";
+
+.flex-container {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding: 0 10px;
+
+    .list-entry-names {
+        display: flex;
+        flex-grow: 1;
+        justify-content: space-between;
+
+        .list-entry-names-header {
+            flex-grow: 1;
+            margin-right: 1rem;
+        }
+    }
+
+    .placeholder {
+        display: flex;
+        justify-content: space-between;
+        visibility: hidden;
+    }
+}
+
+gtx-contents-list-item {
+    display: flex;
+    justify-content: space-between;
+
+    .list-entry-inputs, .list-entry-actions {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .list-entry-actions {
+        align-items: center;
+    }
+
+    .list-entry-inputs {
+        flex-grow: 1;
+
+        gtx-input, gtx-i18n-input {
+            flex-grow: 1;
+        }
+
+        gtx-input {
+            margin-right: 1rem;
+
+            &.duplicateKey > input[type=text] {
+                background-color: color.scale($gtx-color-alert, $lightness: 60%);
+            }
+        }
+    }
+}
+
+gtx-sortable-item:last-child gtx-contents-list-item {
+    border-bottom: none;
+}
+
+gtx-sortable-item .gtx-drag-handle {
+    padding: 0.3rem;
+
+    i {
+        font-size: 1.4rem;
+    }
+}
+
+.label {
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
+}
+
+.add-button, .remove-row-button {
+    background-color: $gcms-color-editor-element-buttons-background-default;
+    color: $gcms-color-editor-element-buttons-color-default;
+    padding: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color $gcms-form-editor-transition-duration ease-in-out;
+
+    &:hover {
+        color: $gcms-color-editor-element-buttons-color-hover;
+    }
+}
+
+.add-button:hover {
+    background-color: $gcms-color-editor-element-buttons-background-hover;
+}
+
+.remove-row-button:hover {
+    background-color: $gtx-color-alert;
+}
+
+.list {
+    padding: 0.1rem;
+    border: 2px solid $gtx-color-light-gray;
+    border-radius: 3px;
+
+    &.duplicateKeys {
+        border: 2px solid $gtx-color-alert;
+    }
+
+    &.untranslated:not(.duplicateKeys) {
+        border: 2px dashed $gcms-color-highlight;
+    }
+}

@@ -8,6 +8,9 @@ export interface TagEditInfo {
      *
      * The property `construct` was added to the REST model, after the new TagEditor was created, which required the `tagType` property.
      * Thus since the entire TagEditor is based on the use of the `tagType` property, it remains in use.
+     *
+     * @deprecated Use the {@link Tag.construct `construct`} property instead.
+     * This property will be removed in the next major version.
      */
     tagType: TagType;
 }

@@ -50,7 +50,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 @EditPermType(PermType.updateitems)
 @DeletePermType(PermType.deleteitems)
 @PublishPermType(PermType.publishpages)
-public interface Page extends GCNRenderable, StageableVersionedNodeObject, StageableChanneledNodeObject,
+public interface Page extends GCNRenderable, StageableVersionedNodeObject, StageableChanneledNodeObject, CustomMetaDateNodeObject,
 		TagContainer, ObjectTagContainer, LocalizableNodeObject<Page>, Disinheritable<Page>, Resolvable, NodeObjectWithAlternateUrls, PublishableNodeObjectInFolder, NamedNodeObject, StackResolvableNodeObject {
 
 	/**
@@ -539,56 +539,6 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	Collection<Page> getLanguages() throws NodeException;
 
 	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
-	 * Get the custom creation date
-	 * @return custom creation date
-	 */
-	@FieldGetter("custom_cdate")
-	ContentNodeDate getCustomCDate();
-
-	/**
-	 * Get the custom creation date (if set != 0) or the default (real) creation date
-	 * @return either custom or default creation date
-	 */
-	default ContentNodeDate getCustomOrDefaultCDate() {
-		if (getCustomCDate().getIntTimestamp() != 0) {
-			return getCustomCDate();
-		} else {
-			return getCDate();
-		}
-	}
-
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	ContentNodeDate getEDate();
-
-	/**
-	 * Get the custom edit date
-	 * @return custom edit date
-	 */
-	@FieldGetter("custom_edate")
-	ContentNodeDate getCustomEDate();
-
-	/**
-	 * Get the custom edit date (if set != 0) or the default (real) edit date
-	 * @return either custom or default edit date
-	 */
-	default ContentNodeDate getCustomOrDefaultEDate() {
-		if (getCustomEDate().getIntTimestamp() != 0) {
-			return getCustomEDate();
-		} else {
-			return getEDate();
-		}
-	}
-
-	/**
 	 * emulate PHP's serialize function for arrays to turn the list of language variants into a string 
 	 * @return PHP-like serialized string of language variants
 	 */
@@ -1042,20 +992,6 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	 * @throws ReadOnlyException
 	 */
 	void setContentId(Integer contentId) throws ReadOnlyException;
-
-	/**
-	 * Sets the custom creation date as a unix timestamp.
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("custom_cdate")
-	void setCustomCDate(int timestamp) throws ReadOnlyException;
-
-	/**
-	 * Sets the custom edit date as a unix timestamp.
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("custom_edate")
-	void setCustomEDate(int timestamp) throws ReadOnlyException;
 
 	/**
 	 * Save the page, optionally create a page version.

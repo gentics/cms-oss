@@ -130,8 +130,13 @@ describe('DateTimePickerControlsComponent', () => {
                 const nativeInput: HTMLInputElement = fixture.debugElement.query(By.css('.seconds input')).nativeElement;
                 const initialValue = +nativeInput.value;
                 const illegalValue = initialValue - 3;
-                secondsInput.onInput({ target: { value: illegalValue } } as any);
-                secondsInput.blur.emit();
+
+                secondsInput.handleInputChange({
+                    target: { value: illegalValue } as any,
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                    stopImmediatePropagation: () => {},
+                } as any);
                 tick();
 
                 expect(instance.onChange).not.toHaveBeenCalled();
@@ -154,8 +159,13 @@ describe('DateTimePickerControlsComponent', () => {
                 const nativeInput: HTMLInputElement = fixture.debugElement.query(By.css('.seconds input')).nativeElement;
                 const initialValue = +nativeInput.value;
                 const illegalValue = initialValue + 3;
-                secondsInput.onInput({ target: { value: illegalValue } } as any);
-                secondsInput.blur.emit();
+
+                secondsInput.handleInputChange({
+                    target: { value: illegalValue } as any,
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                    stopImmediatePropagation: () => {},
+                } as any);
                 tick();
 
                 expect(instance.onChange).not.toHaveBeenCalled();

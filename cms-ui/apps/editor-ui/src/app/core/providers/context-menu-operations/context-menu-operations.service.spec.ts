@@ -23,6 +23,7 @@ import {
     Page,
     Raw,
     TagInContainer,
+    Template,
 } from '@gentics/cms-models';
 import {
     getExampleFolderData,
@@ -637,10 +638,10 @@ class MockFolderActions implements Partial<FolderActionsService> {
     refreshList(type: FolderItemType, itemLanguages?: string[]): Promise<void> {
         throw new Error('refreshList called but not mocked');
     }
-    getTemplatesRaw(): Observable<any | void> {
+    getTemplatesRaw(): Observable<any> {
         throw new Error('getTemplatesRaw called but not mocked');
     }
-    getAllTemplatesOfNode(): Observable<any | void> {
+    getAllTemplatesOfNode(): Observable<any> {
         throw new Error('getAllTemplatesOfNode called but not mocked');
     }
     updateItem<T extends ItemType>(
@@ -652,7 +653,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
     ): Promise<ItemTypeMap<Raw>[T] | void> {
         throw new Error('updateItem called but not mocked');
     }
-    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void>  {
+    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[] | null>  {
         throw new Error('getTemplates called but not mocked');
     }
 }

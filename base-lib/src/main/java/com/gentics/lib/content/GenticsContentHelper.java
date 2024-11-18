@@ -124,7 +124,7 @@ public class GenticsContentHelper {
 		return false;
 	}
 
-	public static Object getObject(GenticsContentObject object, String attributeName) {
+	public static GenticsContentAttribute getObject(GenticsContentObject object, String attributeName) {
 		if (object == null) {
 			return null;
 		}

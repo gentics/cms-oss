@@ -5,17 +5,16 @@ import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
-import { Language, Node, NodeCreateRequest, NodeFeatureModel, Raw } from '@gentics/cms-models';
+import { Language, Node, NodeCreateRequest, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
-import { NodePropertiesFormData } from '..';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
-import { NodePropertiesComponent, NodePropertiesMode } from '../node-properties/node-properties.component';
+import { NodePropertiesComponent, NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
-    urlRenderWayFiles: 0,
-    urlRenderWayPages: 0,
+    urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+    urlRenderWayPages: NodeUrlMode.AUTOMATIC,
 };
 
 @Component({
@@ -56,6 +55,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         return this.onFinishClick();
     }
 
+    setChildNodeAction: WizardStepNextClickFn<void> = () => {
+        this.setChildNode();
+        return Promise.resolve();
+    }
+
     constructor(
         private appState: AppStateService,
         private nodeOps: NodeOperations,
@@ -71,6 +75,10 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             startWith(observableOf(true)),
             switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
         );
+    }
+
+    private setChildNode(): void {
+        this.isChildNode = typeof this.fgProperties.value.inheritedFromId === 'number';
     }
 
     private initForms(): void {

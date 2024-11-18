@@ -1,11 +1,11 @@
 package com.gentics.contentnode.render;
 
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -35,6 +35,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -50,6 +51,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaReferenceImpl;
 import com.gentics.mesh.core.rest.user.NodeReference;
 import com.gentics.mesh.json.JsonUtil;
+import com.github.jknack.handlebars.Options;
 
 /**
  * Utility class for rendering
@@ -200,6 +202,45 @@ public class RenderUtils {
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Get the parameters from handlebars options filled into an instance of the given class
+	 * @param <T> type of requested class
+	 * @param clazz requested class
+	 * @param options options
+	 * @return instance
+	 */
+	public static <T> T getHandlebarsHelperObject(Class<T> clazz, Options options) {
+		return mapper.convertValue(options.hash, clazz);
+	}
+
+	/**
+	 * Get the list of language codes from the currently rendered page (as first list item) and the other languages assigned to the current node.
+	 * @return list of language codes (may be empty but never null)
+	 * @throws NodeException
+	 */
+	public static List<String> getLanguages() throws NodeException {
+		List<String> codes = new ArrayList<>();
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+		Page page = renderType.getStack().getTopmost(Page.class);
+		if (page != null) {
+			// add the page's language first
+			ContentLanguage pageLanguage = page.getLanguage();
+			if (pageLanguage != null) {
+				codes.add(pageLanguage.getCode());
+			}
+
+			// then add all node languages
+			List<ContentLanguage> langs = page.getOwningNode().getLanguages();
+			for (ContentLanguage lang : langs) {
+				if (!codes.contains(lang.getCode())) {
+					codes.add(lang.getCode());
+				}
+			}
+		}
+
+		return codes;
 	}
 
 	/**

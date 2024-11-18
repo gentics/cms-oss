@@ -7,6 +7,7 @@
     <gtx-wizard-step
         [title]="'node.create_node_wizard_step_properties' | i18n"
         [nextEnabled]="fgPropertiesValid$ | async"
+        [nextClick]="setChildNodeAction"
     >
         <ng-template>
             <div>
@@ -61,6 +62,7 @@
         <ng-template>
             <div>
                 <gtx-language-table
+                    [disabled]="isChildNode"
                     [showSearch]="true"
                     [hideActions]="true"
                     [(selected)]="selectedLanguages"

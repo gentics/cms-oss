@@ -616,6 +616,12 @@ published_label:
 not_published_label:
     en: 'Not published'
     de: 'Nicht veröffentlicht'
+unpublished_label:
+    en: 'Unpublished by {{unpublisher}} at {{date}}, {{time}}'
+    de: 'Offline genommen von {{unpublisher}} am {{date}} um {{time}}'
+unpublished_field_label:
+    en: 'Unpublished at'
+    de: 'Offline am'
 read_only:
     en: Write permission
     de: Schreibrechte
@@ -791,8 +797,11 @@ publish_queue_btn_approve:
     en: 'Approve'
     de: 'Freigeben'
 version_history_label:
-    en: Version History
+    en: Version history
     de: Versionen
+published_protocol_label:
+    en: Publish protocol
+    de: Publizierungsprotokoll
 wastebin_label:
     en: Wastebin
     de: Papierkorb

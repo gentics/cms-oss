@@ -43,12 +43,12 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.0.4</alohaeditor.version>
+		<alohaeditor.version>2.0.5</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
 		<alohaeditor.date>10.07.2024</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>2.1.6</mesh.version>
+		<mesh.version>3.0.0-SNAPSHOT</mesh.version>
 		<mesh.forms.plugin.version>2.1.0</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
@@ -78,6 +78,8 @@
 		<org.json.version>20240303</org.json.version>
 		<commons-text.version>1.11.0</commons-text.version>
 		<commons-io.version>2.16.1</commons-io.version>
+
+		<handlebars.version>4.4.0</handlebars.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.8</generic-testutils.version>

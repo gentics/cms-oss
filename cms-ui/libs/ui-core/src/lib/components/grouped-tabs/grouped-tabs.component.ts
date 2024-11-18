@@ -262,23 +262,6 @@ export class GroupedTabsComponent
         group.toggle();
     }
 
-    /**
-     * Calculates TabGroup body height to to make it correctly animateable.
-     */
-    tabsHeight(group: TabGroupComponent): number {
-        if (this.elementRef && group.expand) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            const body: HTMLOListElement = this.elementRef.nativeElement.querySelector(`li#${group.uniqueId} div.collapsible-body > ul`);
-
-            if (body) {
-                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                return body.getBoundingClientRect().height + 30;
-            }
-        }
-
-        return 0;
-    }
-
     public setAsActive(tabToActivate?: TabPaneComponent): void {
         this.tabPanes.toArray().forEach(tab => {
             if (tabToActivate != null) {

@@ -30,7 +30,7 @@ import { map } from 'rxjs/operators';
 import { ItemsInfo } from '../../../common/models';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
-import { DisplayFieldSelector } from '../display-field-selector/display-field-selector.component';
+import { DisplayFieldSelectorModal } from '../display-field-selector/display-field-selector.component';
 import { MasonryGridComponent } from '../masonry-grid/masonry-grid.component';
 
 /**
@@ -160,7 +160,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
 
     openDisplayFieldsModal(): void {
         const locals = { type: this.itemType as ItemType, fields: this.displayFields, showPath: this.pageShowPath };
-        this.modalService.fromComponent(DisplayFieldSelector, {}, locals)
+        this.modalService.fromComponent(DisplayFieldSelectorModal, {}, locals)
             .then(modal => modal.open())
             .then((output: { selection: string[], showPath: boolean; }) => this.updateDisplayFields.emit(output.selection));
     }

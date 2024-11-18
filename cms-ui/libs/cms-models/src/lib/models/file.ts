@@ -6,14 +6,8 @@ import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
 /**
  * These are the user-editable properties of a File object.
  */
-export interface EditableFileProps {
-    name?: string;
-    description?: string;
-    forceOnline?: boolean;
-    online?: boolean;
-    niceUrl?: string;
-    alternateUrls?: string[];
-}
+export type EditableFileProps = Partial<Pick<FileOrImage, 'name' | 'description' | 'forceOnline'
+| 'niceUrl' | 'alternateUrls' | 'customCdate' | 'customEdate'>>;
 
 /**
  * Superinterface for CMS files and images.
@@ -71,6 +65,12 @@ export interface FileOrImage<T extends ModelType = DefaultModelType> extends Inh
      * (may be null if status is undetermined)
      */
     forceOnline: boolean;
+
+    /** Customizable creation date to display in public/frontend */
+    customCdate: number;
+
+    /** Customizable edit date to display in public/frontend */
+    customEdate: number;
 
     /** Publish path */
     publishPath: string;

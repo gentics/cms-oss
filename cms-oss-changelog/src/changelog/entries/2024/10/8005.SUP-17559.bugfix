@@ -1,0 +1,1 @@
+Fixes handling of follow up schedules which do not have any follow schedules set. This caused an error which prevented listing schedules in the Admin UI.

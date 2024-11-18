@@ -133,7 +133,7 @@ public class TablePartType extends AbstractPartType {
 		} catch (NumberFormatException e) {
 			rows = 0;
 			cols = 0;
-			NodeLogger.getLogger(this.getClass()).warn(e);
+			NodeLogger.getLogger(this.getClass()).warn("Could not determine number of rows/columns: " + e.getMessage(), e);
 		}
 	}
     

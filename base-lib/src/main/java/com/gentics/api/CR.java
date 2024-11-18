@@ -49,8 +49,7 @@ public class CR {
 			try {
 				line = parser.parse(createOptions(), args);
 			} catch (ParseException e) {
-				logger.fatal("Invalid arguments found.");
-				logger.fatal(e.getMessage());
+				logger.fatal("Invalid arguments found: " + e.getMessage(), e);
 				System.exit(-1);
 			}
 

@@ -1,38 +1,49 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormGroup } from '@angular/forms';
-import { ContentRepositoryType, EditableFolderProps } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { ContentRepositoryType, EditableFolderProps, Folder, FolderCreateRequest } from '@gentics/cms-models';
+import { BaseModal } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { FolderPropertiesForm } from '../../../shared/components/folder-properties-form/folder-properties-form.component';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Component({
     selector: 'create-folder-modal',
-    templateUrl: './create-folder-modal.tpl.html'
+    templateUrl: './create-folder-modal.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateFolderModalComponent implements AfterViewInit, OnDestroy, OnInit, IModalDialog {
+export class CreateFolderModalComponent extends BaseModal<Folder> implements OnInit, OnDestroy {
 
-    creating$: Observable<boolean>;
-
-    form: UntypedFormGroup;
-
-    folderProperties: EditableFolderProps = {};
-
-    @ViewChild(FolderPropertiesForm, { static: true })
-    private folderPropertiesForm: FolderPropertiesForm;
+    public control: FormControl<EditableFolderProps>;
+    public loading = false;
 
     private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private folderActions: FolderActionsService,
         private entityResolver: EntityResolver,
         private appState: ApplicationStateService,
     ) {
-        this.creating$ = appState.select(state => state.folder.folders.creating);
+        super();
     }
 
     ngOnInit(): void {
+        this.subscriptions.push(this.appState.select(state => state.folder.folders.creating).subscribe(creating => {
+            this.loading = creating;
+
+            if (this.control) {
+                if (this.loading && this.control.enabled) {
+                    this.control.disable();
+                } else if (!this.loading && !this.control.enabled) {
+                    this.control.enable();
+                }
+            }
+
+            this.changeDetector.markForCheck();
+        }));
+
+        const properties: EditableFolderProps = {};
+
         const activeNodeId = this.appState.now.folder.activeNode;
         const activeFolderId = this.appState.now.folder.activeFolder;
 
@@ -41,45 +52,40 @@ export class CreateFolderModalComponent implements AfterViewInit, OnDestroy, OnI
          */
         const crIsMesh = this.contentRepositoryTypeIsMesh(activeFolderId);
 
-        this.folderProperties.directory = '';
+        properties.publishDir = '';
 
         if (!!activeNodeId && !!activeFolderId && !crIsMesh) {
             const activeNode = this.appState.now.entities.node[activeNodeId];
             if (!!activeNode && !activeNode.pubDirSegment) {
-                this.folderProperties.directory = this.entityResolver.getFolder(activeFolderId).publishDir;
+                properties.publishDir = this.entityResolver.getFolder(activeFolderId).publishDir;
             }
         }
-    }
 
-    ngAfterViewInit(): void {
-        this.form = this.folderPropertiesForm.form;
+        this.control = new FormControl(properties);
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.map(s => s.unsubscribe());
-    }
-
-    closeFn = (val: any) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     saveChanges(): void {
+        if (!this.control.valid || this.loading) {
+            return;
+        }
+
         const activeFolderId = this.appState.now.folder.activeFolder;
         const activeNodeId = this.appState.now.folder.activeNode;
-        const newFolder = Object.assign({}, this.form.value, { parentFolderId: activeFolderId, nodeId: activeNodeId, failOnDuplicate: true });
-        this.folderActions.createNewFolder(newFolder)
-            .then(folder => {
-                if (folder) {
-                    this.closeFn(folder);
-                }
-            })
+        const newFolder: FolderCreateRequest = {
+            ...this.control.value,
+            motherId: activeFolderId,
+            nodeId: activeNodeId,
+            failOnDuplicate: true,
+        };
+        this.folderActions.createNewFolder(newFolder).then(folder => {
+            if (folder) {
+                this.closeFn(folder);
+            }
+        })
     }
 
     private getContentRepositoryTypeFromFolderId(folderId: number): ContentRepositoryType | null {
@@ -91,7 +97,7 @@ export class CreateFolderModalComponent implements AfterViewInit, OnDestroy, OnI
     }
 
     private contentRepositoryTypeIsMesh(folderId: number): boolean {
-        return this.getContentRepositoryTypeFromFolderId(folderId) === 'mesh';
+        return this.getContentRepositoryTypeFromFolderId(folderId) === ContentRepositoryType.MESH;
     }
 
 }

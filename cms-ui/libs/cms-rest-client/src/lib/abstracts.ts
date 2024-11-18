@@ -269,7 +269,10 @@ import {
     PolicyMapOptions,
     PolicyResponse,
     PublishInfo,
+    PublishLogEntry,
+    PublishLogListOption,
     PublishQueue,
+    PublishType,
     PushToMasterRequest,
     Raw,
     Response,
@@ -1054,6 +1057,12 @@ export interface AbstractTranslationAPI extends BasicAPI {
     translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>
 }
 
+export interface AbstractPublishProtocolAPI extends BasicAPI {
+    get: (type: PublishType, objId: number) =>  PublishLogEntry;
+    list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
+}
+
+
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
     auth: AbstractAuthenticationAPI;
@@ -1085,6 +1094,7 @@ export interface AbstractRootAPI {
     partType: AbstractPartTypeAPI;
     permission: AbstractPermissionAPI;
     policyMap: AbstractPolicyMapAPI;
+    publishProtocol: AbstractPublishProtocolAPI;
     role: AbstractRoleAPI;
     scheduler: AbstractSchedulerAPI;
     schedulerTask: AbstractScheduleTaskAPI;

@@ -9,14 +9,16 @@ import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createM
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.addTagmapEntry;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFile;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,16 +39,23 @@ import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentRepository;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.Node.UrlRenderWay;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.FileURLPartType;
+import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -81,6 +90,12 @@ public class MeshPublishFolderTranslationTest {
 	private static ContentRepository cr;
 
 	private static Template template;
+
+	private static int htmlConstructId;
+
+	private static int pageUrlConstructId;
+
+	private static int fileUrlConstructId;
 
 	@Rule
 	public MeshTestRule meshTestRule = new MeshTestRule(mesh);
@@ -126,9 +141,28 @@ public class MeshPublishFolderTranslationTest {
 			n.setContentrepositoryId(crId);
 			n.setPageLanguageCode(PageLanguageCode.PATH);
 			n.setPublishDir("base");
+
+			n.setUrlRenderWayFiles(UrlRenderWay.STATIC_WITHOUT_DOMAIN.getValue());
+			n.setUrlRenderWayPages(UrlRenderWay.STATIC_WITHOUT_DOMAIN.getValue());
 		});
 
-		template = supply(() -> createTemplate(node.getFolder(), "Template"));
+		htmlConstructId = supply(() -> createConstruct(node, LongHTMLPartType.class, "text", "text"));
+		fileUrlConstructId = supply(() -> createConstruct(node, FileURLPartType.class, "file", "file"));
+		pageUrlConstructId = supply(() -> createConstruct(node, PageURLPartType.class, "page", "page"));
+
+		template = Builder.create(Template.class, create -> {
+			create.setName("Template");
+			create.addFolder(node.getFolder());
+
+			create.setSource("<node tag>");
+
+			create.getTemplateTags().put("tag", Builder.create(TemplateTag.class, tag -> {
+				tag.setConstructId(htmlConstructId);
+				tag.setEnabled(true);
+				tag.setName("tag");
+				tag.setPublic(true);
+			}).doNotSave().build());
+		}).build();
 	}
 
 	@Before
@@ -520,6 +554,290 @@ public class MeshPublishFolderTranslationTest {
 
 		// publish process should have failed
 		assertThat(info.getReturnCode()).as("Publish return code").isEqualTo(PublishInfo.RETURN_CODE_ERROR);
+	}
+
+	@Test
+	public void testRenderPageUrl() throws Exception {
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("/generic/path");
+
+			f.setPublishDirI18n(new I18nMap().put("de", "/german/path").put("en", "/english/path"));
+		}).build();
+
+		// create the target page in english
+		Page targetPage = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("Target");
+			create.setFilename("target.html");
+			create.setLanguage(getLanguage("en"));
+		}).publish().build();
+
+		// create a page in german, which renders the page URL
+		Page german = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("German");
+			create.setLanguage(getLanguage("de"));
+
+			ContentTag pageTag = create.getContent().addContentTag(pageUrlConstructId);
+			getPartType(PageURLPartType.class, pageTag, "page").setTargetPage(targetPage);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + pageTag.getName() + ">");
+		}).publish().build();
+
+		// create a page in enlish, which renders the page URL
+		Page english = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("English");
+			create.setLanguage(getLanguage("en"));
+
+			ContentTag pageTag = create.getContent().addContentTag(pageUrlConstructId);
+			getPartType(PageURLPartType.class, pageTag, "page").setTargetPage(targetPage);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + pageTag.getName() + ">");
+		}).publish().build();
+
+		if (!instantPublishing) {
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+		}
+
+		String expectedPageUrl = "/en/english/path/target.html";
+		assertObject("Check published target page", mesh.client(), MESH_PROJECT_NAME, targetPage, true, node -> {
+			// assert url
+			MeshAssertions.assertThat(node).hasStringField(MeshPublisher.FIELD_GTX_URL, expectedPageUrl);
+		});
+		assertObject("Check german page", mesh.client(), MESH_PROJECT_NAME, german, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedPageUrl);
+		});
+		assertObject("Check english page", mesh.client(), MESH_PROJECT_NAME, english, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedPageUrl);
+		});
+	}
+
+	@Test
+	public void testRenderFileUrl() throws Exception {
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("/generic/path");
+
+			f.setPublishDirI18n(new I18nMap().put("de", "/german/path").put("en", "/english/path"));
+		}).build();
+
+		// create a file in the folder
+		File file = Builder.create(File.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setName("testfile.txt");
+			create.setFiletype("text/raw");
+			create.setFileStream(new ByteArrayInputStream("file contents".getBytes()));
+		}).build();
+
+		// create a page in german, which renders the file URL
+		Page german = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("German");
+			create.setLanguage(getLanguage("de"));
+
+			ContentTag fileTag = create.getContent().addContentTag(fileUrlConstructId);
+			getPartType(FileURLPartType.class, fileTag, "file").setTargetFile(file);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + fileTag.getName() + ">");
+		}).publish().build();
+
+		// create a page in english, which renders the file URL
+		Page english = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("English");
+			create.setLanguage(getLanguage("en"));
+
+			ContentTag fileTag = create.getContent().addContentTag(fileUrlConstructId);
+			getPartType(FileURLPartType.class, fileTag, "file").setTargetFile(file);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + fileTag.getName() + ">");
+		}).publish().build();
+
+		if (!instantPublishing) {
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+		}
+
+		String expectedFileUrl = "/generic/path/testfile.txt";
+		assertObject("Check published file", mesh.client(), MESH_PROJECT_NAME, file, true, node -> {
+			// assert url
+			MeshAssertions.assertThat(node).hasStringField(MeshPublisher.FIELD_GTX_URL, expectedFileUrl);
+		});
+		assertObject("Check german page", mesh.client(), MESH_PROJECT_NAME, german, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedFileUrl);
+		});
+		assertObject("Check english page", mesh.client(), MESH_PROJECT_NAME, english, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedFileUrl);
+		});
+	}
+
+	@Test
+	public void testRenderPageUrlWithSegments() throws Exception {
+		// activate pub_dir_segments
+		node = update(node, update -> {
+			update.setPubDirSegment(true);
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("generic");
+
+			f.setPublishDirI18n(new I18nMap().put("de", "german").put("en", "english"));
+		}).build();
+
+		// create the target page in english
+		Page targetPage = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("Target");
+			create.setFilename("target.html");
+			create.setLanguage(getLanguage("en"));
+		}).publish().build();
+
+		// create a page in german, which renders the page URL
+		Page german = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("German");
+			create.setFilename("german.html");
+			create.setLanguage(getLanguage("de"));
+
+			ContentTag pageTag = create.getContent().addContentTag(pageUrlConstructId);
+			getPartType(PageURLPartType.class, pageTag, "page").setTargetPage(targetPage);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + pageTag.getName() + ">");
+		}).publish().build();
+
+		// create a page in english, which renders the page URL
+		Page english = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("English");
+			create.setFilename("english.html");
+			create.setLanguage(getLanguage("en"));
+
+			ContentTag pageTag = create.getContent().addContentTag(pageUrlConstructId);
+			getPartType(PageURLPartType.class, pageTag, "page").setTargetPage(targetPage);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + pageTag.getName() + ">");
+		}).publish().build();
+
+		if (!instantPublishing) {
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+		}
+
+		String expectedPageUrl = "/en/home/english/target.html";
+		assertObject("Check published target page", mesh.client(), MESH_PROJECT_NAME, targetPage, true);
+		assertObject("Check german page", mesh.client(), MESH_PROJECT_NAME, german, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedPageUrl);
+		});
+		assertObject("Check english page", mesh.client(), MESH_PROJECT_NAME, english, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedPageUrl);
+		});
+	}
+
+	@Test
+	public void testRenderFileUrlWithSegments() throws Exception {
+		// acticate pub_dir_segments
+		node = update(node, update -> {
+			update.setPubDirSegment(true);
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("generic");
+
+			f.setPublishDirI18n(new I18nMap().put("de", "german").put("en", "english"));
+		}).build();
+
+		// create a file in the folder
+		File file = Builder.create(File.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setName("testfile.txt");
+			create.setFiletype("text/raw");
+			create.setFileStream(new ByteArrayInputStream("file contents".getBytes()));
+		}).build();
+
+		// create a page in german, which renders the file URL
+		Page german = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("German");
+			create.setFilename("german.html");
+			create.setLanguage(getLanguage("de"));
+
+			ContentTag fileTag = create.getContent().addContentTag(fileUrlConstructId);
+			getPartType(FileURLPartType.class, fileTag, "file").setTargetFile(file);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + fileTag.getName() + ">");
+		}).publish().build();
+
+		// create a page in english, which renders the file URL
+		Page english = Builder.create(Page.class, create -> {
+			create.setFolderId(folder.getId());
+			create.setTemplateId(template.getId());
+			create.setName("English");
+			create.setFilename("english.html");
+			create.setLanguage(getLanguage("en"));
+
+			ContentTag fileTag = create.getContent().addContentTag(fileUrlConstructId);
+			getPartType(FileURLPartType.class, fileTag, "file").setTargetFile(file);
+			getPartType(LongHTMLPartType.class, create.getContentTag("tag"), "text")
+					.setText("<node " + fileTag.getName() + ">");
+		}).publish().build();
+
+		if (!instantPublishing) {
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+		}
+
+		String expectedFileUrl = "/home/generic/testfile.txt";
+		assertObject("Check published file", mesh.client(), MESH_PROJECT_NAME, file, true);
+		assertObject("Check german page", mesh.client(), MESH_PROJECT_NAME, german, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedFileUrl);
+		});
+		assertObject("Check english page", mesh.client(), MESH_PROJECT_NAME, english, true, node -> {
+			// assert content
+			MeshAssertions.assertThat(node).hasStringField("content", expectedFileUrl);
+		});
 	}
 
 	/**

@@ -61,8 +61,9 @@ export class SelectTagPropertyEditor implements TagPropertyEditor {
     onSingleSelectChange(newValue: number): void {
         this.tagProperty.selectedOptions = [];
 
-        if (typeof newValue === 'number') {
-            this.tagProperty.selectedOptions[0] = this.tagProperty.options.find(option => option.id === newValue);
+        const found = this.tagProperty.options.find(option => option.id === newValue);
+        if (found) {
+            this.tagProperty.selectedOptions.push(found);
         }
 
         if (this.onChangeFn) {
@@ -73,12 +74,10 @@ export class SelectTagPropertyEditor implements TagPropertyEditor {
     }
 
     onMultipleSelectChange(newValue: number[]): void {
-        this.tagProperty.selectedOptions = [];
-
-        newValue.sort();
-        newValue.forEach((value) => {
-            this.tagProperty.selectedOptions.push(this.tagProperty.options.find(option => option.id === value));
-        });
+        this.tagProperty.selectedOptions = (newValue || [])
+            .sort()
+            .map(id => this.tagProperty.options.find(option => option.id === id))
+            .filter(val => val != null);
 
         if (this.onChangeFn) {
             const changes: Partial<TagPropertyMap> = {};

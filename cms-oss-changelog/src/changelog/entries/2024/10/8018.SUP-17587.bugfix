@@ -1,0 +1,4 @@
+When publishing into a Mesh Content.Repository with static URL rendering for files, the rendered file URLs
+contained possibly translated folder publish paths, but the file itself would only be accessible via the
+generic folder publish path.
+The rendering of file URLs has been fixed.

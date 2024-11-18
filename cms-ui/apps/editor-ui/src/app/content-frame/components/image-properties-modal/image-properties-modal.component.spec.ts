@@ -7,6 +7,7 @@ import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
+import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { SharedModule } from '@editor-ui/app/shared/shared.module';
 import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
@@ -17,19 +18,23 @@ import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.m
 import {
     File as CmsFile,
     EditableFileProps,
+    EditableImageProps,
     Folder,
     FolderItemSaveOptionsMap,
     FolderItemType,
     FolderItemTypeMap,
+    Image,
     ModelType,
     Node,
     Normalized,
+    Raw,
     Tags,
 } from '@gentics/cms-models';
 import {
     getExampleEditableObjectTag,
     getExampleFileData,
     getExampleFolderDataNormalized,
+    getExampleImageData,
     getExampleNodeDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -54,6 +59,9 @@ class MockFolderActionsService implements Partial<FolderActionsService> {
     updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<void | CmsFile<ModelType.Raw>> {
         return Promise.resolve();
     }
+    updateImageProperties(imageId: number, properties: EditableImageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Image<Raw> | void> {
+        return Promise.resolve();
+    }
     updateItemObjectProperties<T extends FolderItemType, U extends FolderItemTypeMap<ModelType.Raw>[T], R extends FolderItemSaveOptionsMap[T]>(
         type: T,
         itemId: number,
@@ -74,6 +82,7 @@ class MockI18nService {
         return key;
     }
 }
+class MockUserSettingsService {}
 
 const NODE_ID = 1;
 
@@ -108,6 +117,7 @@ describe('ImagePropertiesModal', () => {
                 { provide: ModalService, useClass: MockModalService },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: UserSettingsService, useClass: MockUserSettingsService },
                 Api,
             ],
             schemas: [NO_ERRORS_SCHEMA],
@@ -120,6 +130,7 @@ describe('ImagePropertiesModal', () => {
     it('should save properties if edited', componentTest(() => ImagePropertiesModalComponent, (fixture, instance) => {
         // Setup spies
         spyOn(actions, 'updateFileProperties').and.callThrough();
+        spyOn(actions, 'updateImageProperties').and.callThrough();
         spyOn(actions, 'updateItemObjectProperties').and.callThrough();
         spyOn(client.node, 'listLanguages').and.returnValue(of({
             items: [],
@@ -157,12 +168,14 @@ describe('ImagePropertiesModal', () => {
         tick();
 
         expect(actions.updateFileProperties).toHaveBeenCalledWith(ITEM.id, CHANGES, jasmine.anything());
+        expect(actions.updateImageProperties).not.toHaveBeenCalled();
         expect(actions.updateItemObjectProperties).toHaveBeenCalledWith(ITEM.type, ITEM.id, ITEM.tags, jasmine.anything());
     }));
 
     it('should save object-properties if edited', componentTest(() => ImagePropertiesModalComponent, (fixture, instance) => {
         // Setup spies
         spyOn(actions, 'updateFileProperties').and.callThrough();
+        spyOn(actions, 'updateImageProperties').and.callThrough();
         spyOn(actions, 'updateItemObjectProperties').and.callThrough();
         spyOn(client.node, 'listLanguages').and.returnValue(of({
             items: [],
@@ -180,7 +193,10 @@ describe('ImagePropertiesModal', () => {
         }));
 
         // Testing constants
-        const ITEM = getExampleFileData();
+        const ITEM = getExampleImageData();
+        if (ITEM.tags == null) {
+            ITEM.tags = {};
+        }
         const TAG = getExampleEditableTag();
         ITEM.tags[TAG.name] = TAG;
         const OBJ_PROP = getExampleEditableObjectTag();
@@ -205,6 +221,7 @@ describe('ImagePropertiesModal', () => {
         tick();
 
         expect(actions.updateFileProperties).not.toHaveBeenCalled();
+        expect(actions.updateImageProperties).toHaveBeenCalledWith(ITEM.id, jasmine.anything(), jasmine.anything());
         expect(actions.updateItemObjectProperties).toHaveBeenCalledWith(EXPECTED.type, EXPECTED.id, EXPECTED.tags, jasmine.anything());
     }));
 });

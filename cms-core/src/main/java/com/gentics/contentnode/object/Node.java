@@ -21,7 +21,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.etc.ContentMap;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.FieldGetter;
@@ -34,12 +33,13 @@ import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The object for a Node or Domain in content.node.
  */
 @TType(Node.TYPE_NODE)
-public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
+public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, ResolvableMapWrappable, MetaDateNodeObject {
 
 	/**
 	 * The ttype for the node object.
@@ -697,18 +697,6 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	void setEditorversion(int editorversion) throws ReadOnlyException;
 
 	/**
-	 * return the creation date of the node as a unix timestamp
-	 * @return creation date as a unix timestamp
-	 */
-	ContentNodeDate getCDate();
-
-	/**
-	 * return the edit date of the node as a unix timestamp
-	 * @return edit date as a unix timestamp
-	 */
-	ContentNodeDate getEDate();
-
-	/**
 	 * retrieve node creator
 	 * @return creator of the node
 	 * @throws NodeException
@@ -896,6 +884,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	 */
 	@FieldSetter("insecure_preview_url")
 	void setInsecurePreviewUrl(boolean insecurePreviewUrl) throws ReadOnlyException;
+
+	/**
+	 * Get the mesh project name
+	 * @return mesh project name
+	 */
+	@FieldGetter("mesh_project_name")
+	String getMeshProjectName();
+
+	/**
+	 * Set the mesh project name
+	 * @param meshProjectName mesh project name
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("mesh_project_name")
+	void setMeshProjectName(String meshProjectName) throws ReadOnlyException;
 
 	/**
 	 * Get the list of features that are activated for the node.

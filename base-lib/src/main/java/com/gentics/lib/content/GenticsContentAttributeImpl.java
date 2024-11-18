@@ -433,7 +433,7 @@ public class GenticsContentAttributeImpl implements GenticsContentAttribute, Clo
 			} else if (!m_parent.isCurrentVersion()) {
 				// the parent is not the current version, but the datasource is
 				// not versioning -> something's wrong here
-				NodeLogger.getLogger(getClass()).error("cannot get versioned objects of foreignlinkattribute '" + m_name + "'; datasource is not versioning");
+				NodeLogger.getLogger(getClass()).warn("cannot get versioned objects of foreignlinkattribute '" + m_name + "'; datasource is not versioning");
 				return;
 			}
 
@@ -943,7 +943,7 @@ public class GenticsContentAttributeImpl implements GenticsContentAttribute, Clo
 				} else if (element instanceof String) {
 					newResult.add(element);
 				} else {
-					NodeLogger.getLogger(getClass()).error(
+					NodeLogger.getLogger(getClass()).warn(
 							"Error while preparing foreign linked attribute {" + m_name + "} for caching: value is neither String nor GenticsContentObject");
 				}
 			}
@@ -973,7 +973,7 @@ public class GenticsContentAttributeImpl implements GenticsContentAttribute, Clo
 				} else if (element instanceof String) {
 					cachableValues.add(element);
 				} else {
-					NodeLogger.getLogger(getClass()).error(
+					NodeLogger.getLogger(getClass()).warn(
 							"Error while preparing foreign linked attribute {" + m_name + "} for caching: value is neither String nor GenticsContentObject");
 				}
 			}

@@ -11,39 +11,27 @@
   },
   "mayBeSubtag" : true,
   "mayContainsSubtags" : false,
-  "editorControlStyle": "ASIDE",
+  "editOnInsert" : false,
+  "editorControlStyle" : "ASIDE",
+  "editorControlsInside" : false,
   "autoEnable" : true,
+  "externalEditorUrl" : "",
   "parts" : [ {
-    "globalId" : "A547.70956",
+    "globalId" : "B9E7.1e998ae0-6931-11ef-95ab-0242ac140005",
     "name" : {
-      "de" : "VTL",
-      "en" : "VTL"
+      "de" : "Handlebars",
+      "en" : "Handlebars"
     },
-    "keyword" : "vtl",
+    "keyword" : "handlebars",
     "editable" : false,
-    "typeId" : 33,
+    "typeId" : 43,
     "order" : 1,
     "mlId" : 0,
     "visible" : true,
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
-    "regexId" : 0
-  }, {
-    "globalId" : "A547.75233",
-    "name" : {
-      "de" : "Template",
-      "en" : "Template"
-    },
-    "keyword" : "template",
-    "editable" : false,
-    "typeId" : 21,
-    "order" : 2,
-    "mlId" : 0,
-    "visible" : false,
-    "required" : false,
-    "inlineEditable" : false,
-    "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "A547.70966",
@@ -60,6 +48,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "A547.70961",
@@ -76,6 +65,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "A547.75228",
@@ -92,6 +82,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "2ABB.f67edd75-eb88-11e5-9d68-02420a2b4001",
@@ -108,6 +99,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "71E1.77234",
@@ -124,6 +116,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "71E1.77239",
@@ -140,6 +133,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   }, {
     "globalId" : "A547.70971",
@@ -156,6 +150,7 @@
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,
+    "externalEditorUrl" : "",
     "regexId" : 0
   } ],
   "category" : {
@@ -164,6 +159,6 @@
       "de" : "Gentics CMP Standard",
       "en" : "Gentics CMP Default"
     },
-    "sortOrder" : 0
+    "sortOrder" : 1
   }
 }

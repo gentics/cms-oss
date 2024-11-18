@@ -555,6 +555,9 @@ page_versions_editor_label:
 page_versions_empty_label:
     en: No versions exist for this page.
     de: Für diese Seite existieren keine Versionen.
+page_publish_log_empty_label:
+    en: Publish protocol does not exist for this page yet.
+    de: Für diese Seite existiert noch kein Publizierungsprotokoll.    
 page_versions_item:
     en: 'Version {{version}}'
     de: 'Version {{version}}'
@@ -576,9 +579,15 @@ page_versions_title_prefix:
 page_versions_title_suffix:
     en: '" in '
     de: '" auf '
+page_published_date:
+    en: 'on {{date}}'
+    de: 'am {{date}}'    
 page_versions_title_suffix_no_languages:
     en: '":'
     de: '":'
+publish_protocol_title_prefix:
+    en: 'Publish Protocol of "'
+    de: 'Veröffentlichungs Protokoll von "'
 page_versions_tooltip_already_current_version:
     en: 'This is already the current version'
     de: 'Das ist bereits die aktuelle Version'

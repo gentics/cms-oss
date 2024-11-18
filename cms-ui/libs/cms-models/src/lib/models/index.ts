@@ -35,6 +35,7 @@ export * from './package';
 export * from './package-check';
 export * from './page';
 export * from './permissions';
+export * from './publish-log';
 export * from './privileges';
 export * from './repository-browser';
 export * from './request';

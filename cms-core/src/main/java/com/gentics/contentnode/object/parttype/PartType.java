@@ -16,6 +16,7 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.TemplateRenderer;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The PartType is a special templaterenderer, which can render a {@link Value}.
@@ -28,7 +29,7 @@ import com.gentics.contentnode.render.TemplateRenderer;
  *
  * TODO check, if a special get(RenderType,key) method is needed (for .url,.. props)
  */
-public interface PartType extends Resolvable, TemplateRenderer, TransformablePartType {
+public interface PartType extends Resolvable, TemplateRenderer, TransformablePartType, ResolvableMapWrappable {
 
 	/**
 	 * Set of all Part types that are convertible to each other because their value is of type text

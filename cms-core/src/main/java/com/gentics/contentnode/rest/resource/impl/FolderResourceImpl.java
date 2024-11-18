@@ -5,6 +5,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -965,9 +967,11 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 						try {
 							restPages.add(ModelBuilder.getPage(page, fillRefs, wastebin));
 						} catch (InconsistentDataException e) {
-							logger.error("Error while fetching page {" + page.getId() + "}", e);
+							logger.warn("Error while fetching page {" + page.getId() + "}", e);
 						}
 					}
+
+
 					response.setPages(restPages);
 					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
 					response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
@@ -991,6 +995,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			return new LegacyPageListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getMessage()));
 		}
 	}
+
+
 
 	/**
 	 * Get the pages from the given folder. Possibly do a search.

@@ -1,111 +1,100 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
-import { UntypedFormGroup } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { EditablePageProps, Language, NodeFeature, Page, Raw, ResponseCode, Template } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
+import { BaseModal } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { PagePropertiesForm } from '../../../shared/components/page-properties-form/page-properties-form.component';
 import { ApplicationStateService, FolderActionsService, TranslateRequestFunction } from '../../../state';
 import { TranslationActionsService } from '../../providers';
 
 export enum TranslatePageModalActions {
-    EditPage = 'editPage',
-    EditPageCompareWithLanguage = 'editPageCompareWithLanguage',
+    EDIT_PAGE = 'editPage',
+    EDIT_PAGE_COMPARE_WITH_LANGUAGE = 'editPageCompareWithLanguage',
 }
 
-export interface TranslationForm {
-    pageName: string;
-    fileName: string;
-    description: string;
-    templateId: number | null;
-    language: string | null;
-    priority: number;
+export interface TranslateResult {
+    newPage: Page,
+    action: TranslatePageModalActions,
 }
-
 
 @Component({
     selector: 'translate-page-modal',
     templateUrl: './translate-page-modal.tpl.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TranslatePageModal implements IModalDialog, AfterViewInit, OnDestroy {
+export class TranslatePageModal extends BaseModal<TranslateResult> implements OnInit, OnDestroy {
+
+    public readonly TranslatePageModalActions = TranslatePageModalActions;
 
     // The following fields should be provided by the call to ModalService.fromComponent()
-    defaultProps: EditablePageProps = {};
-    languageName: string;
-    pageId: number;
-    nodeId: number;
-    folderId: number;
+    @Input()
+    public defaultProps: EditablePageProps = {};
 
-    @ViewChild(PagePropertiesForm, { static: true }) pagePropertiesForm: PagePropertiesForm;
-    creating$: Observable<boolean>;
-    languages$: Observable<Language[]>;
-    templates$: Observable<Template[]>;
-    form: UntypedFormGroup;
+    @Input()
+    public languageName: string;
 
-    translationEnabled = false;
+    @Input()
+    public pageId: number;
+
+    @Input()
+    public nodeId: number;
+
+    @Input()
+    public folderId: number;
+
+    public languages: Language[] = [];
+    public templates: Template[] = [];
+
+    public loading = false;
+    public control: FormControl<EditablePageProps>;
+
+    public autoTranslationEnabled = false;
 
     private subscriptions: Subscription[] = [];
 
     constructor(
-        private folderActions: FolderActionsService,
+        private changeDetector: ChangeDetectorRef,
         private translationService: TranslationActionsService,
         private notificationService: I18nNotification,
-        entityResolver: EntityResolver,
-        appState: ApplicationStateService,
+        private folderActions: FolderActionsService,
+        private entityResolver: EntityResolver,
+        private appState: ApplicationStateService,
     ) {
+        super();
+    }
 
-        this.templates$ = appState.select(
-            state => state.folder.templates.list.map(
-                templateId => entityResolver.getTemplate(templateId)));
+    ngOnInit(): void {
+        this.control = new FormControl(this.defaultProps);
 
-        this.languages$ = appState.select(
-            state => state.folder.activeNodeLanguages.list.map(
-                langId => entityResolver.getLanguage(langId)));
+        this.subscriptions.push(this.appState.select(state => state.folder.templates.list).subscribe(templateIds => {
+            this.templates = templateIds.map(id => this.entityResolver.getTemplate(id));
+            this.changeDetector.markForCheck();
+        }));
 
-        this.creating$ = appState.select(state => state.folder.folders.creating);
+        this.subscriptions.push(this.appState.select(state => state.folder.activeNodeLanguages.list).subscribe(languageIds => {
+            this.languages = languageIds.map(id => this.entityResolver.getLanguage(id));
+            this.changeDetector.markForCheck();
+        }));
 
-        const nodeFeatures$ = appState.select(state => state.features.nodeFeatures);
+        this.subscriptions.push(this.appState.select(state => state.folder.folders.creating).subscribe(loading => {
+            this.loading = loading;
+            this.changeDetector.markForCheck();
+        }));
 
-        this.subscriptions.push(nodeFeatures$.subscribe(nodeFeatures => {
-            this.translationEnabled = this.isTranslationFeatureEnabled(nodeFeatures)
+        this.subscriptions.push(this.appState.select(state => state.features.nodeFeatures).subscribe(nodeFeatures => {
+            this.autoTranslationEnabled = ((nodeFeatures || {})[this.nodeId] || []).includes(NodeFeature.AUTOMATIC_TRANSLATION);
+            this.changeDetector.markForCheck();
         }));
     }
-
-    ngAfterViewInit(): void {
-        setTimeout(() => this.form = this.pagePropertiesForm.form);
-    }
-
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    closeFn(val: { newPage: Page<Raw>, action: string }): void { }
-    cancelFn(val?: any): void {}
-
-    registerCloseFn(close: (val: { newPage: Page<Raw>, action: string }) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
-    }
-
-    /**
-     * User chooses to translate and do nothing afterwards.
-     */
-    createTranslation(): void {
-        this.createTranslationWithFunction((pageId, options)  => this.folderActions.createPageTranslation(pageId, options) )
-            .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPage' }));
-    }
-
-    /**
-     * User chooses to translate and open translated page afterwards
-     */
-    createTranslationAndEditTranslatedPage(): void {
-        this.createTranslationWithFunction((pageId, options) => this.folderActions.createPageTranslation(pageId, options ))
-            .then((newPage: Page<Raw>) => this.closeFn({ newPage, action: 'editPageCompareWithLanguage' }));
+    handleConfirm(action: TranslatePageModalActions): void {
+        this.createPageTranslation()
+            .then((newPage: Page<Raw>) => this.closeFn({ newPage, action }));
     }
 
     createAutomaticallyTranslatedPage(): void {
@@ -122,52 +111,29 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit, OnDestro
             }),
         ).then((newPage: Page<Raw>) => {
             if (newPage) {
-                this.closeFn({ newPage, action: 'editPage' })
+                this.closeFn({ newPage, action: TranslatePageModalActions.EDIT_PAGE })
             }
         }).catch(error=> {
             console.log(error)
         })
     }
 
-
     /**
      * Create page translation with the provided translation function.
      */
-    private createTranslationWithFunction(translationFunction: TranslateRequestFunction): Promise<Page<Raw> | void> {
-        const languageCode = this.defaultProps.language;
-        const newPageProps = this.getNewPageProperties();
+    private async createPageTranslation(): Promise<Page<Raw> | void> {
+        return this.createTranslationWithFunction((pageId, options) => this.folderActions.createPageTranslation(pageId, options));
+    }
 
-        return this.folderActions.executePageTranslationFunction(this.nodeId, this.pageId, languageCode, translationFunction)
+    private createTranslationWithFunction(translationFunction: TranslateRequestFunction): Promise<Page<Raw> | void> {
+        return this.folderActions.executePageTranslationFunction(this.nodeId, this.pageId, this.defaultProps.language, translationFunction)
             .then(page => {
                 if (page) {
-                    this.folderActions.updatePageProperties(page.id, newPageProps, { showNotification: true, fetchForUpdate: false });
+                    this.folderActions.updatePageProperties(page.id, this.control.value, { showNotification: true, fetchForUpdate: false });
                     this.folderActions.refreshList(page.type);
 
                     return page;
                 }
             }).catch(err => this.cancelFn(err));
     }
-
-    private getNewPageProperties(): EditablePageProps {
-        const formValue: TranslationForm = this.form.value;
-        const newPageProps: EditablePageProps = {
-            pageName: formValue.pageName,
-            fileName: formValue.fileName,
-            description: formValue.description,
-            templateId: formValue.templateId,
-            priority: formValue.priority,
-        };
-
-        return newPageProps;
-    }
-
-    private isTranslationFeatureEnabled(features: {[id: number]: NodeFeature[]}): boolean {
-        for (const key in features) {
-            if (features[key].includes(NodeFeature.AUTOMATIC_TRANSLATION)  ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }

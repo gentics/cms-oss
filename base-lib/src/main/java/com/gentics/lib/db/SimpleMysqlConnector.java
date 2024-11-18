@@ -60,7 +60,7 @@ public class SimpleMysqlConnector extends DefaultConnectionManager {
 			}
 			return DriverManager.getConnection(url, username, passwd);
 		} catch (ClassNotFoundException e) {
-			NodeLogger.getLogger(getClass()).fatal("Could not load Mysql-Driver-Class!");
+			NodeLogger.getLogger(getClass()).error("Could not load Mysql-Driver-Class!");
 			return null;
 		}
 	}

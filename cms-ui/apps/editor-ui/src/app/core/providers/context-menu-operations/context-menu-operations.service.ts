@@ -6,6 +6,7 @@ import {
     ChannelDependenciesModal,
     InheritanceDialog,
     LinkTemplateModal,
+    PublishProtocolModalComponent,
     MultiDeleteResult,
     PageVersionsModal,
     PublishTimeManagedPagesModal,
@@ -31,6 +32,7 @@ import {
     CmsFormElement,
     DependencyItemTypePlural,
     Favourite,
+    Feature,
     File as FileModel,
     Folder,
     FolderItemType,
@@ -154,8 +156,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     async linkTemplatesToFolder(
         nodeId: number,
         folderId: number,
-    ): Promise<any> {
-        const featureLinkTemplatesNew = this.state.now.features.folder_based_template_selection;
+    ): Promise<Template[] | null> {
+        const featureLinkTemplatesNew = this.state.now.features[Feature.FOLDER_BASED_TEMPLATE_SELECTION];
 
         if (!featureLinkTemplatesNew) {
             const modal = await this.modalService.fromComponent(LinkTemplateModal, {
@@ -172,7 +174,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     throw err;
                 }
             }
-            return;
+            return null;
         }
 
         let selectResult: Template[];
@@ -190,7 +192,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }
 
         if (!selectResult || !selectResult.length) {
-            return;
+            return null;
         }
 
         const dialog = await this.modalService.dialog({
@@ -215,7 +217,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             const recursive: boolean = await dialog.open();
 
             await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
-            await this.folderActions.getTemplates(folderId, true);
+            return this.folderActions.getTemplates(folderId, true);
         } catch (err) {
             if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
                 throw err;
@@ -590,6 +592,16 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     listPageVersions(page: Page, activeNodeId: number): void {
         const options = { page, nodeId: activeNodeId };
         this.modalService.fromComponent(PageVersionsModal, null, options)
+            .then(modal => modal.open())
+            .catch(err => {});
+    }
+
+    openPublishProtocol(item: Page | Form): void {
+        const options = {
+            item,
+        };
+
+        this.modalService.fromComponent(PublishProtocolModalComponent, null, options)
             .then(modal => modal.open())
             .catch(err => {});
     }

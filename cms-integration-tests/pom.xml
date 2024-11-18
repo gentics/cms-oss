@@ -98,7 +98,7 @@
 									<dependsOn>
 									<container>mariadb</container>
 								</dependsOn>
-								
+
 								<ports>
 									<port>cms.port:8080</port>
 									<port>8080:8080</port>

@@ -104,7 +104,7 @@ public final class RuntimeProfiler {
 				currentTimeMethod = System.class.getMethod("currentTimeMillis", null);
 				currentTimeInNanos = false;
 			} catch (Exception e1) {
-				logger.fatal("Unable to find method System.currentTimeMillis", e1);
+				logger.error("Unable to find method System.currentTimeMillis", e1);
 			}
 		}
 
@@ -119,7 +119,7 @@ public final class RuntimeProfiler {
 				settingsLoaded = true;
 			}
 		} catch (Exception e) {
-			logger.fatal("Error while loading settings from " + propFile.getAbsolutePath());
+			logger.error("Error while loading settings from " + propFile.getAbsolutePath());
 		}
 
 		if (!settingsLoaded) {
@@ -193,7 +193,7 @@ public final class RuntimeProfiler {
 		try {
 			return ((Long) currentTimeMethod.invoke(null, null)).longValue();
 		} catch (Exception e) {
-			logger.fatal("Unable to get current time..", e);
+			logger.error("Unable to get current time..", e);
 			return 0;
 		}
 	}
@@ -513,7 +513,7 @@ public final class RuntimeProfiler {
 					logger.debug("endmark:   element {" + key + "}");
 				}
 				if (child == null) {
-					logger.fatal("Called endMark without an open mark. (Ie. beginMark was called less often than endMark)");
+					logger.error("Called endMark without an open mark. (Ie. beginMark was called less often than endMark)");
 				} else {
 					if (child != information) {
 						if (child.getElement() != null && !child.getElement().equals(information.getElement())) {

@@ -713,7 +713,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					throw new WebApplicationException(new Exception("Error while saving file - Error while rollback of transaction.", e1));
 				}
 			} else {
-				NodeLogger.getNodeLogger(getClass()).error("Transaction not available.", e);
+				NodeLogger.getNodeLogger(getClass()).warn("Transaction for rollback not available.", e);
 			}
 
 			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);

@@ -1,0 +1,3 @@
+aloha_plugins_global:
+  - "project/specific"
+  - "extra/ribbon"

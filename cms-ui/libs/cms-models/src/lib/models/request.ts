@@ -1028,6 +1028,7 @@ export interface PageVariantCreateRequest extends Omit<PageCreateRequest, 'pageN
  * `POST /form` endpoint.
  */
 export interface FormCreateRequest extends EditableFormProps {
+    nodeId?: number;
     folderId: number;
     languages: string[];
 }

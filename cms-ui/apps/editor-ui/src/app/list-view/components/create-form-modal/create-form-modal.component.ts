@@ -91,12 +91,17 @@ export class CreateFormModalComponent
 
         const form: FormCreateRequest = {
             ...this.control.value,
+            nodeId: this.nodeId,
             folderId: this.folderId,
             languages: this.control.value.languages || [],
         };
 
-        if (this.languages?.length > 0) {
-            form.languages = [this.activeLanguage.code];
+        if (
+            this.languages?.length > 0
+            && this.activeLanguage != null
+            && !form.languages.includes(this.activeLanguage.code)
+        ) {
+            form.languages.push(this.activeLanguage.code);
         }
 
         this.folderActions.createNewForm(form).then(form => {

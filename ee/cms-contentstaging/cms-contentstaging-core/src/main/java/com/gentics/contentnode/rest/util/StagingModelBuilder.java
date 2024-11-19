@@ -1118,7 +1118,7 @@ public class StagingModelBuilder {
 						}, DBUtils.firstInt("id"));
 						if (defId > 0) {
 							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
-							if (definition != null && !definition.isVisibleIn(null)) {
+							if (definition != null && !definition.isVisibleIn(owningNode)) {
 								continue;
 							}
 						}

@@ -645,13 +645,6 @@ public class InstantPublisher {
 				com.gentics.contentnode.object.File file = (com.gentics.contentnode.object.File) sourceObject;
 				Node fileNodeOrChannel = file.getOwningNode();
 
-				// omit files, that should not be published into the contentrepository
-				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					if (!crNodes.contains(fileNodeOrChannel)) {
-						continue;
-					}
-				}
-
 				// when the root object is published into a channel, we need to check whether the file
 				// belongs to the same channel structure
 				if (channel != null) {
@@ -659,6 +652,11 @@ public class InstantPublisher {
 						file = file.getChannelVariant(channel);
 						fileNodeOrChannel = channel;
 					}
+				}
+
+				// omit files, that should not be published into the contentrepository
+				if (!crNodes.contains(fileNodeOrChannel)) {
+					continue;
 				}
 
 				if (file != null && !checked.contains(file)) {

@@ -786,7 +786,7 @@ public class StagingModelBuilder {
 			}
 		}
 
-		getObjectTags(restPage.getObjectTags(), page, mismatches, onReferenceNotFound);
+		getObjectTags(restPage.getObjectTags(), page, page.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return page;
 	}
@@ -1089,33 +1089,47 @@ public class StagingModelBuilder {
 	 * Set the staged object tags to the container
 	 * @param stagedTags staged object tags
 	 * @param container object tag container
+	 * @param owningNode node owning the container
 	 * @param mismatches set of mismatched implementation entities
 	 * @param onReferenceNotFound optional operator, which is called when a reference was not found
 	 * @throws NodeException
 	 */
 	public static void getObjectTags(Map<String, StagedObjectTag> stagedTags, ObjectTagContainer container,
-			Set<String> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+			Node owningNode, Set<String> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		if (stagedTags != null) {
 			// get the objecttags
 			Map<String, ObjectTag> objectTags = container.getObjectTags();
 
-			for (Iterator<StagedObjectTag> i = stagedTags.values().iterator(); i.hasNext();) {
-				StagedObjectTag restTag = i.next();
+			for (StagedObjectTag restTag : stagedTags.values()) {
+				String tagName = restTag.getName();
 
-				if (restTag.getName().startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+				if (tagName.startsWith("object.")) {
+					String shortName = tagName.substring(7);
+					ObjectTag oTag = objectTags.get(shortName);
 
 					if (oTag == null) {
+						// check whether we really should create the tag
+						int defId = DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? AND obj_id = ? AND name = ?", pst -> {
+							pst.setInt(1, container.getTType());
+							pst.setInt(2, 0);
+							pst.setString(3, tagName);
+						}, DBUtils.firstInt("id"));
+						if (defId > 0) {
+							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
+							if (definition != null && !definition.isVisibleIn(null)) {
+								continue;
+							}
+						}
+
 						// did not find the tag, so create a new one
 						oTag = t.createObject(ObjectTag.class);
-						oTag.setName(realName);
+						oTag.setName(tagName);
 						getReferenced(Construct.class, StagedReferencedConstruct::new, restTag.getConstruct(), mismatches, oTag::setConstructId);
 
 						// and add it to the other tags
-						objectTags.put(restTag.getName(), oTag);
+						objectTags.put(shortName, oTag);
 					}
 
 					// now set the data from the REST tag
@@ -1163,7 +1177,7 @@ public class StagingModelBuilder {
 			}
 		}
 
-		getObjectTags(restFile.getObjectTags(), file, mismatches, onReferenceNotFound);
+		getObjectTags(restFile.getObjectTags(), file, file.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return file;
 	}
@@ -1212,7 +1226,7 @@ public class StagingModelBuilder {
 			image.setFpY(restImage.getFpY());
 		}
 
-		getObjectTags(restImage.getObjectTags(), image, mismatches, onReferenceNotFound);
+		getObjectTags(restImage.getObjectTags(), image, image.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return image;
 	}
@@ -1332,7 +1346,7 @@ public class StagingModelBuilder {
 			folder.setPublishDirI18n(I18nMap.TRANSFORM2NODE.apply(stagedFolder.getPublishDirI18n()));
 		}
 
-		getObjectTags(stagedFolder.getObjectTags(), folder, mismatches, onReferenceNotFound);
+		getObjectTags(stagedFolder.getObjectTags(), folder, folder.getOwningNode(), mismatches, onReferenceNotFound);
 
 		if (stagedFolder.getTemplateIds() != null) {
 			List<Template> templates = folder.getTemplates();

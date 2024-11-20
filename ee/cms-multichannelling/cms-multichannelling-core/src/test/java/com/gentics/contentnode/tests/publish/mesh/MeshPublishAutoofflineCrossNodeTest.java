@@ -75,6 +75,8 @@ public class MeshPublishAutoofflineCrossNodeTest {
 
 	private static Node otherNode;
 
+	private static Node otherPublishedNode;
+
 	private static Integer constructId;
 
 	private static Template template;
@@ -124,6 +126,15 @@ public class MeshPublishAutoofflineCrossNodeTest {
 
 		otherNode = supply(() -> createNode("other", "Other", PublishTarget.NONE));
 
+		otherPublishedNode = supply(() -> createNode("otherpublished", "Other Published", PublishTarget.CONTENTREPOSITORY));
+
+		otherPublishedNode = supply(() -> update(otherPublishedNode, n -> {
+			n.setPubDirSegment(true);
+			n.setContentrepositoryId(crId);
+			n.getFolder().setPublishDir("other_published");
+			n.activateFeature(Feature.CONTENTFILE_AUTO_OFFLINE);
+		}));
+
 		constructId = supply(() -> createConstruct(node, FileURLPartType.class, "fileurl", "url"));
 
 		template = supply(() -> create(Template.class, t -> {
@@ -149,7 +160,7 @@ public class MeshPublishAutoofflineCrossNodeTest {
 		cleanMesh(mesh.client());
 
 		try (FeatureClosure fc = new FeatureClosure(Feature.INSTANT_CR_PUBLISHING, false)) {
-			for (Node n : Arrays.asList(node, channel, otherNode)) {
+			for (Node n : Arrays.asList(node, channel, otherNode, otherPublishedNode)) {
 				operate(() -> {
 					for (Folder f : n.getFolder().getChildFolders()) {
 						f.delete(true);
@@ -226,5 +237,72 @@ public class MeshPublishAutoofflineCrossNodeTest {
 		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), targetFile, false));
 		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), targetFolder, false));
 		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), otherNode.getFolder(), false));
+	}
+
+	/**
+	 * Test page in master, using a file from the foreign node, which also publishes into the CR
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLinkMasterOtherPublished() throws NodeException {
+		Folder targetFolder = supply(() -> createFolder(otherPublishedNode.getFolder(), "Folder"));
+		File targetFile = supply(() -> create(File.class, f -> {
+			f.setFolderId(targetFolder.getId());
+			f.setName("testfile.txt");
+			f.setFileStream(new ByteArrayInputStream("Testfile contents".getBytes()));
+		}));
+
+		Page page = supply(() -> create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(node.getFolder().getId());
+			getPartType(FileURLPartType.class, p.getContentTag("tag"), "url").setTargetFile(targetFile);
+		}));
+
+		String projectName = Trx.supply(() -> MeshPublisher.getMeshProjectName(node));
+		String otherProjectName = Trx.supply(() -> MeshPublisher.getMeshProjectName(otherPublishedNode));
+
+		update(page, Page::publish);
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, page, true));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, targetFile, false));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, targetFolder, false));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, otherPublishedNode.getFolder(), false));
+
+		// file should have been published into the other project
+		operate(() -> assertObject("after instant publishing", mesh.client(), otherProjectName, targetFile, true));
+		operate(() -> assertObject("after instant publishing", mesh.client(), otherProjectName, targetFolder, true));
+	}
+
+	/**
+	 * Test page in channel, using a file from the foreign node, which also publishes into the CR
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLinkChannelOtherPublished() throws NodeException {
+		Folder targetFolder = supply(() -> createFolder(otherPublishedNode.getFolder(), "Folder"));
+		File targetFile = supply(() -> create(File.class, f -> {
+			f.setFolderId(targetFolder.getId());
+			f.setName("testfile.txt");
+			f.setFileStream(new ByteArrayInputStream("Testfile contents".getBytes()));
+		}));
+
+		Page page = supply(() -> create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(node.getFolder().getId());
+			p.setChannelInfo(channel.getId(), null);
+			getPartType(FileURLPartType.class, p.getContentTag("tag"), "url").setTargetFile(targetFile);
+		}));
+
+		String projectName = Trx.supply(() -> MeshPublisher.getMeshProjectName(node));
+		String otherProjectName = Trx.supply(() -> MeshPublisher.getMeshProjectName(otherPublishedNode));
+
+		update(page, Page::publish);
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), page, true));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), targetFile, false));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), targetFolder, false));
+		operate(() -> assertObject("after instant publishing", mesh.client(), projectName, MeshPublisher.getMeshName(channel), otherPublishedNode.getFolder(), false));
+
+		// file should have been published into the other project
+		operate(() -> assertObject("after instant publishing", mesh.client(), otherProjectName, targetFile, true));
+		operate(() -> assertObject("after instant publishing", mesh.client(), otherProjectName, targetFolder, true));
 	}
 }

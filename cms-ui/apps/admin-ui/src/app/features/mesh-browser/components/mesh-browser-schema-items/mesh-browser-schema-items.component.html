@@ -1,40 +1,56 @@
-<div class="schema-items" *ngIf="schemaElements?.length > 0">
+<div *ngIf="schemaElements?.length > 0" class="schema-items" [class.collapsed]="collapsed">
 
     <div class="schema-header">
-        <div class="schema-title">{{ schemaName }}</div>
-        <icon [ngClass]="{'collapsed': collapsed}" (click)="toggleSection()" right>
-            keyboard_arrow_down
-        </icon>
+        <div class="title-wrapper">
+            <div class="schema-title">{{ schemaName }}</div>
+            <icon class="collapse-icon" (click)="toggleSection()">
+                keyboard_arrow_down
+            </icon>
+        </div>
+        <div class="progress-wrapper">
+            <gtx-progress-bar [active]="loading || elementsLoading" />
+        </div>
     </div>
 
-    <div *ngIf="!!schemaElements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
-        <div *ngFor="let element of schemaElements  | paginate : {
-            id: UNIQUE_ID,
-            itemsPerPage: perPage,
-            currentPage: page,
-            totalItems: totalCount,
-        } index as index">
-            <div *ngIf="!!element" [ngClass]="{'striped': index % 2 === 0}" class="schema-element">
-                <icon (click)="showDetails(element)" left>
-                    {{  element.isContainer ? 'folder' : 'description' }}
-                </icon> 
+    <div *ngIf="!loading && !elementsLoading && schemaElements?.length" class="schema-content">
+        <div
+            *ngFor="let element of schemaElements | paginate : {
+                id: UNIQUE_ID,
+                itemsPerPage: perPage,
+                currentPage: page,
+                totalItems: totalCount,
+            } index as index"
+            class="schema-element"
+        >
+            <div class="main-content">
+                <icon class="content-icon" (click)="showElementDetails(element)">
+                    {{ element.isContainer ? 'folder' : 'description' }}
+                </icon>
 
-                <div class="title" (click)="loadContent(element)" [attr.data-is-container]="element.isContainer">
-                   <span> {{ element.displayName ?? element?.uuid }}  </span>
-                
-                    <gtx-mesh-browser-content-version 
-                        [schemaElement]="element"
-                    />
+                <div class="title" (click)="handleElementClick(element)" [attr.data-is-container]="element.isContainer">
+                    <span>{{ element.displayName ?? element?.uuid }}</span>
                 </div>
 
-                <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
-                    {{ language.language }}
+                <gtx-mesh-browser-content-version
+                    class="status"
+                    [schemaElement]="element"
+                />
+            </div>
+
+            <div class="language-content">
+                <span
+                    *ngFor="let availLang of element.availableLanguages"
+                    [class.active]="availLang === language"
+                    class="language"
+                >
+                    {{ availLang }}
                 </span>
             </div>
         </div>
 
         <gtx-paging
             *ngIf="totalCount > perPage"
+            class="pagingation"
             [id]="UNIQUE_ID"
             (pageChange)="changePage($event)"
         />

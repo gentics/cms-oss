@@ -3,12 +3,10 @@
 .pagination {
     width: 100%;
     display: flex;
-    padding: 0 1rem;
+    padding: 1rem 1rem 3px;
     flex-direction: row;
     justify-content: center;
     flex-wrap: nowrap;
-    margin-bottom: 3px;
-    margin-top: 1rem;
     font-size: 0.8rem;
 
     .previous,

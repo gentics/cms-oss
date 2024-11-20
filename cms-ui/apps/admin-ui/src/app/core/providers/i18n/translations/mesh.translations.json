@@ -742,6 +742,10 @@
         "de": "Version",
         "en": "Version"
     },
+    "version_of": {
+        "de": "Version: {{ version }}",
+        "en": "Version: {{ version }}"
+    },
     "status": {
         "de": "Status",
         "en": "Status"
@@ -782,13 +786,21 @@
         "de": "Fehlgeschlagen (Neustart)",
         "en": "Failed (retry)"
     },
+    "content_repository_title": {
+        "de": "Mesh Repositories",
+        "en": "Mesh Repositories"
+    },
     "browser_title": {
-        "en": "Mesh Browser for",
-        "de": "Mesh Browser für"
+        "en": "Mesh Browser for \"{{ name }}\"",
+        "de": "Mesh Browser für „{{ name }}“"
     },
     "browser_no_projects": {
         "en": "No Project available",
         "de": "Keine Projekte verfügbar"
+    },
+    "browser_no_root_node": {
+        "en": "Could not find a viewable root node for project \"{{ project }}\". Please check the permissions of your user.",
+        "de": "Es konnte kein anzeigbarer Node für das Project „{{ project }}“ gefunden werden. Bitte überprüfen Sie ihre Benutzer-Berechtigungen."
     },
     "browser_no_schema_elements": {
         "en": "This node has no schema elements",
@@ -812,7 +824,7 @@
         "de": "Geändert"
     },
     "published_state_changed": {
-        "en": "Last modified at",
-        "de": "Geändert am"
+        "en": "Last modified at: {{ date }}",
+        "de": "Geändert am: {{ date }}"
     }
 }

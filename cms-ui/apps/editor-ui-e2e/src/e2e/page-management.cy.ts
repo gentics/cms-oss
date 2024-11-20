@@ -47,10 +47,11 @@ describe('Page Management', () => {
             await IMPORTER.setupTest(TestSize.MINIMAL);
 
             cy.navigateToApp();
-            cy.window().then(win => {
-                win.localStorage.setItem('GCMSUI_openObjectPropertyGroups', JSON.stringify(DEFAULT_OBJ_PROP_CAT));
-            })
-            cy.login(AUTH_ADMIN);
+            cy.login(AUTH_ADMIN).then(res => {
+                cy.window().then(win => {
+                    win.localStorage.setItem(`GCMSUI_USER-${res?.user.id}_openObjectPropertyGroups`, JSON.stringify(DEFAULT_OBJ_PROP_CAT));
+                });
+            });
             cy.selectNode(IMPORTER.get(minimalNode)!.id);
         });
 
@@ -75,7 +76,7 @@ describe('Page Management', () => {
                 .type(NEW_PAGE_PATH)
             cy.get(ALIAS_FORM)
                 .find('[formcontrolname="language"]')
-                .selectValue(LANGUAGE_EN);
+                .select(LANGUAGE_EN);
 
             cy.intercept({
                 method: 'POST',
@@ -198,7 +199,7 @@ describe('Page Management', () => {
 
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)
-                .selectValue(COLOR_ID);
+                .select(COLOR_ID);
 
             /* Save the Object-Property changes
              * ---------------------------- */
@@ -351,7 +352,7 @@ describe('Page Management', () => {
             cy.get('content-frame combined-properties-editor .properties-content gtx-page-properties')
                 .as(ALIAS_FORM)
                 .find('[formcontrolname="language"]')
-                .selectValue(LANG);
+                .select(LANG);
 
             cy.editorAction('save');
 

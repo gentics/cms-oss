@@ -1,5 +1,5 @@
-import { normalizeToImportBinary, resolveFixtures } from './binaries';
-import { createRange, updateAlohaRange } from './utils';
+import { resolveFixtures } from './binaries';
+import { createRange, isJQueryElement, updateAlohaRange } from './utils';
 
 /**
  * Override of the original `as` query, and the `intercept` function.
@@ -83,6 +83,65 @@ export function setupAliasOverrides(): void {
     /* eslint-enable @typescript-eslint/no-unsafe-call */
 }
 
+const GTX_BUTTONS: string[] = [
+    'gtx-button',
+    ...[
+        '', // will be correct in assembly
+        'context',
+        'context-toggle',
+        'toggle',
+    ].map(name => `gtx-aloha-${name}${name !== '' ? '-' : ''}button-renderer`),
+];
+
+const GTX_SPLIT_BUTTONS: string[] = [
+    'gtx-split-button',
+    'gtx-aloha-split-button-renderer',
+    'gtx-aloha-toggle-split-button-renderer',
+    'gtx-aloha-attribute-button-renderer',
+    'gtx-aloha-attribute-toggle-button-renderer',
+];
+
+/**
+ * Helper function to get the actual clickable element of a element.
+ * This is done for custom button components or similar, where the tests shouldn't have
+ * to learn how the component works.
+ * Makes it a lot easier to use this way and doesn't require special knowledge of the underlying layout
+ * of each clickable element.
+ *
+ * @param $subject The current element that should be clicked.
+ * @param options Options to find the clickable element.
+ * @returns If it's a special gtx component (gtx-button, gtx-aloha-button, ...), which aren't inheriently
+ * clickable, then the actual clickable element is returned. Otherwise the `$subject`.
+ */
+function resolveClickable($subject: JQuery<HTMLElement>, options?: ClickableOptions): JQuery<HTMLElement> {
+    if (!isJQueryElement($subject)) {
+        return $subject;
+    }
+
+    const action = options?.action ?? 'primary';
+
+    // Split buttons have to be handled differently
+    if ($subject.is(GTX_SPLIT_BUTTONS.join(','))) {
+        if (action === 'secondary') {
+            return $subject.find([
+                '> .split-button-wrapper .more-trigger button[data-action="primary"]',
+                '.gtx-editor-split-button .split-button-secondary',
+                '.gtx-editor-toggle-split-button .split-button-secondary',
+            ].join(','));
+        } else {
+            return $subject.find([
+                '> .split-button-wrapper > .primary-button button[data-action="primary"]',
+                '.gtx-editor-split-button .split-button-main',
+                '.gtx-editor-toggle-split-button .split-button-main',
+            ].join(','));
+        }
+    } else if ($subject.is(GTX_BUTTONS.join(','))) {
+        return $subject.find(`button[data-action="${action}"]`);
+    }
+
+    return $subject;
+}
+
 /**
  * This function will register all commands from the `commands` defintion.
  * These commands are common commands which are shared between all app e2e tests.
@@ -97,156 +156,145 @@ export function registerCommonCommands(): void {
         return resolveFixtures(files, options);
     });
 
-    Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames, dragNDrop) => {
-        cy.intercept({
-            method: 'POST',
-            pathname: '/rest/file/create',
-        }, (req) => {
-            // We need the form-data string that is being sent to the CMS
-            // The actual FormData object would be best of course, but isn't available here
-            let body: string = req.body;
-
-            if (
-                // Very hacky, but the types are different between the runtimes which causes this issue
-                (body as any) instanceof ArrayBuffer
-                || Object.getPrototypeOf(body).constructor.name === 'ArrayBuffer'
-            ) {
-                // `fatal` has to be false, otherwise it'll break
-                const decoder = new TextDecoder('utf-8', { fatal: false });
-                body = decoder.decode(body as any as ArrayBuffer);
-            }
-
-            // Get the filename from the form-data request
-            // The fileName is (or should be) normalized already
-            const fileName = /filename="([^"]*)"/.exec(body)?.[1] || '';
-            req.alias = `_upload_req_${fileName}`;
-        });
-
-        // Wait till elements have been reloaded
-        cy.intercept({
-            method: 'GET',
-            pathname: '/rest/folder/getPages/*',
-        }).as('folderLoad');
-
-        return cy.loadBinaries(fixtureNames, { applyAlias: true }).then(binaries => {
-            const output: Record<string, any> = {};
-            let main: Cypress.Chainable<any>;
-
-            if (dragNDrop) {
-                const transfer = new DataTransfer();
-                // Put the binaries/Files into the transfer
-                Object.values(binaries).forEach(file => {
-                    transfer.items.add(file);
-                });
-
-                main = cy.get('folder-contents > [data-action="file-drop"]').trigger('drop', {
-                    dataTransfer: transfer,
-                    force: true,
-                });
-            } else {
-                main = cy.findList(type)
-                    .find('.list-header .header-controls [data-action="upload-item"] input[type="file"]')
-                    .selectFile(fixtureNames.map(entry => '@' + (typeof entry === 'string' ? entry : entry.fixturePath)), { force: true });
-            }
-
-            return main.then(() => {
-                for (const entry of fixtureNames) {
-                    const data = normalizeToImportBinary(entry);
-
-                    cy.wait(`@_upload_req_${data.name}`).then(intercept => {
-                        const res = intercept.response?.body;
-                        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                        expect(res.success).to.be.true;
-                        output[data.fixturePath] = res.file;
-                    });
-                }
-
-                return cy.wait('@folderLoad').then(() => cy.wrap(output, { log: false }));
-            })
-        });
-    });
-
-    Cypress.Commands.add('selectValue', { prevSubject: 'element' }, (subject, valueId) => {
-        cy.wrap(subject)
-            .find('> gtx-dropdown-list')
-            .openContext()
-            .find(`[data-id="${valueId}"]`)
-            .click({ force: true });
-        return cy.wrap(null, { log: false });
-    });
-
-    Cypress.Commands.add('openContext', { prevSubject: 'element' }, subject => {
+    Cypress.Commands.add('openContext', { prevSubject: 'element' }, (subject, options) => {
         const ATTR_ID = 'data-context-id';
         const id = subject.attr(ATTR_ID);
         if (!id) {
-            cy.log(`Cannot open element context, since attribute "${ATTR_ID}" is missing!`);
-            return cy.wrap(null, { log: false });
+            Cypress.log({
+                $el: subject,
+                name: 'open context',
+                message: `Cannot open element context, since attribute "${ATTR_ID}" is missing!`,
+                end: true,
+                type: 'child',
+            });
+
+            return cy.wrap(null, { log: false }).end();
         }
 
-        cy.wrap(subject)
-            .find('gtx-dropdown-trigger [data-context-trigger]')
-            .btnClick();
+        cy.wrap(subject, { log: false })
+            .find('gtx-dropdown-trigger [data-context-trigger]', { log: false })
+            .click({ log: false });
 
-        return cy.get(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
+        return cy.get(`gtx-dropdown-content[${ATTR_ID}="${id}"]`, { log: false })
+            .then($el => {
+                if (options?.log !== false) {
+                    Cypress.log({
+                        $el: subject,
+                        name: 'open context',
+                        type: 'child',
+                        consoleProps: () => ({
+                            // eslint-disable-next-line @typescript-eslint/naming-convention
+                            Context: $el,
+                        }),
+                    });
+                }
+
+                return $el;
+            });
     });
 
-    const GTX_BUTTONS: string[] = [
-        'gtx-button',
-        ...[
-            'attribute',
-            'attribute-toggle',
-            '', // will be correct in assembly
-            'context',
-            'context-toggle',
-            'toggle',
-        ].map(name => `gtx-aloha-${name}${name !== '' ? '-' : ''}button-renderer`),
-    ];
+    /**
+     * Overrides the default `click` command, to swap out the subject if needed.
+     * This is because angular templates/components are often nested and don't directly
+     * show the actual clickable button.
+     * @see resolveClickable
+     *
+     * @example
+     * ```html
+     * <!-- Angular template -->
+     * <gtx-button id="click-me">Hello World</gtx-button>
+     *
+     * <!-- Actually rendered HTML -->
+     * <gtx-button id="click-me">
+     *  <div class="button-event-wrapper">
+     *      <button
+     *          class="btn"
+     *          data-action="primary"
+     *          type="button"
+     *      >Hello World</button>
+     *  </div>
+     * </gtx-button>
+     * ```
+     * ```ts
+     * // Without the override, the click would happen on our custom component,
+     * // which isn't actually clickable, and we would get an error from cypress.
+     * cy.get('@click-me').click()
+     * // Therefore, you'ld need to actually reference the button within the button
+     * cy.get('#click-me button').click();
+     *
+     * // Since this is tedious, prone to error, and doesn't cover split-buttons
+     * // or other variations, this override is here to fix this.
+     * // With the override, we can now use it as expected:
+     * cy.get('#click-me').click();
+     * ```
+     */
+    Cypress.Commands.overwrite('click', ((originalFn, subject, optionsOrPositionOrX, optionsOrY, options) => {
+        let actualOptions;
+        if (options != null && typeof options === 'object') {
+            actualOptions = options;
+        } else if (optionsOrY != null && typeof optionsOrY === 'object') {
+            actualOptions = optionsOrY;
+        } else if (optionsOrPositionOrX != null && typeof optionsOrPositionOrX === 'object') {
+            actualOptions = optionsOrPositionOrX;
+        }
 
-    const GTX_SPLIT_BUTTONS: string[] = [
-        'gtx-split-button',
-        'gtx-aloha-split-button-renderer',
-        'gtx-aloha-toggle-split-button-renderer',
-    ];
+        subject = resolveClickable(subject, actualOptions);
+
+        return (originalFn as Cypress.CommandOriginalFnWithSubject<'click', any>)(subject, optionsOrPositionOrX, optionsOrY, options);
+    }) as any);
+
+    /**
+     * Overrides the default `select` command, to check if the subject is a custom select component.
+     * This is to make them behave/useable the same way as native selects, as custom select components
+     * are *not* actually using a native one in the background, and therefore require quite
+     * some efford to actualy use.
+     *
+     * If the subject however, is not a special case, the default/original `select` command-function will be used.
+     */
+    Cypress.Commands.overwrite('select', ((originalFn, subject, value, options) => {
+        if (!isJQueryElement(subject)) {
+            return (originalFn as Cypress.CommandOriginalFnWithSubject<'select', any>)(subject, value, options);
+        }
+
+        if (subject.is('gtx-select')) {
+            return cy.wrap(subject.find('> gtx-dropdown-list'), { log: false })
+                .openContext()
+                .then(elem => {
+                    const $container = Cypress.$(elem);
+                    if (!Array.isArray(value)) {
+                        return $container.find(`[data-id="${value}"]`);
+                    }
+                    const $out = Cypress.$();
+
+                    for (const singleValue of value) {
+                        const $found = $container.find(`[data-id="${singleValue}"]`);
+                        if ($found.length !== 1) {
+                            const errMsg = `Could not find any select option for value "${singleValue}"!`;
+                            Cypress.log({
+                                $el: subject,
+                                end: true,
+                                name: 'select',
+                                message: errMsg,
+                                type: 'child',
+                            });
+                            throw new Error(errMsg);
+                        }
+                        $out.add($found);
+                    }
+
+                    return $out;
+                })
+                .click({ force: true, multiple: true })
+                .end();
+        }
+
+        return (originalFn as Cypress.CommandOriginalFnWithSubject<'select', any>)(subject, value, options);
+    }) as any);
+
+    // TODO: Override the default `check`/`uncheck` command to include `gtx-checkbox` and `gtx-radio-button` behaviour.
 
     Cypress.Commands.add('btn', { prevSubject: 'element' }, (subject, options) => {
-        const action = options?.action ?? 'primary';
-        const actionBtn = `button[data-action="${action}"]`;
-        let buttonSelectors = GTX_BUTTONS.map(tagName => `${tagName} ${actionBtn}`);
-
-        // Split buttons have to be handled differently
-        if (subject.is(GTX_SPLIT_BUTTONS.join(','))) {
-            if (action === 'secondary') {
-                buttonSelectors = [
-                    '> .split-button-wrapper .more-trigger button[data-action="primary"]',
-                    '.gtx-editor-split-button .split-button-secondary',
-                    '.gtx-editor-toggle-split-button .split-button-secondary',
-                ];
-            } else {
-                buttonSelectors = [
-                    '> .split-button-wrapper > .primary-button button[data-action="primary"]',
-                    '.gtx-editor-split-button .split-button-main',
-                    '.gtx-editor-toggle-split-button .split-button-main',
-                ];
-            }
-        }
-
-        let $elem = subject.find(buttonSelectors.join(', '));
-        if (!$elem || $elem.length === 0) {
-            $elem = subject.find(actionBtn);
-        }
-        if (!$elem || $elem.length === 0) {
-            return cy.wrap(subject, { log: false });
-        }
-
-        return cy.wrap($elem);
-    });
-
-    Cypress.Commands.add('btnClick', { prevSubject: 'element' }, (subject, options) => {
-        // eslint-disable-next-line prefer-const
-        let { action, ...cyOptions } = options ?? {};
-        return cy.wrap(subject, { log: false })
-            .btn({ action })
-            .click(cyOptions);
+        return cy.wrap(resolveClickable(subject, options), { log: false });
     });
 
     Cypress.Commands.add('rangeSelection', { prevSubject: 'element' }, (subject, start, end, aloha) => {
@@ -295,5 +343,50 @@ export function registerCommonCommands(): void {
         }
 
         return cy.wrap(subject, { log: false });
+    });
+
+    Cypress.Commands.add('selectTab', { prevSubject: 'element' }, (subject, tabId) => {
+        cy.wrap(subject, { log: false })
+            .find(`.tab-links .tab-link[data-id="${tabId}"]`)
+            .then($tab => {
+                if (!$tab.hasClass('is-active')) {
+                    cy.wrap($tab, { log: false }).click();
+                }
+            });
+        return cy.wrap(subject, { log: false })
+            .find(`gtx-tab > .tab-content[data-id="${tabId}"]`);
+    });
+
+    Cypress.Commands.add('findTableRow', { prevSubject: 'element' }, (subject, id) => {
+        return cy.wrap(subject, { log: false })
+            .find(`.grid-row.data-row[data-id="${id}"]`);
+    });
+
+    Cypress.Commands.add('findTableAction', { prevSubject: 'element' }, (subject, id) => {
+        const rows = subject.filter('.data-row');
+        const tables = subject.not('.data-row');
+
+        if (rows.length > 0) {
+            return cy.wrap(rows, { log: false })
+                .find(`.action-column .action-button[data-id="${id}"]`)
+                .then($actions => {
+                    if (tables.length !== 0) {
+                        cy.wrap(tables, { log: false })
+                            .find(`.header-row .action-column .action-button[data-id="${id}"]`)
+                            .then($multiActions => {
+                                $actions.add($multiActions);
+                            });
+                    }
+
+                    return $actions;
+                });
+        }
+
+        if (tables.length === 0) {
+            return cy.wrap(subject, { log: false });
+        }
+
+        return cy.wrap(tables, { log: false })
+            .find(`.header-row .action-column .action-button[data-id="${id}"]`);
     });
 }

@@ -46,6 +46,16 @@ export function isVariant(variant: Variant): boolean {
     return Cypress.env(ENV_CMS_VARIANT) === variant;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function isJQueryElement($subject: any): $subject is JQuery {
+    return !(
+        $subject == null
+        || typeof $subject !== 'object'
+        || typeof $subject.length !== 'number'
+        || typeof $subject.jquery !== 'string'
+    );
+}
+
 export function skipableSuite(doExecute: boolean, title: string, fn: (this: Suite) => void): Suite | void {
     return (doExecute ? describe : describe.skip)(title, fn);
 }

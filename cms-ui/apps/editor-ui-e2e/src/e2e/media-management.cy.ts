@@ -21,6 +21,7 @@ describe('Media Management', () => {
     });
 
     beforeEach(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
@@ -43,7 +44,7 @@ describe('Media Management', () => {
 
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)
-                .selectValue(COLOR_ID);
+                .select(COLOR_ID);
 
             /* Save the Object-Property changes
              * ---------------------------- */
@@ -83,7 +84,7 @@ describe('Media Management', () => {
 
             cy.openObjectPropertyEditor(OBJECT_PROPERTY)
                 .findTagEditorElement(TagPropertyType.SELECT)
-                .selectValue(COLOR_ID);
+                .select(COLOR_ID);
 
             /* Save the Object-Property changes
              * ---------------------------- */

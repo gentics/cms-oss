@@ -18,7 +18,7 @@
             [class.sortable]="column.sortable"
             [class.sort-active]="sortBy === column.id"
             [ngClass]="column.align ? 'align-' + column.align : ''"
-            [attr.column-id]="column.id"
+            [attr.data-id]="column.id"
             (click)="preventClick($event)"
         >
             <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
@@ -43,6 +43,7 @@
                 [disabled]="(rows?.length < 1) || (action.disabled | gtxTableActionEnabled)"
                 [title]="action.label"
                 [type]="action.type"
+                [attr.data-id]="action.id"
                 (click)="handleMultiActionClick(action)"
             >
                 <icon>{{ action.icon }}</icon>
@@ -82,6 +83,7 @@
             [class.expanded]="row.expanded"
             [class.expandable]="row.hasChildren || !row.loaded"
             [ngClass]="'row-level-' + (row.level || 0)"
+            [attr.data-id]="row.id"
             [style]="'--trable-row-level: ' + (row.level || 0)"
             (click)="handleRowClick(row, $event)"
         >
@@ -107,7 +109,7 @@
                 [class.clickable]="column.clickable !== false"
                 [class.has-inline-content]="isFirst && (inlineExpansion || inlineSelection)"
                 [ngClass]="(column.align ? 'align-' + column.align : '')"
-                [attr.column-id]="column.id"
+                [attr.data-id]="column.id"
                 (click)="handleCellClick(row, column, $event)"
             >
                 <ng-container *ngIf="isFirst; else columnContent">
@@ -162,6 +164,7 @@
                     [disabled]="action.disabled | gtxTableActionEnabled:row.item"
                     [title]="action.label"
                     [type]="action.type"
+                    [attr.data-id]="action.id"
                     (click)="handleSingleActionClick(action, row)"
                 >
                     <icon>{{ action.icon }}</icon>

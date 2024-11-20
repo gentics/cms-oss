@@ -23,6 +23,7 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.TriFunction;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
+import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -397,6 +398,25 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 	 */
 	public abstract List<Node> getNodes() throws NodeException;
 
+	/**
+	 * Determine whether the definition is visible in the given node
+	 * @param node node
+	 * @return false, when node is null or the definition is restricted to other nodes, true otherwise
+	 * @throws NodeException
+	 */
+	public boolean isVisibleIn(Node node) throws NodeException {
+		if (node == null) {
+			return false;
+		}
+		try (NoMcTrx noMcTrx = new NoMcTrx()) {
+			List<Node> restriction = getNodes();
+			if (restriction.isEmpty()) {
+				return true;
+			} else {
+				return restriction.contains(node.getMaster());
+			}
+		}
+	}
 	/**
 	 * Get the list of real objecttags referencing this definition
 	 * @return list of objecttags

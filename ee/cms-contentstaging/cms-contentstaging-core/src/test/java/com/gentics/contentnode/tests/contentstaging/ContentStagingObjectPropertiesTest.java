@@ -199,7 +199,7 @@ public class ContentStagingObjectPropertiesTest {
 		// import package
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0);
+			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
 			assertResponseOK(response);
 		});
 
@@ -255,7 +255,7 @@ public class ContentStagingObjectPropertiesTest {
 		// import package
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0);
+			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
 			assertResponseOK(response);
 		});
 
@@ -311,7 +311,7 @@ public class ContentStagingObjectPropertiesTest {
 		// import package
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0);
+			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
 			assertResponseOK(response);
 		});
 
@@ -370,7 +370,7 @@ public class ContentStagingObjectPropertiesTest {
 		// import package
 		operate(() -> {
 			ContentStagingResourceImpl resource = new ContentStagingResourceImpl();
-			GenericResponse response = resource.importIntoCms(contentPackageName, 0);
+			GenericResponse response = resource.importIntoCms(contentPackageName, 0, false);
 			assertResponseOK(response);
 		});
 

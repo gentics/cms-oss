@@ -53,6 +53,12 @@ export class ObjectPropertyTableComponent
             sortable: true,
         },
         {
+            id: 'restricted',
+            label: 'objectProperty.restricted',
+            fieldPath: 'restricted',
+            sortable: true,
+        },
+        {
             id: 'category',
             label: 'objectProperty.objectPropertyCategory_singular',
             fieldPath: 'categoryId',

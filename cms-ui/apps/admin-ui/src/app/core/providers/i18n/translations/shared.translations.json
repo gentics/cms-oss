@@ -56,8 +56,8 @@
         "de": "Einschränkungen zuweisen"
     },
     "assign_objectProperty_to_nodes_title": {
-        "en": "Assign objectProperty \"{{ entityName }}\" to Nodes",
-        "de": "Objekteigenschaft „{{ entityName }}“ zu Nodes zuweisen"
+        "en": "Restrict objectProperty \"{{ entityName }}\" to Nodes",
+        "de": "Objekteigenschaft „{{ entityName }}“ auf Nodes einschränken"
     },
     "assign_user_to_roles": {
         "en": "Assign User to Roles",

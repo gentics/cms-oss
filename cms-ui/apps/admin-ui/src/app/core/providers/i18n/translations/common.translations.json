@@ -4,8 +4,8 @@
         "de": "Dem Benutzer in Gruppe Node-Einschränkungen zuweisen"
     },
     "assign_objectProperty_to_nodes": {
-        "en": "Assign objectProperty to Nodes",
-        "de": "Objekteigenschaft zu Nodes zuweisen"
+        "en": "Restrict objectProperty to Nodes",
+        "de": "Objekteigenschaft auf Nodes einschränken"
     },
     "assign_user_to_group": {
         "en": "You do not have permission to assign users to groups",

@@ -34,6 +34,7 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
             syncContentset: false,
             syncChannelset: false,
             syncVariants: false,
+            restricted: false,
         };
         // instantiate form
         this.form = new UntypedFormControl(payload);

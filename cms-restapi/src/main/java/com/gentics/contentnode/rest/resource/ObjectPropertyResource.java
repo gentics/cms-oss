@@ -60,6 +60,7 @@ public interface ObjectPropertyResource {
 	 * <li><code>syncContentset</code></li>
 	 * <li><code>syncChannelset</code></li>
 	 * <li><code>syncVariants</code></li>
+	 * <li><code>restricted</code></li>
 	 * <li><code>construct.name</code></li>
 	 * <li><code>category.name</code></li>
 	 * </ul>

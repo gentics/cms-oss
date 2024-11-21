@@ -6,6 +6,7 @@ import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParam
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -120,7 +121,7 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 			}
 
 			ResolvableComparator<ObjectTagDefinition> sorter = ResolvableComparator.get(sorting, "id", "globalId", "name", "description", "keyword", "type", "required",
-					"inheritable", "syncContentset", "syncChannelset", "syncVariants", "construct.name",
+					"inheritable", "syncContentset", "syncChannelset", "syncVariants", "restricted", "construct.name",
 					"category.name", "category.sortorder");
 			if (sorter != null) {
 				sorter.setNullsAsLast("category.sortorder");
@@ -563,18 +564,27 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 				throw new InsufficientPrivilegesException(I18NHelper.get("objectproperty.nopermission"), null, null,
 						ObjectTagDefinition.TYPE_OBJTAG_DEF, 0, PermType.update);
 			}
-			for (Integer nodeId : request.getIds()) {
-				Node node = loadNodeForUpdate(Integer.toString(nodeId), PermType.read);
 
-				for (String objectPropertyId : request.getTargetIds()) {
-					ObjectTagDefinition update = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.edit);
-					if (add) {
-						node.addObjectTagDefinition(update);
-					} else {
-						node.removeObjectTagDefinition(update);
-					}
-				}
+			Set<Node> nodes = new HashSet<>(); 
+			for (Integer nodeId : request.getIds()) {
+				nodes.add(load(Node.class, Integer.toString(nodeId)));
 			}
+
+			for (String objectPropertyId : request.getTargetIds()) {
+				ObjectTagDefinition update = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.edit);
+
+				update = t.getObject(update, true);
+				if (add) {
+					// add
+					update.getNodes().addAll(nodes);
+				} else {
+					// remove
+					update.getNodes().removeAll(nodes);
+				}
+
+				update.save();
+			}
+
 			trx.success();
 			return new GenericResponse(null, ResponseInfo.ok("Successfully " + (add ? "" : "un") + "linked object properties against nodes"));
 		}
@@ -645,25 +655,5 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 			throw new RestMappedException(I18NHelper.get("objectproperty.duplicate", keyword))
 				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 		}
-	}
-
-	/**
-	 * Load the node with given ID and check for existence and permission. The permission check will also check for permission to see at least a channel
-	 * @param id node ID
-	 * @param permType an access permission to check against the node
-	 * @return node
-	 * @throws NodeException
-	 */
-	private Node loadNodeForUpdate(String id, PermType permType) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Node node = t.getObject(Node.class, id, true);
-		if (node == null) {
-			throw new EntityNotFoundException(I18NHelper.get("node.notfound", id));
-		}
-		if (!checkViewPermission(node)) {
-			throw new InsufficientPrivilegesException(I18NHelper.get("node.nopermission", id), node, permType);
-		}
-
-		return node;
 	}
 }

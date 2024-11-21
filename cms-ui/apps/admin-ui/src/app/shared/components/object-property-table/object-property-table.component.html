@@ -77,7 +77,8 @@
     [renderers]="{
         construct: constructRenderer,
         category: categoryRenderer,
-        type: typeRenderer
+        type: typeRenderer,
+        restricted: boolIconRenderer,
     }"
 
     (pageChange)="changePageTo($event)"
@@ -112,4 +113,11 @@
     <span class="gtx-table-cell-text">
         {{ 'common.' + value + '_singular' | i18n | titlecase }}
     </span>
+</ng-template>
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>

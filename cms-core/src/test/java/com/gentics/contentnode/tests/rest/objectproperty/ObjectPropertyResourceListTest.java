@@ -88,6 +88,7 @@ public class ObjectPropertyResourceListTest extends AbstractListSortAndFilterTes
 				Pair.of("syncContentset", item -> Optional.ofNullable(item.getSyncContentset()).map(b -> Boolean.toString(b)).orElse("false")),
 				Pair.of("syncChannelset", item -> Optional.ofNullable(item.getSyncChannelset()).map(b -> Boolean.toString(b)).orElse(null)),
 				Pair.of("syncVariants", item -> Optional.ofNullable(item.getSyncVariants()).map(b -> Boolean.toString(b)).orElse("false")),
+				Pair.of("restricted", item -> Optional.ofNullable(item.getRestricted()).map(b -> Boolean.toString(b)).orElse("false")),
 				Pair.of("construct.name", item -> item.getConstruct().getName()),
 				Pair.of("category.name", item -> Optional.ofNullable(item.getCategory()).map(ObjectPropertyCategory::getName).orElse(null))
 		);
@@ -122,6 +123,7 @@ public class ObjectPropertyResourceListTest extends AbstractListSortAndFilterTes
 					o.setSyncContentset(random.nextBoolean());
 					o.setSyncVariants(random.nextBoolean());
 				}
+				o.setRestricted(random.nextBoolean());
 
 				if (random.nextBoolean()) {
 					o.setCategoryId(getRandomEntry(categoryIds));

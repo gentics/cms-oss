@@ -123,17 +123,17 @@ function resolveClickable($subject: JQuery<HTMLElement>, options?: ClickableOpti
     // Split buttons have to be handled differently
     if ($subject.is(GTX_SPLIT_BUTTONS.join(','))) {
         if (action === 'secondary') {
-            return $subject.find([
+            return Cypress.$(Array.from($subject.find([
                 '> .split-button-wrapper .more-trigger button[data-action="primary"]',
                 '.gtx-editor-split-button .split-button-secondary',
                 '.gtx-editor-toggle-split-button .split-button-secondary',
-            ].join(','));
+            ].join(','))));
         } else {
-            return $subject.find([
+            return Cypress.$(Array.from($subject.find([
                 '> .split-button-wrapper > .primary-button button[data-action="primary"]',
                 '.gtx-editor-split-button .split-button-main',
                 '.gtx-editor-toggle-split-button .split-button-main',
-            ].join(','));
+            ].join(','))));
         }
     } else if ($subject.is(GTX_BUTTONS.join(','))) {
         return $subject.find(`button[data-action="${action}"]`);
@@ -238,9 +238,41 @@ export function registerCommonCommands(): void {
             actualOptions = optionsOrPositionOrX;
         }
 
-        subject = resolveClickable(subject, actualOptions);
+        const newSubject = resolveClickable(subject, actualOptions);
 
-        return (originalFn as Cypress.CommandOriginalFnWithSubject<'click', any>)(subject, optionsOrPositionOrX, optionsOrY, options);
+        // Remove the action property after we used it here
+        if (actualOptions) {
+            delete actualOptions.action;
+        }
+
+        if (newSubject === subject) {
+            return (originalFn as Cypress.CommandOriginalFnWithSubject<'click', any>)(subject, optionsOrPositionOrX, optionsOrY, options);
+        }
+
+        if (actualOptions?.log !== false) {
+            Cypress.log({
+                $el: newSubject,
+                name: 'redirect',
+                type: 'child',
+                message: newSubject,
+                consoleProps: () => ({
+                    'Original Target': subject,
+                    'New Target': newSubject,
+                }),
+            });
+        }
+
+        // Funny thing: no matter which subject is passed to `originalFn`, it'll call the subject
+        // from the state instead. The state can't easily be modified, which is why we wrap the new subject
+        // and then call the original function, which fixes this issue.
+        cy.wrap(newSubject, { log: false })
+            .then($el => {
+                // Hacky way to fix the name of the click function logging
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                (cy as any).state('current').attributes.name = 'click';
+                return (originalFn as Cypress.CommandOriginalFnWithSubject<'click', any>)($el, optionsOrPositionOrX, optionsOrY, options);
+            })
+
     }) as any);
 
     /**

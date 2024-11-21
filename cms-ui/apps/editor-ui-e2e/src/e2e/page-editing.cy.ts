@@ -46,20 +46,32 @@ describe('Page Editing', () => {
     const ALIAS_CONTROLS = '@controls';
     const ALIAS_TABS = '@tabs';
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        cy.wrap(null, { log: false })
+            .then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
+            })
+            .then(() => {
+                return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            });
     });
 
-    beforeEach(async () => {
+    beforeEach(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
-        cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        cy.wrap(null, { log: false })
+            .then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
+            })
+            .then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            })
+            .then(() => {
+                cy.navigateToApp();
+                cy.login(AUTH_ADMIN);
+                cy.selectNode(IMPORTER.get(minimalNode)!.id);
+            });
     });
 
     describe('Edit Mode', () => {
@@ -328,7 +340,7 @@ describe('Page Editing', () => {
             }
         });
 
-        it.only('should format and manage abbreviations correctly', () => {
+        it('should format and manage abbreviations correctly', () => {
             const FULL_CONTENT = 'foo bar hello world test content this is a test text';
             const TEXT_CONTENT = 'test content';
             const TITLE_CONTENT = 'something fancy';

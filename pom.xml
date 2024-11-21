@@ -37,7 +37,7 @@
 		<module>cms-server</module>
 		<module>cms-changelog</module>
 		<module>cms-doc</module>
-    <module>cms-translation</module>
+		<module>cms-translation</module>
   </modules>
 
 	<properties>

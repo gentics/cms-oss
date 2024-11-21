@@ -798,7 +798,7 @@ public class StagingModelBuilder {
 			}
 		}
 
-		getObjectTags(pagePath, restPage.getId(), restPage.getObjectTags(), page, mismatches, onReferenceNotFound);
+		getObjectTags(pagePath, restPage.getId(), restPage.getObjectTags(), page, page.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return page;
 	}
@@ -1103,33 +1103,47 @@ public class StagingModelBuilder {
 	 * Set the staged object tags to the container
 	 * @param stagedTags staged object tags
 	 * @param container object tag container
+	 * @param owningNode node owning the container
 	 * @param mismatches set of mismatched implementation entities
 	 * @param onReferenceNotFound optional operator, which is called when a reference was not found
 	 * @throws NodeException
 	 */
 	public static void getObjectTags(Path ownerPath, String ownerId, Map<String, StagedObjectTag> stagedTags, ObjectTagContainer container,
-			Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+			Node owningNode, Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		if (stagedTags != null) {
 			// get the objecttags
 			Map<String, ObjectTag> objectTags = container.getObjectTags();
 
-			for (Iterator<StagedObjectTag> i = stagedTags.values().iterator(); i.hasNext();) {
-				StagedObjectTag restTag = i.next();
+			for (StagedObjectTag restTag : stagedTags.values()) {
+				String tagName = restTag.getName();
 
-				if (restTag.getName().startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+				if (tagName.startsWith("object.")) {
+					String shortName = tagName.substring(7);
+					ObjectTag oTag = objectTags.get(shortName);
 
 					if (oTag == null) {
+						// check whether we really should create the tag
+						int defId = DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? AND obj_id = ? AND name = ?", pst -> {
+							pst.setInt(1, container.getTType());
+							pst.setInt(2, 0);
+							pst.setString(3, tagName);
+						}, DBUtils.firstInt("id"));
+						if (defId > 0) {
+							ObjectTagDefinition definition = t.getObject(ObjectTagDefinition.class, defId);
+							if (definition != null && !definition.isVisibleIn(owningNode)) {
+								continue;
+							}
+						}
+
 						// did not find the tag, so create a new one
 						oTag = t.createObject(ObjectTag.class);
-						oTag.setName(realName);
+						oTag.setName(tagName);
 						getReferenced(ownerPath, ownerId, Construct.class, StagedReferencedConstruct::new, restTag.getConstruct(), mismatches, oTag::setConstructId);
 
 						// and add it to the other tags
-						objectTags.put(restTag.getName(), oTag);
+						objectTags.put(shortName, oTag);
 					}
 
 					// now set the data from the REST tag
@@ -1183,7 +1197,7 @@ public class StagingModelBuilder {
 			}
 		}
 
-		getObjectTags(filePath, restFile.getId(), restFile.getObjectTags(), file, mismatches, onReferenceNotFound);
+		getObjectTags(filePath, restFile.getId(), restFile.getObjectTags(), file, file.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return file;
 	}
@@ -1238,7 +1252,7 @@ public class StagingModelBuilder {
 			image.setFpY(restImage.getFpY());
 		}
 
-		getObjectTags(imagePath, restImage.getId(), restImage.getObjectTags(), image, mismatches, onReferenceNotFound);
+		getObjectTags(imagePath, restImage.getId(), restImage.getObjectTags(), image, image.getOwningNode(), mismatches, onReferenceNotFound);
 
 		return image;
 	}
@@ -1358,7 +1372,7 @@ public class StagingModelBuilder {
 			folder.setPublishDirI18n(I18nMap.TRANSFORM2NODE.apply(stagedFolder.getPublishDirI18n()));
 		}
 
-		getObjectTags(folderPath, stagedFolder.getId(), stagedFolder.getObjectTags(), folder, mismatches, onReferenceNotFound);
+		getObjectTags(folderPath, stagedFolder.getId(), stagedFolder.getObjectTags(), folder, folder.getOwningNode(), mismatches, onReferenceNotFound);
 
 		if (stagedFolder.getTemplateIds() != null) {
 			List<Template> templates = folder.getTemplates();

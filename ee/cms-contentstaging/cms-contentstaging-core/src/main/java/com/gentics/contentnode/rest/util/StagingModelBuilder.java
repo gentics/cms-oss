@@ -923,7 +923,7 @@ public class StagingModelBuilder {
 
 		for (String objectPropId : stagedNode.getObjectPropertyIds()) {
 			ObjectTagDefinition objectProperty = t.getObject(ObjectTagDefinition.class, objectPropId);
-			if (objectProperty != null) {
+			if (objectProperty != null && objectProperty.isRestricted()) {
 				node.addObjectTagDefinition(objectProperty);
 			}
 		}

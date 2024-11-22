@@ -73,6 +73,7 @@
         },
         "serve": {
             "executor": "@nx/angular:webpack-dev-server",
+            "dependsOn": ["compile"],
             "options": {
                 "proxyConfig": "proxy.conf.json",
                 "liveReload": false

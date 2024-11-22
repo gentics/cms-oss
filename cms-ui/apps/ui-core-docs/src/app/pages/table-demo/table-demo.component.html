@@ -1,31 +1,76 @@
-<h1>Table</h1>
-
 <gtx-autodocs [docs]="documentation"></gtx-autodocs>
 
-<gtx-table
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selectable]="true"
-    [selected]="selected"
-    [active]="active"
-    [sortBy]="sortColumn"
-    [sortOrder]="sortOrder"
-    [renderers]="{ dateOfBirth: dateRenderer, childOf: childOfRenderer }"
-    (selectedChange)="updateSelection($event)"
-    (sortByChange)="updateSortColumn($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (rowClick)="setRowActive($event)"
-    (actionClick)="handleAction($event)"
-></gtx-table>
+<h2>Demos</h2>
 
-<ng-template #dateRenderer let-value="value">
-    {{ i18nDate.format(value) }}
-</ng-template>
+<gtx-demo-block demoTitle="Table with sorting and custom column rendering">
+    <div class="demo-result">
+        <gtx-table
+            [columns]="columns"
+            [rows]="rows"
+            [actions]="actions"
+            [selectable]="true"
+            [selected]="selected"
+            [active]="active"
+            [sortBy]="sortColumn"
+            [sortOrder]="sortOrder"
+            [renderers]="{ dateOfBirth: dateRenderer, childOf: childOfRenderer }"
+            (selectedChange)="updateSelection($event)"
+            (sortByChange)="updateSortColumn($event)"
+            (sortOrderChange)="updateSortOrder($event)"
+            (rowClick)="setRowActive($event)"
+            (actionClick)="handleAction($event)"
+        ></gtx-table>
 
-<ng-template #childOfRenderer let-row="row" let-column="column">
-    <div *ngIf="row.item.childOf">
-        <span>{{ row.item.childOf[0].firstName }} {{row.item.childOf[0].lastName}}</span>
-        <span>{{ row.item.childOf[1].firstName }} {{row.item.childOf[1].lastName}}</span>
+        <ng-template #dateRenderer let-value="value">
+            {{ i18nDate.format(value) }}
+        </ng-template>
+
+        <ng-template #childOfRenderer let-row="row" let-column="column">
+            <div *ngIf="row.item.childOf">
+                <span>{{ row.item.childOf[0].firstName }} {{ row.item.childOf[0].lastName }}</span>
+                <span>{{ row.item.childOf[1].firstName }} {{ row.item.childOf[1].lastName }}</span>
+            </div>
+        </ng-template>
+
+        <br>
+
+        <div *ngIf="selected.length > 0">
+            Rows selected: {{ selected | json }} ({{ selected.length}})
+        </div>
+        <div *ngIf="active">
+            Row active: {{ active }}
+        </div>
     </div>
-</ng-template>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-table
+                [columns]="columns"
+                [rows]="rows"
+                [actions]="actions"
+                [selectable]="true"
+                [selected]="selection"
+                [active]="active"
+                [sortBy]="sortColumn"
+                [sortOrder]="sortOrder"
+                [renderers]="{ dateOfBirth: dateRenderer, childOf: childOfRenderer }"
+                (selectedChange)="updateSelection($event)"
+                (sortByChange)="updateSortColumn($event)"
+                (sortOrderChange)="updateSortOrder($event)"
+                (rowClick)="setRowActive($event)"
+                (actionClick)="handleAction($event)"
+            ></gtx-table>
+
+            <ng-template #dateRenderer let-value="value">
+                (( i18nDate.format(value) ))
+            </ng-template>
+
+            <ng-template #childOfRenderer let-row="row" let-column="column">
+                <div *ngIf="row.item.childOf">
+                    <span>(( row.item.childOf[0].firstName )) (( row.item.childOf[0].lastName ))</span>
+                    <span>(( row.item.childOf[1].firstName )) (( row.item.childOf[1].lastName ))</span>
+                </div>
+            </ng-template>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

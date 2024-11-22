@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit } from '@angular/core';
-import hljs from 'highlight.js';
+import hljs from 'highlight.js/lib/core';
 
 /**
  * Code highlighting via highlight.js. To include interpolated vars in the code, use double
@@ -25,7 +25,7 @@ export class HighlightedCodeComponent implements OnInit, AfterViewInit {
 
     formattedCode: string;
 
-    constructor(private elementRef: ElementRef<HTMLElement>) {}
+    constructor(private elementRef: ElementRef<HTMLElement>) { }
 
     ngOnInit(): void {
         this.formattedCode = this.formatCodeContents(this.code);
@@ -33,7 +33,7 @@ export class HighlightedCodeComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        let codeEl = this.elementRef.nativeElement.querySelector('code');
+        const codeEl = this.elementRef.nativeElement.querySelector('code');
         hljs.highlightBlock(codeEl);
     }
 
@@ -51,10 +51,10 @@ export class HighlightedCodeComponent implements OnInit, AfterViewInit {
             }
         };
 
-        let lines: string[] = contents
+        const lines: string[] = contents
             .replace(/^(\s*[\r\n]+)+|([\r\n]+\s*)+$/g, '')
             .split(/\r?\n|\r/);
-        let indentation: number = (/^\s*/.exec(lines[0]))[0].length;
+        const indentation: number = (/^\s*/.exec(lines[0]))[0].length;
 
         return lines.map((line: string) => removeIndentation(line, indentation)).join('\n');
     }

@@ -1,31 +1,31 @@
-<div class="gtx-modal-datagrid">
-    <div class="modal-title">
-        <h5>{{ constructs?.length === 1 ? ('modal.assign_construct_to_nodes_title' | i18n:{ entityName: constructs[0].keyword }) : 'modal.assign_constructs_to_nodes_title' | i18n }}</h5>
-    </div>
+<div class="modal-title">
+    <h5>{{ constructs?.length === 1 ? ('modal.assign_construct_to_nodes_title' | i18n:{ entityName: constructs[0].keyword }) : 'modal.assign_constructs_to_nodes_title' | i18n }}</h5>
+</div>
 
-    <div class="modal-content">
-        <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
-        <gtx-node-table
-            class="modal-table"
-            [showSearch]="true"
-            [hideActions]="true"
-            [selected]="selectedIds"
-            (selectedChange)="selectionChange($event)"
-        ></gtx-node-table>
-    </div>
+<div class="modal-content">
+    <gtx-node-table
+        class="modal-table"
+        [showSearch]="true"
+        [hideActions]="true"
+        [disabled]="loading"
+        [selected]="selectedIds"
+        (selectedChange)="selectionChange($event)"
+    ></gtx-node-table>
+</div>
 
-    <div class="modal-footer">
-        <gtx-button
-            type="primary"
-            [disabled]="loading"
-            (click)="okButtonClicked()"
-        >{{ 'common.ok_button' | i18n }}</gtx-button>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        data-action="confirm"
+        [disabled]="loading"
+        (click)="okButtonClicked()"
+    >{{ 'common.ok_button' | i18n }}</gtx-button>
 
-        <gtx-button
-            flat
-            type="secondary"
-            [disabled]="loading"
-            (click)="cancelFn()"
-        >{{ 'common.close_button' | i18n }}</gtx-button>
-    </div>
+    <gtx-button
+        flat
+        type="secondary"
+        data-action="cancel"
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >{{ 'common.close_button' | i18n }}</gtx-button>
 </div>

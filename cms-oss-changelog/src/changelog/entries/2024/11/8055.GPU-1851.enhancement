@@ -1,1 +1,0 @@
-Object property definitions now have a boolean flag "restricted" which can be set to restrict object properties to assigned Nodes.

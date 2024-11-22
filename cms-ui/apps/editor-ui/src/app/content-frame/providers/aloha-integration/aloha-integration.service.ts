@@ -373,6 +373,7 @@ export class AlohaIntegrationService {
 
     public unregisterComponent(slot: string): void {
         delete this.registeredComponents[slot];
+        this.componentsSub.next({ ...this.registeredComponents });
     }
 
     public reloadToolbarSettings(): void {

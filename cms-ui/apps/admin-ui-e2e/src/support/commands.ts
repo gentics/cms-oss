@@ -28,26 +28,63 @@ Cypress.Commands.add('login', (account, keycloak) => {
     });
 });
 
-Cypress.Commands.add('editEntity', (type, identifier) => {
-    let tabId;
-    let properties;
+Cypress.Commands.add('navigateToModule', (moduleId, perms) => {
+    const ALIAS_FEATURE_CHECK_REQ = '@featureChecksReq';
+    const ALIAS_PERM_CHECK_REQ = '@permChecksReq';
+
+    cy.intercept({
+        pathname: '/rest/admin/features/*',
+    }, req => {
+        req.alias = ALIAS_FEATURE_CHECK_REQ;
+    });
+    if (perms) {
+        cy.intercept({
+            pathname: `/rest/perm/${perms}`,
+        }, req => {
+            req.alias = ALIAS_PERM_CHECK_REQ;
+        });
+    }
+
+    // Wait for all features and permissions to load
+    cy.wait(ALIAS_FEATURE_CHECK_REQ);
+    if (perms) {
+        cy.wait(ALIAS_PERM_CHECK_REQ);
+    }
+
+    cy.get(`gtx-dashboard-item[data-id="${moduleId}"]`).click();
+
+    return cy.get('gtx-split-view-router-outlet .master-route-wrapper > *:not(router-outlet)');
+});
+
+Cypress.Commands.add('getDetailView', () => {
+    return cy.get('gtx-split-view-router-outlet .detail-route-wrapper > *:not(router-outlet)');
+});
+
+Cypress.Commands.add('editMeshEntity', { prevSubject: 'element' }, (subject, type, identifier) => {
+    let tabId: string;
+    let properties: string;
 
     switch (type) {
         case 'user':
-            tabId = 1;
+            tabId = 'users';
             properties = 'gtx-mesh-user-properties';
             break;
         default:
             return cy.root().end();
     }
 
-    cy.get(`.grouped-tabs .tab-link:nth(${tabId})`).click();
-    // Find the user in the table and edit it
-    cy.get('gtx-table')
-        .find('.grid-row').contains(identifier)
-        .parents('.grid-row')
-        .find('gtx-button[data-id="edit"]')
+    cy.wrap(subject, { log: false })
+        .find(`gtx-grouped-tabs .grouped-tabs .tab-link[data-id="${tabId}"]`)
         .click();
 
+    // Find the user in the table and edit it
+    cy.wrap(subject, { log: false })
+        .find('gtx-grouped-tabs .grouped-tab-content gtx-table .grid-row.data-row')
+        .contains(identifier)
+        .parents('.grid-row.data-row')
+        .findTableAction('edit')
+        .click();
+
+    // Get the properties component, which should be open in a modal now
     return cy.get(properties);
 });

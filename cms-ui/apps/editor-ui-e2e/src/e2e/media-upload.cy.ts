@@ -32,7 +32,8 @@ describe('Media Upload', () => {
     });
 
     beforeEach(() => {
-        cy.wrap(IMPORTER.cleanupTest()).then(() => {
+        cy.muteXHR();
+        cy.wrap(IMPORTER.cleanupTest(), { log: false }).then(() => {
             return cy.loadBinaries([
                 FIXTURE_TEST_IMAGE_JPG_1,
                 FIXTURE_TEST_FILE_DOC_1,
@@ -43,7 +44,7 @@ describe('Media Upload', () => {
                 [fileOne[IMPORT_ID]]: fixtures[FIXTURE_TEST_FILE_DOC_1],
             };
         }).then(() => {
-            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false });
         }).then(() => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);
@@ -74,7 +75,7 @@ describe('Media Upload', () => {
     });
 
     it('should be possible to upload a regular text file with drag-n-drop', () => {
-        cy.uploadFiles(ITEM_TYPE_FILE, [FIXTURE_TEST_FILE_TXT_1], true).then(allFiles => {
+        cy.uploadFiles(ITEM_TYPE_FILE, [FIXTURE_TEST_FILE_TXT_1], { dragAndDrop: true }).then(allFiles => {
             cy.findList(ITEM_TYPE_FILE)
                 .findItem(allFiles[FIXTURE_TEST_FILE_TXT_1].id)
                 .should('exist');
@@ -85,7 +86,7 @@ describe('Media Upload', () => {
     });
 
     it('should be possible to upload a image file with drag-n-drop', () => {
-        cy.uploadFiles(ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2], true).then(allFiles => {
+        cy.uploadFiles(ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2], { dragAndDrop: true }).then(allFiles => {
             cy.findList(ITEM_TYPE_IMAGE)
                 .findItem(allFiles[FIXTURE_TEST_IMAGE_JPG_2].id)
                 .should('exist');

@@ -133,6 +133,7 @@ export class EntityImporter {
      */
     public async importData(
         importList: ImportData[],
+        size: TestSize | null = null,
     ): Promise<EntityMap> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests });
@@ -140,7 +141,7 @@ export class EntityImporter {
 
         for (const importData of importList) {
             const entity = await this.importEntity(
-                null,
+                size,
                 importData[IMPORT_TYPE],
                 importData,
             );

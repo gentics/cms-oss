@@ -226,8 +226,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     activeTabId$: Observable<string>;
     itemWithObjectProperties$: Observable<{ item: ItemWithObjectTags | Node, objProperties: EditableObjectTag[] }>;
-    objectPropertiesGrouped$: Observable<ObjectPropertiesCategory[]>;
-    objectPropertiesGroupedDelayed$: Observable<ObjectPropertiesCategory[]>;
     activeTabObjectProperty$: Observable<{ item: ItemWithObjectTags, tag: EditableObjectTag }>;
     itemProperties$: Observable<{
         item: ItemWithObjectTags | Node,
@@ -235,6 +233,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         templates: Template[]
     }>;
     currentNode: Node;
+    objectPropertiesGrouped: ObjectPropertiesCategory[] = [];
+    expandedObjectPropertyCategories: string[] = [];
 
     get canSave(): boolean {
         return this.hasUpdatePermission !== false;
@@ -248,8 +248,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private subscriptions: Subscription[] = [];
     private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
     public tagFillLightEnabled = true;
-
-    expandedState$: Observable<string[]>;
 
     itemPermissions: ItemPermissions = noItemPermissions;
 
@@ -297,10 +295,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         ];
         this.rebuildContentTagActions();
 
-        this.expandedState$ = editorState$.pipe(
-            map(value => value.openObjectPropertyGroups),
-            startWith([]),
-        );
+        this.subscriptions.push(editorState$.subscribe(state => {
+            this.expandedObjectPropertyCategories = state.openObjectPropertyGroups.slice(0);
+            this.changeDetector.markForCheck();
+        }));
 
         const currNodeId$ = editorState$.pipe(
             map(state => state.nodeId),
@@ -331,17 +329,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             this.changeDetector.markForCheck();
         }));
 
-        this.objectPropertiesGrouped$ = this.itemWithObjectProperties$.pipe(
+        this.subscriptions.push(this.itemWithObjectProperties$.pipe(
             map(itemWithObjProps => itemWithObjProps.objProperties),
             distinctUntilChanged(isEqual),
             map(objectProperties => groupObjectPropertiesByCategory(objectProperties)),
-            publishReplay(1),
-            refCount(),
-        );
-
-        this.objectPropertiesGroupedDelayed$ = this.objectPropertiesGrouped$.pipe(
-            delay(0), // to make sure we don't get ExpressionChangedAfterItWasChecked
-        );
+        ).subscribe(data => {
+            this.objectPropertiesGrouped = data;
+            this.changeDetector.markForCheck();
+        }));
 
         this.activeTabId$ = combineLatest([
             this.itemWithObjectProperties$.pipe(

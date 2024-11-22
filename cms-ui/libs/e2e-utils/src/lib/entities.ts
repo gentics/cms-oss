@@ -371,11 +371,13 @@ export const pageA_B_E_Two = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID
  * ---------------------------------------------------------------- */
 
 export const PACKAGE_IMPORTS: Record<TestSize, string[]> = {
+    [TestSize.NONE]: [],
     [TestSize.MINIMAL]: ['minimal'],
     [TestSize.FULL]: ['minimal', 'full'],
 }
 
 export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
+    [TestSize.NONE]: [],
     [TestSize.MINIMAL]: [
         minimalNode,
         folderA,

@@ -17,6 +17,6 @@
     if (typeof Aloha.settings.plugins.format !== "object") {
         Aloha.settings.plugins.format = {};
     }
-    Aloha.settings.plugins.format.config = ['b', 'i', 'u', 's', 'sub', 'sup', 'code', 'q', 'cite', 'removeFormat'];
+    Aloha.settings.plugins.format.config = ['b', 'i', 'u', 's', 'sub', 'sup', 'code', 'q', 'abbr', 'cite', 'removeFormat'];
 
 })();

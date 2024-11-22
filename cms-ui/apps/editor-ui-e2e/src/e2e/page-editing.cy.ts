@@ -46,34 +46,55 @@ describe('Page Editing', () => {
     const ALIAS_CONTROLS = '@controls';
     const ALIAS_TABS = '@tabs';
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        cy.wrap(null, { log: false })
+            .then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
+            })
+            .then(() => {
+                return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            });
     });
 
-    beforeEach(async () => {
+    beforeEach(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
-        cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        cy.wrap(null, { log: false })
+            .then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
+            })
+            .then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            })
+            .then(() => {
+                cy.navigateToApp();
+                cy.login(AUTH_ADMIN);
+                cy.selectNode(IMPORTER.get(minimalNode)!.id);
+            });
     });
 
     describe('Edit Mode', () => {
         beforeEach(() => {
+            const ALIAS_ALOHA_PAGE_REQ = '@alohaPageReq';
+
+            cy.intercept({
+                method: 'GET',
+                pathname: '/alohapage',
+            }, req => {
+                req.alias = ALIAS_ALOHA_PAGE_REQ;
+            });
+
             cy.findList(ITEM_TYPE_PAGE)
                 .findItem(IMPORTER.get(pageOne)!.id)
                 .itemAction('edit');
 
-            // High timeout for all of aloha to finish loading
-            cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
-                .its('0.contentDocument.body')
-                // Additional wait, for aloha to initialze all the blocks
-                .find('main [contenteditable="true"]', { timeout: 60_000 })
-                .as(ALIAS_CONTENT);
+            cy.wait(ALIAS_ALOHA_PAGE_REQ).then(() => {
+                cy.getAlohaIFrame()
+                    // Additional wait, for aloha to initialze all the blocks
+                    .find('main [contenteditable="true"]', { timeout: 60_000 })
+                    .as(ALIAS_CONTENT);
+            });
 
             cy.get('project-editor content-frame gtx-page-editor-controls')
                 .as(ALIAS_CONTROLS);
@@ -85,16 +106,16 @@ describe('Page Editing', () => {
             // eslint-disable-next-line cypress/unsafe-to-chain-command
             cy.get(ALIAS_CONTENT)
                 .clear()
-            // Replace default text with the test content
+                // Replace default text with the test content
                 .type(TEXT_CONTENT);
 
             cy.intercept<PageSaveRequest>({
                 method: 'POST',
                 pathname: '/rest/page/save/*',
             }, request => {
-            // Only alias it, if it is the "actual" save request.
-            // There's a periodic "save" request being sent which only "updates" the ID,
-            // to keep the page in the "locked" state.
+                // Only alias it, if it is the "actual" save request.
+                // There's a periodic "save" request being sent which only "updates" the ID,
+                // to keep the page in the "locked" state.
                 if (request.body.page?.tags) {
                     request.alias = ALIAS_SAVE;
                 }
@@ -204,7 +225,7 @@ describe('Page Editing', () => {
                     for (const action of group) {
                         cy.get(ALIAS_CONTROLS)
                             .findAlohaComponent({ slot: action })
-                            .btnClick();
+                            .click();
                     }
 
                     cy.get(ALIAS_CONTENT)
@@ -259,7 +280,7 @@ describe('Page Editing', () => {
                     for (const action of ctl.apply) {
                         cy.get(ALIAS_CONTROLS)
                             .findAlohaComponent({ slot: action })
-                            .btnClick();
+                            .click();
                     }
 
                     cy.get(ALIAS_CONTENT)
@@ -268,7 +289,7 @@ describe('Page Editing', () => {
                     for (const action of ctl.remove) {
                         cy.get(ALIAS_CONTROLS)
                             .findAlohaComponent({ slot: action })
-                            .btnClick();
+                            .click();
                     }
 
                     cy.get(ALIAS_CONTENT)
@@ -298,13 +319,13 @@ describe('Page Editing', () => {
                     for (const action of group) {
                         cy.get(ALIAS_CONTROLS)
                             .findAlohaComponent({ slot: action })
-                            .btnClick();
+                            .click();
                     }
 
                     cy.get(ALIAS_CONTENT).rangeSelection(0, null, true);
                     cy.get(ALIAS_CONTROLS)
                         .findAlohaComponent({ slot: ACTION_REMOVE_FORMAT })
-                        .btnClick();
+                        .click();
 
                     cy.get(ALIAS_CONTENT)
                         .should('have.formatting', FULL_CONTENT, []);
@@ -329,7 +350,6 @@ describe('Page Editing', () => {
 
             const ALIAS_WRAPPER = '@btnWrapper';
             const ALIAS_BUTTON = '@btnPrimary';
-            const ALIAS_SECONDARY_BUTTON = '@btnSecondary';
 
             // eslint-disable-next-line cypress/unsafe-to-chain-command
             cy.get(ALIAS_CONTENT)
@@ -340,10 +360,11 @@ describe('Page Editing', () => {
             // Format it as abbr
             cy.get(ALIAS_CONTROLS)
                 .findAlohaComponent({ slot: ACTION_FORMAT_ABBR })
-                .find('.gtx-editor-toggle-split-button')
-                .as(ALIAS_WRAPPER)
-                .btn()
                 .as(ALIAS_BUTTON)
+                .find('.gtx-editor-toggle-split-button')
+                .as(ALIAS_WRAPPER);
+
+            cy.get(ALIAS_BUTTON)
                 .click();
 
             // Verify formatting worked
@@ -357,16 +378,16 @@ describe('Page Editing', () => {
                     expect($elem.attr(ATTR_TITLE)).to.equal('');
                 });
 
-            // Verify button state, and click it
+            // Verify button state, and click the secondary button
             cy.get(ALIAS_WRAPPER)
                 .should('have.class', CLASS_ACTIVE)
                 .should('have.class', CLASS_INPUT_ACTIVE)
-                .btn({ action: 'secondary' })
-                .as(ALIAS_SECONDARY_BUTTON)
-                .should('be.visible')
-                .click();
+                .should('be.visible');
 
-            // Enter the title in the dropdown
+            cy.get(ALIAS_BUTTON)
+                .click({ action: 'secondary' });
+
+            // Enter the title in the dropdown, and confirm input with "enter"
             cy.findDynamicDropdown(ACTION_FORMAT_ABBR)
                 .find('gtx-aloha-input-renderer input')
                 .type(`${TITLE_CONTENT}{enter}`);
@@ -413,7 +434,7 @@ describe('Page Editing', () => {
                     .rangeSelection(0, -2, true);
 
                 cy.findAlohaComponent({ slot: ACTION_FORMAT_QUOTE })
-                    .btnClick();
+                    .click();
 
                 cy.findDynamicFormModal(ACTION_FORMAT_QUOTE)
                     .as(ALIAS_MODAL);
@@ -430,7 +451,7 @@ describe('Page Editing', () => {
 
                 cy.get(ALIAS_MODAL)
                     .find('.modal-footer gtx-button[data-action="confirm"]')
-                    .btnClick();
+                    .click();
 
                 cy.get(ALIAS_CONTENT)
                     .should('have.formatting', TEXT_CONTENT, [FORMAT_QUOTE])
@@ -461,7 +482,7 @@ describe('Page Editing', () => {
                 .type(TEXT_CONTENT);
 
             cy.findAlohaComponent({ slot: 'insertLink', type: 'toggle-split-button' })
-                .btnClick();
+                .click();
 
             cy.findDynamicFormModal()
                 .as(ALIAS_MODAL)
@@ -492,7 +513,7 @@ describe('Page Editing', () => {
 
             cy.get(ALIAS_FORM)
                 .find('> [data-slot="target"] gtx-select')
-                .selectValue(LINK_TARGET);
+                .select(LINK_TARGET);
 
             // eslint-disable-next-line cypress/unsafe-to-chain-command
             cy.get(ALIAS_FORM)
@@ -506,7 +527,7 @@ describe('Page Editing', () => {
 
             cy.get(ALIAS_MODAL)
                 .find('.modal-footer [data-action="confirm"]')
-                .btnClick();
+                .click();
 
             /*
              * Validate HTML
@@ -562,9 +583,7 @@ describe('Page Editing', () => {
         cy.get('project-editor content-frame gtx-page-editor-tabs')
             .as(ALIAS_TABS);
 
-        // High timeout for all of aloha to finish loading
-        cy.get('project-editor content-frame iframe[name="master-frame"][loaded="true"]', { timeout: 60_000 })
-            .its('0.contentDocument.body')
+        cy.getAlohaIFrame()
             // Additional wait, for aloha to initialze all the blocks
             .find('main [contenteditable="true"]', { timeout: 60_000 })
             .as(ALIAS_CONTENT);

@@ -129,7 +129,7 @@ describe('Folder Management', () => {
             .itemAction('properties');
         cy.openObjectPropertyEditor(OBJECT_PROPERTY)
             .findTagEditorElement(TagPropertyType.SELECT)
-            .selectValue(COLOR_ID);
+            .select(COLOR_ID);
 
         /* Save the Object-Property changes
          * ---------------------------- */

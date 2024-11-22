@@ -79,7 +79,7 @@ skipableSuite(isVariant(Variant.ENTERPRISE), 'Form Management', () => {
 
         cy.get(ALIAS_FORM)
             .find('[formcontrolname="languages"]')
-            .selectValue(LANGUAGE_DE);
+            .select(LANGUAGE_DE);
 
         cy.intercept({
             method: 'POST',

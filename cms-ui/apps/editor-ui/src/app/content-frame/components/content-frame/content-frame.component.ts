@@ -485,7 +485,13 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.changeDetector.markForCheck();
         });
 
-        masterFrame.addEventListener('load', () => {
+        masterFrame.addEventListener('load', event => {
+            // This is browser dependend. Sometimes it'll load a blank page first,
+            // and then the actual aloha page.
+            if (masterFrame.contentWindow.location.toString() === 'about:blank') {
+                return;
+            }
+
             this.windowLoaded = true;
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.

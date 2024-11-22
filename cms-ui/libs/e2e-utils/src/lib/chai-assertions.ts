@@ -82,7 +82,7 @@ export function registerCommonAssertions(): void {
                     `expected #{act} to have a formatted text "${text}" with [${formats.join(', ')}]`,
                     `expected #{act} to not have a formatted text "${text}" with [${formats.join(', ')}]`,
                     { text, formats },
-                    el,
+                    el.innerHTML,
                 );
             }
         });

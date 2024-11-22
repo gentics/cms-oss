@@ -17,6 +17,7 @@ export interface LoginInformation {
 }
 
 export enum TestSize {
+    NONE = 'none',
     MINIMAL = 'minimal',
     FULL = 'full',
 }

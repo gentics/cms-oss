@@ -16,11 +16,9 @@ interface ContentFile {
     mimeType: string;
 }
 
-interface ButtonOptions {
+interface ClickableOptions {
     action?: 'primary' | 'secondary';
 }
-
-interface ButtonClickOptions extends ButtonOptions, Partial<Cypress.ClickOptions> {}
 
 interface BinaryLoadOptions {
     applyAlias?: boolean;
@@ -32,6 +30,7 @@ interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
     asContent: true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare module Chai {
     interface Assertion {
         /**
@@ -174,6 +173,7 @@ declare namespace Cypress {
         (chainer: 'not.to.be.displayed', options?: IntersectionObserverInit): Chainable<Subject>;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         /**
          * Prevents the logging of XHR/Fetch requests (unless intercepted/aliased).
@@ -188,13 +188,6 @@ declare namespace Cypress {
          */
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
-        /**
-         * Uploads the specified fixture-names as files or images.
-         * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
-         * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
-         * @param dragNDrop If the upload should be done via the drag-n-drop functionality.
-         */
-        uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
         /**
          * Current element needs to be a `gtx-dropdown-list` element.
          * Will click the trigger-element (`data-context-trigger`) with `btnClick`,
@@ -227,17 +220,13 @@ declare namespace Cypress {
          *      .click();
          * ```
          */
-        openContext(): Chainable<HTMLElement>;
+        openContext(options?: Partial<Cypress.Loggable>): Chainable<HTMLElement>;
         /**
-         * Requires the subject to be a `gtx-select`.
-         * Will select the option with the corresponding `valueId`.
-         * @param valueId The value/option to select.
+         * Resolves the actual clickable button of an element.
+         * Only intended for custom button components like `gtx-button`, `gtx-split-button`, and the sort.
+         * @param options Options to resolve the button
          */
-        selectValue(valueId: any): Chainable<null>;
-        /** */
-        btn(options?: ButtonOptions): Chainable<HTMLElement>;
-        /** Helper function to press the actual button element of various custom buttons */
-        btnClick(options?: ButtonClickOptions): Chainable<HTMLElement>;
+        btn(options?: ClickableOptions): Chainable<HTMLElement>;
         /**
          * Applies the range as selection, and optionally to aloha as well.
          *
@@ -254,5 +243,65 @@ declare namespace Cypress {
          * @param aloha If it should apply the range to aloha as well.
          */
         textSelection(text: string, aloha?: boolean): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to be a `gtx-tabs`.
+         * Will select the tab with the corresponding `tabId`, and yield the tab body.
+         * @param tabId The ID of the Tab to select.
+         */
+        // TODO: Override the default `select` command to include this behaviour.
+        selectTab(tabId: string): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to only contain one `gtx-table`.
+         * Will find the row of the table with the corresponding `id`.
+         * @param id The id of the row.
+         */
+        findTableRow(id: string): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to be a table row to find a `single` action,
+         * otherwise will look for multi actions.
+         * @param id The id of the action.
+         */
+        findTableAction(id: string): Chainable<HTMLElement>;
+
+        /*
+         * OVERRIDES
+         *
+         * Overwritten commands, which have changed typings.
+         * *****************************************************************************/
+
+        /**
+         * Click a DOM element.
+         *
+         * @see https://on.cypress.io/click
+         * @example
+         *    cy.get('button').click()          // Click on button
+         *    cy.focused().click()              // Click on el with focus
+         *    cy.contains('Welcome').click()    // Click on first el containing 'Welcome'
+         */
+        click(options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
+        /**
+         * Click a DOM element at specific corner / side.
+         *
+         * @param {PositionType} position - The position where the click should be issued.
+         * The `center` position is the default position.
+         * @see https://on.cypress.io/click
+         * @example
+         *    cy.get('button').click('topRight')
+         */
+        click(position: PositionType, options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
+        /**
+         * Click a DOM element at specific coordinates
+         *
+         * @param {number} x The distance in pixels from the element's left to issue the click.
+         * @param {number} y The distance in pixels from the element's top to issue the click.
+         * @see https://on.cypress.io/click
+         * @example
+        ```
+        // The click below will be issued inside of the element
+        // (15px from the left and 40px from the top).
+        cy.get('button').click(15, 40)
+        ```
+         */
+        click(x: number, y: number, options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
     }
 }

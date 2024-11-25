@@ -36,13 +36,15 @@
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "@gentics/ui-core",
                     "angular2-hotkeys",
-                    "dom-serialize",
+                    "base64-js",
+                    "cropperjs",
+                    "dompurify",
+                    "ev-emitter",
+                    "js-sha256",
                     "masonry-layout",
-                    "rxjs",
-                    "serialize-to-js",
-                    "immutablets"
+                    "moment",
+                    "moment-timezone"
                 ],
                 "fileReplacements": [
                     {

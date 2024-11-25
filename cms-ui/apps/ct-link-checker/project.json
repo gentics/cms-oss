@@ -33,7 +33,8 @@
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "@gentics/ui-core"
+                    "moment",
+                    "moment-timezone"
                 ],
                 "aot": true,
                 "fileReplacements": [

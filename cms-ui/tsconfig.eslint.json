@@ -10,6 +10,7 @@
         ".eslintrc.js",
         "**/jest.config.[jt]s",
         "jest.preset.[jt]s",
+        "jest.config.[jt]s",
         "cypress.preset.js",
         "apps/**/*.ts",
         "libs/**/*.ts",

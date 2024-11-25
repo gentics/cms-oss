@@ -7,9 +7,5 @@
         "../"
     ]
   },
-  "allowedNonPeerDependencies": [
-    "@gentics/cms-models",
-    "@gentics/cms-integration-api-models",
-    "lodash-es"
-  ]
+  "allowedNonPeerDependencies": []
 }

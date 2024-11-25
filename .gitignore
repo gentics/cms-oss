@@ -190,3 +190,5 @@ velocity.log
 
 ### Misc ###
 /*.sh
+.nx/
+!cms-integration-tests/test/resources/cms/conf

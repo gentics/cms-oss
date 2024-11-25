@@ -41,7 +41,7 @@ export class FavouritesService implements OnDestroy {
                 return favourites.map(fav => {
                     const node = entityResolver.getNode(fav.nodeId);
                     const entity = this.entityResolver.getEntity(fav.type, fav.id);
-                    let breadcrumbs = this.entityToBreadcrumb(entity);
+                    const breadcrumbs = this.entityToBreadcrumb(entity);
                     const nodeName = node ? node.name : '';
                     return Object.assign({}, fav, { nodeName, breadcrumbs });
                 });
@@ -56,7 +56,7 @@ export class FavouritesService implements OnDestroy {
     entityToBreadcrumb(entity: any): string[] {
         let breadcrumbs: string[] = [];
         if (entity && entity.path) {
-            const entityPath = entity.path.split('/');
+            const entityPath = (entity.path as string).split('/');
             entityPath.pop();
             entityPath.shift();
             if (entity.type && entity.type === 'folder') {
@@ -89,12 +89,12 @@ export class FavouritesService implements OnDestroy {
     /**
      * Add items to the user's favourites.
      */
-    add(items: Starrable[], nodeObj?: { nodeId: number }): void {
-        let nodeId: number = nodeObj
+    async add(items: Starrable[], nodeObj?: { nodeId: number }): Promise<void> {
+        const nodeId: number = nodeObj
             ? nodeObj.nodeId
             : this.appState.now.folder.activeNode;
 
-        let toAdd = items.map((item: any) => (<Favourite> {
+        const toAdd = items.map((item: any) => (<Favourite> {
             id: item.id,
             type: item.type,
             name: item.name,
@@ -102,22 +102,22 @@ export class FavouritesService implements OnDestroy {
             nodeId: !nodeObj && item.nodeId || nodeId,
         }));
 
-        this.appState.dispatch(new AddFavouritesAction(toAdd));
+        await this.appState.dispatch(new AddFavouritesAction(toAdd)).toPromise();
 
-        let favsNow = this.appState.now.favourites.list;
-        this.userSettings.saveFavourites(favsNow);
+        const favsNow = this.appState.now.favourites.list;
+        await this.userSettings.saveFavourites(favsNow);
     }
 
     /**
      * Remove items from the user's favourites.
      */
-    remove(items: Favourite[]): void;
-    remove(items: Starrable[], nodeInfo: { nodeId: number }): void;
-    remove(items: Starrable[], nodeInfo?: { nodeId: number }): void {
+    async remove(items: Favourite[]): Promise<void>;
+    async remove(items: Starrable[], nodeInfo: { nodeId: number }): Promise<void>;
+    async remove(items: Starrable[], nodeInfo?: { nodeId: number }): Promise<void> {
         let toRemove: Favourite[];
 
         if (nodeInfo) {
-            let nodeId = nodeInfo.nodeId;
+            const nodeId = nodeInfo.nodeId;
             toRemove = items.map(item => ({
                 ...item,
                 nodeId,
@@ -126,15 +126,15 @@ export class FavouritesService implements OnDestroy {
             toRemove = items as Favourite[];
         }
 
-        this.appState.dispatch(new RemoveFavouritesAction(toRemove));
+        await this.appState.dispatch(new RemoveFavouritesAction(toRemove)).toPromise();
 
-        let favsNow = this.appState.now.favourites.list;
-        this.userSettings.saveFavourites(favsNow);
+        const favsNow = this.appState.now.favourites.list;
+        await this.userSettings.saveFavourites(favsNow);
     }
 
-    reorder(reorderedFavourites: Favourite[]): void {
-        this.appState.dispatch(new ReorderFavouritesAction(reorderedFavourites));
-        let favsNow = this.appState.now.favourites.list;
-        this.userSettings.saveFavourites(favsNow);
+    async reorder(reorderedFavourites: Favourite[]): Promise<void> {
+        await this.appState.dispatch(new ReorderFavouritesAction(reorderedFavourites)).toPromise();
+        const favsNow = this.appState.now.favourites.list;
+        await this.userSettings.saveFavourites(favsNow);
     }
 }

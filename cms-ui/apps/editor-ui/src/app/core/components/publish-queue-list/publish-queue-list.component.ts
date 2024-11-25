@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { DisplayFieldSelector } from '../../../shared/components/display-field-selector/display-field-selector.component';
+import { DisplayFieldSelectorModal } from '../../../shared/components/display-field-selector/display-field-selector.component';
 import { ApplicationStateService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 
@@ -85,7 +85,7 @@ export class PublishQueueList implements OnInit, OnChanges {
     selectDisplayFields(): void {
         const type = 'page';
         const fields = this.appState.now.publishQueue.pages.displayFields;
-        this.modalService.fromComponent(DisplayFieldSelector, {}, { type, fields })
+        this.modalService.fromComponent(DisplayFieldSelectorModal, {}, { type, fields })
             .then(modal => modal.open())
             .then(selection => this.updateDisplayFields(type, selection))
             .catch(this.errorHandler.catch);

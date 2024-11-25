@@ -20,7 +20,7 @@ services:
       retries: 3
 
   mesh:
-    image: docker.apa-it.at/gentics/mesh:${CI_MESH_VERSION:-2.1.0}
+    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.0.0-SNAPSHOT}
 
     environment:
       MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
@@ -40,7 +40,7 @@ services:
       retries: 3
 
   cms:
-    image: docker.apa-it.at/gentics/cms-oss:${CI_CMS_VERSION:-6.1.10}
+    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-ci-devtest}
     ports:
       - 8080:8080
 
@@ -84,5 +84,3 @@ services:
         condition: service_healthy
       mesh:
         condition: service_healthy
-
-

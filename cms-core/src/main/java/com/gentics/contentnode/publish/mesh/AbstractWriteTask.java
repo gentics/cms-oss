@@ -1,9 +1,12 @@
 package com.gentics.contentnode.publish.mesh;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
@@ -104,6 +107,18 @@ abstract class AbstractWriteTask {
 			Page page = (Page) nodeObject;
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				return page.getLanguageVariant(language);
+			}
+		} else if (nodeObject instanceof Folder) {
+			// folders will always exist in english
+			if (StringUtils.equals(language, "en")) {
+				return nodeObject;
+			} else {
+				// check for alternative languages
+				if (MeshPublisher.getAlternativeMeshLanguages(nodeObject).contains(language)) {
+					return nodeObject;
+				} else {
+					return null;
+				}
 			}
 		} else {
 			return null;

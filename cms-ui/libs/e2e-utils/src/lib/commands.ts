@@ -16,11 +16,9 @@ interface ContentFile {
     mimeType: string;
 }
 
-interface ButtonOptions {
+interface ClickableOptions {
     action?: 'primary' | 'secondary';
 }
-
-interface ButtonClickOptions extends ButtonOptions, Partial<Cypress.ClickOptions> {}
 
 interface BinaryLoadOptions {
     applyAlias?: boolean;
@@ -32,16 +30,22 @@ interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
     asContent: true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare module Chai {
     interface Assertion {
         /**
          * Assertion to check if a value has specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('have.formatting', 'text', ['b']);
-        ```
+         * ```html
+         * <div class="some-element">
+         *      <p>Hello World! This <b>text</b> is <i>formatted</i>!
+         * </div>
+         * ```
+         * ```ts
+         * expect($('.some-element)).to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('have.formatting', 'text', ['b']);
+         * ```
          */
         formatting(text: string, format: string[]): Assertion;
         /**
@@ -51,17 +55,29 @@ declare module Chai {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(123).to.be.included([123, 456, 789]);
-        // > true
-        expect('hello').to.be.included(['hello', 'world']);
-        // > true
-        expect('hello').to.be.included(['hello world', 'foo bar']);
-        // > true
-        cy.wrap(456).should('be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(123).to.be.included([123, 456, 789]);
+         * // > true
+         * expect('hello').to.be.included(['hello', 'world']);
+         * // > true
+         * expect('hello').to.be.included(['hello world', 'foo bar']);
+         * // > true
+         * cy.wrap(456).should('be.included', [123, 456, 789]);
+         * ```
          */
         included(array: any[]): Assertion;
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('be.displayed');
+         * ```
+         */
+        displayed(options?: IntersectionObserverInit): Assertion;
     }
 }
 
@@ -71,10 +87,10 @@ declare namespace Cypress {
          * Assertion to check if a value has specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('have.formatting', 'text', ['b']);
-        ```
+         * ```ts
+         * expect($('.some-element')).to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('have.formatting', 'text', ['b']);
+         * ```
          */
         (chainer: 'have.formatting', text: string, formats: string[]): Chainable<Subject>;
 
@@ -82,10 +98,10 @@ declare namespace Cypress {
          * Assertion to check if a value does not have a specific formats applied.
          *
          * @example
-        ```ts
-        expect($someElement).not.to.have.formatting('text', ['b']);
-        cy.get('.some-element').should('not.have.formatting', 'text', ['b']);
-        ```
+         * ```ts
+         * expect($('.some-element')).not.to.have.formatting('text', ['b']);
+         * cy.get('.some-element').should('not.have.formatting', 'text', ['b']);
+         * ```
          */
         (chainer: 'not.have.formatting', text: string, formats: string[]): Chainable<Subject>;
 
@@ -96,15 +112,15 @@ declare namespace Cypress {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(123).to.be.included([123, 456, 789]);
-        // > true
-        expect('hello').to.be.included(['hello', 'world']);
-        // > true
-        expect('hello').to.be.included(['hello world', 'foo bar']);
-        // > true
-        cy.wrap(456).should('be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(123).to.be.included([123, 456, 789]);
+         * // > true
+         * expect('hello').to.be.included(['hello', 'world']);
+         * // > true
+         * expect('hello').to.be.included(['hello world', 'foo bar']);
+         * // > true
+         * cy.wrap(456).should('be.included', [123, 456, 789]);
+         * ```
          */
         (chainer: 'be.included', array: any[]): Chainable<Subject>;
         (chainer: 'to.be.included', array: any[]): Chainable<Subject>;
@@ -116,19 +132,48 @@ declare namespace Cypress {
          * instead of the regular equality check.
          *
          * @example
-        ```ts
-        expect(420).not.to.be.included([123, 456, 789]);
-        // > true
-        expect('example').not.to.be.included(['hello', 'world']);
-        // > true
-        expect('world').not.to.be.included(['hello world', 'foo bar']);
-        // > false
-        cy.wrap(420).should('not.be.included', [123, 456, 789]);
-        ```
+         * ```ts
+         * expect(420).not.to.be.included([123, 456, 789]);
+         * // > true
+         * expect('example').not.to.be.included(['hello', 'world']);
+         * // > true
+         * expect('world').not.to.be.included(['hello world', 'foo bar']);
+         * // > false
+         * cy.wrap(420).should('not.be.included', [123, 456, 789]);
+         * ```
          */
         (chainer: 'not.be.included', array: any[]): Chainable<Subject>;
+
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('be.displayed');
+         * ```
+         */
+        (chainer: 'be.displayed', threshold?: number | string): Chainable<Subject>;
+        (chainer: 'to.be.displayed', threshold?: number | string): Chainable<Subject>;
+
+        /**
+         * Assertion to check if an element is actually displayed to the user.
+         * This is done with the `IntersectionObserver` API to determine it's intersection with the
+         * current viewport.
+         * @param threshold How much of the element needs to be visible in order to be considered displayed.
+         *
+         * @example
+         * ```ts
+         * cy.get('.some-element').should('not.be.displayed');
+         * ```
+         */
+        (chainer: 'not.be.displayed', options?: IntersectionObserverInit): Chainable<Subject>;
+        (chainer: 'not.to.be.displayed', options?: IntersectionObserverInit): Chainable<Subject>;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Chainable<Subject> {
         /**
          * Prevents the logging of XHR/Fetch requests (unless intercepted/aliased).
@@ -143,13 +188,6 @@ declare namespace Cypress {
          */
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryFileLoadOptions): Chainable<Record<string, File>>;
         loadBinaries(files: (string | ImportBinary)[], options?: BinaryContentFileLoadOptions): Chainable<Record<string, ContentFile>>;
-        /**
-         * Uploads the specified fixture-names as files or images.
-         * @param type If the upload should be done as "file" or "image" to the CMS (Only relevant for which list button to press)
-         * @param fixtureNames The names of the fixtures/import-binaries to upload. See `loadBinaries` command.
-         * @param dragNDrop If the upload should be done via the drag-n-drop functionality.
-         */
-        uploadFiles(type: 'file' | 'image', fixtureNames: (string | ImportBinary)[], dragNDrop?: boolean): Chainable<Record<string, any>>;
         /**
          * Current element needs to be a `gtx-dropdown-list` element.
          * Will click the trigger-element (`data-context-trigger`) with `btnClick`,
@@ -171,24 +209,24 @@ declare namespace Cypress {
          *      </gtx-dropdown-content>
          * </gtx-dropdown-list>
          * ```
+         *
+         * ---
+         *
          * ```ts
+         * // my-test.cy.ts
          * cy.get('.my-dropdown')
          *      .openContext()
          *      .find('[data-action="whatever"]')
          *      .click();
          * ```
          */
-        openContext(): Chainable<HTMLElement>;
+        openContext(options?: Partial<Cypress.Loggable>): Chainable<HTMLElement>;
         /**
-         * Requires the subject to be a `gtx-select`.
-         * Will select the option with the corresponding `valueId`.
-         * @param valueId The value/option to select.
+         * Resolves the actual clickable button of an element.
+         * Only intended for custom button components like `gtx-button`, `gtx-split-button`, and the sort.
+         * @param options Options to resolve the button
          */
-        selectValue(valueId: any): Chainable<null>;
-        /** */
-        btn(options?: ButtonOptions): Chainable<HTMLElement>;
-        /** Helper function to press the actual button element of various custom buttons */
-        btnClick(options?: ButtonClickOptions): Chainable<HTMLElement>;
+        btn(options?: ClickableOptions): Chainable<HTMLElement>;
         /**
          * Applies the range as selection, and optionally to aloha as well.
          *
@@ -218,5 +256,65 @@ declare namespace Cypress {
          * Requires the subject to be a row in a trable and will expand that row
          */
         expandTrableRow(): Chainable<JQuery<HTMLElement>>;
+        /**
+         * Requires the subject to be a `gtx-tabs`.
+         * Will select the tab with the corresponding `tabId`, and yield the tab body.
+         * @param tabId The ID of the Tab to select.
+         */
+        // TODO: Override the default `select` command to include this behaviour.
+        selectTab(tabId: string): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to only contain one `gtx-table`.
+         * Will find the row of the table with the corresponding `id`.
+         * @param id The id of the row.
+         */
+        findTableRow(id: string): Chainable<HTMLElement>;
+        /**
+         * Requires the subject to be a table row to find a `single` action,
+         * otherwise will look for multi actions.
+         * @param id The id of the action.
+         */
+        findTableAction(id: string): Chainable<HTMLElement>;
+
+        /*
+         * OVERRIDES
+         *
+         * Overwritten commands, which have changed typings.
+         * *****************************************************************************/
+
+        /**
+         * Click a DOM element.
+         *
+         * @see https://on.cypress.io/click
+         * @example
+         *    cy.get('button').click()          // Click on button
+         *    cy.focused().click()              // Click on el with focus
+         *    cy.contains('Welcome').click()    // Click on first el containing 'Welcome'
+         */
+        click(options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
+        /**
+         * Click a DOM element at specific corner / side.
+         *
+         * @param {PositionType} position - The position where the click should be issued.
+         * The `center` position is the default position.
+         * @see https://on.cypress.io/click
+         * @example
+         *    cy.get('button').click('topRight')
+         */
+        click(position: PositionType, options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
+        /**
+         * Click a DOM element at specific coordinates
+         *
+         * @param {number} x The distance in pixels from the element's left to issue the click.
+         * @param {number} y The distance in pixels from the element's top to issue the click.
+         * @see https://on.cypress.io/click
+         * @example
+        ```
+        // The click below will be issued inside of the element
+        // (15px from the left and 40px from the top).
+        cy.get('button').click(15, 40)
+        ```
+         */
+        click(x: number, y: number, options?: Partial<Cypress.ClickOptions & ClickableOptions>): Chainable<Subject>;
     }
 }

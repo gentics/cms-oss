@@ -29,8 +29,8 @@ import com.gentics.lib.db.DBHandle;
 import com.gentics.lib.db.ResultProcessor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
-import com.gentics.lib.db.TableVersion;
-import com.gentics.lib.db.TableVersion.Join;
+import com.gentics.contentnode.factory.object.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion.Join;
 import com.gentics.lib.db.UpdateProcessor;
 import com.gentics.testutils.database.SQLUtils;
 import com.gentics.testutils.database.SQLUtilsFactory;
@@ -89,31 +89,26 @@ public class AbstractVersioningTest {
 		new MigrateTimeManagement().execute();
 		t.commit(false);
 
-		pageVersion = new TableVersion(false);
-		pageVersion.setHandle(dbHandle);
+		pageVersion = new TableVersion();
 		pageVersion.setTable("page");
 		pageVersion.setWherePart("gentics_main.id = ?");
 
-		contenttagVersion = new TableVersion(false);
-		contenttagVersion.setHandle(dbHandle);
+		contenttagVersion = new TableVersion();
 		contenttagVersion.setTable("contenttag");
 		contenttagVersion.setJoin("content", "id", "content_id");
 		contenttagVersion.setWherePart("content.id = ?");
 
-		valueVersion = new TableVersion(false);
-		valueVersion.setHandle(dbHandle);
+		valueVersion = new TableVersion();
 		valueVersion.setTable("value");
 		valueVersion.setJoin("contenttag", "id", "contenttag_id");
 		valueVersion.setWherePart("contenttag.content_id = ?");
 
-		dsVersion = new TableVersion(false);
-		dsVersion.setHandle(dbHandle);
+		dsVersion = new TableVersion();
 		dsVersion.setTable("ds");
 		dsVersion.setJoin("contenttag", "id", "contenttag_id");
 		dsVersion.setWherePart("contenttag.content_id = ?");
 
-		dsObjVersion = new TableVersion(false);
-		dsObjVersion.setHandle(dbHandle);
+		dsObjVersion = new TableVersion();
 		dsObjVersion.setTable("ds_obj");
 		dsObjVersion.setJoin("contenttag", "id", "contenttag_id");
 		dsObjVersion.setWherePart("contenttag.content_id = ?");

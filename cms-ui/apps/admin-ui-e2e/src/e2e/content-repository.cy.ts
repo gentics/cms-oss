@@ -1,14 +1,14 @@
+import { AccessControlledType } from '@gentics/cms-models';
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 import { AUTH_ADMIN } from '../support/app.po';
 import '@gentics/e2e-utils/commands';
 
-describe('Content Repository', () => {
+describe('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
         logRequests: false,
         logImports: false
     });
-    const CR_NAME = 'Mesh CR';
 
     const NEW_PROJECT_NAME = 'New Project';
 
@@ -21,14 +21,20 @@ describe('Content Repository', () => {
     const MINIMAL = "Minimal";
     const FOLDER_A = "Folder A";
     const FOLDER_B = "Folder B";
+    const CR_ID = '1';
 
-    before(async () => {
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    const ALIAS_MODULE = '@module';
+    const ALIAS_CR_TABLE = '@crTable';
+
+    before(() => {
+        cy.muteXHR();
+        cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL));
     });
 
     beforeEach(() => {
-        cy.wrap(IMPORTER.clearClient());
+        cy.muteXHR();
+        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
+        IMPORTER.client = null;
         cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
         cy.wrap(IMPORTER.cleanupTest());
         cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
@@ -36,75 +42,77 @@ describe('Content Repository', () => {
         cy.navigateToApp();
         cy.login(AUTH_ADMIN);
 
-        cy.intercept({
-            pathname: '/rest/admin/features/*',
-        }).as('featureChecks');
-        cy.intercept({
-            pathname: '/rest/perm/contentadmin',
-        }).as('permChecks');
+        // Table loading
+        const ALIAS_TABLE_LOAD_REQ = '@tableLoadReq';
+
         cy.intercept({
             method: 'GET',
             pathname: '/rest/contentrepositories',
-        }).as('listLoad');
+        }, req => {
+            req.alias = ALIAS_TABLE_LOAD_REQ;
+        });
 
-        // Wait for all features and permissions to load
-        cy.wait('@featureChecks');
-        cy.wait('@permChecks');
+        cy.navigateToModule('content-repositories', AccessControlledType.CONTENT_ADMIN)
+            .as(ALIAS_MODULE)
+            .find('gtx-table')
+            .as(ALIAS_CR_TABLE);
 
-        cy.get('gtx-dashboard-item[data-id="content-repositories"]').click();
-
-        // Wait for the table to finish loading
-        cy.wait('@listLoad');
+        cy.wait(ALIAS_TABLE_LOAD_REQ);
     });
 
     it('should have content repositories listed', () => {
-        cy.get('gtx-table')
+        cy.get(ALIAS_CR_TABLE)
             .find('.grid-row')
             .should('have.length.gte', 1);
     });
 
     it('should open the details on click', () => {
-        cy.get('gtx-table')
-            .find('.grid-row')
-            .contains(CR_NAME)
-
-        cy.get('gtx-table .grid-row.data-row')
-            .click({ force: true });
-
-        cy.get('gtx-table .grid-row.data-row')
+        // eslint-disable-next-line cypress/unsafe-to-chain-command
+        cy.get(ALIAS_CR_TABLE)
+            .findTableRow(CR_ID)
+            .click({ force: true })
             .should('have.class', 'active');
-        cy.get('gtx-content-repository-editor').should('exist');
+
+        cy.getDetailView()
+            .find('gtx-content-repository-editor')
+            .should('exist');
     });
 
     it('should be possible to select the management tab', () => {
-        cy.get('gtx-table')
-            .find('.grid-row').contains(CR_NAME)
+        cy.get(ALIAS_CR_TABLE)
+            .findTableRow(CR_ID)
             .click({ force: true });
 
-        cy.get('gtx-content-repository-editor')
-            .find('gtx-tabs .tab-link[data-id="management"]')
-            .click()
-
-        cy.get('gtx-content-repository-editor gtx-tabs .tab-link[data-id="management"]')
-            .should('have.class', 'is-active');
-
-        cy.get('gtx-mesh-management').should('exist');
+        // eslint-disable-next-line cypress/unsafe-to-chain-command
+        cy.get('gtx-content-repository-editor .gtx-entity-detail > gtx-tabs')
+            .selectTab('management')
+            .find('gtx-mesh-management')
+            .should('exist');
     });
 
     describe('Mesh Management', () => {
+        const ALIAS_MANAGEMENT_CONTENT = '@managementContent';
+
         beforeEach(() => {
-            cy.get('gtx-table')
-                .find('.grid-row.data-row').contains(CR_NAME)
-                .click();
-            cy.get('gtx-content-repository-editor')
-                .find('gtx-tabs .tab-link[data-id="management"]')
-                .click();
-            cy.get('gtx-mesh-management').should('exist');
+            cy.get(ALIAS_CR_TABLE)
+                .findTableRow(CR_ID)
+                .click({ force: true });
+
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get('gtx-content-repository-editor .gtx-entity-detail > gtx-tabs')
+                .selectTab('management')
+                .as(ALIAS_MANAGEMENT_CONTENT);
+
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('gtx-mesh-management')
+                .should('exist');
         });
 
         it('should be possible to login via manual credentials and to logout again', () => {
             // Management data should not be loaded until actually logged in.
-            cy.get('.management-container').should('not.exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('not.exist');
 
             cy.fixture('auth.json').then(auth => {
                 cy.get('.login-form input[type="text"]').type(auth.mesh.username);
@@ -113,80 +121,143 @@ describe('Content Repository', () => {
             });
 
             // Management should be visible now since we're logged in
-            cy.get('.management-container').should('exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('exist');
 
             // Logout again
-            cy.get('.management-container .logout-button').click();
-            cy.get('.management-container').should('not.exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container .logout-button')
+                .click();
+
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('not.exist');
         });
 
         it('should be possible to login via CR credentials and to logout again', () => {
             // Management data should not be loaded until actually logged in.
-            cy.get('.management-container').should('not.exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('not.exist');
 
-            cy.get('.cr-login-button').click();
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.cr-login-button')
+                .click();
 
             // Management should be visible now since we're logged in
-            cy.get('.management-container').should('exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('exist');
 
             // Logout again
-            cy.get('.management-container .logout-button').click();
-            cy.get('.management-container').should('not.exist');
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container .logout-button')
+                .click();
+
+            cy.get(ALIAS_MANAGEMENT_CONTENT)
+                .find('.management-container')
+                .should('not.exist');
         });
 
         it('should force a new password, apply a new one, and reset it manually to the original one', () => {
             cy.fixture('auth.json').then(auth => {
-                cy.get('.cr-login-button').click();
-                cy.get('.management-container').should('exist');
+                const ALIAS_USER_PROPERTIES = '@userProps';
 
-                cy.editEntity('user', auth.mesh.username)
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.cr-login-button')
+                    .click();
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('exist');
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .editMeshEntity('user', auth.mesh.username)
                     .find('[data-control="forcePasswordChange"] label')
                     .click();
 
                 // Save the user
-                cy.get('gtx-mesh-user-modal .modal-footer gtx-button')
-                    .first()
+                cy.get('gtx-mesh-user-modal .modal-footer gtx-button[data-action="confirm"]')
                     .click();
 
                 // Logout
-                cy.get('.management-container .logout-button').click();
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container .logout-button')
+                    .click();
 
                 // Login with CR should not be possible, as the user needs to update the password
-                cy.get('.management-container').should('not.exist');
-                cy.get('.cr-login-button').click();
-                cy.get('.management-container').should('not.exist');
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('not.exist');
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.cr-login-button')
+                    .click();
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('not.exist');
 
                 // Attempt to login, which will fail
-                cy.get('.login-form input[type="text"]').type(auth.mesh.username);
-                cy.get('.login-form input[type="password"]').type(auth.mesh.password);
-                cy.get('.login-form button[type="submit"]').click();
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.login-form input[type="text"]')
+                    .type(auth.mesh.username);
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.login-form input[type="password"]')
+                    .type(auth.mesh.password);
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.login-form button[type="submit"]')
+                    .click();
 
                 // Login should have worked now
-                cy.get('.login-form input[type="password"]:nth(1)').type(auth.mesh.newPassword);
-                cy.get('.login-form button[type="submit"]').click();
-                cy.get('.management-container').should('exist');
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.login-form input[type="password"]:nth(1)')
+                    .type(auth.mesh.newPassword);
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.login-form button[type="submit"]')
+                    .click();
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('exist');
 
                 // Reset the user password to the original one
-                cy.editEntity('user', auth.mesh.username).as('props')
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .editMeshEntity('user', auth.mesh.username)
+                    .as(ALIAS_USER_PROPERTIES)
                     .find('.password-checkbox label')
                     .click();
-                cy.get('@props')
+
+                cy.get(ALIAS_USER_PROPERTIES)
                     .find('[data-control="password"] input')
                     .each(el => {
-                        cy.wrap(el).type(auth.mesh.password)
+                        cy.wrap(el, { log: false }).type(auth.mesh.password)
                     });
 
                 // Save the user
-                cy.get('gtx-mesh-user-modal .modal-footer gtx-button')
-                    .first()
+                cy.get('gtx-mesh-user-modal .modal-footer gtx-button[data-action="confirm"]')
                     .click();
 
                 // Logout
-                cy.get('.management-container .logout-button').click();
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container .logout-button')
+                    .click();
 
-                cy.get('.management-container').should('not.exist');
-                cy.get('.cr-login-button').click();
-                cy.get('.management-container').should('exist');
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('not.exist');
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.cr-login-button')
+                    .click();
+
+                cy.get(ALIAS_MANAGEMENT_CONTENT)
+                    .find('.management-container')
+                    .should('exist');
             });
         });
 
@@ -197,7 +268,7 @@ describe('Content Repository', () => {
                 cy.get('.management-container').should('exist');
 
                 function updateUserPassword(passwordToSet: string) {
-                    cy.editEntity('user', auth.mesh.username).as('props')
+                    cy.editMeshEntity('user', auth.mesh.username).as('props')
                         .find('.password-checkbox label')
                         .click();
                     cy.get('@props')
@@ -269,7 +340,7 @@ describe('Content Repository', () => {
                 it('should be possible to create a new project', () => {
                     // select projects
                     cy.get('.grouped-tabs .tab-link[data-id="projects"]').click();
-    
+
                     // click button to create new project
                     cy.get('gtx-mesh-project-table')
                         .find('[data-action="create"]')

@@ -30,6 +30,7 @@ describe('Folder Management', () => {
     });
 
     beforeEach(async () => {
+        cy.muteXHR();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
@@ -48,14 +49,14 @@ describe('Folder Management', () => {
             .find('.header-controls [data-action="create-new-item"]')
             .click({ force: true });
         cy.get('create-folder-modal').as(ALIAS_MODAL);
-        cy.get(ALIAS_MODAL).find('folder-properties-form').as(ALIAS_FORM);
+        cy.get(ALIAS_MODAL).find('gtx-folder-properties').as(ALIAS_FORM);
 
         cy.get(ALIAS_FORM)
             .find('[formcontrolname="name"] input')
             .type(NEW_FOLDER_NAME);
 
         cy.get(ALIAS_FORM)
-            .find('[formcontrolname="directory"] input')
+            .find('[formcontrolname="publishDir"] input')
             .type(NEW_FOLDER_PATH);
 
         cy.intercept({
@@ -93,7 +94,7 @@ describe('Folder Management', () => {
         cy.findList(ITEM_TYPE_FOLDER)
             .findItem(FOLDER.id)
             .itemAction('properties');
-        cy.get('content-frame combined-properties-editor .properties-content folder-properties-form').as(ALIAS_FORM);
+        cy.get('content-frame combined-properties-editor .properties-content gtx-folder-properties').as(ALIAS_FORM);
 
         cy.intercept({
             method: 'POST',
@@ -128,7 +129,7 @@ describe('Folder Management', () => {
             .itemAction('properties');
         cy.openObjectPropertyEditor(OBJECT_PROPERTY)
             .findTagEditorElement(TagPropertyType.SELECT)
-            .selectValue(COLOR_ID);
+            .select(COLOR_ID);
 
         /* Save the Object-Property changes
          * ---------------------------- */

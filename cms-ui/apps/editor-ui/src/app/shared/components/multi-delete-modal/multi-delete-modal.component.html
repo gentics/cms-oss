@@ -70,13 +70,13 @@
                 (selectionChange)="onPageLanguageSelectionChange(item.id, $event, true)"
             ></page-language-selector>
 
-            <form-language-selector
+            <gtx-form-language-selector
                 *ngIf="itemType === 'form'"
                 [item]="item"
                 [variants]="formLanguageVariants[item.id]"
-                [selected]="selectedFormLanguageVariants[item.id]"
+                [selection]="selectedFormLanguageVariants[item.id]"
                 (selectionChange)="onFormLanguageSelectionChange(item.id, $event)"
-            ></form-language-selector>
+            ></gtx-form-language-selector>
         </gtx-contents-list-item>
     </div>
 

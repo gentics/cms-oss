@@ -12,7 +12,6 @@ import {
     Folder,
     FolderTagPartProperty,
     ItemInNode,
-    Page,
     Raw,
     TagPart,
     TagPartProperty,
@@ -69,8 +68,10 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
     /** Whether the tag is opened in read-only mode. */
     readOnly: boolean;
 
-    /** Page this edited tag belongs to */
-    private page?: Page<Raw>;
+    /** The initial base/destination folder id, taken from the context. */
+    private baseFolderId?: number;
+    /** The initial base/destination language, taken from the context. */
+    private baseLanguage?: string;
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
@@ -131,25 +132,19 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
 
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;
-        this.page = context.page;
+        this.baseFolderId = context.page?.folderId
+            ?? context.folder?.id
+            ?? context.image?.folderId
+            ?? context.file?.folderId
+            ?? context.node.folderId;
+
+        this.baseLanguage = context.page?.language;
         this.updateTagProperty(tagProperty);
 
-        this.selectedFolder.selectedItem$
-            .pipe(
-                switchMap((selectedFolder) => {
-                    if (selectedFolder) {
-                        return this.client.folder.get(selectedFolder.id)
-                            .pipe(
-                                map(response => response.folder),
-                                catchError(err => of(err)),
-                                tap((folder: Folder<Raw>) => {
-                                    this.uploadDestination = folder;
-                                    this.changeDetector.markForCheck();
-                                }),
-                            )
-                    }
-
-                    return this.client.folder.get(this.page.folderId)
+        this.selectedFolder.selectedItem$.pipe(
+            switchMap((selectedFolder) => {
+                if (selectedFolder) {
+                    return this.client.folder.get(selectedFolder.id)
                         .pipe(
                             map(response => response.folder),
                             catchError(err => of(err)),
@@ -158,10 +153,24 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                                 this.changeDetector.markForCheck();
                             }),
                         )
-                }),
-                takeUntil(this.stopper.stopper$),
-            )
-            .subscribe();
+                }
+
+                if (this.baseFolderId) {
+                    return this.client.folder.get(this.baseFolderId)
+                        .pipe(
+                            map(response => response.folder),
+                            catchError(err => of(err)),
+                            tap((folder: Folder<Raw>) => {
+                                this.uploadDestination = folder;
+                                this.changeDetector.markForCheck();
+                            }),
+                        )
+                }
+
+                return of();
+            }),
+            takeUntil(this.stopper.stopper$),
+        ).subscribe();
     }
 
     registerOnChange(fn: TagPropertiesChangedFn): void {
@@ -203,8 +212,8 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
      */
     browseForItem(): void {
         let contentLanguage: string;
-        if (this.page) {
-            contentLanguage = this.page.language;
+        if (this.baseLanguage) {
+            contentLanguage = this.baseLanguage;
         }
         this.repositoryBrowserClient.openRepositoryBrowser({
             allowedSelection: 'folder',
@@ -226,8 +235,8 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
             this.folderActions.createNewFolder({
                 name: this.subfolderName,
                 description: '',
-                directory: parentFolder.publishDir,
-                parentFolderId: parentFolder.id,
+                publishDir: parentFolder.publishDir,
+                motherId: parentFolder.id,
                 nodeId: parentFolder.nodeId,
                 failOnDuplicate: true,
             })

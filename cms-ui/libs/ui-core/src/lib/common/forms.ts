@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { AbstractControl } from '@angular/forms';
 
 /** A Symbol which inicates that the JSON value is invalid/could not be parsed correctly. */
@@ -57,3 +59,40 @@ export interface JsonValidationErrorModel {
 export type FormProperties<T> = {
     [P in keyof T]: AbstractControl<T[P]>;
 };
+
+/**
+ * Configuration options that determine how the control propagates
+ * changes and emits events after the control is changed.
+ *
+ * @see {@link AbstractControl.disable}
+ * @see {@link AbstractControl.enable}
+ * @see {@link AbstractControl.markAsDirty}
+ * @see {@link AbstractControl.markAsPristine}
+ * @see {@link AbstractControl.markAsUntouched}
+ * @see {@link AbstractControl.markAsTouched}
+ * @see {@link AbstractControl.markAsPending}
+ * @see {@link AbstractControl.updateValueAndValidity}
+ * @see {@link FormControl.setValue}
+ * @see {@link FormGroup.setValue}
+ * @see {@link FormArray.setValue}
+ * @see {@link FormControl.patchValue}
+ * @see {@link FormGroup.patchValue}
+ * @see {@link FormArray.patchValue}
+ * @see {@link FormControl.reset}
+ * @see {@link FormGroup.reset}
+ * @see {@link FormArray.reset}
+ */
+export interface FormChangePropagation {
+    /**
+     * When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false.
+     */
+    onlySelf?: boolean;
+    /**
+     * When true or not supplied (the default), the `statusChanges`,
+     * `valueChanges` and `events` observables emit events with the latest status
+     * and value when the control is changed.
+     * When false, no events are emitted.
+     */
+    emitEvent?: boolean;
+}

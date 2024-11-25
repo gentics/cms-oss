@@ -104,6 +104,9 @@ index:
     - title: "Part Types"
       url: gcn_part_types
       text: "List of all existing part types"
+    - title: "Rendering with Handlebars"
+      url: handlebars
+      text: "Rendering in the CMS with Handlebars is an alternative to Velocity"
     - title: "Using Velocity in Tagtypes"
       url: impl_using_velocity
       text: "Learn how to use velocity in Tagtypes"

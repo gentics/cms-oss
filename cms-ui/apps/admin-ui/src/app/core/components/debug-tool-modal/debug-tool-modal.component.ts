@@ -11,10 +11,11 @@ export class DebugToolModalComponent extends BaseModal<void> {
 
     public inProgress = false;
     public clearingData = false;
+    // FIXME: This circular dependency is really bad.
+    // In general, the usefulness and architecture of this entire module is questionable.
+    public debugToolService: DebugToolService;
 
-    constructor(
-        public debugToolService: DebugToolService,
-    ) {
+    constructor() {
         super();
     }
 

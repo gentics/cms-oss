@@ -1,29 +1,56 @@
-<gtx-progress-bar [active]="creating$ | async"></gtx-progress-bar>
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
 <div class="modal-title">
     <h5>{{ 'modal.translate_page_title' | i18n:{ _language: defaultProps?.language } }}</h5>
 </div>
+
 <div class="modal-content">
-    <page-properties-form [properties]="defaultProps"
-                          [enableFileNameSuggestion]="true"
-                          [folderId]="folderId"
-                          [nodeId]="nodeId"
-                          [disabled]="creating$ | async"
-                          [languages]="languages$ | async"
-                          [disableLanguageSelect]="true"
-                          [autoUpdateFileName]="false"
-                          [templates]="templates$ | async"></page-properties-form>
+    <gtx-page-properties
+        [enableFileNameSuggestion]="true"
+        [folderId]="folderId"
+        [nodeId]="nodeId"
+        [disabled]="loading"
+        [languages]="languages"
+        [formControl]="control"
+        [disableLanguageSelect]="true"
+        [autoUpdateFileName]="false"
+        [templates]="templates"
+    ></gtx-page-properties>
 </div>
+
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="creating$ | async">
+    <gtx-button
+        type="secondary"
+        flat
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >
         {{ 'common.cancel_button' | i18n }}
     </gtx-button>
-    <gtx-button type="primary" (click)="createTranslation()" [disabled]="(creating$ | async) || !form?.valid">
+
+    <gtx-button
+        type="primary"
+        [disabled]="loading || !control?.valid"
+        (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE)"
+    >
         {{ 'modal.translate_and_edit_button' | i18n }}
     </gtx-button>
-    <gtx-button type="primary" (click)="createTranslationAndEditTranslatedPage()" [disabled]="(creating$ | async) || !form?.valid">
+
+    <gtx-button
+        type="primary"
+        [disabled]="loading || !control?.valid"
+        (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE_COMPARE_WITH_LANGUAGE)"
+    >
         {{ 'modal.translate_and_compare_button' | i18n }}
     </gtx-button>
-    <gtx-button data-action="auto-translate"  *ngIf="translationEnabled"  type="primary" (click)="createAutomaticallyTranslatedPage()" [disabled]="(creating$ | async) || !form?.valid">
+
+    <gtx-button
+        *ngIf="autoTranslationEnabled"
+        data-action="auto-translate"
+        type="primary"
+        [disabled]="loading || !control?.valid"
+        (click)="createAutomaticallyTranslatedPage()"
+    >
         {{ 'modal.translate_automatically' | i18n }}
     </gtx-button>
 </div>

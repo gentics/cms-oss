@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,9 +45,13 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.translate.CharSequenceTranslator;
+import org.apache.commons.text.translate.EntityArrays;
+import org.apache.commons.text.translate.LookupTranslator;
 import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -54,12 +59,14 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.SemaphoreMap;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.AnyChannelTrx;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.ContentLanguageTrx;
 import com.gentics.contentnode.factory.HandleDependenciesTrx;
@@ -87,6 +94,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
+import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -932,7 +940,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getMeshName(Node node) throws NodeException {
-		return FileUtil.sanitizeName(node.getFolder().getName(), REPLACEMENT_MAP, null, null);
+		String name = node.getMeshProjectName();
+		if (org.apache.commons.lang3.StringUtils.isBlank(name)) {
+			name = node.getFolder().getName();
+		}
+		return FileUtil.sanitizeName(name, REPLACEMENT_MAP, null, null);
 	}
 
 	/**
@@ -943,7 +955,12 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getBranchName(Node channel, String implementationVersion) throws NodeException {
-		return getBranchName(channel.getFolder().getName(), implementationVersion);
+		String name = channel.getMeshProjectName();
+		if (org.apache.commons.lang3.StringUtils.isBlank(name)) {
+			name = channel.getFolder().getName();
+		}
+
+		return getBranchName(name, implementationVersion);
 	}
 
 	/**
@@ -2362,7 +2379,14 @@ public class MeshPublisher implements AutoCloseable {
 					}
 
 					if (cr.mustContain(object, checkedNode)) {
-						toDelete.remove(getMeshUuid(object));
+						String meshUuid = getMeshUuid(object);
+						if (toDelete.containsKey(meshUuid)) {
+							if (object instanceof Page) {
+								toDelete.getOrDefault(meshUuid, Collections.emptySet()).remove(getMeshLanguage(object));
+							} else {
+								toDelete.remove(meshUuid);
+							}
+						}
 					}
 				}
 			}
@@ -3155,7 +3179,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		try (ContentLanguageTrx clTrx = new ContentLanguageTrx(language)) {
 			for (TagmapEntryRenderer entry : tagmapEntries) {
-				if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+				if (entry.skip(attributes)) {
 					renderType.preserveDependencies(entry.getMapname());
 				} else {
 					// set the rendered property
@@ -3177,22 +3201,160 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public String render(Form form, String language) throws NodeException {
-		String data = form.getData(language).toString();
+		JsonNode data = renderFormTextUrls(form.getData(language), language);
 		String projectName = getMeshProjectName(form.getOwningNode());
 		String uuid = getMeshUuid(form);
 
 		RestModel dataAsModel = new RestModel() {
 			@Override
 			public String toJson(boolean minify) {
-				return data;
+				return data.toString();
 			}
 		};
 
 		return client.post(String.format("/%s/plugins/forms/forms/%s/preview", encodeSegment(projectName), uuid),
 				dataAsModel, FormsPluginRenderResponse.class).toSingle().doOnSubscribe(disp -> {
-					MeshPublisher.logger.debug(
-							String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
+					MeshPublisher.logger.debug(String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
 				}).blockingGet().getHtml();
+	}
+
+	/**
+	 * Render URLS in text fields of the given form.
+	 * 
+	 * @param form
+	 * @param language
+	 * @return
+	 * @throws NodeException
+	 */
+	public static final JsonNode renderFormTextUrls(JsonNode form, String language) throws NodeException {
+		if (form == null) {
+			return form;
+		}
+		for (Iterator<Entry<String, JsonNode>> i = form.fields(); i.hasNext();) {
+			Entry<String, JsonNode> entry = i.next(); 
+			if (entry.getValue() == null) {
+				continue;
+			}
+			switch (entry.getValue().getNodeType()) {
+			case STRING:
+				String newValue = renderFormTextUrls(entry.getValue().asText(), language);
+				((ObjectNode)form).put(entry.getKey(), newValue);
+				break;
+			case OBJECT:
+				JsonNode newNode = renderFormTextUrls(entry.getValue(), language);
+				((ObjectNode)form).replace(entry.getKey(), newNode);
+				break;
+			case ARRAY:
+				ArrayNode anode = ((ArrayNode)entry.getValue());
+				for (int ii = 0; ii < anode.size(); ii++) {
+					anode.set(ii, renderFormTextUrls(anode.get(ii), language));
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		return form;
+	}
+
+	/**
+	 * Render URLS in text, if any.
+	 * 
+	 * @param text
+	 * @param language
+	 * @return
+	 * @throws NodeException
+	 */
+	public static final String renderFormTextUrls(String text, String language) throws NodeException {
+		if (text == null) {
+			// TODO check allow_links if possible
+			return text;
+		}
+		String linkPattern = "\\{\\{"
+				+ "[\\s]*(LINK)[\\s]*"
+				+ "[|]"
+				+ "[\\s]*(?<linkType>(PAGE|FILE|URL))"
+				+ "[:]("
+					+ "?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)"
+					+ "(?<nodeId>[a-zA-Z0-9\\-\\.]+)"
+					+ "[:]"
+					+ "(?<itemId>[a-zA-Z0-9\\-\\.]+)"
+					+ "(?:[:](?<langCode>[a-zA-Z]{2}))?"
+				+ ")[\\s]*[|][\\s]*"
+				+ "(?<displayText>[^|]*)"
+				+ "[\\s]*(?:[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
+				+ "\\}\\}";
+		Pattern pattern = Pattern.compile(linkPattern);
+		Matcher matcher = pattern.matcher(text);
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Deque<String> matches = new ArrayDeque<>(1);
+			Transaction t = trx.getTransaction();
+			while (matcher.find()) {
+				String linkType = matcher.group("linkType");
+				String nodeId = matcher.group("nodeId");
+				String itemId = matcher.group("itemId");
+				String displayText = matcher.group("displayText");
+				Optional<String> maybeUrl = Optional.ofNullable(matcher.group("url"));
+				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
+				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
+				Node channelOrNode = t.getObject(Node.class, nodeId);
+				Optional<Disinheritable<?>> maybeRenderedObject = Optional.empty();
+				if ("FILE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(File.class, itemId));
+					if (maybeRenderedObject.isEmpty()) {
+						maybeRenderedObject = Optional.ofNullable(t.getObject(ImageFile.class, itemId));
+					}
+				} else if ("PAGE".equals(linkType)) {
+					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
+					if (maybeLangCode.isPresent()) {
+						try {
+							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
+								try {
+									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
+								} catch (NodeException e) {
+									throw new IllegalStateException(e);
+								}
+							});
+							if (maybeLocPage.isPresent()) {
+								maybeRenderedObject = maybeLocPage;
+							} else {
+								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
+							}
+						} catch (Throwable e) {
+							if (e.getCause() instanceof NodeException) {
+								throw (NodeException) e.getCause();
+							} else {
+								throw e;
+							}
+						}
+					}
+				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
+					throw new NodeException("No URL provided for " + matcher.toString());
+				}
+				String url;
+				if ("URL".equals(linkType)) {
+					url = maybeUrl.get();
+				} else {
+					Disinheritable<?> renderedObject = maybeRenderedObject.get();
+					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
+							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
+						// TODO more meaningful error / logging
+						throw new NodeException("Wrong node / channel for " + matcher.toString());
+					}
+					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
+				}
+				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
+						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
+						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), 
+						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(displayText))
+					));
+			}
+			String link;
+			while ((link = matches.poll()) != null) {
+				text = text.replaceFirst(linkPattern, link);
+			}
+		}
+		return text;
 	}
 
 	/**
@@ -3450,7 +3612,7 @@ public class MeshPublisher implements AutoCloseable {
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
 			Object value = mapEntry.getValue();
-			if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+			if (entry.skip(attributes)) {
 				continue;
 			}
 
@@ -3820,12 +3982,25 @@ public class MeshPublisher implements AutoCloseable {
 						String conflictingUuid = conflictingNode.get().getLeft();
 						String conflictingLanguage = conflictingNode.get().getRight();
 
+						if (renderResult != null) {
+							renderResult.warn(MeshPublisher.class, String.format(
+									"Handling conflict with mesh node %s (language %s) when writing %d.%d into {%s} for node %d",
+									conflictingUuid, conflictingLanguage, task.objType, task.objId, cr.getName(),
+									task.nodeId));
+						}
+
 						if (org.apache.commons.lang3.StringUtils.equals(conflictingUuid, task.uuid)
 								&& !org.apache.commons.lang3.StringUtils.equals(conflictingLanguage, task.language)) {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
 
 							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
+								if (renderResult != null) {
+									renderResult.info(MeshPublisher.class,
+											String.format(
+													"Removing conflicting language variant %s (language %s) from mesh",
+													conflictingUuid, conflictingLanguage));
+								}
 								// remove language variant
 								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
 								// repeat task
@@ -3841,6 +4016,12 @@ public class MeshPublisher implements AutoCloseable {
 								int objType = optNodeObject.get().getLeft();
 								NodeObject conflictingNodeObject = optNodeObject.get().getRight();
 								if (conflictingNodeObject == null || !Trx.supply(() -> cr.mustContain(conflictingNodeObject))) {
+									if (renderResult != null) {
+										renderResult.info(MeshPublisher.class,
+												String.format(
+														"Removing conflicting object %s (language %s) from mesh",
+														conflictingUuid, conflictingLanguage));
+									}
 									// remove the object from Mesh
 									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
 									// repeat task
@@ -5368,6 +5549,46 @@ public class MeshPublisher implements AutoCloseable {
 				client.updateTagsForBranch(currentProjectName, branch.getUuid(), request).toSingle()
 						.retry(RETRY_HANDLER).blockingGet();
 			}
+		}
+	}
+
+	/**
+	 * Character escape utils, mimic StringEscapeUtils of apache commons-text.
+	 */
+	public static final class UrlEscapeUtils {
+		static final Map<CharSequence, CharSequence> URL_ESCAPE;
+		static final Map<CharSequence, CharSequence> URL_UNESCAPE;
+		static final CharSequenceTranslator ESCAPE_URL;
+		static final CharSequenceTranslator UNESCAPE_URL;
+
+		static {
+			final Map<CharSequence, CharSequence> initialMap = new HashMap<>();
+			initialMap.put("\"", "&quot;");
+			initialMap.put("&", "&amp;"); 
+			initialMap.put("<", "&lt;");
+			initialMap.put(">", "&gt;"); 
+			initialMap.put("|", "&vert;");
+			initialMap.put("'", "&apos;"); 
+			initialMap.put("$", "&dollar;");
+			initialMap.put(":", "&col;"); 
+			initialMap.put("(", "&lpar;");
+			initialMap.put(")", "&rpar;"); 
+			initialMap.put("{", "&lcurb;");
+			initialMap.put("}", "&rcurb;"); 
+			initialMap.put("=", "&equals;");
+			initialMap.put("\\", "&bsol;"); 
+			URL_ESCAPE = Collections.unmodifiableMap(initialMap);
+			URL_UNESCAPE = Collections.unmodifiableMap(EntityArrays.invert(URL_ESCAPE));
+			ESCAPE_URL = new LookupTranslator(URL_ESCAPE);
+			UNESCAPE_URL = new LookupTranslator(URL_UNESCAPE);
+		}
+
+		public static final String escapeUrl(final String input) {
+			return ESCAPE_URL.translate(input);
+		}
+
+		public static final String unescapeUrl(final String input) {
+			return UNESCAPE_URL.translate(input);
 		}
 	}
 }

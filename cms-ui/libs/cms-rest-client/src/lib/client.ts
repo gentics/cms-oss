@@ -1,4 +1,6 @@
-import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
+import { BaseListOptionsWithPaging, PublishLogEntry } from '@gentics/cms-models';
+import { CONTENT_TYPE_FORM, CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
+
 import {
     GCMSAdminAPI,
     GCMSAuthenticationAPI,
@@ -45,6 +47,7 @@ import {
     GCMSUsersnapAPI,
     GCMSValidationAPI,
     RequestMethod,
+    GCMSPublishProtocolAPI,
     GCMSTranslationAPI,
 } from './models';
 import { parseJSONSafe, stringifyEmbedOptions, stringifyPagingSortOptions, toRelativePath, trimTrailingSlash } from './utils';
@@ -241,6 +244,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/${id}`),
 
+        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct/list', null, options),
+
         hash: (id) => this.executeMappedJsonRequest(GET, `/constructs/${id}/hash`),
         getLinkedNodes: (id) => this.executeMappedJsonRequest(GET, `/construct/${id}/nodes`),
         linkToNode: (body) => this.executeMappedJsonRequest(POST, '/construct/link/nodes', body),
@@ -249,7 +254,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public constructCategory: GCMSConstrctCategoryAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/construct/category', null, options),
-        create: (body) => this.executeMappedJsonRequest(POST, '/construct', body),
+        create: (body) => this.executeMappedJsonRequest(POST, '/construct/category', body),
         get: (id) => this.executeMappedJsonRequest(GET, `/construct/category/${id}`),
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/category/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/category/${id}`),
@@ -781,6 +786,11 @@ export class GCMSRestClient implements GCMSRootAPI {
     public policyMap: GCMSPolicyMapAPI = {
         policy: (options) => this.executeMappedJsonRequest(GET, '/policyMap/policy', null, options),
         policyGroup: (type) => this.executeMappedJsonRequest(GET, `/policyMap/partType/${type}/policyGroup`),
+    } as const;
+
+    public publishProtocol: GCMSPublishProtocolAPI = {
+        get: (type, objId: number) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null, null),
+        list: (options: BaseListOptionsWithPaging<PublishLogEntry>) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
     } as const;
 
     public role: GCMSRoleAPI = {

@@ -37,6 +37,7 @@ import {
     AbstractPartTypeAPI,
     AbstractPermissionAPI,
     AbstractPolicyMapAPI,
+    AbstractPublishProtocolAPI,
     AbstractRoleAPI,
     AbstractRootAPI,
     AbstractScheduleTaskAPI,
@@ -151,6 +152,7 @@ export class GCMSRestClientService implements APIDefinition {
             partType: asAngularAPI<AbstractPartTypeAPI>(this.client.partType),
             permission: asAngularAPI<AbstractPermissionAPI>(this.client.permission),
             policyMap: asAngularAPI<AbstractPolicyMapAPI>(this.client.policyMap),
+            publishProtocol: asAngularAPI<AbstractPublishProtocolAPI>(this.client.publishProtocol),
             role: asAngularAPI<AbstractRoleAPI>(this.client.role),
             scheduler: asAngularAPI<AbstractSchedulerAPI>(this.client.scheduler),
             schedulerTask: asAngularAPI<AbstractScheduleTaskAPI>(this.client.schedulerTask),
@@ -306,6 +308,10 @@ export class GCMSRestClientService implements APIDefinition {
 
     get policyMap(): AngularAPI<AbstractPolicyMapAPI> {
         return this.apis.policyMap;
+    }
+
+    get publishProtocol(): AngularAPI<AbstractPublishProtocolAPI> {
+        return this.apis.publishProtocol;
     }
 
     get role(): AngularAPI<AbstractRoleAPI> {

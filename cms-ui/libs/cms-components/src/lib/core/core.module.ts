@@ -2,22 +2,23 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
-import {
-    FormBrowseBoxComponent,
-    I18nCheckboxComponent,
-    I18nInputComponent,
-    I18nSelectComponent,
-    KeyI18nValueListInputComponent,
-} from '../form-controls';
 import {
     BasePropertiesComponent,
     BrowseBoxComponent,
+    FormBrowseBoxComponent,
     GtxAppVersionLabelComponent,
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
     GtxUserMenuToggleComponent,
+    I18nCheckboxComponent,
+    I18nInputComponent,
+    I18nPanelGroupComponent,
+    I18nSelectComponent,
+    KeyI18nValueListInputComponent,
     PasswordConfirmInputComponent,
+    RichContentEditorComponent,
+    RichContentLinkPropertiesComponent,
+    RichContentModal,
     StringListComponent,
     VersionModalComponent,
 } from './components';
@@ -33,6 +34,7 @@ import {
     GtxI18nRelativeDatePipe,
     GtxI18nRelativeDateService,
     SafePipe,
+    StripRichContentPipe,
     ValuesPipe,
 } from './pipes';
 import {
@@ -51,15 +53,16 @@ const COMPONENTS: any[] = [
     GtxUserMenuToggleComponent,
     I18nCheckboxComponent,
     I18nInputComponent,
+    I18nPanelGroupComponent,
     FormBrowseBoxComponent,
     I18nSelectComponent,
     KeyI18nValueListInputComponent,
     VersionModalComponent,
     BrowseBoxComponent,
     PasswordConfirmInputComponent,
-];
-
-const ENTRY_COMPONENTS = [
+    RichContentEditorComponent,
+    RichContentModal,
+    RichContentLinkPropertiesComponent,
 ];
 
 const DIRECTIVES = [
@@ -73,13 +76,13 @@ const PIPES: any[] = [
     GtxI18nDatePipe,
     GtxI18nPipe,
     GtxI18nRelativeDatePipe,
+    StripRichContentPipe,
     SafePipe,
     ValuesPipe,
 ];
 
 const DECLARATIONS: any[] = [
     ...COMPONENTS,
-    ...ENTRY_COMPONENTS,
     ...DIRECTIVES,
     ...PIPES,
 ];

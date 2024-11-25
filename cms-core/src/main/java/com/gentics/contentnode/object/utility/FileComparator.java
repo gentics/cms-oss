@@ -5,7 +5,6 @@ import java.util.Comparator;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.etc.StringUtils;
 
@@ -105,7 +104,12 @@ public class FileComparator extends AbstractComparator implements Comparator<Fil
 		case NODE:
 			cmp = compareNode(f1, f2);
 			break;
-
+		case CUSTOM_OR_DEFAULT_EDIT_DATE:
+			cmp = f1.getCustomOrDefaultEDate().compareTo(f2.getCustomOrDefaultEDate()) * way;
+			break;
+		case CUSTOM_OR_DEFAULT_CREATE_DATE:
+			cmp = f1.getCustomOrDefaultCDate().compareTo(f2.getCustomOrDefaultCDate()) * way;
+			break;
 		default:
 			cmp = 0;
 			break;

@@ -16,6 +16,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.resolving.ResolvableGetter;
 import com.gentics.contentnode.rest.model.Property;
 
 /**
@@ -29,18 +30,18 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	 * do not replace any newlines
 	 */
 	public static final int REPLACENL_NONE = 0;
-    
+
 	/**
 	 * turn newlines to html breaks
 	 */
 	public static final int REPLACENL_NL2BR = 1;
-    
+
 	/**
 	 * turn newlines to html breaks, do not add breaks after tags, do add breaks
 	 * after some specific tags. #textnl2br(String) ist used.
 	 */
 	public static final int REPLACENL_EXTENDEDNL2BR = 2;
-    
+
 	protected int replaceNewline;
 
 	private String parsedText;
@@ -63,7 +64,7 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	public TextPartType(Value value) throws NodeException {
 		super(value);
 	}
-
+	
 	public void setValue(Value value) throws NodeException {
 		super.setValue(value);
 		parsedText = parseText();
@@ -99,15 +100,12 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 			return "".equals(parsedText);
 		}
 	}
-    
-	public Object get(String key) {
-		// TODO: move this to javabean getters
-		if ("text".equals(key)) {
-			return parsedText;
-		}
-		return null;
-	}
 
+	/**
+	 * Get the parsed text
+	 * @return parsed text
+	 */
+	@ResolvableGetter
 	public String getText() {
 		return parsedText;
 	}

@@ -2,6 +2,7 @@ import { AppStateService } from '@admin-ui/state';
 import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '@admin-ui/state/utils/test-app-state';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlSegment } from '@angular/router';
+import { Observable } from 'rxjs';
 import { AuthGuard } from './auth.guard';
 
 class MockRouter {
@@ -118,9 +119,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(USER_MODULE_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             tick();
             expect(accessGranted).toBeUndefined('The promise should not resolve before `loggingIn` changes.');
 
@@ -141,9 +142,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(USER_MODULE_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
 
             // Signal a failed login.
             appState.mockState({

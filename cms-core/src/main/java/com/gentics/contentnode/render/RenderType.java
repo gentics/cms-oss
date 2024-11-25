@@ -1,5 +1,10 @@
 package com.gentics.contentnode.render;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EmptyStackException;
@@ -9,8 +14,16 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 
+import com.gentics.contentnode.utils.ResourcePath;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.devtools.MainPackageSynchronizer;
+import com.gentics.contentnode.devtools.Synchronizer;
+import com.gentics.contentnode.devtools.Synchronizer.Status;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
@@ -32,12 +45,19 @@ import com.gentics.contentnode.object.TagContainer;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.CMSResolver;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType.PackageTemplateLoader;
+import com.gentics.contentnode.object.parttype.handlebars.HelperSource;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.lib.genericexceptions.NotYetImplementedException;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.cache.ConcurrentMapTemplateCache;
+import com.github.jknack.handlebars.helper.ConditionalHelpers;
+import com.github.jknack.handlebars.helper.StringHelpers;
+import com.github.jknack.handlebars.io.TemplateLoader;
 
 /**
  * RenderType provides informations and settings about how code should be rendered.
@@ -81,6 +101,8 @@ public class RenderType implements RenderInfo {
 	 * Parameter name for storing the page language
 	 */
 	private final static String LANGUAGE_PARAM = "language";
+
+	private static String defaultHandlebarsHelpers = null;
 
 	private Stack<RenderInfo> infoStack;
 	private StackResolver stack;
@@ -144,6 +166,11 @@ public class RenderType implements RenderInfo {
 	 * Flag to mark whether the rendering is done in frontend mode
 	 */
 	private boolean frontEnd = false;
+
+	/**
+	 * Stored handlebars instances per node
+	 */
+	private Map<Node, Handlebars> handlebarsPerNode = new HashMap<>();
 
 	/**
 	 * A public constructor, which provides the renderType with all required informations.
@@ -1379,6 +1406,86 @@ public class RenderType implements RenderInfo {
 	 */
 	public ParameterScope withParameter(String name, Object value) {
 		return new ParameterScope(name, value);
+	}
+
+	/**
+	 * Get the handlebars instance for the node.
+	 * @param node node
+	 * @return handlebars instance
+	 * @throws NodeException
+	 * @throws IOException
+	 */
+	public Handlebars getHandlebars(Node node) throws NodeException, IOException {
+		if (!handlebarsPerNode.containsKey(node)) {
+			// each handlebars instance will have its own "private" cache implementation
+			// this also means that when the rendertype is disposed, the handlebars instances and their caches will be disposed as well
+			var handlebars = new Handlebars().infiniteLoops(true).with(new ConcurrentMapTemplateCache().setReload(true));
+
+			List<TemplateLoader> templateLoaders = new ArrayList<>();
+
+			if (Synchronizer.getStatus() == Status.UP) {
+				for (String packageName : Synchronizer.getPackages(node)) {
+					MainPackageSynchronizer mainPack = Synchronizer.getPackage(packageName);
+					String packageHelpers = mainPack.getHandlebarsHelpers();
+
+					if (!StringUtils.isBlank(packageHelpers)) {
+						handlebars.registerHelpers(packageName, packageHelpers);
+					}
+
+					File partialsDirectory = mainPack.getHandlebarsPartialsDirectory();
+					if (partialsDirectory.isDirectory()) {
+						templateLoaders.add(new PackageTemplateLoader(packageName, partialsDirectory));
+					}
+				}
+			}
+
+			if (defaultHandlebarsHelpers == null) {
+				try (ResourcePath resourcePath = new ResourcePath("/packages/DefaultElements/handlebars/helpers")) {
+					Path path = resourcePath.getPath();
+
+					if (path == null) {
+						logger.info("No Handlebars helpers found for DefaultElements");
+					} else {
+						StringBuilder helpers = new StringBuilder();
+						File helpersDir = path.toFile();
+						File[] files = helpersDir.listFiles((dir, filename) -> filename.endsWith(".js"));
+						int helperCount = 0;
+
+						if (files != null) {
+							helperCount = files.length;
+
+							for (File helperFile : files) {
+								String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+								String helperName = String.format("%s", helperNameShort);
+								String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
+								String helper = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
+
+								helpers.append(helper).append("\n");
+							}
+
+							defaultHandlebarsHelpers = helpers.toString();
+						}
+
+						logger.info(String.format("Added %d handlebars helper%s", helperCount, helperCount == 1 ? "" : "s"));
+					}
+				}
+			}
+
+			if (StringUtils.isNotBlank(defaultHandlebarsHelpers)) {
+				handlebars.registerHelpers("default", defaultHandlebarsHelpers);
+			}
+
+			if (!templateLoaders.isEmpty()) {
+				handlebars.with(templateLoaders.toArray(new TemplateLoader[templateLoaders.size()]));
+			}
+
+			handlebars.registerHelpers(ConditionalHelpers.class);
+			handlebars.registerHelpers(StringHelpers.class);
+			handlebars.registerHelpers(HelperSource.class);
+
+			handlebarsPerNode.put(node, handlebars);
+		}
+		return handlebarsPerNode.get(node);
 	}
 
 	/**

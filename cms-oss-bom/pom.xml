@@ -227,6 +227,12 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>com.gentics.mesh</groupId>
+				<artifactId>mesh-database-connector-mariadb</artifactId>
+				<version>${mesh.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>com.webcohesion.enunciate</groupId>
 				<artifactId>enunciate-core-annotations</artifactId>
 				<version>${enunciate.version}</version>
@@ -345,6 +351,13 @@
 				<groupId>org.apache.tika</groupId>
 				<artifactId>tika-core</artifactId>
 				<version>${tika.version}</version>
+			</dependency>
+
+			<!-- Handlebars -->
+			<dependency>
+				<groupId>com.github.jknack</groupId>
+				<artifactId>handlebars</artifactId>
+				<version>${handlebars.version}</version>
 			</dependency>
 
 			<!--Test dependencies -->

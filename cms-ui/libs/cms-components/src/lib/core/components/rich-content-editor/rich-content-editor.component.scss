@@ -1,0 +1,47 @@
+@import "../../../../styles/variables";
+
+.content-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    border: 2px solid $gtx-color-light-gray;
+    border-radius: 3px;
+    transition: border 0.2s;
+
+    &.focused {
+        border-color: $gtx-color-primary;
+    }
+
+    .content-toolbar {
+        background: $gtx-color-off-white;
+        border-bottom: 1px solid $gtx-color-warning;
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .text-container {
+        padding: 5px;
+
+        &:focus,
+        &:focus-within {
+            outline: none;
+        }
+
+        /*
+         * ng-deep is needed here, because these HTML elements aren't created by angular,
+         * and therefore lack the encapsulation attributes, which make these styles not apply then.
+         */
+        ::ng-deep .item-link {
+            color: $gtx-color-primary;
+            text-decoration: underline;
+        }
+    }
+}
+
+:host.ng-invalid .content-wrapper {
+    border-color: $gtx-color-alert;
+}

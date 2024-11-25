@@ -4,86 +4,131 @@ A special tag-type may be defined, which will be used by Aloha to create interna
 
 endprologue.
 
-h3. How the Aloha Editor Page Link Tag should look like
+h3. Default implementation of the Aloha Editor Page Link Tag
 
 The tag-type must have the keyword "gtxalohapagelink". Also, the internal definition must be equivalent to the one found in the screen-shot below - in particular, the part-keywords "url", "fileurl", "anchor", "text" and "class" must be identical.
 
 !images/gcn_dialogs/aloha_pagelink.png!
 
-Contents of the part "Template":
+Contents of the part "Handlebars":
 
 <div class="code_container">
 <pre class="brush: plain; toolbar: false; gutter: true;">
-#set($parts = $cms.tag.parts)#*
-##
-*##if("$!parts.target" == "")#*
-    *##if("$!parts.url" != "")#*
-        *##if("$parts.url.isinternal" == "1")#*
-            *##set($target = " target='_self'")#*
-        *##else#*
-            *##set($target = " target='_blank' rel='noopener noreferrer'")#*
-        *##end#*
-    *##end#*
-*##else#*
-    *##set($target = " target='$parts.target'")#*
-    *##if("$!parts.target" == "_blank")#*
-      *##set($target = "$target rel='noopener noreferrer'")#*
-    *##end#*
-*##end#*
-##
-*##if("$!parts.title" != "")#*
-    *##set($escapedTitle = $cms.imps.velocitytools.esc.xml($parts.title))#*
-    *##set($title = " title='$escapedTitle'")#*
-*##end#*
-##
-*##if("$!parts.class" != "")#*
-    *##set($class = " class='$parts.get('class')'")#*
-*##end#*
-##
-*##if("$!parts.url" != "")#*
-    *##if("$!parts.url.target.id" != "")#*
-        *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.$parts.url.target.id' data-gentics-aloha-object-online='$parts.url.target.online'")#*
-    *##else#*
-        *##set($data = " data-gentics-gcn-url='$cms.imps.velocitytools.esc.xml($parts.url)'")#*
-    *##end#*
-    *##set($href = $parts.url)#*
-*##elseif("$!parts.fileurl.target.id" != "")#*
-    *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='${parts.fileurl.target.ttype}.${parts.fileurl.target.id}'")#*
-    *##set($href = $parts.fileurl)#*
-    *##set($target = " target='_blank'")#*
-*##end#*
-*##if("$!href" == "")#*
-    *##set($data = " data-gentics-gcn-url='#'")#*
-    *##set($href = "#")#*
-*##end#*
-*##if(!$href.toString().startsWith("<plink"))#*
-    *##set($href = $cms.imps.velocitytools.esc.xml("$href"))#*
-*##elseif($cms.rendermode.edit)#*
-    *##set($href = "")#*
-*##end#*
-*##set($anchor = "$!parts.anchor")#*
-*##if($anchor != "")#*
-    *##if($href.endsWith("#"))#*
-        *##set($href = "$href$anchor")#*
-    *##else#*
-        *##set($href= "$href#$anchor")#*
-    *##end#*
-*##end#*
-*##if(!$cms.rendermode.publish)#*
-    *##set($data = "$!data data-gentics-gcn-anchor='$anchor'")#*
-*##end#*
-*##if($href.toString().startsWith("#"))#*
-    *##set($target = " ")#*
-*##end#*
-*#<a$!title$!target$!class$!data href="$!href.toString().trim()">$!parts.text</a>##
+{{#gtx_alohalink cms.tag cms.rendermode ~}}
+<a{{{title}}}{{{target}}}{{{class}}}{{{data}}} href="{{{href}}}">{{cms.tag.parts.text.text}}</a>
+{{~/gtx_alohalink}}
 </pre>
 </div>
 
-The hashes in the content are important as they are velocity comments to prevent the rendering of new lines. If not all newlines are stripped out, the tag will be wrapped with a DIV in the edit view.
+The default implementation of the used @gtx_alohalink@ helper is as follows:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+function gtx_alohalink(tag, renderMode, options) {
+    let ctx = {};
+    let parts = tag.parts;
+
+    if (parts.target.text) {
+        ctx['target'] = ' target="' + parts.target.text + '"';
+
+        if (parts.target.text.trim() === '_blank') {
+            ctx['target'] += ' rel="noopener noreferrer"';
+        }
+    } else {
+        if (parts.url.isinternal) {
+            ctx['target'] = ' target="_self"';
+        } else {
+            ctx['target'] = ' target="_blank" rel="noopener noreferrer"'
+        }
+
+    }
+
+    // Determine title.
+    if (parts.title.text) {
+        ctx['title'] = ' title="' + encodeURIComponent(parts.title.text) + '"';
+    }
+
+    if (parts.class.text) {
+        ctx['class'] = ' class="' + parts.class.text + '"';
+    }
+
+    let url = parts.url;
+    let href = '';
+
+    if (url.target && url.target.id) {
+        ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';
+        href = url.target.url;
+    } else {
+        if (!/^https?:\/\/$/.test(url.externalurl)) {
+            ctx['data'] = ' data-gentics-gcn-url="' + encodeURIComponent(url.externalurl) + '"';
+            href = url.externalurl;
+        }
+    }
+
+    // If href is not set here, there is no page URL set, so check for a file URL.
+    if (!href && parts.fileurl.target && parts.fileurl.target.id) {
+        ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.File" data-gentics-aloha-object-id="' + parts.fileurl.target.ttype + '.' + parts.fileurl.target.id + '"';
+        href = parts.fileurl.target.url;
+        ctx['target']  = ' target="_blank"';
+    }
+
+    if (!href) {
+        ctx['data'] = ' data-gentics-gcn-url="#"';
+        href = '#';
+    }
+
+    if (href.startsWith('<plink') && renderMode.edit) {
+        href = '#';
+    }
+
+    if (parts.anchor.text) {
+        if (href.endsWith('#')) {
+            href += parts.anchor.text;
+        } else {
+            href += '#' + parts.anchor.text;
+        }
+
+        if (!renderMode.publish) {
+            ctx['data'] += ' data-gentics-gcn-anchor="' + parts.anchor.text + '"';
+        }
+    }
+
+    if (href.startsWith('#')) {
+        ctx['target'] = ' ';
+    }
+
+    ctx['href'] = href.trim();
+
+    return options.fn(ctx);
+}
+</pre>
+</div>
 
 This tag-type must be linked to each node (root-folder) that has Aloha enabled.
 
 A user can then create an internal link by inserting a link with the Aloha floating menu, and by beginning to type the name of the page/file he wants to link to. A number of suggestions will be displayed that match the typed text. Selecting one of the suggestions with the cursors-keys and confirming the selection with the enter-key will create the link tag once the page is saved.
+
+h4. Customizing the Aloha Editor Page Link Tag
+
+Changing the "Handlebars" part of the default implementation requires no additional actions, but to customize the fields provided by the @gtx_alohalink@ helper a new helper implementation must be placed in a package along with the @gtxalohapagelink@ tagtype. The reason that a package is required, is because custom Handlebars helpers are always prefixed with the respective package name (see the "Custom Helpers":https://www.gentics.com/Content.Node/guides/handlebars.html#custom-helpers section in the Handlebars guide).
+
+For example the helper in the package "custom_package":
+
+<shell filename="/cms/packages/custom_package/handlebars/helpers/gtx_alohalink.js">
+function gtx_alohalink(link, options) {
+    let ctx = { /* Set properties in context JSON */ };
+
+    return options.fn(ctx);
+}
+</shell>
+
+can be used in a "Handlebars" part as follows:
+
+<shell>
+{{#custom_package.gtx_alohalink cms.tag ~}}
+<!-- Render link with the context provided by the helper -->
+{{~/custom_package.gtx_alohalink}}
+</shell>
 
 h3. Aloha Link Anchors
 

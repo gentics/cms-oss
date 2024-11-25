@@ -17,6 +17,7 @@ export interface LoginInformation {
 }
 
 export enum TestSize {
+    NONE = 'none',
     MINIMAL = 'minimal',
     FULL = 'full',
 }
@@ -266,7 +267,10 @@ export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | '
     motherId: string;
 }
 
-export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId'>, Partial<Pick<Page, 'tags'>>, ImportData {
+export interface PageImportData
+    extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId' | 'language'>,
+    Partial<Pick<Page, 'tags' | 'language'>>, ImportData {
+
     [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
 
     /** The nodes `IMPROT_ID` value */

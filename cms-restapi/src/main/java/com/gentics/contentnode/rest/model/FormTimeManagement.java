@@ -1,7 +1,6 @@
 package com.gentics.contentnode.rest.model;
 
 import java.io.Serializable;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -28,6 +27,17 @@ public class FormTimeManagement implements Serializable {
 	 * Time at which the form will be taken offline
 	 */
 	private Integer offlineAt;
+
+	/**
+	 * the future publisher (i.e.: the user that planned to publish something)
+	 */
+	public User futurePublisher;
+
+	/**
+	 * the future unpublisher (i.e.: the user that planned to unpublish something)
+	 */
+	public User futureUnpublisher;
+
 
 	/**
 	 * Get the timestamp at which the form will be published
@@ -80,6 +90,42 @@ public class FormTimeManagement implements Serializable {
 	 */
 	public FormTimeManagement setOfflineAt(Integer offlineAt) {
 		this.offlineAt = offlineAt;
+		return this;
+	}
+
+	/**
+	 * Gets user that planned to publish something
+	 * @return the future publisher
+	 */
+	public User getFuturePublisher() {
+		return futurePublisher;
+	}
+
+	/**
+	 * Sets the future publisher (i.e.: the user that planned to publish something)
+	 * @param futurePublisher
+	 * @return fluent API
+	 */
+	public FormTimeManagement setFuturePublisher(User futurePublisher) {
+		this.futurePublisher = futurePublisher;
+		return this;
+	}
+
+	/**
+	 * Gets user that planned to upublish something
+	 * @return the future upublisher
+	 */
+	public User getFutureUnpublisher() {
+		return futureUnpublisher;
+	}
+
+	/**
+	 * Sets the future unpublisher (i.e.: the user that planned to unpublish something)
+	 * @param futureUnpublisher
+	 * @return fluent API
+	 */
+	public FormTimeManagement setFutureUnpublisher(User futureUnpublisher) {
+		this.futureUnpublisher = futureUnpublisher;
 		return this;
 	}
 }

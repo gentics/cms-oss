@@ -1,117 +1,114 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { EditableFormProps, Form, IndexById, Language } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
-import { Observable, combineLatest, forkJoin } from 'rxjs';
-import { first, map } from 'rxjs/operators';
-import { FormPropertiesFormComponent } from '../../../shared/components/form-properties-form/form-properties-form.component';
+import { EditableFormProps, Form, FormCreateRequest, IndexById, Language } from '@gentics/cms-models';
+import { BaseModal, setEnabled } from '@gentics/ui-core';
+import { Subscription, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { FormPropertiesMode } from '../../../shared/components/form-properties/form-properties.component';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Component({
     selector: 'create-form-modal',
-    templateUrl: './create-form-modal.tpl.html',
-    styleUrls: ['./create-form-modal.scss'],
+    templateUrl: './create-form-modal.component.html',
+    styleUrls: ['./create-form-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateFormModalComponent implements IModalDialog, OnInit {
+export class CreateFormModalComponent
+    extends BaseModal<Form>
+    implements OnInit, OnDestroy {
 
-    defaultProps: EditableFormProps = {};
+    public readonly FormPropertiesMode = FormPropertiesMode;
 
-    @ViewChild('formPropertiesForm', { static: true })
-    formPropertiesForm: FormPropertiesFormComponent;
+    @Input()
+    public defaultProps: EditableFormProps = {};
 
-    creating$: Observable<boolean>;
-    /** Code strings of active Node languages to be provided for orm-properties-form language drop-down menu */
-    activeNodeLanguages$: Observable<Language[]>;
-    folderId: number;
-    nodeId: number;
+    // Will be loaded from state
+    public folderId: number;
+    public nodeId: number;
 
-    activeContentLanguage$: Observable<Language>;
-    isMultiLang$: Observable<boolean>;
+    public languages: Language[] = [];
+    public activeLanguage: Language = null;
+
+    public loading = false;
+    public control: FormControl<EditableFormProps>;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private folderActions: FolderActionsService,
         private appState: ApplicationStateService,
         private notification: I18nNotification,
     ) {
-
-        this.creating$ = appState.select(state => state.folder.forms.creating);
+        super();
     }
 
     ngOnInit(): void {
+        this.control = new FormControl(this.defaultProps, Validators.required);
+
         const folderState = this.appState.now.folder;
 
         this.folderId = folderState.activeFolder;
         this.nodeId = folderState.activeNode;
 
-        this.activeNodeLanguages$ = combineLatest([
+        this.subscriptions.push(this.appState.select(state => state.folder.forms.creating).subscribe(loading => {
+            this.loading = loading;
+            setEnabled(this.control, !loading);
+            this.changeDetector.markForCheck();
+        }))
+
+        this.subscriptions.push(combineLatest([
             this.appState.select(state => state.entities.language),
             this.appState.select(state => state.folder.activeNodeLanguages.list),
         ]).pipe(
             map(([indexedLanguages, activeNodeLanguagesIds]: [IndexById<Language>, number[]]) => {
                 return activeNodeLanguagesIds.map(id => indexedLanguages[id]);
             }),
-        );
-
-        this.activeContentLanguage$ = combineLatest([
-            this.appState.select(state => state.entities.language),
-            this.appState.select(state => state.folder.activeLanguage),
-        ]).pipe(
-            map(([indexedLanguages, activeLanguage]: [IndexById<Language>, number]) => {
-                return indexedLanguages[activeLanguage];
-            }),
-        );
-
-        this.isMultiLang$ = this.activeNodeLanguages$.pipe(
-            map(activeNodeLanguages => activeNodeLanguages && activeNodeLanguages.length > 0),
-        );
+        ).subscribe(languages => {
+            this.languages = languages;
+            this.activeLanguage = languages.find(lang => lang.id ===  folderState.activeLanguage);
+            this.changeDetector.markForCheck();
+        }));
     }
 
-    closeFn(form: Form): void { }
-    cancelFn(): void { }
-
-    registerCloseFn(close: (form: Form) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     saveChanges(): void {
-        forkJoin([
-            this.isMultiLang$.pipe(first()),
-            this.activeContentLanguage$.pipe(first()),
-        ]).toPromise()
-            .then(([isMultiLang, activeContentLanguage]: [boolean, Language]) => {
-                if (!isMultiLang && !activeContentLanguage) {
-                    this.notification.show({
-                        type: 'alert',
-                        message: 'message.form_missing_language',
-                    });
-                    return;
-                }
+        if (!this.control.valid) {
+            return;
+        }
 
-                if (!this.formPropertiesForm) {
-                    return;
-                }
-
-                const form = {
-                    ...this.formPropertiesForm.formGroup.value,
-                    folderId: this.folderId,
-                    nodeId: this.nodeId,
-                };
-
-                if (isMultiLang) {
-                    form.languages = [activeContentLanguage.code];
-                }
-
-                this.folderActions.createNewForm(form as any).then(form => {
-                    if (form) {
-                        this.closeFn(form);
-                    }
-                });
+        if (this.languages?.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.form_missing_language',
             });
+            return;
+        }
+
+        const form: FormCreateRequest = {
+            ...this.control.value,
+            nodeId: this.nodeId,
+            folderId: this.folderId,
+            languages: this.control.value.languages || [],
+        };
+
+        if (
+            this.languages?.length > 0
+            && this.activeLanguage != null
+            && !form.languages.includes(this.activeLanguage.code)
+        ) {
+            form.languages.push(this.activeLanguage.code);
+        }
+
+        this.folderActions.createNewForm(form).then(form => {
+            if (form) {
+                this.closeFn(form);
+            }
+        });
 
     }
 }

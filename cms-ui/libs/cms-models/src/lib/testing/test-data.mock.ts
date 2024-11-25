@@ -698,6 +698,8 @@ export function getExampleImageData({ id, userId }: { id: number, userId?: numbe
         name: 'aloha_editor.png',
         id: id,
         type: 'image',
+        customCdate: 0,
+        customEdate: 0,
     };
 }
 
@@ -753,6 +755,8 @@ export function getExampleFileData({ id, userId }: { id: number, userId?: number
         cls: 'file',
         iconCls: 'gtx_file',
         text: 'Gentics_Content_Node_Technologie.pdf',
+        customCdate: 0,
+        customEdate: 0,
     };
 }
 
@@ -826,6 +830,8 @@ export function getExampleNewImageData({ id, userId }: { id: number, userId?: nu
         name: 'sprachreisen-hawaii_2.jpg',
         id: id,
         type: 'file',
+        customCdate: 0,
+        customEdate: 0,
     };
 }
 
@@ -945,6 +951,7 @@ export function getExampleNodeData(config: MockNodeConfig = { id: 1, userId: 3 }
         meshPreviewUrl: null,
         meshPreviewUrlProperty: null,
         insecurePreviewUrl: null,
+        meshProjectName: null,
         masterNodeId: config.masterNodeId,
         omitPageExtension: false,
         pageLanguageCode: NodePageLanguageCode.FILENAME,

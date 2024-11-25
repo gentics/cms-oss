@@ -147,6 +147,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     objectPropertyModified = false;
     modifiedObjectPropertyValid: boolean;
     currentItem: ItemNormalized;
+    currentItemPath = '';
+    currentItemClean = true;
+
     editorNodeId: number;
     currentNode: Node;
     editorIsOpen = false;
@@ -170,8 +173,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     alohaWindowLoaded = false;
     windowLoaded = false;
 
-    currentItemPath = '';
-
     activeUiLanguageCode$: Observable<string>;
     activeFormLanguageCode$: Observable<string>;
 
@@ -186,7 +187,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     /** If has permission to publish and state is planned return true */
     isInQueue$: Observable<boolean> = undefined;
 
-    private forceItemRefresh$ = new BehaviorSubject<void>(undefined);
     private onLoadListener: EventListener;
     public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
@@ -295,6 +295,10 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 ) {
                     return of(params);
                 }
+
+                // Set the window as unloaded, as we're reloading everything here.
+                this.windowLoaded = false;
+                this.changeDetector.markForCheck();
 
                 const options = { nodeId: params.nodeId };
 
@@ -481,9 +485,17 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.changeDetector.markForCheck();
         });
 
-        masterFrame.addEventListener('load', () => {
+        masterFrame.addEventListener('load', event => {
+            // This is browser dependend. Sometimes it'll load a blank page first,
+            // and then the actual aloha page.
+            if (masterFrame.contentWindow.location.toString() === 'about:blank') {
+                return;
+            }
+
             this.windowLoaded = true;
-            if (!this.childFrameInitialized) {
+
+            // We only need to wait/check for Aloha, if we're in the edit-mode.
+            if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
                 // Similiar to the error handler above, but with a timeout instead
                 this.childFrameInitTimer = window.setTimeout(() => {
                     console.warn('UI was not properly initialized in the Aloha-Page!');
@@ -491,6 +503,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.changeDetector.markForCheck();
                 }, 10_000);
             } else {
+                // Clear the timeout just in case it's still here
+                if (this.childFrameInitTimer != null) {
+                    window.clearTimeout(this.childFrameInitTimer);
+                    this.childFrameInitTimer = null;
+                }
                 this.alohaWindowLoaded = true;
             }
 
@@ -835,8 +852,10 @@ ins.gtx-diff {
         const itemId = this.currentItem.id;
         if (this.editMode === EditMode.EDIT_PROPERTIES) {
             if (this.appState.now.editor.modifiedObjectPropertiesValid) {
-                return this.combinedPropertiesEditor.saveChanges()
-                    .then(() => this.forceItemRefresh$.next());
+                return this.combinedPropertiesEditor.saveChanges().then(() => {
+                    this.currentItemClean = true;
+                    this.changeDetector.markForCheck();
+                });
             }
 
             this.notification.show({

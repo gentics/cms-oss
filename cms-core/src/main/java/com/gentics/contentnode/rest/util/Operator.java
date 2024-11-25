@@ -320,7 +320,7 @@ public class Operator {
 		executor.shutdown();
 		try {
 			if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-				logger.error("Thread pool did not terminate in 10 seconds, forcing shutdown now");
+				logger.warn("Thread pool did not terminate in 10 seconds, forcing shutdown now");
 				executor.shutdownNow();
 			}
 		} catch (InterruptedException e) {
@@ -328,7 +328,7 @@ public class Operator {
 		scheduledExecutor.shutdown();
 		try {
 			if (!scheduledExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-				logger.error("Scheduled Executor did not terminate in 10 seconds, forcing shutdown now");
+				logger.warn("Scheduled Executor did not terminate in 10 seconds, forcing shutdown now");
 				scheduledExecutor.shutdownNow();
 	}
 		} catch (InterruptedException e) {
@@ -564,6 +564,6 @@ public class Operator {
 	 * Enum of possible lock types
 	 */
 	public static enum LockType {
-		channelSet, contentSet, contentPackage
+		channelSet, contentSet, contentPackage, devtoolPackage
 	}
 }

@@ -459,7 +459,7 @@ public class RoundRobinHandlePool implements HandlePool {
 								if (!handleAlive && wasAlive) {
 									Exception e = handles[i].handle.getLastException();
 
-									logger.error(
+									logger.warn(
 											"Handle {" + handles[i] + "} is not alive and temporarily taken out of service. Will be checked again in "
 											+ backgroundValidationInterval + " ms",
 											e);

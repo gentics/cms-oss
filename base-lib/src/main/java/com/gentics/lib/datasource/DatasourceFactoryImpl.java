@@ -160,11 +160,11 @@ public class DatasourceFactoryImpl implements DatasourceFactory, SchedulingInter
 				// versioning was configured but datasource does not support
 				// versioning
 				if (dsInstance == null) {
-					logger.error(
+					logger.warn(
 							"datasource configuration error for datasource '" + id + "': versioning was set to TRUE but no instance could be created; "
 							+ "versioning will NOT be active");
 				} else {
-					logger.error(
+					logger.warn(
 							"datasource configuration error for datasource '" + id + "': versioning was set to TRUE but class " + dsInstance.getClass().getName()
 							+ " is no VersioningDatasource; versioning will NOT be active");
 				}
@@ -172,7 +172,7 @@ public class DatasourceFactoryImpl implements DatasourceFactory, SchedulingInter
 			} else {
 				// let the datasource instance check the requirements
 				if (!((VersioningDatasource) dsInstance).checkRequirements()) {
-					logger.error("datasource '" + id + "' does not meet all requirements for versioning; versioning will NOT be active");
+					logger.warn("datasource '" + id + "' does not meet all requirements for versioning; versioning will NOT be active");
 					versioning = false;
 				}
 			}
@@ -286,7 +286,7 @@ public class DatasourceFactoryImpl implements DatasourceFactory, SchedulingInter
 				try {
 					GenticsContentFactory.refreshCaches(cnDS, -1L);
 				} catch (Exception e) {
-					logger.error("Error while freshing cache ", e);
+					logger.warn("Error while freshing cache ", e);
 				}
 			}
 		} else if (ds instanceof MCCRDatasource) {

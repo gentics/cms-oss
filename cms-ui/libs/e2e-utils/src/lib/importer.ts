@@ -140,6 +140,7 @@ export class EntityImporter {
      */
     public async importData(
         importList: ImportData[],
+        size: TestSize | null = null,
     ): Promise<EntityMap> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests });
@@ -147,7 +148,7 @@ export class EntityImporter {
 
         for (const importData of importList) {
             const entity = await this.importEntity(
-                null,
+                size,
                 importData[IMPORT_TYPE],
                 importData,
             );
@@ -306,6 +307,8 @@ export class EntityImporter {
 
         if (typeof sizeOrGlobalFeatures === 'object') {
             features = sizeOrGlobalFeatures;
+        } else {
+            size = sizeOrGlobalFeatures;
         }
 
         // Reset to initial config
@@ -321,6 +324,7 @@ export class EntityImporter {
         for (const entry of Object.entries(features || {})) {
             const [feature, enabled] = entry;
             if (Feature[feature]) {
+
                 try {
                     await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/features/${feature}`, null, {
                         enabled,

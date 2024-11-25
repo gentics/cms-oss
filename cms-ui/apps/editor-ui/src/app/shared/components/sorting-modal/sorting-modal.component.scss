@@ -1,0 +1,28 @@
+@import "variables";
+
+:host {
+    display: block;
+    width: 90vw;
+    max-width: 400px;
+}
+
+gtx-contents-list-item {
+    cursor: pointer;
+    &.selected {
+        font-weight: bold;
+        background-color: $gtx-color-light-gray;
+    }
+
+    .sort-order {
+        flex: none;
+        background-color: white;
+        border-radius: 3px;
+        padding: 0 6px;
+        color: $gtx-color-dark-gray;
+        font-weight: normal;
+
+        icon {
+            font-size: $gtx-font-size-small;
+        }
+    }
+}

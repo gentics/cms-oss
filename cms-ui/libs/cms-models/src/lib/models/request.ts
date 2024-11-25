@@ -1,6 +1,6 @@
 import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueItem, Jobs } from './admin-info';
-import { CmsFormData, Form, FormStatus } from './cms-form';
+import { CmsFormData, EditableFormProps, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
 import { CRElasticsearchModel, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType } from './content-repository';
@@ -10,11 +10,11 @@ import { DataSourceEntry } from './data-source-entry';
 import { ElasticSearchIndex } from './elastic-search-index';
 import { ExternalLink } from './external-link';
 import { NodeFeatureModel } from './feature';
-import { File } from './file';
-import { Folder } from './folder';
+import { EditableFileProps, File } from './file';
+import { EditableFolderProps, Folder } from './folder';
 import { EntityIdType } from './gcms-normalizer/gcms-normalizer-types';
 import { Group } from './group';
-import { Image } from './image';
+import { EditableImageProps, Image } from './image';
 import { ItemType } from './item';
 import { Language } from './language';
 import { Node } from './node';
@@ -22,7 +22,7 @@ import { ObjectProperty } from './object-property';
 import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { DependencyType } from './package-check';
-import { Page, PageStatus } from './page';
+import { EditablePageProps, Page, PageStatus } from './page';
 import { AccessControlledType } from './permissions';
 import { Role, RoleAssignment, RolePermissions } from './role';
 import { Schedule } from './schedule';
@@ -457,7 +457,7 @@ export interface FileListOptions extends FolderListOptions {
 }
 
 /** Collection of all query parameters allowed by GCMS entities Folder, Form, File, Image, Item */
-export type GtxCmsQueryOptions = FolderListOptions & PageListOptions & FolderListOptions & FormListOptions &
+export type GtxCmsQueryOptions = FolderListOptions & PageListOptions   & FormListOptions &
 {
     /** path (e.g. /_search) */
     path?: string;
@@ -972,12 +972,15 @@ export enum ContentMaintenanceType {
 /** * Request object used to configure the behaviour of the
  * `folder/create` endpoint.
  */
-export interface FolderCreateRequest {
+export interface FolderCreateRequest extends EditableFolderProps {
     nodeId: number;
     motherId: number;
-    publishDir: string;
-    description: string;
-    name: string;
+
+    /**
+     * True if saving the folder with a duplicate filename will fail.
+     * If false (default) the filename will be made unique before saving
+     */
+    failOnDuplicate?: boolean;
 }
 
 /**
@@ -1008,43 +1011,26 @@ export interface I18nTranslationOptions {
  * Request object used to configure the behaviour of the
  * `page/create` endpoint.
  */
-export interface PageCreateRequest {
+export interface PageCreateRequest extends Omit<EditablePageProps, 'name'> {
     nodeId: number;
     folderId: number;
     pageName: string;
-    fileName: string;
-    description: string;
-    language: string;
-    priority: number;
-    templateId: number;
 }
 
-export interface PageVariantCreateRequest {
-    nodeId: number;
-    folderId: number;
+export interface PageVariantCreateRequest extends Omit<PageCreateRequest, 'pageName'> {
     variantId: number;
     variantChannelId: number;
-
     pageName?: string;
-    fileName?: string;
-    description?: string;
-    language?: string;
-    priority?: number;
-    templateId?: number;
 }
 
 /**
  * Request object used to configure the behaviour of the
  * `POST /form` endpoint.
  */
-export interface FormCreateRequest {
+export interface FormCreateRequest extends EditableFormProps {
+    nodeId?: number;
     folderId: number;
-    name: string;
-    description?: string;
-    successPageId?: number;
-    successNodeId?: number;
     languages: string[];
-    data: CmsFormData;
 }
 
 /**
@@ -1413,7 +1399,7 @@ export interface FileSaveRequestOptions {
 export interface FileSaveRequest extends FileSaveRequestOptions {
 
     /** The properties of the file that should be saved/updated. */
-    file: Partial<File<Raw>>;
+    file: EditableFileProps;
 
 }
 
@@ -1450,7 +1436,7 @@ export interface FolderSaveRequestOptions {
  */
 export interface FolderSaveRequest extends FolderSaveRequestOptions {
     /** The properties of the folder that should be saved/updated. */
-    folder: Partial<Folder<Raw>>;
+    folder: EditableFolderProps;
 }
 
 /**
@@ -1469,7 +1455,7 @@ export interface ImageSaveRequestOptions { }
 export interface ImageSaveRequest extends ImageSaveRequestOptions {
 
     /** The properties of the image that should be saved/updated. */
-    image: Partial<Image<Raw>>;
+    image: EditableImageProps;
 
 }
 
@@ -1604,7 +1590,7 @@ export interface MultiPageLoadRequest extends MultiObjectLoadRequest {
 export interface PageSaveRequest extends PageSaveRequestOptions {
 
     /** The properties of the page that should be saved/updated. */
-    page: Partial<Page<Raw>>;
+    page: EditablePageProps;
 
 }
 
@@ -1918,7 +1904,15 @@ export type RolePermissionsUpdateRequest = RolePermissions;
 /**
  * Query parameters for `/construct/list`
  */
-export type ConstructListOptions = BaseListOptionsWithPaging<TagType>;
+export type ConstructListOptions = BaseListOptionsWithSkipCount & {
+    category?: number;
+    changable?: boolean;
+    nodeId?: number;
+    pageId?: number;
+    partTypeId?: number | number[];
+    search?: string;
+    sortby?: 'category' | 'description' | 'keyword' | 'name';
+};
 
 /**
  * Request used for saving a `TagType`.

@@ -11,9 +11,13 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -69,6 +73,8 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 	 * static map of resolvable properties
 	 */
 	protected static Map<String, Property> resolvableProperties;
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		resolvableProperties = new HashMap<String, Property>();
@@ -214,29 +220,30 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 		resolvableProperties.put("editor", editor);
 		resolvableProperties.put("bearbeiter", editor);
-		Property createtimestamp = new Property(new String[] { "cdate"}) {
+		Property createtimestamp = new Property(new String[] { "cdate", "custom_cdate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getCDate().getTimestamp();
+				return file.getCustomOrDefaultCDate().getTimestamp();
 			}
 		};
 
 		resolvableProperties.put("createtimestamp", createtimestamp);
+		resolvableProperties.put("creationtimestamp", createtimestamp);
 		// this typo (timstamp) is kept for backwards compatibility or maybe
 		// just because it looks so neat?
 		resolvableProperties.put("createtimstamp", createtimestamp);
-		resolvableProperties.put("createdate", new Property(new String[] { "cdate"}) {
+		resolvableProperties.put("createdate", new Property(new String[] { "cdate", "custom_cdate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getCDate();
+				return file.getCustomOrDefaultCDate();
 			}
 		});
-		resolvableProperties.put("edittimestamp", new Property(new String[] { "edate"}) {
+		resolvableProperties.put("edittimestamp", new Property(new String[] { "edate", "custom_edate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getEDate().getTimestamp();
+				return file.getCustomOrDefaultEDate().getTimestamp();
 			}
 		});
-		resolvableProperties.put("editdate", new Property(new String[] { "edate"}) {
+		resolvableProperties.put("editdate", new Property(new String[] { "edate", "custom_edate" }) {
 			public Object get(ContentFile file, String key) {
-				return file.getEDate();
+				return file.getCustomOrDefaultEDate();
 			}
 		});
 		resolvableProperties.put("type", new Property(new String[] { "filetype"}) {
@@ -397,10 +404,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 			}
 		});
 
+		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
 
 	protected ContentFile(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/**
@@ -458,6 +471,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 	public Integer setFolderId(Integer folderId) throws NodeException, ReadOnlyException {
 		failReadOnly();
 		return null;
+	}
+
+	@Override
+	public void setCustomCDate(int timestamp) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setCustomEDate(int timestamp) throws ReadOnlyException {
+		failReadOnly();
 	}
 
 	/**
@@ -530,18 +553,6 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-    
-	/**
-	 * get the creation date as a unix timestamp 
-	 * @return creation date unix timestamp
-	 */
-	public abstract ContentNodeDate getCDate();
-    
-	/**
-	 * get the edit date as a unix timestamp 
-	 * @return edit date unix timestamp
-	 */
-	public abstract ContentNodeDate getEDate();
     
 	/*
 	 * (non-Javadoc)
@@ -678,6 +689,16 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		return (ObjectTag) getObjectTags().get(name);
 	}
 
+	@Override
+	public Set<String> getObjectTagNames(boolean fallback) throws NodeException {
+		Set<String> names = new HashSet<>();
+		names.addAll(getObjectTags().keySet());
+		if (fallback) {
+			names.addAll(getFolder().getObjectTags().keySet());
+		}
+		return names;
+	}
+
 	/**
 	 * check whether the file has been changed since the given timestamp
 	 * @param timestamp timestamp
@@ -746,11 +767,9 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		public abstract Object get(ContentFile object, String key);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.AbstractContentObject#getModifiedProperties(java.lang.String[])
-	 */
-	protected List getModifiedProperties(String[] modifiedDataProperties) {
-		List modifiedProperties = super.getModifiedProperties(modifiedDataProperties);
+	@Override
+	protected List<String> getModifiedProperties(String[] modifiedDataProperties) {
+		List<String> modifiedProperties = super.getModifiedProperties(modifiedDataProperties);
 
 		return getModifiedProperties(resolvableProperties, modifiedDataProperties, modifiedProperties);
 	}

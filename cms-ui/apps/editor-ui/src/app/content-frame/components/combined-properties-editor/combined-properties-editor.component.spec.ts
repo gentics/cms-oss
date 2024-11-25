@@ -57,11 +57,16 @@ import { EditTagInfo, TagEditorHostComponent, TagEditorService } from '../../../
 import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wrapper/iframe-wrapper.component';
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
-import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
-import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 import { generateContentTagList } from '../../utils';
-import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
+import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
+import { PropertiesEditorComponent } from '../properties-editor/properties-editor.component';
+import {
+    CombinedPropertiesEditorComponent,
+    groupObjectPropertiesByCategory,
+    ID_OBJ_PROP_CATEGORY_OTHERS,
+    NAME_OBJ_PROP_CATEGORY_OTHERS,
+} from './combined-properties-editor.component';
 
 const CONTENT_TAG_NAME = 'contenttag0';
 const TAG0_NAME = 'object.tag0';
@@ -139,7 +144,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),
@@ -260,6 +265,82 @@ describe('CombinedPropertiesEditorComponent', () => {
     });
 
     describe('object properties', () => {
+
+        it('should correctly group object-properties by their category', () => {
+            let counter = 1;
+            const categories: Record<number, string> = {
+                1: 'Group 1',
+                2: 'Hello World!',
+                3: 'Example',
+            };
+
+            function mockObjProp(categoryId?: number): EditableObjectTag {
+                const prop: EditableObjectTag = {
+                    id: counter,
+                    active: true,
+                    constructId: 123,
+                    displayName: `Mock #${counter}`,
+                    categoryId,
+                    categoryName: categories[categoryId],
+                    name: `Mock #${counter}`,
+                    inheritable: false,
+                    properties: {},
+                    readOnly: false,
+                    required: false,
+                    sortOrder: counter,
+                    type: 'OBJECTTAG',
+                    construct: {
+                        id: 123,
+                        keyword: 'example',
+                        parts: [],
+                    },
+                    description: 'Hello World!',
+                    tagType: null,
+                };
+                counter++;
+                return prop;
+            }
+
+            const objectProperties = [
+                mockObjProp(),
+                mockObjProp(1),
+                mockObjProp(1),
+                mockObjProp(3),
+                mockObjProp(1),
+                mockObjProp(),
+                mockObjProp(2),
+                mockObjProp(2),
+            ];
+            const grouping = groupObjectPropertiesByCategory(objectProperties)
+                .map(group => ({
+                    id: group.id,
+                    name: group.name,
+                    properties: group.objProperties.map(prop => prop.id),
+                }));
+
+            expect(grouping).toEqual([
+                {
+                    id: '1',
+                    name: categories[1],
+                    properties: [2, 3, 5],
+                },
+                {
+                    id: '3',
+                    name: categories[3],
+                    properties: [4],
+                },
+                {
+                    id: '2',
+                    name: categories[2],
+                    properties: [7, 8],
+                },
+                {
+                    id: ID_OBJ_PROP_CATEGORY_OTHERS,
+                    name: NAME_OBJ_PROP_CATEGORY_OTHERS,
+                    properties: [1, 6],
+                },
+            ])
+        });
 
         it('displays one tab for the item properties and one tab for each object property',
             componentTest(() => TestComponent, (fixture, testComponent) => {
@@ -1635,8 +1716,8 @@ class TestComponent {
 }
 
 @Component({
-    selector: 'properties-editor',
-    providers: [ { provide: PropertiesEditor, useClass: MockPropertiesEditor } ],
+    selector: 'gtx-properties-editor',
+    providers: [ { provide: PropertiesEditorComponent, useClass: MockPropertiesEditor } ],
     template: '',
 })
 class MockPropertiesEditor {

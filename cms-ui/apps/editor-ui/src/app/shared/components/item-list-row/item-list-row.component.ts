@@ -39,7 +39,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { EntityStateUtil, PublishableStateUtil } from '../../../shared/util/entity-states';
-import { TranslatePageModal, TranslatePageModalActions } from '../translate-page-modal/translate-page-modal.component';
+import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
 
 type AllowedItemType =
@@ -221,6 +221,7 @@ export class ItemListRowComponent implements OnInit {
         const pageLanguageIds = item.languageVariants ? Object.keys(item.languageVariants).map(id => +id) : [];
         const languageVariantId = item.languageVariants && item.languageVariants[language.id];
         const pageTranslation = languageVariantId && this.entityResolver.getPage(languageVariantId);
+        const pageLanguageIsSet = item.language ?? false;
 
         if (restore) {
             const entityToBeRestoredId = languageVariantId;
@@ -241,7 +242,7 @@ export class ItemListRowComponent implements OnInit {
                 this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, EditMode.PREVIEW).navigate();
             }
             return;
-        } else if (source && pageTranslation && !isDeleted) {
+        } else if (source && !pageTranslation && !pageLanguageIsSet && !isDeleted) {
             this.folderActions.updatePageLanguage(item.id, language).then(() => {
                 this.folderActions.refreshList('page');
             });
@@ -252,7 +253,7 @@ export class ItemListRowComponent implements OnInit {
         this.decisionModals.showTranslatePageDialog(item, this.activeNode.id)
             .then(nodeId => this.modalService.fromComponent(TranslatePageModal, null, {
                 defaultProps: {
-                    pageName: item.name,
+                    name: item.name,
                     description: item.description || '',
                     language: language.code,
                     priority: item.priority,
@@ -265,14 +266,17 @@ export class ItemListRowComponent implements OnInit {
             }))
             .then(modal => modal.open())
             // If user created translation and wants to edit, opensplitscreen; if not, do nothing.
-            .then((data: { newPage: Page<Raw>, action: string }) => {
-                if (data.newPage) {
-                    if (data.action === TranslatePageModalActions.EditPage) {
+            .then((data: TranslateResult) => {
+                if (!data.newPage) {
+                    return;
+                }
+                switch (data.action) {
+                    case TranslatePageModalActions.EDIT_PAGE:
                         this.editPage(data.newPage);
-                    }
-                    if (data.action === TranslatePageModalActions.EditPageCompareWithLanguage) {
+                        break;
+                    case TranslatePageModalActions.EDIT_PAGE_COMPARE_WITH_LANGUAGE:
                         this.editPageCompareWithLanguage(data.newPage, item.id);
-                    }
+                        break;
                 }
             });
     }
@@ -282,7 +286,7 @@ export class ItemListRowComponent implements OnInit {
      * exist, we display the "create translation" dialog.
      */
     async formLanguageClicked(event: ItemLanguageClickEvent<Form>): Promise<void> {
-        const { item, language, compare, source, restore } = event;
+        const { item, language, source, restore } = event;
 
         if (restore) {
             const entityToBeRestoredId = item.id;

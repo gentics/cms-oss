@@ -53,7 +53,7 @@ public class ActionLogger {
 			TypePerms.inboxmessage, TypePerms.actionlog, TypePerms.language, TypePerms.crfragment,
 			TypePerms.contentrepository, TypePerms.construct, TypePerms.part, TypePerms.constructcategory,
 			TypePerms.datasource, TypePerms.objproptype, TypePerms.objprop, TypePerms.objtag, TypePerms.tasktemplate, TypePerms.task, TypePerms.job, TypePerms.node,
-			TypePerms.folder, TypePerms.page, TypePerms.pagecontent, TypePerms.template, TypePerms.image, TypePerms.file, TypePerms.form);
+			TypePerms.folder, TypePerms.page, TypePerms.pagecontent, TypePerms.template, TypePerms.image, TypePerms.file, TypePerms.form, TypePerms.devtooladmin);
 
 	public final static int CREATE = 338;
 	public final static int EDIT = 339;
@@ -100,6 +100,9 @@ public class ActionLogger {
 	public final static int FUM_DENIED = 702;
 	public final static int FUM_POSTPONED = 703;
 	public final static int FUM_ERROR = 704;
+
+	public final static int DEVTOOL_SYNC_START = 750;
+	public final static int DEVTOOL_SYNC_END = 751;
 
 	/**
 	 * 
@@ -378,6 +381,8 @@ public class ActionLogger {
 				if (folder != null) {
 					model.setInfo(I18NHelper.getPath(folder));
 				}
+			} else {
+				model.setInfo(log.getInfo());
 			}
 
 			model.setObjId(log.getOId());

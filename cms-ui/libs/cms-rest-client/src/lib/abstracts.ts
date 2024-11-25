@@ -269,7 +269,10 @@ import {
     PolicyMapOptions,
     PolicyResponse,
     PublishInfo,
+    PublishLogEntry,
+    PublishLogListOption,
     PublishQueue,
+    PublishType,
     PushToMasterRequest,
     Raw,
     Response,
@@ -407,6 +410,8 @@ export interface AbstractConstructAPI extends BasicAPI {
     get: (id: number | string) => ConstructLoadResponse;
     update: (id: number | string, body: ConstructUpdateRequest) => ConstructUpdateResponse;
     delete: (id: number | string) => void;
+
+    listForEditor: (options?: ConstructListOptions) => ConstructListResponse,
 
     hash: (id: number | string) => ImplementationHashResponse;
     getLinkedNodes: (id: number | string) => ConstructLinkedNodesResponse;
@@ -1052,6 +1057,12 @@ export interface AbstractTranslationAPI extends BasicAPI {
     translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>
 }
 
+export interface AbstractPublishProtocolAPI extends BasicAPI {
+    get: (type: PublishType, objId: number) =>  PublishLogEntry;
+    list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
+}
+
+
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
     auth: AbstractAuthenticationAPI;
@@ -1083,6 +1094,7 @@ export interface AbstractRootAPI {
     partType: AbstractPartTypeAPI;
     permission: AbstractPermissionAPI;
     policyMap: AbstractPolicyMapAPI;
+    publishProtocol: AbstractPublishProtocolAPI;
     role: AbstractRoleAPI;
     scheduler: AbstractSchedulerAPI;
     schedulerTask: AbstractScheduleTaskAPI;

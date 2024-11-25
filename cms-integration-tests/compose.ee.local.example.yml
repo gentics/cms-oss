@@ -1,0 +1,34 @@
+services:
+  mariadb:
+    extends:
+      file: compose.ee.yml
+      service: mariadb
+
+  mesh:
+    extends:
+      file: compose.ee.yml
+      service: mesh
+    environment:
+      LICENSEKEY: "YOUR-LICENSEKEY-HERE"
+
+  cms:
+    extends:
+      file: compose.ee.yml
+      service: cms
+    environment:
+      LICENSEKEY: "YOUR-LICENSEKEY-HERE"
+
+  keycloak:
+    extends:
+      file: compose.ee.yml
+      service: keycloak
+
+  elasticsearch:
+    extends:
+      file: compose.ee.yml
+      service: elasticsearch
+
+  web:
+    extends:
+      file: compose.ee.yml
+      service: web

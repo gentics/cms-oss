@@ -114,9 +114,6 @@
                 "watch": false
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "apps/admin-ui/cypress.config.ci.ts",

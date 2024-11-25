@@ -47,9 +47,6 @@
                 "watch": false
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "libs/form-generator/cypress.config.ci.ts",

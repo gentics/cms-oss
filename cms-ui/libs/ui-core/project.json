@@ -46,9 +46,6 @@
                 "devServerTarget": "image-editor-demo:build"
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "libs/ui-core/cypress.config.ci.ts",

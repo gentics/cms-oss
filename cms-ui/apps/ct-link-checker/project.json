@@ -112,9 +112,6 @@
                 "watch": false
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "apps/ct-link-checker/cypress.config.ci.ts",

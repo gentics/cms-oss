@@ -89,7 +89,12 @@
         },
         "component-test": {
             "inputs": ["default", "^production"],
-            "cache": true
+            "cache": true,
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
         },
         "@nx/jest:jest": {
             "inputs": [

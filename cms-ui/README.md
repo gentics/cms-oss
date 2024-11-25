@@ -94,6 +94,7 @@ npm run many -- --target=e2e --project=tag:e2e
 **Available Configurations**:
 
 * `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
+* `ci`: To start the tests in CI mode, which will use the actual served UI from the CMS.
 
 ### Components Tests
 
@@ -111,7 +112,7 @@ npm run many -- --target=component-test
 **Available Configurations**:
 
 * `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
-* `ci`: When run in a CI Server
+* `ci`: When run in a CI Server and includes test coverage reporting
 
 ### Build an application or library
 

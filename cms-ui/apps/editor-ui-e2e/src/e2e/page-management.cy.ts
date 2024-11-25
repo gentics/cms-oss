@@ -25,6 +25,7 @@ describe('Page Management', () => {
     const ALIAS_FORM = '@form';
     const ALIAS_CREATE_REQ = '@createRequest';
     const ALIAS_UPDATE_REQ = '@updateRequest';
+    const ALIAS_CANCEL_REQ = '@cancelRequest';
 
     before(() => {
         cy.muteXHR();
@@ -224,6 +225,25 @@ describe('Page Management', () => {
                 expect(options).to.have.length(1);
                 expect(options![0].id).to.equal(COLOR_ID);
             });
+        });
+
+        it('should cancel editing when the page properties view is closed', () => {
+            const PAGE = IMPORTER.get(pageOne)!;
+
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(PAGE.id)
+                .itemAction('properties');
+
+            cy.intercept({
+                method: 'POST',
+                pathname: '/rest/page/cancel/**',
+            }, req => {
+                req.alias = ALIAS_CANCEL_REQ;
+            });
+
+            cy.editorAction('close');
+
+            cy.wait(ALIAS_CANCEL_REQ);
         });
     });
 

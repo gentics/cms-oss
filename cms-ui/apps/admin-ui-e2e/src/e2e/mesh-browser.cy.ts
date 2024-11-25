@@ -1,45 +1,43 @@
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { AccessControlledType } from '@gentics/cms-models';
 import { AUTH_ADMIN } from '../support/app.po';
 
 describe('Mesh Browser', () => {
 
     const CR_NAME = 'Mesh CR';
     const IMPORTER = new EntityImporter();
+    const ALIAS_MODULE = '@module';
 
-    before(async () => {
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    before(() => {
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
-        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
-        IMPORTER.client = null;
-        cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
+        cy.muteXHR();
 
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
-
-        cy.intercept({
-            pathname: '/rest/admin/features/*',
-        }).as('featureChecks');
-        cy.intercept({
-            pathname: '/rest/perm/contentrepositoryadmin',
-        }).as('permChecks');
-
-        cy.wait('@featureChecks');
-        cy.wait('@permChecks');
-
-        cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.navigateToModule('mesh-browser', AccessControlledType.CONTENT_REPOSITORY_ADMIN)
+                .as(ALIAS_MODULE);
+        });
     });
 
     it('should have content repositories listed', () => {
-        cy.get('gtx-table')
-            .find('.grid-row')
+        cy.get(ALIAS_MODULE)
+            .find('gtx-table .grid-row')
             .should('have.length.gte', 1);
     });
 
     it('should show login gate on click', () => {
-        cy.get('gtx-table')
-            .find('.grid-row')
+        cy.get(ALIAS_MODULE)
+            .find('gtx-table .grid-row')
             .contains(CR_NAME)
             .click();
 
@@ -49,8 +47,8 @@ describe('Mesh Browser', () => {
     // TODO: Needs proper CR repair and content import to work
     describe.skip('Mesh Browser', () => {
         beforeEach(() => {
-            cy.get('gtx-table')
-                .find('.grid-row')
+            cy.get(ALIAS_MODULE)
+                .find('gtx-table .grid-row')
                 .contains(CR_NAME)
                 .click();
 
@@ -89,7 +87,6 @@ describe('Mesh Browser', () => {
 
             cy.get('gtx-mesh-browser-editor').should('exist')
         });
-
     });
 
 });

@@ -7,6 +7,7 @@ export interface IDialogConfig {
     title: string;
     body?: string;
     buttons: {
+        id?: string;
         label: string;
         type?: 'default' | 'secondary' | 'success'| 'warning' | 'alert';
         flat?: boolean;

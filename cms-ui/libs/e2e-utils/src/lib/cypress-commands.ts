@@ -421,4 +421,23 @@ export function registerCommonCommands(): void {
         return cy.wrap(tables, { log: false })
             .find(`.header-row .action-column .action-button[data-id="${id}"]`);
     });
+
+    Cypress.Commands.add('findTableRowContainingText', {prevSubject: 'element'}, (subject, text) => {
+        return cy.wrap(subject)
+             .find('.grid-row')
+             .contains(text)
+             .parents('.grid-row');
+    });
+
+    Cypress.Commands.add('selectTableRow', {prevSubject: 'element'}, (subject) => {
+        return cy.wrap(subject)
+            .find('gtx-checkbox.selection-checkbox')
+            .click();
+    });
+
+    Cypress.Commands.add('expandTrableRow', {prevSubject: 'element'}, (subject) => {
+        return cy.wrap(subject)
+            .find('.row-expansion-wrapper')
+            .click();
+    });
 }

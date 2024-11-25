@@ -7,24 +7,28 @@ describe('Login', () => {
 
     const IMPORTER = new EntityImporter();
 
-    before(() => {
+    beforeEach(() => {
         cy.muteXHR();
     });
 
     describe('Without keycloak feature enabled', () => {
         // Make sure to have keycloak disabled for these tests
-        before(async () => {
-            // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
-            IMPORTER.client = null;
-            await IMPORTER.setupFeatures({
-                [Feature.KEYCLOAK]: false,
+        before(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.setupFeatures({
+                    [Feature.KEYCLOAK]: false,
+                }), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
             });
-            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
         });
 
-        beforeEach(async () => {
-            await IMPORTER.cleanupTest();
-            await IMPORTER.setupTest(TestSize.MINIMAL);
+        beforeEach(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            });
         });
 
         it('should be able to login', () => {
@@ -83,19 +87,23 @@ describe('Login', () => {
     skipableSuite(isVariant(Variant.ENTERPRISE), 'With keycloak feature enabled', () => {
         const ALIAS_SSO_LOGIN = '@ssoLogin';
 
-        // Make sure to have keycloak enabled for these tests
-        before(async () => {
-            // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
-            IMPORTER.client = null;
-            await IMPORTER.setupFeatures({
-                [Feature.KEYCLOAK]: true,
+        // Make sure to have keycloak disabled for these tests
+        before(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.setupFeatures({
+                    [Feature.KEYCLOAK]: true,
+                }), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
             });
-            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
         });
 
-        beforeEach(async () => {
-            await IMPORTER.cleanupTest();
-            await IMPORTER.setupTest(TestSize.MINIMAL);
+        beforeEach(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            });
         });
 
         it('should be able to login (skip-sso)', () => {

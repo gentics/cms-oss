@@ -26,14 +26,18 @@ describe('Page Management', () => {
     const ALIAS_CREATE_REQ = '@createRequest';
     const ALIAS_UPDATE_REQ = '@updateRequest';
 
-    before(async () => {
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+    before(() => {
+        cy.muteXHR();
+        cy.wrap(null, { log: false }).then(() => {\
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
         cy.muteXHR();
-    })
+    });
 
     describe('Minimal Setup', () => {
         const OBJ_PROP_CAT_TESTS = '2';

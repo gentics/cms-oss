@@ -159,6 +159,7 @@
                 <gtx-button
                     *ngFor="let action of singleActions; trackBy: trackElement"
                     class="action-button"
+                    [attr.data-id]="action.id"
                     [icon]="true"
                     [size]="'small'"
                     [disabled]="action.disabled | gtxTableActionEnabled:row.item"

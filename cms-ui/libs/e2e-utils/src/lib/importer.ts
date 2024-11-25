@@ -12,6 +12,8 @@ import {
     Page,
     PageCreateRequest,
     PagingSortOrder,
+    Schedule,
+    ScheduleType,
     Template,
     User,
 } from '@gentics/cms-models';
@@ -81,6 +83,9 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
 }
 
+const PUBLISHER_TASK_CMD = "publish";
+const PUBLISHER_SCHEDULE_NAME = "Run Publish Process";
+
 /**
  * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
  * instance, by using a dedicated GCMS REST Client.
@@ -115,6 +120,8 @@ export class EntityImporter {
     public templates: Record<string, Template> = {};
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
+
+    private publisherSchedule: Schedule;
 
     constructor(
         public options?: ImporterOptions,
@@ -169,6 +176,24 @@ export class EntityImporter {
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
 
+        const tasks = await this.client.schedulerTask.list().send();
+        const schedulerTask = tasks.items.find(item => item.internal === true && item.command === PUBLISHER_TASK_CMD);
+
+        const schedules = await this.client.scheduler.list().send();
+        this.publisherSchedule = schedules.items.find(item => item.taskId === schedulerTask.id);
+        if (!this.publisherSchedule) {
+            const response = await this.client.scheduler.create({
+                active: true,
+                parallel: false,
+                name: PUBLISHER_SCHEDULE_NAME,
+                taskId: schedulerTask.id,
+                scheduleData: {
+                    type: ScheduleType.MANUAL
+                }
+            }).send();
+            this.publisherSchedule = response.item;
+        }
+
         this.bootstrapped = true;
     }
 
@@ -185,6 +210,46 @@ export class EntityImporter {
         const map = await this.setupContent(size);
 
         return map;
+    }
+
+    /**
+     * Start the scheduler task for the publish process and wait up to 100 seconds for the task to finish
+     */
+    public async runPublish(): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        await this.client.scheduler.execute(this.publisherSchedule.id).send();
+        for (let i = 0; i < 100; i++) {
+            this.publisherSchedule = (await this.client.scheduler.get(this.publisherSchedule.id).send()).item;
+            if (!this.publisherSchedule.lastExecution?.running) {
+                break;
+            }
+            cy.log('Waiting for the publish execution to finish');
+            cy.wait(1000, {log:false});
+        }
+    }
+
+    /**
+     * Delete all mesh projects for all contentrepositories
+     */
+    public async deleteMeshProjects(): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+
+        const crListResponse = await this.client.contentRepository.list().send();
+        for (let i = 0; i < crListResponse.items.length; i++) {
+            const cr = crListResponse.items[i];
+
+            await this.client.contentRepository.proxyLogin(cr.id).send();
+            const projectsList = await this.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${cr.id}/proxy/api/v2/projects`).send();
+            for (let j = 0; j < projectsList.data.length; j++) {
+                const project = projectsList.data[j];
+                await this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/contentrepositories/${cr.id}/proxy/api/v2/projects/${project.uuid}`).send();
+            }
+        }
     }
 
     /**
@@ -282,6 +347,10 @@ export class EntityImporter {
                 }
             }
         }
+    }
+
+    public async clearClient(): Promise<void> {
+        this.client = null;
     }
 
     public async syncPackages(size: TestSize): Promise<void> {

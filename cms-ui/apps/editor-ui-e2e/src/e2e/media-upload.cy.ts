@@ -25,15 +25,21 @@ describe('Media Upload', () => {
 
     const IMPORTER = new EntityImporter();
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
         cy.muteXHR();
-        cy.wrap(IMPORTER.cleanupTest(), { log: false }).then(() => {
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
             return cy.loadBinaries([
                 FIXTURE_TEST_IMAGE_JPG_1,
                 FIXTURE_TEST_FILE_DOC_1,
@@ -44,7 +50,7 @@ describe('Media Upload', () => {
                 [fileOne[IMPORT_ID]]: fixtures[FIXTURE_TEST_FILE_DOC_1],
             };
         }).then(() => {
-            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false });
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
         }).then(() => {
             cy.navigateToApp();
             cy.login(AUTH_ADMIN);

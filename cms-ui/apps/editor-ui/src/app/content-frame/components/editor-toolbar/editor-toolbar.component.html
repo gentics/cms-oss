@@ -70,7 +70,7 @@
                 *ngIf="showSave"
                 class="primary-action save-button"
                 size="small"
-                data-button-id="save"
+                data-action="save"
                 [disabled]="saveDisabled || isSaving"
                 [title]="'editor.content_frame_save_changes_tooltip' | i18n"
             >
@@ -104,19 +104,22 @@
 
             <gtx-dropdown-list
                 *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'"
+                data-action="editor-context"
+                data-context-id="item-editor"
                 class="content-frame-context-menu"
             >
                 <gtx-dropdown-trigger>
                     <gtx-button
                         icon
                         type="secondary"
-                        data-action="open-content-frame-context"
+                        data-context-trigger
+                        [disabled]="currentItem?.type === 'page' && !alohaReady"
                     >
                         <icon>more_vert</icon>
                     </gtx-button>
                 </gtx-dropdown-trigger>
 
-                <gtx-dropdown-content class="content-frame-context">
+                <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
                     <gtx-dropdown-item
                         *ngIf="buttons.editProperties"
                         data-action="edit-properties"

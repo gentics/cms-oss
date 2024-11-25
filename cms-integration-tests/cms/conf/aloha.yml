@@ -1,0 +1,18 @@
+aloha_plugins_global:
+  - "common/ui"
+  - "common/block"
+  - "common/format"
+  - "common/autoparagraph"
+  - "common/highlighteditables"
+  - "common/list"
+  - "common/link"
+  - "common/table"
+  - "common/paste"
+  - "common/contenthandler"
+  - "common/commands"
+  - "gcn/gcn"
+  - "common/dom-to-xhtml"
+  - "common/abbr"
+  # Disabled until we know how to solve the issue with storing/referecing the
+  # citation notes.
+  # - "extra/cite"

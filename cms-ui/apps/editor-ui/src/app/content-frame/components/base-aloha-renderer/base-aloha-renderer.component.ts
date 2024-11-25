@@ -77,7 +77,7 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
     }
 
     protected unregisterAsRendered(): void {
-        if (!this.slot && !this.settings.name) {
+        if (!this.slot && !this.settings?.name) {
             return;
         }
         delete this.aloha.renderedComponents[this.slot || this.settings.name];

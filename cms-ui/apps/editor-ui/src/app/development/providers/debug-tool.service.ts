@@ -1,38 +1,17 @@
-import * as punycodeModule from 'punycode';
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import { ModalService } from '@gentics/ui-core';
 import { Hotkey, HotkeysService } from 'angular2-hotkeys';
-import * as domSerialize from 'dom-serialize';
-import { Observable, Subscription, of, throwError, zip } from 'rxjs';
-import { timeout, take, map, catchError } from 'rxjs/operators';
-import * as serialize from 'serialize-to-js';
-import * as StackTrace from 'stacktrace-js';
+import { Observable, Subscription, of, zip } from 'rxjs';
+import { catchError, map, take, timeout } from 'rxjs/operators';
 import { ApiBase } from '../../core/providers/api';
 import { Api } from '../../core/providers/api/api.service';
-import { ErrorHandler as CMSErrorHandler } from '../../core/providers/error-handler/error-handler.service';
 import { I18nService } from '../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../state';
 import { DebugTool } from '../components/debug-tool/debug-tool.component';
-import { TraceErrorHandler } from './trace-error-handler';
 
 declare const window: Window & typeof globalThis & {
     gcmsui_debugTool(): void;
 };
-
-/**
- * dom-serialize imports punycode using require, but it expects version 1.x and it can
- * apparently not handle the default export of punycode 2.x properly, so we patch the
- * punycode module temporarily.
- *
- * Currently the Editor UI uses punycode 1.x, because 1.x does not ship with an ES5 build.
- * But we include the workaround here nevertheless to avoid issues when upgrading later.
- */
-const patchablePunycode: {
-    ucs2: punycodeModule.ucs2;
-    default: {
-        ucs2: punycodeModule.ucs2;
-    }
-} = punycodeModule as any;
 
 /**
  * This service is responsible for listening to the Debug Tool hotkey, which is CTRL+ALT+G then CTRL+ALT+D.
@@ -62,8 +41,6 @@ export class DebugToolService implements OnDestroy {
     static hotkey = ['ctrl+alt+g ctrl+alt+d'];
 
     private debugDataSnapshot: any = {};
-    private collectedErrors: any = [];
-    private collectedCmsErrors: any = [];
 
     private subscriptions = new Subscription();
 
@@ -81,7 +58,6 @@ export class DebugToolService implements OnDestroy {
         private hotkeysService: HotkeysService,
         private modalService: ModalService,
         private appState: ApplicationStateService,
-        private cmsErrorHandler: CMSErrorHandler,
         private apiService: Api,
         private apiBase: ApiBase,
         private zone: NgZone,
@@ -94,19 +70,6 @@ export class DebugToolService implements OnDestroy {
      * Initializes the DebugToolService it should called only once, and from the constructor
      */
     initialize(): void {
-        this.subscriptions.add(
-            this.cmsErrorHandler.caughtErrors$
-                .subscribe(errorList => {
-                    this.collectedCmsErrors = errorList;
-                }),
-        );
-
-        this.subscriptions.add(
-            TraceErrorHandler.collectErrors$.subscribe(error => {
-                this.collectedErrors.push(error);
-            }),
-        );
-
         window.gcmsui_debugTool = () => this.zone.run(() => {
             if (!this.isDebugToolActive) {
                 this.runDebugTool();
@@ -147,21 +110,19 @@ export class DebugToolService implements OnDestroy {
             localStorage: this.debug_localStorage,
             sessionStorage: this.debug_sessionStorage,
             appState: this.debug_appState,
-            dom: this.debug_dom,
+            dom: null,
             scripts: this.debug_loadedScripts,
             styles: this.debug_loadedStyles,
         };
 
-        this.modalService.fromComponent(DebugTool,
-            {
-                closeOnOverlayClick: false,
-                closeOnEscape: false,
-                onClose: () => {
-                    this.debugDataSnapshot = {}; // Clear Debug Data Snapshot
-                },
-                width: '700px',
+        this.modalService.fromComponent(DebugTool, {
+            closeOnOverlayClick: false,
+            closeOnEscape: false,
+            onClose: () => {
+                this.debugDataSnapshot = {}; // Clear Debug Data Snapshot
             },
-            { debugToolService: this })
+            width: '700px',
+        })
             .then(modal => modal.open())
             .then(result => {
                 if ( typeof result === 'object') {
@@ -178,7 +139,7 @@ export class DebugToolService implements OnDestroy {
      * @returns - Responses from API Endpoints
      */
     requestApiData(): Promise<any> {
-        let apiData: any = {};
+        const apiData: any = {};
 
         const requestList: { [key: string]: Observable<any> } = {
             user: this.apiBase.get('user/me'),
@@ -225,31 +186,15 @@ export class DebugToolService implements OnDestroy {
      * @returns - Prepared report data
      */
     generateReport(): Promise<any> {
-        let apiData: any;
-        let apiDataPromise = this.requestApiData();
-        let traceCmsPromises: Promise<any>[] = [];
-        let tracedCmsErrors: any = [];
-
-        // Build stack from CMS Errors
-        this.collectedCmsErrors.forEach((error: any) => {
-            traceCmsPromises.push(StackTrace.fromError(error, { offline: true }).then((trace) => {
-                tracedCmsErrors.push({error, trace});
-            }));
-        });
-
-        // Load API Data
-        apiDataPromise.then( result => apiData = result );
-
         // Wait until all data becomes ready, then resolve
-        return Promise.all([...traceCmsPromises, apiDataPromise]).then(() =>
+        return this.requestApiData().then(apiData =>
             Promise.resolve({
                 ...this.debugDataSnapshot,
                 apiData: apiData,
-                errors: serialize([...this.collectedErrors]),
-                cmsErrors: serialize([...tracedCmsErrors]),
+                errors: [],
+                cmsErrors: [],
             }),
         );
-
     }
 
     /**
@@ -294,14 +239,14 @@ export class DebugToolService implements OnDestroy {
     }
 
     clearAllCookies(): void {
-        let cookies = document.cookie.split('; ');
+        const cookies = document.cookie.split('; ');
         for (let c = 0; c < cookies.length; c++) {
-            let d = window.location.hostname.split('.');
+            const d = window.location.hostname.split('.');
             while (d.length > 0) {
-                let cookieBase = encodeURIComponent(cookies[c].split(';')[0].split('=')[0]) +
+                const cookieBase = encodeURIComponent(cookies[c].split(';')[0].split('=')[0]) +
                 '=; expires=Thu, 01-Jan-1970 00:00:01 GMT; domain=' +
                 d.join('.') + ' ;path=';
-                let p = location.pathname.split('/');
+                const p = location.pathname.split('/');
                 document.cookie = cookieBase + '/';
                 while (p.length > 0) {
                     document.cookie = cookieBase + p.join('/');
@@ -313,18 +258,18 @@ export class DebugToolService implements OnDestroy {
     }
 
     downloadReport(data: any): void {
-        let fileName = 'GCMS_Debug_Report_' + this.debug_currentDate.replace(/[\.\:\-]+/g, '') + '.grd'; // GRD: Gentics Report Data
-        let json = JSON.stringify(data);
-        let blob = new Blob([json], { type: 'application/octet-stream' });
+        const fileName = 'GCMS_Debug_Report_' + this.debug_currentDate.replace(/[\.\:\-]+/g, '') + '.grd'; // GRD: Gentics Report Data
+        const json = JSON.stringify(data);
+        const blob = new Blob([json], { type: 'application/octet-stream' });
 
         if ((window.navigator as any).msSaveOrOpenBlob) {
             (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
         } else {
-            let url = (window.URL || (window as any).webkitURL).createObjectURL(blob);
-            let downloadLink = document.createElement('a');
+            const url = (window.URL || (window as any).webkitURL).createObjectURL(blob);
+            const downloadLink = document.createElement('a');
             downloadLink.download = fileName,
             downloadLink.href = url;
-            let event = document.createEvent('MouseEvents');
+            const event = document.createEvent('MouseEvents');
             event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
             downloadLink.dispatchEvent(event);
         }
@@ -335,11 +280,11 @@ export class DebugToolService implements OnDestroy {
     }
 
     get debug_cookies(): any {
-        let cookies: any = {};
+        const cookies: any = {};
         if (document.cookie) {
-            let split = document.cookie.split(';');
+            const split = document.cookie.split(';');
             for (let i = 0; i < split.length; i++) {
-                let nameValue = split[i].split('=');
+                const nameValue = split[i].split('=');
                 nameValue[0] = nameValue[0].replace(/^ /, '');
                 cookies[decodeURIComponent(nameValue[0])] = decodeURIComponent(nameValue[1]);
             }
@@ -367,15 +312,11 @@ export class DebugToolService implements OnDestroy {
         return this.appState.now;
     }
 
-    get debug_dom(): any {
-        return this.runWithPatchedPunycode(() => domSerialize(window.document));
-    }
-
     get debug_platform(): any {
         if (typeof window.navigator == 'object') {
-            let navigator: any = window.navigator;
-            let _navigator: any = {};
-            for (let i in navigator) {
+            const navigator: any = window.navigator;
+            const _navigator: any = {};
+            for (const i in navigator) {
                 _navigator[i] = navigator[i];
             }
 
@@ -388,7 +329,7 @@ export class DebugToolService implements OnDestroy {
     }
 
     get debug_connection(): any {
-        let navigator: any = (window.navigator as any);
+        const navigator: any = (window.navigator as any);
         if (navigator.connection && typeof navigator.connection == 'object') {
             return {
                 type: navigator.connection.effectiveType,
@@ -409,7 +350,7 @@ export class DebugToolService implements OnDestroy {
     }
 
     get debug_loadedScripts(): any {
-        let scripts: any = [];
+        const scripts: any = [];
 
         [].forEach.call(document.querySelectorAll('script[src]'), (element: any) => {
             scripts.push(element.getAttribute('src'));
@@ -419,8 +360,8 @@ export class DebugToolService implements OnDestroy {
     }
 
     get debug_loadedStyles(): any {
-        let stylesheets: any = [];
-        let styles: any = [];
+        const stylesheets: any = [];
+        const styles: any = [];
 
         [].forEach.call(document.querySelectorAll('link[rel="stylesheet"][href]'), (element: any) => {
             stylesheets.push(element.getAttribute('href'));
@@ -431,20 +372,5 @@ export class DebugToolService implements OnDestroy {
         });
 
         return { stylesheets, styles };
-    }
-
-    private runWithPatchedPunycode<R>(action: () => R): R {
-        const origValue = patchablePunycode.ucs2;
-        const needsPatch = typeof origValue !== 'object';
-
-        if (needsPatch) {
-            patchablePunycode.ucs2 = patchablePunycode.default.ucs2;
-        }
-        const ret = action();
-        if (needsPatch) {
-            patchablePunycode.ucs2 = origValue;
-        }
-
-        return ret;
     }
 }

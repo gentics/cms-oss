@@ -91,9 +91,9 @@ export class DynamicOverlayService {
                 });
                 instance.registerErrorFn(error => {
                     closeDropdown();
-                    if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
-                        return;
-                    }
+                    // if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+                    //     return;
+                    // }
                     reject(error);
                 });
             }),

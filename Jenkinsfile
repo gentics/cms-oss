@@ -81,6 +81,7 @@ spec:
         booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
+        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
         booleanParam(name: 'deployTesting',             defaultValue: false, description: "Like deploy, but only the server image will be built and deployed to a different repository")
         booleanParam(name: 'install',                   defaultValue: false, description: "Install the Maven artifacts to the local repository (unless deploy or runReleaseBuild is true). If this is set, no tests will be executed (regardless of other settings).")
@@ -89,7 +90,6 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
-        booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
     }
@@ -285,14 +285,14 @@ spec:
 
                         if (params.runTests) {
                             if (runJUnitTests) {
-                                junit  testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
-                                junit  testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
-                                junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
+                                junit testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit  testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
-                            junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
-                            junit  testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -309,7 +309,7 @@ spec:
 			}
 
             environment {
-                DOCKER_TAG   = "${branchName}"
+                DOCKER_TAG = "${branchName}"
             }
 
             steps {
@@ -335,7 +335,8 @@ spec:
         stage("UI Integration Tests") {
 			when {
 				expression {
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
+                    // Requires Docker image; Forcefully disabled until fully tested
+					return false && env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
 				}
 			}
 
@@ -352,13 +353,9 @@ spec:
                             // prior to starting the tests, start the docker containers with CMS
                             sh "docker login -u ${repoUsername} -p ${repoPassword} docker.gentics.com"
                             sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-
-                            // run the integration tests in the ui-module
-                            sh "xvfb-run -a mvn integration-test -B -fae -pl :cms-ui " +
-                                // Setup NPM correctly for this run
-                                "-Dnodejs.npm.bin=/opt/node/bin/npm " + 
-                                // And skip all other parts - these had to run before hand or will be executed by the UI repo
-                                "-Dui.skip.install=true -Dui.skip.publish=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report=true -Dui.skip.assembly=true"
+                            
+                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
+                            sh "mvn integration-test -B -am -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report"
                         } finally {
                             // finally stop the docker containers
                             sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
@@ -370,7 +367,9 @@ spec:
             post {
                 always {
                     script {
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: false
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
                     }
                 }
             }
@@ -404,6 +403,37 @@ spec:
                     } else if (params.deploy || params.deployTesting) {
                         // push snapshot build image
                         sh "docker push ${imageNameWithTag}"
+                    }
+                }
+            }
+		}
+
+        stage("UI Integration Tests") {
+			when {
+				expression {
+                    // Needs built docker images to be deployed (as they are used in another job)
+                    // And only if the tests should be performed as well
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && (params.deploy || params.deployTesting) && params.integrationTests
+				}
+			}
+            
+            steps {
+                script {
+                    def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
+                    def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
+                        parameters: [
+                            string(name: 'variant', value: 'OSS'),
+                            string(name: 'cmsVersion', value: branchName),
+                            // TODO: Get Mesh Version from POM?
+                            // string(name: 'meshVersion', value: '2.1.0')
+                        ],
+                        wait: true
+                    )
+
+                    if ( testJob.getBuildVariables()["BUILD_SKIPPED"] == "true" ) {
+                        echo "Integration Tests finished with an error"
+                    } else {
+                        echo "Integration Tests finished successfully"
                     }
                 }
             }

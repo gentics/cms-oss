@@ -32,7 +32,10 @@ export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData,
 export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     if (res.ok) {
         return res.json().then(json => {
-            validateResponseObject(request, json);
+            const err = validateResponseObject(request, json);
+            if (err) {
+                throw err;
+            }
             return json;
         });
     }

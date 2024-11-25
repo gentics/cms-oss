@@ -6,11 +6,17 @@ describe('Login', () => {
 
     const IMPORTER = new EntityImporter();
 
+    beforeEach(() => {
+        cy.muteXHR();
+    });
+
     describe('Without keycloak feature enabled', () => {
         // Make sure to have keycloak disabled for these tests
-        before(async () => {
-            await IMPORTER.setupFeatures({
-                [Feature.KEYCLOAK]: false,
+        before(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.setupFeatures({
+                    [Feature.KEYCLOAK]: false,
+                }), { log: false, timeout: 60_000 });
             });
         });
 
@@ -24,9 +30,11 @@ describe('Login', () => {
     // Keycloak is an enterprise edition feature, therefore we can only test it in that variant.
     skipableSuite(isVariant(Variant.ENTERPRISE), 'With keycloak feature enabled', () => {
         // Make sure to have keycloak enabled for these tests
-        before(async () => {
-            await IMPORTER.setupFeatures({
-                [Feature.KEYCLOAK]: true,
+        before(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.setupFeatures({
+                    [Feature.KEYCLOAK]: true,
+                }), { log: false, timeout: 60_000 });
             });
         });
 

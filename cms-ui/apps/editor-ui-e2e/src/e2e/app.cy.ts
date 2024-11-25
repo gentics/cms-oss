@@ -13,19 +13,26 @@ describe('Login', () => {
 
     const IMPORTER = new EntityImporter();
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
-    beforeEach(async () => {
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
-        cy.selectNode(IMPORTER.get(minimalNode)!.id);
+    beforeEach(() => {
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        });
     });
 
     it('should have the minimal node present', () => {

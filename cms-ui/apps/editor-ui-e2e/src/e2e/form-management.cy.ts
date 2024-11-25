@@ -25,21 +25,27 @@ skipableSuite(isVariant(Variant.ENTERPRISE), 'Form Management', () => {
     const ALIAS_CREATE_REQ = '@createRequest';
     const ALIAS_UPDATE_REQ = '@updateRequest';
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
         cy.muteXHR();
 
-        cy.wrap(IMPORTER.cleanupTest()).then(() => {
-            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.setupFeatures(TestSize.MINIMAL, {
                 [NodeFeature.FORMS]: true,
-            }));
+            }), { log: false, timeout: 60_000 });
         }).then(() => {
             const NODE_ID = IMPORTER.get(minimalNode)!.id;
             // Languages have to be loaded, otherwise the create-modal might not have the

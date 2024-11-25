@@ -6,14 +6,18 @@ describe('No Nodes', () => {
 
     const IMPORTER =  new EntityImporter();
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest(true);
-        await IMPORTER.importData([
-            rootGroup,
-            userAlpha,
-            userBeta,
-        ]);
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(true), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.importData([
+                rootGroup,
+                userAlpha,
+                userBeta,
+            ]), { log: false, timeout: 60_000 });
+        });
 
         cy.wrap({
             username: userAlpha.login,

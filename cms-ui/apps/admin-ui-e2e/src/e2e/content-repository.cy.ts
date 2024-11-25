@@ -7,7 +7,7 @@ describe('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
         logRequests: false,
-        logImports: false
+        logImports: false,
     });
 
     const NEW_PROJECT_NAME = 'New Project';
@@ -18,9 +18,9 @@ describe('Content Repositories Module', () => {
 
     const EXAMPLE_PROJECT = 'example';
 
-    const MINIMAL = "Minimal";
-    const FOLDER_A = "Folder A";
-    const FOLDER_B = "Folder B";
+    const MINIMAL = 'Minimal';
+    const FOLDER_A = 'Folder A';
+    const FOLDER_B = 'Folder B';
     const CR_ID = '1';
 
     const ALIAS_MODULE = '@module';
@@ -28,36 +28,41 @@ describe('Content Repositories Module', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL));
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        })
     });
 
     beforeEach(() => {
         cy.muteXHR();
-        // If this client isn't recreated for WHATEVER reason, the CMS gives back a 401 for importer requests.
-        IMPORTER.client = null;
-        cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL));
-        cy.wrap(IMPORTER.cleanupTest());
-        cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL));
 
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
 
-        // Table loading
-        const ALIAS_TABLE_LOAD_REQ = '@tableLoadReq';
+            // Table loading
+            const ALIAS_TABLE_LOAD_REQ = '@tableLoadReq';
 
-        cy.intercept({
-            method: 'GET',
-            pathname: '/rest/contentrepositories',
-        }, req => {
-            req.alias = ALIAS_TABLE_LOAD_REQ;
+            cy.intercept({
+                method: 'GET',
+                pathname: '/rest/contentrepositories',
+            }, req => {
+                req.alias = ALIAS_TABLE_LOAD_REQ;
+            });
+
+            cy.navigateToModule('content-repositories', AccessControlledType.CONTENT_ADMIN)
+                .as(ALIAS_MODULE)
+                .find('gtx-table')
+                .as(ALIAS_CR_TABLE);
+
+            cy.wait(ALIAS_TABLE_LOAD_REQ);
         });
-
-        cy.navigateToModule('content-repositories', AccessControlledType.CONTENT_ADMIN)
-            .as(ALIAS_MODULE)
-            .find('gtx-table')
-            .as(ALIAS_CR_TABLE);
-
-        cy.wait(ALIAS_TABLE_LOAD_REQ);
     });
 
     it('should have content repositories listed', () => {

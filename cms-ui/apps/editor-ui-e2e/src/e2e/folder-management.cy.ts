@@ -23,20 +23,28 @@ describe('Folder Management', () => {
     const ALIAS_CREATE_REQ = '@createRequest';
     const ALIAS_UPDATE_REQ = '@updateRequest';
 
-    before(async () => {
+    before(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
-    beforeEach(async () => {
+    beforeEach(() => {
         cy.muteXHR();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        cy.navigateToApp();
-        cy.login(AUTH_ADMIN);
-        cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        });
     });
 
     it('should be possible to create a new folder', () => {

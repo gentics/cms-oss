@@ -1,0 +1,34 @@
+<gtx-rich-content-editor
+    *ngIf="useRichEditor; else defaultInput"
+    [value]="value?.[language] || ''"
+    [label]="label"
+    [disabled]="disabled"
+    (valueChange)="handleInputChange($event)"
+></gtx-rich-content-editor>
+
+<ng-template #defaultInput>
+    <gtx-input
+        [value]="value?.[language] || ''"
+        [label]="label"
+        [type]="type"
+        [required]="requiredInCurrentLanguage"
+        [class.untranslated]="!isTranslated"
+        [disabled]="disabled"
+        (valueChange)="handleInputChange($event)"
+        (blur)="triggerTouch()"
+    ></gtx-input>
+</ng-template>
+
+<div *ngIf="!isTranslated && requiredInCurrentLanguage" class="translation-suggestions">
+    <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>
+    <div class="translation-suggestions__values">
+        <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
+        <div class="translation-suggestions__additional-values">
+            <ng-container *ngFor="let translationSuggestion of translationSuggestions; let first = first">
+                <div *ngIf="!first">
+                    [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>

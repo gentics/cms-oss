@@ -1,0 +1,76 @@
+<form [formGroup]="form">
+    <gtx-input
+        [label]="('editor.item_name_label' | i18n) + '*'"
+        formControlName="name"
+        pattern=".+\.\w+"
+        required
+    ></gtx-input>
+
+    <div
+        *ngIf="form.controls.name.invalid"
+        class="error-message"
+    >{{ 'editor.item_file_name_error' | i18n }}</div>
+
+    <gtx-input
+        [label]="'editor.item_description_label' | i18n"
+        formControlName="description"
+    ></gtx-input>
+
+    <gtx-checkbox
+        *ngIf="form.controls.forceOnline.enabled"
+        class="checkbox-input"
+        [label]="'editor.forcePublish_label' | i18n"
+        formControlName="forceOnline"
+    ></gtx-checkbox>
+
+    <div *ngIf="item" class="custom-date-row">
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_creation_date_label' | i18n"
+                formControlName="customCdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_date_created_label' | i18n  }}: {{ item.cdate | i18nDate:'dateTime' }}</span>
+        </div>
+
+        <div class="custom-date-col">
+            <gtx-date-time-picker
+                class="custom-date-picker"
+                [label]="'editor.item_custom_edit_date_label' | i18n"
+                formControlName="customEdate"
+                [clearable]="true"
+                [displaySeconds]="false"
+            ></gtx-date-time-picker>
+
+            <span class="actual-date">{{ 'editor.item_edited_on_label' | i18n  }}: {{ item.edate | i18nDate:'dateTime' }}</span>
+        </div>
+    </div>
+
+    <div *ngIf="niceUrlsEnabled">
+        <gtx-input
+            [label]="'editor.item_nice_url_label' | i18n"
+            formControlName="niceUrl"
+        ></gtx-input>
+
+        <div
+            *ngIf="form.controls.niceUrl.invalid"
+            class="error-message"
+        >{{ 'editor.item_nice_url_error' | i18n }}</div>
+
+        <gtx-string-list
+            [label]="'editor.item_alternate_urls_label' | i18n"
+            [addLabel]="'editor.add_label' | i18n"
+            [errors]="form.controls.alternateUrls.errors"
+            class="alternate-urls"
+            formControlName="alternateUrls"
+        ></gtx-string-list>
+
+        <div
+            *ngIf="form.controls.alternateUrls.invalid"
+            class="error-message"
+        >{{ 'editor.item_alternate_urls_error' | i18n }}</div>
+    </div>
+</form>

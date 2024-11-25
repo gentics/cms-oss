@@ -1,50 +1,54 @@
+import '@gentics/e2e-utils/commands';
 import {
-    EntityMap,
+    EntityImporter,
     IMPORT_TYPE,
-    ImportBootstrapData,
     TestSize,
-    bootstrapSuite,
-    cleanupTest,
     folderA,
     folderB,
-    getItem,
     minimalNode,
-    setupTest,
 } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('Login', () => {
 
-    let bootstrap: ImportBootstrapData;
-    let entities: EntityMap = {};
+    const IMPORTER = new EntityImporter();
 
     before(() => {
-        cy.wrap(cleanupTest()
-            .then(() => bootstrapSuite(TestSize.MINIMAL))
-            .then(data => {
-                bootstrap = data;
-            }),
-        );
+        cy.muteXHR();
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
-        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap).then(data => {
-            entities = data;
-        }));
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        });
     });
 
     it('should have the minimal node present', () => {
-        cy.navigateToApp();
-        cy.login('cms');
-        cy.selectNode(getItem(minimalNode, entities)!.id);
         cy.get('folder-contents > .title .title-name')
             .should('exist')
             .should('contain.text', minimalNode.node.name);
         const folders = [folderA, folderB];
         for (const folder of folders) {
-            cy.findItem(folder[IMPORT_TYPE], getItem(folder, entities)!.id).should('exist');
+            cy.findList(folder[IMPORT_TYPE])
+                .findItem(IMPORTER.get(folder)!.id)
+                .should('exist');
         }
 
-        cy.itemAction(folderA[IMPORT_TYPE], getItem(folderA, entities)!.id, 'properties');
+        cy.findList(folderA[IMPORT_TYPE])
+            .findItem(IMPORTER.get(folderA)!.id)
+            .itemAction('properties');
         cy.get('content-frame')
             .should('exist');
     });

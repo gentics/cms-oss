@@ -82,6 +82,7 @@ public abstract class ContentNodeItem implements Serializable {
 	 */
 	private DeleteInfo folderDeleted;
 
+
 	/**
 	 * Default constructor needed by JAXB
 	 */
@@ -260,9 +261,13 @@ public abstract class ContentNodeItem implements Serializable {
 
 	/**
 	 * Set containing folder deletion info.
-	 * @param masterDeleted deletion info
+	 * @param folderDeleted deletion info
 	 */
 	public void setFolderDeleted(DeleteInfo folderDeleted) {
 		this.folderDeleted = folderDeleted;
 	}
+
+
+
+
 }

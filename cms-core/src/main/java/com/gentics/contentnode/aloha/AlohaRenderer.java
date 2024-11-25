@@ -61,6 +61,7 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.render.FormDirective;
+import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.TemplateRenderer;
@@ -426,7 +427,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				try {
 					cnBlock.put("constructid", construct.getId().toString());
 				} catch (Exception e) {
-					logger.error("construct for tag {" + blockTagIds[i] + "} has no id.");
+					logger.warn("construct for tag {" + blockTagIds[i] + "} has no id.");
 				}
 				cnBlock.put("icontitle", tag.getName() + " (" + construct.getName() + ")");
 				cnBlock.put("editdo", tag.containsOverviewPart() ? "17001" : "10008");
@@ -1078,7 +1079,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return true iff forms feature is active and the start tag is the forms preview tag
 	 */
 	protected static boolean isFormsPreviewTag(String startTag) {
-		return getClasses(startTag).contains(FormDirective.FORMS_PREVIEW_CLASS);
+		return getClasses(startTag).contains(FormRendering.FORMS_PREVIEW_CLASS);
 	}
 
 	/*
@@ -1100,11 +1101,11 @@ public class AlohaRenderer implements TemplateRenderer {
 
 			// replace editables
 			if (isReplaceEditables(renderType)) {
-			try {
-				template = replaceEditables(template, renderResult);
-			} catch (Exception e) {
-				logger.error("Error while replacing editables", e);
-			}
+				try {
+					template = replaceEditables(template, renderResult);
+				} catch (Exception e) {
+					logger.error("Error while replacing editables in template", e);
+				}
 			}
 
 			if (!isRenderSettings(renderType)) {
@@ -1766,7 +1767,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return aloha plugins to be loaded
 	 * @throws NodeException
 	 */
-	protected String getAlohaPlugins(Node node) throws NodeException {
+	public String getAlohaPlugins(Node node) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 

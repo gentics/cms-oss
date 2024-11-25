@@ -19,17 +19,13 @@
 	<url>http://www.gentics.com</url>
 
 	<properties>
-		<!-- Default is already false. Don't enable this, as it's quite buggy and will cause issues with starting the containers-->
-		<docker.startParallel>false</docker.startParallel>
-
 		<integrationTest.mariadb.image>mariadb</integrationTest.mariadb.image>
 		<integrationTest.mariadb.version>10.7</integrationTest.mariadb.version>
 
-		<integrationTest.cms.image>docker.apa-it.at/gentics/cms-oss</integrationTest.cms.image>
-		<!-- <integrationTest.cms.version>${project.version}</integrationTest.cms.version> -->
-		<integrationTest.cms.version>6.1.6</integrationTest.cms.version>
+		<integrationTest.cms.image>docker.gentics.com/gentics/cms-oss</integrationTest.cms.image>
+		<integrationTest.cms.version>${project.version}</integrationTest.cms.version>
 
-		<integrationTest.mesh.image>docker.apa-it.at/gentics/mesh</integrationTest.mesh.image>
+		<integrationTest.mesh.image>docker.gentics.com/gentics/mesh</integrationTest.mesh.image>
 		<integrationTest.mesh.version>${mesh.version}</integrationTest.mesh.version>
 	</properties>
 
@@ -45,10 +41,10 @@
 					<images>
 						<image>
 							<alias>mariadb</alias>
-							<name>${integrationTest.mariadb.image}:${integrationTest.mariadb.version}</name>
+							<name>
+								${integrationTest.mariadb.image}:${integrationTest.mariadb.version}</name>
 							<run>
 								<skip>${skip.integration.tests}</skip>
-
 								<cmd>
 									<exec>
 										<arg>--transaction-isolation=READ-COMMITTED</arg>
@@ -56,24 +52,12 @@
 										<arg>--log-bin=mysqld-bin</arg>
 									</exec>
 								</cmd>
-
 								<env>
 									<MYSQL_DATABASE>node_utf8</MYSQL_DATABASE>
 									<MYSQL_USER>node</MYSQL_USER>
 									<MYSQL_PASSWORD>node</MYSQL_PASSWORD>
 									<MYSQL_ROOT_PASSWORD>finger</MYSQL_ROOT_PASSWORD>
 								</env>
-
-								<volumes>
-									<bind>
-										<volume>./test/resources/mariadb/dumps:/docker-entrypoint-initdb.d</volume>
-									</bind>
-								</volumes>
-
-								<network>
-									<mode>bridge</mode>
-									<alias>mariadb</alias>
-								</network>
 
 								<ports>
 									<port>mariadb.port:3306</port>
@@ -82,6 +66,46 @@
 
 								<wait>
 									<log>.*socket: '/run/mysqld/mysqld.sock'  port: 3306 .*</log>
+									<time>120000</time>
+								</wait>
+							</run>
+						</image>
+
+						<image>
+							<alias>cms</alias>
+							<name>${integrationTest.cms.image}:${integrationTest.cms.version}</name>
+
+							<run>
+								<skip>${skip.integration.tests}</skip>
+								<env>
+									<NODE_DB_HOST>+${docker.container.mariadb.ip}</NODE_DB_HOST>
+									<NODE_DB_USER>root</NODE_DB_USER>
+									<NODE_DB_PASSWORD>finger</NODE_DB_PASSWORD>
+									<NODE_USER_PASSWORD>node</NODE_USER_PASSWORD>
+									<ELASTICSEARCH_ENABLED>false</ELASTICSEARCH_ENABLED>
+									<ELASTICSEARCH_URL></ELASTICSEARCH_URL>
+									<CONF_FILES>cms</CONF_FILES>
+								</env>
+
+								<volumes>
+									<bind>
+										<volume>
+											./test/resources/cms/commands:/cms/scheduler-commands</volume>
+											<volume>./test/resources/cms/conf:/cms/conf/cms</volume>
+											<volume>./test/resources/cms/ui-conf:/cms/ui-conf</volume>
+										</bind>
+									</volumes>
+									<dependsOn>
+									<container>mariadb</container>
+								</dependsOn>
+
+								<ports>
+									<port>cms.port:8080</port>
+									<port>8080:8080</port>
+								</ports>
+
+								<wait>
+									<log>.*runtime - Server started successfully.*</log>
 									<time>120000</time>
 								</wait>
 							</run>
@@ -101,11 +125,6 @@
 									<MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS>false</MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS>
 								</env>
 
-								<network>
-									<mode>bridge</mode>
-									<alias>mesh</alias>
-								</network>
-
 								<ports>
 									<port>mesh.port:8100</port>
 									<port>8100:8080</port>
@@ -118,61 +137,6 @@
 							</run>
 						</image>
 
-						<image>
-							<alias>cms</alias>
-							<name>${integrationTest.cms.image}:${integrationTest.cms.version}</name>
-
-							<run>
-								<skip>${skip.integration.tests}</skip>
-								<env>
-									<NODE_DB_HOST>+${docker.container.mariadb.ip}</NODE_DB_HOST>
-									<NODE_DB_USER>root</NODE_DB_USER>
-									<NODE_DB_PASSWORD>finger</NODE_DB_PASSWORD>
-
-									<NODE_USER_PASSWORD>node</NODE_USER_PASSWORD>
-									<ELASTICSEARCH_ENABLED>false</ELASTICSEARCH_ENABLED>
-									<ELASTICSEARCH_URL></ELASTICSEARCH_URL>
-									<CONF_FILES>cms</CONF_FILES>
-
-									<CR_URL_MESH_CR>http://${docker.container.mesh.ip}:8080/example</CR_URL_MESH_CR>
-									<CR_USERNAME_MESH_CR>admin</CR_USERNAME_MESH_CR>
-									<CR_PASSWORD_MESH_CR>admin</CR_PASSWORD_MESH_CR>
-
-									<CR_URL_MARIADB_CR>jdbc:mariadb://${docker.container.mariadb.ip}:3306/cr</CR_URL_MARIADB_CR>
-									<CR_USERNAME_MARIADB_CR>crtest</CR_USERNAME_MARIADB_CR>
-									<CR_PASSWORD_MARIADB_CR>crtest</CR_PASSWORD_MARIADB_CR>
-								</env>
-
-								<volumes>
-									<bind>
-										<volume>./test/resources/cms/commands:/cms/scheduler-commands</volume>
-										<volume>./test/resources/cms/conf:/cms/conf/cms</volume>
-										<volume>./test/resources/cms/ui-conf:/cms/ui-conf</volume>
-										<volume>./test/resources/cms/packages:/cms/packages</volume>
-									</bind>
-								</volumes>
-
-								<dependsOn>
-									<container>mariadb</container>
-									<container>mesh</container>
-								</dependsOn>
-
-								<network>
-									<mode>bridge</mode>
-									<alias>cms</alias>
-								</network>
-								
-								<ports>
-									<port>cms.port:8080</port>
-									<port>8080:8080</port>
-								</ports>
-
-								<wait>
-									<log>.*runtime - Server started successfully.*</log>
-									<time>120000</time>
-								</wait>
-							</run>
-						</image>
 					</images>
 				</configuration>
 			</plugin>

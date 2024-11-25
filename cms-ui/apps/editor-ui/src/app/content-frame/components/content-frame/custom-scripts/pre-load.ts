@@ -1,15 +1,6 @@
 import * as Mousetrap from 'mousetrap';
 import { DebugToolService } from '../../../../development/providers/debug-tool.service';
 import { CNIFrameDocument, CNWindow } from '../../../models/content-frame';
-import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
-
-/** Callback for the extended version of pollUntilAvailable(). */
-type PollCallback<T> = (
-    window: CNWindow,
-    document: CNIFrameDocument,
-    receiver: (found: T) => unknown
-) => unknown
 
 /**
  * This script will be executed once when the IFrame calls GCMSUI.runPreLoadScript().
@@ -25,16 +16,20 @@ export class PreLoadScript {
     constructor(
         private iFrameWindow: CNWindow,
         private iFrameDocument: CNIFrameDocument,
-        private scriptHost: CustomScriptHostService,
     ) { }
 
     run(): void {
+        this.applyGcmsUiStyles();
         this.bindExternalDebugHotkey();
-        this.copyDataPropertiesFromIframeElementToBody();
         this.removeAlohaUnloadLogic();
-        this.trackWhenObjectPropertyPagesAreLoading();
-        this.showLanguageWhenComparingLanguages();
-        this.hideSyncScrollTextWhenComparingLanguages();
+    }
+
+    /** Applies the GCMS UI styles to the IFrame. */
+    applyGcmsUiStyles(): void {
+        const link = this.iFrameDocument.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = this.iFrameWindow.GCMSUI.gcmsUiStylesUrl;
+        this.iFrameDocument.body.appendChild(link);
     }
 
     /** Add Debug Tool hotkey access to iframe */
@@ -52,126 +47,11 @@ export class PreLoadScript {
         });
     }
 
-    /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
-    pollUntilAvailable<T>(checkFn: (windowRef: CNWindow, documentRef: CNIFrameDocument) => T, callback: (found: T) => any): void {
-        let timeout = 0;
-        let retriesAfterLoad = 5;
-
-        const poll = () => {
-            let found: T;
-            try {
-                if (this.iFrameWindow && this.iFrameDocument) {
-                    found = checkFn(this.iFrameWindow, this.iFrameDocument);
-                }
-            } catch (ignored) {
-                console.warn('Error while calling checkFn() from pollUntilAvailable():', ignored);
-            }
-
-            if (found != null) {
-                timeout = 0;
-                callback(found);
-            } else if (this.iFrameDocument.readyState !== 'complete' || --retriesAfterLoad > 0) {
-                timeout = this.iFrameWindow.setTimeout(poll, 10);
-            }
-        };
-        poll();
-    }
-
-    /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
-    pollUntilAvailableWithPollCallback<T>(checkFn: PollCallback<T>, callback: (found: T) => any): void {
-        let timeout = 0;
-        let retriesAfterLoad = 5;
-
-        const poll = () => {
-            let found: T;
-            try {
-                if (this.iFrameWindow && this.iFrameDocument) {
-                    checkFn(this.iFrameWindow, this.iFrameDocument, (found) => {
-                        if (found !== undefined) {
-                            timeout = 0;
-                            callback(found);
-                        } else if (this.iFrameDocument.readyState !== 'complete' || --retriesAfterLoad > 0) {
-                            timeout = this.iFrameWindow.setTimeout(poll, 10);
-                        }
-                    });
-                }
-            } catch (ignored) {
-                console.warn('Error while calling checkFn() from pollUntilAvailableWithPollCallback():', ignored);
-            }
-        };
-        poll();
-    }
-
-    copyDataPropertiesFromIframeElementToBody(): void {
-        this.pollUntilAvailable(
-            (windowRef, documentRef) =>
-                windowRef.frameElement && windowRef.frameElement.dataset &&
-                documentRef.body && documentRef.body.dataset,
-            () => {
-                const iframeDataset = this.iFrameWindow.frameElement.dataset;
-                // eslint-disable-next-line guard-for-in
-                for (const key in iframeDataset) {
-                    this.iFrameDocument.body.dataset[key] = iframeDataset[key];
-                }
-            },
-        );
-    }
-
     /**
      * Override the Alohapage onbeforeunload handler, our method of
      * checking whether a confirmation needs to be displayed is superior.
      */
     removeAlohaUnloadLogic(): void {
-        this.pollUntilAvailable(windowRef => windowRef.onbeforeunload, () => {
-            this.iFrameWindow.onbeforeunload = function noop(): void { };
-        });
-    }
-
-    /**
-     * In the Object Properties pages, pages are opened via a call to a `progress` method which basically
-     * just updates the document url via JavaScript. Here we patch that method so that we can indicate
-     * page loading by flipping the `requesting` flag to true. There is already an `onLoad` handler defined
-     * which will flip it back to false as soon as loading is complete.
-     *
-     * We also need to explicitly add an entity ID to certain urls to avoid backend hidden state errors.
-     */
-    trackWhenObjectPropertyPagesAreLoading(): void {
-        const oldProgress = this.iFrameWindow.progress;
-        const scriptHost = this.scriptHost;
-
-        this.iFrameWindow.progress = function patchedProgress(myframe: any, doc: Document, url: string): void {
-            scriptHost.setRequesting(true);
-            scriptHost.runChangeDetection();
-            const urlWithTypeId = appendTypeIdToUrl(scriptHost.currentItem, url);
-            oldProgress.call(this, myframe, doc, urlWithTypeId);
-        };
-    }
-
-    showLanguageWhenComparingLanguages(): void {
-        if (this.iFrameWindow.name === 'node_diff_frame' || this.iFrameWindow.frameElement.id === 'gcn-aloha-iframe') {
-            const languageOfThisIframe = this.iFrameWindow.name === 'node_diff_frame' ?
-                this.scriptHost.getPageComparisonLanguage() :
-                this.scriptHost.getItemLanguage();
-
-            if (languageOfThisIframe) {
-                const languageIndicator = this.iFrameDocument.createElement('div');
-                languageIndicator.classList.add('gcms-language-indicator');
-                languageIndicator.innerText = languageOfThisIframe.name;
-                this.iFrameDocument.body.appendChild(languageIndicator);
-            }
-        }
-    }
-
-    /**
-     * The language comparison frame has an annoying bit of text that cannot be hidden with CSS because it is
-     * not contained within an element (other than <body>) so cannot be targeted.
-     *
-     * Therefore we need to do a check for its presence, and if it is there, use some JavaScript to help hide it.
-     */
-    hideSyncScrollTextWhenComparingLanguages(): void {
-        const syncScrollCheckbox = this.iFrameDocument.querySelector('#syncscroll') ;
-        if (syncScrollCheckbox) {
-            this.iFrameDocument.body.classList.add('gcms-hide-syncscroll');
-        }
+        this.iFrameWindow.onbeforeunload = () => { /* Noop */};
     }
 }

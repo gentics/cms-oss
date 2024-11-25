@@ -112,7 +112,7 @@ public class DBTestContext extends TestWatcher {
 	 */
 	public final static String DEFAULT_CONFIG_NAME = "default_test_config.yml";
 
-	public final int DEFAULT_MAX_WAIT = 240;
+	public final static int DEFAULT_MAX_WAIT = 240;
 
 	/**
 	 * Name of the environment variable, which could contain a comma separated list

@@ -38,6 +38,8 @@ import {
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
+    AbstractPublishProtocolAPI,
+    AbstractTranslationAPI,
 } from './abstracts';
 import { BasicAPI, Callable } from './common';
 
@@ -207,6 +209,8 @@ export type GCMSTemplateAPI = MappedAPI<AbstractTemplateAPI>;
 export type GCMSUserAPI = MappedAPI<AbstractUserAPI>;
 export type GCMSUsersnapAPI = MappedAPI<AbstractUsersnapAPI>;
 export type GCMSValidationAPI = MappedAPI<AbstractValidationAPI>;
+export type GCMSPublishProtocolAPI = MappedAPI<AbstractPublishProtocolAPI>;
+export type GCMSTranslationAPI = MappedAPI<AbstractTranslationAPI>;
 
 export type GCMSRootAPI = {
     [K in keyof AbstractRootAPI]: MappedAPI<AbstractRootAPI[K]>;

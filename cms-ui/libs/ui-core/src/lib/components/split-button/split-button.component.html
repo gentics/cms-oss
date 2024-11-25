@@ -1,6 +1,7 @@
 <div class="split-button-wrapper z-depth-1">
     <gtx-button
         class="primary-button"
+        data-action="primary"
         [autofocus]="autofocus"
         [size]="size"
         [type]="type"
@@ -19,6 +20,7 @@
             <gtx-dropdown-trigger>
                 <gtx-button
                     class="more-trigger"
+                    data-action="open-context"
                     [size]="size"
                     [type]="type"
                     [flat]="isFlat"
@@ -28,7 +30,7 @@
                 </gtx-button>
             </gtx-dropdown-trigger>
 
-            <gtx-dropdown-content>
+            <gtx-dropdown-content class="split-button-context">
                 <ng-content select="gtx-dropdown-item"></ng-content>
             </gtx-dropdown-content>
         </gtx-dropdown-list>

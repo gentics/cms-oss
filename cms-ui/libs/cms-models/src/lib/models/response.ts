@@ -1217,7 +1217,7 @@ export interface ElasticSearchQueryResponse<T extends InheritableItem<Raw>> {
             _type: FolderItemType;
         }>;
         max_score: number;
-        total: number;
+        total: number | { value: number, relation: 'eq' | string };
         /** JSON encoded "{ [packageName]: StagedItemsMap }" when in staging mode */
         staging?: string;
     };
@@ -1475,4 +1475,9 @@ export interface FUMStatusResponse {
     status: FUMStatus;
     type: string;
     msg: string;
+}
+
+
+export interface TranslationResponse {
+    text: string;
 }

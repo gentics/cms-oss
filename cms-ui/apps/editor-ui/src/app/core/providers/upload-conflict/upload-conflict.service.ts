@@ -146,8 +146,14 @@ export class UploadConflictService {
             dashed(item2.name) === dashed(item1.name);
     }
 
+    // This should be completely removed, since the server should determine what to do with
+    // the mime-type, especially since it's unreliable.
     private getType(fileOrItem: File | FileModel): 'file' | 'image' {
-        if (fileOrItem instanceof File) {
+        if (
+            fileOrItem instanceof File
+            // This is only present for cypress tests, due to conflicting Type-defintions
+            || Object.getPrototypeOf(fileOrItem).constructor.name === 'File'
+        ) {
             return fileOrItem.type.startsWith('image/') ? 'image' : 'file';
         } else {
             return fileOrItem.type;

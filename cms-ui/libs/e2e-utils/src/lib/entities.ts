@@ -4,79 +4,30 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, TagPropertyType } from '@gentics/cms-models';
 import {
-    FileUploadOptions,
-    FolderCreateRequest,
-    NodeCreateRequest,
-    NodeFeature,
-    NodePageLanguageCode,
-    NodeUrlMode,
-    PageCreateRequest,
-} from '@gentics/cms-models';
-import { TestSize } from './common';
-
-/** Type to determine how to import/delete the entity */
-export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
-/** ID which can be referenced in other entities to determine relationships. */
-export const IMPORT_ID = Symbol('gtx-e2e-import-id');
-
-const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
-
-export interface ImportData {
-    [IMPORT_TYPE]: 'node' | 'folder' | 'page' | 'file' | 'image';
-    [IMPORT_ID]: string;
-}
-
-export interface NodeImportData extends NodeCreateRequest, ImportData {
-    [IMPORT_TYPE]: 'node';
-    /** Language codes which will be assigned */
-    languages: string[];
-    /** Features which will be assigned */
-    features: NodeFeature[];
-    templates: string[];
-}
-
-export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {
-    [IMPORT_TYPE]: 'folder';
-
-    /** The nodes `IMPORT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    motherId: string;
-}
-
-export interface PageImportData extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId'>, ImportData {
-    [IMPORT_TYPE]: 'page',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The Global-ID of the template from the Dev-Tool Package */
-    templateId: string;
-}
-
-export interface FileImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
-    [IMPORT_TYPE]: 'file',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
-}
-
-export interface ImageImportData extends Omit<FileUploadOptions, 'folderId' | 'nodeId'>, ImportData {
-    [IMPORT_TYPE]: 'image',
-
-    /** The nodes `IMPROT_ID` value */
-    nodeId: string;
-    /** The folders/nodes `IMPORT_ID` value */
-    folderId: string;
-    /** The file/blob to upload */
-    data: Blob | File;
-}
+    BASIC_TEMPLATE_ID,
+    FileImportData,
+    FolderImportData,
+    GroupImportData,
+    ImageImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_NODE,
+    IMPORT_TYPE_USER,
+    ImportData,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_FOLDER,
+    ITEM_TYPE_IMAGE,
+    ITEM_TYPE_PAGE,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
+    NodeImportData,
+    PageImportData,
+    TestSize,
+    UserImportData,
+} from './common';
 
 /*
  * REQUIRED SETUP
@@ -84,7 +35,7 @@ export interface ImageImportData extends Omit<FileUploadOptions, 'folderId' | 'n
 
 /** This node exists only, so all devtool-packages are linked to this node, to make the cleanup of our actual test nodes possible. */
 export const emptyNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'emptyNode',
 
     node: {
@@ -110,9 +61,55 @@ export const emptyNode: NodeImportData = {
     },
     description: 'empty node',
 
-    languages : [ 'en' ],
-    features: [],
+    languages : [LANGUAGE_EN],
     templates: [BASIC_TEMPLATE_ID],
+};
+
+export const rootGroup: GroupImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+    [IMPORT_ID]: 'rootGroup',
+
+    name: 'Root-Group',
+    description: 'Integration Tests Root Group',
+
+    permissions: [
+        // Remove Admin permissions for this group
+        {
+            type: AccessControlledType.ADMIN,
+            subGroups: true,
+            perms: [
+                { type: GcmsPermission.READ, value: false },
+            ],
+        },
+    ],
+};
+
+export const userAlpha: UserImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_USER,
+    [IMPORT_ID]: 'userAlpha',
+
+    group: rootGroup[IMPORT_ID],
+
+    email: 'alpha-test-user@localhost',
+    firstName: 'Test User',
+    lastName: 'Alpha',
+    password: 'alpha',
+    login: 'alpha',
+    description: 'Test User Alpha',
+};
+
+export const userBeta: UserImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_USER,
+    [IMPORT_ID]: 'userBeta',
+
+    group: rootGroup[IMPORT_ID],
+
+    email: 'beta-test-user@localhost',
+    firstName: 'Test User',
+    lastName: 'beta',
+    password: 'beta',
+    login: 'beta',
+    description: 'Test User Beta',
 };
 
 /*
@@ -120,7 +117,7 @@ export const emptyNode: NodeImportData = {
  * ---------------------------------------------------------------- */
 
 export const minimalNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'minimalNode',
 
     node: {
@@ -134,10 +131,10 @@ export const minimalNode: NodeImportData = {
         publishFs : false,
         publishFsPages : false,
         publishFsFiles : false,
-        publishContentMap : false,
-        publishContentMapPages : false,
-        publishContentMapFiles : false,
-        publishContentMapFolders : false,
+        publishContentMap : true,
+        publishContentMapPages : true,
+        publishContentMapFiles : true,
+        publishContentMapFolders : true,
         urlRenderWayPages: NodeUrlMode.AUTOMATIC,
         urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
         omitPageExtension : false,
@@ -146,8 +143,7 @@ export const minimalNode: NodeImportData = {
     },
     description: 'minimal test',
 
-    languages : [ 'de', 'en' ],
-    features: [],
+    languages : [LANGUAGE_DE, LANGUAGE_EN],
     templates: [
         BASIC_TEMPLATE_ID,
     ],
@@ -155,7 +151,7 @@ export const minimalNode: NodeImportData = {
 
 function createFolder(node: NodeImportData, parent: NodeImportData | FolderImportData, id: string): FolderImportData {
     return {
-        [IMPORT_TYPE]: 'folder',
+        [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
         [IMPORT_ID]: `folder${id}`,
 
         nodeId: node[IMPORT_ID],
@@ -178,7 +174,7 @@ function createPage(
     id: string,
 ): PageImportData {
     return {
-        [IMPORT_TYPE]: 'page',
+        [IMPORT_TYPE]: ITEM_TYPE_PAGE,
         [IMPORT_ID]: `page${id}`,
 
         folderId: folder[IMPORT_ID],
@@ -188,7 +184,7 @@ function createPage(
         pageName: `Page Nr. ${id}`,
         fileName: `page-${id.toLowerCase()}`,
         description: `Example Page number ${id}`,
-        language: 'en',
+        language: LANGUAGE_EN,
         priority: 1,
     };
 }
@@ -196,14 +192,63 @@ function createPage(
 export const folderA = createRootFolder(minimalNode, 'A');
 export const folderB = createRootFolder(minimalNode, 'B');
 
-export const pageOne = createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One');
+export const pageOne: PageImportData = {
+    ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One'),
+    tags: {
+        content: {
+            id: null,
+            constructId: 7,
+            name: 'content',
+            active: true,
+            type: 'CONTENTTAG',
+            properties: {
+                text: {
+                    type: TagPropertyType.RICHTEXT,
+                    stringValue: `
+Lorem ipsum odor amet, consectetuer adipiscing elit. Tortor consectetur cras aliquam ipsum commodo gravida.
+Duis id ut elit suscipit, litora feugiat sollicitudin gravida. Ex at venenatis congue lacinia at orci eu primis.
+Faucibus netus lobortis porta vulputate lorem molestie porttitor magnis feugiat. Facilisi maximus sollicitudin diam, neque nam per.
+Nisl interdum convallis arcu blandit orci integer parturient. Aliquet eleifend risus ullamcorper consectetur elementum posuere nisl.
+<br>
+<br>
+Neque ullamcorper euismod magnis nec; cubilia magnis vulputate molestie. Vitae ligula scelerisque porttitor quam orci penatibus tortor taciti.
+Aliquam porttitor in volutpat ante semper ad. Lacinia blandit duis egestas metus aliquet mus suscipit potenti.
+Finibus maximus habitant proin facilisi ligula vulputate. Netus sed accumsan parturient sit torquent finibus tempor adipiscing.
+Feugiat ac integer viverra fermentum auctor ipsum tristique rutrum.`,
+                },
+            },
+        },
+    },
+}
+
+export const fileOne: FileImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FILE,
+    [IMPORT_ID]: 'fileOne',
+
+    nodeId: minimalNode[IMPORT_ID],
+    folderId: minimalNode[IMPORT_ID],
+
+    name: 'File #1',
+    description: 'First file',
+};
+
+export const imageOne: ImageImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_IMAGE,
+    [IMPORT_ID]: 'imageOne',
+
+    nodeId: minimalNode[IMPORT_ID],
+    folderId: minimalNode[IMPORT_ID],
+
+    name: 'Image #1',
+    description: 'First image',
+};
 
 /*
  * FULL SETUP
  * ---------------------------------------------------------------- */
 
 export const fullNode: NodeImportData = {
-    [IMPORT_TYPE]: 'node',
+    [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'fullNode',
 
     node: {
@@ -217,10 +262,10 @@ export const fullNode: NodeImportData = {
         publishFs : false,
         publishFsPages : false,
         publishFsFiles : false,
-        publishContentMap : false,
-        publishContentMapPages : false,
-        publishContentMapFiles : false,
-        publishContentMapFolders : false,
+        publishContentMap : true,
+        publishContentMapPages : true,
+        publishContentMapFiles : true,
+        publishContentMapFolders : true,
         urlRenderWayPages: NodeUrlMode.AUTOMATIC,
         urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
         omitPageExtension : false,
@@ -229,8 +274,7 @@ export const fullNode: NodeImportData = {
     },
     description: 'full test',
 
-    languages : [ 'de', 'en' ],
-    features: [],
+    languages : [LANGUAGE_DE, LANGUAGE_EN],
     templates: [
         BASIC_TEMPLATE_ID,
     ],
@@ -327,16 +371,20 @@ export const pageA_B_E_Two = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID
  * ---------------------------------------------------------------- */
 
 export const PACKAGE_IMPORTS: Record<TestSize, string[]> = {
+    [TestSize.NONE]: [],
     [TestSize.MINIMAL]: ['minimal'],
     [TestSize.FULL]: ['minimal', 'full'],
 }
 
 export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
+    [TestSize.NONE]: [],
     [TestSize.MINIMAL]: [
         minimalNode,
         folderA,
         folderB,
         pageOne,
+        fileOne,
+        imageOne,
     ],
     [TestSize.FULL]: [
         fullNode,

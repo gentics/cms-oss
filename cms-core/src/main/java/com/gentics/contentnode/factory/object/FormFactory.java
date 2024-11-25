@@ -69,7 +69,6 @@ import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
-import com.gentics.lib.db.TableVersion;
 import com.gentics.lib.etc.StringUtils;
 
 import io.reactivex.Flowable;
@@ -182,10 +181,30 @@ public class FormFactory extends AbstractFactory {
 		@Unversioned
 		protected ContentNodeDate pDate = new ContentNodeDate(0);
 
+		@DataField("unpublished_date")
+		@Updateable
+		@Unversioned
+		protected ContentNodeDate unpublishedDate = new ContentNodeDate(0);
+
 		@DataField("publisher")
 		@Updateable
 		@Unversioned
 		protected int publisherId = 0;
+
+		@DataField("future_publisher")
+		@Updateable
+		@Unversioned
+		protected int futurePublisherId = 0;
+
+		@DataField("unpublisher")
+		@Updateable
+		@Unversioned
+		protected int unpublisherId = 0;
+
+		@DataField("future_unpublisher")
+		@Updateable
+		@Unversioned
+		protected int futureUnpublisherId = 0;
 
 		@DataField("time_pub")
 		@Unversioned
@@ -330,10 +349,30 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public ContentNodeDate getUnpublishedDate() {
+			return this.unpublishedDate;
+		}
+
+		@Override
 		public SystemUser getPublisher() throws NodeException {
 			SystemUser publisher = TransactionManager.getCurrentTransaction().getObject(SystemUser.class, publisherId);
 			assertNodeObjectNotNull(publisher, publisherId, "Publisher", true);
 			return publisher;
+		}
+
+		@Override
+		public SystemUser getFuturePublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futurePublisherId);
+		}
+
+		@Override
+		public SystemUser getUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, unpublisherId);
+		}
+
+		@Override
+		public SystemUser getFutureUnpublisher() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(SystemUser.class, futureUnpublisherId);
 		}
 
 		@Override
@@ -362,7 +401,7 @@ public class FormFactory extends AbstractFactory {
 				data.put("time_pub", at);
 				data.put("time_pub_version", version != null ? version.getId() : null);
 				if (user != null) {
-					data.put("publisher", user.getId());
+					data.put("future_publisher", user.getId());
 					publisherId = getInteger(user.getId(), publisherId);
 				}
 
@@ -419,8 +458,9 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void takeOffline(int at) throws ReadOnlyException, NodeException {
+		public void takeOffline(int at) throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
+
 			boolean onlineBefore = isOnline();
 
 			Map<String, Object> id = new HashMap<>();
@@ -439,6 +479,7 @@ public class FormFactory extends AbstractFactory {
 				data.put("online", 0);
 				online = false;
 				DBUtils.updateOrInsert("form", id, data);
+				saveUnpublishInfo();
 
 				ActionLogger.logCmd(ActionLogger.PAGEOFFLINE, TYPE_FORM, getId(), getFolderId(), "Form offline");
 
@@ -463,6 +504,17 @@ public class FormFactory extends AbstractFactory {
 
 			// we need to sent the NOTIFY event for the form in order to allow indexing (for feature ELASTICSEARCH)
 			t.addTransactional(new TransactionalTriggerEvent(Form.class, getId(), INDEXED_STATUS_ATTRIBUTES, Events.NOTIFY));
+		}
+
+		/**
+		 * Saves the future publisher
+		 *
+		 * @throws NodeException
+		 */
+		private void saveUnpublishInfo() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			DBUtils.update("UPDATE form SET future_unpublisher = ? WHERE id = ?", t.getUserId(), getId());
 		}
 
 		@Override
@@ -715,7 +767,10 @@ public class FormFactory extends AbstractFactory {
 			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
 			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
 
-			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
+			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
+					PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
+					PublishCacheTrx pcTrx = new PublishCacheTrx(false);
+					RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
 				// for the StaticUrlFactory, forbid auto detection of the linkway
 				RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
 				if (renderUrlFactory instanceof StaticUrlFactory) {
@@ -824,6 +879,17 @@ public class FormFactory extends AbstractFactory {
 
 		/**
 		 * Recursively transform all _pageid fields into the rendered pages
+		 *
+		 * <p>
+		 *     <strong>IMPORTANT:</strong> Make sure that the properties {@code contentnode.linkway} and
+		 *     {@code contentnode.linkway_file} are set to {@code "host"} and that the publish cache is
+		 *     deactivated:
+		 *     <pre>
+		 *			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
+		 *				PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
+		 *				PublishCacheTrx pcTrx = new PublishCacheTrx(false)) { ... }
+		 *     </pre>
+		 * </p>
 		 * @param node current node
 		 * @param language language
 		 * @throws NodeException
@@ -838,24 +904,19 @@ public class FormFactory extends AbstractFactory {
 					String name = i.next();
 					if (name.endsWith(PAGEID_POSTFIX)) {
 						int pageId = objectNode.path(name).asInt();
-						try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
-								PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
-								PublishCacheTrx pcTrx = new PublishCacheTrx(false)) {
-							Page page = t.getObject(Page.class, pageId);
-							if (page != null) {
-								page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),
-										page.getOwningNode());
-							}
-
-							if (page != null) {
-								// render the page and put into replace map
-								String renderedPage = page.render();
-								replace.put(name, renderedPage);
-							} else {
-								replace.put(name, "");
-							}
+						Page page = t.getObject(Page.class, pageId);
+						if (page != null) {
+							page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),
+									page.getOwningNode());
 						}
 
+						if (page != null) {
+							// render the page and put into replace map
+							String renderedPage = page.render();
+							replace.put(name, renderedPage);
+						} else {
+							replace.put(name, "");
+						}
 					} else {
 						// recursion
 						renderReferencedPages(objectNode.get(name), language);
@@ -1582,10 +1643,9 @@ public class FormFactory extends AbstractFactory {
 	 */
 	private static TableVersion getFormTableVersion() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		TableVersion formVersion = new TableVersion(false);
+		TableVersion formVersion = new TableVersion();
 
 		formVersion.setAutoIncrement(true);
-		formVersion.setHandle(t.getDBHandle());
 		formVersion.setTable("form");
 		formVersion.setWherePart("gentics_main.id = ?");
 		return formVersion;

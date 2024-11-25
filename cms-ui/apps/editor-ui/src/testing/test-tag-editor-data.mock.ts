@@ -72,6 +72,7 @@ export interface MockObjectTagInfo {
     description?: string;
     required?: boolean;
     inheritable?: boolean;
+    categoryId?: number;
     categoryName?: string;
     sortOrder?: number;
 }
@@ -168,6 +169,7 @@ export function mockEditableObjectTag<T extends TagPartProperty>(
         name: tagName,
         displayName: objTagInfo.displayName || tagName,
         description: objTagInfo.description || '',
+        categoryId: typeof objTagInfo.categoryId === 'undefined' ? 1 : objTagInfo.categoryId,
         categoryName: objTagInfo.categoryName || 'CategoryA',
         inheritable: typeof objTagInfo.inheritable === 'boolean' ? objTagInfo.inheritable : false,
         sortOrder: typeof objTagInfo.sortOrder === 'number' ? objTagInfo.sortOrder : 0,
@@ -269,6 +271,12 @@ export function getMockedTagEditorContext(
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
             openImageEditor: jasmine.createSpy('openImageEditor'),
             openUploadModal: jasmine.createSpy('openUploadModal'),
+            restClient: jasmine.createSpyObj('restClient', [
+                'executeMappedJsonRequest',
+                'executeMappedFormRequest',
+                'executeRawRequest',
+                'executeBlobRequest',
+            ]),
             restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
             restRequestGET: jasmine.createSpy('restRequestGET'),
             restRequestPOST: jasmine.createSpy('restRequestPOST'),

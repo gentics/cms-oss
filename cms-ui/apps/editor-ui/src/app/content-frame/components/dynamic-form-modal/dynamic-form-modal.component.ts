@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { RENDERING_CONTEXT_MODAL } from '@editor-ui/app/common/models';
 import { DynamicFormModalConfiguration } from '@gentics/aloha-models';
@@ -19,6 +19,9 @@ export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestr
     @Input()
     public configuration: DynamicFormModalConfiguration<any>;
 
+    @HostBinding('attr.data-ref')
+    public reference?: string;
+
     public control: FormGroup<FormProperties<T>>;
 
     protected subscriptions: Subscription[] = [];
@@ -37,6 +40,7 @@ export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestr
         if (sub) {
             this.subscriptions.push(sub);
         }
+        this.reference = this.configuration?.openerReference;
     }
 
     public ngOnDestroy(): void {

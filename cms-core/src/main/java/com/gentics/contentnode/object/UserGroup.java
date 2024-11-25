@@ -16,7 +16,6 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.object.ExtensibleObject;
@@ -27,7 +26,7 @@ import com.gentics.lib.log.NodeLogger;
  * This class represents UserGroup objects 
  */
 @TType(UserGroup.TYPE_USERGROUP)
-public abstract class UserGroup extends AbstractContentObject implements NamedNodeObject, ExtensibleObject<UserGroup> {
+public abstract class UserGroup extends AbstractContentObject implements NamedNodeObject, ExtensibleObject<UserGroup>, MetaDateNodeObject {
 	/**
 	 * The ttype of the group admin
 	 */
@@ -325,23 +324,11 @@ public abstract class UserGroup extends AbstractContentObject implements NamedNo
 	public abstract SystemUser getCreator() throws NodeException;
 
 	/**
-	 * get the group's creation date as a unix timestamp
-	 * @return unix timestamp of the group's creation date
-	 */
-	public abstract ContentNodeDate getCDate();
-
-	/**
 	 * get the group's editor
 	 * @return systemuser who edited this group
 	 * @throws NodeException
 	 */
 	public abstract SystemUser getEditor() throws NodeException;
-
-	/**
-	 * get the user's last edit date as a unix timestamp
-	 * @return unix timestamp of the user's last edit date
-	 */
-	public abstract ContentNodeDate getEDate();
 
 	/**
 	 * Check whether the given user is member of this group

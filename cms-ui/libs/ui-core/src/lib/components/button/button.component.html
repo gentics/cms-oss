@@ -1,6 +1,7 @@
 <div class="button-event-wrapper" (click)="preventDisabledClick($event)">
     <button
         class="btn"
+        data-action="primary"
         [ngClass]="[size || '', type || '']"
         [class.btn-flat]="!!flat || !!icon"
         [class.btn-icon]="!!icon"

@@ -1,23 +1,23 @@
+import { PackageCheckTrableLoaderService } from '@admin-ui/core';
+import { ConstructCategoryTableLoaderService } from '@admin-ui/features/construct/providers';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { PackageCheckTrableLoaderService } from '@admin-ui/core';
 import {
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
-    AssignGroupToUsersModalComponent,
+    AssignGroupToUsersModal,
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
     AssignNodeRestrictionsToUsersModalComponent,
     AssignPackagesToNodeModalComponent,
-    AssignUserToGroupsModalComponent,
+    AssignUserToGroupsModal,
     BooleanIconComponent,
     CRFragmentTableComponent,
     ConfirmDeleteModalComponent,
-    ConfirmRemoveUserFromGroupModalComponent,
     ConstructTableComponent,
     ContentRepositoryTableComponent,
     CreateContentRepositoryFragmentModalComponent,
@@ -34,7 +34,6 @@ import {
     GenericRouterOutletComponent,
     GroupTableComponent,
     GroupTrableComponent,
-    I18nPanelGroupComponent,
     IconCheckboxComponent,
     IconComponent,
     LanguageTableComponent,
@@ -45,8 +44,8 @@ import {
     MoveGroupsModalComponent,
     NodeTableComponent,
     ObjectPropertyTableComponent,
-    PermissionIconComponent,
     PackageCheckTrableComponent,
+    PermissionIconComponent,
     PermissionsTrableComponent,
     PropertiesManagerComponent,
     PropertiesTabsComponent,
@@ -109,14 +108,13 @@ const COMPONENTS: any[] = [
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
-    AssignGroupToUsersModalComponent,
+    AssignGroupToUsersModal,
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
     AssignNodeRestrictionsToUsersModalComponent,
     AssignPackagesToNodeModalComponent,
-    AssignUserToGroupsModalComponent,
+    AssignUserToGroupsModal,
     BooleanIconComponent,
     ConfirmDeleteModalComponent,
-    ConfirmRemoveUserFromGroupModalComponent,
     ConstructTableComponent,
     PackageCheckTrableComponent,
     PermissionsTrableComponent,
@@ -137,7 +135,6 @@ const COMPONENTS: any[] = [
     GenericRouterOutletComponent,
     GroupTableComponent,
     GroupTrableComponent,
-    I18nPanelGroupComponent,
     IconCheckboxComponent,
     IconComponent,
     LanguageTableComponent,
@@ -189,6 +186,7 @@ const DECLARATIONS: any[] = [
 ];
 
 const PROVIDERS: any[] = [
+    ConstructCategoryTableLoaderService,
     ContentItemTrableLoaderService,
     ContentPackageDataService,
     ContentRepositoryFragmentDataService,

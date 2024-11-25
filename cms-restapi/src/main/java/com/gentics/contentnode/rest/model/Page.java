@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -19,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author floriangutmann
  */
 @XmlRootElement
-public class Page extends ContentNodeItem implements Serializable {
+public class Page extends PublishableContentItem implements Serializable {
 
 	/**
 	 * Serial Version UID
@@ -80,16 +79,6 @@ public class Page extends ContentNodeItem implements Serializable {
 	 * Flag if the page is read-only or available for writing
 	 */
 	private boolean readOnly;
-
-	/**
-	 * Last publisher of this page
-	 */
-	private User publisher;
-
-	/**
-	 * Date when this page was published the last time
-	 */
-	private int pdate;
 
 	/**
 	 * Language of the page (code of the contentgroup)
@@ -348,21 +337,7 @@ public class Page extends ContentNodeItem implements Serializable {
 		return this.priority;
 	}
 
-	/**
-	 * Publisher
-	 * @return the publisher
-	 */
-	public User getPublisher() {
-		return this.publisher;
-	}
 
-	/**
-	 * Publish Date
-	 * @return the pdate
-	 */
-	public int getPdate() {
-		return this.pdate;
-	}
 
 	/**
 	 * Language Code (if page has a language)
@@ -511,19 +486,6 @@ public class Page extends ContentNodeItem implements Serializable {
 		this.priority = priority;
 	}
 
-	/**
-	 * @param publisher the publisher to set
-	 */
-	public void setPublisher(User publisher) {
-		this.publisher = publisher;
-	}
-
-	/**
-	 * @param pdate the pdate to set
-	 */
-	public void setPdate(int pdate) {
-		this.pdate = pdate;
-	}
 
 	/**
 	 * @param language the language to set

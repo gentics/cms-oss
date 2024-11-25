@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.publish.mesh;
 
+import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertFolders;
@@ -20,6 +21,9 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRes
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishState;
+import com.gentics.contentnode.publish.protocol.PublishType;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Function;
@@ -33,7 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
@@ -57,9 +60,12 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.PasswordType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
+import com.gentics.contentnode.rest.model.request.PageOfflineRequest;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
@@ -320,6 +326,68 @@ public class MeshPublishTest {
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", page);
 	}
 
+
+	@Test
+	public void testPublishedPageShouldAddPublishLogEntryWithOnlineState() throws Exception {
+		var page = publishPage();
+
+		var pagePublishLogEntry = Trx.supply(()->  PublishProtocolUtil.getPublishLogEntryByObjectId(PublishType.PAGE.toString(), page.getId()));
+
+		assertThat(pagePublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.PAGE.toString());
+		assertThat(pagePublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.ONLINE.getValue());
+	}
+
+	@Test
+	public void testUnpublishedPageShouldAddPublishLogEntryWithOfflineState() throws Exception {
+		var page = publishPage();
+		Trx.operate(() -> page.takeOffline());
+
+		var pagePublishLogEntry = Trx.supply(() ->  PublishProtocolUtil.getPublishLogEntryByObjectId(PublishType.PAGE.toString(), page.getId()));
+		var pagePublishLogEntries = Trx.supply(PublishProtocolUtil::getPublishLogEntries);
+		pagePublishLogEntries = pagePublishLogEntries.stream()
+				.filter(entry -> entry.getType().equals(PublishType.PAGE.toString()))
+				.toList();
+
+
+		assertThat(pagePublishLogEntry.getType()).as("Publish log TYPE").isEqualTo(
+				PublishType.PAGE.toString());
+		assertThat(pagePublishLogEntry.getState()).as("Publish log STATE").isEqualTo(
+				PublishState.OFFLINE.getValue());
+		assertThat(pagePublishLogEntries.size()).isGreaterThanOrEqualTo(2);
+	}
+
+
+
+	private Page publishPage() throws Exception {
+		Folder folder = Trx.supply(() -> create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+		}));
+
+		Page page = Trx.supply(() -> create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(folder.getId());
+			p.setName("Page");
+		}));
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Trx.operate(t -> t.getObject(page, true).publish());
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		return page;
+	}
+
 	/**
 	 * Test publishing a page in "en" and "de"
 	 * @throws Exception
@@ -369,6 +437,67 @@ public class MeshPublishTest {
 
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", enPage);
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de", dePage);
+	}
+
+	@Test
+	public void testTakeLanguagesOffline() throws Exception {
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		Page enPage = Trx.supply(() -> {
+			return create(Page.class, p -> {
+				p.setTemplateId(template.getId());
+				p.setFolderId(folder.getId());
+				p.setName("Page");
+				p.setLanguage(languages.get("en"));
+			});
+		});
+
+		Page dePage = Trx.supply(() -> {
+			Page p = (Page) enPage.copy();
+			p.setLanguage(languages.get("de"));
+			p.setFilename(null);
+			p.save();
+			p.unlock();
+			return TransactionManager.getCurrentTransaction().getObject(p);
+		});
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Trx.operate(t -> {
+			t.getObject(enPage, true).publish();
+			t.getObject(dePage, true).publish();
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", enPage);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de", dePage);
+
+		consume(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			request.setAlllang(false);
+			GenericResponse response = new PageResourceImpl().takeOffline(String.valueOf(p.getId()), request);
+			assertResponseCodeOk(response);
+		}, dePage);
+
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", enPage);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de"); /// removed
 	}
 
 	/**

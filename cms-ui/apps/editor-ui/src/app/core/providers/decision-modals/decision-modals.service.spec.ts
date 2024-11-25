@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
+    Feature,
     File,
     Folder,
     FolderItemType,
@@ -344,7 +345,11 @@ describe('DecisionModalsService', () => {
                     [itemId]: MASTERNODE,
                 },
             });
-
+            state.mockState({
+                features: {
+                    [Feature.MULTICHANNELLING]: true,
+                },
+            });
         });
 
         it('requests a list of localized items in derived channels', fakeAsync(() => {

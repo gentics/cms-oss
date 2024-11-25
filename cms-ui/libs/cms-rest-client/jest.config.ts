@@ -1,11 +1,8 @@
-/* eslint-disable */
-export default {
-  displayName: 'cms-rest-client',
-  preset: '../../jest.preset.js',
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/cms-rest-client',
+import { Config } from 'jest';
+import { createDefaultConfig } from '../../jest.preset';
+
+const config: Config = {
+    ...createDefaultConfig('libs', 'cms-rest-client'),
 };
+
+export default config;

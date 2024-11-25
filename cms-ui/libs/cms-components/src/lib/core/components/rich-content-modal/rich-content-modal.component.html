@@ -1,0 +1,34 @@
+<div class="modal-title">
+    <h5>{{ 'richContent.manage_link_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <ng-container *ngIf="control" [ngSwitch]="type">
+        <gtx-rich-content-link-properties
+            *ngSwitchCase="RichContentType.LINK"
+            [formControl]="control"
+            [enterDisplayText]="enterLinkDisplayText"
+            (submit)="closeWithValue()"
+        ></gtx-rich-content-link-properties>
+    </ng-container>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        action="cancel"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="primary"
+        action="confirm"
+        [disabled]="!control?.valid"
+        (click)="closeWithValue()"
+    >
+        {{ 'common.okay_button' | i18n }}
+    </gtx-button>
+</div>

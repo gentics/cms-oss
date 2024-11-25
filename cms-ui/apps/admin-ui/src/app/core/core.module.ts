@@ -7,14 +7,13 @@ import {
     LocalTranslateLoader,
     LoggingHelperService,
 } from '@admin-ui/core';
-import { KeycloakService } from '@admin-ui/login/providers/keycloak/keycloak.service';
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
-import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule } from '@gentics/cms-components';
+import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
@@ -103,12 +102,11 @@ import { MaintenanceModeService } from './providers/maintenance-mode/maintenance
 import { AdminOperations } from './providers/operations/admin/admin.operations';
 import { AuthOperations } from './providers/operations/auth/auth.operations';
 import { NodeOperations } from './providers/operations/node';
-import { TraceErrorHandler } from './providers/trace-error-handler/trace-error-handler';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
 export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select(state => state.auth.sid);
 
-export function initializeApp(appState: AppStateService, client: GCMSRestClientService): () => Promise<void> {
+export function initializeApp(appState: AppStateService, client: GCMSRestClientService, keycloak: KeycloakService): () => Promise<void> {
     return () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         client.init({
@@ -122,7 +120,7 @@ export function initializeApp(appState: AppStateService, client: GCMSRestClientS
             client.setSessionId(sid);
         });
 
-        return KeycloakService.checkKeycloakAuth();
+        return keycloak.checkKeycloakAuth();
     };
 }
 
@@ -229,11 +227,10 @@ const PROVIDERS: any[] = [
         useFactory: createSidObservable,
         deps: [AppStateService],
     },
-    { provide: NgErrorHandler, useClass: TraceErrorHandler },
     {
         provide: APP_INITIALIZER,
         useFactory: initializeApp,
-        deps: [ AppStateService, GCMSRestClientService ],
+        deps: [ AppStateService, GCMSRestClientService, KeycloakService],
         multi: true,
     },
 ];

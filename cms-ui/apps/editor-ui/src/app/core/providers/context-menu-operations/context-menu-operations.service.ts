@@ -6,6 +6,8 @@ import {
     ChannelDependenciesModal,
     InheritanceDialog,
     LinkTemplateModal,
+    PublishProtocolModalComponent,
+    MultiDeleteResult,
     PageVersionsModal,
     PublishTimeManagedPagesModal,
     SynchronizeChannelModal,
@@ -30,11 +32,11 @@ import {
     CmsFormElement,
     DependencyItemTypePlural,
     Favourite,
+    Feature,
     File as FileModel,
     Folder,
     FolderItemType,
     Form,
-    FormSaveRequest,
     Image,
     InheritableItem,
     InheritanceRequest,
@@ -49,8 +51,8 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';
+import { Observable, combineLatest, forkJoin, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
 import { ApiError } from '../api';
 import { DecisionModalsService } from '../decision-modals/decision-modals.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
@@ -154,8 +156,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     async linkTemplatesToFolder(
         nodeId: number,
         folderId: number,
-    ): Promise<any> {
-        const featureLinkTemplatesNew = this.state.now.features.folder_based_template_selection;
+    ): Promise<Template[] | null> {
+        const featureLinkTemplatesNew = this.state.now.features[Feature.FOLDER_BASED_TEMPLATE_SELECTION];
 
         if (!featureLinkTemplatesNew) {
             const modal = await this.modalService.fromComponent(LinkTemplateModal, {
@@ -172,7 +174,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     throw err;
                 }
             }
-            return;
+            return null;
         }
 
         let selectResult: Template[];
@@ -190,7 +192,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }
 
         if (!selectResult || !selectResult.length) {
-            return;
+            return null;
         }
 
         const dialog = await this.modalService.dialog({
@@ -215,7 +217,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             const recursive: boolean = await dialog.open();
 
             await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
-            await this.folderActions.getTemplates(folderId, true);
+            return this.folderActions.getTemplates(folderId, true);
         } catch (err) {
             if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
                 throw err;
@@ -238,106 +240,108 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Consequentially, Page translations are deleted by deleting their pageVariants, while Form translations are deleted by
      * removing the language to be deleted from the form.languages array and all object withing `i18n`-properties with key [language.code].
      */
-    deleteItems(type: FolderItemType, items: Item[], activeNodeId: number): Promise<number[]> {
+    async deleteItems(type: FolderItemType, items: Item[], activeNodeId: number): Promise<number[]> {
         // If multiple items are to be deleted, some of them may be inherited or localized.
         // In that case, open a modal to give feedback to the user.
-        return this.decisionModals.selectItemsToDelete(items as InheritableItem[])
-            .then(result => {
-                let deletePromise: Promise<{ succeeded: number, failed: number, error: ApiError }>;
-                let unlocalizePromise = Promise.resolve();
-                let updatePromise: Promise<{ succeeded: number, failed: number, error: ApiError }>;
+        let selectResult: MultiDeleteResult;
+        try {
+            selectResult = await this.decisionModals.selectItemsToDelete(items as InheritableItem[]);
+        } catch (err) {
+            // Ignore user close errors
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+            return;
+        }
 
-                let deleteIds: number[] = [];
-                let unlocalizeIds: number[] = [];
-                // deleting Form translations without deleting the Form means updating the Form
-                const updateItems: {
-                    itemId: number;
-                    payload: Partial<Form>;
-                }[] = [];
+        let deleteResult: { succeeded: number, failed: number, error: ApiError } | null = null;
+        let updateResult: { succeeded: number, failed: number, error: ApiError } | null = null;
 
-                if (type === 'form') {
-                    Object.keys(result.deleteForms).forEach(id => {
-                        const formId = parseInt(id, 10);
-                        const languageCodesToDelete = result.deleteForms[formId];
-                        const form = items.find(i => i.id === formId) as Form<Normalized>;
-                        if (
-                            Array.isArray(languageCodesToDelete)
-                            && languageCodesToDelete.length < form.languages.length
-                        ) {
-                            if (languageCodesToDelete.length > 0) {
-                                const updateData: {
-                                    itemId: number;
-                                    payload: FormSaveRequest;
-                                } = {
-                                    itemId: formId,
-                                    payload: {
-                                        languages: form.languages.filter(l => !languageCodesToDelete.includes(l)),
-                                        data: this.removeLanguagesFromFormData(form.data, languageCodesToDelete),
-                                    },
-                                };
-                                updateItems.push(updateData);
-                            }
-                        } else {
-                            deleteIds.push(formId);
-                        }
-                    });
-                } else {
-                    deleteIds = result.delete.map(item => item.id) || [];
-                    unlocalizeIds = result.unlocalize.map(item => item.id) || [];
+        let deleteIds: number[] = [];
+        let unlocalizeIds: number[] = [];
+        // deleting Form translations without deleting the Form means updating the Form
+        const updateItems: {
+            itemId: number;
+            payload: Partial<Form>;
+        }[] = [];
+
+        if (type === 'form') {
+            Object.keys(selectResult.deleteForms).forEach(id => {
+                const formId = parseInt(id, 10);
+                const languageCodesToDelete = selectResult.deleteForms[formId];
+                const form = items.find(i => i.id === formId) as Form<Normalized>;
+
+                if (
+                    !Array.isArray(languageCodesToDelete)
+                    || languageCodesToDelete.length >= form.languages.length
+                ) {
+                    deleteIds.push(formId);
+                    return;
                 }
 
-                const localizationIdsDeleted: LocalizationMap = {};
-                let localizationIds: number[];
-
-                if (deleteIds.length) {
-                    deletePromise = this.wastebinActions.moveItemsToWastebin(type, deleteIds, activeNodeId, deleteIds.length > 1);
-
-                    // filter only localizations that has been deleted and put them to array of IDs
-                    // forms cannot be localized
-                    if (type !== 'form') {
-                        deleteIds.forEach(id => { localizationIdsDeleted[id] = result.localizations[id]; });
-                        localizationIds = localizationIdsDeleted && this.flattenMap(localizationIdsDeleted);
-                    }
-                }
-                if (unlocalizeIds.length) {
-                    unlocalizePromise = this.folderActions.unlocalizeItems(type, unlocalizeIds, activeNodeId);
-                }
-                if (updateItems.length) {
-                    updatePromise = of({ succeeded: 0, failed: 0, error: null }).pipe(
-                        mergeMap(report => forkJoin(
-                            updateItems.map(item => from(this.folderActions.updateItem(type, item.itemId, item.payload)).pipe(
-                                tap(() => report.succeeded++),
-                                catchError(error => {
-                                    report.failed++;
-                                    report.error = error;
-                                    return throwError(error);
-                                }),
-                            )),
-                        ).pipe(map(() => report))),
-                    ).toPromise();
+                if (languageCodesToDelete.length === 0) {
+                    return;
                 }
 
-                const removedItemIds = [...deleteIds, ...unlocalizeIds, ...updateItems.map(i => i.itemId)];
-                return Promise.all([deletePromise, unlocalizePromise, updatePromise])
-                    .then(([deleteResult, unlocalizeResult, updateResult]) => {
-                        const results = {
-                            succeeded: (deleteResult ? deleteResult.succeeded : 0) + (updateResult ? updateResult.succeeded : 0),
-                            failed: (deleteResult ? deleteResult.failed : 0) + (updateResult ? updateResult.failed : 0),
-                            error: deleteResult && deleteResult.error || updateResult && updateResult.error || null,
-                        };
-                        this.showMultiDeleteResultNotification(results, unlocalizeIds, type, removedItemIds, localizationIds, type !== 'form');
-                        this.deleteItemsFavourites(activeNodeId, type, deleteResult);
-
-                        if (deleteResult && deleteResult.failed) {
-                            this.showMultiDeleteErrorNotification(type, deleteResult.failed, deleteResult.error);
-                        }
-                        return removedItemIds;
-                    }).then(async (removedItemIds) => {
-                        await this.folderActions.refreshList(type);
-                        await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
-                        return removedItemIds;
-                    });
+                updateItems.push({
+                    itemId: formId,
+                    payload: {
+                        languages: form.languages.filter(l => !languageCodesToDelete.includes(l)),
+                        data: this.removeLanguagesFromFormData(form.data, languageCodesToDelete),
+                    },
+                });
             });
+        } else {
+            deleteIds = selectResult.delete.map(item => item.id) || [];
+            unlocalizeIds = selectResult.unlocalize.map(item => item.id) || [];
+        }
+
+        const localizationIdsDeleted: LocalizationMap = {};
+        let localizationIds: number[];
+
+        if (deleteIds.length) {
+            deleteResult = await this.wastebinActions.moveItemsToWastebin(type, deleteIds, activeNodeId, deleteIds.length > 1);
+
+            // filter only localizations that has been deleted and put them to array of IDs
+            // forms cannot be localized
+            if (type !== 'form') {
+                deleteIds.forEach(id => { localizationIdsDeleted[id] = selectResult.localizations[id]; });
+                localizationIds = localizationIdsDeleted && this.flattenMap(localizationIdsDeleted);
+            }
+        }
+        if (unlocalizeIds.length) {
+            await this.folderActions.unlocalizeItems(type, unlocalizeIds, activeNodeId);
+        }
+        if (updateItems.length) {
+            updateResult = { succeeded: 0, failed: 0, error: null };
+            for (const item of updateItems) {
+                try {
+                    await this.folderActions.updateItem(type, item.itemId, item.payload);
+                    updateResult.succeeded++;
+                } catch (error) {
+                    updateResult.failed++;
+                    updateResult.error = error;
+                }
+            }
+        }
+
+        const removedItemIds = [...deleteIds, ...unlocalizeIds, ...updateItems.map(i => i.itemId)];
+        const results = {
+            succeeded: deleteResult?.succeeded ?? 0 + updateResult?.succeeded ?? 0,
+            failed: deleteResult?.failed ?? 0 + updateResult?.failed ?? 0,
+            error: deleteResult?.error ?? updateResult?.error ?? null,
+        };
+        await this.showMultiDeleteResultNotification(results, unlocalizeIds, type, removedItemIds, localizationIds, type !== 'form')
+            .toPromise();
+        await this.deleteItemsFavourites(activeNodeId, type, deleteResult);
+
+        if (deleteResult && deleteResult.failed) {
+            this.showMultiDeleteErrorNotification(type, deleteResult.failed, deleteResult.error);
+        }
+        await this.folderActions.refreshList(type);
+        await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
+
+        return removedItemIds;
     }
 
     /**
@@ -396,7 +400,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     /**
      * Delete items from favourites list
      */
-    private deleteItemsFavourites(nodeId: number, type: FolderItemType, deleteResult: any): void {
+    private async deleteItemsFavourites(nodeId: number, type: FolderItemType, deleteResult: any): Promise<void> {
         if (deleteResult && deleteResult.ids && deleteResult.ids.succeeded && deleteResult.ids.succeeded.length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const favouritesToRemove: Favourite[] = deleteResult.ids.succeeded.map((id: number) => {
@@ -404,7 +408,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 return { id: entity.id, type: entity.type, name: entity.name, globalId: entity.globalId, nodeId: entity.masterNodeId };
             });
 
-            this.favourites.remove(favouritesToRemove);
+            await this.favourites.remove(favouritesToRemove);
         }
     }
 
@@ -415,7 +419,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         removedItemIds: number[],
         localizationIds: number[],
         isUndoable: boolean = true,
-    ): void {
+    ): Observable<void> {
         let message: string;
         if (deleteResult && deleteResult.succeeded) {
             if (unlocalizeIds.length) {
@@ -434,7 +438,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             },
         };
 
-        combineLatest([
+        return combineLatest([
             this.permissions.wastebin$,
             this.state.select(state => state.features.wastebin),
         ])
@@ -443,20 +447,20 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 distinctUntilChanged(isEqual),
                 map(([wastebinFeature, wastebinPermission]) => wastebinFeature && wastebinPermission),
                 take(1),
-            )
-            .subscribe((isUndoablePerFeature) => {
-                this.notification.show({
-                    message,
-                    translationParams: {
-                        count: deleteResult && deleteResult.succeeded || 0,
-                        unlocalizedCount: unlocalizeIds.length,
-                        _type: type,
-                    },
-                    type: 'default',
-                    delay: 5000,
-                    action: isUndoablePerFeature && undoAction || null,
-                });
-            });
+                map((isUndoablePerFeature) => {
+                    this.notification.show({
+                        message,
+                        translationParams: {
+                            count: deleteResult && deleteResult.succeeded || 0,
+                            unlocalizedCount: unlocalizeIds.length,
+                            _type: type,
+                        },
+                        type: 'default',
+                        delay: 5000,
+                        action: isUndoablePerFeature && undoAction || null,
+                    });
+                }),
+            );
     }
 
     private showMultiDeleteErrorNotification(type: string, failed: number, error: ApiError): void {
@@ -588,6 +592,16 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     listPageVersions(page: Page, activeNodeId: number): void {
         const options = { page, nodeId: activeNodeId };
         this.modalService.fromComponent(PageVersionsModal, null, options)
+            .then(modal => modal.open())
+            .catch(err => {});
+    }
+
+    openPublishProtocol(item: Page | Form): void {
+        const options = {
+            item,
+        };
+
+        this.modalService.fromComponent(PublishProtocolModalComponent, null, options)
             .then(modal => modal.open())
             .catch(err => {});
     }

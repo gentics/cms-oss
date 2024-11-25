@@ -1443,6 +1443,15 @@ public class SchedulerFactory extends AbstractFactory {
 			case followup: {
 				ScheduleFollow follow = scheduleData.getFollow();
 				Set<Integer> followIds = follow.getScheduleId();
+
+				if (followIds.isEmpty()) {
+					logger.warn(String.format(
+						"Schedule %d has schedule type \"follow\", but no follow IDs are set; schedule can never be executed",
+						id));
+
+					return false;
+				}
+
 				String query =
 					"SELECT e.result " +
 						"FROM scheduler_schedule s " +

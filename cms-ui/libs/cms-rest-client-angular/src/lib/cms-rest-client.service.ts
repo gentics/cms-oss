@@ -37,12 +37,14 @@ import {
     AbstractPartTypeAPI,
     AbstractPermissionAPI,
     AbstractPolicyMapAPI,
+    AbstractPublishProtocolAPI,
     AbstractRoleAPI,
     AbstractRootAPI,
     AbstractScheduleTaskAPI,
     AbstractSchedulerAPI,
     AbstractSearchIndexAPI,
     AbstractTemplateAPI,
+    AbstractTranslationAPI,
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
@@ -101,7 +103,7 @@ function asAngularAPI<T extends BasicAPI>(api: OriginalAPI<T>): AngularAPI<T> {
     }, {}) as any;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class GCMSRestClientService implements APIDefinition {
 
     protected driver: GCMSClientDriver;
@@ -150,11 +152,13 @@ export class GCMSRestClientService implements APIDefinition {
             partType: asAngularAPI<AbstractPartTypeAPI>(this.client.partType),
             permission: asAngularAPI<AbstractPermissionAPI>(this.client.permission),
             policyMap: asAngularAPI<AbstractPolicyMapAPI>(this.client.policyMap),
+            publishProtocol: asAngularAPI<AbstractPublishProtocolAPI>(this.client.publishProtocol),
             role: asAngularAPI<AbstractRoleAPI>(this.client.role),
             scheduler: asAngularAPI<AbstractSchedulerAPI>(this.client.scheduler),
             schedulerTask: asAngularAPI<AbstractScheduleTaskAPI>(this.client.schedulerTask),
             searchIndex: asAngularAPI<AbstractSearchIndexAPI>(this.client.searchIndex),
             template: asAngularAPI<AbstractTemplateAPI>(this.client.template),
+            translation: asAngularAPI<AbstractTranslationAPI>(this.client.translation),
             user: asAngularAPI<AbstractUserAPI>(this.client.user),
             usersnap: asAngularAPI<AbstractUsersnapAPI>(this.client.usersnap),
             validation: asAngularAPI<AbstractValidationAPI>(this.client.validation),
@@ -306,6 +310,10 @@ export class GCMSRestClientService implements APIDefinition {
         return this.apis.policyMap;
     }
 
+    get publishProtocol(): AngularAPI<AbstractPublishProtocolAPI> {
+        return this.apis.publishProtocol;
+    }
+
     get role(): AngularAPI<AbstractRoleAPI> {
         return this.apis.role;
     }
@@ -336,5 +344,9 @@ export class GCMSRestClientService implements APIDefinition {
 
     get validation(): AngularAPI<AbstractValidationAPI> {
         return this.apis.validation;
+    }
+
+    get translation(): AngularAPI<AbstractTranslationAPI> {
+        return this.apis.translation;
     }
 }

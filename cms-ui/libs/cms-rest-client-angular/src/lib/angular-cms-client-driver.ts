@@ -3,10 +3,10 @@ import { Injectable } from '@angular/core';
 import { Response as GCMSResponse } from '@gentics/cms-models';
 import {
     GCMSClientDriver,
-    GCMSRestClientRequest,
+    GCMSRestClientAbortError,
+    GCMSRestClientRequestData,
     GCMSRestClientRequestError,
     validateResponseObject,
-    GCMSRestClientRequestData,
 } from '@gentics/cms-rest-client';
 import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -14,7 +14,10 @@ import { NGGCMSRestClientRequest } from './models';
 
 function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
     const value = typeof str !== 'string' ? str : JSON.parse(str);
-    validateResponseObject(request, value);
+    const err = validateResponseObject(request, value);
+    if (err) {
+        throw err;
+    }
     return value;
 }
 
@@ -126,7 +129,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         });
     }
 
-    protected createClientResponse<T>(obs: Observable<T>): NGGCMSRestClientRequest<T> {
+    protected createClientResponse<T>(obs: Observable<T>, request: GCMSRestClientRequestData): NGGCMSRestClientRequest<T> {
         let promiseSub: Subscription;
         let canceled = false;
 
@@ -134,7 +137,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
             rx: () => obs,
             send: () => {
                 if (canceled) {
-                    return Promise.reject(/* Abort Error? */);
+                    return Promise.reject(new GCMSRestClientAbortError(request));
                 }
                 return new Promise((resolve, reject) => {
                     let tmpValue;
@@ -174,31 +177,31 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         request: GCMSRestClientRequestData,
         body?: string,
     ): NGGCMSRestClientRequest<T> {
-        const req = this.createStringRequest(request, body, (res) => asSafeJSON(request, res));
-        return this.createClientResponse(req);
+        const obs = this.createStringRequest(request, body, (res) => asSafeJSON(request, res));
+        return this.createClientResponse(obs, request);
     }
 
     performFormRequest<T>(
         request: GCMSRestClientRequestData,
         form: FormData,
     ): NGGCMSRestClientRequest<T> {
-        const req = this.createStringRequest(request, form, (res) => asSafeJSON(request, res));
-        return this.createClientResponse(req);
+        const obs = this.createStringRequest(request, form, (res) => asSafeJSON(request, res));
+        return this.createClientResponse(obs, request);
     }
 
     performRawRequest(
         request: GCMSRestClientRequestData,
         body?: string | FormData,
     ): NGGCMSRestClientRequest<string> {
-        const req = this.createStringRequest(request, body, (str) => str);
-        return this.createClientResponse(req);
+        const obs = this.createStringRequest(request, body, (str) => str);
+        return this.createClientResponse(obs, request);
     }
 
     performDownloadRequest(
         request: GCMSRestClientRequestData,
         body?: string | FormData,
     ): NGGCMSRestClientRequest<Blob> {
-        const req = this.createBlobRequest(request, body);
-        return this.createClientResponse(req);
+        const obs = this.createBlobRequest(request, body);
+        return this.createClientResponse(obs, request);
     }
 }

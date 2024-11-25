@@ -93,6 +93,10 @@ public enum Action {
 
 	inboxcreate(ActionLogger.INBOXCREATE, "logcmd.inbox"),
 
+	devtool_sync_start(ActionLogger.DEVTOOL_SYNC_START, "devtools.sync.start"),
+
+	devtool_sync_end(ActionLogger.DEVTOOL_SYNC_END, "devtools.sync.end"),
+
 	;
 
 	/**

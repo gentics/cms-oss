@@ -162,7 +162,7 @@ create_page_variations_submit:
     de: Erstellen
 create_page_variation_submit:
     en: Create here
-    de: Erstellen hier
+    de: Hier erstellen
 create_page_variation_title:
     en: Create Page Variant
     de: Seitenvariante erstellen
@@ -172,7 +172,10 @@ create_page_variations_title:
 confirmation_message_delete_title:
     en: Delete messages
     de: Nachrichten löschen
-confirmation_tag_delete_title:
+confirmation_tag_delete_singular_title:
+    en: Delete tag
+    de: Tag löschen
+confirmation_tag_delete_plural_title:
     en: Delete tags
     de: Tags löschen
 datepicker_hours:
@@ -280,11 +283,11 @@ delete_message_confirm_unread:
     en: Are you sure you want to delete {{count}} unread messages?
     de: Sind Sie sicher, dass Sie {{count}} ungelesene Nachrichten löschen möchten?
 delete_tag_confirm_plural:
-    en: Are you sure you want to delete {{count}} tags?
-    de: Sind Sie sicher, dass Sie {{count}} Tags löschen möchten?
+    en: "Are you sure you want to delete these {{count}} tags?{{names}}"
+    de: "Sind Sie sicher, dass Sie diese {{count}} Tags löschen möchten?{{names}}"
 delete_tag_confirm_singular:
-    en: Are you sure you want to delete one tag?
-    de: Sind Sie sicher, dass Sie 1 Tag löschen möchten?
+    en: Are you sure you want to delete the tag "{{name}}"?
+    de: Sind Sie sicher, dass Sie den Tag "{{name}}" löschen möchten?
 dependencies:
     en: Dependencies
     de: Beziehungen
@@ -552,6 +555,9 @@ page_versions_editor_label:
 page_versions_empty_label:
     en: No versions exist for this page.
     de: Für diese Seite existieren keine Versionen.
+page_publish_log_empty_label:
+    en: Publish protocol does not exist for this page yet.
+    de: Für diese Seite existiert noch kein Publizierungsprotokoll.    
 page_versions_item:
     en: 'Version {{version}}'
     de: 'Version {{version}}'
@@ -573,9 +579,15 @@ page_versions_title_prefix:
 page_versions_title_suffix:
     en: '" in '
     de: '" auf '
+page_published_date:
+    en: 'on {{date}}'
+    de: 'am {{date}}'    
 page_versions_title_suffix_no_languages:
     en: '":'
     de: '":'
+publish_protocol_title_prefix:
+    en: 'Publish Protocol of "'
+    de: 'Veröffentlichungs Protokoll von "'
 page_versions_tooltip_already_current_version:
     en: 'This is already the current version'
     de: 'Das ist bereits die aktuelle Version'
@@ -858,6 +870,9 @@ translate_and_edit_button:
 translate_and_compare_button:
     en: Translate and compare
     de: Übersetzen und vergleichen
+translate_automatically:
+    en: Translate automatically
+    de: Automatisch übersetzen
 translate_page_title:
     en: 'Translate Page to {{language}}'
     de: 'Seite nach {{language}} übersetzen'

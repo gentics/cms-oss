@@ -5,14 +5,18 @@
  */
 package com.gentics.contentnode.object;
 
+import java.util.Collections;
+import java.util.Set;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * This is a helper to make a list of objecttags, contained by a {@link ObjectTagContainer} resolvable.
  * The names of the objecttags of the container are resolved to the objecttags.
  */
-public class ObjectTagResolvable implements Resolvable {
+public class ObjectTagResolvable implements Resolvable, ResolvableMapWrappable {
 
 	private ObjectTagContainer container;
 	private boolean fallback;
@@ -24,6 +28,15 @@ public class ObjectTagResolvable implements Resolvable {
 	public ObjectTagResolvable(ObjectTagContainer container) {
 		this.container = container;
 		this.fallback = true;
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		try {
+			return this.container.getObjectTagNames(fallback);
+		} catch (NodeException e) {
+			return Collections.emptySet();
+		}
 	}
 
 	/**

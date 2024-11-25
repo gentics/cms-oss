@@ -1,0 +1,55 @@
+<label *ngIf="label">{{ label }}</label>
+
+<div
+    class="content-wrapper"
+    [class.focused]="focused"
+    (focusin)="handleFocus()"
+    (focusout)="handleBlur()"
+>
+    <div
+        class="content-toolbar"
+        [class.active]="activeElement != null"
+    >
+        <gtx-button
+            class="action-button"
+            type="success"
+            size="small"
+            action="add"
+            [disabled]="!focused || activeContent || disabled"
+            (mousedown)="addNewContent(RichContentType.LINK, $event)"
+        >
+            <icon>add</icon>
+        </gtx-button>
+
+        <gtx-button
+            class="action-button"
+            type="primary"
+            size="small"
+            action="edit"
+            [disabled]="!focused || !activeContent || disabled"
+            (mousedown)="editCurrentContent($event)"
+        >
+            <icon>edit</icon>
+        </gtx-button>
+
+        <gtx-button
+            class="action-button"
+            type="alert"
+            size="small"
+            action="delete"
+            [disabled]="!focused || !activeContent || disabled"
+            (mousedown)="deleteCurrentContent($event)"
+        >
+            <icon>delete</icon>
+        </gtx-button>
+    </div>
+
+    <div
+        #container
+        class="text-container"
+        [attr.contenteditable]="!disabled"
+        [innerHTML]="rawHtml"
+        (keydown)="handleKeyDown($event)"
+    ></div>
+</div>
+

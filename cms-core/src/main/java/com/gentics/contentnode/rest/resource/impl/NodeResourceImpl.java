@@ -311,7 +311,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		return ret;
@@ -419,7 +419,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		// We could fail fast here by switching the operands, but we want
@@ -579,7 +579,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		if (!ret) {
-			logger.error(errors.toString());
+			logger.warn(errors.toString());
 		}
 
 		return ret;
@@ -995,6 +995,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.isPublishImageVariants() != null) {
 					newNode.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
+
+				if (reqNode.getMeshProjectName() != null) {
+					newNode.setMeshProjectName(reqNode.getMeshProjectName());
+				}
 			}
 
 			if (reqNode.getLanguagesId() != null) {
@@ -1253,6 +1257,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.isPublishImageVariants() != null) {
 					node.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
+
+				if (reqNode.getMeshProjectName() != null) {
+					node.setMeshProjectName(reqNode.getMeshProjectName());
+				}
 			}
 
 			if (!setDefaultFolders(reqNode.getDefaultFileFolderId(), reqNode.getDefaultImageFolderId(), node, response, false)) {
@@ -1399,6 +1407,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse addLanguage(@PathParam("id") String nodeId, @PathParam("languageId") String languageId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
+				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
+			}
 			com.gentics.contentnode.object.ContentLanguage language = getLanguage(languageId);
 
 			List<com.gentics.contentnode.object.ContentLanguage> languages = node.getLanguages();
@@ -1419,6 +1430,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse removeLanguage(@PathParam("id") String nodeId, @PathParam("languageId") String languageId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
+				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
+			}
 			com.gentics.contentnode.object.ContentLanguage language = getLanguage(languageId);
 
 			List<com.gentics.contentnode.object.ContentLanguage> languages = node.getLanguages();
@@ -1441,6 +1455,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public LanguageList setLanguages(@PathParam("id") String nodeId, List<ContentLanguage> languages) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.edit);
+			if (trx.getTransaction().getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && node.isChannel()) {
+				throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels")).setStatus(Status.BAD_REQUEST);
+			}
 			checkFields(() -> Pair.of("languages", languages));
 
 			List<com.gentics.contentnode.object.ContentLanguage> requestedLanguages = new ArrayList<>();
@@ -1814,10 +1831,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (node.getTemplates().contains(template)) {
 					template = t.getObject(template, true);
 
-				// check whether the template would be linked to another folder
-				int iNodeId = node.getId();
-				int iTemplateId = template.getId();
-				int otherUsageCount = DBUtils.select(
+					// check whether the template would be linked to another folder
+					int iNodeId = node.getId();
+					int iTemplateId = template.getId();
+					int otherUsageCount = DBUtils.select(
 						"SELECT COUNT(*) c FROM template_folder tf LEFT JOIN folder f ON tf.folder_id = f.id WHERE f.node_id != ? AND tf.template_id = ?",
 						stmt -> {
 							stmt.setInt(1, iNodeId);
@@ -1829,10 +1846,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 								return 0;
 							}
 						});
-				if (otherUsageCount == 0) {
-					throw new WebApplicationException(I18NHelper.get("template.unlink.notlinked", template.toString()),
-							Response.Status.CONFLICT);
-				}
+					if (otherUsageCount == 0) {
+						throw new WebApplicationException(I18NHelper.get("template.unlink.notlinked", template.toString()),
+								Response.Status.CONFLICT);
+					}
 
 					// remove template from all folders of the node
 					List<Folder> folders = template.getFolders();

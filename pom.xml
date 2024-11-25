@@ -39,17 +39,16 @@
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
-		<module>cms-integration-tests</module>
 	</modules>
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.0.0</alohaeditor.version>
+		<alohaeditor.version>2.0.5</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>26.04.2024</alohaeditor.date>
+		<alohaeditor.date>10.07.2024</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>2.1.0</mesh.version>
+		<mesh.version>3.0.0-SNAPSHOT</mesh.version>
 		<mesh.forms.plugin.version>2.1.0</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
@@ -80,6 +79,8 @@
 		<commons-text.version>1.11.0</commons-text.version>
 		<commons-io.version>2.16.1</commons-io.version>
 
+		<handlebars.version>4.4.0</handlebars.version>
+
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.8</generic-testutils.version>
 		<skip.integration.tests>false</skip.integration.tests>
@@ -89,6 +90,7 @@
 		<mavenRootBuildTimestamp>${maven.build.timestamp}</mavenRootBuildTimestamp>
 		<test.jvm.home>${env.JAVA_HOME}</test.jvm.home>
 		<assertj.version>3.4.1</assertj.version>
+		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
 
 		<surefire.version>3.1.2</surefire.version>
@@ -376,9 +378,37 @@
 			<url>https://repository.mulesoft.org/nexus/content/groups/public</url>
 		</pluginRepository>
 		<pluginRepository>
-			<id>lan.internal</id>
-			<name>LAN Internal Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-internal</url>
+			<id>gentics.nexus.releases</id>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>gentics.nexus.thirdparty</id>
+			<name>Gentics Nexus Thirdparty Repository</name>
+			<url>https://repo.gentics.com/repository/maven-thirdparty/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</pluginRepository>
 		<pluginRepository>
 			<id>maven-repository.dev.java.net</id>
@@ -394,9 +424,42 @@
 
 	<repositories>
 		<repository>
-			<id>maven.gentics.com</id>
-			<name>Gentics Maven Repository</name>
-			<url>https://maven.gentics.com/maven2</url>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.releases</id>
+			<name>Gentics Nexus Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.snapshots</id>
+			<name>Gentics Snapshots Repository</name>
+			<url>https://repo.gentics.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gentics.nexus.thirdparty</id>
+			<name>Gentics Nexus Thirdparty Repository</name>
+			<url>https://repo.gentics.com/repository/maven-thirdparty/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -415,29 +478,18 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>gtx-commercial</id>
-			<name>Gentics Maven Commercial Repository</name>
-			<url>https://maven.gentics.com/maven2-commercial</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
 
 	<distributionManagement>
 		<repository>
-			<id>lan.releases.staging.gcn</id>
-			<name>Gentics Releases Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-releases-staging-cms</url>
+			<id>gentics.nexus.releases-oss</id>
+			<name>Gentics Nexus OSS Maven Repository</name>
+			<url>https://repo.gentics.com/repository/maven-releases-oss/</url>
 		</repository>
 		<snapshotRepository>
-			<id>lan.snapshots</id>
+			<id>gentics.nexus.snapshots</id>
 			<name>Gentics Snapshots Repository</name>
-			<url>https://repo.apa-it.at/artifactory/gtx-maven-snapshots</url>
+			<url>https://repo.gentics.com/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>

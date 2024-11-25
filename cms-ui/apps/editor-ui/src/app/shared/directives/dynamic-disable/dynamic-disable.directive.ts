@@ -11,6 +11,12 @@ import {
 } from '@gentics/ui-core';
 
 /**
+ * @deprecated Use the proper control enable/disable functionality.
+ * The warning from angular exists for a reason - Having two sources of thruths doesn't make any sense
+ * and is basically just a race-condition waiting to happen.
+ *
+ * **DEPRECATED**: Do not use in new code, and get rid of it.
+ *
  * In the current version of Angular (2.x), binding to the `disabled` property of a form control bound to a reactive
  * form control via `formControlName` results in a console warning:
  *

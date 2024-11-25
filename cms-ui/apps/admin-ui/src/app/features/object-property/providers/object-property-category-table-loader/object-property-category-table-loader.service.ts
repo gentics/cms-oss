@@ -3,6 +3,7 @@ import { BaseTableLoaderService, EntityManagerService, ObjectPropertyCategoryHan
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ObjectPropertyCategory } from '@gentics/cms-models';
+import { stringifyPagingSortOptions } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -27,6 +28,10 @@ export class ObjectPropertyCategoryTableLoaderService extends BaseTableLoaderSer
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ObjectPropertyCategoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
+
+        if (loadOptions?.sort) {
+            loadOptions.sort = stringifyPagingSortOptions(loadOptions.sort);
+        }
 
         return this.handler.listMapped(null as never, loadOptions).pipe(
             map(response => {

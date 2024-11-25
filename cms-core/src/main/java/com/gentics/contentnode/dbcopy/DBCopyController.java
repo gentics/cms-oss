@@ -152,7 +152,7 @@ public class DBCopyController extends AbstractCopyController {
 								throw new StructureCopyException("Error while copying contentfile {" + object.getOriginalId() + "}", e);
 							}
 						} else {
-							logger.fatal("Unable to find dbfile for contentfile with id {" + object.getOriginalId() + "} - tried to find in {" + filepath + "}");
+							logger.error("Unable to find dbfile for contentfile with id {" + object.getOriginalId() + "} - tried to find in {" + filepath + "}");
 						}
 					} else {
 						// file is stored in DB

@@ -458,10 +458,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			try {
 				t.rollback(false);
 			} catch (TransactionException e1) {
-				log.error("Error while rolling back while aborting resize call.", e);
-				message = new Message(Message.Type.CRITICAL, e.getMessage());
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-			}
+				log.warn("Error while rolling back while aborting resize call.", e);
+            }
 
 			message = new Message(Message.Type.CRITICAL, e.getMessage());
 			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
@@ -560,10 +558,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			try {
 				t.rollback(false);
 			} catch (TransactionException e1) {
-				log.error("Error while rolling back while aborting rotate call.", e);
-				message = new Message(Message.Type.CRITICAL, e.getMessage());
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-			}
+				log.warn("Error while rolling back while aborting rotate call.", e);
+            }
 
 			message = new Message(Message.Type.CRITICAL, e.getMessage());
 			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
@@ -755,8 +751,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 */
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) {
-		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
+		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
 		try (ChannelTrx trx = new ChannelTrx(nodeId); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// get the image and check for permission to view and delete it
 			ImageFile image = getImage(id, false, ObjectPermission.view, ObjectPermission.delete);

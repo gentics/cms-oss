@@ -2,8 +2,7 @@
     [hidden]="hideDropZones"
     [cannotReceive]="cannotReceive"
     (elementDropped)="onElementDropped($event, 0, true)"
->
-</gtx-form-element-drop-zone>
+></gtx-form-element-drop-zone>
 
 <div class="form-editor-elements">
     <ng-container *ngIf="elements; else errorNoFormData">

@@ -1,0 +1,48 @@
+@import "variables";
+
+.no-templates {
+    color: $gtx-color-alert;
+    margin-bottom: 1rem;
+    margin-top: 0;
+}
+
+.template-select {
+    margin: 0;
+
+    & + a {
+        display: block;
+        margin-bottom: 1rem;
+    }
+}
+
+.basic-flex-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .flex-col {
+        flex: 1 1;
+        min-width: 200px;
+    }
+}
+
+.custom-date-row {
+    margin-bottom: 1rem;
+}
+
+.custom-date-col {
+    .custom-date-picker::ng-deep .input-element {
+        margin-bottom: 0px !important;
+    }
+
+    .actual-date {
+        font-size: 0.8rem;
+        color: $gtx-color-dark-gray;
+    }
+}
+.error-message {
+    color: $gtx-color-alert;
+    margin-bottom: 13px;
+    margin-top: -18px;
+}

@@ -4,7 +4,6 @@ import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActionLogEntry, BaseListOptionsWithPaging, LogTypeListItem, LogsListRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import * as _ from 'lodash';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -77,7 +76,7 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
                 return response.items.sort((a,b) => a.label?.localeCompare(b.label)).map(item => {
                     return {
                         name: item.name,
-                        label: _.capitalize(item.label),
+                        label: item.label,
                     }
                 })
             }),
@@ -87,8 +86,7 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
     }
 
     private createOptionsWithFilter(options: BaseListOptionsWithPaging<ActionLogEntry>, filters: Record<string, any>): LogsListRequest {
-        const nonNullFilters = _.omitBy(filters, value => _.isNull(value));
-        const filterKeys = Object.keys((nonNullFilters));
+        const filterKeys = Object.keys(filters).filter(key => filters[key] != null);
 
         if (!filterKeys || !filterKeys.length) {
             return options;

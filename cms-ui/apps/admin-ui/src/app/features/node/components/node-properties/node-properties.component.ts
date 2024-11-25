@@ -14,15 +14,15 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     FormProperties,
-    generateFormProvider,
-    setControlsEnabled,
-    createPropertyPatternValidator,
     VALIDATOR_REGEX_ERROR_PROPERTY,
+    createPropertyPatternValidator,
+    generateFormProvider,
     generateValidatorProvider,
+    setControlsEnabled,
 } from '@gentics/ui-core';
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
-'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
+'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
     previewType: NodePreviewurlType;
@@ -157,6 +157,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 ? NodePreviewurlType.PROPERTY
                 : NodePreviewurlType.VALUE,
             ),
+            meshProjectName: new FormControl(this.value?.meshProjectName, Validators.maxLength(255)),
             meshPreviewUrl: new FormControl(this.value?.meshPreviewUrl, Validators.maxLength(255)),
             meshPreviewUrlProperty: new FormControl(this.value?.meshPreviewUrlProperty, [
                 Validators.maxLength(255),

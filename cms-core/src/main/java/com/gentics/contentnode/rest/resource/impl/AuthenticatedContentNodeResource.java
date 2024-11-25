@@ -86,6 +86,7 @@ import com.gentics.lib.i18n.CNI18nString;
  * This class provides access to a transaction initialized for the provided session id.
  * After processing a request this transaction is automatically committed if it is open.
  *
+ * @deprecated use {@link com.gentics.contentnode.rest.filters.Authenticated} annotation instead.
  * @author floriangutmann
  */
 @Produces({ MediaType.APPLICATION_JSON })

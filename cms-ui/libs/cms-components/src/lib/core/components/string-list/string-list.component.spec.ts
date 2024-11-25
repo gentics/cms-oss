@@ -134,7 +134,12 @@ describe('StringListComponent', () => {
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
             const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
-            changeInput.onInput({ target: changeInputRef } as any);
+            changeInput.handleInputChange({
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                stopImmediatePropagation: () => {},
+                target: changeInputRef,
+            } as any);
             fixture.detectChanges();
             tick();
             await fixture.whenRenderingDone();
@@ -197,7 +202,12 @@ describe('StringListComponent', () => {
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
             const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
-            changeInput.onInput({ target: inputRef } as any);
+            changeInput.handleInputChange({
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                stopImmediatePropagation: () => {},
+                target: inputRef,
+            } as any);
             fixture.detectChanges();
             tick();
             expect(instance.onValueChange).toHaveBeenCalledTimes(0);
@@ -367,7 +377,12 @@ describe('StringListComponent', () => {
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
             const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
-            changeInput.onInput({ target: changeInputRef } as any);
+            changeInput.handleInputChange({
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                stopImmediatePropagation: () => {},
+                target: changeInputRef,
+            } as any);
             fixture.detectChanges();
             tick();
             await fixture.whenRenderingDone();
@@ -402,7 +417,12 @@ describe('StringListComponent', () => {
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
             const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
-            changeInput.onInput({ target: changeInputRef } as any);
+            changeInput.handleInputChange({
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                stopImmediatePropagation: () => {},
+                target: changeInputRef,
+            } as any);
             fixture.detectChanges();
             tick();
             await fixture.whenRenderingDone();
@@ -476,7 +496,12 @@ describe('StringListComponent', () => {
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
             const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
-            changeInput.onInput({ target: inputRef } as any);
+            changeInput.handleInputChange({
+                preventDefault: () => {},
+                stopPropagation: () => {},
+                stopImmediatePropagation: () => {},
+                target: inputRef,
+            } as any);
             fixture.detectChanges();
             tick();
             expect(instance.onFormControlChange).toHaveBeenCalledTimes(0);

@@ -1,0 +1,7 @@
+Page Expire Date: After taking a page in the CMS offline, the information of when it went offline is now available to the user.
+Two new endpoints have been introduced to obtain this information
+
+* @GET /publish/state/{type}/{objId}@
+* @GET /publish/state/@
+
+Additionally, a publish protocol of pages and forms has been added to the Editor User Interface.

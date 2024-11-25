@@ -20,7 +20,7 @@ import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.NodeObjectWithAlternateUrls;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
-import com.gentics.lib.db.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion;
 import com.gentics.lib.util.FileUtil;
 
 

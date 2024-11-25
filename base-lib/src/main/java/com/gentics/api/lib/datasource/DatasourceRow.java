@@ -9,6 +9,7 @@ package com.gentics.api.lib.datasource;
 import java.sql.Timestamp;
 
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.lib.content.GenticsContentAttribute;
 
 /**
  * Interface for a DatasourceRow contained in a
@@ -82,7 +83,7 @@ public interface DatasourceRow extends Resolvable {
 	 * @param column column name
 	 * @return value as Object
 	 */
-	public Object getObject(String column);
+	public GenticsContentAttribute getObject(String column);
 
 	/**
 	 * Get the Object representing the data in this DatasourceRow

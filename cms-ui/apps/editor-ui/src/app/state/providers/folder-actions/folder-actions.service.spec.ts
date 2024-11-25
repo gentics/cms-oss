@@ -1,7 +1,9 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import {
     File as FileModel,
     FileUploadResponse,
+    FolderCreateRequest,
     FolderItemType,
     FolderItemTypePlural,
     folderItemTypes,
@@ -60,6 +62,17 @@ class MockPermissionService {
     normalizeAPIResponse = jasmine.createSpy('normalizeAPIResponse');
 }
 class MockI18nService {}
+class MockLocalStorage implements Partial<LocalStorage> {
+    private store = {};
+
+    setForUser(userId: number, key: string, value: any): void {
+        this.store[`${userId}_${key}`] = value;
+    }
+
+    getForUser(userId: number, key: string) {
+        return this.store[`${userId}_${key}`];
+    }
+}
 
 let uidCounter = 1;
 const uidCache: Record<string, any> = {};
@@ -72,6 +85,7 @@ function fileToResponse(file: File): FileUploadResponse {
             fileType: file.type,
             fileSize: file.size,
             name: file.name,
+            type: /^image\//.test(file.type) ? 'image' : 'file',
         } as Partial<FileModel>,
     } as any;
 }
@@ -135,6 +149,7 @@ describe('FolderActionsService', () => {
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
                 { provide: ModalService, useClass: MockModalService },
+                { provide: LocalStorage, useClass: MockLocalStorage },
             ],
         });
 
@@ -183,7 +198,7 @@ describe('FolderActionsService', () => {
 
         state.mockState(initialState);
 
-        spyOn(client.folder, 'create').and.callFake((props: { name: string }) => {
+        spyOn(client.folder, 'create').and.callFake(props => {
             if (props.name === 'existing') {
                 return throwError({ message: '' });
             } else {
@@ -729,7 +744,7 @@ describe('FolderActionsService', () => {
                 page: {
                     id: PAGE_ID,
                     language: LANGUAGE.code,
-                },
+                } as any,
                 createVersion: true,
                 unlock: true,
                 deriveFileName: true,
@@ -742,31 +757,25 @@ describe('FolderActionsService', () => {
      */
     describe('createNewFolder()', () => {
 
-        const mapCreateNewFolderModelToCreateFolderModel = (folder: {
-            name: string,
-            directory: string,
-            description: string,
-            parentFolderId: number,
-            nodeId: number,
-            failOnDuplicate?: boolean
-        }) => {
+        const mapCreateNewFolderModelToCreateFolderModel = (folder: FolderCreateRequest) => {
             return {
                 name: folder.name,
-                publishDir: folder.directory,
+                publishDir: folder.publishDir,
                 description: folder.description,
                 nodeId: folder.nodeId,
-                motherId: folder.parentFolderId,
+                motherId: folder.motherId,
                 failOnDuplicate: folder.failOnDuplicate,
             };
         }
 
         it('creates correct folder', fakeAsync(async () => {
-            const folder = {
+            const folder: FolderCreateRequest = {
                 name: 'A new folder',
-                directory: '/new-folder',
+                publishDir: '/new-folder',
                 description: 'A new folder',
                 nodeId: 2222,
-                parentFolderId: 1111,
+                motherId: 1111,
+                failOnDuplicate: undefined,
             };
             const createdFolder = await folderActions.createNewFolder(folder);
             tick();
@@ -779,10 +788,10 @@ describe('FolderActionsService', () => {
         it('creates correct folder with optional failOnDuplicate flag', fakeAsync(async () => {
             const folder = {
                 name: 'A new folder',
-                directory: '/new-folder',
+                publishDir: '/new-folder',
                 description: 'A new folder',
                 nodeId: 2222,
-                parentFolderId: 1111,
+                motherId: 1111,
                 failOnDuplicate: true,
             };
             const createdFolder = await folderActions.createNewFolder(folder);
@@ -796,10 +805,10 @@ describe('FolderActionsService', () => {
         it('emits void value if an error occurs', fakeAsync(async () => {
             const folder = {
                 name: 'existing',
-                directory: '/new-folder',
+                publishDir: '/new-folder',
                 description: 'A new folder',
                 nodeId: 2222,
-                parentFolderId: 1111,
+                motherId: 1111,
                 failOnDuplicate: true,
             };
             const createdFolder = await folderActions.createNewFolder(folder);

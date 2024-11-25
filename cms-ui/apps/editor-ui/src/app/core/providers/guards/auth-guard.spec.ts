@@ -33,6 +33,12 @@ function mockRouterState(url: string): MockRouterState {
 const LOGIN_ROUTE = '/login';
 const ITEM_LIST_ROUTE = '/editor/(list:node/3/folder/63)';
 
+function isObservable<T>(value: any): value is Observable<T> {
+    return value != null
+        && typeof value === 'object'
+        && typeof value.subscribe === 'function';
+}
+
 describe('AuthGuard', () => {
 
     let authGuard: AuthGuard;
@@ -51,10 +57,10 @@ describe('AuthGuard', () => {
             ],
         });
 
-        authGuard = TestBed.get(AuthGuard);
-        appState = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        router = TestBed.get(Router);
+        authGuard = TestBed.inject(AuthGuard);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        router = TestBed.inject(Router) as any;
     });
 
     function assertNoRedirectAction(): void {
@@ -62,11 +68,18 @@ describe('AuthGuard', () => {
         expect(folderActions.navigateToDefaultNode).not.toHaveBeenCalled();
     }
 
-    function assertNavigatingToRouteIsAllowed(url: string): void {
+    async function assertNavigatingToRouteIsAllowed(url: string): Promise<void> {
         const mockRoute = mockRouterState(url);
         const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-        expect(result).toBe(true);
+        if (typeof result === 'boolean') {
+            expect(result).toBe(true);
+        } else if (result instanceof Promise) {
+            expect(await result).toBe(true);
+        } else if (typeof result === 'object' && typeof result.subscribe === 'function') {
+            expect(await result.toPromise()).toBe(true);
+        }
+
         assertNoRedirectAction();
     }
 
@@ -82,7 +95,7 @@ describe('AuthGuard', () => {
         });
 
         it('canActivate() allows accessing the /login route', () => {
-            assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
+            return assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
         });
 
         it('canActivate() redirects the user from a privileged route to /login, appending the return URL as a parameter', () => {
@@ -108,17 +121,22 @@ describe('AuthGuard', () => {
             });
         });
 
-        it('canActivate() allows accessing the /login route', () => {
-            assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
+        it('canActivate() allows accessing the /login route if the login fails', () => {
+            appState.mockState({
+                auth: {
+                    loggingIn: false,
+                },
+            });
+            return assertNavigatingToRouteIsAllowed(LOGIN_ROUTE);
         });
 
         it('canActivate() allows accessing a priviliged URL if the login succeeds', fakeAsync(() => {
             const mockRoute = mockRouterState(ITEM_LIST_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             tick();
             expect(accessGranted).toBeUndefined('The promise should not resolve before `loggingIn` changes.');
 
@@ -139,9 +157,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(ITEM_LIST_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Promise).toBe(true);
+            expect(typeof result === 'object' && typeof (result as Observable<boolean>).subscribe === 'function').toBe(true);
             let accessGranted: boolean;
-            (result as Promise<boolean>).then(granted => accessGranted = granted);
+            (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
 
             // Signal a failed login.
             appState.mockState({
@@ -181,14 +199,16 @@ describe('AuthGuard', () => {
         });
 
         it('canActivate() allows accessing a privileged route', () => {
-            assertNavigatingToRouteIsAllowed(ITEM_LIST_ROUTE);
+            return assertNavigatingToRouteIsAllowed(ITEM_LIST_ROUTE);
         });
 
         it('canActivate() redirects from /login to the default node if there is no activeNode in the AppState', () => {
             const mockRoute = mockRouterState(LOGIN_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Observable).toBe(true, 'canActive() should return an Observable in this case.');
+            expect(isObservable(result)).toBe(true, 'canActive() should return an Observable in this case.');
+            // expect(result instanceof Observable).toBe(true, 'canActive() should return an Observable in this case.');
+
             let accessGranted: boolean;
             subscription = (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             expect(accessGranted).toBeUndefined('The observable should not emit until we have a list of nodes in the AppState.');
@@ -212,7 +232,9 @@ describe('AuthGuard', () => {
             const mockRoute = mockRouterState(LOGIN_ROUTE);
             const result = authGuard.canActivate(mockRoute.route, mockRoute.state);
 
-            expect(result instanceof Observable).toBe(true, 'canActivate() should return an Observable in this case.');
+            expect(isObservable(result)).toBe(true, 'canActivate() should return an Observable in this case.');
+            // expect(result instanceof Observable).toBe(true, 'canActivate() should return an Observable in this case.');
+
             let accessGranted: boolean;
             subscription = (result as Observable<boolean>).subscribe(granted => accessGranted = granted);
             expect(accessGranted).toBeUndefined('The observable should not emit until we have a list of nodes in the AppState.');

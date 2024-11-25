@@ -58,7 +58,12 @@
         <div *ngIf="!(searchFiltersNodeNames$ | async)" class="title-name columns left-items">
             {{ 'editor.search_results_in_path' | i18n: { path: (breadcrumbsString$ | async) } }}
         </div>
-        <div *ngIf="(searchFiltersNodeNames$ | async) && (searchFiltersNodeNames$ | async) !== 'all' && (searchFiltersActive$ | async)" class="title-name columns left-items">
+        <div
+            *ngIf="(searchFiltersNodeNames$ | async)
+                && (searchFiltersNodeNames$ | async) !== 'all'
+                && (searchFiltersActive$ | async)"
+            class="title-name columns left-items"
+        >
             {{ 'editor.search_results_in_path' | i18n: { path: (searchFiltersNodeNames$ | async) } }}
         </div>
         <div *ngIf="(searchFiltersNodeNames$ | async) === 'all'" class="title-name columns left-items">
@@ -82,6 +87,7 @@
 <gtx-file-drop-area
     #dropArea="gtxFileDropArea"
     overrideSlot="fileDragAndDrop"
+    data-action="file-drop"
     [class.page-file-hovered]="(dropArea.filesDraggedInPage$ | async)?.length > 0 && (this.isModalOpen)"
     [class.file-hovered]="(dropArea.draggedFiles$ | async)?.length > 0"
     (fileDragEnter)="setFileDropLabelLeft()"
@@ -144,8 +150,16 @@
                 folderId: currentFolderId,
                 nodeIdActual: (nodeIdActual$ | async)
             } }}</div>
-            <gtx-button (click)="goToBaseFolder()" flat>{{ 'editor.go_to_base_folder_of_node_with_id' | i18n: { nodeId: (activeNode$ | async)?.id } }}</gtx-button>
-            <gtx-button (click)="goToCurrentFolder()" flat>{{ 'editor.go_to_folder_with_id' | i18n: { folderId: (activeFolder$ | async)?.id } }}</gtx-button>
+
+            <gtx-button
+                flat
+                (click)="goToBaseFolder()"
+            >{{ 'editor.go_to_base_folder_of_node_with_id' | i18n: { nodeId: (activeNode$ | async)?.id } }}</gtx-button>
+
+            <gtx-button
+                flat
+                (click)="goToCurrentFolder()"
+            >{{ 'editor.go_to_folder_with_id' | i18n: { folderId: (activeFolder$ | async)?.id } }}</gtx-button>
         </div>
 
         <div *ngIf="displayErrorFolderNotFoundAndNodeNotFound$ | async" class="message-wrapper">

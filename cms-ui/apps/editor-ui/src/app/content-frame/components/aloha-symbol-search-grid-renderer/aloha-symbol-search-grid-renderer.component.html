@@ -3,7 +3,7 @@
     [class.has-label]="!!settings?.searchLabel"
     [label]="settings?.searchLabel"
     [value]="searchText"
-    (change)="updateSearchText($event)"
+    (valueChange)="updateSearchText($event)"
 ></gtx-input>
 
 <gtx-symbol-grid

@@ -39,7 +39,7 @@
             [required]="tagPart?.mandatory"
             [(ngModel)]="externalUrl"
             (blur)="externalUrlBlur.next($event)"
-            (change)="externalUrlChange.next($event)">
+            (valueChange)="externalUrlChange.next($event)">
         </gtx-input>
 
     </div>

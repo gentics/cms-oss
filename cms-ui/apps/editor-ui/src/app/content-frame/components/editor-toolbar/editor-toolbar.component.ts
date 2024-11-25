@@ -10,7 +10,7 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
-import { EditorState, SaveBehaviour } from '@editor-ui/app/common/models';
+import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '@editor-ui/app/common/models';
 import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -68,6 +68,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     public readonly SaveBehaviour = SaveBehaviour;
     public readonly EditMode = EditMode;
+    public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
 
     @Input()
     public nodeInherited: boolean;
@@ -404,9 +405,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
             editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
-            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked && (!isPage || this.alohaReady),
+            edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
-            lockedEdit: (isPage || isForm) && this.locked && userCan.edit,
+            lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,
             publish: (editing || previewing || propertiesTab) && canPublish && userCan.edit && !isInherited,
             saveAsCopy: editing && type === 'image' && userCan.edit,

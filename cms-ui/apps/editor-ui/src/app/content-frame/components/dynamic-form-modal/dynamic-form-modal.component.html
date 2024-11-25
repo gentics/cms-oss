@@ -4,13 +4,14 @@
 
 <div class="modal-content">
     <div class="form-wrapper" [formGroup]="control">
-        <ng-container *ngFor="let ctl of (configuration.controls | gtxEntries)">
+        <ng-container *ngFor="let ctrl of (configuration.controls | gtxEntries)">
             <gtx-aloha-component-renderer
                 class="dynamic-control"
+                [attr.data-slot]="ctrl.key"
                 [renderContext]="RENDERING_CONTEXT_MODAL"
-                [type]="configuration.controls[ctl.key].type"
-                [settings]="configuration.controls[ctl.key].options"
-                [formControlName]="ctl.key"
+                [type]="configuration.controls[ctrl.key].type"
+                [settings]="configuration.controls[ctrl.key].options"
+                [formControlName]="ctrl.key"
             ></gtx-aloha-component-renderer>
         </ng-container>
     </div>
@@ -20,6 +21,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="handleAbortClick()"
     >
         {{ 'common.cancel_button' | i18n }}
@@ -28,6 +30,7 @@
     <gtx-button
         type="primary"
         class="confirm-button"
+        data-action="confirm"
         [disabled]="!control.valid"
         (click)="handleConfirmClick()"
     >

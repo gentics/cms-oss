@@ -10,7 +10,7 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
-import com.gentics.lib.db.TableVersion;
+import com.gentics.contentnode.factory.object.TableVersion;
 import com.gentics.lib.etc.StringUtils;
 
 /**

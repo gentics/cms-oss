@@ -285,6 +285,8 @@ public class ModelBuilder {
 		restFile.setCreator(getUser(nodeFile.getCreator()));
 		restFile.setCdate(nodeFile.getCDate().getIntTimestamp());
 		restFile.setEdate(nodeFile.getEDate().getIntTimestamp());
+		restFile.setCustomCdate(nodeFile.getCustomCDate().getIntTimestamp());
+		restFile.setCustomEdate(nodeFile.getCustomEDate().getIntTimestamp());
 		restFile.setPath(getFolderPath(nodeFile.getFolder()));
 		restFile.setLiveUrl(renderLiveUrlForObject(File.class, nodeFile, nodeFile.getNode()));
 		restFile.setPublishPath(renderPublishPath(nodeFile));
@@ -833,15 +835,6 @@ public class ModelBuilder {
 	 * @return REST Model
 	 * @throws NodeException
 	 */
-	/**
-	 * Transform the given tag into its REST Model
-	 *
-	 * @param nodeTag
-	 *            Node Object
-	 * @param addConstruct true to add construct info
-	 * @return REST Model
-	 * @throws NodeException
-	 */
 	public static com.gentics.contentnode.rest.model.Tag getTag(Tag nodeTag, boolean addConstruct) throws NodeException {
 		return getTag(nodeTag, addConstruct, true);
 	}
@@ -873,14 +866,8 @@ public class ModelBuilder {
 		com.gentics.contentnode.rest.model.ObjectTag restTag = new com.gentics.contentnode.rest.model.ObjectTag();
 
 		applyTagProperties(nodeTag, restTag, addConstruct, addPrivateData);
-		ObjectTagDefinition def = nodeTag.getDefinition();
-		if (def != null) {
-			restTag.setDisplayName(def.getName());
-			restTag.setDescription(def.getDescription());
-			ObjectTagDefinitionCategory category = def.getCategory();
-			if (category != null) {
-				restTag.setCategoryName(category.getName());
-			}
+		if (addConstruct) {
+			fillObjectTagDefinition(nodeTag, restTag);
 		} else {
 			restTag.setDisplayName(nodeTag.getName());
 		}
@@ -893,6 +880,28 @@ public class ModelBuilder {
 			restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
 		}
 		return restTag;
+	}
+
+	/**
+	 * Fills the objectTagDefinition into the rest model
+	 *
+	 * @param nodeTag the entity from where the definition is loaded
+	 * @param restTag the rest model where the definition is added to
+	 * @throws NodeException
+	 */
+	private static void fillObjectTagDefinition(ObjectTag nodeTag, com.gentics.contentnode.rest.model.ObjectTag restTag)
+			throws NodeException {
+		ObjectTagDefinition def = nodeTag.getDefinition();
+
+		if (def != null) {
+			restTag.setDisplayName(def.getName());
+			restTag.setDescription(def.getDescription());
+			ObjectTagDefinitionCategory category = def.getCategory();
+			if (category != null) {
+				restTag.setCategoryId(category.getId());
+				restTag.setCategoryName(category.getName());
+			}
+		}
 	}
 
 	/**
@@ -1112,6 +1121,13 @@ public class ModelBuilder {
 		restPage.setCustomEdate(nodePage.getCustomEDate().getIntTimestamp());
 
 		restPage.setPdate(nodePage.getPDate().getIntTimestamp());
+
+		restPage.setUnpublishedDate(nodePage.getUnpublishedDate().getIntTimestamp());
+
+		if (nodePage.getUnpublisher() != null) {
+			restPage.setUnpublisher(getUser(nodePage.getUnpublisher()));
+		}
+
 		if (nodePage.getPublisher() != null) {
 			restPage.setPublisher(getUser(nodePage.getPublisher()));
 		}
@@ -1159,6 +1175,12 @@ public class ModelBuilder {
 		if (nodePage.getOffQueueUser() != null) {
 			timeManagement.setQueuedOffline(
 					new QueuedTimeManagement().setAt(nodePage.getTimeOffQueue().getIntTimestamp()).setUser(getUser(nodePage.getOffQueueUser())));
+		}
+		if (nodePage.getFuturePublisher() != null) {
+			timeManagement.setFuturePublisher(getUser(nodePage.getFuturePublisher()));
+		}
+		if (nodePage.getFutureUnpublisher() != null) {
+			timeManagement.setFutureUnpublisher(getUser(nodePage.getFutureUnpublisher()));
 		}
 		restPage.setTimeManagement(timeManagement);
 
@@ -1992,6 +2014,7 @@ public class ModelBuilder {
 			node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
+			node.setMeshProjectName(nodeNode.getMeshProjectName());
 			node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		}
 
@@ -2611,6 +2634,12 @@ public class ModelBuilder {
 		if (restFile.isForceOnline() != null) {
 			file.setForceOnline(restFile.isForceOnline());
 		}
+		if (restFile.getCustomCdate() != null) {
+			file.setCustomCDate(restFile.getCustomCdate());
+		}
+		if (restFile.getCustomEdate() != null) {
+			file.setCustomEDate(restFile.getCustomEdate());
+		}
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			if (restFile.getNiceUrl() != null) {
 				file.setNiceUrl(restFile.getNiceUrl());
@@ -2681,6 +2710,12 @@ public class ModelBuilder {
 		}
 		if (restImage.isForceOnline() != null) {
 			image.setForceOnline(restImage.isForceOnline());
+		}
+		if (restImage.getCustomCdate() != null) {
+			image.setCustomCDate(restImage.getCustomCdate());
+		}
+		if (restImage.getCustomEdate() != null) {
+			image.setCustomEDate(restImage.getCustomEdate());
 		}
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			if (restImage.getNiceUrl() != null) {

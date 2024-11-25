@@ -1,35 +1,55 @@
-import { ENV_MESH_CR_ENABLED, TestSize, bootstrapSuite, envAll, skipableSuite } from '@gentics/e2e-utils';
+import { EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { AccessControlledType } from '@gentics/cms-models';
+import { AUTH_ADMIN } from '../support/app.po';
 
-describe('Content Repository', () => {
+describe('Mesh Browser', () => {
+
     const CR_NAME = 'Mesh CR';
+    const IMPORTER = new EntityImporter();
+    const ALIAS_MODULE = '@module';
+
+    before(() => {
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
+    });
 
     beforeEach(() => {
-        cy.wrap(bootstrapSuite(TestSize.MINIMAL));
+        cy.muteXHR();
 
-        cy.navigateToApp();
-        cy.login(true);
-        cy.get('gtx-dashboard-item[data-id="mesh-browser"]').click();
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.syncPackages(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.navigateToModule('mesh-browser', AccessControlledType.CONTENT_REPOSITORY_ADMIN)
+                .as(ALIAS_MODULE);
+        });
     });
 
     it('should have content repositories listed', () => {
-        cy.get('gtx-table')
-            .find('.grid-row')
+        cy.get(ALIAS_MODULE)
+            .find('gtx-table .grid-row')
             .should('have.length.gte', 1);
     });
 
     it('should show login gate on click', () => {
-        cy.get('gtx-table')
-            .find('.grid-row').contains(CR_NAME)
+        cy.get(ALIAS_MODULE)
+            .find('gtx-table .grid-row')
+            .contains(CR_NAME)
             .click();
 
         cy.get('.login-gate-wrapper').should('exist');
     });
 
     // TODO: Needs proper CR repair and content import to work
-    skipableSuite(false && envAll(ENV_MESH_CR_ENABLED), 'Mesh Browser', () => {
+    describe.skip('Mesh Browser', () => {
         beforeEach(() => {
-            cy.get('gtx-table')
-                .find('.grid-row').contains(CR_NAME)
+            cy.get(ALIAS_MODULE)
+                .find('gtx-table .grid-row')
+                .contains(CR_NAME)
                 .click();
 
             cy.fixture('auth.json').then(auth => {
@@ -49,18 +69,12 @@ describe('Content Repository', () => {
         });
 
         it('should be able to navigate to node content', () => {
-            cy.intercept('POST', '**graphql**').as('graphqlRequest');
-
             cy.get('.schema-items')
                 .find('.schema-element')
                 .find('[data-is-container="true"]')
                 .first()
                 .should('have.length.gte', 1)
-                .click()
-
-            cy.wait('@graphqlRequest').then(({ request, response }) => {
-                expect(response?.statusCode).to.eq(200);
-            });
+                .click();
         });
 
         it('should be able to open detail view', () => {
@@ -73,7 +87,6 @@ describe('Content Repository', () => {
 
             cy.get('gtx-mesh-browser-editor').should('exist')
         });
-
     });
 
 });

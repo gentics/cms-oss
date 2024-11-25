@@ -4,12 +4,13 @@ import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.s
 import { TestAppState } from '@admin-ui/state/utils/test-app-state/test-app-state.mock';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { MeshRestClientConfig } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { MeshRestClientConfig } from '@gentics/mesh-rest-client';
 import { LoginGateComponent } from '../login-gate/login-gate.component';
 import { ManagementComponent } from './management.component';
 
@@ -45,6 +46,7 @@ describe('ManagementComponent', () => {
                 GenticsUICoreModule.forRoot(),
                 CoreModule,
                 RouterTestingModule,
+                CmsComponentsModule,
             ],
             declarations: [
                 LoginGateComponent,

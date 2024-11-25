@@ -1,7 +1,4 @@
-import { SimpleChange } from '@angular/core';
-
 // This file contains useful utility types used throughout the application.
-// tslint:disable: jsdoc-format
 
 /**
  * Shorthand for declaring an interface with the same public members as a class.
@@ -19,18 +16,6 @@ export type InterfaceOf<T> = { [K in keyof T]: T[K]; };
    ```
  */
 export interface ConstructorOf<T> { new(...args: any[]): T; }
-
-/**
- * Shorthand for the type of the parameter supplied to `ngOnChanges()`.
- *
- * Example:
-   ```
-   ngOnChanges(changes: ChangesOf<this>): void {
-       ...
-   }
-   ```
- */
-export type ChangesOf<T> = { [K in keyof T]?: SimpleChange };
 
 /**
  * Makes the keys specified as the second type parameter optional.

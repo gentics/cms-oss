@@ -1,11 +1,20 @@
-<gtx-dropdown-list *ngIf="buttons" align="right">
+<gtx-dropdown-list
+    *ngIf="buttons"
+    align="right"
+    data-action="item-context"
+    data-context-id="item-context"
+>
     <gtx-dropdown-trigger>
-        <gtx-button data-action="context-menu-trigger" icon type="secondary">
+        <gtx-button
+            data-context-trigger
+            icon
+            type="secondary"
+        >
             <icon>more_vert</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content class="item-context-menu-content">
+    <gtx-dropdown-content data-context-id="item-context" class="item-context-menu-content">
         <ng-container *ngIf="uiMode === UIMode.EDIT">
             <gtx-dropdown-item
                 *ngIf="buttons.edit"
@@ -34,6 +43,11 @@
             >
                 <icon left>history</icon>
                 {{ 'editor.version_history_label' | i18n }}
+            </gtx-dropdown-item>
+
+            <gtx-dropdown-item *ngIf="buttons.publishProtocol" (click)="publishProtocolClicked(item)">
+                <icon left>news</icon>
+                {{ 'editor.published_protocol_label' | i18n }}
             </gtx-dropdown-item>
 
             <gtx-dropdown-item
@@ -213,6 +227,7 @@
             <gtx-dropdown-item
                 *ngIf="buttons.stage"
                 data-action="stage"
+                [attr.data-active]="stagingMap?.[item.globalId]?.included"
                 (click)="stageClicked(item, StagingMode.REGULAR)"
             >
                 <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'remove' : 'inventory') }}</icon>

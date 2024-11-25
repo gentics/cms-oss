@@ -40,6 +40,7 @@
             <div
                 *ngIf="row.item[MBO_AVILABLE_PERMISSIONS] | gtxIncludes:perm.value; else emptyPermBlock"
                 class="permission-icon"
+                [attr.data-id]="perm.value"
                 [title]="('mesh.permission_' + perm.value) | i18n"
                 [class.granted]="row.item[MBO_ROLE_PERMISSIONS] | gtxIncludes:perm.value"
             >

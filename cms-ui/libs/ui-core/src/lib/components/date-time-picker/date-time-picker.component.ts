@@ -6,8 +6,9 @@ import {
     Input,
     OnInit,
     Optional,
-    Output
+    Output,
 } from '@angular/core';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
@@ -168,6 +169,10 @@ export class DateTimePickerComponent
             const timestamp: number = await dialog.open();
             this.triggerChange(timestamp);
         } catch (err) {
+            // Ignore user close
+            if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                return;
+            }
             console.error('Error while opening the DateTimePicker Modal!', err);
         }
     }

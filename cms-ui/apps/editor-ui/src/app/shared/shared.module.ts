@@ -14,16 +14,16 @@ import {
     ChannelDependenciesModal,
     ChipSearchBarComponent,
     DetailChip,
-    DisplayFieldSelector,
+    DisplayFieldSelectorModal,
     ExternalAssetsModalComponent,
     FavouriteToggleComponent,
-    FilePropertiesForm,
+    FilePropertiesComponent,
     FileStatusLabel,
-    FolderPropertiesForm,
+    FolderPropertiesComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorCurrentComponent,
     FormLanguageSelectorComponent,
-    FormPropertiesFormComponent,
+    FormPropertiesComponent,
     IconCheckbox,
     ImageThumbnailComponent,
     ImageThumbnailTooltip,
@@ -49,7 +49,7 @@ import {
     PageLanguageIndicatorComponent,
     PageLanguageIndicatorCurrentComponent,
     PageLanguageSelector,
-    PagePropertiesForm,
+    PagePropertiesComponent,
     PageSizeSelectorComponent,
     PageVersionsModal,
     PagingControls,
@@ -76,6 +76,7 @@ import {
     UploadButtonComponent,
     UsageListComponent,
     UsageModalComponent,
+    PublishProtocolModalComponent,
 } from './components';
 import {
     DynamicDisableDirective,
@@ -118,6 +119,7 @@ import {
     SuggestionSearchService,
     UIOverridesService,
     UserAgentRef,
+    TranslationActionsService,
 } from './providers';
 
 const COMPONENTS = [
@@ -125,15 +127,15 @@ const COMPONENTS = [
     DetailChip,
     DynamicDisableDirective,
     FavouriteToggleComponent,
-    FilePropertiesForm,
+    FilePropertiesComponent,
     FileStatusLabel,
     FolderContextMenuComponent,
-    FolderPropertiesForm,
+    FolderPropertiesComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorCurrentComponent,
     FormLanguageSelectorComponent,
-    FormPropertiesFormComponent,
+    FormPropertiesComponent,
     IconCheckbox,
     ImageThumbnailComponent,
     ImageThumbnailTooltip,
@@ -155,7 +157,7 @@ const COMPONENTS = [
     PageLanguageIndicatorComponent,
     PageLanguageIndicatorCurrentComponent,
     PageLanguageSelector,
-    PagePropertiesForm,
+    PagePropertiesComponent,
     PageSizeSelectorComponent,
     PagingControls,
     ProxyRouteComponent,
@@ -174,7 +176,7 @@ const COMPONENTS = [
 
 const ENTRY_COMPONENTS = [
     ChannelDependenciesModal,
-    DisplayFieldSelector,
+    DisplayFieldSelectorModal,
     ExternalAssetsModalComponent,
     InheritanceDialog,
     LinkTemplateComponent,
@@ -183,6 +185,7 @@ const ENTRY_COMPONENTS = [
     MultiMoveModal,
     MultiRestoreModalComponent,
     PageVersionsModal,
+    PublishProtocolModalComponent,
     PublishPagesModalComponent,
     PublishTimeManagedPagesModal,
     RepositoryBrowser,
@@ -249,6 +252,7 @@ const PROVIDERS = [
     UIOverridesService,
     UserAgentRef,
     WindowRef,
+    TranslationActionsService,
 ];
 
 @NgModule({

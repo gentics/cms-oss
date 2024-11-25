@@ -3418,6 +3418,13 @@ public class FolderFactory extends AbstractFactory {
 							try {
 								folder.setPublishDir(UniquifyHelper.makeUnique(folder, folder.pubDir, PUB_DIR_FUNCTION,
 										objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+
+								// make the translated publish directories unique among each other
+								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.getOwningNode().getLanguages(), folder.publishDirI18n,
+										folder.pubDir, Optional.ofNullable(orgFolder).map(Folder::getPublishDirI18n), SeparatorType.underscore,
+										Folder.MAX_PUB_DIR_LENGTH));
+
+								// and then make them unique with all other
 								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder, folder.publishDirI18n,
 										PUB_DIR_FUNCTION, objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
 							} finally {
@@ -4897,6 +4904,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected boolean insecurePreviewUrl;
 
+		@DataField("mesh_project_name")
+		@Updateable
+		protected String meshProjectName;
+
 		/**
 		 * List of language ids assigned to this node
 		 */
@@ -5192,6 +5203,13 @@ public class FolderFactory extends AbstractFactory {
 		public List<ContentLanguage> getLanguages() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
+			if (t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && isChannel()) {
+				List<Node> masterNodes = getMasterNodes();
+				if (!masterNodes.isEmpty()) {
+					return masterNodes.get(masterNodes.size() - 1).getLanguages();
+				}
+			}
+
 			// load the ids (if not done before)
 			loadLanguageIds();
 
@@ -5200,6 +5218,15 @@ public class FolderFactory extends AbstractFactory {
 
 		@Override
 		public String getLanguagesMD5() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			if (t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING) && isChannel()) {
+				List<Node> masterNodes = getMasterNodes();
+				if (!masterNodes.isEmpty()) {
+					return masterNodes.get(masterNodes.size() - 1).getLanguagesMD5();
+				}
+			}
+
 			loadLanguageIds();
 			return languageIdsMD5;
 		}
@@ -5278,6 +5305,15 @@ public class FolderFactory extends AbstractFactory {
 		@Override
 		public boolean isInsecurePreviewUrl() {
 			return insecurePreviewUrl;
+		}
+
+		@Override
+		public String getMeshProjectName() {
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				return meshProjectName;
+			} else {
+				return "";
+			}
 		}
 
 		/* (non-Javadoc)
@@ -6488,6 +6524,20 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setMeshProjectName(String meshProjectName) throws ReadOnlyException {
+			if (meshProjectName == null) {
+				return;
+			}
+			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				meshProjectName = "";
+			}
+			if (!StringUtils.isEqual(this.meshProjectName, meshProjectName)) {
+				this.meshProjectName = meshProjectName;
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public boolean save() throws InsufficientPrivilegesException,
 					NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -6544,6 +6594,7 @@ public class FolderFactory extends AbstractFactory {
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
 				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");
+				meshProjectName = ObjectTransformer.getString(meshProjectName, "");
 				hostProperty = ObjectTransformer.getString(hostProperty, "");
 
 				// when the node is a channel, check whether the master node publishes into a MCCR,
@@ -7553,12 +7604,25 @@ public class FolderFactory extends AbstractFactory {
 		conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, folder.getPublishDir(), PUB_DIR_FUNCTION, objectIds);
 		if (conflictingObject != null) {
 			return Pair.of(folder.getPublishDir(), conflictingObject);
-	}
+		}
 
 		for (String i18nPubDir : folder.getPublishDirI18n().values()) {
 			conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds);
 			if (conflictingObject != null) {
 				return Pair.of(i18nPubDir, conflictingObject);
+			}
+		}
+
+		// finally check for uniqueness of the (translated) pubdirs of the folder itself
+		if (!folder.getPublishDirI18n().isEmpty()) {
+			Set<String> checked = new HashSet<>();
+			checked.add(folder.getPublishDir());
+
+			for (String i18nPubDir : folder.getPublishDirI18n().values()) {
+				if (checked.contains(i18nPubDir)) {
+					return Pair.of(i18nPubDir, folder);
+				}
+				checked.add(i18nPubDir);
 			}
 		}
 

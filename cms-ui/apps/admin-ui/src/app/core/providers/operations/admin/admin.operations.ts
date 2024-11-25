@@ -73,7 +73,7 @@ export class AdminOperations extends OperationsBase {
         return this.api.adminInfo.getUpdates().pipe(
             map(response => {
                 this.appState.dispatch(new SetCmsUpdates(response.available));
-                return response.available;
+                return response.available.map(update => update.version);
             }),
             silent ? catchError(() => of(null)) : this.catchAndRethrowError(),
         );

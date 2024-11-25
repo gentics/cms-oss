@@ -5,10 +5,13 @@
  */
 package com.gentics.contentnode.object.parttype;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
@@ -33,6 +36,7 @@ import com.gentics.contentnode.render.RenderInfo;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.resolving.ResolvableMapWrappable;
 import com.gentics.portalnode.formatter.GenticsStringFormatter;
 import com.gentics.portalnode.formatter.SortImp;
 import com.gentics.portalnode.formatter.URLIncludeImp;
@@ -42,14 +46,16 @@ import com.gentics.portalnode.formatter.VelocityToolsImp;
  * Resolver for objects put into the context for AbstractExtensiblePartTypes
  * under the name "cms"
  */
-public class CMSResolver implements Resolvable {
+public class CMSResolver implements ResolvableMapWrappable {
 	protected ModeResolver modeResolver;
 
 	protected ImpsResolver impsResolver;
 
-	protected static Map properties = new HashMap();
+	protected static Map<String, Property> properties = new HashMap<>();
 
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(CMSResolver.class);
+
+	protected final static Set<String> resolvableKeys;
 
 	static {
 		properties.put("rendermode", new Property() {
@@ -97,6 +103,8 @@ public class CMSResolver implements Resolvable {
 				return cmsResolver.getImpsResolver();
 			}
 		});
+
+		resolvableKeys = SetUtils.difference(properties.keySet(), Collections.singleton("imps"));
 	}
 
 	protected Page page;
@@ -163,6 +171,11 @@ public class CMSResolver implements Resolvable {
 		// create the mode resolver and set the flag, whether we are rendering a foreign object
 		StackResolvable renderedRootObject = TransactionManager.getCurrentTransaction().getRenderType().getRenderedRootObject();
 		modeResolver = new ModeResolver(!Objects.equals(renderedRootObject, this.rootObject));
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return resolvableKeys;
 	}
 
 	/*

@@ -1,9 +1,10 @@
 package com.gentics.contentnode.factory.object;
 
-import java.util.List;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.PublishableNodeObject;
+import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
+import com.gentics.contentnode.publish.protocol.PublishState;
+import java.util.List;
 
 /**
  * Interface for {@link PublishableNodeObject}s, which allow to add hooks for specific actions on them (like saving, deleting, publishing and taking offline)
@@ -26,6 +27,8 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onPublish(object, wasOnline, userId);
 		}
+
+		PublishProtocolUtil.logPublishState(object, PublishState.ONLINE.getValue(), userId);
 	}
 
 	/**
@@ -40,5 +43,7 @@ public interface ExtensiblePublishableObject<T extends PublishableNodeObject> ex
 		for (ExtensiblePublishableObjectService<T> service : getServices()) {
 			service.onTakeOffline(object, wasOnline, userId);
 		}
+
+		PublishProtocolUtil.logPublishState(object, PublishState.OFFLINE.getValue(), userId);
 	}
 }

@@ -1,84 +1,369 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
+import { LoginRequest, LoginResponse } from '@gentics/cms-models';
+import { normalizeToImportBinary, registerCommonCommands, RENDERABLE_ALOHA_COMPONENTS, setupAliasOverrides } from '@gentics/e2e-utils';
 
-type ItemType = 'folder' | 'page' | 'image' | 'file' | 'form';
+setupAliasOverrides();
+registerCommonCommands();
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare namespace Cypress {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface Chainable<Subject> {
-        navigateToApp(path?: string): Chainable<void>;
-        login(source: 'cms' | 'keycloak'): Chainable<void>;
-        selectNode(nodeId: number | string): Chainable<JQuery<HTMLElement>>;
-        findItem(type: ItemType, id: number): Chainable<JQuery<HTMLElement>>;
-        itemAction(type: ItemType, id: number, action: string): Chainable<JQuery<HTMLElement>>;
-    }
-}
-
-//
-// -- This is a parent command --
-Cypress.Commands.add('navigateToApp', (path) => {
+Cypress.Commands.add('navigateToApp', { prevSubject: false }, (path, raw) => {
     /*
      * The baseUrl is always properly configured via NX.
      * When using the CI however, we use the served UI from the CMS directly.
      * Therefore we also have to use the correct path for it.
      */
     const appBasePath = Cypress.env('CI') ? Cypress.env('CMS_EDITOR_PATH') : '/';
-    cy.visit(`${appBasePath}${path || ''}`);
+    Cypress.log({
+        name: 'navigate',
+        type: 'parent',
+        message: path || '/',
+        consoleProps: () => ({
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            'Base Path': appBasePath,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Raw: raw,
+        }),
+    });
+    return cy.visit(`${appBasePath}${!raw ? '?skip-sso' : ''}#${path || ''}`, { log: false });
 });
 
-Cypress.Commands.add('login', (source) => {
+Cypress.Commands.add('login', { prevSubject: false }, (account, keycloak) => {
     return cy.fixture('auth.json').then(auth => {
-        const data = auth[source];
-
-        cy.get('input[type="text"]').type(data.username);
-        cy.get('input[type="password"]').type(data.password);
-
-        if (source === 'cms') {
-            cy.get('button[type="submit"]').click();
-        } else {
-            cy.get('input[type="submit"]').click();
+        const data = auth[account];
+        if (data) {
+            return data;
         }
+        return cy.get(account);
+    }).then(data => {
+        Cypress.log({
+            name: 'login',
+            message: keycloak ? 'via Keycloak SSO' : 'direct',
+            type: 'parent',
+        });
+
+        cy.get('input[type="text"]', { log: false }).type(data.username, { log: false });
+        cy.get('input[type="password"]', { log: false }).type(data.password, { log: false });
+
+        const ALIAS_LOGIN_REQ = '@loginReq';
+        cy.intercept({
+            method: 'POST',
+            pathname: '/rest/auth/login',
+        }, req => {
+            req.alias = ALIAS_LOGIN_REQ;
+        });
+
+        cy.get(`${keycloak ? 'input' : 'button'}[type="submit"]`, { log: false }).click({ log: false });
+
+        if (keycloak) {
+            return cy.wrap(null, { log: false });
+        }
+
+        return cy.wait<LoginRequest, LoginResponse>(ALIAS_LOGIN_REQ, { log: false }).then(inter => {
+            Cypress.log({
+                name: 'login success',
+                type: 'child',
+                message: ` ${inter.response?.body.user.firstName} ${inter.response?.body.user.lastName} (${inter.response?.body.user.id})`,
+                consoleProps: () => ({
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    User: inter.response?.body.user,
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    SID: inter.response?.body.sid,
+                }),
+            })
+            return inter.response?.body;
+        });
     });
 });
 
-Cypress.Commands.add('selectNode', (nodeId) => {
-    cy.get('.node-selector [data-action="select-node"]')
-        .click();
-    return cy.get('.node-selector-list')
-        .find(typeof nodeId === 'number' ? `[data-id="${nodeId}"]` : `[data-global-id="${nodeId}"]`)
-        .click();
+Cypress.Commands.add('selectNode', { prevSubject: 'optional' }, (subject, nodeId) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('folder-contents', { log: false });
+
+    root.then($el => {
+        Cypress.log({
+            $el: $el as any,
+            name: 'select node',
+            type: subject ? 'child' : 'parent',
+            message: nodeId,
+        });
+    });
+
+    root.find('node-selector [data-action="select-node"]', { log: false })
+        .click({ log: false });
+    cy.get('gtx-app-root .node-selector-list', { log: false })
+        .find(`[data-id="${nodeId}"], [data-global-id="${nodeId}"]`, { log: false })
+        .click({ log: false });
+    return cy.wrap(null, { log: false });
 });
 
-Cypress.Commands.add('findItem', (type, id) => {
-    return cy.get(`item-list .list-body[data-item-type="${type}"]`)
-        .find(`gtx-contents-list-item[data-id="${id}"]`);
+Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('folder-contents', { log: false });
+    return root
+        .find(`item-list .content-list[data-item-type="${type}"]`, { log: false, timeout: 20_000 })
+        .then($el => {
+            if (options?.log !== false) {
+                Cypress.log({
+                    $el: subject as any,
+                    name: 'find list',
+                    message: type,
+                    type: subject ? 'child' : 'parent',
+                });
+            }
+
+            return $el;
+        });
 });
 
-Cypress.Commands.add('itemAction', (type, id, action) => {
-    cy.findItem(type, id)
-        .find('.context-menu gtx-button[data-action="context-menu-trigger"]')
-        .click({ force: true });
-    return cy.get('.item-context-menu-content')
-        .find(`[data-action="${action}"]`)
-        .click();
+Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id, options) => {
+    return cy.wrap(subject, { log: false })
+        .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`, { log: false, timeout: 20_000 })
+        .then($el => {
+            if (options?.log !== false) {
+                Cypress.log({
+                    $el: subject,
+                    name: 'find item',
+                    message: id,
+                    type: 'child',
+                });
+            }
+
+            return $el;
+        });
 });
 
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames, options) => {
+    cy.intercept({
+        method: 'POST',
+        pathname: '/rest/file/create',
+    }, (req) => {
+        // We need the form-data string that is being sent to the CMS
+        // The actual FormData object would be best of course, but isn't available here
+        let body: string = req.body;
+
+        if (
+            // Very hacky, but the types are different between the runtimes which causes this issue
+            (body as any) instanceof ArrayBuffer
+            || Object.getPrototypeOf(body).constructor.name === 'ArrayBuffer'
+        ) {
+            // `fatal` has to be false, otherwise it'll break
+            const decoder = new TextDecoder('utf-8', { fatal: false });
+            body = decoder.decode(body as any as ArrayBuffer);
+        }
+
+        // Get the filename from the form-data request
+        // The fileName is (or should be) normalized already
+        const fileName = /filename="([^"]*)"/.exec(body)?.[1] || '';
+        req.alias = `_upload_req_${fileName}`;
+    });
+
+    // Wait till elements have been reloaded
+    cy.intercept({
+        method: 'GET',
+        pathname: '/rest/folder/getPages/*',
+    }).as('folderLoad');
+
+    return cy.loadBinaries(fixtureNames, { applyAlias: true }).then(binaries => {
+        const output: Record<string, any> = {};
+        let main: Cypress.Chainable<any>;
+
+        if (options?.dragAndDrop) {
+            const transfer = new DataTransfer();
+            // Put the binaries/Files into the transfer
+            Object.values(binaries).forEach(file => {
+                transfer.items.add(file);
+            });
+
+            if (options?.log !== false) {
+                Cypress.log({
+                    name: 'upload',
+                    type: 'parent',
+                    message: `via drag'n'drop: ${Object.values(binaries).map(bin => bin.name).join(', ')}`,
+                });
+            }
+
+            main = cy.get('folder-contents > [data-action="file-drop"]', { log: false }).trigger('drop', {
+                dataTransfer: transfer,
+                force: true,
+                log: false,
+            });
+        } else {
+            main = cy.findList(type)
+                .find('.list-header .header-controls [data-action="upload-item"] input[type="file"]', { log: false })
+                .selectFile(fixtureNames.map(entry => '@' + (typeof entry === 'string' ? entry : entry.fixturePath)), { force: true });
+        }
+
+        return main.then(() => {
+            for (const entry of fixtureNames) {
+                const data = normalizeToImportBinary(entry);
+
+                cy.wait(`@_upload_req_${data.name}`).then(intercept => {
+                    const res = intercept.response?.body;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                    expect(res.success).to.be.true;
+                    output[data.fixturePath] = res.file;
+                });
+            }
+
+            return cy.wait('@folderLoad').then(() => cy.wrap(output, { log: false }));
+        })
+    });
+});
+
+Cypress.Commands.add('getAlohaIFrame', { prevSubject: 'optional' }, (subject, options) => {
+    const iframeSelector = 'iframe[name="master-frame"][loaded="true"]';
+    // High timeout for all of aloha to finish loading
+    const iframe: Cypress.Chainable<JQuery<HTMLIFrameElement>> = subject
+        ? cy.wrap(subject, { log: false })
+            .find(iframeSelector, { timeout: 60_000, log: false })
+        : cy.get(`project-editor content-frame ${iframeSelector}`, { timeout: 60_000, log: false });
+
+    return iframe.then($iframe => {
+        const body = $iframe[0].contentDocument?.body;
+
+        if (options?.log !== false) {
+            Cypress.log({
+                $el: subject as any,
+                name: 'aloha iframe',
+                type: subject ? 'child' : 'parent',
+                message: '',
+            });
+        }
+
+        return cy.wrap(body ? Cypress.$(body) : null, { log: false });
+    });
+});
+
+Cypress.Commands.add('findAlohaComponent', { prevSubject: 'optional' }, (subject, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.get('project-editor content-frame gtx-page-editor-controls', { log: false });
+    const slotSelector = options?.slot ? `[data-slot="${options.slot}"]` : '';
+    const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
+
+    return root.find(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`, { log: false }).then($el => {
+        if (options?.log !== false) {
+            Cypress.log({
+                $el: subject as any,
+                name: 'aloha component',
+                message: options?.slot || 'unknown',
+                type: subject ? 'child' : 'parent',
+            });
+        }
+
+        return $el;
+    });
+});
+
+Cypress.Commands.add('findDynamicFormModal', { prevSubject: 'optional' }, (subject, ref, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.root({ log: false });
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return root.find(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`, { log: false }).then($el => {
+        if (options?.log !== false) {
+            Cypress.log({
+                $el: subject as any,
+                name: 'dynamic form modal',
+                message: ref || '',
+                type: subject ? 'child' : 'parent',
+            });
+        }
+
+        return $el;
+    });
+});
+
+Cypress.Commands.add('findDynamicDropdown', { prevSubject: 'optional' }, (subject, ref, options) => {
+    const root = subject ? cy.wrap(subject, { log: false }) : cy.root({ log: false });
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+
+    return root.find(`gtx-dynamic-dropdown .gtx-context-menu${refSelector}`, { log: false }).then($el => {
+        if (options?.log !== false) {
+            Cypress.log({
+                $el: subject as any,
+                name: 'dynamic dropdown',
+                message: ref || '',
+                type: subject ? 'child' : 'parent',
+            });
+        }
+
+        return $el;
+    });
+});
+
+Cypress.Commands.add('itemAction', { prevSubject: 'element' }, (subject, action) => {
+    Cypress.log({
+        $el: subject,
+        name: 'item action',
+        message: action,
+        type: 'child',
+    });
+
+    switch (action) {
+        // For other actions such as selecting or similar
+        default:
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            return cy.wrap(subject, { log: false })
+                .find('[data-action="item-context"]', { log: false })
+                .openContext({ log: false })
+                .find(`[data-action="${action}"]`, { log: false })
+                .click({ force: true, log: false })
+                .end();
+    }
+});
+
+Cypress.Commands.add('openObjectPropertyEditor', { prevSubject: false }, (name, options) => {
+    cy.get(`content-frame combined-properties-editor .tab-link[data-id="object.${name}"]`, { log: false })
+        .click({ force: true, log: false });
+    return cy.get('content-frame combined-properties-editor .properties-content .tag-editor tag-editor-host', { log: false }).then($el => {
+        if (options?.log !== false) {
+            Cypress.log({
+                $el,
+                name: 'open object-property editor',
+                message: '',
+                type: 'parent',
+            });
+        }
+
+        return $el;
+    });
+});
+
+Cypress.Commands.add('findTagEditorElement', { prevSubject: 'element' }, (subject, type, options) => {
+    switch (type) {
+        // Should always use the `TagPropertyType` values
+        case 'select':
+        case 'SELECT':
+            return cy.wrap(subject, { log: false })
+                .find('gentics-tag-editor select-tag-property-editor gtx-select', { log: false })
+                .then($el => {
+                    if (options?.log !== false) {
+                        Cypress.log({
+                            $el: subject,
+                            name: 'tag-editor element',
+                            message: 'select',
+                            type: 'child',
+                        });
+                    }
+
+                    return $el;
+                });
+
+        default:
+            return cy.wrap(subject, { log: false });
+    }
+});
+
+Cypress.Commands.add('editorAction', { prevSubject: false }, (action, options) => {
+    if (options?.log !== false) {
+        Cypress.log({
+            name: 'editor action',
+            type: 'parent',
+            message: action,
+        });
+    }
+
+    switch (action) {
+        case 'editor-context':
+            return cy.get('content-frame gtx-editor-toolbar [data-action="editor-context"]', { log: false })
+                .openContext();
+
+        default:
+            cy.get(`content-frame gtx-editor-toolbar [data-action="${action}"]`, { log: false })
+                .click({ log: false });
+            return cy.wrap(null, { log: false });
+    }
+});

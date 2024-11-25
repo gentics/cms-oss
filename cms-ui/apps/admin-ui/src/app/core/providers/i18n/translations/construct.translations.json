@@ -364,6 +364,10 @@
         "en": "Form",
         "de": "Formular"
     },
+    "tagPartType_43": {
+        "en": "Handlebars",
+        "de": "Handlebars"
+    },
 
     "validator_name_number_natural": {
         "en": "Number (natural, small)",

@@ -1,0 +1,5 @@
+# Ignore override files, as they are to be used for local secrets
+compose*.local.yml
+
+# Add the conf directory as we need this for the tests
+!cms/conf

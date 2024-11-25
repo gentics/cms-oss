@@ -1,6 +1,11 @@
 package com.gentics.contentnode.object.parttype;
 
+import java.util.Collections;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -24,8 +29,15 @@ public class NodePartType extends AbstractPartType {
 	 */
 	private static final long serialVersionUID = -1457491512350096672L;
 
+	private final static Set<String> resolvableKeys = SetUtils.unmodifiableSet("id", "name");
+
 	public NodePartType(Value value) throws NodeException {
 		super(value);
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return SetUtils.union(resolvableKeys, Optional.ofNullable(getNode()).map(Node::getResolvableKeys).orElse(Collections.emptySet()));
 	}
 
 	/*

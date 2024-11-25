@@ -223,6 +223,18 @@ public class MigrateScheduler extends InitJob {
 
 			SchedulerSchedule schedule = t.getObject(SchedulerSchedule.class, jobMigrationMap.get(oldJobId), true);
 			if (schedule != null && schedule.getScheduleData().getType() == ScheduleType.followup) {
+				if (newFollowedScheduleIds.isEmpty()) {
+					if (logger.isWarnEnabled()) {
+						logger.warn(String.format(
+							"No follow IDs available for migrated job %d (old job ID: %d, old follow IDs: [%s]); setting schedule type to \"manual\"",
+							jobMigrationMap.get(oldJobId),
+							oldJobId,
+							oldFollowedJobsIds.stream().map(Object::toString).collect(Collectors.joining(", "))));
+					}
+
+					schedule.getScheduleData().setType(ScheduleType.manual);
+				}
+
 				schedule.getScheduleData().getFollow().setScheduleId(newFollowedScheduleIds);
 				schedule.save();
 				t.commit(false);

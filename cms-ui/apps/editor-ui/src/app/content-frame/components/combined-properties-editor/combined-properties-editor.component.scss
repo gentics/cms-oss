@@ -145,24 +145,25 @@ hr {
                 > li.tab-link,
                 li.tab-group div {
                     text-transform: none;
+                    transition: 300ms;
                 }
 
                 > li.tab-link:not(.is-active) {
-                    border-left: 1px solid $gtx-color-light-gray;
-                    border-right: 1px solid $gtx-color-light-gray;
+                    border-left-color: $gtx-color-light-gray;
+                    border-right-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group:not(.is-active) {
                     padding-left: 1px;
-                    border-left: 1px solid $gtx-color-light-gray;
+                    border-left-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group li.tab-link:not(.is-active), .collapsible-header {
-                    border-right: 1px solid $gtx-color-light-gray;
+                    border-right-color: $gtx-color-light-gray;
                 }
 
                 > li.tab-group li.tab-link.is-active {
-                    border-right: 2px solid white;
+                    border-right-color: white;
                     border-left-color: $gtx-color-warning;
                 }
             }
@@ -207,60 +208,6 @@ hr {
     }
 }
 
-.item-tag-list {
-    .item-tag {
-        display: flex;
-        padding: 8px;
-        padding-left: 24px;
-
-        > icon-checkbox {
-            ::ng-deep .item-icon {
-
-            }
-        }
-
-        > icon-checkbox,
-        > gtx-checkbox {
-            flex: 0 0 48px;
-        }
-
-        > gtx-checkbox {
-            margin-top: 2px;
-            margin-left: 3px;
-        }
-
-        span {
-            flex: 1 1;
-
-            &.tag-name {
-                color: $link-color;
-                cursor: pointer;
-
-                detail-chip {
-                    float: right;
-                    margin-right: 4px;
-                }
-            }
-
-            &.tag-actions {
-                flex: 0 0 32px;
-            }
-        }
-
-        border-bottom: 1px dotted #efefef;
-
-        &.item-tag-head {
-            border-bottom-color: #ffb84f;
-        }
-
-        .tag-actions {
-            i {
-                cursor: pointer;
-            }
-        }
-    }
-}
-
 .object-property {
     flex-grow: 1;
     pointer-events: none;
@@ -279,28 +226,10 @@ hr {
     .tag-editor {
         overflow-y: auto;
     }
+}
 
-    .old-tagfill-iframe {
-        width: 100%;
-        flex-grow: 1;
-        overflow: hidden;
-
-        ::ng-deep iframe {
-            transition: opacity .15s ease-in-out;
-            max-height: calc(100% - 3px); /* Remove Progress Bar height */
-        }
-
-        &[data-gcms-ui-iframe-loaded="true"] ::ng-deep iframe {
-            opacity: 1;
-            transition-delay: .2s; /* reveal delayed loading content */
-        }
-
-        &[data-gcms-ui-iframe-loaded="false"] ::ng-deep iframe {
-            opacity: 0;
-            transition-delay: -50ms; /* hide faster unloading content */
-        }
-    }
-
+.tag-list-container {
+    padding-left: 24px;
 }
 
 tag-editor-overlay-host.active {

@@ -1,0 +1,3 @@
+The check result for consistency checks of Content.Repositories sometimes did not show all information messages,
+caused by JVM specific limitations.
+This has been fixed.

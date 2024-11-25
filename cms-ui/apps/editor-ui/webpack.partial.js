@@ -37,7 +37,7 @@ module.exports = (config, options, targetOptions) => {
                 options: {
                     sourceMap: false,
                     sassOptions: {
-                        includePaths: [
+                        loadPaths: [
                             path.normalize(path.resolve(__dirname, './src/styles')),
                             path.normalize(path.resolve(__dirname, '../../libs')),
                             path.normalize(path.resolve(__dirname, '../../node_modules')),

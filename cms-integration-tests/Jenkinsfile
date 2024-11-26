@@ -1,11 +1,10 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
-@Library('jenkins-pipeline-library') import com.gentics.*
+@Library('jenkins-pipeline-library@nexus') import com.gentics.*
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)
 
-final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-oss"
+
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 def branchName                 = null
@@ -98,29 +97,28 @@ spec:
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                    // Make sure we're logged in to all possible registries
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
-                        withCredentials([ string(credentialsId: 'cms-ui-integration-tests.licensekey', variable: 'CI_LICENSEKEY') ]) {
-                            try {
-                                dir(path: 'cms-integration-tests') {
-                                    if (params.variant == 'EE') {
-                                        sh "docker compose -f compose.ee.yml up -d --wait --quiet-pull"
-                                        sh "docker compose -f compose.ee.yml ps"
-                                    } else {
-                                        sh "docker compose up -d --wait --quiet-pull"
-                                        sh "docker compose ps"
-                                    }
-                                }
+                     withCredentials([ string(credentialsId: 'cms-ui-integration-tests.licensekey', variable: 'CI_LICENSEKEY') ]) {
+                        authDockerRegistry("docker.gentics.com", "docker.gentics.com")
 
-                                dir(path: 'cms-ui') {
-                                    sh "npm ci --no-fund --no-audit"
-                                    sh "npm run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --parallel=false --output-style=static --verbose"
+                        try {
+                            dir(path: 'cms-integration-tests') {
+                                if (params.variant == 'EE') {
+                                    sh "docker compose -f compose.ee.yml up -d --wait --quiet-pull"
+                                    sh "docker compose -f compose.ee.yml ps"
+                                } else {
+                                    sh "docker compose up -d --wait --quiet-pull"
+                                    sh "docker compose ps"
                                 }
-                            } finally {
-                                dir(path: 'cms-integration-tests') {
-                                    // finally stop the docker containers
-                                    sh "docker compose down"
-                                }
+                            }
+
+                            dir(path: 'cms-ui') {
+                                sh "npm ci --no-fund --no-audit"
+                                sh "npm run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --parallel=false --output-style=static --verbose"
+                            }
+                        } finally {
+                            dir(path: 'cms-integration-tests') {
+                                // finally stop the docker containers
+                                sh "docker compose down"
                             }
                         }
                     }

@@ -7,7 +7,7 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:package",
+            "executor": "@nx/angular:ng-packagr-lite",
             "options": {
                 "tsConfig": "libs/ui-core/tsconfig.lib.json",
                 "project": "libs/ui-core/ng-package.json"
@@ -46,9 +46,6 @@
                 "devServerTarget": "image-editor-demo:build"
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "libs/ui-core/cypress.config.ci.ts",

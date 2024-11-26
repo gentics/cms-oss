@@ -3,9 +3,13 @@
   "version": "6.2.0-SNAPSHOT",
   "license": "Apache-2.0",
   "dependencies": {
+  },
+  "peerDependencies": {
     "@types/jquery": "^3.5.19"
   },
-  "peerDependencies": {},
+  "devDependencies": {
+    "@types/jquery": "^3.5.19"
+  },
   "publishConfig": {
     "registry": "https://repo.gentics.com/repository/npm-products/"
   }

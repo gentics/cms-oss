@@ -5,28 +5,18 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 ## Package repository settings
 
-Authenticate:
+Authentification for the UI packages is only needed, if you wish to access restriced ones or if you want to publish packages.
+If you only want to develop/build the UIs, you can skip this step entirely.
+
+Since our repository doesn't authenticate with the NPM Tokens however, we need to create the auth value ourself and add the registry to the config manually:
 ```bash
-npm adduser --registry=https://repo.gentics.com/repository/npm-products/ --always-auth
+echo -n "{username}:{password}" | base64 -
 ```
-
-Setup @gentics scope to the Gentics repository:
-```bash
-npm config set @gentics:registry https://repo.gentics.com/repository/npm-products/
+Edit your global `.npmrc` file (should be `~/.npmrc`), and add the following at the end:
 ```
-
-If you wish/need to push new releases, you also need to authenticate to the repository.
-To do this, do the following:
-
-1. Since our repository doesn't authenticate with the NPM Tokens however, we need to create the auth value ourself:
-    ```bash
-    echo -n "{username}:{password}" | base64 -
-    ```
-2. Edit your global `.npmrc` file (should be `~/.npmrc`), and add the following at the end:
-    ```
-    @gentics:registry=https://repo.gentics.com/repository/npm-products/
-    //repo.gentics.com/repository/npm-products/:_auth={base64Auth}
-    ```
+@gentics:registry=https://repo.gentics.com/repository/npm-products/
+//repo.gentics.com/repository/npm-products/:_auth={base64Auth}
+```
 
 ## Commands
 
@@ -58,6 +48,8 @@ Be sure to configure the `proxy.conf.json` correctly first (See `proxy.conf.json
 
 ```bash
 npm start <app-name>
+# Same as the above
+npm run serve <app-name>
 ```
 
 ### Unit-Tests
@@ -69,10 +61,13 @@ Executes the Unit-Tests for the specified project
 To run the unit tests and then terminate the test process:
 
 ```bash
+# Run unit-tests for a single application/library
 npm test <app-name/lib-name>
+# Run unit-tests for all applications/libraries
+npm run many -- --target=test
 ```
 
-To run the unit tests in watch mode (rebuild and rerun on every change):
+To run the unit tests in watch mode (rebuild and re-run on every change):
 
 ```bash
 npm run test <app-name/lib-name> -- --configuration=watch
@@ -90,8 +85,16 @@ npm run test <app-name/lib-name> -- --configuration=watch
 Starts the Cypress E2E/Integration tests with the specific e2e application (`{application-name}-e2e`).
 
 ```bash
+# Runs the e2e-tests for a single e2e application
 npm run e2e <e2e-app-name>
+# Runs the e2e-tests for all e2e applications
+npm run many -- --target=e2e --project=tag:e2e
 ```
+
+**Available Configurations**:
+
+* `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
+* `ci`: To start the tests in CI mode, which will use the actual served UI from the CMS.
 
 ### Components Tests
 
@@ -99,18 +102,17 @@ npm run e2e <e2e-app-name>
 
 Starts the Cypress Components tests for the specific application or library.
 
-*Note*: When running multiple tests, disable `parallel` with `--parallel=false`, as it spawns a server for the tests which binds to a port.
-When multiple try to run, it will fail due to the already bound port.
-
-
 ```bash
+# Run the component-tests for a single application/library
 npm run component-test <app-name/lib-name>
+# Run the component-tests for all applications/libraries
+npm run many -- --target=component-test
 ```
 
 **Available Configurations**:
 
 * `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
-* `ci`: When run in a CI Server
+* `ci`: When run in a CI Server and includes test coverage reporting
 
 ### Build an application or library
 
@@ -119,7 +121,10 @@ npm run component-test <app-name/lib-name>
 Builds the project and outputs ready to use/serve output files.
 
 ```bash
+# Builds a single application/library
 npm run build <app-name/lib-name>
+# Builds all applications/libraries
+npm run many -- --target=build
 ```
 
 **Available Configurations**:
@@ -128,10 +133,27 @@ npm run build <app-name/lib-name>
 * `development`: Builds it with source-maps and non-optimized content to make debugging easier.
 * `ci`: When run in a CI Server
 
+### Multiple targets
+
+**NX Command**: [`run-many`](https://nx.dev/nx-api/nx/documents/run-many)
+
+As already shown in the examples above, it's possible to run multiple targets and projects in one command.
+The most common use case is to run the builds and tests all at once and as many in paralell as possible:
+
+```bash
+# Run the "build", "test", and "component-test" targets for all applications/libraries
+npm run many -- --target=build,test,component-test
+# Run all unit- and component-tests for the libraries
+npm run many -- --target=test,component-test --project=tag:lib
+# Run the build target for the "editor-ui" and the "ui-core-docs" applications
+npm run many -- --target=build --project=editor-ui,ui-core-docs
+# Run all e2e/integration tests
+npm run many -- --target=e2e --project=tag:e2e
+```
 
 ## Tags
 
-NX supports [tagging](https://nx.dev/nx-api/devkit/documents/ProjectConfiguration#tags) of all it's projects and being able to [filter the projects](https://nx.dev/nx-api/nx/documents/run-many) when running multiple commands.
+NX supports [tagging](https://nx.dev/nx-api/devkit/documents/ProjectConfiguration#tags) of all it's projects and being able to [filter the projects](https://nx.dev/nx-api/nx/documents/run-many) when running [multiple targets](#multiple-targets).
 
 Tags that are used in this Repository:
 
@@ -260,6 +282,16 @@ Angular wrapper of the CMS Rest Client to work with it easier in angular project
 
 Previously as [standalone project](https://github.com/gentics/gentics-ui-core/) available, now integrated in the Monorepo.
 Provides general purpose ui components to create custom applications.
+
+### E2E Utils
+
+**Name**: e2e-utils
+
+**Type**: Library
+
+**Readme**: [libs/e2e-utils/README.md](libs/e2e-utils/README.md)
+
+A purely internal library which contains utils, commands, and assertions for cypress based tests (integration-/e2e-tests and component-tests).
 
 ## Coding Style
 

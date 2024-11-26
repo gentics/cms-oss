@@ -33,13 +33,13 @@
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "@gentics/ui-core",
                     "angular2-hotkeys",
-                    "dom-serialize",
-                    "punycode",
-                    "semver",
-                    "serialize-to-js",
-                    "stacktrace-js"
+                    "base64-js",
+                    "hammerjs",
+                    "js-sha256",
+                    "moment",
+                    "moment-timezone",
+                    "semver"
                 ],
                 "aot": true,
                 "fileReplacements": [
@@ -114,9 +114,6 @@
                 "watch": false
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "apps/admin-ui/cypress.config.ci.ts",

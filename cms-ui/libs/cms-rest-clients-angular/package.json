@@ -3,11 +3,16 @@
   "version": "6.2.0-SNAPSHOT",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.2.0-SNAPSHOT"
   },
   "peerDependencies": {
     "@angular/common": "^16.0.0",
-    "@angular/core": "^16.0.0"
+    "@angular/core": "^16.0.0",
+    "@gentics/cms-models": "6.2.0-SNAPSHOT"
+  },
+  "devDependencies": {
+    "@angular/common": "^16.0.0",
+    "@angular/core": "^16.0.0",
+    "@gentics/cms-models": "6.2.0-SNAPSHOT"
   },
   "publishConfig": {
     "registry": "https://repo.gentics.com/repository/npm-products/"

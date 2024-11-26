@@ -2306,6 +2306,7 @@ export interface ContentPackageListOptions extends BaseListOptionsWithPaging<Con
 
 export interface ContentPackageSyncOptions {
     wait?: number;
+    test?: boolean;
 }
 
 export type ContentPackageCreateRequest = Required<Pick<ContentPackage, 'name'>> & Pick<ContentPackage, 'description'>;

@@ -1,6 +1,7 @@
 import {
     AssignEntityToContentPackageOptions,
     ContentPackageCreateRequest,
+    ContentPackageErrorResponse,
     ContentPackageListOptions,
     ContentPackageListResponse,
     ContentPackageResponse,
@@ -54,6 +55,10 @@ export class ContentStagingApi {
 
     importContentPackage(name: string, options?: ContentPackageSyncOptions): Observable<ContentPackageSyncResponse> {
         return this.apiBase.post(`content/package/${name}/import`, null, options);
+    }
+
+    getImportErrors(name: string): Observable<ContentPackageErrorResponse> {
+        return this.apiBase.get(`content/package/${name}/import/errors`, {});
     }
 
     uploadContentPackage(name: string, file: File): Observable<ContentPackageResponse> {

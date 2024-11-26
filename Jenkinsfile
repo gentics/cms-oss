@@ -332,49 +332,6 @@ spec:
             }
 		}
 
-        stage("UI Integration Tests") {
-			when {
-				expression {
-                    // Requires Docker image; Forcefully disabled until fully tested
-					return false && env.BUILD_SKIPPED != "true" && params.runDockerBuild && params.integrationTests
-				}
-			}
-
-            environment {
-                DOCKER_TAG   = "${branchName}"
-            }
-
-            steps {
-                script {
-                    def imageName = "${imageHost}/${imageRepo}/gentics/cms-oss"
-                    def imageNameWithTag = "${imageName}:${branchName}"
-                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                        try {
-                            // prior to starting the tests, start the docker containers with CMS
-                            sh "docker login -u ${repoUsername} -p ${repoPassword} docker.gentics.com"
-                            sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                            
-                            // run the integration tests (And skip all other parts - these had to run before hand or will be executed by the UI repo)
-                            sh "mvn integration-test -B -am -fae -pl :cms-ui -Dui.skip.install=true -Dui.skip.build=true -Dui.skip.test=true -Dui.skip.report"
-                        } finally {
-                            // finally stop the docker containers
-                            sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
-                        }
-                    }
-                }
-            }
-
-            post {
-                always {
-                    script {
-                        // Ignore missing test results if we only run one test
-                        boolean allowEmptyResults = (params.singleTest ? true : false)
-                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
-                    }
-                }
-            }
-		}
-
         stage("Docker Push") {
 			when {
 				expression {

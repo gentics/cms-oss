@@ -141,14 +141,14 @@ As already shown in the examples above, it's possible to run multiple targets an
 The most common use case is to run the builds and tests all at once and as many in paralell as possible:
 
 ```bash
-# Run the "build", "test", and "component-test" targets for all applications/libraries
-npm run many -- --target=build,test,component-test
+# Run the "build", "test", "component-test", and "e2e"/integration-tests targets for all applications/libraries
+npm run many -- --target=build,test,component-test,e2e
 # Run all unit- and component-tests for the libraries
-npm run many -- --target=test,component-test --project=tag:lib
+npm run many -- -t=test,component-test --project=tag:lib
 # Run the build target for the "editor-ui" and the "ui-core-docs" applications
-npm run many -- --target=build --project=editor-ui,ui-core-docs
+npm run many -- --target=build -p=editor-ui,ui-core-docs
 # Run all e2e/integration tests
-npm run many -- --target=e2e --project=tag:e2e
+npm run many -- --target=e2e
 ```
 
 ## Tags

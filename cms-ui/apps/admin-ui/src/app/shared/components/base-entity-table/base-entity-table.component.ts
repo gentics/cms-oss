@@ -25,7 +25,7 @@ import {
     coerceInstance,
 } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
-import { catchError, debounceTime, map, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
 
 export const DELETE_ACTION = 'delete';

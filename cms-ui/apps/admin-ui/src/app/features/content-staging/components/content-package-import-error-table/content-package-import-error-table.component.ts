@@ -9,6 +9,7 @@ import {
     EventEmitter,
     Input,
     OnChanges,
+    OnInit,
     Output,
     SimpleChanges,
 } from '@angular/core';
@@ -17,13 +18,11 @@ import {
     ContentPackageImportError,
 } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
-import { BehaviorSubject } from 'rxjs';
 import {
     ContentPackageImportErrorTableLoaderService,
     ContentPackageTableLoaderService,
     ContentStagingImportErrorTableLoaderOptions,
 } from '../../providers';
-import { switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-content-package-import-error-table',
@@ -31,8 +30,9 @@ import { switchMap } from 'rxjs/operators';
     styleUrls: ['./content-package-import-error-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ContentPackageImportErrorTableComponent extends BaseEntityTableComponent<
-ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>  implements OnChanges {
+export class ContentPackageImportErrorTableComponent
+    extends BaseEntityTableComponent<ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>
+    implements OnInit, OnChanges {
 
     @Input()
     public contentPackage: ContentPackageBO;
@@ -42,7 +42,7 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
 
     public checkResultAvailable: boolean
 
-    public lastCheckTimestamp$: BehaviorSubject<string>;
+    public lastCheckTimestamp: string;
 
     protected entityIdentifier: any = 'contentPackageImport';
 
@@ -74,7 +74,6 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
         },
     ];
 
-
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -86,25 +85,30 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
         private contentPackageLoader: ContentPackageTableLoaderService,
     ) {
         super(changeDetector, appState, i18n, loader, modalService);
+    }
+
+    public override ngOnInit(): void {
+        super.ngOnInit();
 
         this.subscriptions.push(
             this.loader.checkResultAvailable$.subscribe(isAvailable => {
                 this.checkResultAvailable = isAvailable;
+                this.changeDetector.markForCheck();
+            }),
+            this.loader.lastCheckTimestamp$.subscribe(timestamp => {
+                this.lastCheckTimestamp = timestamp;
+                this.changeDetector.markForCheck();
             }),
         );
-
-        this.lastCheckTimestamp$ = this.loader.lastCheckTimestamp$;
-        
     }
 
-    public ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
+
         if (changes.contentPackage) {
             this.reload();
-            this.changeDetector.markForCheck();
         }
     }
-
 
     public handleCheckButtonClick(): void {
         this.i18nNotification.show({
@@ -121,7 +125,7 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
             this.changeDetector.markForCheck();
         }));
     }
-    
+
     public reloadWithPackage(): void {
         this.reload();
         this.reloadPackage.emit();
@@ -129,7 +133,7 @@ ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOp
 
     protected override createAdditionalLoadOptions(): ContentStagingImportErrorTableLoaderOptions {
         return {
-            packageName: this.contentPackage.name,
+            packageName: this.contentPackage?.name,
         };
     }
 }

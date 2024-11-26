@@ -14,7 +14,10 @@ import { NGGCMSRestClientRequest } from './models';
 
 function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
     const value = typeof str !== 'string' ? str : JSON.parse(str);
-    validateResponseObject(request, value);
+    const err = validateResponseObject(request, value);
+    if (err) {
+        throw err;
+    }
     return value;
 }
 

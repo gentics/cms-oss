@@ -1,1 +1,2 @@
-export const getGreeting = () => cy.get('h1');
+export const AUTH_ADMIN = 'admin';
+export const AUTH_KEYCLOAK = 'keycloak';

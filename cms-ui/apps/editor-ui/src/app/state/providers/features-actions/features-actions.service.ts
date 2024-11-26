@@ -33,6 +33,7 @@ export class FeaturesActionsService {
             [Feature.USERSNAP]: false,
             [Feature.AUTOCOMPLETE_FOLDER_PATH]: false,
             [Feature.DEVTOOLS]: false,
+            [Feature.KEYCLOAK]: false,
             [Feature.KEYCLOAK_SIGNOUT]: false,
             [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
             [Feature.CONTENT_STAGING]: false,

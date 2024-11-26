@@ -21,6 +21,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         [disabled]="loading"
         (click)="cancelFn()"
     >
@@ -29,6 +30,7 @@
 
     <gtx-button
         type="primary"
+        data-action="confirm"
         [disabled]="loading|| !control?.valid"
         (click)="saveChanges()"
     >

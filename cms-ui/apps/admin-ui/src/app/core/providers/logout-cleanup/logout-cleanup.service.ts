@@ -32,7 +32,6 @@ export class LogoutCleanupService extends InitializableServiceBase {
         messages: () => this.appState.dispatch(new ClearMessageState()),
         permissions: () => this.appState.dispatch(new ClearAllPermissions()),
         ui: null,
-        mesh: null,
     };
 
     constructor(

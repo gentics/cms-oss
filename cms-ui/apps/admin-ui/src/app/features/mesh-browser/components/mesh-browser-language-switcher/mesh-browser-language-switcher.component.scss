@@ -1,11 +1,19 @@
-.dropdown-language {
-    float: right;
-    margin-right: 1rem;
+@import '../../../../../styles/variables';
+
+.selector {
+    border: none;
+    background: none;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+
+    color: $gtx-color-primary;
     cursor: pointer;
 
-    icon.collapse{
-        position: relative;
-        top: 5px;
-        margin-left: -5px;
+    .collapse-icon {
+        font-size: 18px;
     }
 }

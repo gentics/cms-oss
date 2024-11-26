@@ -482,7 +482,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.mesh_browser',
                     },
-                    [ROUTE_SKIP_BREADCRUMB]: true,
                     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
                     [ROUTE_PERMISSIONS_KEY]: [
                         {
@@ -503,7 +502,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                         title: 'dashboard.mesh_browser',
                     },
                     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
-                    [ROUTE_SKIP_BREADCRUMB]: true,
                     [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,

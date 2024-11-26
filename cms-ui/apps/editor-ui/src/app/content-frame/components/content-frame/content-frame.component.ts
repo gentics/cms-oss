@@ -199,8 +199,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
-                this.appState.dispatch(new CancelEditingAction());
-                this.appState.dispatch(new ResetPageLockAction(item.id));
+                this.editorActions.cancelEditing(item.id);
             }
         }, 250, { leading: true, trailing: false },
     );
@@ -245,10 +244,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }),
             this.appState.select(state => state.editor.objectPropertiesModified).subscribe(modified => {
                 this.objectPropertyModified = modified;
+                this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
                 this.changeDetector.markForCheck();
             }),
             this.appState.select(state => state.editor.modifiedObjectPropertiesValid).subscribe(valid => {
                 this.modifiedObjectPropertyValid = valid;
+                this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
                 this.changeDetector.markForCheck();
             }),
             this.appState.select(state => state.editor.openPropertiesTab).subscribe(openPropertiesTab => {
@@ -311,7 +312,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
-                    this.cancelEditingDebounced(this.currentItem);
+                    if (this.currentItem && this.currentItem?.id != item?.id) {
+                        this.cancelEditingDebounced(this.currentItem);
+                    }
                     this.currentItem = item as any;
                     this.onItemUpdate();
                     this.changeDetector.markForCheck();
@@ -369,6 +372,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         const editorState$ = this.editorState$ = this.appState.select(state => state.editor).pipe(
+            map(state => {
+                // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+                const { modifiedObjectPropertiesValid, objectPropertiesModified, saving, ...actualState } = state;
+                return actualState;
+            }),
+            distinctUntilChanged(isEqual),
             // If the editor is not open yet, the editorState may still contain the IDs from the last time it was open.
             filter(editorState => editorState.editorIsOpen),
             publishReplay(1),
@@ -477,7 +486,13 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.changeDetector.markForCheck();
         });
 
-        masterFrame.addEventListener('load', () => {
+        masterFrame.addEventListener('load', event => {
+            // This is browser dependend. Sometimes it'll load a blank page first,
+            // and then the actual aloha page.
+            if (masterFrame.contentWindow.location.toString() === 'about:blank') {
+                return;
+            }
+
             this.windowLoaded = true;
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.
@@ -1274,8 +1289,31 @@ ins.gtx-diff {
                 && state.openTab === 'properties'
                 && state.openPropertiesTab !== ITEM_TAG_LIST_TAB
             );
-
         this.isLocked = this.isLockedByAnother();
+
+        if (state.editorIsOpen && state.itemId) {
+            const item = this.entityResolver.getEntity(state.itemType, state.itemId);
+            // Without the following check, saving a change that results in no update (e.g., deleting a file's extension)
+            // would cause the first subsequent change to be restored immediately because of the following assignment.
+
+            // Specific logic for Form entity
+            // In 'edit' mode we do not update the form properties, just in 'editProperties' mode.
+            if (
+                this.currentItem && this.currentItem.id === state.itemId &&
+                // ( this.contentModified || this.editorIsOpen ) &&
+                this.currentItem.type === 'form' && state.editMode === EditMode.EDIT
+            ) {
+                return;
+            }
+
+            if (this.currentItem !== item && !isEqual(this.currentItem, item)) {
+                this.currentItem = {
+                    ...this.currentItem,
+                    ...structuredClone(item),
+                } as any;
+            }
+        }
+
         this.changeDetector.markForCheck();
     }
 

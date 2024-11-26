@@ -1,0 +1,3 @@
+Editor User Interface: When an editor closed the edit view of a page without saving or publishing the page,
+the page stayed locked (until the configured timeout).
+This has been fixed, closing the edit view will unlock the page.

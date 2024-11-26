@@ -13,6 +13,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
+        data-action="confirm"
         (click)="confirmSelection()"
     >
         {{ 'shared.confirm_selection' | i18n }}
@@ -21,6 +22,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="cancelFn()"
     >
         {{ 'common.cancel_button' | i18n }}

@@ -11,6 +11,7 @@
 <div class="modal-footer">
     <gtx-button
         type="alert"
+        data-action="confirm"
         (click)="buttonDeleteConfirmClicked()"
     >
         {{ 'modal.confirm_delete_button' | i18n: { entityName: entityIdentifierTranslation, entityAmount: entityAmount } }}
@@ -19,6 +20,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="cancelFn()"
     >
         {{ 'common.cancel_button' | i18n }}

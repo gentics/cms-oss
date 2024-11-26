@@ -1,65 +1,69 @@
+import '@gentics/e2e-utils/commands';
+import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
-    ENV_AUTOMATIC_TRANSLATION_ENABLED,
-    EntityMap,
-    ImportBootstrapData,
+    EntityImporter,
+    ITEM_TYPE_PAGE,
     TestSize,
-    bootstrapSuite,
-    cleanupTest,
-    envAll,
-    getItem,
+    isVariant,
     minimalNode,
     pageOne,
-    setupTest,
     skipableSuite,
 } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('Page Translation', () => {
 
-    let bootstrap: ImportBootstrapData;
-    let entities: EntityMap = {};
+    const IMPORTER = new EntityImporter();
 
     before(() => {
-        cy.wrap(cleanupTest()
-            .then(() => bootstrapSuite(TestSize.MINIMAL))
-            .then(data => {
-                bootstrap = data;
-            }),
-        );
+        cy.muteXHR();
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        });
     });
 
     beforeEach(() => {
-        cy.wrap(setupTest(TestSize.MINIMAL, bootstrap).then(data => {
-            entities = data;
-        }));
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+            }), { log: false, timeout: 60_000 });
+        }).then(() => {
+            cy.navigateToApp();
+            cy.login(AUTH_ADMIN);
+            cy.selectNode(IMPORTER.get(minimalNode)!.id);
+        });
     });
 
-    skipableSuite(envAll(ENV_AUTOMATIC_TRANSLATION_ENABLED), 'automatic translations', ()=>{
+    skipableSuite(isVariant(Variant.ENTERPRISE), 'Automatic Translations', () => {
         it('should be possible to translate a page automatically', () => {
-            cy.navigateToApp();
-            cy.login('admin');
-            cy.selectNode(getItem(minimalNode, entities)!.id);
+            const page = IMPORTER.get(pageOne)!;
+            const NEW_LANG = 'de';
 
-            const page = getItem(pageOne, entities)!
-            const pageId = page.id as any as number;
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(page.id)
+                .find('page-language-indicator')
+                .find(`.language-icon[data-id="${NEW_LANG}"]`)
+                .click({ force: true });
 
-            cy.get(`[data-id="${pageId}"]`)
-                .first()
-                .get('page-language-indicator')
-                .first()
-                .find('.language-icon')
-                .first()
-                .click();
-
-            cy.get('gtx-dropdown-item')
-                .click();
+            cy.get('.page-language-context')
+                .find('[data-action="translate"]')
+                .click({ force: true });
             cy.get('translate-page-modal').as('modal');
-            cy.get('@modal').find('[data-action="auto-translate"]')
+
+            cy.get('@modal')
+                .find('[data-action="auto-translate"]')
                 .should('exist');
 
-
-            cy.get('@modal').find('[data-action="auto-translate"]')
+            cy.get('@modal')
+                .find('[data-action="auto-translate"]')
                 .click();
-
 
             /**
              * Flaky assertions could take longer to finish (i.e.: finished in the background)
@@ -80,5 +84,5 @@ describe('Page Translation', () => {
             //     .first()
             //     .should('contain', 'Dies ist die Seite');
         });
-    })
+    });
 });

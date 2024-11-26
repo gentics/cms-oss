@@ -1,5 +1,5 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
@@ -17,7 +17,6 @@ import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
 import { DebugTool } from '../development/components/debug-tool/debug-tool.component';
 import { ENVIRONMENT_TOKEN } from '../development/development-tools';
 import { DebugToolService } from '../development/providers/debug-tool.service';
-import { TraceErrorHandler } from '../development/providers/trace-error-handler';
 import { EmbeddedToolsModule } from '../embedded-tools/embedded-tools.module';
 import { EmbeddedToolsService } from '../embedded-tools/providers/embedded-tools/embedded-tools.service';
 import { ExposedUIAPI } from '../embedded-tools/providers/exposed-ui-api/exposed-ui-api.service';
@@ -166,7 +165,6 @@ const PROVIDERS = [
     { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormat },
     { provide: ENVIRONMENT_TOKEN, useValue: environmentConfig.production ? 'production' : 'development' },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
-    { provide: NgErrorHandler, useClass: TraceErrorHandler },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
     { provide: GCMS_UI_SERVICES_PROVIDER, useClass: GcmsUiServices },

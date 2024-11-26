@@ -1,5 +1,3 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
-
 # compiled output
 /build
 /dist
@@ -9,66 +7,23 @@
 /apps/ui-core-docs/compile-docs.js
 /apps/ui-core-docs/docs.output.json
 
-# dependencies
-/node_modules
-/node
-/apps/*/node
-/libs/*/node
-
 # profiling files
 chrome-profiler-events.json
 speed-measure-plugin.json
 
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-!.vscode/extensions.json
-!.vscode/launch.json
-.vscode/*
-.history/*
-
 # misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-/.angular
-/ng-workspace/.angular
-/cypress
-
-# System Files
-.DS_Store
-Thumbs.db
-
-# Package manager error logs
-npm-debug.log
-yarn-error.log
+coverage
+.angular
 
 # Customer specific configurations
 customer-config/
 
 # JUnit test reports
-reports/**/report.xml
-**/.reports/
+.reports
 
 # ng serve proxy configuration
 proxy.conf.json
 proxy.conf.*.json
 report.*.json
-
-# old structure
-/src
-/projects
 
 .nx

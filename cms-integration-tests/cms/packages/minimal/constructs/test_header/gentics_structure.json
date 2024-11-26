@@ -1,0 +1,96 @@
+{
+  "globalId" : "3821.37c733c5-3244-11ef-872a-0242ac110002",
+  "keyword" : "test_header",
+  "name" : {
+    "de" : "[Test] Header",
+    "en" : "[Test] Header"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : true,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "9d1e.b5bb0252-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "Logo",
+      "en" : "Logo"
+    },
+    "keyword" : "logo",
+    "editable" : true,
+    "typeId" : 6,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "9d1e.b5bb6b86-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "Titel",
+      "en" : "Title"
+    },
+    "keyword" : "title",
+    "editable" : true,
+    "typeId" : 1,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "9d1e.b5bc66b8-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "gfdgdf",
+    "regexId" : 0
+  }, {
+    "globalId" : "9d1e.b5bcddbe-647c-11ef-87e8-0242ac150003",
+    "name" : {
+      "de" : "velocity",
+      "en" : "velocity"
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

@@ -68,6 +68,9 @@
                     *ngFor="let item of items | paginate: paginationConfig; trackBy: identify"
                     class="icon-checkbox-trigger"
                     [class.item-in-editor]="item === itemInEditor"
+                    [attr.data-item-type]="itemType"
+                    [attr.data-id]="item.id"
+                    [attr.data-global-id]="item.globalId"
                 >
                     <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
                     <grid-item

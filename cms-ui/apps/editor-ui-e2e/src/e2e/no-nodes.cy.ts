@@ -1,43 +1,49 @@
-import { cleanupTest, IMPORT_ID, importData, rootGroup, userAlpha, userBeta } from '@gentics/e2e-utils';
+import '@gentics/e2e-utils/commands';
+import { EntityImporter, IMPORT_ID, rootGroup, userAlpha, userBeta } from '@gentics/e2e-utils';
+import { AUTH_ADMIN } from '../support/common';
 
 describe('No Nodes', () => {
 
+    const IMPORTER =  new EntityImporter();
+
     before(() => {
-        cy.wrap(cleanupTest(true)
-            .then(() => importData([
+        cy.muteXHR();
+
+        cy.wrap(null, { log: false }).then(() => {
+            return cy.wrap(IMPORTER.cleanupTest(true), { log: false, timeout: 60_000 });
+        }).then(() => {
+            return cy.wrap(IMPORTER.importData([
                 rootGroup,
                 userAlpha,
                 userBeta,
-            ])),
-        ).then(() => {
-            cy.wrap({
-                username: userAlpha.login,
-                password: userAlpha.password,
-            }).as(userAlpha[IMPORT_ID]);
+            ]), { log: false, timeout: 60_000 });
         });
+
+        cy.wrap({
+            username: userAlpha.login,
+            password: userAlpha.password,
+        }).as(userAlpha[IMPORT_ID]);
     });
 
     describe('Display the "no-nodes" route when no nodes are present', () => {
+        const CLASS_ADMIN = 'admin';
+
         it('should display the correct error message for a regular user', () => {
             cy.navigateToApp();
             cy.login(`@${userAlpha[IMPORT_ID]}`);
 
             cy.get('gtx-no-nodes .error-container')
-                .should('exist');
-            cy.get('gtx-no-nodes .error-container .error-title')
-                // TODO: Find a way to get translations from the translations-files instead of copy-pasting them
-                // Makes this quite prone to error when translations change
-                .should('contain.text', 'Fehlende Berechtigungen');
+                .should('exist')
+                .should('not.have.class', CLASS_ADMIN);
         });
 
         it('should display the correct error message for a admin user with the admin-ui button', () => {
             cy.navigateToApp();
-            cy.login('admin');
+            cy.login(AUTH_ADMIN);
 
             cy.get('gtx-no-nodes .error-container')
-                .should('exist');
-            cy.get('gtx-no-nodes .error-container .error-title')
-                .should('contain.text', 'Keine Nodes eingestellt');
+                .should('exist')
+                .should('have.class', CLASS_ADMIN);
             cy.get('gtx-no-nodes .admin-button-link')
                 .should('exist')
                 .should('have.attr', 'href');

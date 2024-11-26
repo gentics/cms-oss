@@ -33,7 +33,7 @@ import {
     FormPropertiesConfiguration,
 } from '@gentics/form-generator';
 import { UILanguage } from '@gentics/image-editor';
-import { FormProperties, setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, take, tap } from 'rxjs/operators';
@@ -50,6 +50,10 @@ export enum FormPropertiesMode {
     templateUrl: './form-properties.component.html',
     styleUrls: ['./form-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        generateFormProvider(FormPropertiesComponent),
+        generateValidatorProvider(FormPropertiesComponent),
+    ],
 })
 export class FormPropertiesComponent
     extends BasePropertiesComponent<EditableFormProps>
@@ -300,7 +304,7 @@ export class FormPropertiesComponent
          * `isModified` incorrectly `FormGroup.updateOn: 'blur'` will provide
          * `this.formGroup.pristine` to be the most reliable indicator of `isModified`.
          */
-        { updateOn: 'blur' },
+        // { updateOn: 'blur' },
         );
     }
 

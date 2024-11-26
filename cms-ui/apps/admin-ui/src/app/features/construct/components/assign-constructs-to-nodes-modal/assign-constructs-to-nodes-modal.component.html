@@ -17,6 +17,7 @@
     <div class="modal-footer">
         <gtx-button
             type="primary"
+            data-action="confirm"
             [disabled]="loading"
             (click)="okButtonClicked()"
         >{{ 'common.ok_button' | i18n }}</gtx-button>
@@ -24,6 +25,7 @@
         <gtx-button
             flat
             type="secondary"
+            data-action="cancel"
             [disabled]="loading"
             (click)="cancelFn()"
         >{{ 'common.close_button' | i18n }}</gtx-button>

@@ -23,7 +23,7 @@
             [class.sortable]="sortable && column.sortable"
             [class.sort-active]="sortBy === column.id"
             [ngClass]="column.align ? 'align-' + column.align : ''"
-            [attr.column-id]="column.id"
+            [attr.data-id]="column.id"
             (click)="preventClick($event)"
         >
             <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
@@ -66,7 +66,7 @@
             class="grid-cell data-column"
             [class.sortable]="sortable && column.sortable"
             [class.sort-active]="sortBy === column.id"
-            [attr.column-id]="column.id"
+            [attr.data-id]="column.id"
             (click)="preventClick($event)"
         >
             <ng-container
@@ -98,7 +98,7 @@
         class="grid-row data-row"
         [class.selected]="selected | gtxIncludes:row.id"
         [class.active]="!!active && active === row.id"
-        [attr.data-row-id]="row.id"
+        [attr.data-id]="row.id"
         (click)="handleRowClick(row, $event)"
     >
         <div
@@ -119,7 +119,7 @@
             class="grid-cell data-column"
             [class.clickable]="column.clickable !== false"
             [ngClass]="column.align ? 'align-' + column.align : ''"
-            [attr.column-id]="column.id"
+            [attr.data-id]="column.id"
             (click)="handleCellClick(row, column, $event)"
         >
             <ng-container

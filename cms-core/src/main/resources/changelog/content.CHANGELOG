@@ -810,3 +810,4 @@
 2024-08-08  CH-1722 SP  SQL ALTER TABLE contentfile ADD COLUMN custom_cdate INT NOT NULL DEFAULT 0 AFTER cdate, ADD COLUMN custom_edate INT NOT NULL DEFAULT 0 AFTER edate;
 2024-09-12  CH-1726 GO  SQL ALTER TABLE page ADD unpublished_date INT, ADD unpublisher INT, ADD future_unpublisher INT, ADD future_publisher INT;
 2024-09-12  CH-1727 GO  SQL ALTER TABLE form ADD unpublished_date INT, ADD unpublisher INT, ADD future_unpublisher INT, ADD future_publisher INT;
+2024-11-18	CH-1728 PK	SQL	INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 142, 0, '11000000000000000000000000000000'); ## Add initial permissions form license management to node user.

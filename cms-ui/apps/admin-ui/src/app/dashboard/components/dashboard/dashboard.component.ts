@@ -3,7 +3,7 @@ import { AuthOperations, PermissionsService } from '@admin-ui/core';
 import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, Variant } from '@gentics/cms-models';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -24,7 +24,6 @@ export class DashboardComponent implements OnInit {
     public languagesModuleEnabled$: Observable<boolean>;
     public logsModuleEnabled$: Observable<boolean>;
     public nodesModuleEnabled$: Observable<boolean>;
-    public testingModuleEnabled$: Observable<boolean>;
     public dataSourcesModuleEnabled$: Observable<boolean>;
     public packagesModuleEnabled$: Observable<boolean>;
     public contentRepositoriesModuleEnabled$: Observable<boolean>;
@@ -38,6 +37,7 @@ export class DashboardComponent implements OnInit {
     public objectPropertiesModuleEnabled$: Observable<boolean>;
     public constructsModuleEnabled$: Observable<boolean>;
     public meshBrowserModuleEnabled$: Observable<boolean>;
+    public licenseModuleEnabled$: Observable<boolean>;
 
     constructor(
         private appState: AppStateService,
@@ -125,12 +125,13 @@ export class DashboardComponent implements OnInit {
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
         );
-
-        // Just for testing.
-        this.testingModuleEnabled$ = this.permissions.checkPermissions([
-            { type: AccessControlledType.MAINTENANCE, permissions: GcmsPermission.READ },
-            { type: AccessControlledType.SCHEDULER, permissions: [GcmsPermission.READ, GcmsPermission.SET_PERMISSION] },
-        ]);
+        this.licenseModuleEnabled$ = combineLatest([
+            this.appState.select(state => state.ui.cmpVersion),
+            // this.permissions.checkPermissions({ type: AccessControlledType.LICENSING, permissions: GcmsPermission.READ }),
+            of(true),
+        ]).pipe(
+            map(([version, hasPermission]) => version?.variant === Variant.ENTERPRISE && hasPermission),
+        );
 
         /* Needed for a UI bug where the detail view stays open if we open it
            in another module - this bug is still relevant with direct navigation

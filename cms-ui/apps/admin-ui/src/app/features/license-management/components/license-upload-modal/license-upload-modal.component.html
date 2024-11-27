@@ -1,0 +1,60 @@
+<div class="modal-title">
+    <h5>{{ 'license.upload_license' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <form [formGroup]="form" (submit)="upload()">
+        <gtx-radio-group formControlName="useFile">
+            <div class="selection-group">
+                <gtx-radio-button
+                    [value]="true"
+                    [label]="'license.upload_file' | i18n"
+                />
+
+                <gtx-file-picker
+                    formControlName="licenseFile"
+                    [displayFiles]="true"
+                    [selectionLabel]="'license.selected_file' | i18n"
+                >{{ 'license.file_upload_button' | i18n }}</gtx-file-picker>
+            </div>
+
+            <div class="selection-group">
+                <gtx-radio-button
+                    [value]="false"
+                    [label]="'license.enter_license' | i18n"
+                />
+
+                <gtx-textarea
+                    formControlName="licenseKey"
+                    [placeholder]="('license.enter_license_plceholder' | i18n)"
+                />
+            </div>
+
+            <gtx-checkbox
+                class="checkbox-input"
+                formControlName="pushToContentRepositories"
+                [label]="'license.pushToContentRepositories' | i18n"
+            />
+        </gtx-radio-group>
+    </form>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        data-action="confirm"
+        [disabled]="loading || !this.form?.valid"
+        (click)="upload()"
+    >
+        {{ 'common.upload_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

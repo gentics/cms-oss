@@ -1,0 +1,20 @@
+<div class="modal-title">
+    <h5>{{ 'license.contentRepository_info_modal_title' | i18n: { entityName: info?.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-license-info
+        [status]="info.status"
+        [license]="info.license"
+    />
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn()"
+    >
+        {{ 'common.close_button' | i18n }}
+    </gtx-button>
+</div>

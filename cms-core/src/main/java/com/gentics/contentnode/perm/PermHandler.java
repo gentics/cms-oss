@@ -101,6 +101,7 @@ public class PermHandler {
 	public final static int TYPE_TASK_TEMPLATE = 38;
 	public final static int TYPE_JOB = 39;
 	public final static int TYPE_AUTOUPDATE = 141;
+	public final static int TYPE_LICENSING = 142;
 
 	public final static int TYPE_CUSTOM_TOOLS = 90000;
 	public final static int TYPE_CUSTOM_TOOL = 90001;
@@ -190,6 +191,9 @@ public class PermHandler {
 	public static final int PERM_SCHEDULER_TASK_UPDATE = 11;
 
 	public static final int PERM_SCHEDULER_SCHEDULE_UPDATE = 11;
+
+	public static final int PERM_LICENSING_VIEW = PERM_VIEW;
+	public static final int PERM_LICENSING_UPDATE = 1;
 
 	/**
 	 * Empty permission bits

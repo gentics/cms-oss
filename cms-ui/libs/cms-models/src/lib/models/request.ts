@@ -1,6 +1,6 @@
 import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueItem, Jobs } from './admin-info';
-import { CmsFormData, EditableFormProps, Form, FormStatus } from './cms-form';
+import { EditableFormProps, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
 import { CRElasticsearchModel, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType } from './content-repository';
@@ -10,11 +10,12 @@ import { DataSourceEntry } from './data-source-entry';
 import { ElasticSearchIndex } from './elastic-search-index';
 import { ExternalLink } from './external-link';
 import { NodeFeatureModel } from './feature';
-import { EditableFileProps, File } from './file';
-import { EditableFolderProps, Folder } from './folder';
+import { EditableFileProps } from './file';
+import { EditableFolderProps } from './folder';
 import { EntityIdType } from './gcms-normalizer/gcms-normalizer-types';
 import { Group } from './group';
-import { EditableImageProps, Image } from './image';
+import { PermissionInfo } from './group-permissions';
+import { EditableImageProps } from './image';
 import { ItemType } from './item';
 import { Language } from './language';
 import { Node } from './node';
@@ -24,6 +25,7 @@ import { Package } from './package';
 import { DependencyType } from './package-check';
 import { EditablePageProps, Page, PageStatus } from './page';
 import { AccessControlledType } from './permissions';
+import { PrivilegeFlagName } from './privileges';
 import { Role, RoleAssignment, RolePermissions } from './role';
 import { Schedule } from './schedule';
 import { ScheduleExecution } from './schedule-execution';
@@ -33,8 +35,6 @@ import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
-import { PrivilegeFlagName } from './privileges';
-import { PermissionInfo } from './group-permissions';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -2363,7 +2363,6 @@ export interface UsageInTotalOptions {
     nodeId?: number;
 }
 
-
 // FILE UPLOAD MANIPULATOR (FUM) /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export enum FUMResultStatus {
@@ -2417,4 +2416,18 @@ export interface TranslationRequestOptions {
     language: string;
     locked?: boolean;
     channelId?: number;
+}
+
+// LICENSE /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface LicenseUpdateRequest {
+    licenseKey: string;
+    pushToContentRepositories?: boolean;
+}
+
+export interface LicenseContentRepositoryInfoOptions extends BaseListOptionsWithPaging<'name' | 'url'> {}
+
+export interface PushLicenseRequest {
+    crIds?: number[];
+    all?: boolean;
 }

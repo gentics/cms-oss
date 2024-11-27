@@ -1,0 +1,16 @@
+.selection-group {
+    padding: 1rem 0;
+}
+
+.checkbox-input {
+    display: block;
+    padding: 1rem 0;
+}
+
+gtx-textarea::ng-deep > textarea {
+    margin: 0 !important;
+}
+
+gtx-radio-group {
+    display: contents;
+}

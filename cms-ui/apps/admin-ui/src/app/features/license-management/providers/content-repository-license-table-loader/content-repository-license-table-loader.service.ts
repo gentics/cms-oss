@@ -1,11 +1,10 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ContentRepositoryLicenseBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService, EntityManagerService, ErrorHandler } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ContentRepositoryLicense, LicenseStatus } from '@gentics/cms-models';
+import { ContentRepositoryLicense } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { catchError, map, Observable, of } from 'rxjs';
-import { createMockLicenseInfo } from '../../mock';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 @Injectable()
 export class ContentRepositoryLicenseTableLoaderService extends BaseTableLoaderService<ContentRepositoryLicenseBO> {
@@ -14,6 +13,7 @@ export class ContentRepositoryLicenseTableLoaderService extends BaseTableLoaderS
         entityManager: EntityManagerService,
         appState: AppStateService,
         private client: GCMSRestClientService,
+        private errorHandler: ErrorHandler,
     ) {
         super(null, entityManager, appState);
     }
@@ -36,26 +36,9 @@ export class ContentRepositoryLicenseTableLoaderService extends BaseTableLoaderS
                     totalCount: res.numItems,
                 };
             }),
-            catchError(() => {
-                const total = Math.trunc(Math.random() * 10);
-                const items: ContentRepositoryLicenseBO[] = [];
-                for (let i = 0; i < total; i++) {
-                    const { status, license } = createMockLicenseInfo();
-
-                    items.push(this.mapToBusinessObject({
-                        id: i,
-                        name: `ContentRepository #${i}`,
-                        url: 'example.com',
-                        openSource: (status === LicenseStatus.MISSING) && (Math.round(Math.random()) === 0),
-                        status,
-                        license,
-                    }))
-                }
-
-                return of({
-                    entities: items,
-                    totalCount: total,
-                });
+            catchError(err => {
+                this.errorHandler.catch(err);
+                return throwError(() => err);
             }),
         );
     }

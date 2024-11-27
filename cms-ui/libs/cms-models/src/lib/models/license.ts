@@ -29,7 +29,7 @@ export interface License {
 }
 
 export interface LicenseCheckResult {
-    status: LicenseStatus;
+    licenseResult: LicenseStatus;
     license: License;
 }
 

@@ -4,7 +4,6 @@ import { License, LicenseCheckResult, LicenseStatus } from '@gentics/cms-models'
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { createMockLicenseInfo } from '../../mock';
 import { ContentRepositoryLicenseTableLoaderService } from '../../providers';
 import { LicenseUploadModal } from '../license-upload-modal/license-upload-modal.component';
 
@@ -51,7 +50,7 @@ export class LicenseManagementComponent implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.client.license.info().subscribe({
             next: (info) => {
-                this.status = info.checkResult.status;
+                this.status = info.checkResult.licenseResult;
                 this.license = info.checkResult.license;
                 this.loading = false;
                 this.changeDetector.markForCheck();
@@ -59,9 +58,8 @@ export class LicenseManagementComponent implements OnInit, OnDestroy {
             },
             error: err => {
                 console.error(err);
-                const { status, license } = createMockLicenseInfo();
-                this.status = status;
-                this.license = license;
+                this.status = LicenseStatus.MISSING;
+                this.license = null;
                 this.loading = false;
                 this.changeDetector.markForCheck();
                 this.licenseChange.emit(this.license);
@@ -76,7 +74,7 @@ export class LicenseManagementComponent implements OnInit, OnDestroy {
         try {
             const res: LicenseCheckResult = await modal.open();
 
-            this.status = res.status;
+            this.status = res.licenseResult;
             this.license = res.license;
             this.changeDetector.markForCheck();
             this.licenseChange.emit(this.license);

@@ -14,7 +14,7 @@ import {
 import { merge } from 'rxjs';
 import { ChangesOf, IFileDropAreaOptions } from '../../common';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
-import { generateFormProvider } from '../../utils';
+import { generateFormProvider, transformToBoolean } from '../../utils';
 import { matchesMimeType } from '../../utils/matches-mime-type';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
@@ -42,7 +42,7 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Set to a falsy value to disable picking multiple files at once. Defaults to `true` if absent.
      */
-    @Input()
+    @Input({ transform: transformToBoolean })
     public multiple = false;
 
     /**
@@ -60,7 +60,7 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Display the button as a flat button or not. Forwarded to the Button component.
      */
-    @Input()
+    @Input({ transform: transformToBoolean })
     public flat = false;
 
     /**
@@ -72,13 +72,13 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Icon button without text. Forwarded to the Button component.
      */
-    @Input()
+    @Input({ transform: transformToBoolean })
     public icon = false;
 
     /**
      * If it should display the names of the selected files.
      */
-    @Input()
+    @Input({ transform: transformToBoolean })
     public displayFiles = false;
 
     /**
@@ -112,7 +112,6 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('multiple', 'flat', 'icon', 'displayFiles');
     }
 
     ngOnInit(): void {

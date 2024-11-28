@@ -1,4 +1,4 @@
-import { coerceToBoolean, WizardStepNextClickFn } from '@admin-ui/common';
+import { WizardStepNextClickFn } from '@admin-ui/common';
 import {
     ContentChild,
     Directive,
@@ -7,6 +7,7 @@ import {
     Output,
     TemplateRef,
 } from '@angular/core';
+import { coerceToBoolean } from '@gentics/ui-core';
 
 /**
  * Defines a single step of a wizard.

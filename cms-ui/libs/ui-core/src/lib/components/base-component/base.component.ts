@@ -18,6 +18,9 @@ export class BaseComponent implements OnChanges, OnDestroy {
     /**
      * An array of boolean inputs which will automatically coerced to proper boolean
      * values on changes, when provided via input bindings.
+     *
+     * @deprecated Use the {@link Input.transform} option with the {@link transformToBoolean} transformer instead.
+     * Will be removed in the next major verison.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
     protected readonly booleanInputs: CoerceOption<this>[] = ['disabled'];

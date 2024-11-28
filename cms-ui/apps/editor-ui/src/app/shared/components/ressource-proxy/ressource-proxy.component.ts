@@ -3,7 +3,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute } from '@angular/router';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { coerceToBoolean, downloadFromBlob } from '@gentics/cms-components';
+import { downloadFromBlob } from '@gentics/cms-components';
+import { coerceToBoolean } from '@gentics/ui-core';
 
 const PARAM_BACKGROUND_DOWNLOAD = 'gcms-background-download';
 const PARAM_DOWNLOAD_METHOD = 'gcms-download-method';

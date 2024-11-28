@@ -1,5 +1,4 @@
 import {
-    coerceToBoolean,
     DeactivationConfig,
     DisableableComponent,
     ObservableStopper,
@@ -22,6 +21,7 @@ import { IndexByKey } from '@gentics/cms-models';
 import {
     ButtonComponent,
     CheckboxComponent,
+    coerceToBoolean,
     DateTimePickerComponent,
     DropdownItemComponent,
     InputComponent,

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Feature, NodeFeature } from '@gentics/cms-models';
+import { Feature, FeatureResponse, NodeFeature, ResponseCode } from '@gentics/cms-models';
 import { FeaturesState } from '../../../common/models/features-state';
 import { Api } from '../../../core/providers/api/api.service';
 import { ApplicationStateService } from '../application-state/application-state.service';
@@ -56,6 +56,15 @@ export class FeaturesActionsService {
     checkFeature(key: Feature): Promise<boolean> {
         return this.api.admin.getFeature(key)
             .toPromise()
+            .catch(err => {
+                console.error('Error while checking feature', key, err);
+                const res: FeatureResponse = {
+                    activated: false,
+                    name: key,
+                    responseInfo: {responseCode: ResponseCode.FAILURE},
+                }
+                return res;
+            })
             .then(response => {
                 if (response) {
                     this.appState.dispatch(new SetFeatureAction(key, response.activated));

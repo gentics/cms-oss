@@ -68,7 +68,7 @@ export class FeatureOperations extends OperationsBase {
             map(response => response.activated),
             catchError(err => {
                 console.error('error while loading feature', key, err);
-                return throwError(err);
+                return of(false);
             }),
             tap(isActive => this.appState.dispatch(new SetGlobalFeature(key, isActive))),
         );

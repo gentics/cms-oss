@@ -10,7 +10,7 @@ import { ApplicationStateService } from '../../../state';
     selector: 'form-language-selector',
     templateUrl: './form-language-selector.component.html',
     styleUrls: ['./form-language-selector.scss'],
-    })
+})
 export class FormLanguageSelectorComponent implements OnInit, OnChanges {
 
     @Input()
@@ -123,7 +123,7 @@ export class FormLanguageSelectorComponent implements OnInit, OnChanges {
                 this.selected = [this.activeFolderLanguage.code];
             }
         } else {
-            this.selected = this.variants;
+            this.selected = [...this.variants];
         }
 
         this.onSelectChange(this.selected);

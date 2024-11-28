@@ -19,7 +19,7 @@ import {
     templateSchema,
 } from '@editor-ui/app/common/models';
 import { MarkObjectPropertiesAsModifiedAction, SetHideExtrasAction, addNormalizedEntities } from '@editor-ui/app/state';
-import { WindowRef, coerceToBoolean } from '@gentics/cms-components';
+import { WindowRef } from '@gentics/cms-components';
 import { TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -32,6 +32,7 @@ import {
     Tag,
     Template,
 } from '@gentics/cms-models';
+import { coerceToBoolean } from '@gentics/ui-core';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Schema, normalize } from 'normalizr';
 import { Observable, Subscription, combineLatest, from, of, throwError } from 'rxjs';

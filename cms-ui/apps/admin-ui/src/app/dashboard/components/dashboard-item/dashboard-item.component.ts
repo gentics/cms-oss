@@ -1,6 +1,6 @@
-import { coerceToBoolean } from '@admin-ui/common/utils/coerce-to-boolean/coerce-to-boolean';
 import { GtxIcon } from '@admin-ui/shared';
 import { Component, Input } from '@angular/core';
+import { coerceToBoolean } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-dashboard-item',

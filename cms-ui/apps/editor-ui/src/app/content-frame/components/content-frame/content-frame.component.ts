@@ -93,7 +93,7 @@ import {
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
-import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { BLANK_PAGE, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
@@ -474,7 +474,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             // This is browser dependend. Sometimes it'll load a blank page first,
             // and then the actual aloha page.
             if (
-                masterFrame.contentWindow.location.toString() === 'about:blank'
+                masterFrame.contentWindow.location.toString() === BLANK_PAGE
                 || masterFrame.contentDocument.readyState !== 'complete'
             ) {
                 return;

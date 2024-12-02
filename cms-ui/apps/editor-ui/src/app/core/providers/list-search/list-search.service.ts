@@ -12,6 +12,8 @@ import { I18nService } from '../i18n/i18n.service';
 import { NavigationService } from '../navigation/navigation.service';
 import { QuickJumpService } from '../quick-jump/quick-jump.service';
 
+const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
+
 @Injectable()
 export class ListSearchService {
 
@@ -30,17 +32,17 @@ export class ListSearchService {
 
     /** Search for a string in the folder & node currently active in the item list. */
     search(term: string, nodeId?: number): void {
-        const patternShortCutSyntaxId = new RegExp( /^(jump\:)\d+$/ );
         const activeNode = this.state.now.entities.node[nodeId || this.state.now.folder.activeNode];
         const hosts = Object.values(this.state.now.entities.node).map((node: Node) => node.host);
+        const jumpId = patternShortCutSyntaxId.exec(term);
 
         if (term && activeNode && isLiveUrl(term, hosts)) {
             this.searchLiveUrl(term).pipe(
                 take(1),
             ).subscribe();
-        } else if (patternShortCutSyntaxId.test(term)) {
+        } else if (jumpId) {
             // extract number from shortcut syntax
-            const entityId = parseInt((/\d+/.exec(term))[0], 10);
+            const entityId = parseInt(jumpId[1], 10);
             this.searchPageId(entityId, nodeId || this.state.now.folder.activeNode);
         } else {
             this.folderActions.setFilterTerm('');

@@ -72,7 +72,13 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
                 this.selectedFormLanguageVariants[item.id] = (item as Form).languages;
             }
         });
+    }
 
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    updateDeleteCount(): void {
         if (this.itemType === 'page') {
             this.deleteCount = this.flattenMap(this.selectedPageLanguageVariants).length;
         } else if (this.itemType === 'form') {
@@ -80,10 +86,6 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
         } else {
             this.deleteCount = this.otherItems.length + this.localizedItems.length;
         }
-    }
-
-    ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     confirm(): void {
@@ -118,11 +120,13 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
     onPageLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
         if (!checkLocalizations || !this.appState.now.features[Feature.MULTICHANNELLING]) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             return;
         }
         const uncheckedIds = this.getUncheckedLocalizationIds(variantIds);
         if (uncheckedIds.length < 1) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             return;
         }
 
@@ -131,12 +135,14 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
         ).subscribe(newMap => {
             Object.assign(this.itemLocalizations, newMap);
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.updateDeleteCount();
             this.changeDetector.markForCheck();
         }));
     }
 
     onFormLanguageSelectionChange(itemId: number, languageCodes: string[]): void {
         this.selectedFormLanguageVariants[itemId] = languageCodes;
+        this.updateDeleteCount();
     }
 
     /**

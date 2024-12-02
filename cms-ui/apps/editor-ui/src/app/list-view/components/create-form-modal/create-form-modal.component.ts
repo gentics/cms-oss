@@ -102,8 +102,12 @@ export class CreateFormModalComponent implements IModalDialog, OnInit {
                     nodeId: this.nodeId,
                 };
 
-                if (isMultiLang) {
-                    form.languages = [activeContentLanguage.code];
+                if (!Array.isArray(form.languages)) {
+                    form.languages = [];
+                }
+
+                if (form.languages.length === 0) {
+                    form.languages.push(activeContentLanguage.code);
                 }
 
                 this.folderActions.createNewForm(form as any).then(form => {

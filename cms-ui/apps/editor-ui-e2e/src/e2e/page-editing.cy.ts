@@ -556,6 +556,99 @@ describe('Page Editing', () => {
 
             cy.wait(ALIAS_CANCEL_REQ);
         });
+
+        describe('Typography', () => {
+            const FULL_CONTENT = 'foo bar hello world test content this is a test text';
+            const TEXT_CONTENT = 'test content';
+            const SLOT_TYPO = 'typographyMenu';
+            const ALIAS_TYPO_BUTTON = '@typographyButton';
+            const CLASS_CUSTOMIZED = 'aloha-customized';
+
+            const HEADER_TYPOGRAPHY = [
+                'h1',
+                'h2',
+                'h3',
+                'h4',
+                'h5',
+                'h6',
+            ]
+            const TYPOGRAPHIES = [
+                ...HEADER_TYPOGRAPHY,
+                'pre',
+            ];
+
+            for (const TYPOGRAPHY_NAME of TYPOGRAPHIES) {
+                it(`should apply "${TYPOGRAPHY_NAME}" to the selection`, () => {
+                    // eslint-disable-next-line cypress/unsafe-to-chain-command
+                    cy.get(ALIAS_CONTENT)
+                        .clear()
+                        .type(FULL_CONTENT)
+                        .textSelection(TEXT_CONTENT, true);
+
+                    cy.get(ALIAS_CONTENT)
+                        .then($el => {
+                            expect($el.find(TYPOGRAPHY_NAME)).to.have.lengthOf(0);
+                        });
+
+                    cy.findAlohaComponent({ slot: SLOT_TYPO })
+                        .click();
+
+                    cy.findDynamicDropdown('')
+                        .find(`.select-menu-entry[data-id="${TYPOGRAPHY_NAME}"]`)
+                        .click();
+
+                    cy.get(ALIAS_CONTENT)
+                        .find(TYPOGRAPHY_NAME)
+                        .should('exist')
+                        .should('have.text', TEXT_CONTENT);
+                });
+            }
+
+            it('should apply the header id on headings', () => {
+                const EXAMPLE_ID = 'hello-world-something';
+                const ALIAS_TYPO_ELEM = '@typographyElement';
+
+                // eslint-disable-next-line cypress/unsafe-to-chain-command
+                cy.get(ALIAS_CONTENT)
+                    .clear()
+                    .type(FULL_CONTENT)
+                    .textSelection(TEXT_CONTENT, true);
+
+                cy.get(ALIAS_CONTENT)
+                    .then($el => {
+                        expect($el.find(HEADER_TYPOGRAPHY[0])).to.have.lengthOf(0);
+                    });
+
+                cy.findAlohaComponent({ slot: SLOT_TYPO })
+                    .as(ALIAS_TYPO_BUTTON)
+                    .click();
+
+                cy.findDynamicDropdown()
+                    .find(`.select-menu-entry[data-id="${HEADER_TYPOGRAPHY[0]}"]`)
+                    .click();
+
+                cy.get(ALIAS_CONTENT)
+                    .find(HEADER_TYPOGRAPHY[0])
+                    .should('exist')
+                    .as(ALIAS_TYPO_ELEM)
+                    .should('have.text', TEXT_CONTENT)
+                    .should('have.id', 'test-content')
+                    .should('not.have.class', CLASS_CUSTOMIZED);
+
+                cy.get(ALIAS_TYPO_BUTTON)
+                    .click({ action: 'secondary' });
+
+                cy.findDynamicDropdown()
+                    .find('input')
+                    .type(`${EXAMPLE_ID}{enter}`);
+
+                cy.get(ALIAS_TYPO_ELEM)
+                    .should('exist')
+                    .should('have.text', TEXT_CONTENT)
+                    .should('have.id', EXAMPLE_ID)
+                    .should('have.class', CLASS_CUSTOMIZED);
+            });
+        });
     });
 
     /*

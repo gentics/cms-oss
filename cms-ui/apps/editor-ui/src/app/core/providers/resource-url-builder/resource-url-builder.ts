@@ -1,4 +1,8 @@
 import { Injectable } from '@angular/core';
+import { EditorState } from '@editor-ui/app/common/models';
+import { BLANK_PAGE, BLANK_PROPERTIES_PAGE } from '@editor-ui/app/content-frame/models/content-frame';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { File as FileModel, Folder, Form, Image, Node, Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
@@ -137,6 +141,56 @@ export class ResourceUrlBuilder {
             limit: 15,
         });
         return `${API_BASE_URL}/page/autocomplete?${params}`;
+    }
+
+    /**
+     * Returns a GCMS url to act as the src of the iframe depending on the editMode and
+     * type of item being edited.
+     */
+    stateToUrl(editorState: EditorState, currentItem: Page | FileModel | Folder | Form | Image | Node): string {
+        if (!editorState.editorIsOpen) {
+            return BLANK_PAGE;
+        }
+
+        const itemId = currentItem.id;
+        const nodeId = editorState.nodeId;
+
+        switch (editorState.editMode) {
+            case EditMode.PREVIEW:
+            case EditMode.EDIT:
+                if (editorState.itemType !== 'page') {
+                    break;
+                }
+                if (editorState.editMode === EditMode.PREVIEW) {
+                    return this.pagePreview(itemId, nodeId);
+                } else {
+                    return this.pageEditor(itemId, nodeId);
+                }
+
+            case EditMode.EDIT_PROPERTIES:
+                return BLANK_PROPERTIES_PAGE;
+
+            case EditMode.PREVIEW_VERSION:
+                return this.previewPageVersion(nodeId, itemId, editorState.version.timestamp);
+
+            case EditMode.COMPARE_VERSION_CONTENTS:
+                return this.comparePageVersions(
+                    nodeId,
+                    itemId,
+                    editorState.oldVersion.timestamp,
+                    editorState.version.timestamp,
+                );
+
+            case EditMode.COMPARE_VERSION_SOURCES:
+                return this.comparePageVersionSources(
+                    nodeId,
+                    itemId,
+                    editorState.oldVersion.timestamp,
+                    editorState.version.timestamp,
+                );
+        }
+
+        return BLANK_PAGE;
     }
 
     private createParamsString(data: Record<string, any>): string {

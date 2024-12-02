@@ -26,6 +26,7 @@ define([
 	'aloha/contenthandlermanager',
 	'ui/ui-plugin',
 	'ui/dialog',
+	'ui/overlayElement',
 	'block/blockmanager',
 	'util/misc',
 	'link/link-plugin',
@@ -46,6 +47,7 @@ define([
 	ContentHandlerManager,
 	UiPlugin,
 	Dialog,
+	OverlayElement,
 	BlockManager,
 	Misc,
 	LinkPlugin,
@@ -504,6 +506,11 @@ define([
 			// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
 			var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
 			UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
+
+			// Apply the correct error class from the UI, so we can do correct checks in here as well.
+			if (window.GCMSUI.closeErrorClass) {
+				OverlayElement.OverlayCloseError = window.GCMSUI.closeErrorClass;
+			}
 
 			// make some classes ephemeral. Those classes may be added to tags while initializing them
 			// if they are not ephemeral, the modification check of the editables would always detect them

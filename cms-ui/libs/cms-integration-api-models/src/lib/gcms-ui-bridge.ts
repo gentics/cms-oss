@@ -69,6 +69,8 @@ export enum ModalClosingReason {
     ERROR = 'error',
 }
 
+export const MODAL_CLOSE_ERROR_INSTANCE = Symbol('gtx-modal-close');
+
 /**
  * Special error which is thrown when a Modal is being closed.
  */
@@ -89,6 +91,12 @@ export class ModalCloseError extends Error {
             super(message);
             this.reason = reasonOrError;
         }
+        this[MODAL_CLOSE_ERROR_INSTANCE] = true;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static [Symbol.hasInstance](obj: any): boolean {
+        return obj != null && MODAL_CLOSE_ERROR_INSTANCE in obj;
     }
 }
 

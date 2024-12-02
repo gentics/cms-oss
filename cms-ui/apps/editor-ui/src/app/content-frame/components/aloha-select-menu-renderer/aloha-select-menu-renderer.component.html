@@ -12,6 +12,7 @@
             class="select-menu-entry"
             [class.multi-step-entry]="entry.isMultiStep"
             [class.active]="entry.id === value"
+            [attr.id]="entry.id"
             (click)="handleOptionClick(entry)"
         >
             <div class="entry-icon icon-left">

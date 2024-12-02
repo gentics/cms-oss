@@ -2,24 +2,29 @@
 
 <div class="modal-title">
     <h5>
-        <span>{{ 'modal.publish_protocol_title_prefix' | i18n }}</span>
-        <span class="page-name" title="page.name">{{ item.name }}"</span>
+        <span>{{ 'modal.publish_protocol_title' | i18n: {
+            itemName: item.name,
+        } }}</span>
 
-        <span *ngIf="languageVariants?.length > 1">
-            <gtx-dropdown-list align="right">
-                <gtx-dropdown-trigger>
+        <div *ngIf="languageVariants?.length > 1" class="language-select">
+            <gtx-dropdown-list align="right" data-context-id="language-select">
+                <gtx-dropdown-trigger class="trigger-content">
                     <span class="pre">in</span>
-                    <span class="clickable">{{ 'lang.' + item?.language | i18n }}</span>
-                    <icon class="collapse">keyboard_arrow_down</icon> 
+                    <span class="language-name">{{ 'lang.' + item?.language | i18n }}</span>
+                    <icon class="collapse">keyboard_arrow_down</icon>
                 </gtx-dropdown-trigger>
 
-                <gtx-dropdown-content>
-                    <gtx-dropdown-item *ngFor="let variant of languageVariants" (click)="selectPageVariant(variant)">
+                <gtx-dropdown-content data-context-id="language-select">
+                    <gtx-dropdown-item
+                        *ngFor="let variant of languageVariants"
+                        [attr.data-id]="variant.code"
+                        (click)="selectPageVariant(variant)"
+                    >
                         {{ 'lang.' + variant.language | i18n }}
                     </gtx-dropdown-item>
                 </gtx-dropdown-content>
             </gtx-dropdown-list>
-        </span>
+        </div>
     </h5>
 </div>
 
@@ -35,18 +40,18 @@
         </gtx-contents-list-item>
     </div>
 
-    <div *ngIf="publishLogEntries?.length > 0">
+    <div *ngIf="publishLogEntries?.length > 0" class="entries">
         <gtx-contents-list-item *ngFor="let entry of publishLogEntries">
             <div class="publish-entry">
                 <span class="state" [class]="entry.state.toString().toLocaleLowerCase()">{{ entry.state }}</span>
-                <span class="date">{{ 
+                <span class="date">{{
                     'modal.page_published_date' | i18n: {
-                        date: entry.date
+                        date: entry.date | i18nDate:'dateTime'
                     }
                 }}</span>
                 <span *ngIf="entry.user && entry.user.lastName" class="editor">
-                    {{ 'modal.page_versions_editor_label' | i18n: { 
-                            name: entry.user?.firstName + ' ' + entry.user?.lastName 
+                    {{ 'modal.page_versions_editor_label' | i18n: {
+                            name: entry.user?.firstName + ' ' + entry.user?.lastName
                         }
                     }}
                 </span>

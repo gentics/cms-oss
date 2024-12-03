@@ -153,6 +153,8 @@ define('gcn/gcn-links', [
 	 */
 	function extractLinkTargetFromElement(data, link) {
 		var objId = link.getAttribute(ATTR_OBJECT_ID);
+		// Anchor value is always stored separately
+		data.anchor = link.getAttribute(ATTR_ANCHOR);
 
 		// Not actually an internal link
 		if (objId == null || objId === '') {
@@ -161,9 +163,7 @@ define('gcn/gcn-links', [
 
 		var targetId = 0;
 		var targetType = '';
-		var targetLabel = link.hasAttribute(ATTR_TARGET_LABEL)
-			? link.getAttribute(ATTR_TARGET_LABEL) || ''
-			: link.getAttribute(ATTR_TITLE) || '';
+		var targetLabel = link.getAttribute(ATTR_TARGET_LABEL) || '';
 		var targetNodeId = null;
 
 		/** @type {array.<string>} */
@@ -191,14 +191,19 @@ define('gcn/gcn-links', [
 		}
 
 		targetId = parseInt(objData[1], 10);
+		if (!Number.isInteger(targetId)) {
+			targetId = 0;
+		}
 
 		var channelId = link.getAttribute(ATTR_CHANNEL_ID);
 		if (channelId != null && channelId !== '') {
 			targetNodeId = parseInt(channelId, 10);
+			if (!Number.isInteger(targetNodeId)) {
+				targetNodeId = null;
+			}
 		}
 
 		data.url = Object.assign({}, data.url, {
-			anchor: link.getAttribute(ATTR_ANCHOR) || data.url.anchor,
 			isInternal: true,
 			internalTargetLabel: targetLabel,
 			internalTargetId: targetId,

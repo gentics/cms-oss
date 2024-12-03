@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,6 +71,8 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.TableVersion.Diff;
+import com.gentics.contentnode.factory.object.TableVersion.Join;
 import com.gentics.contentnode.factory.url.AlternateUrlsContainer;
 import com.gentics.contentnode.factory.url.PageAlternateUrlsContainer;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -92,6 +95,7 @@ import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.NodeObjectWithAlternateUrls;
 import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.OverviewEntry;
@@ -123,9 +127,6 @@ import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
-import com.gentics.contentnode.factory.object.TableVersion;
-import com.gentics.contentnode.factory.object.TableVersion.Diff;
-import com.gentics.contentnode.factory.object.TableVersion.Join;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
@@ -996,11 +997,14 @@ public class PageFactory extends AbstractFactory {
 
 			loadObjectTagIds();
 
-			List<ObjectTag> tags;
+			Node owningNode = getOwningNode();
 
-			tags = t.getObjects(ObjectTag.class, objectTagIds, getObjectInfo().isEditable());
-			for (Iterator<?> it = tags.iterator(); it.hasNext();) {
-				ObjectTag tag = (ObjectTag) it.next();
+			List<ObjectTag> tags = t.getObjects(ObjectTag.class, objectTagIds, getObjectInfo().isEditable());
+			for (ObjectTag tag : tags) {
+				ObjectTagDefinition def = tag.getDefinition();
+				if (def != null && !def.isVisibleIn(owningNode)) {
+					continue;
+				}
 
 				String name = tag.getName();
 
@@ -1030,63 +1034,24 @@ public class PageFactory extends AbstractFactory {
 		 * @throws NodeException
 		 */
 		protected void addMissingObjectTags(Map<String, ObjectTag> objectTags) throws NodeException {
-			Transaction t = TransactionManager.getCurrentTransaction();
+			List<ObjectTagDefinition> pageDefs = TagFactory.load(Page.TYPE_PAGE, Optional.ofNullable(getOwningNode()));
 
-			PreparedStatement pst = null;
-			ResultSet res = null;
-			List<Integer> objTagDefIds = new Vector<Integer>();
+			for (ObjectTagDefinition def : pageDefs) {
+				// get the name (without object. prefix)
+				String defName = def.getObjectTag().getName();
 
-			try {
-				// get all objtag definitions for type "page" which are assigned to the page's node (or not restricted to nodes)
-				pst = t.prepareStatement(
-						"SELECT DISTINCT objtag.id id FROM objtag"
-						+ " LEFT JOIN objprop ON objtag.id = objprop.objtag_id"
-						+ " LEFT JOIN objprop_node ON objprop.id = objprop_node.objprop_id"
-						+ " LEFT JOIN construct c ON c.id = objtag.construct_id"
-						+ " WHERE objtag.obj_id = 0 AND objtag.obj_type = ?"
-						+ " AND (objprop_node.node_id = ? OR objprop_node.node_id IS NULL) AND c.id IS NOT NULL");
-				pst.setObject(1, Page.TYPE_PAGE_INTEGER);
-				// Get Master Node in case the node is a Channel
-				Node masterNode;
-				try (NoMcTrx nmc = new NoMcTrx()) {
-					masterNode = getFolder().getNode().getMaster();
+				if (defName.startsWith("object.")) {
+					defName = defName.substring(7);
 				}
-				pst.setObject(2, masterNode.getId());
 
-				res = pst.executeQuery();
-				// collect the id's
-				while (res.next()) {
-					objTagDefIds.add(getInteger(res.getObject("id"), null));
-				}
-			} catch (SQLException e) {
-				throw new NodeException("Error while getting editable objtags", e);
-			} finally {
-				t.closeResultSet(res);
-				t.closeStatement(pst);
-			}
+				// if no objtag of that name exists for the page,
+				// generate a copy and add it to the map of objecttags
+				if (!objectTags.containsKey(defName)) {
+					ObjectTag newObjectTag = (ObjectTag) def.getObjectTag().copy();
 
-			if (objTagDefIds.size() > 0) {
-				// get the objtag (definition)
-				List<ObjectTag> objTagDefs = t.getObjects(ObjectTag.class, objTagDefIds);
-
-				for (Iterator<ObjectTag> i = objTagDefs.iterator(); i.hasNext();) {
-					ObjectTag def = (ObjectTag) i.next();
-					// get the name (without object. prefix)
-					String defName = def.getName();
-
-					if (defName.startsWith("object.")) {
-						defName = defName.substring(7);
-					}
-
-					// if no objtag of that name exists for the page,
-					// generate a copy and add it to the map of objecttags
-					if (!objectTags.containsKey(defName)) {
-						ObjectTag newObjectTag = (ObjectTag) def.copy();
-
-						newObjectTag.setNodeObject(this);
-						newObjectTag.setEnabled(false);
-						objectTags.put(defName, newObjectTag);
-					}
+					newObjectTag.setNodeObject(this);
+					newObjectTag.setEnabled(false);
+					objectTags.put(defName, newObjectTag);
 				}
 			}
 		}

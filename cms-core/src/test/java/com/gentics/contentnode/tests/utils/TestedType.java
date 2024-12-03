@@ -71,7 +71,7 @@ public enum TestedType {
 		case file:
 			return ContentNodeTestDataUtils.createFile(folder, ObjectTransformer.getString(name, "testfile.txt"), "Contents".getBytes(), channel);
 		case image:
-			return ContentNodeTestDataUtils.createFile(folder, ObjectTransformer.getString(name, "blume.jpg"), GenericTestUtils.getPictureResource("blume.jpg"), channel);
+			return ContentNodeTestDataUtils.createImage(folder, ObjectTransformer.getString(name, "blume.jpg"), GenericTestUtils.getPictureResource("blume.jpg"), channel);
 		default:
 			fail("Cannot generate object of unknown type " + this);
 			return null;

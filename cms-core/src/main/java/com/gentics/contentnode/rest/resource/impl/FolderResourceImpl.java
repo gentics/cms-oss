@@ -5,8 +5,6 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
-import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
-import com.gentics.contentnode.publish.protocol.PublishType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,7 +40,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.SetUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -68,6 +65,7 @@ import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FolderFactory;
 import com.gentics.contentnode.factory.object.FolderFactory.ReductionType;
 import com.gentics.contentnode.factory.object.ObjectModificationException;
+import com.gentics.contentnode.factory.object.TagFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -2344,30 +2342,35 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			if (restTags != null) {
 				Map<String, ObjectTag> objectTags = folder.getObjectTags();
+				List<String> defKeynames = TagFactory.loadKeynames(com.gentics.contentnode.object.Folder.TYPE_FOLDER,
+						Optional.of(folder.getOwningNode()));
 
 				for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
 					com.gentics.contentnode.rest.model.Tag restTag = i.next();
 					com.gentics.contentnode.object.Tag tag = null;
 
 					if (restTag.getName().startsWith("object.")) {
-						String realName = restTag.getName().substring(7);
-						ObjectTag oTag = objectTags.get(realName);
+						String keyName = restTag.getName();
+						String shortName = keyName.substring(7);
+						ObjectTag oTag = objectTags.get(shortName);
 
-						if (oTag == null) {
+						if (oTag == null && defKeynames.contains(keyName)) {
 							// did not find the tag, so create a new one
 							oTag = t.createObject(ObjectTag.class);
-							oTag.setName(realName);
+							oTag.setName(keyName);
 							oTag.setConstructId(restTag.getConstructId());
 
 							// and add it to the other tags
-							objectTags.put(restTag.getName(), oTag);
+							objectTags.put(shortName, oTag);
 						}
 
 						tag = oTag;
 					}
 
 					// now set the data from the REST tag
-					ModelBuilder.fillRest2Node(restTag, tag);
+					if (tag != null) {
+						ModelBuilder.fillRest2Node(restTag, tag);
+					}
 				}
 
 				// Throw an error if the user doesn't have permission

@@ -411,16 +411,14 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 	 * @throws NodeException
 	 */
 	public boolean isVisibleIn(Node node) throws NodeException {
+		if (!isRestricted()) {
+			return true;
+		}
 		if (node == null) {
 			return false;
 		}
 		try (NoMcTrx noMcTrx = new NoMcTrx()) {
-			List<Node> restriction = getNodes();
-			if (restriction.isEmpty()) {
-				return true;
-			} else {
-				return restriction.contains(node.getMaster());
-			}
+			return getNodes().contains(node.getMaster());
 		}
 	}
 	/**

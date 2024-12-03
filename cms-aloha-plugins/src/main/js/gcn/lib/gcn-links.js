@@ -6,6 +6,29 @@
  *
  * @overfiew Implements link handeling for Content.Node's specific needs.
  */
+/**
+ * @typedef {object} LinkTarget
+ * @prop {string} target The target URL. Shouldn't contain the `anchor`, as it's saved separately
+ * @prop {string} anchor The anchor part of the target URL.
+ */
+/**
+ * @typedef {object} ExtendedLinkTargetProps
+ * @prop {boolean} isInternal If the link is an internal link
+ * @prop {string=} internalTargetLabel The label/name to where the internal link is referring to
+ * @prop {number=} internalTargetId The ID of the target element
+ * @prop {string=} internalTargetType The type of the target element
+ * @prop {number=} internalTargetNodeId In which Node the target element resides in
+ */
+/**
+ * @typedef {LinkTarget & ExtendedLinkTargetProps} ExtendedLinkTarget
+ */
+/**
+ * @typedef {object} LinkContextData
+ * @prop {ExtendedLinkTarget} url The URL to where the link should point to
+ * @prop {string=} title The title of the link
+ * @prop {string=} target The target where the link should be resolved/opened in
+ * @prop {string=} lang The language the language target is in
+ */
 define('gcn/gcn-links', [
 	'/gcnjsapi/' + window.Aloha.settings.plugins.gcn.buildRootTimestamp + '/' + (
 		window.Aloha.settings.plugins.gcn.gcnLibVersion || 'bin'
@@ -19,6 +42,7 @@ define('gcn/gcn-links', [
 	'i18n!gcn/nls/i18n',
 ], function (
 	GCN,
+	/** @type JQueryStatic */
 	$,
 	Aloha,
 	PubSub,
@@ -39,7 +63,7 @@ define('gcn/gcn-links', [
 	var ATTR_HREF = 'href';
 	var ATTR_HREF_LANG = 'hreflang';
 	var ATTR_TITLE = 'title';
-	
+
 	// Internal Link attributes
 	var ATTR_ANCHOR = 'data-gentics-gcn-anchor';
 	var ATTR_URL = 'data-gentics-gcn-url';
@@ -47,7 +71,7 @@ define('gcn/gcn-links', [
 	var ATTR_CHANNEL_ID = 'data-gcn-channelid';
 	var ATTR_TARGET_LABEL = 'data-gcn-target-label';
 	var ATTR_OBJECT_ONLINE = 'data-gentics-aloha-object-online';
-	
+
 	// Misc constants
 	var REPO_INTERNAL_LINK = 'com.gentics.aloha.GCN.Page';
 	var TYPE_PAGE = '10007';
@@ -89,7 +113,7 @@ define('gcn/gcn-links', [
 		originalLinkContextProviderFn = plugin.createInsertLinkContext;
 		originalLinkUpsertFn = plugin.upsertLink;
 
-		plugin.createInsertLinkContext = function(existingLink) {
+		plugin.createInsertLinkContext = function (existingLink) {
 			var context = originalLinkContextProviderFn(existingLink);
 
 			if (context.controls.url.options == null) {
@@ -98,7 +122,7 @@ define('gcn/gcn-links', [
 			context.controls.url.options.showPicker = true;
 
 			var originalValidateFn = context.controls.url.validate;
-			context.controls.url.validate = function(value) {
+			context.controls.url.validate = function (value) {
 				// If it's an internal link, we do the validation here
 				if (value.isInternal) {
 					if (value.internalTargetId != null && value.internalTargetId > 0) {
@@ -121,7 +145,7 @@ define('gcn/gcn-links', [
 			return context;
 		};
 
-		plugin.upsertLink = function(linkElement, formData) {
+		plugin.upsertLink = function (linkElement, formData) {
 			var link = originalLinkUpsertFn(linkElement, formData, true);
 
 			if (!formData.url.isInternal) {
@@ -147,14 +171,14 @@ define('gcn/gcn-links', [
 
 	/**
 	 * 
-	 * @param {LinkTarget} data The LinkTarget value
+	 * @param {LinkContextData} data The LinkTarget value
 	 * @param {HTMLAnchorElement} link The anchor element
 	 * @returns {ExtendedLinkTarget} An extended form of the LinkTarget with internal properties for the GCMSUI set.
 	 */
 	function extractLinkTargetFromElement(data, link) {
 		var objId = link.getAttribute(ATTR_OBJECT_ID);
 		// Anchor value is always stored separately
-		data.anchor = link.getAttribute(ATTR_ANCHOR);
+		data.url.anchor = link.getAttribute(ATTR_ANCHOR);
 
 		// Not actually an internal link
 		if (objId == null || objId === '') {
@@ -215,35 +239,63 @@ define('gcn/gcn-links', [
 	}
 
 	/**
-	 * @param {ExtendedLinkTarget} data The form data from the link form
-	 * @param {HTMLAnchorElement} link The Link element to apply the data to
+	 * @param {LinkContextData} data The form data from the link form
+	 * @param {HTMLAnchorElement} element The Link element to apply the data to
 	 */
-	function applyLinkTargetToElement(data, link) {
+	function applyLinkTargetToElement(data, element) {
 		var objId;
+		var link = '';
+		var params = new URLSearchParams();
+
+		function applyFileLink() {
+			link = '/rest/file/content/load/' + data.url.internalTargetId;
+			if (data.url.internalTargetNodeId) {
+				// Not a typo, it's two different names for files/images and pages.
+				// once as nodeId, and once as nodeid.
+				params.set('nodeId', data.url.internalTargetNodeId);
+			}
+		}
 
 		switch (data.url.internalTargetType) {
 			case 'image':
 				objId = TYPE_IMAGE;
+				applyFileLink();
 				break;
 
 			case 'file':
 				objId = TYPE_FILE;
+				applyFileLink();
 				break;
-			
-			default:
+
 			case 'page':
 				objId = TYPE_PAGE;
+				link = '/alohapage';
+				params.set('real', 'newview');
+				params.set('realid', data.url.internalTargetId);
+				if (data.url.internalTargetNodeId) {
+					// Not a typo, it's two different names for files/images and pages.
+					// once as nodeId, and once as nodeid.
+					params.set('nodeid', data.url.internalTargetNodeId);
+				}
 				break;
 		}
 
-		link.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
-		link.setAttribute(ATTR_TARGET_LABEL, data.url.internalTargetLabel);
-		link.setAttribute(ATTR_OBJECT_ID, objId + '.' + data.url.internalTargetId);
-		link.setAttribute(ATTR_CHANNEL_ID, data.url.internalTargetNodeId);
-		link.setAttribute(ATTR_URL, data.url.href);
-		link.setAttribute(ATTR_HREF, '#' + data.url.anchor);
-		link.setAttribute(ATTR_ANCHOR, data.url.anchor);
-		link.setAttribute(ATTR_HREF_LANG, data.lang);
+		if (params.size > 0) {
+			link += '?' + params.toString();
+		}
+
+		if (data.url.anchor) {
+			link += '#' + data.url.anchor;
+		}
+
+		element.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
+		element.setAttribute(ATTR_TARGET_LABEL, data.url.internalTargetLabel);
+		element.setAttribute(ATTR_OBJECT_ID, objId + '.' + data.url.internalTargetId);
+		element.setAttribute(ATTR_CHANNEL_ID, data.url.internalTargetNodeId);
+		element.setAttribute(ATTR_URL, data.url.href);
+		element.setAttribute(ATTR_HREF, link);
+		element.setAttribute(ATTR_ANCHOR, data.url.anchor);
+		element.setAttribute(ATTR_HREF_LANG, data.lang);
 	};
 
 	/**
@@ -271,7 +323,7 @@ define('gcn/gcn-links', [
 		} else {
 			//For saving the page we need to leave the 'data-gentics-gcn-anchor' attribute
 			//empty and add the anchor to the href, if the anchorLinks setting is deactivated
-			$link.attr(ATTR_ANCHOR,'');
+			$link.attr(ATTR_ANCHOR, '');
 			if (anchor) {
 				href = href + '#' + anchor;
 			}
@@ -296,7 +348,7 @@ define('gcn/gcn-links', [
 
 		fork.node().constructs(function (constructs) {
 			var magiclink = constructs[GCN.settings.MAGIC_LINK]
-			             && constructs[GCN.settings.MAGIC_LINK].constructId;
+				&& constructs[GCN.settings.MAGIC_LINK].constructId;
 			if (!magiclink) {
 				return releasePageFork();
 			}
@@ -328,10 +380,6 @@ define('gcn/gcn-links', [
 		getMagiclinkTags(page, cleanMagiclinkTags);
 	});
 
-	PubSub.sub('aloha.link.changed', function (msg) {
-		update($(msg.element), $.trim(msg.href));
-	});
-	
 	PubSub.sub('aloha.link.pasted', function (msg) {
 		update($(msg.element), $.trim(msg.href));
 		// Default target is _blank

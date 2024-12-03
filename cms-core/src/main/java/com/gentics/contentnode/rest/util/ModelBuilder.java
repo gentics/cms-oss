@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -41,6 +42,7 @@ import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.PageFactory;
+import com.gentics.contentnode.factory.object.TagFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.messaging.Message;
 import com.gentics.contentnode.msg.NodeMessage;
@@ -1509,42 +1511,40 @@ public class ModelBuilder {
 			Map<String, ContentTag> contentTags = page.getContent().getContentTags();
 			Map<String, ObjectTag> objectTags = page.getObjectTags();
 
-			for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
-				com.gentics.contentnode.rest.model.Tag restTag = i.next();
+			List<String> defKeynames = TagFactory.loadKeynames(Page.TYPE_PAGE,
+					Optional.ofNullable(page.getOwningNode()));
+
+			for (Map.Entry<String, com.gentics.contentnode.rest.model.Tag> entry : restTags.entrySet()) {
 				Tag tag = null;
-				String tagName = getTagNameOrThrow(restTag);
+				String keyName = entry.getKey();
+				com.gentics.contentnode.rest.model.Tag restTag = entry.getValue();
 
-				if (tagName.startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+				if (keyName.startsWith("object.")) {
+					String shortName = keyName.substring(7);
 
-					if (oTag == null) {
-						if (logger.isDebugEnabled()) {
-							logger.debug(
-									"The object tag {" + restTag.getName()
-									+ "} was not found for the given page. Creation of objecttags is currently not supported. Omitting objecttag.");
-						}
-						// TODO Creation of object tags is currently not possible since it is not implemented in the TagFactory
-						// // did not find the tag, so create a new one
-						// oTag = (ObjectTag)t.createObject(ObjectTag.class);
-						// oTag.setName(realName);
-						// oTag.setConstructId(restTag.getConstructId());
-						//
-						// // and add it to the other tags
-						// objectTags.put(restTag.getName(), oTag);
+					ObjectTag oTag = objectTags.get(shortName);
+
+					if (oTag == null && defKeynames.contains(keyName)) {
+						// did not find the tag, so create a new one
+						oTag = t.createObject(ObjectTag.class);
+						oTag.setName(keyName);
+						oTag.setConstructId(restTag.getConstructId());
+
+						// and add it to the other tags
+						objectTags.put(shortName, oTag);
 					}
 					tag = oTag;
 				} else {
-					ContentTag contentTag = contentTags.get(restTag.getName());
+					ContentTag contentTag = contentTags.get(keyName);
 
 					if (contentTag == null) {
 						// did not find the tag, so create a new one
-						contentTag = (ContentTag) t.createObject(ContentTag.class);
-						contentTag.setName(restTag.getName());
+						contentTag = t.createObject(ContentTag.class);
+						contentTag.setName(keyName);
 						contentTag.setConstructId(restTag.getConstructId());
 
 						// and add it to the other tags
-						contentTags.put(restTag.getName(), contentTag);
+						contentTags.put(keyName, contentTag);
 					}
 					tag = contentTag;
 				}
@@ -2655,29 +2655,33 @@ public class ModelBuilder {
 		if (restTags != null) {
 			// get the objecttags
 			Map<String, ObjectTag> objectTags = file.getObjectTags();
+			List<String> defKeynames = TagFactory.loadKeynames(file.getTType(), Optional.of(file.getOwningNode()));
 
-			for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
-				com.gentics.contentnode.rest.model.Tag restTag = i.next();
+			for (Map.Entry<String, com.gentics.contentnode.rest.model.Tag> entry : restTags.entrySet()) {
 				Tag tag = null;
+				String keyName = entry.getKey();
+				com.gentics.contentnode.rest.model.Tag restTag = entry.getValue();
 
-				if (restTag.getName().startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+				if (keyName.startsWith("object.")) {
+					String shortName = keyName.substring(7);
+					ObjectTag oTag = objectTags.get(shortName);
 
-					if (oTag == null) {
+					if (oTag == null && defKeynames.contains(keyName)) {
 						// did not find the tag, so create a new one
-						oTag = (ObjectTag) t.createObject(ObjectTag.class);
-						oTag.setName(realName);
+						oTag = t.createObject(ObjectTag.class);
+						oTag.setName(keyName);
 						oTag.setConstructId(restTag.getConstructId());
 
 						// and add it to the other tags
-						objectTags.put(restTag.getName(), oTag);
+						objectTags.put(shortName, oTag);
 					}
 					tag = oTag;
 				}
 
 				// now set the data from the REST tag
-				ModelBuilder.fillRest2Node(restTag, tag);
+				if (tag != null) {
+					ModelBuilder.fillRest2Node(restTag, tag);
+				}
 			}
 		}
 
@@ -2741,28 +2745,34 @@ public class ModelBuilder {
 			// get the objecttags
 			Map<String, ObjectTag> objectTags = image.getObjectTags();
 
-			for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
-				com.gentics.contentnode.rest.model.Tag restTag = i.next();
+			List<String> defKeynames = TagFactory.loadKeynames(image.getTType(),
+					Optional.ofNullable(image.getOwningNode()));
+
+			for (Map.Entry<String, com.gentics.contentnode.rest.model.Tag> entry : restTags.entrySet()) {
 				Tag tag = null;
+				String keyName = entry.getKey();
+				com.gentics.contentnode.rest.model.Tag restTag = entry.getValue();
 
-				if (restTag.getName().startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+				if (keyName.startsWith("object.")) {
+					String shortName = keyName.substring(7);
+					ObjectTag oTag = objectTags.get(shortName);
 
-					if (oTag == null) {
+					if (oTag == null && defKeynames.contains(keyName)) {
 						// did not find the tag, so create a new one
-						oTag = (ObjectTag) t.createObject(ObjectTag.class);
-						oTag.setName(realName);
+						oTag = t.createObject(ObjectTag.class);
+						oTag.setName(keyName);
 						oTag.setConstructId(restTag.getConstructId());
 
 						// and add it to the other tags
-						objectTags.put(restTag.getName(), oTag);
+						objectTags.put(shortName, oTag);
 					}
 					tag = oTag;
 				}
 
 				// now set the data from the REST tag
-				ModelBuilder.fillRest2Node(restTag, tag);
+				if (tag != null) {
+					ModelBuilder.fillRest2Node(restTag, tag);
+				}
 			}
 		}
 
@@ -2849,28 +2859,33 @@ public class ModelBuilder {
 		if (restTags != null) {
 			Map<String, ObjectTag> objectTags = folder.getObjectTags();
 
-			for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
-				com.gentics.contentnode.rest.model.Tag restTag = i.next();
-				com.gentics.contentnode.object.Tag tag = null;
+			List<String> defKeynames = TagFactory.loadKeynames(Folder.TYPE_FOLDER, Optional.ofNullable(folder.getOwningNode()));
 
-				if (restTag.getName().startsWith("object.")) {
-					String realName = restTag.getName().substring(7);
-					ObjectTag oTag = objectTags.get(realName);
+			for (Map.Entry<String, com.gentics.contentnode.rest.model.Tag> entry : restTags.entrySet()) {
+				Tag tag = null;
+				String keyName = entry.getKey();
+				com.gentics.contentnode.rest.model.Tag restTag = entry.getValue();
 
-					if (oTag == null) {
+				if (keyName.startsWith("object.")) {
+					String shortName = keyName.substring(7);
+					ObjectTag oTag = objectTags.get(shortName);
+
+					if (oTag == null && defKeynames.contains(keyName)) {
 						// did not find the tag, so create a new one
-						oTag = (ObjectTag) t.createObject(ObjectTag.class);
-						oTag.setName(realName);
+						oTag = t.createObject(ObjectTag.class);
+						oTag.setName(keyName);
 						oTag.setConstructId(restTag.getConstructId());
 
 						// and add it to the other tags
-						objectTags.put(restTag.getName(), oTag);
+						objectTags.put(shortName, oTag);
 					}
 					tag = oTag;
 				}
 
 				// now set the data from the REST tag
-				ModelBuilder.fillRest2Node(restTag, tag);
+				if (tag != null) {
+					ModelBuilder.fillRest2Node(restTag, tag);
+				}
 			}
 		}
 

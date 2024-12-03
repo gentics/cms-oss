@@ -45,6 +45,8 @@ export interface ObjectPropertyBase<T extends ModelType> {
     syncChannelset: boolean;
     /** True if the object property is synchronized for all page variants */
     syncVariants: boolean;
+    /** True if the object property is restricted */
+    restricted: boolean;
 }
 
 /** Data model as defined by backend. */

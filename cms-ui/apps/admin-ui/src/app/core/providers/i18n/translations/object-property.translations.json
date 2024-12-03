@@ -75,8 +75,12 @@
         "en": "SyncVariants",
         "de": "Sync-Varianten"
     },
+    "restricted": {
+        "en": "Restricted to Nodes",
+        "de": "Auf Nodes Eingeschränkt"
+    },
     "operation_linked_to_nodes_successful": {
-        "en": "Nodes-links updated successfully",
-        "de": "Node-Verknüpungen erfolgreich geändert"
+        "en": "Node restriction updated successfully",
+        "de": "Einschränkung auf Nodes erfolgreich geändert"
     }
 }

@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.gentics.contentnode.factory.ContentNodeFactory;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -50,6 +50,7 @@ import com.gentics.contentnode.object.Content;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.EditableValueList;
 import com.gentics.contentnode.object.LocalizableNodeObject;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.ObjectTag;
@@ -65,6 +66,7 @@ import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.StringUtils;
 
@@ -2072,5 +2074,42 @@ public class TagFactory extends AbstractFactory {
 		} else {
 			return name;
 		}
+	}
+
+	/**
+	 * Load the object tag definitions for the given object type, optionally filtered by visibility in the give node
+	 * @param type object type
+	 * @param node optional node
+	 * @return list of object tag definitions
+	 * @throws NodeException
+	 */
+	public static List<ObjectTagDefinition> load(int type, Optional<Node> node) throws NodeException {
+		Set<Integer> ids = DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? and obj_id = 0", pst -> {
+			pst.setInt(1, type);
+		}, DBUtils.IDS);
+
+		List<ObjectTagDefinition> defs = new ArrayList<>(
+				TransactionManager.getCurrentTransaction().getObjects(ObjectTagDefinition.class, ids));
+		if (node.isPresent()) {
+			for (Iterator<ObjectTagDefinition> i = defs.iterator(); i.hasNext();) {
+				ObjectTagDefinition def = i.next();
+				if (!def.isVisibleIn(node.get())) {
+					i.remove();
+				}
+			}
+		}
+		return defs;
+	}
+
+	/**
+	 * Load the keynames of the object tag definitions for the given object type, optionally filtered by visibility in the given node
+	 * @param type object type
+	 * @param node optional node
+	 * @return list of object tag definition key names
+	 * @throws NodeException
+	 */
+	public static List<String> loadKeynames(int type, Optional<Node> node) throws NodeException {
+		List<ObjectTagDefinition> defs = load(type, node);
+		return MiscUtils.unwrap(() -> defs.stream().map(def -> MiscUtils.wrap(() -> def.getObjectTag().getName())).collect(Collectors.toList()));
 	}
 }

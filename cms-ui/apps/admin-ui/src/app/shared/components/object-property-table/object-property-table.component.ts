@@ -53,6 +53,13 @@ export class ObjectPropertyTableComponent
             sortable: true,
         },
         {
+            id: 'restricted',
+            label: 'objectProperty.restricted',
+            fieldPath: 'restricted',
+            sortable: true,
+            align: 'center',
+        },
+        {
             id: 'category',
             label: 'objectProperty.objectPropertyCategory_singular',
             fieldPath: 'categoryId',
@@ -189,5 +196,6 @@ export class ObjectPropertyTableComponent
             { objectProperty },
         );
         await dialog.open();
+        this.reload();
     }
 }

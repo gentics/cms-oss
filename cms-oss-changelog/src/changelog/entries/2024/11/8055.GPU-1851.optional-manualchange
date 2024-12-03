@@ -1,0 +1,4 @@
+Object property definitions now have a boolean flag "restricted" which can be set to restrict object properties to assigned Nodes.
+When updating an older CMS instance, the "restricted" flag will be automatically set to object property definitions, which are already
+restricted to Nodes. All other object property definitions remain globally available.
+It is recommended to check the restriction settings of all existing object property definitions after the update.

@@ -31,6 +31,8 @@ public class ObjectTagDefinitionModel extends AbstractModel {
 
 	private Boolean syncVariants;
 
+	private Boolean restricted;
+
 	private ObjectTagDefinitionCategoryModel category;
 
 	private List<String> nodeIds;
@@ -113,6 +115,14 @@ public class ObjectTagDefinitionModel extends AbstractModel {
 
 	public void setSyncVariants(Boolean syncVariants) {
 		this.syncVariants = syncVariants;
+	}
+
+	public Boolean getRestricted() {
+		return restricted;
+	}
+
+	public void setRestricted(Boolean restricted) {
+		this.restricted = restricted;
 	}
 
 	public ObjectTagDefinitionCategoryModel getCategory() {

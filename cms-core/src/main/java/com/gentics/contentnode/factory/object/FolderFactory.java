@@ -653,7 +653,14 @@ public class FolderFactory extends AbstractFactory {
 
 			Collection<ObjectTag> tags = t.getObjects(ObjectTag.class, objectTagIds, getObjectInfo().isEditable());
 
+			Node owningNode = getOwningNode();
+
 			for (ObjectTag tag : tags) {
+				ObjectTagDefinition def = tag.getDefinition();
+				if (def != null && !def.isVisibleIn(owningNode)) {
+					continue;
+				}
+
 				String name = tag.getName();
 
 				if (name.startsWith("object.")) {
@@ -665,62 +672,24 @@ public class FolderFactory extends AbstractFactory {
 
 			// when the folder is editable, get all objecttags which are assigned to the folder's node
 			if (getObjectInfo().isEditable()) {
-				PreparedStatement pst = null;
-				ResultSet res = null;
-				List<Integer> objTagDefIds = new Vector<Integer>();
+				List<ObjectTagDefinition> folderDefs = TagFactory.load(Folder.TYPE_FOLDER, Optional.ofNullable(owningNode));
 
-				try {
-					// get all objtag definitions for type "folder" which are assigned to the folder's node (or not restricted to nodes)
-					pst = t.prepareStatement(
-							"SELECT DISTINCT objtag.id id"
-							+ " FROM objtag LEFT JOIN objprop ON objtag.id = objprop.objtag_id"
-							+ " LEFT JOIN objprop_node ON objprop.id = objprop_node.objprop_id"
-							+ " LEFT JOIN construct c ON c.id = objtag.construct_id"
-							+ " WHERE objtag.obj_id = 0 AND objtag.obj_type = ?"
-							+ " AND (objprop_node.node_id = ? OR objprop_node.node_id IS NULL)"
-							+ " AND c.id IS NOT NULL");
-					pst.setObject(1, Folder.TYPE_FOLDER_INTEGER);
-					// we use the owning node here, because for channel root folders, nodeId is set to the channel
-					Node owningNode = getOwningNode();
-					if (owningNode != null) {
-						pst.setObject(2, owningNode.getId());
-					} else {
-						pst.setObject(2, 0);
+				for (ObjectTagDefinition def : folderDefs) {
+					// get the name (without object. prefix)
+					String defName = def.getObjectTag().getName();
+
+					if (defName.startsWith("object.")) {
+						defName = defName.substring(7);
 					}
 
-					res = pst.executeQuery();
-					// collect the id's
-					while (res.next()) {
-						objTagDefIds.add(ObjectTransformer.getInteger(res.getObject("id"), null));
-					}
-				} catch (SQLException e) {
-					throw new NodeException("Error while getting editable objtags", e);
-				} finally {
-					t.closeResultSet(res);
-					t.closeStatement(pst);
-				}
+					// if no objtag of that name exists for the folder,
+					// generate a copy and add it to the map of objecttags
+					if (!objectTags.containsKey(defName)) {
+						ObjectTag newObjectTag = (ObjectTag) def.getObjectTag().copy();
 
-				if (objTagDefIds.size() > 0) {
-					// get the objtag (definition)
-					List<ObjectTag> objTagDefs = t.getObjects(ObjectTag.class, objTagDefIds);
-
-					for (ObjectTag def : objTagDefs) {
-						// get the name (without object. prefix)
-						String defName = def.getName();
-
-						if (defName.startsWith("object.")) {
-							defName = defName.substring(7);
-						}
-
-						// if no objtag of that name exists for the folder,
-						// generate a copy and add it to the map of objecttags
-						if (!objectTags.containsKey(defName)) {
-							ObjectTag newObjectTag = (ObjectTag) def.copy();
-
-							newObjectTag.setNodeObject(this);
-							newObjectTag.setEnabled(false);
-							objectTags.put(defName, newObjectTag);
-						}
+						newObjectTag.setNodeObject(this);
+						newObjectTag.setEnabled(false);
+						objectTags.put(defName, newObjectTag);
 					}
 				}
 

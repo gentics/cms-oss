@@ -373,11 +373,38 @@ public class ObjectPropertyRestrictionTest {
 						RESTRICTED_SHORT_KEYWORD, RESTRICTED_UNASSIGNED_SHORT_KEYWORD, OTHER_RESTRICTED_SHORT_KEYWORD);
 	}
 
-	protected ObjectTag createObjectTagModel(String name) {
+	/**
+	 * Test moving an object with object properties to another node (with different restriction settings)
+	 * @throws NodeException
+	 */
+	@Test
+	public void testMoveToOtherNode() throws NodeException {
+		LocalizableNodeObject<?> testedObject = supply(() -> type.create(node.getFolder(), template));
+
+		Set<String> tagsBeforeMove = getObjectTags(testedObject);
+		assertThat(tagsBeforeMove).as("Object tags before move").contains(UNRESTRICTED_KEYWORD, RESTRICTED_KEYWORD)
+				.doesNotContain(RESTRICTED_UNASSIGNED_KEYWORD, OTHER_RESTRICTED_KEYWORD, UNRESTRICTED_SHORT_KEYWORD,
+						RESTRICTED_SHORT_KEYWORD, RESTRICTED_UNASSIGNED_SHORT_KEYWORD, OTHER_RESTRICTED_SHORT_KEYWORD);
+
+		assertResponseCodeOk(execute(o -> type.move(o, otherNode.getFolder()), testedObject));
+
+		// the object properties in the database will not have changed
+		Set<String> tagsAfterMove = getObjectTags(testedObject);
+		assertThat(tagsAfterMove).as("Object tags after move").contains(UNRESTRICTED_KEYWORD, RESTRICTED_KEYWORD)
+				.doesNotContain(RESTRICTED_UNASSIGNED_KEYWORD, OTHER_RESTRICTED_KEYWORD, UNRESTRICTED_SHORT_KEYWORD,
+						RESTRICTED_SHORT_KEYWORD, RESTRICTED_UNASSIGNED_SHORT_KEYWORD, OTHER_RESTRICTED_SHORT_KEYWORD);
+	}
+
+	/**
+	 * Create an object tag model for the object property with given keyname
+	 * @param keyname key name
+	 * @return object tag model
+	 */
+	protected ObjectTag createObjectTagModel(String keyname) {
 		ObjectTag tag = new ObjectTag();
 		tag.setConstructId(constructId);
 		tag.setActive(true);
-		tag.setName(name);
+		tag.setName(keyname);
 		tag.setType(Type.OBJECTTAG);
 		Property prop = new Property();
 		prop.setStringValue("Contents");
@@ -385,6 +412,12 @@ public class ObjectPropertyRestrictionTest {
 		return tag;
 	}
 
+	/**
+	 * Load the keynames of the object tags of the given object out of the database (regardless of restrictions)
+	 * @param object object
+	 * @return set of keynames
+	 * @throws NodeException
+	 */
 	protected Set<String> getObjectTags(LocalizableNodeObject<?> object) throws NodeException {
 		return execute(o -> {
 			return DBUtils.select("SELECT name FROM objtag WHERE obj_type = ? AND obj_id = ?", ps -> {

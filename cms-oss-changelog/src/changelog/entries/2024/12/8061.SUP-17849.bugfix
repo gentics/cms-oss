@@ -1,0 +1,2 @@
+Editor User Interface: In Edit-Mode, internal links are now only clickable when holding the @CTRL@ Key down, to prevent accidental navigation.
+Additionally, internal links will reload the selected item to display the correct name and create a correct link during editing to enable navigation.

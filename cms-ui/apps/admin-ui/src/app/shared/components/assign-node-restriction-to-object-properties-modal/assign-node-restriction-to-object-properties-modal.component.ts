@@ -1,5 +1,5 @@
 import { ObjectPropertyBO } from '@admin-ui/common';
-import { ObjectPropertyHandlerService, ObjectPropertyTableLoaderService } from '@admin-ui/core';
+import { ObjectPropertyHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { EntityIdType, Node, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -26,7 +26,6 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
     constructor(
         protected changeDetector: ChangeDetectorRef,
         private handler: ObjectPropertyHandlerService,
-        protected tableLoader: ObjectPropertyTableLoaderService,
     ) {
         super();
     }
@@ -49,7 +48,6 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
         this.handler.changeNodeRestrictions(this.objectProperty.globalId, this.nodeIdsSelected, this.nodeIdsInitial)
             .toPromise()
             .then(() => {
-                this.tableLoader.reload();
                 this.closeFn();
             });
     }

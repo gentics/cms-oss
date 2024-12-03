@@ -2345,12 +2345,12 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				List<String> defKeynames = TagFactory.loadKeynames(com.gentics.contentnode.object.Folder.TYPE_FOLDER,
 						Optional.of(folder.getOwningNode()));
 
-				for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
-					com.gentics.contentnode.rest.model.Tag restTag = i.next();
+				for (Map.Entry<String, Tag> entry : restTags.entrySet()) {
 					com.gentics.contentnode.object.Tag tag = null;
+					String keyName = entry.getKey();
+					Tag restTag = entry.getValue();
 
-					if (restTag.getName().startsWith("object.")) {
-						String keyName = restTag.getName();
+					if (keyName.startsWith("object.")) {
 						String shortName = keyName.substring(7);
 						ObjectTag oTag = objectTags.get(shortName);
 

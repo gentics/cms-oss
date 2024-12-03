@@ -567,7 +567,9 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 
 			Set<Node> nodes = new HashSet<>(); 
 			for (Integer nodeId : request.getIds()) {
-				nodes.add(load(Node.class, Integer.toString(nodeId)));
+				Node givenNode = load(Node.class, Integer.toString(nodeId));
+				givenNode = load(Node.class, Integer.toString(givenNode.getMaster().getId()));
+				nodes.add(givenNode);
 			}
 
 			for (String objectPropertyId : request.getTargetIds()) {

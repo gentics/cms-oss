@@ -2101,6 +2101,13 @@ public class TagFactory extends AbstractFactory {
 		return defs;
 	}
 
+	/**
+	 * Load the keynames of the object tag definitions for the given object type, optionally filtered by visibility in the given node
+	 * @param type object type
+	 * @param node optional node
+	 * @return list of object tag definition key names
+	 * @throws NodeException
+	 */
 	public static List<String> loadKeynames(int type, Optional<Node> node) throws NodeException {
 		List<ObjectTagDefinition> defs = load(type, node);
 		return MiscUtils.unwrap(() -> defs.stream().map(def -> MiscUtils.wrap(() -> def.getObjectTag().getName())).collect(Collectors.toList()));

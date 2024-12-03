@@ -418,9 +418,10 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 			return false;
 		}
 		try (NoMcTrx noMcTrx = new NoMcTrx()) {
-			return getNodes().contains(node.getMaster());
+			return getNodes().contains(node);
 		}
 	}
+
 	/**
 	 * Get the list of real objecttags referencing this definition
 	 * @return list of objecttags

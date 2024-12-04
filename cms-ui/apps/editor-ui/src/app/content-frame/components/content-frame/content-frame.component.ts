@@ -77,7 +77,6 @@ import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import {
     AddEditedEntityToRecentItemsAction,
     ApplicationStateService,
-    CancelEditingAction,
     CloseEditorAction,
     ComparePageVersionSourcesAction,
     ComparePageVersionsAction,
@@ -89,17 +88,15 @@ import {
     MarkContentAsModifiedAction,
     MarkObjectPropertiesAsModifiedAction,
     PreviewPageVersionAction,
-    ResetPageLockAction,
     SaveErrorAction,
     SaveSuccessAction,
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
-import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { BLANK_PAGE, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
@@ -113,7 +110,7 @@ import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navi
     selector: 'content-frame',
     templateUrl: './content-frame.component.html',
     styleUrls: ['./content-frame.component.scss'],
-    providers: [IFrameManager, CustomScriptHostService],
+    providers: [CustomScriptHostService],
 })
 export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -155,6 +152,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     // currently only used by form editor (not properties editing)
     itemValid = false;
 
+    iframeUrl: string;
     comparePageId = -1;
     comparePageUrl: string;
     // Flags if it should ignore scroll events
@@ -217,7 +215,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private folderActions: FolderActionsService,
         private entityResolver: EntityResolver,
         private permissions: PermissionService,
-        private iframeManager: IFrameManager,
         private notification: I18nNotification,
         private customScriptHostService: CustomScriptHostService,
         private customerScriptService: CustomerScriptService,
@@ -310,7 +307,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
 
                 const itemLoaded = (item: InheritableItem) => {
-                    if (this.currentItem && this.currentItem?.id != item?.id) {
+                    if (this.currentItem && this.currentItem?.id !== item?.id) {
                         this.cancelEditingDebounced(this.currentItem);
                     }
                     this.currentItem = item as any;
@@ -364,10 +361,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.alohaWindowLoaded = loaded;
             this.changeDetector.markForCheck();
         }))
-
-        this.iframeManager.onMasterFrameClosed(() => {
-            this.cancelEditingDebounced(this.currentItem);
-        });
 
         const editorState$ = this.editorState$ = this.appState.select(state => state.editor).pipe(
             // If the editor is not open yet, the editorState may still contain the IDs from the last time it was open.
@@ -467,7 +460,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngAfterViewInit(): void {
         const masterFrame = this.iframe.nativeElement;
-        this.iframeManager.initialize(masterFrame, this);
         this.updateDiffFrame();
 
         masterFrame.addEventListener('error', error => {
@@ -479,6 +471,15 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         masterFrame.addEventListener('load', () => {
+            // This is browser dependend. Sometimes it'll load a blank page first,
+            // and then the actual aloha page.
+            if (
+                masterFrame.contentWindow.location.toString() === BLANK_PAGE
+                || masterFrame.contentDocument.readyState !== 'complete'
+            ) {
+                return;
+            }
+
             this.windowLoaded = true;
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.
@@ -531,7 +532,6 @@ ins.gtx-diff {
         const iframe = this.iframe.nativeElement;
         iframe.removeEventListener('load', this.onLoadListener);
         this.subscriptions.forEach(s => s.unsubscribe());
-        this.iframeManager.destroy();
         this.cancelEditingDebounced(this.currentItem);
         this.appState.dispatch(new CloseEditorAction());
         (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = null;
@@ -563,6 +563,7 @@ ins.gtx-diff {
         this.tagEditorService.forceCloseTagEditor();
         this.isLocked = this.isLockedByAnother();
         this.currentItemPath = this.getItemPath(this.currentItem);
+        this.updateIframeUrl(this.appState.now.editor);
         this.changeDetector.detectChanges();
     }
 
@@ -643,14 +644,6 @@ ins.gtx-diff {
     }
 
     /**
-     * Gets the current item async, which guarantees that the value will always be available
-     * by the time the promise resolves.
-     */
-    getCurrentItem(): Promise<Page | FileModel | Folder | Form | Image | Node> {
-        return Promise.resolve(this.currentItem);
-    }
-
-    /**
      * Returns the language of the language variant which a page is being compared to.
      */
     getPageComparisonLanguage(): Language | undefined {
@@ -715,12 +708,10 @@ ins.gtx-diff {
      * get updated.
      */
     runChangeDetection(): void {
-        if (!this.iframeManager.destroyed) {
-            this.ngZone.run(() => {
-                this.changeDetector.markForCheck();
-                this.changeDetector.detectChanges();
-            });
-        }
+        this.ngZone.run(() => {
+            this.changeDetector.markForCheck();
+            this.changeDetector.detectChanges();
+        });
     }
 
     /**
@@ -1096,7 +1087,6 @@ ins.gtx-diff {
      * Tell the IFrameManager that the user initiated a close action.
      */
     closeEditor(): void {
-        this.iframeManager.initiateUserClose();
         this.navigationService.instruction({ detail: null }).navigate();
     }
 
@@ -1205,7 +1195,9 @@ ins.gtx-diff {
                         } else {
                             // we need to force a reload, else the gcnImagePlugin will start to
                             // error on subsequent saves.
-                            this.iframeManager.reloadMasterFrame();
+                            if (this.iframe?.nativeElement) {
+                                this.iframe.nativeElement.contentWindow.location.reload();
+                            }
                         }
                     }
                 })
@@ -1275,7 +1267,20 @@ ins.gtx-diff {
             );
 
         this.isLocked = this.isLockedByAnother();
+        this.updateIframeUrl(state);
+
         this.changeDetector.markForCheck();
+    }
+
+    private updateIframeUrl(state: EditorState): void {
+        const newUrl = this.urlBuilder.stateToUrl(state, this.currentItem);
+        if (newUrl !== this.iframeUrl) {
+            this.iframeUrl = newUrl;
+
+            if (this.iframe?.nativeElement?.contentWindow?.location) {
+                this.iframe.nativeElement.contentWindow.location.replace(newUrl);
+            }
+        }
     }
 
     private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form<Normalized> | Node<Normalized>): boolean {

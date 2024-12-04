@@ -28,7 +28,7 @@ export class TagFamilyPropertiesComponent extends BasePropertiesComponent<Editab
 
     protected createForm(): FormGroup<FormProperties<EditableTagFamilyProperties>> {
         return new FormGroup<FormProperties<EditableTagFamilyProperties>>({
-            name: new FormControl(this.value?.name, Validators.required),
+            name: new FormControl(this.safeValue('name'), Validators.required),
         });
     }
 

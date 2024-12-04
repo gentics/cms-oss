@@ -30,10 +30,10 @@ export class OverviewPartSettingsComponent
 
     protected createForm(): FormGroup<FormProperties<OverviewSetting>> {
         return new FormGroup<FormProperties<OverviewSetting>>({
-            listTypes: new FormControl(this.value?.listTypes || []),
-            selectTypes: new FormControl(this.value?.selectTypes || []),
-            hideSortOptions: new FormControl(this.value?.hideSortOptions ?? false),
-            stickyChannel: new FormControl(this.value?.stickyChannel ?? false),
+            listTypes: new FormControl(this.safeValue('listTypes') || []),
+            selectTypes: new FormControl(this.safeValue('selectTypes') || []),
+            hideSortOptions: new FormControl(this.safeValue('hideSortOptions') ?? false),
+            stickyChannel: new FormControl(this.safeValue('stickyChannel') ?? false),
         });
     }
 

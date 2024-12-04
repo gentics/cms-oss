@@ -28,9 +28,9 @@ export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<Sch
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            name: new UntypedFormControl(this.value?.name || '', Validators.required),
-            description: new UntypedFormControl(this.value?.description || ''),
-            command: new UntypedFormControl(this.value?.command || '', Validators.required),
+            name: new UntypedFormControl(this.safeValue('name') || '', Validators.required),
+            description: new UntypedFormControl(this.safeValue('description') || ''),
+            command: new UntypedFormControl(this.safeValue('command') || '', Validators.required),
         });
     }
 

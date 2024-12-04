@@ -42,20 +42,20 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
 
     protected createForm(): FormGroup<FormProperties<EditableSchemaProperties>> {
         return new FormGroup<FormProperties<EditableSchemaProperties>>({
-            name: new FormControl(this.value?.name || '', [
+            name: new FormControl(this.safeValue('name') || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
                 createBlacklistValidator(() => this.schemaNames.filter(name => name !== this.form?.value?.name)),
             ]),
-            description: new FormControl(this.value?.description || ''),
-            autoPurge: new FormControl(this.value?.autoPurge ?? false),
-            noIndex: new FormControl(this.value?.noIndex ?? false),
-            container: new FormControl(this.value?.container ?? false),
-            displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
-            segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
-            urlFields: new FormControl(this.value?.urlFields || [], createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
-            elasticsearch: new FormControl(this.value?.elasticsearch, createJsonValidator()),
-            fields: new FormControl(this.value?.fields || []),
+            description: new FormControl(this.safeValue('description') || ''),
+            autoPurge: new FormControl(this.safeValue('autoPurge') ?? false),
+            noIndex: new FormControl(this.safeValue('noIndex') ?? false),
+            container: new FormControl(this.safeValue('container') ?? false),
+            displayField: new FormControl(this.safeValue('displayField'), createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            segmentField: new FormControl(this.safeValue('segmentField'), createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            urlFields: new FormControl(this.safeValue('urlFields') || [], createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch'), createJsonValidator()),
+            fields: new FormControl(this.safeValue('fields') || []),
         });
     }
 

@@ -162,22 +162,22 @@ export class ObjectpropertyPropertiesComponent
         });
 
         return new UntypedFormGroup({
-            nameI18n: new UntypedFormControl(this.value?.nameI18n, this.createNameValidator()),
+            nameI18n: new UntypedFormControl(this.safeValue('nameI18n'), this.createNameValidator()),
             descriptionI18n: new UntypedFormControl({
                 ...defaultDesc,
-                ...this.value?.descriptionI18n || {},
+                ...this.safeValue('descriptionI18n') || {},
             }),
             /* eslint-disable @typescript-eslint/unbound-method */
-            keyword: new UntypedFormControl(this.value?.keyword, Validators.required),
-            type: new UntypedFormControl(this.value?.type, Validators.required),
-            constructId: new UntypedFormControl(this.value?.constructId, Validators.required),
-            categoryId: new UntypedFormControl(this.value?.categoryId),
-            required: new UntypedFormControl(this.value?.required),
-            inheritable: new UntypedFormControl(this.value?.inheritable),
-            syncContentset: new UntypedFormControl(this.value?.syncContentset),
-            syncChannelset: new UntypedFormControl(this.value?.syncChannelset),
-            syncVariants: new UntypedFormControl(this.value?.syncVariants),
-            restricted: new UntypedFormControl(this.value?.restricted),
+            keyword: new UntypedFormControl(this.safeValue('keyword'), Validators.required),
+            type: new UntypedFormControl(this.safeValue('type'), Validators.required),
+            constructId: new UntypedFormControl(this.safeValue('constructId'), Validators.required),
+            categoryId: new UntypedFormControl(this.safeValue('categoryId')),
+            required: new UntypedFormControl(this.safeValue('required')),
+            inheritable: new UntypedFormControl(this.safeValue('inheritable')),
+            syncContentset: new UntypedFormControl(this.safeValue('syncContentset')),
+            syncChannelset: new UntypedFormControl(this.safeValue('syncChannelset')),
+            syncVariants: new UntypedFormControl(this.safeValue('syncVariants')),
+            restricted: new UntypedFormControl(this.safeValue('restricted')),
             /* eslint-disable @typescript-eslint/unbound-method */
         }, { updateOn: 'change' });
     }

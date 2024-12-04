@@ -79,22 +79,22 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
 
     protected createForm(): FormGroup<FormProperties<SchemaField>> {
         return new FormGroup<FormProperties<SchemaField>>({
-            name: new FormControl(this.value?.name || '', [
+            name: new FormControl(this.safeValue('name') || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
             ]),
-            type: new FormControl(this.value?.type, [
+            type: new FormControl(this.safeValue('type'), [
                 Validators.required,
                 createWhitelistValidator(() => this.validTypes),
             ]),
-            listType: new FormControl(this.value?.listType, [
+            listType: new FormControl(this.safeValue('listType'), [
                 Validators.required,
                 createWhitelistValidator(() => this.validListTypes),
             ]),
-            label: new FormControl(this.value?.label || ''),
-            required: new FormControl(this.value?.required ?? false),
-            noIndex: new FormControl(this.value?.noIndex ?? false),
-            allow: new FormControl(this.value?.allow || [], createWhitelistValidator(() => {
+            label: new FormControl(this.safeValue('label') || ''),
+            required: new FormControl(this.safeValue('required') ?? false),
+            noIndex: new FormControl(this.safeValue('noIndex') ?? false),
+            allow: new FormControl(this.safeValue('allow') || [], createWhitelistValidator(() => {
                 switch (this.effectiveType) {
                     case FieldType.NODE:
                         return [...(this.schemaNames || []), this.ownName];
@@ -106,11 +106,11 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                         return null;
                 }
             })),
-            elasticsearch: new FormControl(this.value?.elasticsearch || {}, createJsonValidator()),
-            checkServiceUrl: new FormControl(this.value?.checkServiceUrl || ''),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch') || {}, createJsonValidator()),
+            checkServiceUrl: new FormControl(this.safeValue('checkServiceUrl') || ''),
             extract: new FormGroup<FormProperties<FieldExtractOptions>>({
-                content: new FormControl(this.value?.extract?.content ?? true),
-                metadata: new FormControl(this.value?.extract?.metadata ?? true),
+                content: new FormControl(this.safeValue('extract')?.content ?? true),
+                metadata: new FormControl(this.safeValue('extract')?.metadata ?? true),
             }),
         });
     }

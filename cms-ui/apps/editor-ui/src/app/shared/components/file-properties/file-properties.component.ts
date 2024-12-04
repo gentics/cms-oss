@@ -53,13 +53,13 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
 
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<EditableFileProps>>({
-            name: new FormControl(this.value?.name, Validators.required),
-            description: new FormControl(this.value?.description),
-            niceUrl: new FormControl(this.value?.niceUrl),
-            forceOnline: new FormControl(this.value?.forceOnline),
-            alternateUrls: new FormControl(this.value?.alternateUrls),
-            customCdate: new FormControl(this.value?.customCdate),
-            customEdate: new FormControl(this.value?.customEdate),
+            name: new FormControl(this.safeValue('name'), Validators.required),
+            description: new FormControl(this.safeValue('description')),
+            niceUrl: new FormControl(this.safeValue('niceUrl')),
+            forceOnline: new FormControl(this.safeValue('forceOnline')),
+            alternateUrls: new FormControl(this.safeValue('alternateUrls')),
+            customCdate: new FormControl(this.safeValue('customCdate')),
+            customEdate: new FormControl(this.safeValue('customEdate')),
         });
     }
 

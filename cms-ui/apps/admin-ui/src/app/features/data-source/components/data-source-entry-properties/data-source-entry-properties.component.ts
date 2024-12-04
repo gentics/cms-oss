@@ -18,8 +18,8 @@ export class DataSourceEntryPropertiesComponent extends BasePropertiesComponent<
 
     protected createForm(): FormGroup<any> {
         return new UntypedFormGroup({
-            key: new UntypedFormControl((this.value || {}).key, Validators.required),
-            value: new UntypedFormControl((this.value || {}).value),
+            key: new UntypedFormControl(this.safeValue('key'), Validators.required),
+            value: new UntypedFormControl(this.safeValue('value')),
         });
     }
 

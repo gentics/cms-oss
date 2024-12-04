@@ -41,8 +41,8 @@ export class RolePropertiesComponent extends BasePropertiesComponent<Role> imple
 
     protected createForm(): FormGroup<any> {
         return new FormGroup({
-            nameI18n: new FormControl(this.value?.nameI18n || {}, this.createNameValidator()),
-            descriptionI18n: new FormControl(this.value?.descriptionI18n || {}),
+            nameI18n: new FormControl(this.safeValue('nameI18n') || {}, this.createNameValidator()),
+            descriptionI18n: new FormControl(this.safeValue('descriptionI18n') || {}),
         });
     }
 

@@ -18,7 +18,7 @@ export class DataSourcePropertiesComponent extends BasePropertiesComponent<DataS
 
     protected createForm(): FormGroup<any> {
         return new UntypedFormGroup({
-            name: new UntypedFormControl((this.value || {}).name, [Validators.required, Validators.maxLength(50)]),
+            name: new UntypedFormControl(this.safeValue('name'), [Validators.required, Validators.maxLength(50)]),
         });
     }
 

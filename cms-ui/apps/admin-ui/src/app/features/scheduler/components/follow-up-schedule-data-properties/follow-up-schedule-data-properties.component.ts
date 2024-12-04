@@ -67,8 +67,8 @@ export class FollowUpScheduleDataPropertiesComponent
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            scheduleId: new UntypedFormControl((this.value )?.follow?.scheduleId, [Validators.required, Validators.minLength(1)]),
-            onlyAfterSuccess: new UntypedFormControl((this.value )?.follow?.onlyAfterSuccess),
+            scheduleId: new UntypedFormControl(this.safeValue('follow')?.scheduleId, [Validators.required, Validators.minLength(1)]),
+            onlyAfterSuccess: new UntypedFormControl(this.safeValue('follow')?.onlyAfterSuccess),
         });
     }
 

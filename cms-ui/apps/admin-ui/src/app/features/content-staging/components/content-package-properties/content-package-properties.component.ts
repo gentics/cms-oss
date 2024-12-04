@@ -28,8 +28,8 @@ export class ContentPackagePropertiesComponent extends BasePropertiesComponent<C
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            name: new UntypedFormControl(this.value?.name, Validators.required),
-            description: new UntypedFormControl(this.value?.description),
+            name: new UntypedFormControl(this.safeValue('name'), Validators.required),
+            description: new UntypedFormControl(this.safeValue('description')),
         });
     }
 

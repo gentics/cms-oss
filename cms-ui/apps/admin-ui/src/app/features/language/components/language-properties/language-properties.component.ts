@@ -18,8 +18,8 @@ export class LanguagePropertiesComponent extends BasePropertiesComponent<Languag
 
     protected createForm(): FormGroup<any> {
         return new FormGroup<any>({
-            name: new FormControl((this.value || {}).name, [Validators.required, Validators.maxLength(50)]),
-            code: new FormControl((this.value || {}).code, [Validators.required, Validators.maxLength(5)]),
+            name: new FormControl(this.safeValue('name'), [Validators.required, Validators.maxLength(50)]),
+            code: new FormControl(this.safeValue('code'), [Validators.required, Validators.maxLength(5)]),
         });
     }
 

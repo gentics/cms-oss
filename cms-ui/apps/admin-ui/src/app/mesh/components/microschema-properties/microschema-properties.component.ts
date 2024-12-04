@@ -40,15 +40,15 @@ export class MicroschemaPropertiesComponent extends BasePropertiesComponent<Edit
 
     protected createForm(): FormGroup<FormProperties<EditableMicroschemaProperties>> {
         return new FormGroup<FormProperties<EditableMicroschemaProperties>>({
-            name: new FormControl(this.value?.name || '', [
+            name: new FormControl(this.safeValue('name') || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
                 createBlacklistValidator(() => this.microschemaNames.filter(name => name !== this.form?.value?.name)),
             ]),
-            noIndex: new FormControl(this.value?.noIndex ?? false),
-            description: new FormControl(this.value?.description || ''),
-            elasticsearch: new FormControl(this.value?.elasticsearch, createJsonValidator()),
-            fields: new FormControl(this.value?.fields || []),
+            noIndex: new FormControl(this.safeValue('noIndex') ?? false),
+            description: new FormControl(this.safeValue('description') || ''),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch'), createJsonValidator()),
+            fields: new FormControl(this.safeValue('fields') || []),
         });
     }
 

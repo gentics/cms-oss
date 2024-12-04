@@ -88,13 +88,13 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
 
     protected createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            id: new UntypedFormControl(this.value?.id || null),
-            name: new UntypedFormControl(this.value?.name || '', [Validators.required, Validators.maxLength(255)]),
-            description: new UntypedFormControl(this.value?.description || ''),
-            markupLanguage: new UntypedFormControl(`${(this.value?.markupLanguage?.id || '')}`, Validators.required),
-            source: new UntypedFormControl(this.value?.source || ''),
-            objectTags: new UntypedFormControl(this.value?.objectTags || {}),
-            templateTags: new UntypedFormControl(this.value?.templateTags || {}),
+            id: new UntypedFormControl(this.safeValue('id') || null),
+            name: new UntypedFormControl(this.safeValue('name') || '', [Validators.required, Validators.maxLength(255)]),
+            description: new UntypedFormControl(this.safeValue('description') || ''),
+            markupLanguage: new UntypedFormControl(`${(this.safeValue('markupLanguage')?.id || '')}`, Validators.required),
+            source: new UntypedFormControl(this.safeValue('source') || ''),
+            objectTags: new UntypedFormControl(this.safeValue('objectTags') || {}),
+            templateTags: new UntypedFormControl(this.safeValue('templateTags') || {}),
         });
     }
 

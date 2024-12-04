@@ -82,7 +82,7 @@ export class ObjectPropertyCategoryPropertiesComponent
 
     protected createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            nameI18n: new UntypedFormControl(this.value?.nameI18n, this.createNameValidator()),
+            nameI18n: new UntypedFormControl(this.safeValue('nameI18n'), this.createNameValidator()),
         }, { updateOn: 'change' });
     }
 

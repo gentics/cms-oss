@@ -126,25 +126,25 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Edit
 
     protected createForm(): FormGroup<FormProperties<EditableTagmapEntry>> {
         return new FormGroup<FormProperties<EditableTagmapEntry>>({
-            mapname: new FormControl(this.value?.mapname || '', Validators.required),
-            tagname: new FormControl(this.value?.tagname || '', Validators.required),
-            objType: new FormControl(this.value?.objType ?? 0, Validators.required),
-            attributeType: new FormControl(this.value?.attributeType ?? 0, Validators.required),
-            multivalue: new FormControl(this.value?.multivalue ?? false),
-            targetType: new FormControl(this.value?.targetType),
-            segmentfield: new FormControl(this.value?.segmentfield ?? false),
-            displayfield: new FormControl(this.value?.displayfield ?? false),
-            category: new FormControl(this.value?.category ?? ''),
+            mapname: new FormControl(this.safeValue('mapname') || '', Validators.required),
+            tagname: new FormControl(this.safeValue('tagname') || '', Validators.required),
+            objType: new FormControl(this.safeValue('objType') ?? 0, Validators.required),
+            attributeType: new FormControl(this.safeValue('attributeType') ?? 0, Validators.required),
+            multivalue: new FormControl(this.safeValue('multivalue') ?? false),
+            targetType: new FormControl(this.safeValue('targetType')),
+            segmentfield: new FormControl(this.safeValue('segmentfield') ?? false),
+            displayfield: new FormControl(this.safeValue('displayfield') ?? false),
+            category: new FormControl(this.safeValue('category') ?? ''),
             // Mesh CR
-            urlfield: new FormControl(this.value?.urlfield ?? false),
-            noIndex: new FormControl(this.value?.noIndex ?? false),
-            elasticsearch: new FormControl(this.value?.elasticsearch ?? null, GtxJsonValidator),
-            micronodeFilter: new FormControl(this.value?.micronodeFilter),
+            urlfield: new FormControl(this.safeValue('urlfield') ?? false),
+            noIndex: new FormControl(this.safeValue('noIndex') ?? false),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch') ?? null, GtxJsonValidator),
+            micronodeFilter: new FormControl(this.safeValue('micronodeFilter')),
             // SQL CR
-            filesystem: new FormControl(this.value?.filesystem ?? false),
-            optimized: new FormControl(this.value?.optimized ?? false),
-            foreignlinkAttribute: new FormControl(this.value?.foreignlinkAttribute, Validators.required),
-            foreignlinkAttributeRule: new FormControl(this.value?.foreignlinkAttributeRule),
+            filesystem: new FormControl(this.safeValue('filesystem') ?? false),
+            optimized: new FormControl(this.safeValue('optimized') ?? false),
+            foreignlinkAttribute: new FormControl(this.safeValue('foreignlinkAttribute'), Validators.required),
+            foreignlinkAttributeRule: new FormControl(this.safeValue('foreignlinkAttributeRule')),
         });
     }
 

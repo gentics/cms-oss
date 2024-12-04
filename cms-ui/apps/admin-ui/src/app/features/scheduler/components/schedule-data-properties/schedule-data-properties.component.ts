@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { FollowUpScheduleData, IntervalScheduleData, ScheduleData, ScheduleType } from '@gentics/cms-models';
+import { ScheduleData, ScheduleType } from '@gentics/cms-models';
 import { FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { pick } from'lodash-es'
+import { pick } from 'lodash-es';
 
 @Component({
     selector: 'gtx-schedule-data-properties',
@@ -33,10 +33,10 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
     protected override createForm(): FormGroup<FormProperties<ScheduleData>> {
         return new FormGroup<FormProperties<ScheduleData>>({
             type: new FormControl(this.value?.type as any, Validators.required),
-            startTimestamp: new FormControl(this.value?.startTimestamp),
-            endTimestamp: new FormControl(this.value?.endTimestamp),
-            interval: new FormControl((this.value as IntervalScheduleData)?.interval, Validators.required),
-            follow: new FormControl((this.value as FollowUpScheduleData)?.follow, Validators.required),
+            startTimestamp: new FormControl(this.safeValue('startTimestamp')),
+            endTimestamp: new FormControl(this.safeValue('endTimestamp')),
+            interval: new FormControl(this.safeValue('interval' as any), Validators.required),
+            follow: new FormControl(this.safeValue('follow' as any), Validators.required),
         });
     }
 

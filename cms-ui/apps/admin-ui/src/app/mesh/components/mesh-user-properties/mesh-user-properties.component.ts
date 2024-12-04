@@ -48,14 +48,14 @@ export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpd
 
     protected createForm(): FormGroup<FormProperties<UserUpdateRequest>> {
         const out = new FormGroup<FormProperties<UserUpdateRequest>>({
-            username: new FormControl(this.value?.username, Validators.required),
-            firstname: new FormControl(this.value?.firstname),
-            lastname: new FormControl(this.value?.lastname),
-            emailAddress: new FormControl(this.value?.emailAddress, Validators.email),
-            admin: new FormControl(this.value?.admin ?? false),
-            forcedPasswordChange: new FormControl(this.value?.forcedPasswordChange ?? false),
+            username: new FormControl(this.safeValue('username'), Validators.required),
+            firstname: new FormControl(this.safeValue('firstname')),
+            lastname: new FormControl(this.safeValue('lastname')),
+            emailAddress: new FormControl(this.safeValue('emailAddress'), Validators.email),
+            admin: new FormControl(this.safeValue('admin') ?? false),
+            forcedPasswordChange: new FormControl(this.safeValue('forcedPasswordChange') ?? false),
             password: new FormControl({
-                value: this.value?.password || '',
+                value: this.safeValue('password') || '',
                 disabled: this.mode !== MeshUserPropertiesMode.CREATE,
             }, Validators.required),
         });

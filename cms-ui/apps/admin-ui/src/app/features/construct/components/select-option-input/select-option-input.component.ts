@@ -27,9 +27,9 @@ export class SelectOptionInputComponent extends BasePropertiesComponent<SelectOp
 
     protected createForm(): FormGroup<any> {
         return new FormGroup<FormProperties<SelectOption>>({
-            id: new FormControl(this.value?.id),
-            key: new FormControl(this.value?.key, [Validators.required, createBlacklistValidator(() => this.keyBlacklist)]),
-            value: new FormControl(this.value?.value, Validators.required),
+            id: new FormControl(this.safeValue('id')),
+            key: new FormControl(this.safeValue('key'), [Validators.required, createBlacklistValidator(() => this.keyBlacklist)]),
+            value: new FormControl(this.safeValue('value'), Validators.required),
         });
     }
 

@@ -52,13 +52,13 @@ export class SchedulePropertiesComponent extends BasePropertiesComponent<Schedul
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            name: new UntypedFormControl(this.value?.name || '', Validators.required),
-            description: new UntypedFormControl(this.value?.description || ''),
-            taskId: new UntypedFormControl(this.value?.taskId ?? 0, Validators.required),
-            scheduleData: new UntypedFormControl(this.value?.scheduleData || {}, Validators.required),
-            active: new UntypedFormControl(this.value?.active ?? true),
-            parallel: new UntypedFormControl(this.value?.parallel ?? false),
-            notificationEmail: new UntypedFormControl(this.value?.notificationEmail || []),
+            name: new UntypedFormControl(this.safeValue('name') || '', Validators.required),
+            description: new UntypedFormControl(this.safeValue('description') || ''),
+            taskId: new UntypedFormControl(this.safeValue('taskId') ?? 0, Validators.required),
+            scheduleData: new UntypedFormControl(this.safeValue('scheduleData') || {}, Validators.required),
+            active: new UntypedFormControl(this.safeValue('active') ?? true),
+            parallel: new UntypedFormControl(this.safeValue('parallel') ?? false),
+            notificationEmail: new UntypedFormControl(this.safeValue('notificationEmail') || []),
         });
     }
 

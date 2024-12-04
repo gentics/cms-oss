@@ -202,16 +202,16 @@ export class PagePropertiesComponent
 
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<EditablePageProps>>({
-            name: new FormControl(this.value?.name || '', Validators.required),
-            fileName: new FormControl(this.value?.fileName || ''),
-            description: new FormControl(this.value?.description || ''),
-            templateId: new FormControl(this.value?.templateId || null, Validators.required),
-            niceUrl: new FormControl(this.value?.niceUrl || '', createMultiValuePatternValidator(this.urlPattern)),
-            alternateUrls: new FormControl(this.value?.alternateUrls || [], createMultiValuePatternValidator(this.urlPattern)),
-            language: new FormControl(this.value?.language ?? this.languages?.[0]?.code, Validators.required),
-            customCdate: new FormControl(this.value?.customCdate),
-            customEdate: new FormControl(this.value?.customEdate),
-            priority: new FormControl(this.value?.priority || 1, [Validators.required, numberBetween(1, 100)]),
+            name: new FormControl(this.safeValue('name') || '', Validators.required),
+            fileName: new FormControl(this.safeValue('fileName') || ''),
+            description: new FormControl(this.safeValue('description') || ''),
+            templateId: new FormControl(this.safeValue('templateId') || null, Validators.required),
+            niceUrl: new FormControl(this.safeValue('niceUrl') || '', createMultiValuePatternValidator(this.urlPattern)),
+            alternateUrls: new FormControl(this.safeValue('alternateUrls') || [], createMultiValuePatternValidator(this.urlPattern)),
+            language: new FormControl(this.safeValue('language') ?? this.languages?.[0]?.code, Validators.required),
+            customCdate: new FormControl(this.safeValue('customCdate')),
+            customEdate: new FormControl(this.safeValue('customEdate')),
+            priority: new FormControl(this.safeValue('priority') || 1, [Validators.required, numberBetween(1, 100)]),
         });
     }
 

@@ -9,3 +9,17 @@
     padding: 1rem 0 2rem;
     justify-content: space-between;
 }
+
+.management-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}
+
+.management-content {
+    flex: 1 1 auto;
+    min-height: 1px;
+    width: 100%;
+}

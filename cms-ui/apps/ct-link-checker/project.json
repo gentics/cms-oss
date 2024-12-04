@@ -33,7 +33,8 @@
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "@gentics/ui-core"
+                    "moment",
+                    "moment-timezone"
                 ],
                 "aot": true,
                 "fileReplacements": [
@@ -112,9 +113,6 @@
                 "watch": false
             },
             "configurations": {
-                "watch": {
-                    "watch": true
-                },
                 "ci": {
                     "quiet": true,
                     "cypressConfig": "apps/ct-link-checker/cypress.config.ci.ts",

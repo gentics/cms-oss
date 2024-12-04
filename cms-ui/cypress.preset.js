@@ -6,6 +6,26 @@ const { resolve } = require('path');
 const CYPRESS_TYPE_E2E = 'e2e';
 const CYPRESS_TYPE_COMPONENT = 'component';
 
+/**
+ * Mapping for each package to have it's own dedicated port.
+ * This is used for component-tests, so that they can run in paralell,
+ * as cypress always attempts to start the tests on 8081, which is in most
+ * cases already used, or at the very least, once from in the first test.
+ * All subsequent tests would result in an error where the port is already
+ * in use, and removes the usefullness of paralellism.
+ */
+const PORT_MAPPING = {
+    // Applications
+    'admin-ui': 8381,
+    'editor-ui': 8382,
+    'ct-link-checker': 8383,
+    // Libraries
+    'cms-components': 8481,
+    'form-generator': 8482,
+    'image-editor': 8483,
+    'ui-core': 8484,
+};
+
 function createReporterOptions(cypressType, type, name, isCI) {
     isCI = typeof isCI === 'boolean' ? isCI : false;
 
@@ -36,6 +56,8 @@ module.exports = {
         return createReporterOptions(CYPRESS_TYPE_E2E, type, name, isCI);
     },
     createComponentReporterOptions(type, name, isCI) {
-        return createReporterOptions(CYPRESS_TYPE_COMPONENT, type, name, isCI);
+        const config = createReporterOptions(CYPRESS_TYPE_COMPONENT, type, name, isCI);
+        config.port = PORT_MAPPING[name] || 8580;
+        return config;
     },
 };

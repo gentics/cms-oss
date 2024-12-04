@@ -246,6 +246,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
                 return this.loadTablePage(options, additionalOptions).pipe(
                     tap(res => {
+                        this.hasError = res.hasError ?? false;
                         this.loading = false;
                         this.changeDetector.markForCheck();
 

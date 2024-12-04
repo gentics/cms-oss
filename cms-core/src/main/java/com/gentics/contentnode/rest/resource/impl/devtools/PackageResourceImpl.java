@@ -585,7 +585,7 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}/datasources/{datasource}")
 	public Response removeDatasource(@PathParam("name") String name, @PathParam("datasource") String datasource) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			PackageSynchronizer packageSynchronizer = getPackage(name);/**/
+			PackageSynchronizer packageSynchronizer = getPackage(name);
 
 			PackageObject<Datasource> datasourceInPackage = getDatasource(packageSynchronizer, datasource);
 			if (!ObjectTransformer.isEmpty(datasourceInPackage.getPackageName())) {

@@ -114,6 +114,9 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
             [ContentPackageDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateEntity(),
             }),
+            [ContentPackageDetailTabs.IMPORT_ERRORS]: new FormGroupTabHandle(this.fgProperties, {
+                save: () => Promise.resolve(),
+            }),
         };
     }
 
@@ -128,8 +131,15 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
     /**
      * Set new value of form 'Properties'
      */
-     protected fgPropertiesUpdate(pkg: ContentPackageBO<Normalized | Raw>): void {
+    protected fgPropertiesUpdate(pkg: ContentPackageBO<Normalized | Raw>): void {
         this.fgProperties.setValue(pkg);
         this.fgProperties.markAsPristine();
+    }
+
+    public reloadEntity(): void {
+        this.entitiyOperations.get(this.currentEntity.name).subscribe(pkg => {
+            this.currentEntity = pkg;
+            this.changeDetectorRef.markForCheck();
+        });
     }
 }

@@ -80,6 +80,7 @@
         "e2e": {
             "inputs": ["default", "^production"],
             "cache": false,
+            "parallelism": false,
             "configurations": {
                 "watch": {
                     "watch": true
@@ -88,10 +89,19 @@
         },
         "component-test": {
             "inputs": ["default", "^production"],
-            "cache": true
+            "cache": true,
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
         },
         "@nx/jest:jest": {
-            "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+            "inputs": [
+                "default",
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
+            ],
             "cache": true,
             "options": {
                 "passWithNoTests": true
@@ -112,5 +122,6 @@
                 "{workspaceRoot}/eslint.config.js"
             ]
         }
-    }
+    },
+    "useLegacyCache": true
 }

@@ -314,7 +314,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         delete: (name) => this.executeMappedJsonRequest(DELETE, `/content/package/${name}`),
 
         export: (name) => this.executeMappedJsonRequest(POST, `/content/package/${name}/export`),
-        import: (name) => this.executeMappedJsonRequest(POST, `/content/package/${name}/import`),
+        import: (name, options) => this.executeMappedJsonRequest(POST, `/content/package/${name}/import`, null, options),
         upload: (name, file) => {
             const data = new FormData();
             data.append('fileBinaryData', file);

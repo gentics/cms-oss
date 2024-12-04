@@ -32,6 +32,7 @@ describe('DebugToolModal', () => {
     });
 
     it('should call generateReport when Generate Report clicked', componentTest(() => DebugToolModalComponent, (fixture, instance) => {
+        instance.debugToolService = service;
         fixture.detectChanges();
 
         spyOn(instance, 'generateReport').and.callThrough();
@@ -47,6 +48,7 @@ describe('DebugToolModal', () => {
     }));
 
     it('should call clearSiteData when Clear Local Data clicked', componentTest(() => DebugToolModalComponent, (fixture, instance) => {
+        instance.debugToolService = service;
         fixture.detectChanges();
 
         spyOn(instance, 'clearSiteData').and.callThrough();

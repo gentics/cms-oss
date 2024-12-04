@@ -475,6 +475,10 @@
         "en": "Properties",
         "de": "Eigenschaften"
     },
+    "title_import_errors": {
+        "en": "Import Errors",
+        "de": "Import Fehler"
+    },
     "title_entries_of_entity": {
         "en": "Entries of \"{{ entityName }}\"",
         "de": "Einträge von „{{ entityName }}“"
@@ -514,6 +518,10 @@
     "title_properties_of_entity": {
         "en": "Properties of \"{{ entityName }}\"",
         "de": "Eigenschaften von „{{ entityName }}“"
+    },
+    "title_content_staging_errors": {
+        "en": "Import errors of \"{{ entityName }}\"",
+        "de": "Importfehler von „{{ entityName }}“"
     },
     "title_tagmap_of_entity": {
         "en": "Tagmap of \"{{ entityName }}\"",
@@ -570,6 +578,14 @@
     "folder_path": {
         "en": "Directory",
         "de": "Verzeichnis"
+    },
+    "path": {
+        "en": "Path",
+        "de": "Pfad"
+    },
+    "object_id": {
+        "en": "Object ID",
+        "de": "Objekt ID"
     },
     "group_name": {
         "en": "Groupname",
@@ -630,6 +646,10 @@
     "delete": {
         "en": "delete",
         "de": "löschen"
+    },
+    "empty": {
+        "en": "",
+        "de": ""
     },
     "no_row_selected_warning": {
         "en": "No row selected",

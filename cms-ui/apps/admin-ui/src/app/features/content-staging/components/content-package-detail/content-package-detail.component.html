@@ -17,14 +17,34 @@
                 ></gtx-entity-detail-header>
 
                 <div class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
+                    <div class="flex-row">
                         <gtx-content-package-properties
                             [mode]="ContentPackagePropertiesMode.UPDATE"
-                            [formControl]="fgProperties"
-                        ></gtx-content-package-properties>
-                    </div>
+                            [formControl]="fgProperties"/>
+                    </div>    
                 </div>
             </div>
         </gtx-tab>
+
+        <gtx-tab
+            [id]="ContentPackageDetailTabs.IMPORT_ERRORS"
+            gtxDetailTabLink
+            [title]="'shared.title_import_errors' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_content_staging_errors' | i18n: { entityName: currentEntity?.name }"
+                    (cancelClick)="detailsClose()"
+                />
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-content-package-import-error-table
+                        [contentPackage]="currentEntity"
+                        (reloadPackage)="reloadEntity()"
+                    />
+                </div>
+            </div>
+        </gtx-tab>
+
     </gtx-tabs>
 </div>

@@ -73,6 +73,7 @@
     "@ngxs/devtools-plugin": "^3.8.1",
     "@ngxs/logger-plugin": "^3.8.1",
     "@ngxs/store": "^3.8.1",
+    "@usersnap/browser": "^0.0.5",
     "angular-svg-icon": "^16.0.0",
     "angular2-hotkeys": "^15.0.0",
     "buffer": "^6.0.3",

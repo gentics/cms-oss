@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { User } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
-
 import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils/state-utils';
 import {
     ChangePasswordError,
@@ -24,6 +24,7 @@ export interface AuthStateModel {
     loggingOut: boolean;
     changingPassword: boolean;
     currentUserId: number;
+    currentUser: User;
     /** The GCMS session ID */
     sid: number;
     lastError: string;
@@ -35,6 +36,7 @@ export const INITIAL_AUTH_STATE = defineInitialState<AuthStateModel>({
     loggingOut: false,
     changingPassword: false,
     currentUserId: null,
+    currentUser: null,
     sid: null,
     lastError: null,
 });
@@ -59,6 +61,7 @@ export class AuthStateModule {
             isLoggedIn: true,
             loggingIn: false,
             currentUserId: action.user.id,
+            currentUser: action.user,
             sid: action.sid,
             lastError: '',
         });
@@ -85,6 +88,7 @@ export class AuthStateModule {
             loggingOut: false,
             isLoggedIn: false,
             currentUserId: null,
+            currentUser: null,
             sid: null,
         });
     }
@@ -115,6 +119,7 @@ export class AuthStateModule {
             isLoggedIn: true,
             loggingIn: false,
             currentUserId: action.user.id,
+            currentUser: action.user,
             sid: action.sid,
             lastError: '',
         });

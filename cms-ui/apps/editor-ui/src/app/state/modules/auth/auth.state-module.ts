@@ -26,6 +26,7 @@ const INITIAL_AUTH_STATE: AuthState = {
     loggingOut: false,
     changingPassword: false,
     currentUserId: null,
+    currentUser: null,
     sid: null,
     lastError: '',
 };
@@ -33,7 +34,7 @@ const INITIAL_AUTH_STATE: AuthState = {
 @AppStateBranch<AuthState>({
     name: AUTH_STATE_KEY,
     defaults: INITIAL_AUTH_STATE,
-    })
+})
 @Injectable()
 export class AuthStateModule {
 
@@ -69,6 +70,7 @@ export class AuthStateModule {
             loggingIn: false,
             isLoggedIn: true,
             currentUserId: action.user.id,
+            currentUser: action.user,
             sid: action.sid,
             lastError: '',
         });
@@ -81,6 +83,7 @@ export class AuthStateModule {
             loggingIn: false,
             lastError: action.message,
             currentUserId: null,
+            currentUser: null,
             sid: null,
         });
     }
@@ -98,6 +101,7 @@ export class AuthStateModule {
             loggingOut: false,
             isLoggedIn: false,
             currentUserId: null,
+            currentUser: null,
             sid: null,
         });
     }
@@ -123,6 +127,7 @@ export class AuthStateModule {
             loggingIn: false,
             isLoggedIn: true,
             currentUserId: action.user.id,
+            currentUser: action.user,
             sid: action.sid,
             lastError: '',
         });
@@ -135,6 +140,7 @@ export class AuthStateModule {
             loggingIn: false,
             lastError: action.message,
             currentUserId: null,
+            currentUser: null,
             sid: null,
         });
     }

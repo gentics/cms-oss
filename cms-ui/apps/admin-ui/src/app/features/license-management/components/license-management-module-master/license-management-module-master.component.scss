@@ -1,0 +1,16 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    > gtx-tabs {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.management-master {
+    display: block;
+    height: 100%;
+    width: 100%;
+}

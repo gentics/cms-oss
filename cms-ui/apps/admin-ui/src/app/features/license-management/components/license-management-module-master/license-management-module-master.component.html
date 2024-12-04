@@ -5,6 +5,7 @@
         (select)="setTabAsActive($event)"
     >
         <gtx-license-management
+            class="management-master"
             (licenseChange)="setCurrentLicense($event)"
         />
     </gtx-tab>
@@ -14,9 +15,12 @@
         [title]="'common.contentRepository_plural' | i18n"
         (select)="setTabAsActive($event)"
     >
-        <gtx-content-repository-license-table
-            [compareLicense]="true"
-            [license]="currentLicense"
-        />
+        <div class="gtx-entity-master">
+            <gtx-content-repository-license-table
+                class="entity-table"
+                [compareLicense]="true"
+                [license]="currentLicense"
+            />
+        </div>
     </gtx-tab>
 </gtx-tabs>

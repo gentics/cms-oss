@@ -85,6 +85,11 @@ public class ObjectProperty implements Serializable {
 	private Boolean syncVariants;
 
 	/**
+	 * Flag for restricted
+	 */
+	private Boolean restricted;
+
+	/**
 	 * Category ID
 	 */
 	private Integer categoryId;
@@ -341,6 +346,24 @@ public class ObjectProperty implements Serializable {
 	 */
 	public ObjectProperty setSyncVariants(Boolean syncVariants) {
 		this.syncVariants = syncVariants;
+		return this;
+	}
+
+	/**
+	 * True if the object property is restricted
+	 * @return true for restricted
+	 */
+	public Boolean getRestricted() {
+		return restricted;
+	}
+
+	/**
+	 * Set true for restricted
+	 * @param restricted flag
+	 * @return fluent API
+	 */
+	public ObjectProperty setRestricted(Boolean restricted) {
+		this.restricted = restricted;
 		return this;
 	}
 

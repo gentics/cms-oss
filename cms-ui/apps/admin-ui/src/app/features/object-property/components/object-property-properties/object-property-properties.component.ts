@@ -177,6 +177,7 @@ export class ObjectpropertyPropertiesComponent
             syncContentset: new UntypedFormControl(this.value?.syncContentset),
             syncChannelset: new UntypedFormControl(this.value?.syncChannelset),
             syncVariants: new UntypedFormControl(this.value?.syncVariants),
+            restricted: new UntypedFormControl(this.value?.restricted),
             /* eslint-disable @typescript-eslint/unbound-method */
         }, { updateOn: 'change' });
     }

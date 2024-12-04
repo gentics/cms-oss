@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
@@ -61,7 +63,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 	 * Select clause for the columns of table objprop
 	 */
 	protected final static String OBJPROP_SELECT = StringUtils.merge(
-			Arrays.asList("name_id", "description_id", "o_type", "keyword", "creator", "cdate", "editor", "edate", "objtag_id", "category_id", "sync_contentset", "sync_channelset", "sync_variants").toArray(), ",",
+			Arrays.asList("name_id", "description_id", "o_type", "keyword", "creator", "cdate", "editor", "edate", "objtag_id", "category_id", "sync_contentset", "sync_channelset", "sync_variants", "restricted").toArray(), ",",
 			"p.", "");
 
 	/**
@@ -89,12 +91,12 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 	/**
 	 * SQL Statement to insert a objprop entry
 	 */
-	protected final static String INSERT_OBJPROP_SQL = "INSERT INTO objprop (name_id, description_id, o_type, creator, cdate, editor, edate, objtag_id, category_id, sync_contentset, sync_channelset, sync_variants, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_OBJPROP_SQL = "INSERT INTO objprop (name_id, description_id, o_type, creator, cdate, editor, edate, objtag_id, category_id, sync_contentset, sync_channelset, sync_variants, restricted, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	/**
 	 * SQL Statement to update a objprop entry
 	 */
-	protected final static String UPDATE_OBJPROP_SQL = "UPDATE objprop SET editor = ?, edate = ?, category_id = ?, sync_contentset = ?, sync_channelset = ?, sync_variants = ? WHERE id = ?";
+	protected final static String UPDATE_OBJPROP_SQL = "UPDATE objprop SET editor = ?, edate = ?, category_id = ?, sync_contentset = ?, sync_channelset = ?, sync_variants = ?, restricted = ? WHERE id = ?";
 
 	static {
 		// register the factory class
@@ -192,9 +194,10 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			boolean syncContentset = rs.getBoolean("sync_contentset");
 			boolean syncChannelset = rs.getBoolean("sync_channelset");
 			boolean syncVariants = rs.getBoolean("sync_variants");
+			boolean restricted = rs.getBoolean("restricted");
 
 			return (T) new FactoryObjectTagDefinition(id, info, nameId, descriptionId, objpropId, targetType,
-					categoryId, syncContentset, syncChannelset, syncVariants, getUdate(rs), getGlobalId(rs));
+					categoryId, syncContentset, syncChannelset, syncVariants, restricted, getUdate(rs), getGlobalId(rs));
 		} else if (ObjectTagDefinitionCategory.class.equals(clazz)) {
 			return (T) new FactoryObjectTagDefinitionCategory(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
 		} else {
@@ -223,7 +226,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			List<Integer> keys = DBUtils.executeInsert(INSERT_OBJPROP_SQL,
 					new Object[] {
 				def.nameId, def.descriptionId, def.targetType, def.creatorId, def.cDate.getIntTimestamp(), def.editorId, def.eDate.getIntTimestamp(),
-				def.getId(), def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants, ""
+				def.getId(), def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants, def.restricted, ""
 			});
 
 			if (keys.size() != 1) {
@@ -236,7 +239,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			// TODO set initial permissions
 		} else {
 			DBUtils.executeUpdate(UPDATE_OBJPROP_SQL, new Object[] {
-				def.editorId, def.eDate.getIntTimestamp(), def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants, def.objpropId });
+				def.editorId, def.eDate.getIntTimestamp(), def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants, def.restricted, def.objpropId });
 
 			if (def.syncChanged) {
 				DBUtils.executeUpdate("UPDATE objtag SET in_sync = 0 WHERE obj_type = ? AND name = ? AND obj_id != 0",
@@ -331,6 +334,11 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		protected boolean syncVariants;
 
 		/**
+		 * Restricted flag
+		 */
+		protected boolean restricted;
+
+		/**
 		 * Create an empty instance
 		 * @param info info
 		 */
@@ -350,12 +358,13 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		 * @param syncContentset sync Contentset flag
 		 * @param syncChannelset sync Channelset flag
 		 * @param syncVariants sync Variants flag
+		 * @param restricted Restricted flag
 		 * @param udate udate
 		 * @param globalId globalid
 		 */
 		protected FactoryObjectTagDefinition(Integer id, NodeObjectInfo info, int nameId, int descriptionId,
 				int objPropId, int targetType, int categoryId, boolean syncContentset, boolean syncChannelset,
-				boolean syncVariants, int udate, GlobalId globalId) {
+				boolean syncVariants, boolean restricted, int udate, GlobalId globalId) {
 			super(id, info);
 			this.udate = udate;
 			this.globalId = globalId;
@@ -373,6 +382,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			this.syncContentset = syncContentset;
 			this.syncChannelset = syncChannelset;
 			this.syncVariants = syncVariants;
+			this.restricted = restricted;
 		}
 
 		@Override
@@ -444,6 +454,11 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		@Override
 		public boolean isSyncVariants() {
 			return syncVariants;
+		}
+
+		@Override
+		public boolean isRestricted() {
+			return restricted;
 		}
 
 		/**
@@ -609,7 +624,7 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		 */
 		protected EditableFactoryObjectTagDefinition(FactoryObjectTagDefinition def, NodeObjectInfo info, boolean asNew) throws NodeException {
 			super(asNew ? null : def.getId(), info, def.nameId, def.descriptionId, def.objpropId, def.targetType,
-					def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants,
+					def.categoryId, def.syncContentset, def.syncChannelset, def.syncVariants, def.restricted,
 					asNew ? -1 : def.getUdate(), asNew ? null : def.getGlobalId());
 			// read the names and descriptions
 			if (nameId > 0) {
@@ -727,9 +742,22 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setRestricted(boolean restricted) throws ReadOnlyException {
+			if (this.restricted != restricted) {
+				this.restricted = restricted;
+
+				// when the restricted flag is cleared, we need to remove the restriction also
+				if (!this.restricted) {
+					nodes = new ArrayList<>();
+				}
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public List<Node> getNodes() throws NodeException {
 			if (nodes == null) {
-				nodes = new Vector<Node>(super.getNodes());
+				nodes = new ArrayList<>(super.getNodes());
 			}
 			return nodes;
 		}
@@ -769,6 +797,11 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 					int id = lang.getId();
 					dicEntriesChanged |= CNDictionary.saveDicUserEntry(descriptionId, id, ObjectTransformer.getString(editableDescription.get(id), ""));
 				}
+			}
+
+			// when the object property definition should be restricted to nodes, we set the "restricted" flag also
+			if (!CollectionUtils.isEmpty(nodes)) {
+				setRestricted(true);
 			}
 
 			boolean isModified = this.modified;

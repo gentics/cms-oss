@@ -86,6 +86,7 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 				restModel.setSyncChannelset(nodeDefinition.isSyncChannelset());
 			}
 		}
+		restModel.setRestricted(nodeDefinition.isRestricted());
 		ObjectTagDefinitionCategory cat = nodeDefinition.getCategory();
 		if (cat != null) {
 			restModel.setCategoryId(cat.getId());
@@ -151,6 +152,9 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MULTICHANNELLING) && restModel.getSyncChannelset() != null) {
 				nodeDefinition.setSyncChannelset(restModel.getSyncChannelset());
 			}
+		}
+		if (restModel.getRestricted() != null) {
+			nodeDefinition.setRestricted(restModel.getRestricted());
 		}
 		return nodeDefinition;
 	};
@@ -223,6 +227,7 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 				to.setSyncChannelset(from.isSyncChannelset());
 			}
 		}
+		to.setRestricted(from.isRestricted());
 
 		ObjectTagDefinitionCategory category = from.getCategory();
 		if (category != null) {
@@ -264,6 +269,7 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 		resolvableProperties.put("syncChannelset", new NodeObjectProperty<>((o, key) -> o.isSyncChannelset()));
 		resolvableProperties.put("syncVariants", new NodeObjectProperty<>((o, key) -> o.isSyncVariants()));
 		resolvableProperties.put("syncContentset", new NodeObjectProperty<>((o, key) -> o.isSyncContentset()));
+		resolvableProperties.put("restricted", new NodeObjectProperty<>((o, key) -> o.isRestricted()));
 	}
 
 	@Override
@@ -405,18 +411,17 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 	 * @throws NodeException
 	 */
 	public boolean isVisibleIn(Node node) throws NodeException {
+		if (!isRestricted()) {
+			return true;
+		}
 		if (node == null) {
 			return false;
 		}
 		try (NoMcTrx noMcTrx = new NoMcTrx()) {
-			List<Node> restriction = getNodes();
-			if (restriction.isEmpty()) {
-				return true;
-			} else {
-				return restriction.contains(node.getMaster());
-			}
+			return getNodes().contains(node);
 		}
 	}
+
 	/**
 	 * Get the list of real objecttags referencing this definition
 	 * @return list of objecttags
@@ -472,6 +477,23 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 	 */
 	@FieldSetter("sync_variants")
 	public void setSyncVariants(boolean syncVariants) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the flag for "Restricted"
+	 * @return restricted flag
+	 */
+	@FieldGetter("restricted")
+	public abstract boolean isRestricted();
+
+	/**
+	 * Set the flag for "Restricted"
+	 * @param restricted flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("restricted")
+	public void setRestricted(boolean restricted) throws ReadOnlyException {
 		failReadOnly();
 	}
 }

@@ -210,6 +210,9 @@ public class ObjectTagDefinitionSynchronizer extends AbstractSynchronizer<Object
 				to.setSyncChannelset(from.getSyncChannelset());
 			}
 		}
+		if (from.getRestricted() != null) {
+			to.setRestricted(from.getRestricted());
+		}
 
 		forI18nMap(from.getName(), (translation, id) -> to.setName(translation, id));
 
@@ -238,7 +241,7 @@ public class ObjectTagDefinitionSynchronizer extends AbstractSynchronizer<Object
 	protected void assign(ObjectTagDefinition object, Node node, boolean isNew) throws NodeException {
 		// if the object tag definition is new or already restricted to nodes, we add it to the nodes to which the package is assigned
 		List<Node> nodes = object.getNodes();
-		if ((isNew || !nodes.isEmpty()) && !nodes.contains(node)) {
+		if (object.isRestricted() && !nodes.contains(node)) {
 			ObjectTagDefinition editable = TransactionManager.getCurrentTransaction().getObject(object, true);
 			nodes = editable.getNodes();
 			nodes.add(node);

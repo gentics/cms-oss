@@ -43,6 +43,11 @@
         ></gtx-checkbox>
 
         <gtx-checkbox
+            [label]="'objectProperty.restricted' | i18n"
+            formControlName="restricted"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
             *ngIf="form.get('inheritable').enabled"
             [label]="'objectProperty.inheritable' | i18n"
             formControlName="inheritable"

@@ -302,6 +302,7 @@ public class ObjectPropertyResourceTest {
 		assertEquals(read.getObjectProperty().getCategoryId(), response.getObjectProperty().getCategoryId());
 		assertEquals(read.getObjectProperty().getType(), response.getObjectProperty().getType());
 		assertEquals(read.getObjectProperty().getKeyword(), response.getObjectProperty().getKeyword());
+		assertEquals(read.getObjectProperty().getRestricted(), response.getObjectProperty().getRestricted());
 	}
 
 	@Test
@@ -522,6 +523,12 @@ public class ObjectPropertyResourceTest {
 			assertThat(nodes.getItems()).as("Object property nodes").usingElementComparatorOnFields("id").contains(Node.TRANSFORM2REST.apply(node));
 		});
 
+		operate(() -> {
+			ObjectPropertyLoadResponse loadResponse = new ObjectPropertyResourceImpl().get(op.getGlobalId(), null);
+			assertResponseCodeOk(loadResponse);
+			assertThat(loadResponse.getObjectProperty()).as("Object Property Definition").hasFieldOrPropertyWithValue("restricted", true);
+		});
+
 		// unlink
 		updated = supply(() -> new ObjectPropertyResourceImpl().unlink(link));
 		assertResponseCodeOk(updated);
@@ -546,6 +553,71 @@ public class ObjectPropertyResourceTest {
 		});
 	}
 
+	@Test
+	public void testClearRestrictionFlag() throws NodeException {
+		ObjectPropertyLoadResponse response = createRandomObjectProperty();
+		ObjectProperty op = response.getObjectProperty();
+
+		BulkLinkUpdateRequest link = new BulkLinkUpdateRequest()
+				.setTargetIds(Collections.singleton(op.getId().toString()))
+				.setIds(new HashSet<>(Arrays.asList(node.getId())));
+
+		// link it
+		GenericResponse updated = supply(() -> new ObjectPropertyResourceImpl().link(link));
+		assertResponseCodeOk(updated);
+
+		PagedObjectPropertyListResponse opList = supply(user, () -> {
+			try {
+				return new NodeResourceImpl().getObjectProperties(node.getId().toString(), new FilterParameterBean(),
+						new SortParameterBean(), new PagingParameterBean(), new PermsParameterBean());
+			} catch (Exception e) {
+				throw new NodeException(e);
+			}
+		});
+		assertResponseCodeOk(opList);
+
+		assertThat(opList.getItems())
+			.as("Node object property IDs").usingElementComparatorOnFields("id").contains(op);
+
+		operate(() -> {
+			NodeList nodes = new ObjectPropertyResourceImpl().listObjectPropertyNodes(op.getId().toString());
+			assertResponseCodeOk(nodes);
+			assertThat(nodes.getItems()).as("Object property nodes").usingElementComparatorOnFields("id").contains(Node.TRANSFORM2REST.apply(node));
+		});
+
+		operate(() -> {
+			ObjectPropertyLoadResponse loadResponse = new ObjectPropertyResourceImpl().get(op.getGlobalId(), null);
+			assertResponseCodeOk(loadResponse);
+			assertThat(loadResponse.getObjectProperty()).as("Object Property Definition").hasFieldOrPropertyWithValue("restricted", true);
+		});
+
+		consume(id -> {
+			ObjectProperty update = new ObjectProperty().setRestricted(false);
+			ObjectPropertyLoadResponse updateResponse = new ObjectPropertyResourceImpl().update(id, update);
+			assertResponseCodeOk(updateResponse);
+			assertThat(updateResponse.getObjectProperty()).as("Unrestricted object property").hasFieldOrPropertyWithValue("restricted", false);
+		}, op.getGlobalId());
+
+		opList = supply(user, () -> {
+			try {
+				return new NodeResourceImpl().getObjectProperties(node.getId().toString(), new FilterParameterBean(),
+						new SortParameterBean(), new PagingParameterBean(), new PermsParameterBean());
+			} catch (Exception e) {
+				throw new NodeException(e);
+			}
+		});
+		assertResponseCodeOk(opList);
+
+		assertThat(opList.getItems())
+			.as("Node object property IDs").usingElementComparatorOnFields("id").isEmpty();
+
+		operate(() -> {
+			NodeList nodes = new ObjectPropertyResourceImpl().listObjectPropertyNodes(op.getId().toString());
+			assertResponseCodeOk(nodes);
+			assertThat(nodes.getItems()).as("Object property nodes").isEmpty();
+		});
+	}
+
 	protected ObjectPropertyLoadResponse createRandomObjectProperty() throws NodeException {
 		ObjectPropertyLoadResponse response = supply(user, () -> {
 			ObjectProperty op = new ObjectProperty()
@@ -565,6 +637,7 @@ public class ObjectPropertyResourceTest {
 		assertThat(response.getObjectProperty().getName()).as("Created object property name").isNotNull();
 		assertThat(response.getObjectProperty().getKeyword()).as("Created object property keyword").isNotNull();
 		assertThat(response.getObjectProperty().getKeyword()).as("Created object property keyword prefix").startsWith("object.");
+		assertThat(response.getObjectProperty().getRestricted()).as("Created object property restricted flag").isFalse();
 
 		operate(() -> setPermissions(ObjectTagDefinition.TYPE_OBJTAG_DEF, response.getObjectProperty().getId(), Arrays.asList(group),
 				new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_OBJPROP_UPDATE, PermHandler.PERM_OBJPROPS_UPDATE).toString()));

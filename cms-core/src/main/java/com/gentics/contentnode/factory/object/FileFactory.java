@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -81,6 +82,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.NodeObjectWithAlternateUrls;
 import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
@@ -742,10 +744,15 @@ public class FileFactory extends AbstractFactory {
 
 			loadObjectTagIds();
 
-			Collection<ObjectTag> tags;
+			Node owningNode = getOwningNode();
 
-			tags = t.getObjects(ObjectTag.class, objectTagIds, getObjectInfo().isEditable());
+			List<ObjectTag> tags = t.getObjects(ObjectTag.class, objectTagIds, getObjectInfo().isEditable());
 			for (ObjectTag tag : tags) {
+				ObjectTagDefinition def = tag.getDefinition();
+				if (def != null && !def.isVisibleIn(owningNode)) {
+					continue;
+				}
+
 				String name = tag.getName();
 
 				if (name.startsWith("object.")) {
@@ -757,57 +764,24 @@ public class FileFactory extends AbstractFactory {
 
 			// when the file is editable, get all objecttags which are assigned to the file's node
 			if (getObjectInfo().isEditable() && folderId != null) {
-				PreparedStatement pst = null;
-				ResultSet res = null;
-				List<Integer> objTagDefIds = new Vector<Integer>();
+				List<ObjectTagDefinition> fileDefs = TagFactory.load(getTType(), Optional.ofNullable(owningNode));
 
-				try {
-					// get all objtag definitions for type "file" or "image" which are assigned to the file's node (or not restricted to nodes)
-					// The construct of the objtag must exist
-					pst = t.prepareStatement(
-							"SELECT DISTINCT objtag.id id FROM objtag"
-							+ " LEFT JOIN objprop ON objtag.id = objprop.objtag_id"
-							+ " LEFT JOIN objprop_node ON objprop.id = objprop_node.objprop_id"
-							+ " LEFT JOIN construct c ON c.id = objtag.construct_id"
-							+ " WHERE objtag.obj_id = 0 AND objtag.obj_type = ?"
-							+ " AND (objprop_node.node_id = ? OR objprop_node.node_id IS NULL)"
-							+ " AND c.id IS NOT NULL");
-					pst.setObject(1, getTType());
-					pst.setObject(2, getFolder().getNode().getMaster().getId());
+				for (ObjectTagDefinition def : fileDefs) {
+					// get the name (without object. prefix)
+					String defName = def.getObjectTag().getName();
 
-					res = pst.executeQuery();
-					// collect the id's
-					while (res.next()) {
-						objTagDefIds.add(ObjectTransformer.getInteger(res.getObject("id"), null));
+					if (defName.startsWith("object.")) {
+						defName = defName.substring(7);
 					}
-				} catch (SQLException e) {
-					throw new NodeException("Error while getting editable objtags", e);
-				} finally {
-					t.closeResultSet(res);
-					t.closeStatement(pst);
-				}
 
-				if (objTagDefIds.size() > 0) {
-					// get the objtag (definition)
-					List<ObjectTag> objTagDefs = t.getObjects(ObjectTag.class, objTagDefIds);
+					// if no objtag of that name exists for the file,
+					// generate a copy and add it to the map of objecttags
+					if (!objectTags.containsKey(defName)) {
+						ObjectTag newObjectTag = (ObjectTag) def.getObjectTag().copy();
 
-					for (ObjectTag def : objTagDefs) {
-						// get the name (without object. prefix)
-						String defName = def.getName();
-
-						if (defName.startsWith("object.")) {
-							defName = defName.substring(7);
-						}
-
-						// if no objtag of that name exists for the file,
-						// generate a copy and add it to the map of objecttags
-						if (!objectTags.containsKey(defName)) {
-							ObjectTag newObjectTag = (ObjectTag) def.copy();
-
-							newObjectTag.setNodeObject(this);
-							newObjectTag.setEnabled(false);
-							objectTags.put(defName, newObjectTag);
-						}
+						newObjectTag.setNodeObject(this);
+						newObjectTag.setEnabled(false);
+						objectTags.put(defName, newObjectTag);
 					}
 				}
 

@@ -87,12 +87,12 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<RichContentLink>>({
             type: new FormControl(RichContentType.LINK),
-            linkType: new FormControl(this.value?.linkType ?? RichContentLinkType.URL, Validators.required),
-            displayText: new FormControl(this.value?.displayText || LINK_DEFAULT_DISPLAY_VALUE, Validators.required),
-            url: new FormControl(this.value?.url || '', Validators.required),
-            nodeId: new FormControl(this.value?.nodeId, Validators.required),
-            itemId: new FormControl(this.value?.itemId, Validators.required),
-            target: new FormControl(this.value?.target || '_top'),
+            linkType: new FormControl(this.safeValue('linkType') ?? RichContentLinkType.URL, Validators.required),
+            displayText: new FormControl(this.safeValue('displayText') || LINK_DEFAULT_DISPLAY_VALUE, Validators.required),
+            url: new FormControl(this.safeValue('url') || '', Validators.required),
+            nodeId: new FormControl(this.safeValue('nodeId'), Validators.required),
+            itemId: new FormControl(this.safeValue('itemId'), Validators.required),
+            target: new FormControl(this.safeValue('target') || '_top'),
         });
     }
 

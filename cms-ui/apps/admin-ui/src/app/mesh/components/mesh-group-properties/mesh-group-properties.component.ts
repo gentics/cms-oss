@@ -28,7 +28,7 @@ export class MeshGroupPropertiesComponent extends BasePropertiesComponent<Editab
 
     protected createForm(): FormGroup<FormProperties<EditableGroupProperties>> {
         return new FormGroup<FormProperties<EditableGroupProperties>>({
-            name: new FormControl(this.value?.name, Validators.required),
+            name: new FormControl(this.safeValue('name'), Validators.required),
         });
     }
 

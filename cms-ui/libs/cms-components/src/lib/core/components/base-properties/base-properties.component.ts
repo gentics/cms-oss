@@ -219,13 +219,32 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     }
 
     /**
+     * A "wrapper" around the nullish access `this.value?.propertyName`, but with
+     * an additional check if the value is actually rhe unset value/a symbol.
+     * This broke some forms, as `Symbol` has a `description` property which caused some trouble.
+     * @param property The property you want to access.
+     * @returns The property-value, or null if not present.
+     */
+    protected safeValue<K extends keyof T>(property: K): T[K] | null {
+        if (this.value === INITIAL_UNSET_VALUE || typeof this.value === 'symbol') {
+            return null;
+        }
+
+        return this.value?.[property];
+    }
+
+    /**
      * Basic implementation which will simply put the value into the form.
      */
     protected override onValueChange(): void {
         if (this.form) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
-                if (this.value != null && this.value.hasOwnProperty(controlName)) {
+                if (
+                    this.value != null
+                    && typeof this.value !== 'symbol'
+                    && this.value.hasOwnProperty(controlName)
+                ) {
                     tmpObj[controlName] = this.value[controlName];
                 }
             });

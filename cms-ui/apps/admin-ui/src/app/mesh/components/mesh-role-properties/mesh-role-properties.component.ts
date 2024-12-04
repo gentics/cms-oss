@@ -28,7 +28,7 @@ export class MeshRolePropertiesComponent extends BasePropertiesComponent<Editabl
 
     protected createForm(): FormGroup<FormProperties<EditableRoleProperties>> {
         return new FormGroup<FormProperties<EditableRoleProperties>>({
-            name: new FormControl(this.value?.name, Validators.required),
+            name: new FormControl(this.safeValue('name'), Validators.required),
         });
     }
 

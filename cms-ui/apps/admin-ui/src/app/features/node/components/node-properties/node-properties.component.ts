@@ -143,48 +143,48 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
     protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
         return new FormGroup<FormProperties<NodePropertiesFormData>>({
-            name: new FormControl(this.value?.name, [
+            name: new FormControl(this.safeValue('name'), [
                 Validators.required,
                 Validators.maxLength(50),
             ]),
-            description: new FormControl(this.value?.description, Validators.maxLength(200)),
+            description: new FormControl(this.safeValue('description'), Validators.maxLength(200)),
             inheritedFromId: new FormControl({
-                value: this.value?.inheritedFromId,
+                value: this.safeValue('inheritedFromId'),
                 disabled: this.mode !== NodePropertiesMode.CREATE,
             }),
 
-            previewType: new FormControl<NodePreviewurlType>(this.value?.previewType ?? this.value?.meshPreviewUrlProperty
+            previewType: new FormControl<NodePreviewurlType>(this.safeValue('previewType') ?? this.safeValue('meshPreviewUrlProperty')
                 ? NodePreviewurlType.PROPERTY
                 : NodePreviewurlType.VALUE,
             ),
-            meshProjectName: new FormControl(this.value?.meshProjectName, Validators.maxLength(255)),
-            meshPreviewUrl: new FormControl(this.value?.meshPreviewUrl, Validators.maxLength(255)),
-            meshPreviewUrlProperty: new FormControl(this.value?.meshPreviewUrlProperty, [
+            meshProjectName: new FormControl(this.safeValue('meshProjectName'), Validators.maxLength(255)),
+            meshPreviewUrl: new FormControl(this.safeValue('meshPreviewUrl'), Validators.maxLength(255)),
+            meshPreviewUrlProperty: new FormControl(this.safeValue('meshPreviewUrlProperty'), [
                 Validators.maxLength(255),
                 createPropertyPatternValidator(NODE_PREVIEW_URL_PROPERTY_PREFIX),
             ]),
 
-            https: new FormControl(this.value?.https),
-            insecurePreviewUrl: new FormControl(this.value?.insecurePreviewUrl),
-            publishImageVariants: new FormControl(this.value?.publishImageVariants),
+            https: new FormControl(this.safeValue('https')),
+            insecurePreviewUrl: new FormControl(this.safeValue('insecurePreviewUrl')),
+            publishImageVariants: new FormControl(this.safeValue('publishImageVariants')),
 
-            hostType: new FormControl<NodeHostnameType>(this.value?.hostType ?? this.value?.hostProperty
+            hostType: new FormControl<NodeHostnameType>(this.safeValue('hostType') ?? this.safeValue('hostProperty')
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
             ),
-            host: new FormControl(this.value?.host, Validators.maxLength(255)),
-            hostProperty: new FormControl(this.value?.hostProperty, [
+            host: new FormControl(this.safeValue('host'), Validators.maxLength(255)),
+            hostProperty: new FormControl(this.safeValue('hostProperty'), [
                 Validators.required,
                 Validators.maxLength(255),
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
 
             pubDirSegment: new FormControl({
-                value: this.value?.pubDirSegment,
+                value: this.safeValue('pubDirSegment'),
                 disabled: !this.pubDirSegmentActivated,
             }),
-            defaultFileFolderId: new FormControl(this.value?.defaultFileFolderId),
-            defaultImageFolderId: new FormControl(this.value?.defaultImageFolderId),
+            defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
+            defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
         });
     }
 

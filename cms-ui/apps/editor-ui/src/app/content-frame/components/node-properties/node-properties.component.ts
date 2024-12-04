@@ -126,28 +126,28 @@ export class NodePropertiesComponent
 
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<EditableNodeProps>>({
-            name: new FormControl(this.value?.name || '', Validators.required),
-            https: new FormControl(this.value?.https ?? false),
-            host: new FormControl(this.value?.host || '', Validators.required),
-            hostProperty: new FormControl(this.value?.hostProperty || '', [
+            name: new FormControl(this.safeValue('name') || '', Validators.required),
+            https: new FormControl(this.safeValue('https') ?? false),
+            host: new FormControl(this.safeValue('host') || '', Validators.required),
+            hostProperty: new FormControl(this.safeValue('hostProperty') || '', [
                 Validators.required,
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
-            utf8: new FormControl(this.value?.utf8 ?? false),
-            defaultFileFolderId: new FormControl(this.value?.defaultFileFolderId),
-            defaultImageFolderId: new FormControl(this.value?.defaultImageFolderId),
-            disablePublish: new FormControl(this.value?.disablePublish ?? false),
-            publishFs: new FormControl(this.value?.publishFs ?? false),
-            publishFsPages: new FormControl(this.value?.publishFsPages ?? false),
-            publishFsFiles: new FormControl(this.value?.publishFsFiles ?? false),
-            publishDir: new FormControl(this.value?.publishDir || ''),
-            binaryPublishDir: new FormControl(this.value?.binaryPublishDir || ''),
-            publishContentMap: new FormControl(this.value?.publishContentMap ?? false),
-            publishContentMapPages: new FormControl(this.value?.publishContentMapPages ?? false),
-            publishContentMapFiles: new FormControl(this.value?.publishContentMapFiles ?? false),
-            publishContentMapFolders: new FormControl(this.value?.publishContentMapFolders ?? false),
-            urlRenderWayPages: new FormControl(this.value?.urlRenderWayPages || 0),
-            urlRenderWayFiles: new FormControl(this.value?.urlRenderWayFiles || 0),
+            utf8: new FormControl(this.safeValue('utf8') ?? false),
+            defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
+            defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
+            disablePublish: new FormControl(this.safeValue('disablePublish') ?? false),
+            publishFs: new FormControl(this.safeValue('publishFs') ?? false),
+            publishFsPages: new FormControl(this.safeValue('publishFsPages') ?? false),
+            publishFsFiles: new FormControl(this.safeValue('publishFsFiles') ?? false),
+            publishDir: new FormControl(this.safeValue('publishDir') || ''),
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || ''),
+            publishContentMap: new FormControl(this.safeValue('publishContentMap') ?? false),
+            publishContentMapPages: new FormControl(this.safeValue('publishContentMapPages') ?? false),
+            publishContentMapFiles: new FormControl(this.safeValue('publishContentMapFiles') ?? false),
+            publishContentMapFolders: new FormControl(this.safeValue('publishContentMapFolders') ?? false),
+            urlRenderWayPages: new FormControl(this.safeValue('urlRenderWayPages') || 0),
+            urlRenderWayFiles: new FormControl(this.safeValue('urlRenderWayFiles') || 0),
         });
     }
 

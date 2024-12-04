@@ -233,54 +233,54 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
 
     protected createForm(): FormGroup<FormProperties<ContentRepositoryPropertiesFormData>> {
         return new FormGroup<FormProperties<ContentRepositoryPropertiesFormData>>({
-            basepathType: new FormControl(this.value?.basepathType ?? this.value?.basepathProperty
+            basepathType: new FormControl(this.safeValue('basepathType') ?? this.safeValue('basepathProperty')
                 ? BasepathType.PROPERTY
                 : BasepathType.VALUE,
             ),
-            basepath: new FormControl(this.value?.basepath || ''),
-            basepathProperty: new FormControl(this.value?.basepathProperty || '', [
+            basepath: new FormControl(this.safeValue('basepath') || ''),
+            basepathProperty: new FormControl(this.safeValue('basepathProperty') || '', [
                 createPropertyPatternValidator(CONTENT_REPOSITORY_BASE_PATH_PROPERTY_PREFIX),
             ]),
-            crType: new FormControl(this.value?.crType || null, Validators.required),
-            dbType: new FormControl(this.value?.dbType || null, Validators.required),
-            defaultPermission: new FormControl(this.value?.defaultPermission || ''),
-            diffDelete: new FormControl(this.value?.diffDelete ?? false),
-            elasticsearch: new FormControl<any>(this.value?.elasticsearch || '', GtxJsonValidator),
-            instantPublishing: new FormControl(this.value?.instantPublishing ?? false),
-            languageInformation: new FormControl(this.value?.languageInformation ?? false),
-            name: new FormControl(this.value?.name || '', Validators.required),
-            passwordType: new FormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
+            crType: new FormControl(this.safeValue('crType') || null, Validators.required),
+            dbType: new FormControl(this.safeValue('dbType') || null, Validators.required),
+            defaultPermission: new FormControl(this.safeValue('defaultPermission') || ''),
+            diffDelete: new FormControl(this.safeValue('diffDelete') ?? false),
+            elasticsearch: new FormControl<any>(this.safeValue('elasticsearch') || '', GtxJsonValidator),
+            instantPublishing: new FormControl(this.safeValue('instantPublishing') ?? false),
+            languageInformation: new FormControl(this.safeValue('languageInformation') ?? false),
+            name: new FormControl(this.safeValue('name') || '', Validators.required),
+            passwordType: new FormControl(this.safeValue('passwordType') || ContentRepositoryPasswordType.NONE),
             password: new FormControl('', this.validatorPasswordsDontMatch),
-            passwordProperty: new FormControl(this.value?.passwordProperty || '', [
+            passwordProperty: new FormControl(this.safeValue('passwordProperty') || '', [
                 createPropertyPatternValidator(CONTENT_REPOSITORY_PASSWORD_PROPERTY_PREFIX),
             ]),
-            permissionProperty: new FormControl(this.value?.permissionProperty || ''),
-            permissionInformation: new FormControl(this.value?.permissionInformation ?? false),
-            projectPerNode: new FormControl(this.value?.projectPerNode ?? false),
-            version: new FormControl(this.value?.version || ''),
-            url: new FormControl(this.value?.url || '', Validators.required),
-            urlType: new FormControl(this.value?.urlType ?? this.value?.urlProperty
+            permissionProperty: new FormControl(this.safeValue('permissionProperty') || ''),
+            permissionInformation: new FormControl(this.safeValue('permissionInformation') ?? false),
+            projectPerNode: new FormControl(this.safeValue('projectPerNode') ?? false),
+            version: new FormControl(this.safeValue('version') || ''),
+            url: new FormControl(this.safeValue('url') || '', Validators.required),
+            urlType: new FormControl(this.safeValue('urlType') ?? this.value?.urlProperty
                 ? UrlType.PROPERTY
                 : UrlType.VALUE,
             ),
-            urlProperty: new FormControl(this.value?.urlProperty || '', [
+            urlProperty: new FormControl(this.safeValue('urlProperty') || '', [
                 Validators.required,
                 createPropertyPatternValidator(CONTENT_REPOSITORY_URL_PROPERTY_PREFIX),
             ]),
-            usernameType: new FormControl(this.value?.usernameType ?? this.value?.usernameProperty
+            usernameType: new FormControl(this.safeValue('usernameType') ?? this.value?.usernameProperty
                 ? UsernameType.PROPERTY
                 : UsernameType.VALUE,
             ),
-            username: new FormControl(this.value?.username || '', Validators.required),
-            usernameProperty: new FormControl(this.value?.usernameProperty || '', [
+            username: new FormControl(this.safeValue('username') || '', Validators.required),
+            usernameProperty: new FormControl(this.safeValue('usernameProperty') || '', [
                 Validators.required,
                 createPropertyPatternValidator(CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX),
             ]),
-            http2: new FormControl(this.value?.http2 ?? false),
-            noFoldersIndex: new FormControl(this.value?.noFoldersIndex ?? false),
-            noFilesIndex: new FormControl(this.value?.noFilesIndex ?? false),
-            noPagesIndex: new FormControl(this.value?.noPagesIndex ?? false),
-            noFormsIndex: new FormControl(this.value?.noFormsIndex ?? false),
+            http2: new FormControl(this.safeValue('http2') ?? false),
+            noFoldersIndex: new FormControl(this.safeValue('noFoldersIndex') ?? false),
+            noFilesIndex: new FormControl(this.safeValue('noFilesIndex') ?? false),
+            noPagesIndex: new FormControl(this.safeValue('noPagesIndex') ?? false),
+            noFormsIndex: new FormControl(this.safeValue('noFormsIndex') ?? false),
         });
     }
 

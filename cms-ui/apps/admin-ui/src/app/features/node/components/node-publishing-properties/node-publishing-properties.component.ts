@@ -81,25 +81,25 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
         this.previousPublishCr = this.value?.publishContentMap ?? false;
 
         return new FormGroup<FormProperties<NodePublishingPropertiesFormData>>({
-            disablePublish: new FormControl(this.value?.disablePublish),
+            disablePublish: new FormControl(this.safeValue('disablePublish')),
 
-            publishFs: new FormControl(this.value?.publishFs),
-            publishFsPages: new FormControl(this.value?.publishFsPages),
-            publishDir: new FormControl(this.value?.publishDir),
-            publishFsFiles: new FormControl(this.value?.publishFsFiles),
-            binaryPublishDir: new FormControl(this.value?.binaryPublishDir),
+            publishFs: new FormControl(this.safeValue('publishFs')),
+            publishFsPages: new FormControl(this.safeValue('publishFsPages')),
+            publishDir: new FormControl(this.safeValue('publishDir')),
+            publishFsFiles: new FormControl(this.safeValue('publishFsFiles')),
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir')),
 
-            publishContentMap: new FormControl(this.value?.publishContentMap),
-            publishContentMapPages: new FormControl(this.value?.publishContentMapPages),
-            publishContentMapFiles: new FormControl(this.value?.publishContentMapFiles),
-            publishContentMapFolders: new FormControl(this.value?.publishContentMapFolders),
-            contentRepositoryId: new FormControl(this.value?.contentRepositoryId),
+            publishContentMap: new FormControl(this.safeValue('publishContentMap')),
+            publishContentMapPages: new FormControl(this.safeValue('publishContentMapPages')),
+            publishContentMapFiles: new FormControl(this.safeValue('publishContentMapFiles')),
+            publishContentMapFolders: new FormControl(this.safeValue('publishContentMapFolders')),
+            contentRepositoryId: new FormControl(this.safeValue('contentRepositoryId')),
 
-            urlRenderWayFiles: new FormControl(this.value?.urlRenderWayPages),
-            urlRenderWayPages: new FormControl(this.value?.urlRenderWayFiles),
+            urlRenderWayFiles: new FormControl(this.safeValue('urlRenderWayPages')),
+            urlRenderWayPages: new FormControl(this.safeValue('urlRenderWayFiles')),
 
-            omitPageExtension: new FormControl(this.value?.omitPageExtension),
-            pageLanguageCode: new FormControl(this.value?.pageLanguageCode),
+            omitPageExtension: new FormControl(this.safeValue('omitPageExtension')),
+            pageLanguageCode: new FormControl(this.safeValue('pageLanguageCode')),
         });
     }
 

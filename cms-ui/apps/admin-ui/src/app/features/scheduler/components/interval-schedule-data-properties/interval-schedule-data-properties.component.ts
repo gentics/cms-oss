@@ -20,8 +20,8 @@ export class IntervalScheduleDataPropertiesComponent extends BasePropertiesCompo
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            value: new UntypedFormControl(this.value?.interval?.value, Validators.required),
-            unit: new UntypedFormControl(this.value?.interval?.unit, Validators.required),
+            value: new UntypedFormControl(this.safeValue('interval')?.value, Validators.required),
+            unit: new UntypedFormControl(this.safeValue('interval')?.unit, Validators.required),
         }, Validators.required);
     }
 

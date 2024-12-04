@@ -93,10 +93,12 @@ export class PostLoadScript {
             const internalLink = parseInternalLink(link);
 
             if (internalLink) {
-                if (internalLink.type === 'page') {
-                    this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
-                } else if (internalLink.type === 'file' || internalLink.type === 'image') {
-                    this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                if (e.ctrlKey) {
+                    if (internalLink.type === 'page') {
+                        this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
+                    } else if (internalLink.type === 'file' || internalLink.type === 'image') {
+                        this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                    }
                 }
                 e.preventDefault();
             } else if (

@@ -138,7 +138,7 @@ export class PagePropertiesComponent
                 nodeId: this.nodeId,
 
                 pageName: value.name,
-                fileName: value.fileName,
+                fileName: '',
                 language: value.language,
                 templateId: value.templateId,
             })),

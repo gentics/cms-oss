@@ -1,11 +1,13 @@
 package com.gentics.contentnode.cluster;
 
+import java.util.function.Supplier;
+
 import com.gentics.contentnode.cache.CacheService;
 import com.gentics.contentnode.distributed.DistributionSync;
 import com.gentics.contentnode.object.NodeObject;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.topic.ITopic;
+import com.hazelcast.topic.MessageListener;
 
 /**
  * Cluster specific implementation of {@link CacheService} which will send messages to clear or dirt caches on all cluster instances
@@ -34,37 +36,37 @@ public class ClusterCacheService implements CacheService {
 
 	@Override
 	public void clear() {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.clearall));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearall));
 	}
 
 	@Override
 	public void clear(Class<? extends NodeObject> clazz) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.cleartype).setClazz(clazz));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.cleartype).setClazz(clazz));
 	}
 
 	@Override
 	public void clear(Class<? extends NodeObject> clazz, Integer id) {
-		HazelcastInstance instance = ClusterSupport.get();
-		if (instance != null && sync.allow()) {
-			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.clearobject).setClazz(clazz).setId(id));
-		}
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearobject).setClazz(clazz).setId(id));
 	}
 
 	@Override
 	public void dirt(Class<? extends NodeObject> clazz, Integer id) {
-		HazelcastInstance instance = ClusterSupport.get();
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.dirt).setClazz(clazz).setId(id));
+	}
+
+	/**
+	 * If allowed, publish the message which is supplied by the given message supplier
+	 * @param msgSupplier message supplier
+	 */
+	protected void publishMessage(Supplier<CacheSyncMessage> msgSupplier) {
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 		if (instance != null && sync.allow()) {
 			ITopic<CacheSyncMessage> cacheSyncTopic = instance.getTopic(CACHE_SYNC_TOPIC);
-			cacheSyncTopic.publish(new CacheSyncMessage().setType(CacheSyncMessageType.dirt).setClazz(clazz).setId(id));
+			CacheSyncMessage msg = msgSupplier.get();
+			cacheSyncTopic.publish(msg);
+			if (ClusterSupport.logger.isDebugEnabled()) {
+				ClusterSupport.logger.debug(String.format("Published %s", msg));
+			}
 		}
 	}
 
@@ -72,7 +74,7 @@ public class ClusterCacheService implements CacheService {
 	 * Add message listeners
 	 */
 	static void addMessageListeners() {
-		HazelcastInstance instance = ClusterSupport.get();
+		HazelcastInstance instance = ClusterSupport.getSingleton().get();
 
 		// add listener for cache put/clear events
 		if (instance != null) {

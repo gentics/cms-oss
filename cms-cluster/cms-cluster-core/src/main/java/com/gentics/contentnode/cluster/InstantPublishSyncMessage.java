@@ -70,4 +70,9 @@ public class InstantPublishSyncMessage implements Serializable {
 		this.objectType = objectType;
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("InstantPublishSyncMessage object: %d.%d, failed: %b", objectType, objectId, failed);
+	}
 }

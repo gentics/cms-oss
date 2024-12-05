@@ -1,8 +1,10 @@
 package com.gentics.contentnode.rest.model.staging;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
 
 /**
  * Content staging package entity.
@@ -20,6 +22,11 @@ public class StagedContentPackage extends ContentPackageBase {
 	private int images = 0;
 	private int nodes = 0;
 	private int channels = 0;
+
+	@XmlAttribute(name = "import")
+	private JobStatus import_;
+
+	public static final String TYPE_NAME = "contentpackage";
 
 	/**
 	 * Count of forms in the package.
@@ -132,5 +139,23 @@ public class StagedContentPackage extends ContentPackageBase {
 	 */
 	public void setChannels(int channels) {
 		this.channels = channels;
+	}
+
+	/**
+	 * Status of the latest import
+	 * 
+	 * @return
+	 */
+	public JobStatus getImport() {
+		return import_;
+	}
+
+	/**
+	 * Set import job status.
+	 * 
+	 * @param import_
+	 */
+	public void setImport(JobStatus import_) {
+		this.import_ = import_;
 	}
 }

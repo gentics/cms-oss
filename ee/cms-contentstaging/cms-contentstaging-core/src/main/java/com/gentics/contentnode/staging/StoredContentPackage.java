@@ -21,7 +21,7 @@ import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("package")
+@StoredType(StagedContentPackage.TYPE_NAME)
 public class StoredContentPackage extends ContentPackageBase implements StoredModel {
 
 	private static final long serialVersionUID = -6438718314023524153L;
@@ -47,7 +47,7 @@ public class StoredContentPackage extends ContentPackageBase implements StoredMo
 	@XmlTransient
 	@JsonIgnore
     public String getTypeName() {
-		return "contentpackage";
+		return StagedContentPackage.TYPE_NAME;
 	}
 
 	@Override

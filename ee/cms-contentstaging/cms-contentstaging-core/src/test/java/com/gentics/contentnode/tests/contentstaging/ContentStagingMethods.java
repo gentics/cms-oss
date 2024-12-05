@@ -119,7 +119,7 @@ public interface ContentStagingMethods {
 	 * @throws NodeException
 	 */
 	default void importContentPackage(String name) throws NodeException {
-		GenericResponse response = new ContentStagingResourceImpl().importIntoCms(name, 0);
+		GenericResponse response = new ContentStagingResourceImpl().importIntoCms(name, 0, false);
 		assertResponseOK(response);
 	}
 
@@ -132,7 +132,7 @@ public interface ContentStagingMethods {
 	 * @throws NodeException
 	 */
 	default void tryImportContentPackage(String name, ResponseCode responseCode, String responseMessage, Message... userMessages) throws NodeException {
-		GenericResponse response = new ContentStagingResourceImpl().importIntoCms(name, 0);
+		GenericResponse response = new ContentStagingResourceImpl().importIntoCms(name, 0, false);
 		assertResponse(response, responseCode, responseMessage, userMessages);
 	}
 

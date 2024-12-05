@@ -9,7 +9,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.gentics.contentnode.object.Node.UrlRenderWay;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 
 /**
@@ -21,6 +20,8 @@ import com.gentics.contentnode.rest.model.PageLanguageCode;
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedNode extends StagingBase {
+
+	public static final String TYPE_NAME = "node";
 
 	private static final long serialVersionUID = 4249916187600453578L;
 
@@ -40,8 +41,10 @@ public class StagedNode extends StagingBase {
 	private boolean publishContentMapFiles;
 	private boolean publishContentMapFolders;
 	private List<String> languages;
-	private UrlRenderWay pageUrls;
-	private UrlRenderWay fileUrls;
+
+	private String pageUrls;
+	private String fileUrls;
+
 	private boolean omitPageExtension;
 	private PageLanguageCode pageLanguageCode;
 
@@ -311,22 +314,6 @@ public class StagedNode extends StagingBase {
 		this.languages = languages;
 	}
 
-	public UrlRenderWay getPageUrls() {
-		return pageUrls;
-	}
-
-	public void setPageUrls(UrlRenderWay pageUrls) {
-		this.pageUrls = pageUrls;
-	}
-
-	public UrlRenderWay getFileUrls() {
-		return fileUrls;
-	}
-
-	public void setFileUrls(UrlRenderWay fileUrls) {
-		this.fileUrls = fileUrls;
-	}
-
 	/**
 	 * Should the page extensions be omitted?
 	 * 
@@ -446,6 +433,22 @@ public class StagedNode extends StagingBase {
 		this.packages = packages;
 	}
 
+	public String getPageUrls() {
+		return pageUrls;
+	}
+
+	public void setPageUrls(String pageUrls) {
+		this.pageUrls = pageUrls;
+	}
+
+	public String getFileUrls() {
+		return fileUrls;
+	}
+
+	public void setFileUrls(String fileUrls) {
+		this.fileUrls = fileUrls;
+	}
+
 	public String getMeshPreviewUrlProperty() {
 		return meshPreviewUrlProperty;
 	}
@@ -479,8 +482,6 @@ public class StagedNode extends StagingBase {
 		this.publishContentMapFiles = origin.publishContentMapFiles;
 		this.publishContentMapFolders = origin.publishContentMapFolders;
 		this.languages = origin.languages;
-		this.pageUrls = origin.pageUrls;
-		this.fileUrls = origin.fileUrls;
 		this.omitPageExtension = origin.omitPageExtension;
 		this.pageLanguageCode = origin.pageLanguageCode;
 		this.rootFolderId = origin.rootFolderId;
@@ -490,6 +491,8 @@ public class StagedNode extends StagingBase {
 		this.hostname = origin.hostname;
 		this.hostnameProperty = origin.hostnameProperty;
 		this.meshPreviewUrlProperty = origin.meshPreviewUrlProperty;
+		this.fileUrls = origin.fileUrls;
+		this.pageUrls = origin.pageUrls;
 		this.meshProjectName = origin.meshProjectName;
 	}
 
@@ -497,6 +500,6 @@ public class StagedNode extends StagingBase {
 	@XmlTransient
 	@JsonIgnore
 	public String getTypeName() {
-		return "node";
+		return TYPE_NAME;
 	}
 }

@@ -4,6 +4,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.require;
 import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
 import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
+import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -12,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +64,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -70,6 +73,7 @@ import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.comparators.ComparatorChain;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.FileUtils;
@@ -79,6 +83,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
@@ -89,6 +95,7 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.etc.TriConsumer;
 import com.gentics.contentnode.exception.DuplicateValueException;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -122,6 +129,7 @@ import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredPerm;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -144,7 +152,18 @@ import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.contentnode.rest.util.StagingModelBuilder;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.staging.StageableObjectType;
+import com.gentics.contentnode.staging.StagedChannel;
+import com.gentics.contentnode.staging.StagedFile;
+import com.gentics.contentnode.staging.StagedFolder;
+import com.gentics.contentnode.staging.StagedForm;
+import com.gentics.contentnode.staging.StagedImage;
+import com.gentics.contentnode.staging.StagedNode;
 import com.gentics.contentnode.staging.StagedObjectVersion;
+import com.gentics.contentnode.staging.StagedPage;
+import com.gentics.contentnode.staging.StagingBase;
+import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorKind;
+import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.staging.StoredChannel;
 import com.gentics.contentnode.staging.StoredContentPackage;
 import com.gentics.contentnode.staging.StoredFile;
@@ -170,6 +189,7 @@ import de.jkeylockmanager.manager.KeyLockManagers;
 @RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_VIEW)
 public class ContentStagingResourceImpl implements ContentStagingResource {
 
+	private static final String FOUND_AT_LOG = "Found {} at {}";
 	private static final String DOWNLOAD_EXTENSION = ".zip";
 	private static final String METADATA_EXTENSION = ".json";
 	private static final String FOLDER_EXTENSION = ".folder" + METADATA_EXTENSION;
@@ -185,6 +205,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			Pattern.CASE_INSENSITIVE
 		);
 	public static final String CONTENT_PACKAGE_METADATA_FILENAME = "metadata" + METADATA_EXTENSION;
+	public static final String CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME = "import-errors" + METADATA_EXTENSION;
 
 	/**
 	 * Logger
@@ -285,6 +306,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								try (InputStream is = Channels.newInputStream(FileChannel.open(p.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StandardOpenOption.READ).lock(0, Long.MAX_VALUE, true).channel())) {
 									StagedContentPackage cp = StoredContentPackage.NODE2REST.apply(mapper.readValue(is, StoredContentPackage.class), new StagedContentPackage());
 									fillContentPackageStatistic(p, cp);
+									addImportProgress(cp);
 									return cp;
 								} catch (Throwable e) {
 									throw new IllegalStateException(e);
@@ -363,20 +385,28 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		Path path = checkFeatureGetPath();
 		
 		try (Trx trx = ContentNodeHelper.trx()) {
+			String sanitizedName = sanitizeCheck(name, false);
+
 			ContentPackageLoadResponse response = new ContentPackageLoadResponse();
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
-			response.setImport(imports.entrySet().stream()
-					.filter(e -> e.getKey().equals(name))
-					.map(e -> e.getValue().getJobStatus())
-					.findAny().orElse(null));
-			if (response.getImport() == null || !response.getImport().isRunning()) {
-				response.setContentPackage(executeLocked(sanitizeCheck(name, true), () -> {
+			Optional<StagingJobController> optionalImport = Optional.ofNullable(imports.get(sanitizedName));
+
+			response.setImport(optionalImport.map(StagingJobController::getJobStatus).orElse(null));
+
+			if (!optionalImport.map(StagingJobController::getJobStatus).map(JobStatus::isRunning).orElse(false)) {
+				response.setContentPackage(executeLocked(sanitizedName, () -> {
 					Path pkgPath = path.resolve(name);
 					StagedContentPackage contentPackage = loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class, 
 							stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
 					fillContentPackageStatistic(pkgPath, contentPackage);
+					addImportProgress(contentPackage);
 					return contentPackage;
 				}));
+			} else {
+				response.setContentPackage(optionalImport.map(StagingJobController::getInitialState).map(pkg -> {
+					addImportProgress(pkg);
+					return pkg;
+				}).orElse(null));
 			}
 			return response;
 		} catch (IllegalStateException e) {
@@ -537,6 +567,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					break;
 				}
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
@@ -600,6 +631,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
@@ -786,6 +818,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 				// Clean off alien content
 				fillContentPackageStatistic(packagePath, packageToUpdate);
+				addImportProgress(packageToUpdate);
 
 				// Cleanup backups / temp
 				try {
@@ -816,9 +849,36 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	@Override
+	@GET
+	@javax.ws.rs.Path("/package/{name}/import/errors")
+	public Response getImportErrors(@PathParam("name") String name) throws NodeException {
+		Path pathRoot = checkFeatureGetPath();
+		try (Trx trx = ContentNodeHelper.trx()) {
+			String sanitizedName = sanitizeCheck(name, false);
+
+			// check, whether the content package actually exists (if not, a 404 response will be generated)
+			Path pkgPath = pathRoot.resolve(name);
+			loadFromFilesystem(pkgPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME),
+					StoredContentPackage.class,
+					stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
+
+			var contentPackageErrorFile = Path.of(
+					pathRoot + "/" + sanitizedName + "/" + CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME).toFile();
+			if (contentPackageErrorFile.exists()) {
+				return Response.ok()
+						.entity(contentPackageErrorFile)
+						.type(MediaType.APPLICATION_JSON)
+						.build();
+			} else {
+				return Response.ok().build();
+			}
+		}
+	}
+
+	@Override
 	@POST
 	@javax.ws.rs.Path("/package/{name}/import")
-	public GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+	public GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs, @QueryParam("test") @DefaultValue("false") boolean isTest) throws NodeException {
 		Path pathRoot = checkFeatureGetPath();
 
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -837,7 +897,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 									packagePath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class,
 									stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
 							fillContentPackageStatistic(packagePath, contentPackage);
-							StagingJobController controller = new StagingJobController(sanitizedName, contentPackage, packagePath);
+							StagingJobController controller = new StagingJobController(sanitizedName, contentPackage, packagePath, isTest);
 							imports.put(sanitizedName, controller);
 
 							return controller.call();
@@ -910,6 +970,134 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		return response;
 	}
 
+	@GET
+	@javax.ws.rs.Path("/package/{name}/list/{pathSegments: .*}")
+	public ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> rawSegments, @QueryParam("filter") String filter) throws NodeException {
+		Path path = checkFeatureGetPath();
+
+		final List<PathSegment> segments = rawSegments.stream().filter(s -> StringUtils.isNotBlank(s.getPath())).collect(Collectors.toList());
+		
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ContentPackageFolderResponse response;
+			JobStatus importStatus = imports.entrySet().stream()
+					.filter(e -> e.getKey().equals(name))
+					.map(e -> e.getValue().getJobStatus())
+					.findAny().orElse(null);
+			if (importStatus == null || !importStatus.isRunning()) {
+				// Check that the package is well formed
+				Path packagePath = path.resolve(name);
+				StagedContentPackage cpackage = executeLocked(sanitizeCheck(name, true), () -> {
+					StagedContentPackage contentPackage = loadFromFilesystem(
+							packagePath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), StoredContentPackage.class,
+							stored -> StoredContentPackage.NODE2REST.apply(stored, new StagedContentPackage()), p -> name);
+					return contentPackage;
+				});
+				ArrayDeque<String> walker = new ArrayDeque<>();
+				List<StagingBase> items = new ArrayList<>();
+				List<StagingError> errors = new ArrayList<>();
+
+				StagingErrorKind filterByError = Optional.ofNullable(filter).map(StagingErrorKind::fromValue).orElse(null);
+				
+				processContentPackageItems(packagePath, cpackage, true,
+						page -> {
+							if (page.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredPage storedPage = loadFromFilesystem(page, StoredPage.class, s -> s);
+								items.add(storedPage);
+							}
+						}, 
+						folder -> {
+							StoredFolder storedFolder = loadFromFilesystem(folder, StoredFolder.class, s -> s);
+							String folderName = storedFolder.getName();
+							if (segments.size() == walker.size() && folder.getParent().getFileName().toString().equals(walker.peek())) {
+								items.add(storedFolder);
+							} else if (segments.size() > walker.size() && segments.get(walker.size()).getPath().equals(folderName)) {
+								// Right folder, use it
+								walker.push(storedFolder.getId());
+							}
+						}, 
+						file -> {
+							if (segments.size() == walker.size() && file.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
+								items.add(storedFile);
+								if (!file.getParent().resolve(makeBinaryFilename(storedFile)).toFile().exists()) {
+									var stagingError = new StagingError(storedFile.getId(), file.toString(), null, StagingErrorKind.NO_BINARY);
+									stagingError.setRecommendation(StagingErrorRecommendation.NOT_FOUND.toString());
+									errors.add(stagingError);
+								}
+							}
+						}, 
+						image -> {
+							if (segments.size() == walker.size() && image.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
+								items.add(storedImage);
+								if (!image.getParent().resolve(makeBinaryFilename(storedImage)).toFile().exists()) {
+									var stagingError = new StagingError(storedImage.getId(), image.toString(), null, StagingErrorKind.NO_BINARY);
+									stagingError.setRecommendation(StagingErrorRecommendation.NOT_FOUND.toString());
+									errors.add(stagingError);
+								}
+							}
+						}, 
+						form -> {
+							if (segments.size() == walker.size() && form.getParent().getFileName().toString().equals(walker.peek())) {
+								StoredForm storedForm = loadFromFilesystem(form, StoredForm.class, s -> s);
+								items.add(storedForm);
+							}
+						}, 
+						binary -> {							
+						}, 
+						node -> {
+							if (CollectionUtils.isEmpty(segments)) {
+								StoredNode storedNode = loadFromFilesystem(node, StoredNode.class, s -> s);
+								items.add(storedNode);
+							}
+						}, 
+						channel -> {
+							if (CollectionUtils.isEmpty(segments)) {
+								StoredChannel storedChannel = loadFromFilesystem(channel, StoredChannel.class, s -> s);
+								items.add(storedChannel);
+							}
+						}, 
+						metadata -> {}, 
+						error -> {
+							StagingErrors storedFile = loadFromFilesystemUnsafe(error, StagingErrors.class, s -> s.toString());
+							errors.addAll(storedFile.getErrors());
+						},
+						alien -> {
+							logger.warn(String.format("Alien file in the content package [%s]: %s", cpackage.getName(), alien.toString()));
+						}, 
+						(dup, orig, id) -> {
+							logger.warn(String.format("Duplicated file for id [%s] in the content package [%s]: orig: %s, dup: %s", id, cpackage.getName(), orig.toString(), dup.toString()));
+							var stagingErrorDub = new StagingError(id, dup.toString(), "Duplication of " + orig.toString(), StagingErrorKind.DUPLICATION);
+							stagingErrorDub.setRecommendation(StagingErrorRecommendation.DUPLICATION.toString());
+							errors.add(stagingErrorDub);
+
+							var stagingError = new StagingError(id, orig.toString(), "Duplication of " + dup.toString(), StagingErrorKind.DUPLICATION);
+							stagingError.setRecommendation(StagingErrorRecommendation.DUPLICATION.toString());
+							errors.add(stagingError);
+						},
+						exception -> {
+							logger.error(String.format("Could not process the content package [%s]", cpackage.getName()));
+							if (exception instanceof NodeException) {
+								throw (NodeException) exception;
+							} else if (exception.getCause() instanceof NodeException) {
+								throw (NodeException) exception.getCause();
+							} else {
+								throw new NodeException(exception);
+							}
+						}
+					);
+				response = ContentPackageFolderResponse.fromContent(items, errors, filterByError);
+			} else {
+				response = new ContentPackageFolderResponse();
+			}
+			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
+			response.setImport(importStatus);
+			return response;
+		} catch (IllegalStateException e) {
+			throw new NodeException("Error reading Content Package '" + name + "'", e);
+		}
+	}
+
 	/**
 	 * Check the license feature enabled, and find the content packages filesystem path
 	 * 
@@ -957,8 +1145,24 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @throws NodeException
 	 */
 	private static final <S extends StoredModel, T> T loadFromFilesystem(Path path, Class<S> storedClass, Function<S, T> adapter, Function<Path, String> nameGetter) throws NodeException {
+		return adapter.apply(loadFromFilesystemUnsafe(path, storedClass, nameGetter));
+	}
+
+
+	/**
+	 * Load a stored serializable object from the filesystem.
+	 * @param path file to read
+	 * @param storedClass stored stageable class
+	 * @param nameGetter function to get the name/ID from the given path (for generating an error message)
+	 * 
+	 * @param <S> stored serializable type
+	 * @param <T> output type
+	 * @return
+	 * @throws NodeException
+	 */
+	private static final <S extends Serializable> S loadFromFilesystemUnsafe(Path path, Class<S> storedClass, Function<Path, String> nameGetter) throws NodeException {
 		try (InputStream is = Channels.newInputStream(FileChannel.open(path, StandardOpenOption.READ).lock(0, Long.MAX_VALUE, true).channel())) {
-			return adapter.apply(mapper.readValue(is, storedClass));
+			return mapper.readValue(is, storedClass);
 		} catch (NoSuchFileException noSuchFileException) {
 			String typeName = Optional.ofNullable(storedClass.getAnnotation(StoredType.class)).map(StoredType::value).orElse("object");
 			I18nString message = new CNI18nString(typeName + ".notfound");
@@ -966,6 +1170,22 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			throw new EntityNotFoundException(message.toString());
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
+		}
+	}
+
+	/**
+	 * Get the Global ID from the stored filesystem model. Type agnostic.
+	 * 
+	 * @param path file to read
+	 * @return
+	 */
+	private static final String idFromFilesystem(Path path) {
+		try {
+			JSONObject json = new JSONObject(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
+			return (json != null && json.has("id")) ? json.getString("id") : null;
+		} catch (JSONException | IOException e) {
+			logger.error("Error at getting ID from " + path, e);
+			return null;
 		}
 	}
 
@@ -1081,7 +1301,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			// Independently of the result, we have to store the binary data along,
 			// in order for the possible references to work with this object as fully functional binary, even if the tag data is to be added later.
 			if (storedObject.hasBinary()) {
-				java.io.File binary = currentPath.getParent().resolve(storedObject.getId() + storedObject.getSuffix() + BINARY_EXTENSION).toFile();
+				java.io.File binary = currentPath.getParent().resolve(makeBinaryFilename(storedObject)).toFile();
 				if (!binary.exists()) {
 					binary.createNewFile();
 				}
@@ -1276,13 +1496,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param pathRoot package root
 	 * @param progress import progress
 	 * @param maybeHaveOrphans storage for the paths that cannot be imported right away due to the orphaned links.
-	 * @param mismatches a container for referenced objects, that have been changed before the import.
 	 * @return pair of global node ID and root folder ID
 	 * @throws NodeException
 	 * @throws IOException
 	 */
 	private Pair<String, String> importNodeFromStageable(Path currentPath, Path pathRoot, JobProgress progress,
-			Optional<List<Path>> maybeHaveOrphans, Set<String> mismatches) throws NodeException, IOException {
+			Optional<List<Path>> maybeHaveOrphans) throws NodeException, IOException {
 		String filename = currentPath.getFileName().toString();
 		logger.info("Processing " + currentPath);
 
@@ -1307,6 +1526,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			}, maybeHaveOrphans, null, Optional.of((s, n) -> StagingModelBuilder.setFeatures(s, n)));
 		}
 		logger.info(" ... processed = " + processed);
+		progress.incDone(processed);
 
 		return returnedPair.get();
 	}
@@ -1317,13 +1537,13 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param pathRoot package root
 	 * @param progress import progress
 	 * @param maybeHaveOrphans storage for the paths that cannot be imported right away due to the orphaned links.
-	 * @param mismatches a container for referenced objects, that have been changed before the import.
+	 * @param errors a container for referenced objects, that have been changed before the import.
 	 * @param node node into which the object shall be imported
 	 * @throws NodeException
 	 * @throws IOException
 	 */
 	private void importFromStageable(Path currentPath, Path pathRoot, JobProgress progress,
-			Optional<List<Path>> maybeHaveOrphans, Set<String> mismatches, Node node) throws NodeException, IOException {
+			Optional<List<Path>> maybeHaveOrphans, Set<StagingError> errors, Node node) throws NodeException, IOException {
 		if (!Files.isDirectory(currentPath)) {
 			// operator, which is called when a referenced object (content object), could not be found.
 			com.gentics.contentnode.etc.Operator onReferenceNotFound = () -> {
@@ -1341,22 +1561,22 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			int processed = 0;
 			if (filename.endsWith(PAGE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Page.class, new StoredPage(),
-						(n, s) -> StagingModelBuilder.getPage(n, s, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(n, s) -> StagingModelBuilder.getPage(currentPath, n, s, errors, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(FORM_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Form.class, new StoredForm(),
 						(n, s) -> StagingModelBuilder.getForm(n, s, onReferenceNotFound), maybeHaveOrphans, node, Optional.empty());
 			} else if (filename.endsWith(FILE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, File.class, new StoredFile(),
-						(s, n) -> StagingModelBuilder.getFile(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getFile(currentPath, s, n, errors, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(IMAGE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, ImageFile.class, new StoredImage(),
-						(s, n) -> StagingModelBuilder.getImage(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getImage(currentPath, s, n, errors, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(FOLDER_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Folder.class, new StoredFolder(),
-						(s, n) -> StagingModelBuilder.getFolder(s, n, mismatches, onReferenceNotFound, node), maybeHaveOrphans, node,
+						(s, n) -> StagingModelBuilder.getFolder(currentPath, s, n, errors, onReferenceNotFound, node), maybeHaveOrphans, node,
 						Optional.of((s, n) -> {
 							StagingModelBuilder.setMultichannellingRestrictions(s, n);
 							PermissionStore.getInstance().refreshObject(Folder.TYPE_FOLDER, n.getId());
@@ -1364,7 +1584,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			} else if (filename.endsWith(NODE_EXTENSION)
 					|| filename.endsWith(CHANNEL_EXTENSION)
 					|| filename.equals(CONTENT_PACKAGE_METADATA_FILENAME) 
-					|| filename.endsWith(BINARY_EXTENSION)) {
+					|| filename.endsWith(BINARY_EXTENSION)
+					|| filename.endsWith(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME)) {
 				// ignore - should already be processed
 			} else {
 				logger.warn("Removing alien file " + currentPath.toAbsolutePath());
@@ -1476,12 +1697,21 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	/**
+	 * Add the import progress info of the latest (current) import (if any)
+	 * @param cp content package to modify
+	 */
+	private void addImportProgress(StagedContentPackage cp) {
+		Optional.ofNullable(imports.get(cp.getName())).ifPresent(lastImport -> cp.setImport(lastImport.getJobStatus()));
+	}
+
+	/**
 	 * Fill the package statistics. Remove alien (unrecognizable) content from the package.
 	 * 
 	 * @param path
 	 * @param cp
+	 * @throws NodeException 
 	 */
-	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) {
+	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) throws NodeException {
 		fillContentPackageStatistic(path, cp, false);
 	}
 
@@ -1490,52 +1720,154 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * 
 	 * @param path
 	 * @param cp
+	 * @param throwOnDuplications set this if you want an exception thrown on a duplicated ID in the package
+	 * @throws NodeException 
 	 */
-	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) {
-		try {
-			Map<String, Path> encounteredIDs = new HashMap<>();
-			Files.walk(path).forEach(i -> {
-				if (encounteredBefore(i, encounteredIDs)) {
-					Optional<String> objectId = getObjectId(i);
+	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
+		processContentPackageItems(
+				path, cp, false,
+				page -> cp.setPages(cp.getPages() + 1), 
+				folder -> cp.setFolders(cp.getFolders() + 1), 
+				file -> cp.setFiles(cp.getFiles() + 1), 
+				image -> cp.setImages(cp.getImages() + 1), 
+				form -> cp.setForms(cp.getForms() + 1), 
+				binary -> {}, 
+				node -> cp.setNodes(cp.getNodes() + 1), 
+				channel -> cp.setChannels(cp.getChannels() + 1), 
+				metadata -> {}, 
+				error -> {}, 
+				alien -> {
+					logger.warn("Removing alien file " + alien.toAbsolutePath());
+					try {
+						Files.delete(alien);
+					} catch (IOException e) {
+						logger.error("Cannot remove alien file " + alien.toAbsolutePath(), e);
+					}
+				}, 
+				(dup, orig, id) -> {
 					if (throwOnDuplications) {
-						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", objectId.get(), i, encounteredIDs.get(objectId.get())));
+						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", id, dup, orig));
 					} else {
 						return;
 					}
-				}
-				if (Files.isRegularFile(i)) {
-					if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
-						// TODO consider versions
-						cp.setPages(cp.getPages() + 1);
-					} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
-						// TODO consider versions
-						cp.setForms(cp.getForms() + 1);
-					} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
-						cp.setFiles(cp.getFiles() + 1);
-					} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
-						cp.setImages(cp.getImages() + 1);
-					} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
-						cp.setNodes(cp.getNodes() + 1);
-					} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
-						cp.setFolders(cp.getFolders() + 1);
-					} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
-						cp.setChannels(cp.getChannels() + 1);
-					} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME) 
-							|| i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
-						// ignore
-					} else {
-						logger.warn("Removing alien file " + i.toAbsolutePath());
-						try {
-							Files.delete(i);
-						} catch (IOException e) {
-							logger.error("Cannot remove alien file " + i.toAbsolutePath(), e);
+					
+				}, 
+				exception -> {
+					logger.error("Failed to collect statistic for ContentPackage " + path.getFileName(), exception);
+					// TODO drop 500 here?
+				});
+	}
+
+	/**
+	 * Walk over content staging package contents, performing operations on `doOnXXX` consumers.
+	 * 
+	 * @param path package path
+	 * @param cp package definition
+	 * @param sort set to preserve depth-first order of execution
+	 * @param doOnPage
+	 * @param doOnFolder
+	 * @param doOnFile
+	 * @param doOnImage
+	 * @param doOnForm
+	 * @param doOnBinary
+	 * @param doOnNode
+	 * @param doOnChannel
+	 * @param doOnMetadata
+	 * @param doOnErrors
+	 * @param doOnAlien
+	 * @param doOnDups
+	 * @param doOnException
+	 * @throws NodeException
+	 */
+	public static void processContentPackageItems(Path path, StagedContentPackage cp, boolean sort,
+				Consumer<Path> doOnPage, Consumer<Path> doOnFolder, Consumer<Path> doOnFile, Consumer<Path> doOnImage,
+				Consumer<Path> doOnForm, Consumer<Path> doOnBinary, Consumer<Path> doOnNode, Consumer<Path> doOnChannel,
+				Consumer<Path> doOnMetadata, Consumer<Path> doOnErrors, Consumer<Path> doOnAlien, TriConsumer<Path, Path, String> doOnDups, Consumer<Throwable> doOnException
+			) throws NodeException {
+		Stream<Path> walker = null;
+		try {
+			Map<String, Path> encounteredIDs = new HashMap<>();
+			walker = Files.walk(path);
+			if (sort) {
+				walker = walker.sorted();
+			}
+			walker.forEach(i -> {
+				try {
+					if (encounteredBefore(i, encounteredIDs)) {
+						String objectId = getObjectId(i).get();
+						doOnDups.accept(i, encounteredIDs.get(objectId), objectId);
+					}
+					if (Files.isRegularFile(i)) {
+						if (i.getFileName().toString().equals(CONTENT_PACKAGE_METADATA_FILENAME)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, "metadata", i));
+							}
+							doOnMetadata.accept(i);
+						} else if (i.getFileName().toString().equals(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, "errors", i));
+							}
+							doOnErrors.accept(i);
+						} else if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedPage.TYPE_NAME, i));
+							}
+							doOnPage.accept(i);
+						} else if (i.getFileName().toString().endsWith(FORM_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedForm.TYPE_NAME, i));
+							}
+							doOnForm.accept(i);
+						} else if (i.getFileName().toString().endsWith(FILE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedFile.TYPE_NAME, i));
+							}
+							doOnFile.accept(i);
+						} else if (i.getFileName().toString().endsWith(IMAGE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedImage.TYPE_NAME, i));
+							}
+							doOnImage.accept(i);
+						} else if (i.getFileName().toString().endsWith(NODE_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedNode.TYPE_NAME, i));
+							}
+							doOnNode.accept(i);
+						} else if (i.getFileName().toString().endsWith(FOLDER_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedFolder.TYPE_NAME, i));
+							}
+							doOnFolder.accept(i);
+						} else if (i.getFileName().toString().endsWith(CHANNEL_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, StagedChannel.TYPE_NAME, i));
+							}
+							doOnChannel.accept(i);
+						} else if (i.getFileName().toString().endsWith(BINARY_EXTENSION)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, "binary data", i));
+							}
+							doOnBinary.accept(i);
+						} else {
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format(FOUND_AT_LOG, "alien file", i));
+							}
+							doOnAlien.accept(i);
 						}
 					}
+				} catch (NodeException e) {
+					throw new IllegalStateException(e);
 				}
 			});
-		} catch (IOException e) {
-			logger.error("Failed to collect statistic for ContentPackage " + path.getFileName(), e);
-			// TODO drop 500 here?
+		} catch (Throwable e) {
+			if (e.getCause() != null && e.getCause() instanceof NodeException) {
+				e = e.getCause();
+			}
+			doOnException.accept(e);
+		} finally {
+			if (walker != null) {
+				walker.close();
+			}
 		}
 	}
 
@@ -2265,14 +2597,28 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		unwrap(() -> FILENAME_LOCK.executeLocked(lockKey, () -> wrap(method)));
 	}
 
+	/**
+	 * Make a binary data filename for the given object.
+	 * 
+	 * @param storedObject
+	 * @return
+	 */
+	private static final String makeBinaryFilename(StoredModel storedObject) {
+		return storedObject.getId() + storedObject.getSuffix() + BINARY_EXTENSION;
+	}
+
 	private final class StagingJobController implements Callable<GenericResponse> {
 		private final String name;
 		private final JobProgress progress = new JobProgress().setDone(0).setTotal(0);
 		private final Path packagePath;
+		private final boolean isTest;
 		private boolean running = true;
+		private StagedContentPackage initialState;
 
-		public StagingJobController(String name, StagedContentPackage initialState, Path packagePath) {
+		public StagingJobController(String name, StagedContentPackage initialState, Path packagePath, boolean isTest) {
+			this.initialState = initialState;
 			this.name = name;
+			this.isTest = isTest;
 			this.packagePath = packagePath;
 			progress.setTotal(initialState.getChannels() + initialState.getFiles() + initialState.getFolders() + initialState.getForms() + initialState.getImages() + initialState.getNodes() + initialState.getPages());
 		}
@@ -2281,8 +2627,11 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		public JobStatus call() throws NodeException {
 			progress.setStarted((int) (System.currentTimeMillis() / 1000L));
 
+			// if import errors file exists, we delete it now
+			FileUtils.deleteQuietly(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME).toFile());
+
+			Set<StagingError> errors = new TreeSet<>();
 			try (TrxAttribute trxAttr = TrxAttribute.with(NodeFactory.UNLOCK_AT_TRX_COMMIT, true)) {
-				Set<String> mismatches = new TreeSet<>();
 				List<Path> haveOrphans = new ArrayList<>();
 				try {
 					Map<String, Path> encounteredIDs = new HashMap<>();
@@ -2290,24 +2639,34 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 					java.util.function.Consumer<? super Path> importNodeFromPath = path -> {
 						try {
-							importedNodes.add(importNodeFromStageable(path, packagePath, progress, Optional.of(haveOrphans), mismatches));
+							importedNodes.add(importNodeFromStageable(path, packagePath, progress, Optional.of(haveOrphans)));
 						} catch (Throwable e) {
-							if (e instanceof RuntimeException) {
-								throw (RuntimeException) e;
+							errors.add(StagingError.fromThrowable(idFromFilesystem(path), path, e));
+							if (isTest) {
+								logger.error("Error at test import of path: " + path, e);
 							} else {
-								throw new IllegalStateException(e);
+								if (e instanceof RuntimeException) {
+									throw (RuntimeException) e;
+								} else {
+									throw new IllegalStateException(e);
+								}
 							}
 						}
 					};
 					java.util.function.BiConsumer<Node, ? super Path> importFromPath = (node, path) -> {
 						if (!encounteredBefore(path, encounteredIDs)) {
 							try {
-								importFromStageable(path, packagePath, progress, Optional.of(haveOrphans), mismatches, node);
+								importFromStageable(path, packagePath, progress, Optional.of(haveOrphans), errors, node);
 							} catch (Throwable e) {
-								if (e instanceof RuntimeException) {
-									throw (RuntimeException) e;
+								errors.add(StagingError.fromThrowable(idFromFilesystem(path), path, e));
+								if (isTest) {
+									logger.error("Error at test import of path: " + path, e);
 								} else {
-									throw new IllegalStateException(e);
+									if (e instanceof RuntimeException) {
+										throw (RuntimeException) e;
+									} else {
+										throw new IllegalStateException(e);
+									}
 								}
 							}
 						}
@@ -2356,37 +2715,90 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						importRecursively(folderDir, node, importFromPath);
 					}
 				} catch (Throwable e) {
-					if (e.getCause() != null && e.getCause() instanceof NodeException) {
-						throw (NodeException) e.getCause();
+					errors.add(StagingError.fromThrowable(null, packagePath, e));
+					if (isTest) {
+						logger.error("Error at test import of package: " + name, e);
 					} else {
-						throw new IllegalStateException(e);
+						if (e.getCause() != null && e.getCause() instanceof NodeException) {
+							throw (NodeException) e.getCause();
+						} else if (e instanceof NodeException) {
+							throw (NodeException) (e);
+						} else if (e.getCause() != null && e.getCause() instanceof NodeException) {
+							throw (NodeException) e.getCause();
+						} else {
+							throw new NodeException(e);
+						}
 					}
 				}
 				int tries = 2; 
+
+				// we need to increase the total by the number of orphans, which will be handled now
+				progress.setTotal(progress.getTotal() + haveOrphans.size());
 				while (!haveOrphans.isEmpty() && tries >= 0) {
+
 					for (int i = haveOrphans.size()-1; i >= 0; i--) {
 						Path orphaned = haveOrphans.remove(i);
 						try {
-							importFromStageable(orphaned, packagePath, progress, tries > 0 ? Optional.of(haveOrphans) : Optional.empty(), mismatches, null);
-						} catch (IOException e) {
-							throw new NodeException(e);
+							importFromStageable(orphaned, packagePath, progress, tries > 0 ? Optional.of(haveOrphans) : Optional.empty(), errors, null);
+						} catch (Throwable e) {
+							errors.add(StagingError.fromThrowable(idFromFilesystem(orphaned), orphaned, e));
+							if (isTest) {
+								logger.error("Error at test import of an orphaned path: " + orphaned, e);
+							} else if (e instanceof NodeException) {
+								throw (NodeException) (e);
+							} else if (e.getCause() != null && e.getCause() instanceof NodeException) {
+								throw (NodeException) e.getCause();
+							} else {
+								throw new NodeException(e);
+							}
 						}
 					}
 					tries -= 1;
 				}
-				progress.setFinished((int) (System.currentTimeMillis() / 1000));
-				if (mismatches.isEmpty()) {
-					JobStatus response = getJobStatus();
-					response.addMessage(new Message(Type.SUCCESS, I18NHelper
-							.get("content.staging.import.success", Integer.toString(progress.getDone()), name)));
-					return response;
+				if (isTest) {
+					TransactionManager.getCurrentTransaction().rollback(false);
+				}
+
+				JobStatus response = getJobStatus();
+				Type status;
+				String i18nKey;
+				String[] i18nParams;
+				boolean throwException = false;
+
+				if (errors.isEmpty()) {
+					status = Type.SUCCESS;
+					i18nKey = isTest ? "content.staging.import.test.success" : "content.staging.import.success";
+					i18nParams = new String[] {Integer.toString(progress.getDone()), name};
 				} else {
-					throw new RestMappedException("Error while importing",
-							"content.staging.import.implementation_mismatch",
-							Arrays.asList(name, mismatches.stream().collect(Collectors.joining("\n ", "\n ", ""))));
+					status = Type.CRITICAL;
+					i18nKey = "content.staging.import.errors";
+					i18nParams = new String[] {name, Integer.toString(errors.size())};
+					throwException = !isTest;
+				}
+
+				if (throwException) {
+					throw new RestMappedException("Error while importing", i18nKey, Arrays.asList(i18nParams));
+				} else {
+					response.addMessage(new Message(status, I18NHelper
+							.get(i18nKey, i18nParams)));
+					return response;
 				}
 			} finally {
+				// this is a bit lame, we just make sure that progress.done is not greater than progress.total
+				if (progress.getDone() > progress.getTotal()) {
+					progress.setTotal(progress.getDone());
+				}
+				progress.setFinished((int) (System.currentTimeMillis() / 1000));
 				running = false;
+				StagingErrors stagingErrors = new StagingErrors();
+				stagingErrors.setErrors(new ArrayList<>(errors));
+				try (OutputStream os = Channels.newOutputStream(FileChannel.open(packagePath.resolve(CONTENT_PACKAGE_IMPORT_ERRORS_FILENAME),
+						StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
+					mapper.writeValue(os, stagingErrors);
+				} catch (IOException e) {
+					logger.error("Unable to write content staging error file", e);
+					throw new IllegalStateException(e);
+				}
 			}
 		}
 
@@ -2396,6 +2808,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		 */
 		public JobStatus getJobStatus() {
 			return new JobStatus(I18NHelper.get("content.staging.import", name), running).setProgress(progress);
+		}
+
+		/**
+		 * Get the content package, which is currently imported
+		 * @return content package
+		 */
+		public StagedContentPackage getInitialState() {
+			return this.initialState;
 		}
 
 		/**

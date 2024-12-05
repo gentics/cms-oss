@@ -15,7 +15,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("file")
+@StoredType(StagedFile.TYPE_NAME)
 public class StoredFile extends StagedFile implements StoredModel {
 
 	private static final long serialVersionUID = -1935799142638489825L;

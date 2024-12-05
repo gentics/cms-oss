@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedFolder extends StagedLocalizableObject {
 
+	public static final String TYPE_NAME = "folder";
+
 	private static final long serialVersionUID = 4211397828533288505L;
 
 	/**
@@ -191,6 +193,6 @@ public class StagedFolder extends StagedLocalizableObject {
 	@XmlTransient
 	@JsonIgnore
     public String getTypeName() {
-		return "folder";
+		return TYPE_NAME;
 	}
 }

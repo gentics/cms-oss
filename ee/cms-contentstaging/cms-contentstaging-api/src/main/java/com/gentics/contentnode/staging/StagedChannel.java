@@ -16,6 +16,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StagedChannel extends StagedNode {
 
+	public static final String TYPE_NAME = "channel";
+
 	private static final long serialVersionUID = -5069880653613236301L;
 
 	private String masterNodeId;
@@ -36,10 +38,22 @@ public class StagedChannel extends StagedNode {
 		this.masterNodeId = masterNodeId;
 	}
 
+	/**
+	 * Clone the origin into this entity.
+	 * 
+	 * @param origin
+	 */
+	@XmlTransient
+	@JsonIgnore
+    public void clone(StagedChannel origin) {
+		super.clone(origin);
+		this.masterNodeId = origin.masterNodeId;
+	}
+
 	@Override
 	@XmlTransient
 	@JsonIgnore
 	public String getTypeName() {
-		return "channel";
+		return TYPE_NAME;
 	}
 }

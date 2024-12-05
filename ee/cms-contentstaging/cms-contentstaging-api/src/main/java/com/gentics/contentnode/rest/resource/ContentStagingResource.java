@@ -1,5 +1,7 @@
 package com.gentics.contentnode.rest.resource;
 
+import java.util.List;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -11,12 +13,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPart;
 
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -159,17 +162,31 @@ public interface ContentStagingResource {
 	@Consumes("multipart/form-data")
 	ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws Exception;
 
+
+	/**
+	 * Retrieve a list of import errors
+	 *
+	 * @param name package name
+	 * @return response containing the error list
+	 * @throws Exception
+	 */
+	@GET
+	@javax.ws.rs.Path("/package/{name}/import/errors")
+	Response getImportErrors(@PathParam("name") String name) throws Exception;
+
+
 	/**
 	 * Import the entities of a package of given name into CMS.
 	 * 
 	 * @param name package name
 	 * @param waitMs wait timeout in ms. When set to 0, response will be sent, when the action completes
+	 * @param isTest do not make an actual import, but test instead if the package can be imported.
 	 * @return response
 	 * @throws Exception
 	 */
 	@POST
 	@Path("/package/{name}/import")
-	GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
+	GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs, @QueryParam("test") @DefaultValue("false") boolean isTest) throws Exception;
 
 	/**
 	 * Export the CMS entities, contained in the package with the given name, into the package, i.e. make a package sync.
@@ -194,4 +211,17 @@ public interface ContentStagingResource {
 	@POST
 	@Path("/package/{name}/status")
 	StagingStatusResponse status(String name, IdTypeMapRequest request) throws Exception;
+
+	/**
+	 * List the contents of a given folder of a package of the given name.
+	 * 
+	 * @param name package name
+	 * @param segments folder path
+	 * @param filter filter the results
+	 * @return download response
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/package/{name}/list/{pathSegments: .*}")
+	ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> segments, @QueryParam("filter") String filter) throws Exception;
 }

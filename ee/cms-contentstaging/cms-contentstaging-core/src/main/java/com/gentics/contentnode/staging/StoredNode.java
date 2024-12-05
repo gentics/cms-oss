@@ -13,11 +13,11 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("node")
+@StoredType(StagedNode.TYPE_NAME)
 public class StoredNode extends StagedNode implements StoredModel {
 
 	private static final long serialVersionUID = 3693393007670673734L;
-
+	
 	public static final BiFunction<StagedNode, StoredNode, StoredNode> REST2NODE = (from, to) -> {
 		to.clone(from);
 		return to;

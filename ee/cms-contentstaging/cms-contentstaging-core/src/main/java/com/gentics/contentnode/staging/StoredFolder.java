@@ -15,7 +15,7 @@ import com.gentics.contentnode.etc.BiFunction;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@StoredType("folder")
+@StoredType(StagedFolder.TYPE_NAME)
 public class StoredFolder extends StagedFolder implements StoredModel {
 
 	private static final long serialVersionUID = 2144865542004355956L;

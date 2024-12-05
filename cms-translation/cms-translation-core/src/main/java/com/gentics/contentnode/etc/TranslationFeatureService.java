@@ -22,6 +22,10 @@ public class TranslationFeatureService implements FeatureService {
 			return false;
 		}
 
+		if (TranslationServiceLoaderUtil.isAlreadyProvided()) {
+			return true;
+		}
+
 		return TranslationServiceLoaderUtil.reloadService();
 	}
 

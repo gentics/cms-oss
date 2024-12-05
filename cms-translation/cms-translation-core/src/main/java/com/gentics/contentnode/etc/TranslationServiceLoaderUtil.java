@@ -84,6 +84,25 @@ public class TranslationServiceLoaderUtil {
 	}
 
 	/**
+	 * Checks if the TranslationService implementation is already provided.
+	 *
+	 * @return true if the implementation is provided and matches the configured class name, false otherwise
+	 */
+	public static boolean isAlreadyProvided() {
+		final var implementationClassOpt = getImplementationClass();
+		if (implementationClassOpt.isEmpty()) {
+			logger.error("No implementation for the 'TranslationService' interface is configured.");
+			return false;
+		}
+		final var implementationClassFromConfig = implementationClassOpt.get();
+
+		var currentService = getTranslationService();
+		return currentService.map(translationService -> translationService.getClass().getName()
+						.equals(implementationClassFromConfig))
+				.orElse(false);
+	}
+
+	/**
 	 * Checks if the service definition file requires an update.
 	 *
 	 * @param implementationClass       The class name of the implementation.

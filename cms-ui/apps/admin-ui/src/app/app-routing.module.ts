@@ -1,6 +1,6 @@
 import { PermissionsGuard } from '@admin-ui/core/guards/permissions/permissions.guard';
 import { NgModule, inject } from '@angular/core';
-import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ROUTE_DETAIL_OUTLET } from './common';
 import {
@@ -509,6 +509,27 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                                 GcmsPermission.READ,
                             ],
                         },
+                    ],
+                },
+            },
+
+            // License-Management Module
+            {
+                path: AdminUIModuleRoutes.LICENSE_MANAGEMENT,
+                component: SplitViewRouterOutletComponent,
+                loadChildren: () => import('./features/license-management/license-management.module').then(m => m.LicenseManagementModeModule),
+                data: {
+                    [ROUTE_BREADCRUMB_KEY]: {
+                        title: 'dashboard.license_management',
+                    },
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
+                        // {
+                        //     type: AccessControlledType.LICENSING,
+                        //     permissions: [
+                        //         GcmsPermission.READ,
+                        //     ],
+                        // },
                     ],
                 },
             },

@@ -29,6 +29,7 @@ import * as TEMPLATE_TAG_TRANSLATIONS from './translations/template-tag.translat
 import * as TEMPLATE_TRANSLATIONS from './translations/template.translations.json';
 import * as USER_TRANSLATIONS from './translations/user.translations.json';
 import * as WIDGET_TRANSLATIONS from './translations/widget.translations.json';
+import * as LICENSE_TRANSLATIONS from './translations/license.translations.json';
 
 function getTranslations(jsonModule: any): any {
     return jsonModule;
@@ -62,6 +63,7 @@ export const ALL_TRANSLATIONS = {
     templateTag: getTranslations(TEMPLATE_TAG_TRANSLATIONS),
     user: getTranslations(USER_TRANSLATIONS),
     widget: getTranslations(WIDGET_TRANSLATIONS),
+    license: getTranslations(LICENSE_TRANSLATIONS),
 };
 
 /** Translations for a single language. */

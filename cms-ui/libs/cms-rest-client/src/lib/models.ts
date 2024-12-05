@@ -40,6 +40,7 @@ import {
     AbstractValidationAPI,
     AbstractPublishProtocolAPI,
     AbstractTranslationAPI,
+    AbstractLicenseAPI,
 } from './abstracts';
 import { BasicAPI, Callable } from './common';
 
@@ -211,6 +212,7 @@ export type GCMSUsersnapAPI = MappedAPI<AbstractUsersnapAPI>;
 export type GCMSValidationAPI = MappedAPI<AbstractValidationAPI>;
 export type GCMSPublishProtocolAPI = MappedAPI<AbstractPublishProtocolAPI>;
 export type GCMSTranslationAPI = MappedAPI<AbstractTranslationAPI>;
+export type GCMSLicenseAPI = MappedAPI<AbstractLicenseAPI>;
 
 export type GCMSRootAPI = {
     [K in keyof AbstractRootAPI]: MappedAPI<AbstractRootAPI[K]>;

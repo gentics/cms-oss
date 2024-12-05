@@ -361,6 +361,12 @@ import {
     WastebinRestoreOptions,
     TranslationRequestOptions,
     GenericItemResponse,
+    LicenseInfoResponse,
+    LicenseUpdateRequest,
+    LicenseUpdateResponse,
+    LicenseContentRepositoryInfoOptions,
+    LicenseContentRepositoryInfoResponse,
+    PushLicenseRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -1062,6 +1068,12 @@ export interface AbstractPublishProtocolAPI extends BasicAPI {
     list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
 }
 
+export interface AbstractLicenseAPI extends BasicAPI {
+    info: () => LicenseInfoResponse;
+    update: (data: LicenseUpdateRequest) => LicenseUpdateResponse;
+    contentRepositories: (options?: LicenseContentRepositoryInfoOptions) => LicenseContentRepositoryInfoResponse;
+    push: (data: PushLicenseRequest) => Response;
+}
 
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
@@ -1104,4 +1116,5 @@ export interface AbstractRootAPI {
     user: AbstractUserAPI;
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;
+    license: AbstractLicenseAPI;
 }

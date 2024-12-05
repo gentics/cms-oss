@@ -606,6 +606,11 @@ public class MeshPublisher implements AutoCloseable {
 	protected Single<MeshServerInfoModel> serverInfo;
 
 	/**
+	 * Mesh licensing info
+	 */
+	protected Single<LicenseInfoModel> licenseInfo;
+
+	/**
 	 * Flag, which is set when publishing into Mesh SQL
 	 */
 	protected boolean meshSql = false;
@@ -1183,6 +1188,9 @@ public class MeshPublisher implements AutoCloseable {
 
 			serverInfo = client.getApiInfo().toSingle().cache();
 			serverInfo.subscribe();
+
+			licenseInfo = client.get("/admin/license", LicenseInfoModel.class).toSingle().cache();
+			licenseInfo.subscribe();
 
 			// determine, whether the Mesh version supports publishing (and setting roles) with the save requests
 			meshSql = !serverInfo.blockingGet().getDatabaseVendor().contains("orientdb");
@@ -2944,6 +2952,44 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public CmpProductVersion getMeshServerVersion() {
 		return new CmpProductVersion(serverInfo.blockingGet().getMeshVersion());
+	}
+
+	/**
+	 * Push active license key to Mesh.
+	 * @param licenseKey The license key to push.
+	 * @return {@code true} when the license key was successfully pushed and {@code false} otherwise.
+	 */
+	public boolean pushLicenseKey(String licenseKey) {
+		try {
+			client.post("/admin/license", new JsonObject().put("licenseKey", licenseKey)).blockingGet();
+
+			return true;
+		} catch (Exception e) {
+			logger.error("Could not push license key: " + e.getMessage(), e);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get licensing information from Mesh.
+	 * @return The licensing information retrieved from Mesh.
+	 */
+	public JsonObject getLicenseInfo() {
+		try {
+			return client.get("/admin/license").blockingGet();
+		} catch (Exception e) {
+			if (e.getCause() instanceof MeshRestClientMessageException restException) {
+				if (restException.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+					// When the license endpoint does not exist, the Mesh instance is an open source Mesh.
+					return new JsonObject().put("openSource", true);
+				}
+			}
+
+			logger.error(String.format("Could not get license information from Mesh CR {%s}: %s", cr.getName(), e.getMessage()), e);
+		}
+
+		return null;
 	}
 
 	/**

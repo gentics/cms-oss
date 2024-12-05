@@ -4,10 +4,10 @@
         type="file"
         class="hidden-file-input"
         tabindex="-1"
-        [accept]="inputAccept"
+        [accept]="'*'"
         [disabled]="disabled"
         [multiple]="multiple"
-        (change)="onChange($event, fileInput)"
+        (change)="handleFileChange()"
     />
 </div>
 
@@ -17,7 +17,21 @@
     [icon]="icon"
     [type]="dropArea?.pageDragHovered ? 'success' : type"
     [flat]="flat || dropArea?.dragHovered"
-    (click)="!disabled && fileInput.click()"
+    (click)="openFilePicker()"
 >
     <ng-content></ng-content>
 </gtx-button>
+
+<div
+    *ngIf="displayFiles && value.length > 0"
+    class="selection"
+    [class.multiple]="multiple"
+>
+    <div class="label-wrapper">
+        <span class="selected-label">{{ selectionLabel }}</span>
+        <span *ngIf="!multiple" class="file-name">:&nbsp;{{ value[0].name }}</span>
+    </div>
+    <ul *ngIf="multiple" class="file-list">
+        <li *ngFor="let f of value" class="file-name">{{ f.name }}</li>
+    </ul>
+</div>

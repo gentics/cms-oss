@@ -1,16 +1,19 @@
 import {
     ChangeDetectorRef,
     Component,
+    ElementRef,
     EventEmitter,
     Input,
-    OnDestroy,
+    OnChanges,
     OnInit,
     Optional,
     Output,
     Self,
+    ViewChild,
 } from '@angular/core';
-import { merge, Subscription } from 'rxjs';
-import { IFileDropAreaOptions } from '../../common';
+import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
+import { merge } from 'rxjs';
+import { ChangesOf, IFileDropAreaOptions } from '../../common';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
 import { matchesMimeType } from '../../utils/matches-mime-type';
 
@@ -25,161 +28,143 @@ import { matchesMimeType } from '../../utils/matches-mime-type';
     selector: 'gtx-file-picker',
     templateUrl: './file-picker.component.html',
     styleUrls: ['./file-picker.component.scss'],
+    providers: [generateFormProvider(FilePickerComponent)],
 })
-export class FilePickerComponent implements OnInit, OnDestroy {
+export class FilePickerComponent extends BaseFormElementComponent<File[]> implements OnInit, OnChanges {
 
     /**
      * Sets the file picker button to be auto-focused. Handled by `AutofocusDirective`.
      */
     @Input()
-    autofocus = false;
-
-    /**
-     * Set to a non-false value to disable the file picker. Defaults to `false` if absent.
-     */
-    @Input()
-    get disabled(): boolean {
-        return this._disabled;
-    }
-    set disabled(value: boolean) {
-        let newValue = value !== false && <any>value !== 'false';
-        if (newValue != this._disabled) {
-            this._disabled = newValue;
-            this.setDropAreaOptions();
-        }
-    }
+    public autofocus = false;
 
     /**
      * Set to a falsy value to disable picking multiple files at once. Defaults to `true` if absent.
      */
     @Input()
-    get multiple(): boolean {
-        return this._multiple;
-    }
-    set multiple(value: boolean) {
-        let newValue = value !== false && <any>value !== 'false';
-        if (newValue != this._multiple) {
-            this._multiple = newValue;
-            this.setDropAreaOptions();
-        }
-    }
+    public multiple = false;
 
     /**
      * Provides feedback for accepted file types, if supported by the browser. Defaults to `"*"`.
      */
     @Input()
-    get accept(): string {
-        return this._accept;
-    }
-    set accept(value: string) {
-        let usedValue = value == undefined ? '*' : value;
-        if (usedValue !== this._accept) {
-            this._accept = usedValue;
-            this.inputAccept = usedValue.replace(/,/g, ';');
-            this.setDropAreaOptions();
-        }
-    }
+    public accept = '*';
 
     /**
      * Button size - "small", "regular" or "large". Forwarded to the Button component.
      */
     @Input()
-    get size(): 'small' | 'regular' | 'large' {
-        return this._size;
-    }
-    set size(val: 'small' | 'regular' | 'large') {
-        this._size = val == undefined ? 'regular' : val;
-    }
+    public size: 'small' | 'regular' | 'large' = 'regular';
 
     /**
      * Display the button as a flat button or not. Forwarded to the Button component.
      */
     @Input()
-    get flat(): boolean {
-        return this._flat;
-    }
-    set flat(val: boolean) {
-        this._flat = val != undefined && val !== false;
-    }
+    public flat = false;
 
     /**
      * Sets the type of the button. Forwarded to the Button component.
      */
     @Input()
-    type: 'primary' | 'secondary' | 'success' | 'warning' | 'alert' = 'primary';
+    public type: 'primary' | 'secondary' | 'success' | 'warning' | 'alert' = 'primary';
 
     /**
      * Icon button without text. Forwarded to the Button component.
      */
     @Input()
-    get icon(): boolean {
-        return this._icon;
-    }
-    set icon(val: boolean) {
-        this._icon = val !== false && <any>val !== 'false';
-    }
+    public icon = false;
+
+    /**
+     * If it should display the names of the selected files.
+     */
+    @Input()
+    public displayFiles = false;
+
+    /**
+     * The label to show when `displayFiles` is `true`.
+     */
+    @Input()
+    public selectionLabel = '';
 
     /**
      * Triggered when a file / files are selected via the file picker.
+     * @deprecated Use `valueChange` events instead.
      */
     @Output()
-    fileSelect = new EventEmitter<File[]>();
+    public fileSelect = new EventEmitter<File[]>();
 
     /**
      * Triggered when a file / files are selected but do not fit the "accept" option.
      */
     @Output()
-    fileSelectReject = new EventEmitter<File[]>();
+    public fileSelectReject = new EventEmitter<File[]>();
 
+    @ViewChild('fileInput', { static: true })
+    public inputElement: ElementRef<HTMLInputElement>;
 
-    inputAccept = '*';
-
-    private _icon = false;
-    private _size: 'small' | 'regular' | 'large' = 'regular';
-    private _flat = false;
-    private _accept = '*';
-    private _disabled = false;
-    private _multiple = true;
-    private _subscriptions: Subscription[] = [];
+    public inputAccept = '*';
 
     constructor(
-        @Optional() @Self() public dropArea: FileDropAreaDirective,
-        private cd: ChangeDetectorRef,
-    ) { }
+        @Optional()
+        @Self()
+        public dropArea: FileDropAreaDirective,
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+        this.booleanInputs.push('multiple', 'flat', 'icon', 'displayFiles');
+    }
 
     ngOnInit(): void {
-        if (this.dropArea) {
+        if (!this.dropArea) {
+            return;
+        }
+        this.setDropAreaOptions();
+        this.subscriptions.push(
+            merge(
+                this.dropArea.pageDragEnter,
+                this.dropArea.pageDragLeave,
+                this.dropArea.fileDragEnter,
+                this.dropArea.fileDragLeave,
+            ).subscribe(() => {
+                this.changeDetector.markForCheck();
+            }),
+        );
+
+        this.subscriptions.push(this.dropArea.fileDrop.subscribe((files: File[]) => {
+            this.triggerChange(files);
+            this.fileSelect.emit(files);
+        }));
+
+        this.subscriptions.push(this.dropArea.fileDropReject.subscribe((files: File[]) => {
+            this.fileSelectReject.emit(files);
+        }));
+    }
+
+    public ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.accept) {
+            this.accept = this.accept || '*';
+            this.inputAccept = this.accept.replace(/,/g, ';');
+        }
+        if (changes.accept || changes.disabled || changes.multiple) {
             this.setDropAreaOptions();
-            this._subscriptions = [
-                merge(
-                    this.dropArea.pageDragEnter,
-                    this.dropArea.pageDragLeave,
-                    this.dropArea.fileDragEnter,
-                    this.dropArea.fileDragLeave,
-                ).subscribe(() => this.cd.markForCheck()),
-
-                this.dropArea.fileDrop.subscribe((files: File[]) => {
-                    this.fileSelect.emit(files);
-                }),
-
-                this.dropArea.fileDropReject.subscribe((files: File[]) => {
-                    this.fileSelectReject.emit(files);
-                }),
-            ];
         }
     }
 
-    ngOnDestroy(): void {
-        this._subscriptions.forEach(s => s.unsubscribe());
+    openFilePicker(): void {
+        if (this.disabled) {
+            return;
+        }
+        this.inputElement?.nativeElement?.click?.();
     }
 
-    onChange(event: Event, input: HTMLInputElement): void {
-        let files = input && input.files;
+    handleFileChange(): void {
+        const files = this.inputElement?.nativeElement?.files;
         if (files && files.length) {
-            let accepted: File[] = [];
-            let rejected: File[] = [];
+            const accepted: File[] = [];
+            const rejected: File[] = [];
+
             Array.from(files).forEach(file => {
-                if (matchesMimeType(file.type, this._accept)) {
+                if (matchesMimeType(file.type, this.accept)) {
                     accepted.push(file);
                 } else {
                     rejected.push(file);
@@ -187,8 +172,9 @@ export class FilePickerComponent implements OnInit, OnDestroy {
             });
 
             // Remove the Files from the input
-            input.value = '';
+            this.inputElement.nativeElement.value = '';
 
+            this.triggerChange(accepted);
             if (accepted.length > 0) {
                 this.fileSelect.emit(accepted);
             }
@@ -198,13 +184,19 @@ export class FilePickerComponent implements OnInit, OnDestroy {
         }
     }
 
+    protected onValueChange(): void {
+        // no-op
+    }
+
     private setDropAreaOptions(): void {
-        if (this.dropArea) {
-            let options: IFileDropAreaOptions = Object.assign({}, this.dropArea.options || {});
-            options.accept = this._accept;
-            options.disabled = this._disabled;
-            options.multiple = this._multiple;
-            this.dropArea.options = options;
+        if (!this.dropArea) {
+            return;
         }
+
+        const options: IFileDropAreaOptions = Object.assign({}, this.dropArea.options || {});
+        options.accept = this.accept;
+        options.disabled = this.disabled;
+        options.multiple = this.multiple;
+        this.dropArea.options = options;
     }
 }

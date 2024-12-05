@@ -812,3 +812,4 @@
 2024-09-12  CH-1727 GO  SQL ALTER TABLE form ADD unpublished_date INT, ADD unpublisher INT, ADD future_unpublisher INT, ADD future_publisher INT;
 2024-11-20  CH-1729 NOP SQL ALTER TABLE objprop ADD COLUMN restricted TINYINT(1) NOT NULL DEFAULT 0 AFTER sync_variants; ## Add flag to restrict object property definitions
 2024-11-20  CH-1730 NOP SQL UPDATE objprop SET restricted = 1 WHERE id IN (SELECT objprop_id FROM objprop_node); ## Make object property definitions restricted, which are assigned to nodes
+2024-11-18	CH-1728 PK	SQL	INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 142, 0, '11000000000000000000000000000000'); ## Add initial permissions form license management to node user.

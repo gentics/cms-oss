@@ -238,5 +238,9 @@
     "packages": {
         "en": "Packages",
         "de": "Pakete"
+    },
+    "license_management": {
+        "en": "License Management",
+        "de": "Lizenz Management"
     }
 }

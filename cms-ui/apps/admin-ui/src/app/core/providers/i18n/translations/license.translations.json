@@ -1,0 +1,114 @@
+{
+    "overview_title": {
+        "en": "Overview",
+        "de": "Übersicht"
+    },
+    "status": {
+        "en": "Status",
+        "de": "Status"
+    },
+    "status_MISSING": {
+        "en": "Missing",
+        "de": "Fehlt"
+    },
+    "status_INVALID": {
+        "en": "Invalid",
+        "de": "Invalide"
+    },
+    "status_EXPIRED": {
+        "en": "Expired",
+        "de": "Abgelaufen"
+    },
+    "status_VALID": {
+        "en": "Valid",
+        "de": "Valide"
+    },
+    "status_INSUFFICIENT": {
+        "en": "Insufficient",
+        "de": "Unzureichend"
+    },
+    "status_NOT_NEEDED": {
+        "en": "Not needed",
+        "de": "Nicht benötigt"
+    },
+    "uuid": {
+        "en": "ID",
+        "de": "ID"
+    },
+    "issuer": {
+        "en": "Issuer",
+        "de": "Aussteller"
+    },
+    "subject": {
+        "en": "Subject",
+        "de": "Betreff"
+    },
+    "features": {
+        "en": "Features",
+        "de": "Features"
+    },
+    "issuedAt": {
+        "en": "Issued at",
+        "de": "Ausgestellt am"
+    },
+    "validUntil": {
+        "en": "Valid until",
+        "de": "Valide bis"
+    },
+    "unlimitedValidity": {
+        "en": "Unlimited",
+        "de": "Unlimitiert"
+    },
+    "openSource": {
+        "en": "OpenSource",
+        "de": "OpenSource"
+    },
+    "featureName": {
+        "en": "Product",
+        "de": "Produkt"
+    },
+    "upload_license": {
+        "en": "Upload License",
+        "de": "Lizenz hochladen"
+    },
+    "upload_file": {
+        "en": "Upload a license file",
+        "de": "Lizenzdatei hochladen"
+    },
+    "file_upload_button": {
+        "en": "Select license file",
+        "de": "Lizenzdatei auswählen"
+    },
+    "selected_file": {
+        "en": "Selected file",
+        "de": "Ausgwählte Datei"
+    },
+    "enter_license": {
+        "en": "Enter license directly",
+        "de": "Lizenz direkt eingeben"
+    },
+    "enter_license_plceholder": {
+        "en": "Enter license here",
+        "de": "Lizenz hier eingeben"
+    },
+    "pushToContentRepositories": {
+        "en": "Forward license to ContentRepositories",
+        "de": "Lizenz zu ContentRepositories weiterleiten"
+    },
+    "cr_license_differs": {
+        "en": "The license of the ContentRepository is different from the CMS",
+        "de": "Die Lizenz von dem ContentRepository eine andere, als die CMS verwendete"
+    },
+    "push_license_to_cr_button": {
+        "en": "Push license",
+        "de": "Lizenz übertragen"
+    },
+    "push_license_to_all_crs_button": {
+        "en": "Push license to all",
+        "de": "Lizenz auf alle übertragen"
+    },
+    "contentRepository_info_modal_title": {
+        "en": "License information of \"{{ entityName }}\"",
+        "de": "Lizenzinformationen von „{{ entityName }}“"
+    }
+}

@@ -19,10 +19,10 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
     public constructs: (TagTypeBO<Raw> | ConstructBO)[] = [];
 
     public loading = false;
-    public selectedIds: number[] = [];
+    public selectedIds: string[] = [];
 
     protected nodes: IndexById<Node<Raw>> = {};
-    protected selectedPerConstruct: { [constructId: EntityIdType]: number[] } = {};
+    protected selectedPerConstruct: { [constructId: EntityIdType]: string[] } = {};
 
     private subscription: Subscription = new Subscription();
 
@@ -63,13 +63,13 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
             nodes.forEach(node => this.nodes[node.id] = node);
 
             const links = (linkedNodesPerConstruct as [EntityIdType, Node<Raw>[]][]).map(([constructId, linkedNodes]) => {
-                const nodeIds = linkedNodes.map(node => node.id);
+                const nodeIds = linkedNodes.map(node => `${node.id}`);
                 this.selectedPerConstruct[constructId] = nodeIds;
                 return nodeIds;
             });
 
             // Gives us a unique list of all nodes which are selected by all constructs
-            this.selectedIds = Array.from(new Set<number>(intersection(...links)));
+            this.selectedIds = Array.from(new Set<string>(intersection(...links)));
             this.loading = false;
             this.changeDetector.markForCheck();
         }, err => {
@@ -82,19 +82,19 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
         }));
     }
 
-    selectionChange(newSelection: number[]): void {
+    selectionChange(newSelection: string[]): void {
         this.selectedIds = newSelection;
     }
 
     async okButtonClicked(): Promise<void> {
         this.loading = true;
         this.changeDetector.markForCheck();
-        const addSuccess = new Set<number>();
-        const removeSucess = new Set<number>();
+        const addSuccess = new Set<string>();
+        const removeSucess = new Set<string>();
 
         for (const construct of this.constructs) {
-            const toAdd = new Set<number>(this.selectedIds);
-            const toRemove = new Set<number>(this.selectedPerConstruct[construct.id]);
+            const toAdd = new Set<string>(this.selectedIds);
+            const toRemove = new Set<string>(this.selectedPerConstruct[construct.id]);
 
             for (const alreadAssigned of this.selectedPerConstruct[construct.id]) {
                 toAdd.delete(alreadAssigned);
@@ -105,7 +105,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
 
             for (const nodeToAdd of toAdd) {
                 try {
-                    await this.handler.linkToNode(construct.id, nodeToAdd).toPromise();
+                    await this.handler.linkToNode(construct.id, Number(nodeToAdd)).toPromise();
                     addSuccess.add(nodeToAdd);
                 } catch (err) {
                     this.notification.show({
@@ -122,7 +122,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
 
             for (const nodeToRemove of toRemove) {
                 try {
-                    await this.handler.unlinkFromNode(construct.id, nodeToRemove).toPromise();
+                    await this.handler.unlinkFromNode(construct.id, Number(nodeToRemove)).toPromise();
                     removeSucess.add(nodeToRemove);
                 } catch (err) {
                     this.notification.show({

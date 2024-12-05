@@ -13,13 +13,12 @@ import {
     AlohaGlobal,
     CNIFrameDocument,
     CNWindow,
-    DYNAMIC_FRAME,
     GCNJSLib,
     GCNJsLibRequestOptions,
     GCNRestRequestArgs,
 } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { OBJECT_PROPERTIES_CONTEXT_MENU_CLASS, OBJECT_PROPERTIES_INFO_BUTTON_CLASS, PostLoadScript } from './post-load';
+import { PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';
 
 describe('custom scripts', () => {
@@ -113,24 +112,10 @@ describe('custom scripts', () => {
             const link = fixture.addLinkToDifferentPageInEditMode();
             const event = link.leftClick();
             link.middleClick();
-            link.ctrlClick();
             link.shiftClick();
 
             expect(fixture.eventPreventedByCustomScript).toBe(true);
             expect(event.defaultPrevented).toBe(true);
-            expect(fixture.window.open).not.toHaveBeenCalled();
-            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
-        });
-
-        it('ignores links in tagfill dialogs', () => {
-            fixture = CustomScriptsTestFixture.withTagfillDialog();
-            const link = fixture.addLinkToDifferentPageInEditMode();
-            link.leftClick();
-            link.middleClick();
-            link.ctrlClick();
-            link.shiftClick();
-
-            expect(fixture.eventPreventedByCustomScript).toBe(false);
             expect(fixture.window.open).not.toHaveBeenCalled();
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
@@ -153,7 +138,7 @@ describe('custom scripts', () => {
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
-        it('navigates in the UI when clicking links to other pages', () => {
+        it('navigates in the UI when clicking (left-click) links to other pages', () => {
             fixture = CustomScriptsTestFixture.withPagePreview();
             const link = fixture.addLinkToDifferentPage();
             const event = link.leftClick();
@@ -186,14 +171,17 @@ describe('custom scripts', () => {
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
-        it('opens links in new page when clicked via shift+click', () => {
+        it('navigates to page when clicked via shift+click', () => {
             fixture = CustomScriptsTestFixture.withPagePreview();
             const link = fixture.addLinkToDifferentPage();
             const event = link.shiftClick();
 
             expect(event.defaultPrevented).toBe(true);
-            expect(fixture.window.open).toHaveBeenCalledWith(fixture.urlOfInternalLink, '_blank');
-            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
+            expect(fixture.window.open).not.toHaveBeenCalled();
+            expect(fixture.scriptHost.navigateToPagePreview).toHaveBeenCalledWith(
+                fixture.linkToOtherPage.nodeId,
+                fixture.linkToOtherPage.pageId,
+            );
         });
 
         it('changes the URL of links when right-clicked by the user', () => {
@@ -212,20 +200,6 @@ describe('custom scripts', () => {
             link.blur();
 
             expect(link.hasDifferentHref).toBe(false);
-        });
-
-    });
-
-    describe('FormGenerator tagfill dialogs', () => {
-
-        it('hides the original tagfill "Okay" button', () => {
-            fixture = CustomScriptsTestFixture.withFormGeneratorTagfillDialog();
-            expect(fixture.tagfillOkayButton.isVisibleToUser).toBe(false);
-        });
-
-        it('removes the original tagfill "Cancel" button', () => {
-            fixture = CustomScriptsTestFixture.withFormGeneratorTagfillDialog();
-            expect(fixture.tagfillCancelButton.isVisibleToUser).toBe(false);
         });
 
     });
@@ -278,27 +252,6 @@ class CustomScriptsTestFixture {
     static withPageEditMode(): CustomScriptsTestFixture {
         const fixture = new CustomScriptsTestFixture();
         fixture.pretendToBeEditingAPage();
-        fixture.attachToBodyAndRunPreAndPostLoadScripts();
-        return fixture;
-    }
-
-    static withTagfillDialog(): CustomScriptsTestFixture {
-        const fixture = new CustomScriptsTestFixture();
-        fixture.pretendToBeATagfillDialog();
-        fixture.attachToBodyAndRunPreAndPostLoadScripts();
-        return fixture;
-    }
-
-    static withFormGeneratorTagfillDialog(): CustomScriptsTestFixture {
-        const fixture = new CustomScriptsTestFixture();
-        fixture.pretendToBeATagfillDialogWithAFormGenerator();
-        fixture.attachToBodyAndRunPreAndPostLoadScripts();
-        return fixture;
-    }
-
-    static withObjectPropertiesList(): CustomScriptsTestFixture {
-        const fixture = new CustomScriptsTestFixture();
-        fixture.pretendToBeObjectPropertiesList();
         fixture.attachToBodyAndRunPreAndPostLoadScripts();
         return fixture;
     }
@@ -387,45 +340,8 @@ class CustomScriptsTestFixture {
         });
     }
 
-    addFormGeneratorToolbar(): FormGeneratorToolbarFixture {
-        const toolbar = FormGeneratorToolbarFixture.create();
-        toolbar.prependTo(this.document.body.querySelector('#fg-form'));
-        return toolbar;
-    }
-
-    get customCancelButton(): ClickableElementFixture<HTMLButtonElement> | undefined {
-        return this.findClickableElement('.gcms-custom-tagfill-button.role-cancel');
-    }
-
-    get customOkayButton(): ClickableElementFixture<HTMLButtonElement> | undefined {
-        return this.findClickableElement('.gcms-custom-tagfill-button.role-ok');
-    }
-
-    get tagfillCancelButton(): ClickableElementFixture<HTMLInputElement> | undefined {
-        return this.findClickableElement('input[type="image"][name="factioncancel"]');
-    }
-
-    get tagfillOkayButton(): ClickableElementFixture<HTMLInputElement> | undefined {
-        return this.findClickableElement('input[type="image"][name="factionok"]');
-    }
-
     get reportsContentModified(): boolean {
         return this.scriptHost.mostRecentModifiedValue;
-    }
-
-    get objectPropertyRows(): Array<ClickableElementFixture<HTMLTableRowElement>> {
-        return Array.from(this.document.body.querySelectorAll('#itemList3 tr[id]'))
-            .map((row: HTMLTableRowElement) => ClickableElementFixture.from(row));
-    }
-
-    get objectPropertyContextMenuIcons(): Array<ClickableElementFixture<HTMLAnchorElement>> {
-        return Array.from(this.document.body.querySelectorAll('.' + OBJECT_PROPERTIES_CONTEXT_MENU_CLASS))
-            .map((a: HTMLAnchorElement) => ClickableElementFixture.from(a));
-    }
-
-    get objectPropertyInfoIcons(): Array<ClickableElementFixture<HTMLAnchorElement>> {
-        return Array.from(this.document.body.querySelectorAll('.' + OBJECT_PROPERTIES_INFO_BUTTON_CLASS))
-            .map((a: HTMLAnchorElement) => ClickableElementFixture.from(a));
     }
 
     private createFakeWindow(): void {
@@ -459,83 +375,6 @@ class CustomScriptsTestFixture {
         this.scriptHost.editMode = EditMode.EDIT;
     }
 
-    private pretendToBeATagfillDialog(): void {
-        this.window.frameElement.dataset = { [DYNAMIC_FRAME]: 'true' };
-        this.appendHtmlToBody(`
-            <form name="tagfill">
-                <table>
-                    <tbody></tbody>
-                </table>
-                <div class="actions">
-                    <div>
-                        <div class="error" id="gtx_form_error_tagfill_ok"></div>
-                        <input name="factionok" type="image" src="about:blank" title="OK" alt="OK">
-                    </div>
-                    <div>
-                        <div class="error" id="gtx_form_error_tagfill_cancel"></div>
-                        <input name="factioncancel" type="image" src="about:blank" title="Cancel" alt="Cancel">
-                    </div>
-                </div>
-            </form>
-        `);
-    }
-
-    private pretendToBeATagfillDialogWithAFormGenerator(): void {
-        this.pretendToBeATagfillDialog();
-        this.appendTagfillRow(`
-            <div class="editorform">
-                <div id="work-panel">
-                    <div id="fg-form" class="fg-form">
-                        <form method="post" class="anfrage ui-sortable">
-                            (form inputs)
-                        </form>
-                    </div>
-                </div>
-            </div>
-        `);
-    }
-
-    private pretendToBeObjectPropertiesList(): void {
-        this.appendHtmlToBody(`
-            <form name="objprop_new">
-                <table id="itemList3" class="itemlist3">
-                    <tbody>
-                        <tr id="JSI3_objprop_new_1" class="gentics_itemlist_oddrow"
-                                onmouseover="this.onMouseOverHandlerInvoked = true">
-                            <td><input type="checkbox"></td>
-                            <td><img></td>
-                        </tr>
-                        <tr id="JSI3_objprop_new_2" class="gentics_itemlist_evenrow"
-                                onmouseover="this.onMouseOverHandlerInvoked = true;">
-                            <td><input type="checkbox"></td>
-                            <td><img></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </form>
-        `);
-    }
-
-    private pretendToBeObjectPropertiesWithOpenedProperty(): void {
-        this.pretendToBeObjectPropertiesList();
-        this.appendHtmlToBody(`
-            <div class="actions">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td align="right" valign="bottom">
-                                <input name="factionok" type="image" title="OK" alt="OK">
-                            </td
-                            <td align="right" valign="bottom">
-                                <input name="factioncancel" type="image" title="Cancel" alt="Cancel">
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `);
-    }
-
     private appendHtmlToBody(html: string): void {
         const container = document.createElement('div');
         container.innerHTML = html;
@@ -544,18 +383,6 @@ class CustomScriptsTestFixture {
             fragment.appendChild(container.firstChild);
         }
         this.document.body.appendChild(fragment);
-    }
-
-    private appendTagfillRow(html: string): void {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${html}</td>`;
-        const tbody = this.document.body.querySelector('form[name=tagfill] tbody');
-        tbody.appendChild(tr);
-    }
-
-    private findClickableElement<T extends Element>(selector: string): ClickableElementFixture<T> | undefined {
-        const element = this.document.body.querySelector(selector) ;
-        return element ? ClickableElementFixture.from(element) as any : undefined;
     }
 
     private preventLinkClicksFromNavigating(): void {
@@ -827,8 +654,8 @@ class FakeScriptHost {
         spyOn(this, 'getInternalLinkUrlToPagePreview' as any).and.callThrough();
     }
 
-    getInternalLinkUrlToPagePreview(nodeId: number, pageId: number): string {
-        return `internal link (node ${nodeId} page ${pageId})`;
+    getInternalLinkUrlToPagePreview(nodeId: number, itemType: string, pageId: number): string {
+        return `internal link (node ${nodeId} ${itemType} ${pageId})`;
     }
 
     getTranslation(key: string): string {
@@ -913,7 +740,7 @@ class ClickableElementFixture<T extends Element> {
     }
 
     middleClick(): MouseEvent {
-        return this.triggerMouseEvent('mousedown', { button: 1, detail: 2 });
+        return this.triggerMouseEvent('auxclick', { button: 1, detail: 2 });
     }
 
     rightClick(): MouseEvent {
@@ -925,11 +752,11 @@ class ClickableElementFixture<T extends Element> {
     }
 
     ctrlClick(): MouseEvent {
-        return this.triggerMouseEvent('mousedown', { button: 0, detail: 1, ctrlKey: true });
+        return this.triggerMouseEvent('click', { button: 0, detail: 1, ctrlKey: true });
     }
 
     shiftClick(): MouseEvent {
-        return this.triggerMouseEvent('mousedown', { button: 0, detail: 1, shiftKey: true });
+        return this.triggerMouseEvent('click', { button: 0, detail: 1, shiftKey: true });
     }
 
     private createMouseEvent(typeArg: string, { detail, button, ctrlKey, shiftKey, altKey }: Partial<MouseEventInit>): MouseEvent {
@@ -1003,46 +830,8 @@ class LinkTestFixture extends ClickableElementFixture<HTMLAnchorElement> {
 
     inEditMode(): this {
         this.nativeElement.dataset.gcnI18nConstructname = 'construct name';
+
         return this;
-    }
-
-}
-
-class FormGeneratorToolbarFixture {
-
-    private nativeElement: HTMLElement;
-    private saveButtonFixture: ClickableElementFixture<HTMLSpanElement>;
-
-    static create(): FormGeneratorToolbarFixture {
-        return new FormGeneratorToolbarFixture();
-    }
-
-    protected constructor() {
-        const toolbarDiv = this.nativeElement = document.createElement('div');
-        toolbarDiv.setAttribute('id', 'toolbar');
-        toolbarDiv.innerHTML = `
-            <ul class="buttons">
-                (other buttons)
-                <li id="toolbar-button-save" class="save">
-                    <a href="#" title role="button" class="ui-button ui-widget">
-                        <span class="ui-button-icon-primary ui-icon ui-icon-disk"></span>
-                        <span class="ui-button-text">Speichern</span>
-                    </a>
-                </li>
-                (other buttons)
-            </ul>`;
-
-        const saveButtonText = this.nativeElement.querySelector('#toolbar-button-save .ui-button-text') ;
-        this.saveButtonFixture = saveButtonText && ClickableElementFixture.from(saveButtonText) as any;
-    }
-
-    prependTo(element: Element): this {
-        element.parentElement.insertBefore(this.nativeElement, element);
-        return this;
-    }
-
-    get saveButton(): ClickableElementFixture<HTMLSpanElement> {
-        return this.saveButtonFixture;
     }
 
 }

@@ -60,6 +60,8 @@ import {
     tap,
 } from 'rxjs/operators';
 
+const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
+
 /**
  * # Chip Search Bar
  * ## Description
@@ -180,6 +182,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             takeUntil(this.stopper.stopper$),
         ).subscribe((filterTerm: string) => {
             this.setSearchbarValue(filterTerm, !this.writeFromStateToComponentInProgess);
+            this.changeDetector.markForCheck();
         });
 
         const activeSearch$ = this.state.select(state => state.folder.searchFilters);
@@ -206,7 +209,9 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         // listen to debounced window.resize event
         this.onResizeDebounced$.pipe(
             takeUntil(this.stopper.stopper$),
-        ).subscribe(() => this.updatePresentation());
+        ).subscribe(() => {
+            this.updatePresentation();
+        });
 
         // request data
         this.publishQueueActions.getUsersForRevision();
@@ -699,6 +704,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             }
 
             this.presentation.headerHeight = `${headerHeightNew}px`;
+            this.changeDetector.markForCheck();
         }, 1);
     }
 
@@ -733,18 +739,24 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
                     .subscribe(() => {
                         this.setEditorIsFocused(true);
                         this.specialSearchActionInProgess = false;
+                        this.changeDetector.markForCheck();
                     });
                 return;
             }
         }
 
-        const patternShortCutSyntaxId = new RegExp(/^(jump):\d+$/);
-        if (patternShortCutSyntaxId.test(term)) {
+        const jumpId = patternShortCutSyntaxId.exec(term);
+        if (jumpId) {
             this.specialSearchActionInProgess = true;
             // extract number from shortcut syntax
-            const entityId = parseInt((/\d+/.exec(term))[0], 10);
-            this.listSearch.searchPageId(entityId, activeNode.id || this.state.now.folder.activeNode)
-                .then(() => this.specialSearchActionInProgess = false);
+            const entityId = parseInt(jumpId[1], 10);
+            this.listSearch.searchPageId(
+                entityId,
+                activeNode.id || this.state.now.folder.activeNode,
+            ).then(() => {
+                this.specialSearchActionInProgess = false;
+                this.changeDetector.markForCheck();
+            });
             this.folderActions.setFilterTerm('');
         } else {
             // if search value as oure text exists, convert it into a all/any search chip

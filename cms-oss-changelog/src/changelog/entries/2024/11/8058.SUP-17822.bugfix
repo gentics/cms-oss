@@ -1,0 +1,2 @@
+The @OverlayElement.OverlayCloseError@ in Aloha is now correctly populated with the Class from the Editor-UI, to handle the instances as expected.
+Additionally, error handling of these Errors has been streamlined.

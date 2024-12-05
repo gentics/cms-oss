@@ -187,12 +187,3 @@ export const BLANK_PAGE = 'about:blank';
  * dialogs to work reliably cross browser.
  */
 export const BLANK_PROPERTIES_PAGE = 'assets/properties-blank.html';
-
-/**
- * Token used to identify frames created dynamically within the master frame (e.g. tag fill dialogs)
- */
-export const DYNAMIC_FRAME = 'gcmsDynamicFrame';
-
-export const OBJECT_PROPERTIES_CONTEXT_MENU_CLASS = 'custom-object-properties-context-menu-button';
-
-export const OBJECT_PROPERTIES_INFO_ICON_CLASS = 'custom-object-properties-info-button';

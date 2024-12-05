@@ -55,7 +55,6 @@ import {
     AlohaIntegrationService,
     CustomerScriptService,
     DynamicOverlayService,
-    IFrameCollectionService,
 } from './providers';
 
 const COMPONENTS = [
@@ -108,7 +107,6 @@ const PROVIDERS = [
     AlohaIntegrationService,
     CustomerScriptService,
     DynamicOverlayService,
-    IFrameCollectionService,
 ];
 
 const GUARDS = [

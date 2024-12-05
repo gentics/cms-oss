@@ -246,7 +246,7 @@ describe('CustomScriptHostService', () => {
             get: (): string => '/editor/(detail:node/1/page/16/preview;options=e30%3D//list:node/1/folder/4)',
         });
 
-        const result = customScriptHostService.getInternalLinkUrlToPagePreview(20, 89);
+        const result = customScriptHostService.getInternalLinkUrlToPagePreview(20, 'page', 89);
         expect(result)
             .toBe(window.location.pathname + '#/editor/(detail:node/20/page/89/preview;options=e30%3D//list:node/1/folder/4)');
     });

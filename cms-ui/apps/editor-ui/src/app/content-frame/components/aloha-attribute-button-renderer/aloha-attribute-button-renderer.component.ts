@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
 import { AlohaAttributeButtonComponent, OverlayElementControl } from '@gentics/aloha-models';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
-import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 import { patchMultipleAlohaFunctions } from '../../utils';
+import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
     selector: 'gtx-aloha-attribute-button-renderer',
@@ -116,6 +117,10 @@ export class AlohaAttributeButtonRendererComponent
             })
             .catch(err => {
                 this.inputDropdown = null;
+                if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                    return;
+                }
+                console.error(err);
             })
             .finally(() => {
                 this.aloha.restoreSelection();

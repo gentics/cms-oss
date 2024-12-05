@@ -293,13 +293,13 @@ export class CustomScriptHostService {
     /**
      * Get a complete URL path to the UI app with the given page opened in preview mode
      */
-    getInternalLinkUrlToPagePreview(nodeId: number, pageId: number): string {
+    getInternalLinkUrlToPagePreview(nodeId: number, itemType: 'page' | 'image' | 'file', itemId: number): string {
         const urlTree = this.router.parseUrl(this.router.url);
         const detailOutlet = urlTree.root.children[PRIMARY_OUTLET].children.detail;
         detailOutlet.segments[1].path = nodeId.toString();
-        detailOutlet.segments[2].path = 'page';
-        detailOutlet.segments[3].path = pageId.toString();
-        detailOutlet.segments[4].path = 'preview';
+        detailOutlet.segments[2].path = itemType;
+        detailOutlet.segments[3].path = itemId.toString();
+        detailOutlet.segments[4].path = itemType === 'page' ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
 
         return window.location.pathname + '#' + this.router.serializeUrl(urlTree);
     }

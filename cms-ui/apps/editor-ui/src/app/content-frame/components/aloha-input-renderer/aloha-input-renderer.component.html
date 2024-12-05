@@ -2,7 +2,7 @@
     <input
         #input
         type="text"
-        [value]="value"
+        [value]="value || ''"
         [disabled]="disabled"
         (change)="handleInputChange()"
         (keydown)="handleKeyDown($event)"

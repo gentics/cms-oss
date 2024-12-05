@@ -11,11 +11,12 @@ import {
     Self,
     ViewChild,
 } from '@angular/core';
-import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { merge } from 'rxjs';
 import { ChangesOf, IFileDropAreaOptions } from '../../common';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
+import { generateFormProvider } from '../../utils';
 import { matchesMimeType } from '../../utils/matches-mime-type';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 /**
  * A file picker component.

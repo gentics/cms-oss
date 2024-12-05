@@ -53,10 +53,10 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { TagEditorService } from '../../../tag-editor';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
+import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -154,16 +154,7 @@ class MockI18nService {
         return key;
     }
 }
-class MockIFrameManager {
-    triggerOnMasterFrameClosed: () => void;
 
-    destroy = jasmine.createSpy('destroy');
-    initialize = jasmine.createSpy('initialize');
-    initiateUserClose = jasmine.createSpy('initiateUserClose');
-    onMasterFrameClosed = jasmine.createSpy('onMasterFrameClosed')
-        .and.callFake((callback: () => void) => this.triggerOnMasterFrameClosed = callback);
-    requesting$ = NEVER;
-}
 class MockI18nNotification {}
 class MockUserSettingsService {}
 
@@ -176,6 +167,7 @@ class MockCustomerScriptService {
 }
 
 class MockEditorOverlayService {}
+class MockRepositoryBrowserClient {}
 
 @Component({
     selector: 'test-component',
@@ -479,7 +471,7 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
     tick();
 }
 
-describe('ContentFrame', () => {
+describe('ContentFrameComponent', () => {
     let api: MockApi;
 
     let origDebounce: any;
@@ -504,7 +496,6 @@ describe('ContentFrame', () => {
                 EditorActionsService,
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PermissionService, useValue: permissionService },
-                { provide: IFrameManager, useClass: MockIFrameManager },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: I18nNotification, useClass: MockI18nNotification },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
@@ -512,6 +503,7 @@ describe('ContentFrame', () => {
                 { provide: CustomerScriptService, useClass: MockCustomerScriptService },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
+                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 MockCanSaveService,
                 ResourceUrlBuilder,
@@ -538,12 +530,6 @@ describe('ContentFrame', () => {
                 FormsModule,
                 ReactiveFormsModule,
             ],
-        });
-
-        TestBed.overrideComponent(ContentFrameComponent, {
-            set: {
-                providers: [{ provide: IFrameManager, useClass: MockIFrameManager }],
-            },
         });
 
         appState = TestBed.get(ApplicationStateService);
@@ -613,27 +599,6 @@ describe('ContentFrame', () => {
                 fixture.detectChanges();
 
                 fixture.destroy();
-                tick();
-
-                const state = appState.now;
-                const editorState = state.editor;
-                const page = state.entities.page[ITEM_ID];
-
-                expect(editorState.contentModified).toBeFalse();
-                expect(editorState.objectPropertiesModified).toBeFalse();
-
-                expect(page.locked).toBeFalse();
-                expect(page.lockedBy).toBeNull();
-                expect(page.lockedSince).toEqual(-1);
-            }));
-
-            it('is called when unloading the IFrame', componentTest(() => TestComponent, (fixture, instance) => {
-                const iFrameManager: MockIFrameManager = instance.contentFrameViewContainerRef.injector.get(IFrameManager) as any;
-                openPropertiesOfAPage(fixture);
-                tick();
-                fixture.detectChanges();
-
-                iFrameManager.triggerOnMasterFrameClosed();
                 tick();
 
                 const state = appState.now;

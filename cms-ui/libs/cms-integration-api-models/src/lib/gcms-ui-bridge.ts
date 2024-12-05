@@ -69,6 +69,8 @@ export enum ModalClosingReason {
     ERROR = 'error',
 }
 
+export const MODAL_CLOSE_ERROR_INSTANCE = Symbol('gtx-modal-close');
+
 /**
  * Special error which is thrown when a Modal is being closed.
  */
@@ -89,6 +91,12 @@ export class ModalCloseError extends Error {
             super(message);
             this.reason = reasonOrError;
         }
+        this[MODAL_CLOSE_ERROR_INSTANCE] = true;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    static [Symbol.hasInstance](obj: any): boolean {
+        return obj != null && MODAL_CLOSE_ERROR_INSTANCE in obj;
     }
 }
 
@@ -153,18 +161,55 @@ export interface GcmsUiBridge {
      * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
      * the documentation, e.g. `/folder/create`.
+     *
+     * @deprecated Use the {@link restClient} for all requests instead.
+     * ```ts     *
+     * // Old way - Should not be used anymore
+     * GCMSUI.restRequestGET('/page/load/123')
+     * // Recommended: Use the dedicated functions of the resources
+     * GCMSUI.restClient.page.get(123).send()
+     * // In case there's no function or it's a endpoint for something different,
+     * // you can call it manually.
+     * GCMSUI.restClient.executeMappedJsonRequest('GET', '/page/load/123').send()
+     * ```
      */
     restRequestGET: (endpoint: string, params?: object) => Promise<object>;
     /**
      * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
      * the documentation, e.g. `/folder/create`.
+     *
+     * @deprecated Use the {@link restClient} for all requests instead.
+     * ```ts
+     * const pageToCreate = {
+     *      // Page content
+     * };
+     *
+     * // Old way - Should not be used anymore
+     * GCMSUI.restRequestPOST('/page/create', pageToCreate)
+     * // Recommended: Use the dedicated functions of the resources
+     * GCMSUI.restClient.page.create(pageToCreate).send()
+     * // In case there's no function or it's a endpoint for something different,
+     * // you can call it manually.
+     * GCMSUI.restClient.executeMappedJsonRequest('POST', '/page/create', pageToCreate).send()
+     * ```
      */
     restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
-    /*
+    /**
      * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
+     * the documentation, e.g. `/folder/create`.]
+     *
+     * @deprecated Use the {@link restClient} for all requests instead.
+     * ```ts
+     * // Old way - Should not be used anymore
+     * GCMSUI.restRequestDELETE('/page/delete/123')
+     * // Recommended: Use the dedicated functions of the resources
+     * GCMSUI.restClient.page.delete(123).send()
+     * // In case there's no function or it's a endpoint for something different,
+     * // you can call it manually.
+     * GCMSUI.restClient.executeMappedJsonRequest('DELETE', '/page/delete/123').send()
+     * ```
      */
     restRequestDELETE: (endpoint: string, params?: object) => Promise<object | void>;
     /**

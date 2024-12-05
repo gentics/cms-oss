@@ -203,6 +203,14 @@
 		               : '';
 	}
 
+	var ATTR_LINK_OBJECT_ID = 'data-gentics-aloha-object-id';
+	var ATTR_LINK_HREF = 'href';
+	var ATTR_LINK_ANCHOR = 'data-gentics-gcn-anchor';
+	var ATTR_LINK_TITLE = 'title';
+	var ATTR_LINK_TARGET = 'target';
+	var ATTR_LINK_LANGUAGE = 'hreflang';
+	var ATTR_LINK_NODE_ID = 'data-gcn-channelid';
+
 	/**
 	 * Determines the backend object that was set to the given link.
 	 *
@@ -214,17 +222,17 @@
 	 *                  external links or an integer for internal links.
 	 */
 	function getTagPartsFromLink($link) {
-		var linkData = $link.attr('data-gentics-aloha-object-id');
-		var href = $link.attr('href') || '';
+		var linkData = $link.attr(ATTR_LINK_OBJECT_ID);
+		var href = $link.attr(ATTR_LINK_HREF) || '';
 		var anchorUrlMatch = href.match(ANCHOR_LINK);
 		var tagparts = {
 			text: $link.html(),
-			anchor: $link.attr('data-gentics-gcn-anchor'),
-			title: $link.attr('title'),
-			target: $link.attr('target'),
-			language: $link.attr('hreflang'),
+			anchor: $link.attr(ATTR_LINK_ANCHOR),
+			title: $link.attr(ATTR_LINK_TITLE),
+			target: $link.attr(ATTR_LINK_TARGET),
+			language: $link.attr(ATTR_LINK_LANGUAGE),
 			'class': cleanBlockClasses($link.attr('class')),
-			channel: $link.attr('data-gcn-channelid')
+			channel: $link.attr(ATTR_LINK_NODE_ID)
 		};
 
 		if (anchorUrlMatch && tagparts.anchor) {
@@ -241,19 +249,19 @@
 			if (2 !== idParts.length) {
 				tagparts.url = {
 					'pageId' : linkData,
-					'nodeId' : $link.attr('data-gcn-channelid')
+					'nodeId' : $link.attr(ATTR_LINK_NODE_ID)
 				};
 			} else if ('10007' === idParts[0]) {
 				tagparts.url = {
 					'pageId' : parseInt(idParts[1], 10),
-					'nodeId' : $link.attr('data-gcn-channelid')
+					'nodeId' : $link.attr(ATTR_LINK_NODE_ID)
 				};
 				tagparts.fileurl = 0;
 			} else if ('10008' === idParts[0] || '10011' === idParts[0]) {
 				tagparts.url = 0;
 				tagparts.fileurl = {
 					'fileId' : parseInt(idParts[1], 10),
-					'nodeId' : $link.attr('data-gcn-channelid')
+					'nodeId' : $link.attr(ATTR_LINK_NODE_ID)
 				};
 			} else {
 				tagparts.url = href;

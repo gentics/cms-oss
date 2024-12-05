@@ -212,12 +212,14 @@ export class ListService implements OnDestroy {
             }),
         );
 
-        const folderIdSub = folderIdParam$.pipe(debounceTime(50)).subscribe((folderId) => {
-            if (Number.isInteger(folderId)) {
-                // in case search is active, reset in order to access folder contents
-                this.folderActions.resetSearchFilters();
-                this.folderActions.getAllFolderContents(folderId, this.state.now.folder.searchTerm, false, true);
-            }
+        const folderIdSub = folderIdParam$.pipe(
+            debounceTime(50),
+            filter(Number.isInteger),
+            distinctUntilChanged(),
+        ).subscribe((folderId: number) => {
+            // in case search is active, reset in order to access folder contents
+            this.folderActions.resetSearchFilters();
+            this.folderActions.getAllFolderContents(folderId, this.state.now.folder.searchTerm, false, true);
         });
 
         this.subscriptions.push(folderIdSub);
@@ -303,6 +305,7 @@ export class ListService implements OnDestroy {
                 ),
             ),
             skip(1),
+            distinctUntilChanged(isEqual),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {
             if (!searchFiltersVisible || !searchFiltersValid) {
                 this.folderActions.resetSearchFilters();

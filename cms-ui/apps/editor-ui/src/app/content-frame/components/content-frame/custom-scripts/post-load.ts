@@ -1,14 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers';
-import { Page } from '@gentics/cms-models';
 import { typeIdsToName } from '@gentics/cms-components';
+import { EditMode } from '@gentics/cms-integration-api-models';
+import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL, API_BASE_URL } from '../../../../common/utils/base-urls';
-import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJsLibRequestOptions } from '../../../models/content-frame';
+import { CNIFrameDocument, CNWindow, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-
-export const OBJECT_PROPERTIES_CONTEXT_MENU_CLASS = 'custom-object-properties-context-menu-button';
-
-export const OBJECT_PROPERTIES_INFO_BUTTON_CLASS = 'custom-object-properties-info-button';
 
 const ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';
 const ATTR_NODE_ID = 'data-gcn-channelid';
@@ -47,19 +44,8 @@ export class PostLoadScript {
 
     run(): void {
         this.setupAlohaHooks(this.iFrameWindow);
-
-        // Determine which type of editor frame is opened (previewing page, tagfill, ...)
-        const editFrameType = this.determineEditFrameType();
-
-        // Depending on the frame type, do the right things
-        switch (editFrameType) {
-            case 'editPage':
-            case 'previewPage':
-                this.handleClickEventsOnLinks();
-                this.notifyWhenContentsChange();
-                break;
-        }
-
+        this.handleClickEventsOnLinks();
+        this.notifyWhenContentsChange();
         this.scriptHost.runChangeDetection();
     }
 
@@ -90,47 +76,6 @@ export class PostLoadScript {
         });
     }
 
-    determineEditFrameType(): 'tagfill' | 'editPage' | 'editImage' | 'objectProperties' | 'objectPropertiesNoValidation' | 'previewPage' {
-        const frameElement = this.iFrameWindow.frameElement as HTMLElement;
-        const isDynamicFrame = frameElement && frameElement.dataset[DYNAMIC_FRAME] === 'true';
-        const isValidationDisabled = frameElement && frameElement.dataset['disableValidation'] === 'true';
-
-        if (isDynamicFrame) {
-            return 'tagfill';
-        }
-
-        const objectPropertiesOkayButton = this.iFrameDocument.querySelector('input[type="image"][name="factionok"]');
-        if (objectPropertiesOkayButton) {
-            return 'objectProperties';
-        }
-
-        if (this.iFrameDocument && this.iFrameDocument.body &&
-            this.iFrameDocument.body.dataset['itemType'] === 'image' &&
-            this.iFrameDocument.body.dataset['editMode'] === 'edit') {
-            return 'editImage';
-        }
-
-        switch (this.scriptHost.editMode) {
-            case 'compareVersionContents':
-            case 'compareVersionSources':
-            case 'preview':
-            case 'previewVersion':
-                return 'previewPage';
-
-            case 'edit':
-                return 'editPage';
-
-            case 'editProperties':
-                if (isValidationDisabled) {
-                    return 'objectPropertiesNoValidation';
-                }
-                return 'objectProperties';
-
-            default:
-                // const unhandledCase: never = this.scriptHost.editMode;
-        }
-    }
-
     /**
      * Intercept any clicks on anchor links within the iframe. External links should open in a new window to prevent
      * the UI state getting messed up, and internal links to other pages should cause a regular navigation within the UI app.
@@ -138,7 +83,7 @@ export class PostLoadScript {
      * This only applies for the master frame, tagfill dialogs are allowed to handle links however they like.
      */
     handleClickEventsOnLinks(): void {
-        this.iFrameDocument.body.addEventListener('click', (e: MouseEvent) => {
+        const handleClickEvent = (e: MouseEvent, middleClick: boolean) => {
             if (e.defaultPrevented) { return; }
 
             const link = e.target;
@@ -149,60 +94,52 @@ export class PostLoadScript {
             const internalLink = parseInternalLink(link);
 
             if (internalLink) {
-                if (internalLink.type === 'page') {
-                    this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
-                } else if (internalLink.type === 'file' || internalLink.type === 'image') {
-                    this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                // All internal links are handled here, so prevent default handling
+                e.preventDefault();
+
+                // In the edit-mode, links can only be clicked with the ctrl key.
+                // In preview modes, links will navigate in the app on default,
+                // and open it in a new tab if the ctrl key is pressed.
+                if (
+                    (this.scriptHost.editMode === EditMode.EDIT && e.ctrlKey)
+                    || (this.scriptHost.editMode !== EditMode.EDIT && !e.ctrlKey && !middleClick)
+                ) {
+                    // Attempt to internally navigate
+                    if (internalLink.type === 'page') {
+                        this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
+                    } else if (internalLink.type === 'file' || internalLink.type === 'image') {
+                        this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                    }
+                } else if (this.scriptHost.editMode !== EditMode.EDIT) {
+                    const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.type as any, internalLink.itemId);
+                    this.iFrameWindow.open(newUrl, '_blank');
                 }
-                e.preventDefault();
-            } else if (
-                (this.scriptHost.editMode === 'preview' || e.ctrlKey)
-                && url
-                && !url.startsWith('#')
-                && link.target !== '_blank'
-            ) {
-                this.iFrameWindow.open(url, '_blank');
-                e.preventDefault();
-            } else if (url.startsWith('#')) {
-                // Allow anchor links, as they are fine.
-                // no-op
-            } else if (link.target !== '_blank') {
-                // TODO: Show modal with link?
-                e.preventDefault();
+
+                return;
             }
+
+            // Links to anchors/markers inside of a page are valid
+            // So are links which have a _blank target set
+            if (url.startsWith('#') || link.target === '_blank') {
+                return;
+            }
+
+            // Open external links always in a new tab, since we don't want to close our app
+            this.iFrameWindow.open(url, '_blank');
+            e.preventDefault();
+        };
+
+        // Simple left click handler
+        this.iFrameDocument.body.addEventListener('click', (e: MouseEvent) => {
+            handleClickEvent(e, false);
         }, true);
 
-        /**
-         * Intercept mousedown events in order to correctly handle internal links when opening
-         * in a new tab or a new window either with the middle mouse button or by ctrl + clicking.
-         */
-        this.iFrameDocument.body.addEventListener('mousedown', (e: MouseEvent) => {
-            if (e.defaultPrevented) { return; }
-
-            const target = e.target;
-            // Middle mouse click can be determined either by the `which` or `button` property depending on browser.
-            const middleMouseClick = e.which === 2 || e.button === 1;
-            const controlKeyPressed = e.ctrlKey;
-            const shiftKeyPressed = e.shiftKey;
-
-            if (!isAnchorElement(target) || !(middleMouseClick || controlKeyPressed || shiftKeyPressed)) {
-                return;
+        // Middle click handler
+        this.iFrameDocument.body.addEventListener('auxclick', (e: PointerEvent) => {
+            if (e.button === 1) {
+                handleClickEvent(e, true);
             }
-
-            const internalLink = parseInternalLink(target);
-            if (!internalLink) {
-                return;
-            }
-
-            if (internalLink.type === 'page') {
-                // We open the internal link in a new window and cause the entire UI app to load
-                // in that window, rather than just the linked page.
-                const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.itemId);
-                this.iFrameWindow.open(newUrl, '_blank');
-            }
-
-            e.preventDefault();
-        });
+        }, true);
 
         /**
          * Intercept contextmenu to handle the case where internal links are opened in a new tab / window. In this case,
@@ -229,7 +166,7 @@ export class PostLoadScript {
             }
 
             const originalHref = target.getAttribute('href');
-            target.href = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.itemId);
+            target.href = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
             const resetHref = (): void => {
                 target.setAttribute('href', originalHref);
                 target.removeEventListener('blur', resetHref);
@@ -439,16 +376,6 @@ function parseInternalLink(anchor: HTMLAnchorElement): InternalLink | null {
 }
 
 function parseInternalPageLink(anchor: HTMLAnchorElement, parsed: URL): InternalLink | null {
-    // A link created by the GCN Links plugin has the following data attribute when in edit mode
-    const isEditModeLink = !!anchor.dataset['gcnI18nConstructname'];
-
-    // UI elements which are only an anchor for keyboard focus purposes should not be handled
-    const isPresentationalLink = anchor.getAttribute('role') === 'presentation';
-
-    if (isEditModeLink || isPresentationalLink) {
-        return null;
-    }
-
     const nodeId = parsed.searchParams.get('nodeid');
     const pageId = parsed.searchParams.get('realid');
 

@@ -187,6 +187,7 @@
             type="button"
             role="button"
             class="previous"
+            data-action="previous"
             [disabled]="p.isFirstPage()"
             (click)="p.previous()"
         >
@@ -202,6 +203,8 @@
                     type="button"
                     role="button"
                     class="page link"
+                    data-action="change-page"
+                    [attr.data-page]="singlePage.value"
                     (click)="p.setCurrent(singlePage.value)"
                 >
                     <span class="page-text link-text">{{ singlePage.label }}</span>
@@ -217,6 +220,7 @@
             type="button"
             role="button"
             class="next"
+            data-action="next"
             [disabled]="p.isLastPage()"
             (click)="p.next()"
         >

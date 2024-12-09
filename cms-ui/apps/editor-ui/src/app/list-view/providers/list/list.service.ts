@@ -305,7 +305,6 @@ export class ListService implements OnDestroy {
                 ),
             ),
             skip(1),
-            distinctUntilChanged(isEqual),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {
             if (!searchFiltersVisible || !searchFiltersValid) {
                 this.folderActions.resetSearchFilters();

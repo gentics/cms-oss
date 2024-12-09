@@ -19,6 +19,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 
 export interface GtxInputSelectOption {
+    id: string;
     value: any;
     label: string;
 }

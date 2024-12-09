@@ -7,7 +7,6 @@ export type GtxQueryAssemblerDataType =
     'boolean' |
     'number' |
     'string' |
-    'number' |
     'date' |
     'objectid';
 

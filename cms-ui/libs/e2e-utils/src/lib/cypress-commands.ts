@@ -424,9 +424,9 @@ export function registerCommonCommands(): void {
 
     Cypress.Commands.add('findTableRowContainingText', {prevSubject: 'element'}, (subject, text) => {
         return cy.wrap(subject)
-             .find('.grid-row')
-             .contains(text)
-             .parents('.grid-row');
+            .find('.grid-row')
+            .contains(text)
+            .parents('.grid-row');
     });
 
     Cypress.Commands.add('selectTableRow', {prevSubject: 'element'}, (subject) => {
@@ -440,4 +440,108 @@ export function registerCommonCommands(): void {
             .find('.row-expansion-wrapper')
             .click();
     });
+
+    Cypress.Commands.add('pickDate', { prevSubject: 'element' }, (subject, date, options) => {
+        if (subject.is('gtx-date-time-picker')) {
+            cy.wrap(subject, { log: false })
+                .find('.input-element', { log: false })
+                .click({ log: false });
+            return cy.get('gtx-dynamic-modal gtx-date-time-picker-modal').then($modal => {
+                return cy.wrap($modal.find('gtx-date-time-picker-controls'), { log: false })
+                    .pickDate(date, options)
+                    .then(() => {
+                        cy.wrap($modal, { log: false })
+                            .find('.modal-footer [data-action="confirm"]', { log: false })
+                            .click({ log: false });
+                    });
+            });
+        }
+
+        expect(subject[0].nodeName).to.equal('GTX-DATE-TIME-PICKER-CONTROLS');
+
+        const $content = subject.find('.controls-content');
+        const $prevMonthBtn = $content.find('.rd-date .rd-month button.rd-back');
+        const $nextMonthBtn = $content.find('.rd-date .rd-month button.rd-next');
+        let year: number;
+        let month: number;
+
+        const refreshControlData = () => {
+            year = parseInt($content.attr('data-value-year'), 10);
+            month = parseInt($content.attr('data-value-month'), 10);
+        }
+        refreshControlData();
+
+        const targetYear = date.getFullYear();
+        const targetMonth = date.getMonth();
+
+        // Select the year first
+        if (year !== targetYear) {
+            // Check if the year selector is available
+            const $selector = subject.find('.year-selector gtx-select');
+            if ($selector.length > 0) {
+                cy.wrap($selector, { log: false })
+                    .select(targetYear, { log: false });
+            } else {
+                // Otherwise navigate using the months (tedious, but works)
+                while (year < targetYear) {
+                    $nextMonthBtn.trigger('click');
+                    refreshControlData();
+                }
+                while (year > targetYear) {
+                    $prevMonthBtn.trigger('click');
+                    refreshControlData();
+                }
+            }
+        }
+
+        // Set the month correct
+        while (month < targetMonth) {
+            $nextMonthBtn.trigger('click');
+            refreshControlData();
+        }
+        while (month > targetMonth) {
+            $prevMonthBtn.trigger('click');
+            refreshControlData();
+        }
+
+        // Select the correct day
+        let targetDate = `${date.getDate()}`;
+        if (targetDate.length === 1) {
+            targetDate = `0${targetDate}`;
+        }
+        cy.wrap($content, { log: false })
+            .find('.rd-date .rd-days .rd-days-body', { log: false })
+            .contains(targetDate, { log: false })
+            .click({ force: true, log: false });
+
+        // Enter the date if available
+        const $timePicker = subject.find('.time-picker');
+        if ($timePicker.length > 0) {
+            cy.wrap($timePicker, { log: false })
+                .find('.hours .input-element', { log: false })
+                .type(`{selectAll}${date.getHours()}`, { log: false });
+            cy.wrap($timePicker, { log: false })
+                .find('.minutes .input-element', { log: false })
+                .type(`{selectAll}${date.getMinutes()}`, { log: false });
+
+            const $seconds = $timePicker.find('.seconds');
+            if ($seconds.length > 0) {
+                cy.wrap($seconds, { log: false })
+                    .find('.input-element', { log: false })
+                    .type(`{selectAll}${date.getSeconds()}`, { log: false });
+            }
+        }
+
+        if (options?.log !== false) {
+            Cypress.log({
+                name: 'pick date',
+                type: 'child',
+                $el: subject,
+                message: `${date.toISOString()} / ${date.getTime()}`,
+            });
+        }
+
+        return cy.wrap(subject, { log: false });
+    });
+
 }

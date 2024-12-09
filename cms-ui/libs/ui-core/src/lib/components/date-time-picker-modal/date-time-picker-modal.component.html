@@ -10,6 +10,15 @@
 ></gtx-date-time-picker-controls>
 
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ formatProvider.strings.cancel }}</gtx-button>
-    <gtx-button (click)="okayClicked()">{{ formatProvider.strings.okay }}</gtx-button>
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ formatProvider.strings.cancel }}</gtx-button>
+
+    <gtx-button
+        data-action="confirm"
+        (click)="okayClicked()"
+    >{{ formatProvider.strings.okay }}</gtx-button>
 </div>

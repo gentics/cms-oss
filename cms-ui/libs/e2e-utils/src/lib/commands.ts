@@ -275,6 +275,14 @@ declare namespace Cypress {
          * @param id The id of the action.
          */
         findTableAction(id: string): Chainable<HTMLElement>;
+        /**
+         * Subject has to be a `gtx-date-time-picker` or `gtx-date-time-picker-controls` element.
+         * Will then attempt to pick the selected date as close as possible.
+         * Yields the original subject.
+         * @param date The date to pick/select in the picker/controls.
+         * @param options Additional options
+         */
+        pickDate(date: Date, options?: Partial<Cypress.Loggable>): Chainable<HTMLElement>;
 
         /*
          * OVERRIDES

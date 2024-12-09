@@ -64,6 +64,7 @@
                     #dropDownMenuItems
                     class="custom-content-menu-button"
                     [attr.data-value]="option.value"
+                    [attr.data-id]="option.id"
                     (click)="onDropDownMenuItemTriggered(option.value, $event)"
                     (keydown.enter)="onDropDownMenuItemTriggered(option.value, $event)"
                     (keydown.space)="onDropDownMenuItemTriggered(option.value, $event)"

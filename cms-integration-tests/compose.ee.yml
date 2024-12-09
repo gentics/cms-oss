@@ -18,7 +18,7 @@ services:
     image: docker.gentics.com/gentics/cms:${CI_CMS_VERSION:-ci-devtest}
 
     environment:
-      ELASTICSEARCH_ENABLED: "false" # Disabled until ES 8 compat is ready
+      ELASTICSEARCH_ENABLED: "true"
       ELASTICSEARCH_URL: "http://elasticsearch:9200"
       LICENSEKEY: "${CI_LICENSEKEY}"
 

@@ -3,7 +3,7 @@ import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { KnownDateFormatName, knownFormats } from './known-date-formats';
 
-declare var navigator: Navigator &  {
+declare let navigator: Navigator &  {
     languages: string[];
 };
 
@@ -26,7 +26,7 @@ declare var navigator: Navigator &  {
  */
 @Pipe({
     name: 'i18nDate',
-    pure: false
+    pure: false,
 })
 export class I18nDatePipe implements OnDestroy, PipeTransform {
 
@@ -81,14 +81,14 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
         if (typeof value === 'number') {
             date = new Date(value > 300000000000 ? value : value * 1000);
         } else {
-            date = value as Date;
+            date = value;
         }
 
         return this.formatFunction(date);
     }
 
     private getFormatFunction(locale: string, formatName: KnownDateFormatName): (date: Date) => string {
-        let cached = I18nDatePipe.formatCache[`${formatName}(${locale})`];
+        const cached = I18nDatePipe.formatCache[`${formatName}(${locale})`];
         if (cached) {
             return cached;
         } else if (typeof Intl !== 'object') {
@@ -100,30 +100,30 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
         if (locale.indexOf('-') > 0) {
             specializedLocale = locale;
         } else {
-            let userLocales = navigator.languages || [navigator.language];
-            let matchingLocale = userLocales.filter(loc => loc.startsWith(locale + '-'))[0];
+            const userLocales = navigator.languages || [navigator.language];
+            const matchingLocale = userLocales.filter(loc => loc.startsWith(locale + '-'))[0];
             specializedLocale = matchingLocale || locale;
         }
 
         // Use number formatting provided by the format (e.g. 'number' vs '2-digit').
-        let formatOptions = knownFormats[formatName] || knownFormats['date'];
-        let originalOptions = new Intl.DateTimeFormat([specializedLocale, locale, 'en']).resolvedOptions();
-        let options: any = {};
+        const formatOptions = knownFormats[formatName] || knownFormats['date'];
+        const originalOptions = new Intl.DateTimeFormat([specializedLocale, locale, 'en']).resolvedOptions();
+        const options: any = {};
         Object.keys(formatOptions).forEach(key => {
             options[key] = (<any> originalOptions)[key] || (<any> formatOptions)[key];
         });
-        let dateFormat = new Intl.DateTimeFormat([specializedLocale, locale, 'en'], options);
+        const dateFormat = new Intl.DateTimeFormat([specializedLocale, locale, 'en'], options);
 
         // Cache the result
-        let formatFunction = this.formatWithoutBrowserQuirks(dateFormat.format.bind(dateFormat), dateFormat);
+        const formatFunction = this.formatWithoutBrowserQuirks(dateFormat.format.bind(dateFormat), dateFormat);
         I18nDatePipe.formatCache[`${formatName}(${locale})`] = formatFunction;
         return formatFunction;
     }
 
     private formatWithoutBrowserQuirks(formatter: (date: Date) => string, locale: Intl.DateTimeFormat): (date: Date) => string {
         // Internet Explorer (not Edge) formats dates with { day: 'numeric' } like { day: '2-digit' }.
-        let resolvedOptions = locale.resolvedOptions();
-        let userAgentIgnoresNumberFormat: boolean = /Trident.+ rv:/.test(navigator.userAgent) &&
+        const resolvedOptions = locale.resolvedOptions();
+        const userAgentIgnoresNumberFormat: boolean = /Trident.+ rv:/.test(navigator.userAgent) &&
             resolvedOptions.locale.startsWith('de') &&
             resolvedOptions.day === 'numeric' &&
             locale.format(new Date(2000, 0, 5)).indexOf('05') > 0;

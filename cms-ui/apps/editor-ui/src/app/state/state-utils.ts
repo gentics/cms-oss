@@ -1,7 +1,7 @@
 import { NormalizedResponse, Response as ResponseModel } from '@gentics/cms-models';
 import { Action, State } from '@ngxs/store';
 import { ɵStateClass, ɵStoreOptions } from '@ngxs/store/internals';
-import { StateOperator } from '@ngxs/store/src/symbols';
+import { StateOperator } from '@ngxs/store';
 import { Schema, normalize } from 'normalizr';
 import {
     fileSchema,

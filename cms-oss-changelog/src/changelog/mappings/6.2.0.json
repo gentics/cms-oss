@@ -1,0 +1,17 @@
+{
+  "version": "6.2.0",
+  "date": "10.12.2024",
+  "changeLogEntryFileNames": [
+    "7886.GPU-1604.enhancement",
+    "8001.GPU-1805.enhancement",
+    "8066.GPU-1606.enhancement",
+    "7919.GPU-1708.enhancement",
+    "8078.SUP-17766.bugfix",
+    "7948.GPU-1711.enhancement",
+    "8055.GPU-1851.optional-manualchange"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "05.12.2024",
+    "alohaeditor-version": "2.1.0"
+  }
+}

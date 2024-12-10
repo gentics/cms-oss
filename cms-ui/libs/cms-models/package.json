@@ -1,9 +1,8 @@
 {
   "name": "@gentics/cms-models",
-  "version": "6.2.0-SNAPSHOT",
+  "version": "6.2.0",
   "license": "Apache-2.0",
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@gentics/mesh-models": "^2.1.0",
     "elastic-types": "^0.1.5"

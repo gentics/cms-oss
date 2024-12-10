@@ -25,7 +25,6 @@ import {
 import {
     filter,
     map,
-    tap,
 } from 'rxjs/operators';
 import {
     GCMSSEARCH_AVAILABLE_FILTERS_FILE,
@@ -204,11 +203,11 @@ export class QueryAssemblerGCMSSearchService {
         filters.forEach(filter => {
             switch (filter.operator) {
                 case 'BEFORE':
-                    mappedOptions[optionsKeyDateBefore] = convertToTimestamp(new Date(filter.value));
+                    mappedOptions[optionsKeyDateBefore] = filter.value;
                     break;
 
                 case 'AFTER':
-                    mappedOptions[optionsKeyDateSince] = convertToTimestamp(new Date(filter.value));
+                    mappedOptions[optionsKeyDateSince] = filter.value;
                     break;
 
                 case 'AT': {

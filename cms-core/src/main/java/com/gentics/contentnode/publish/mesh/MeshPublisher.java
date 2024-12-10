@@ -606,11 +606,6 @@ public class MeshPublisher implements AutoCloseable {
 	protected Single<MeshServerInfoModel> serverInfo;
 
 	/**
-	 * Mesh licensing info
-	 */
-	protected Single<LicenseInfoModel> licenseInfo;
-
-	/**
 	 * Flag, which is set when publishing into Mesh SQL
 	 */
 	protected boolean meshSql = false;
@@ -1188,9 +1183,6 @@ public class MeshPublisher implements AutoCloseable {
 
 			serverInfo = client.getApiInfo().toSingle().cache();
 			serverInfo.subscribe();
-
-			licenseInfo = client.get("/admin/license", LicenseInfoModel.class).toSingle().cache();
-			licenseInfo.subscribe();
 
 			// determine, whether the Mesh version supports publishing (and setting roles) with the save requests
 			meshSql = !serverInfo.blockingGet().getDatabaseVendor().contains("orientdb");

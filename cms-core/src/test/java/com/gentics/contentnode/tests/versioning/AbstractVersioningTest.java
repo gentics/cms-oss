@@ -127,10 +127,10 @@ public class AbstractVersioningTest {
 	 * @throws Exception
 	 */
 	protected void checkNumberOfVersionedEntries(final TableVersion tableVersion, Long id, final Map<Long, Integer> expectedEntries) throws Exception {
-		StringBuffer sql = new StringBuffer("SELECT gentics_main.id, count(*) c FROM ");
+		StringBuffer sql = new StringBuffer("SELECT gentics_main.id, count(*) c FROM `");
 
 		sql.append(tableVersion.getTable());
-		sql.append("_nodeversion gentics_main");
+		sql.append("_nodeversion` gentics_main");
 
 		List<Join> joins = tableVersion.getJoins();
 		for (Join join : joins) {

@@ -217,7 +217,7 @@ public class TableVersion {
 			columnsList += i.next();
 		}
 
-		insertSQLStatement = "INSERT INTO " + table + "_nodeversion (" + columnsList
+		insertSQLStatement = "INSERT INTO `" + table + "_nodeversion` (" + columnsList
 				+ ", nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES ("
 				+ StringUtils.repeat("?", tableColumns.size() + 4, ",") + ")";
 	}
@@ -331,8 +331,8 @@ public class TableVersion {
 		Integer timeInt = new Integer(time);
 
 		// restriction to version at a timestamp (by subselect)
-		String restrictToTimestampVersion = "nodeversiontimestamp = " + "(SELECT max(nodeversiontimestamp) FROM " + getTable()
-				+ "_nodeversion WHERE id = orig.id AND nodeversiontimestamp <= " + time + " AND (nodeversionremoved = 0 OR nodeversionremoved > " + time + "))";
+		String restrictToTimestampVersion = "nodeversiontimestamp = " + "(SELECT max(nodeversiontimestamp) FROM `" + getTable()
+				+ "_nodeversion` WHERE id = orig.id AND nodeversiontimestamp <= " + time + " AND (nodeversionremoved = 0 OR nodeversionremoved > " + time + "))";
 
 		// get rows of current version
 		String sqlCurrentVersion = "SELECT gentics_main.id FROM " + getFromPart(false) + " WHERE " + getWherePart();
@@ -404,9 +404,9 @@ public class TableVersion {
 				String insertQuery = null;
 				Object[] insertParams = null;
 
-				insertQuery = "INSERT INTO " + table + "_nodeversion (" + columnsList
-						+ ",nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) " + "SELECT " + columnsList + ", ?, ?, ?, 0 FROM "
-						+ table + " WHERE id in (" + changedIds + ")";
+				insertQuery = "INSERT INTO `" + table + "_nodeversion` (" + columnsList
+						+ ",nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) " + "SELECT " + columnsList + ", ?, ?, ?, 0 FROM `"
+						+ table + "` WHERE id in (" + changedIds + ")";
 				insertParams = new Object[] { timeInt, userId, new Integer(futureOrPastChange ? 0 : 1)};
 
 				DB.update(getHandle(), insertQuery, insertParams, null);
@@ -440,7 +440,7 @@ public class TableVersion {
 					currentVersionString.append(row.getInt("id"));
 				}
 				SimpleResultProcessor rsCount = new SimpleResultProcessor();
-				String sqlCountForUpdate = "SELECT count(*) num FROM " + table + "_nodeversion " + " WHERE id IN (" + lastVersionString.toString() + ")";
+				String sqlCountForUpdate = "SELECT count(*) num FROM `" + table + "_nodeversion` " + " WHERE id IN (" + lastVersionString.toString() + ")";
 
 				if (currentVersionString.length() > 0) {
 					sqlCountForUpdate += " AND id NOT IN (" + currentVersionString.toString() + ")";
@@ -467,10 +467,10 @@ public class TableVersion {
 				// be copied to the new version anyway (and marked as removed)
 				String sqlCopyRemoved = null;
 
-				sqlCopyRemoved = "INSERT INTO " + getTable() + "_nodeversion (" + columnsList
+				sqlCopyRemoved = "INSERT INTO `" + getTable() + "_nodeversion` (" + columnsList
 						+ ", nodeversiontimestamp, nodeversionremoved, nodeversionlatest, nodeversion_user) ";
-				sqlCopyRemoved += "SELECT " + columnsList + ", ?, ?, 0, ? FROM " + getTable()
-						+ "_nodeversion orig WHERE id IN (" + lastVersionString.toString() + ") AND " + restrictToTimestampVersion;
+				sqlCopyRemoved += "SELECT " + columnsList + ", ?, ?, 0, ? FROM `" + getTable()
+						+ "_nodeversion` orig WHERE id IN (" + lastVersionString.toString() + ") AND " + restrictToTimestampVersion;
 
 				// sqlCopyRemoved += "SELECT "+columnsList+", ?, ?, 0,
 				// nodeversion_user FROM "+getTable()+"_nodeversion WHERE id IN
@@ -488,7 +488,7 @@ public class TableVersion {
 				// when this is no future change, mark the removed records as no
 				// longer latest
 				// if(!futureOrPastChange) {
-				String sqlUpdateLastVersion = "UPDATE " + getTable() + "_nodeversion SET nodeversionremoved = ?, nodeversionlatest = 0"
+				String sqlUpdateLastVersion = "UPDATE `" + getTable() + "_nodeversion` SET nodeversionremoved = ?, nodeversionlatest = 0"
 						+ " WHERE (nodeversionremoved = 0 OR nodeversionremoved > ?) AND nodeversiontimestamp <= ? AND id IN (" + lastVersionString.toString() + ")";
 
 				if (currentVersionString.length() > 0) {
@@ -748,7 +748,7 @@ public class TableVersion {
 
 				fetchVersionedData(row.getInt("id"), row.getInt("nodeversionrtime"), data, false);
 				rowsToRestore.merge(data);
-				DB.update(getHandle(), "DELETE FROM " + getTable() + " WHERE id = ?", new Object[] { row.getInt("id") });
+				DB.update(getHandle(), "DELETE FROM `" + getTable() + "` WHERE id = ?", new Object[] { row.getInt("id") });
 			}
 
 			// Although we deleted the rows as we retrieved their data, there may be more rows in the current
@@ -759,7 +759,7 @@ public class TableVersion {
 
 			if (!joins.isEmpty()) {
 				// e.g. DELETE value FROM value, contenttag WHERE value.contenttag_id = contenttag.id AND contenttag.content_id = ?
-				deleteSQL.append("DELETE gentics_main FROM ").append(table).append(" gentics_main");
+				deleteSQL.append("DELETE gentics_main FROM `").append(table).append("` gentics_main");
 				for (Join join : joins) {
 					deleteSQL.append(", ").append(join.joinedTable);
 				}
@@ -770,7 +770,7 @@ public class TableVersion {
 				deleteSQL.append(getWherePart(false));
 			} else {
 				// e.g. DELETE FROM page WHERE id = ?
-				deleteSQL.append("DELETE FROM ").append(table).append(" WHERE ").append(getWherePart(true));
+				deleteSQL.append("DELETE FROM `").append(table).append("` WHERE ").append(getWherePart(true));
 			}
 			DB.update(getHandle(), deleteSQL.toString(), idParams);
 
@@ -806,7 +806,7 @@ public class TableVersion {
 	 * 		The SQL statement to get the current data.
 	 */
 	private String getCurrentDataSelect() {
-		return "SELECT " + makeColumnsSql(nonVersionedColumns) + " FROM " + getTable() + " WHERE id = ?"; 
+		return "SELECT " + makeColumnsSql(nonVersionedColumns) + " FROM `" + getTable() + "` WHERE id = ?";
 	}
 
 	/**
@@ -820,7 +820,7 @@ public class TableVersion {
 	 * 		The SQL statement to the the versioned data.
 	 */
 	private String getVersionedDataSelect() {
-		return " SELECT " + columnsList + " FROM " + table + "_nodeversion " + " WHERE " + table + "_nodeversion.id = ? AND " + table
+		return " SELECT " + columnsList + " FROM `" + table + "_nodeversion` " + " WHERE " + table + "_nodeversion.id = ? AND " + table
 				+ "_nodeversion.nodeversiontimestamp = ?";
 	}
 
@@ -963,7 +963,7 @@ public class TableVersion {
 		}
 
 		String sql = String.format(
-				"SELECT %s, nodeversiontimestamp FROM %s_nodeversion WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s)",
+				"SELECT %s, nodeversiontimestamp FROM `%s_nodeversion` WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s)",
 				columnsList, table, table, StringUtils.repeat("?", ids.size(), ","), table,
 				StringUtils.repeat("?", timestamps.size(), ","));
 
@@ -987,7 +987,7 @@ public class TableVersion {
 	 * @throws SQLException
 	 */
 	private SimpleResultProcessor fetchCurrentDataBatch(List<Integer> ids) throws SQLException, NodeException {
-		String sql = String.format("SELECT id, %s FROM %s WHERE id IN (%s)", makeColumnsSql(nonVersionedColumns), table,
+		String sql = String.format("SELECT id, %s FROM `%s` WHERE id IN (%s)", makeColumnsSql(nonVersionedColumns), table,
 				StringUtils.repeat("?", ids.size(), ","));
 
 		SimpleResultProcessor tmp = new SimpleResultProcessor();
@@ -1024,7 +1024,7 @@ public class TableVersion {
 	 */
 	protected void restoreData(Object[] idParams, SimpleResultProcessor data) throws SQLException, NodeException {
 		// first remove all existing data
-		DB.update(getHandle(), "DELETE FROM " + getTable() + " WHERE " + getWherePart(true), idParams, null);
+		DB.update(getHandle(), "DELETE FROM `" + getTable() + "` WHERE " + getWherePart(true), idParams, null);
 		insertRowsFromData(data);
 	}
 
@@ -1042,7 +1042,7 @@ public class TableVersion {
 		List<String> allColumns = getColumns(table);
 		List<Integer> columnTypes = getColumnDataTypes(table);
 
-		String insertSql = "INSERT INTO " + getTable() + " (" + makeColumnsSql(allColumns) + ")" + " VALUES (" + makeQuestionMarks(allColumns.size()) + ")";
+		String insertSql = "INSERT INTO `" + getTable() + "` (" + makeColumnsSql(allColumns) + ")" + " VALUES (" + makeQuestionMarks(allColumns.size()) + ")";
 
 		List<Object> params = new ArrayList<Object>();
 
@@ -1243,13 +1243,17 @@ public class TableVersion {
 	 * @return from part (excluding the word "FROM")
 	 */
 	private String getFromPart(boolean versionTable) {
-		StringBuffer fromPart = new StringBuffer();
+		StringBuilder fromPart = new StringBuilder("`");
 
 		fromPart.append(table);
+
 		if (versionTable) {
 			fromPart.append("_nodeversion");
 		}
-		fromPart.append(" gentics_main");
+
+		fromPart.append("`")
+			.append(" gentics_main");
+
 		for (Join join : joins) {
 			fromPart.append(" ").append(join.getLeftJoin());
 		}
@@ -1280,10 +1284,10 @@ public class TableVersion {
 	public int createInitialVersions(int timestamp, String userId, String whereClause,
 			Object[] params) throws NodeException {
 		Integer timeInt = new Integer(timestamp);
-		String insertQuery = "INSERT INTO " + table + "_nodeversion (" + columnsList
+		String insertQuery = "INSERT INTO `" + table + "_nodeversion` (" + columnsList
 				+ ",nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) "
-				+ "SELECT " + columnsList + ", ?, ?, 1, 0 FROM " + table + " WHERE id in (select " + table + ".id from " + table
-				+ " left join " + table + "_nodeversion on (" + table + ".id = " + table + "_nodeversion.id) where " + table + "_nodeversion.id is null";
+				+ "SELECT " + columnsList + ", ?, ?, 1, 0 FROM `" + table + "` WHERE id in (select " + table + ".id from `" + table
+				+ "` left join `" + table + "_nodeversion` on (" + table + ".id = " + table + "_nodeversion.id) where " + table + "_nodeversion.id is null";
 		Object[] filterParams = null;
 
 		if (whereClause != null) {
@@ -1311,7 +1315,7 @@ public class TableVersion {
 	 * @throws SQLException
 	 */
 	public int getRecordsWithoutVersions() throws SQLException, NodeException {
-		String countQuery = "select count(*) c from " + table + " left join " + table + "_nodeversion on (" + table + ".id = " + table
+		String countQuery = "select count(*) c from `" + table + "` left join `" + table + "_nodeversion` on (" + table + ".id = " + table
 				+ "_nodeversion.id) where " + table + "_nodeversion.id is null";
 		SimpleResultProcessor result = new SimpleResultProcessor();
 
@@ -1486,7 +1490,7 @@ public class TableVersion {
 			DB.query(getHandle(), sql.toString(), idParams, rsVersions);
 
 			// now move the latest records to the given timestamp
-			String updateSQL = new StringBuffer("UPDATE ").append(getTable()).append("_nodeversion SET nodeversiontimestamp = ? WHERE id = ? AND nodeversiontimestamp = ?").toString();
+			String updateSQL = new StringBuffer("UPDATE `").append(getTable()).append("_nodeversion` SET nodeversiontimestamp = ? WHERE id = ? AND nodeversiontimestamp = ?").toString();
 			List<Integer> ids = new Vector<Integer>(rsVersions.size());
 
 			for (Iterator<SimpleResultRow> iter = rsVersions.iterator(); iter.hasNext();) {
@@ -1499,7 +1503,7 @@ public class TableVersion {
 
 			// finally remove too old versions
 			if (ids.size() > 0) {
-				String deleteSQL = new StringBuffer("DELETE FROM ").append(getTable()).append("_nodeversion WHERE nodeversiontimestamp < ? AND id IN (").append(StringUtils.repeat("?", ids.size(), ",")).append(")").toString();
+				String deleteSQL = new StringBuffer("DELETE FROM `").append(getTable()).append("_nodeversion` WHERE nodeversiontimestamp < ? AND id IN (").append(StringUtils.repeat("?", ids.size(), ",")).append(")").toString();
 				Object[] params = new Object[ids.size() + 1];
 
 				params[0] = timestamp;
@@ -1610,14 +1614,14 @@ public class TableVersion {
 		if (autoIncrement) {
 			AutoIdCollector autoIds = new AutoIdCollector();
 
-			DB.query(getHandle(), "SELECT auto_id FROM " + table + "_nodeversion WHERE " + where, whereParams, autoIds);
+			DB.query(getHandle(), "SELECT auto_id FROM `" + table + "_nodeversion` WHERE " + where, whereParams, autoIds);
 			if (autoIds.size() > 0) {
 				DB.update(getHandle(),
-						"UPDATE " + table + "_nodeversion SET " + set + " WHERE auto_id IN (" + StringUtils.repeat("?", autoIds.size(), ",") + ")",
+						"UPDATE `" + table + "_nodeversion` SET " + set + " WHERE auto_id IN (" + StringUtils.repeat("?", autoIds.size(), ",") + ")",
 						merge(setParams, autoIds.getObjectArray()));
 			}
 		} else {
-			DB.update(getHandle(), "UPDATE " + table + "_nodeversion SET " + set + " WHERE " + where, merge(setParams, whereParams));
+			DB.update(getHandle(), "UPDATE `" + table + "_nodeversion` SET " + set + " WHERE " + where, merge(setParams, whereParams));
 		}
 	}
 
@@ -1632,13 +1636,13 @@ public class TableVersion {
 			// when the _nodeversion table contains a auto_id column, we will use it to delete the entries
 			AutoIdCollector autoIds = new AutoIdCollector();
 
-			DB.query(getHandle(), "SELECT auto_id FROM " + getTable() + "_nodeversion WHERE " + where, whereParams, autoIds);
+			DB.query(getHandle(), "SELECT auto_id FROM `" + getTable() + "_nodeversion` WHERE " + where, whereParams, autoIds);
 			if (autoIds.size() > 0) {
-				DB.update(getHandle(), "DELETE FROM " + getTable() + "_nodeversion WHERE auto_id IN (" + StringUtils.repeat("?", autoIds.size(), ",") + ")",
+				DB.update(getHandle(), "DELETE FROM `" + getTable() + "_nodeversion` WHERE auto_id IN (" + StringUtils.repeat("?", autoIds.size(), ",") + ")",
 						autoIds.getObjectArray());
 			}
 		} else {
-			DB.update(getHandle(), "DELETE FROM " + getTable() + "_nodeversion WHERE " + where, whereParams, null);
+			DB.update(getHandle(), "DELETE FROM `" + getTable() + "_nodeversion` WHERE " + where, whereParams, null);
 		}
 	}
 

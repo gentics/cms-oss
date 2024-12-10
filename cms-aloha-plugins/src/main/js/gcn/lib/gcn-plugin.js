@@ -710,21 +710,13 @@ define([
 		setupMagicLinkConstruct: function (callback) {
 			var that = this;
 
-			GCMSUI.restClient.construct.listForEditor({
-				page: Aloha.settings.plugins.gcn.id,
-				node: Aloha.settings.plugins.gcn.nodeId,
-				search: GCN.settings.MAGIC_LINK,
-			}).send().then(res => {
-				let magicLinkConstruct;
-				for (const construct of res.constructs) {
-					if (construct.keyword === GCN.settings.MAGIC_LINK) {
-						magicLinkConstruct = construct;
-						break;
-					}
-				}
+			GCMSUI.getConstructs().then(constructs => {
+				const magicLinkConstruct = constructs[GCN.settings.MAGIC_LINK];
+
 				if (!magicLinkConstruct) {
 					return;
 				}
+
 				GCNLinks.magicLink = magicLinkConstruct;
 				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
 				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);

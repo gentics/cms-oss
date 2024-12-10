@@ -136,12 +136,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(combineLatest([
-            this.constructReload.asObservable().pipe(
-                switchMap(() => this.client.construct.listForEditor({
-                    nodeId: this.nodeId,
-                    pageId: this.pageId,
-                })),
-            ),
+            this.aloha.constructs$.asObservable(),
             this.aloha.activeEditable$.pipe(
                 tap(editable => {
                     this.editable = editable;
@@ -150,9 +145,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             ),
             this.aloha.settings$,
         ]).pipe(
-            map(([res, activeEditable, settings]) => {
-                const raw = res.constructs || [];
-
+            map(([raw, activeEditable, settings]) => {
                 // No element selected, nothing to do
                 if (activeEditable?.obj?.[0] == null) {
                     return raw;
@@ -316,10 +309,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         }));
     }
 
-    public ngOnChanges(changes: ChangesOf<this>): void {
-        if (!changes.nodeId.firstChange || !changes.pageId.firstChange) {
-            this.constructReload.next();
-        }
+    public ngOnChanges(_changes: ChangesOf<this>): void {
     }
 
     public ngAfterViewInit(): void {

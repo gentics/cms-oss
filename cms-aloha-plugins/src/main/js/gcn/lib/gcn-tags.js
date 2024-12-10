@@ -156,7 +156,7 @@ define('gcn/gcn-tags', [
 
 		var page = GCN.page(pageId);
 
-		page.constructs(function (constructs) {
+		GCMSUI.getConstructs().then(function (constructs) {
 			var numBlocksToInitialize = blocks.length;
 			var processTag = function (tag, block) {
 				--numBlocksToInitialize;

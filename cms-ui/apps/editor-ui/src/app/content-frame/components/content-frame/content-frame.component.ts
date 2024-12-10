@@ -192,6 +192,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private contentModifiedByExternalScript = false;
     private childFrameInitTimer: any;
     private childFrameInitialized = false;
+    private constructsSubscription: Subscription;
 
     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
@@ -350,8 +351,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             filter(node => node != null),
         );
 
-        this.isInherited$ = this.activeNode$
-            .pipe(map(activeNode => activeNode && activeNode.inheritedFromId !== activeNode.id));
+        this.isInherited$ = this.activeNode$.pipe(
+            map(activeNode => activeNode && activeNode.inheritedFromId !== activeNode.id),
+        );
 
         this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
             this.alohaReady = ready;
@@ -481,6 +483,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             this.windowLoaded = true;
+            this.reloadPageConstructs();
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.
             if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
@@ -535,6 +538,10 @@ ins.gtx-diff {
         this.cancelEditingDebounced(this.currentItem);
         this.appState.dispatch(new CloseEditorAction());
         (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = null;
+        if (this.constructsSubscription != null) {
+            this.constructsSubscription.unsubscribe();
+            this.constructsSubscription = null;
+        }
     }
 
     /**
@@ -565,6 +572,23 @@ ins.gtx-diff {
         this.currentItemPath = this.getItemPath(this.currentItem);
         this.updateIframeUrl(this.appState.now.editor);
         this.changeDetector.detectChanges();
+    }
+
+    protected reloadPageConstructs(): void {
+        if (this.constructsSubscription != null) {
+            this.constructsSubscription.unsubscribe();
+        }
+
+        if (this.currentItem == null || this.currentNode == null) {
+            return;
+        }
+
+        this.constructsSubscription = this.client.construct.listForEditor({
+            pageId: this.currentItem.id,
+            nodeId: this.currentNode.id,
+        }).subscribe(res => {
+            this.aloha.constructs$.next(res.constructs);
+        });
     }
 
     getItemPath(item: Page | FileModel | Folder | Form | Image | Node): string {

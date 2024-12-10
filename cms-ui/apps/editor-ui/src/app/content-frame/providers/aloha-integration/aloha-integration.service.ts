@@ -17,8 +17,9 @@ import {
     ScreenSize,
 } from '@gentics/aloha-models';
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
+import { Construct } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
@@ -167,6 +168,10 @@ export class AlohaIntegrationService {
     public ready$ = new BehaviorSubject<boolean>(false);
     /** Similar to {@link ready$}, but will be `true` even if the page fails. */
     public windowLoaded$ = new BehaviorSubject<boolean>(false);
+    /**
+     * An array of constructs which are available in the current page.
+     */
+    public constructs$ = new Subject<Construct[]>();
 
     public gcnPlugin$: Observable<GCNAlohaPlugin>;
     public uiPlugin$: Observable<AlohaUiPlugin>;

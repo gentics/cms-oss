@@ -19,7 +19,7 @@ import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSetting
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf } from '@gentics/ui-core';
-import { BehaviorSubject, Subscription, combineLatest, merge, of } from 'rxjs';
+import { Subscription, combineLatest, merge, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
@@ -120,7 +120,6 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     public brokenLinkElements: HTMLElement[] = [];
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
 
-    protected constructReload = new BehaviorSubject<void>(null);
     protected subscriptions: Subscription[] = [];
     protected currentMenus: MobileMenu[] = [];
 
@@ -136,12 +135,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(combineLatest([
-            this.constructReload.asObservable().pipe(
-                switchMap(() => this.client.construct.listForEditor({
-                    nodeId: this.nodeId,
-                    pageId: this.pageId,
-                })),
-            ),
+            this.aloha.constructs$.asObservable(),
             this.aloha.activeEditable$.pipe(
                 tap(editable => {
                     this.editable = editable;
@@ -150,9 +144,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             ),
             this.aloha.settings$,
         ]).pipe(
-            map(([res, activeEditable, settings]) => {
-                const raw = res.constructs || [];
-
+            map(([raw, activeEditable, settings]) => {
                 // No element selected, nothing to do
                 if (activeEditable?.obj?.[0] == null) {
                     return raw;
@@ -171,7 +163,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                 return raw.filter(construct => whitelist.includes(construct.keyword));
             }),
         ).subscribe(constructs => {
-            this.constructs = constructs;
+            this.constructs = structuredClone(constructs);
             this.changeDetector.markForCheck();
         }));
 
@@ -316,10 +308,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         }));
     }
 
-    public ngOnChanges(changes: ChangesOf<this>): void {
-        if (!changes.nodeId.firstChange || !changes.pageId.firstChange) {
-            this.constructReload.next();
-        }
+    public ngOnChanges(_changes: ChangesOf<this>): void {
     }
 
     public ngAfterViewInit(): void {

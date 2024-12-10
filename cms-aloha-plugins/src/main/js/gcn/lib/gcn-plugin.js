@@ -123,7 +123,7 @@ define([
 	 * @param {function} error Custom error handler.
 	 */
 	function getConstructById(page, id, success, error) {
-		page.constructs(function (constructs) {
+		GCMSUI.getConstructs().then(function (constructs) {
 			var construct;
 			for (construct in constructs) {
 				if (constructs.hasOwnProperty(construct)
@@ -133,7 +133,7 @@ define([
 				}
 			}
 			error('Could not find construct for tag id ' + id + '.');
-		}, error);
+		}).catch(error);
 	}
 
 	var OBJECT_PROPERTY_PREFIX = /^object\.[a-zA-Z0-9]+/i;
@@ -708,25 +708,20 @@ define([
 		 *                                     argument.
 		 */
 		setupMagicLinkConstruct: function (callback) {
-			var hasPageIdSetting = !(
-				typeof this.settings.id === 'null' ||
-				typeof this.settings.id === 'undefined'
-			);
-			var source = hasPageIdSetting
-				? GCN.page(this.settings.id).node()
-				: GCN.Admin;
 			var that = this;
-			source.constructs(function (constructs) {
-				if (that.settings.magiclinkconstruct) {
-					that.setMagicLinkOnGCNLib(constructs, parseInt(
-						that.settings.magiclinkconstruct, 10));
+
+			GCMSUI.getConstructs().then(constructs => {
+				const magicLinkConstruct = constructs[GCN.settings.MAGIC_LINK];
+
+				if (!magicLinkConstruct) {
+					return;
 				}
-				if (constructs[GCN.settings.MAGIC_LINK]) {
-					that.setMagicLinkOnIntergrationPlugin(
-						constructs[GCN.settings.MAGIC_LINK].constructId);
-				}
-				if (callback) {
-					callback(that.settings.magiclinkconstruct);
+
+				GCNLinks.magicLink = magicLinkConstruct;
+				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
+				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
+				if (typeof callback === 'function') {
+					callback(magicLinkConstruct);
 				}
 			});
 		},

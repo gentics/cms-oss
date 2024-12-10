@@ -14,7 +14,7 @@ import {
 import { merge } from 'rxjs';
 import { ChangesOf, IFileDropAreaOptions } from '../../common';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
-import { generateFormProvider, transformToBoolean } from '../../utils';
+import { coerceToBoolean, coerceToTruelean, generateFormProvider } from '../../utils';
 import { matchesMimeType } from '../../utils/matches-mime-type';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
@@ -42,8 +42,8 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Set to a falsy value to disable picking multiple files at once. Defaults to `true` if absent.
      */
-    @Input({ transform: transformToBoolean })
-    public multiple = false;
+    @Input({ transform: coerceToTruelean })
+    public multiple = true;
 
     /**
      * Provides feedback for accepted file types, if supported by the browser. Defaults to `"*"`.
@@ -60,7 +60,7 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Display the button as a flat button or not. Forwarded to the Button component.
      */
-    @Input({ transform: transformToBoolean })
+    @Input({ transform: coerceToBoolean })
     public flat = false;
 
     /**
@@ -72,13 +72,13 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
     /**
      * Icon button without text. Forwarded to the Button component.
      */
-    @Input({ transform: transformToBoolean })
+    @Input({ transform: coerceToBoolean })
     public icon = false;
 
     /**
      * If it should display the names of the selected files.
      */
-    @Input({ transform: transformToBoolean })
+    @Input({ transform: coerceToBoolean })
     public displayFiles = false;
 
     /**

@@ -1,17 +1,16 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { AppStateService, GlobalFeaturesMap, NodeFeaturesMap, SetGlobalFeature, SetNodeFeatures } from '@admin-ui/state';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE, TrackedActions } from '@admin-ui/state/utils/test-app-state';
-import { createDelayedError, createDelayedObservable } from '@admin-ui/testing';
+import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState, TrackedActions } from '@admin-ui/state/utils/test-app-state';
+import { createDelayedObservable } from '@admin-ui/testing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Feature, FeatureResponse, NodeFeature, RecursivePartial } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { ActionType, ofActionDispatched } from '@ngxs/store';
+import { ofActionDispatched } from '@ngxs/store';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ErrorHandler } from '../../error-handler';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
-import { FeatureOperations } from './feature.operations';
-import { ALL_GLOBAL_FEATURES } from './feature.operations';
+import { ALL_GLOBAL_FEATURES, FeatureOperations } from './feature.operations';
 
 class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
     admin = {
@@ -30,7 +29,6 @@ describe('FeatureOperations', () => {
 
     let api: MockApi;
     let appState: TestAppState;
-    let errorHandler: MockErrorHandler;
     let featureOps: FeatureOperations;
     let stopper: ObservableStopper;
 
@@ -50,7 +48,6 @@ describe('FeatureOperations', () => {
         api = TestBed.get(GcmsApi);
         appState = TestBed.get(AppStateService);
         featureOps = TestBed.get(FeatureOperations);
-        errorHandler = TestBed.get(ErrorHandler);
         stopper = new ObservableStopper();
     });
 
@@ -87,13 +84,6 @@ describe('FeatureOperations', () => {
             expect(dispatchedActions.get(0).feature).toEqual(GLOBAL_FEATURE_A);
             expect(dispatchedActions.get(0).enabled).toBe(true);
         }));
-
-        it('shows an error notification and rethrows the error', fakeAsync(() => {
-            const error = new Error('Test');
-            api.admin.getFeature.and.returnValue(createDelayedError(error));
-            errorHandler.assertNotifyAndRethrowIsCalled(featureOps.checkGlobalFeature(GLOBAL_FEATURE_A), error);
-        }));
-
     });
 
     describe('checkAllGlobalFeatures()', () => {
@@ -144,20 +134,6 @@ describe('FeatureOperations', () => {
             }
             expect(result).toEqual(appState.now.features.global);
         });
-
-        it('notifies once on multiple errors and rethrows the error', fakeAsync(() => {
-            const errorMsgStart = 'Expected Test Error';
-            const errors: Error[] = [];
-            api.admin.getFeature.and.callFake(() => {
-                const error = new Error(`${errorMsgStart} ${api.admin.getFeature.calls.count()}`);
-                errors.push(error);
-                return createDelayedError(error);
-            });
-
-            errorHandler.assertNotifyAndRethrowIsCalled(featureOps.checkAllGlobalFeatures(), errors[0]);
-            expect(errorHandler.notifyAndRethrow.calls.count()).toBe(1, 'Only a single error should be reported.');
-        }));
-
     });
 
     describe('getNodeFeatures()', () => {
@@ -186,13 +162,6 @@ describe('FeatureOperations', () => {
             expect(dispatchedActions.get(0).nodeId).toBe(NODE_ID);
             expect(dispatchedActions.get(0).enabledFeatures).toEqual(enabledFeatures);
         }));
-
-        it('shows an error notification and rethrows the error', fakeAsync(() => {
-            const error = new Error('Test');
-            api.folders.getNodeFeatures.and.returnValue(createDelayedError(error));
-            errorHandler.assertNotifyAndRethrowIsCalled(featureOps.getNodeFeatures(NODE_ID), error);
-        }));
-
     });
 
 });

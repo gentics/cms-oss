@@ -1,11 +1,56 @@
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { SimpleChanges, type Input } from '@angular/core';
+import { SimpleChanges, Input } from '@angular/core';
 
 /**
- * Components with boolean inputs may receive the value as an actual boolean (if data-bound `[prop]="false"`) or as
- * a string representation of a boolean (if passed as a regular attribute `prop="false"`).
- * In the latter case, we want to ensure that the string version is correctly coerced to its boolean counterpart.
+ * Components may receive boolean inputs in the following ways:
+ * ```html
+ * <my-component multiple />
+ * <my-component multiple="true" />
+ * <my-component [multiple]="true" />
+ * ```
+ *
+ * In the code example, only the last one would actually be a correct boolean value for the input,
+ * while the other two examples would yield `''` and `'true'`.
+ * To get correct boolean values, this helper method can be used to get the expected result:
+ *
+ * ```ts
+ * coerceToBoolean('') // true
+ * coerceToBoolean('true') // true
+ * coerceToBoolean('false') // false
+ * coerceToBoolean('invalid') // false
+ * coerceToBoolean(true) // true
+ * ```
+ *
+ * You may also provide a `defaultValue` to change the behaviour for missing values:
+ *
+ * ```ts
+ * coerceToBoolean(null) // false
+ * coerceToBoolean(null, true) // true
+ * ```
+ *
+ * It's best used as the {@link Input.transform} function,
+ * to perform the coercion as soon and integrated as possible.
+ * When using it as a `transform` function, you may not alter/provide a `defaultValue` however,
+ * which is why a dedicated {@link coerceToTruelean} function exists:
+ *
+ * ```ts
+ * class MyComponent {
+ *      \@Input({
+ *          transform: coerceToBoolean
+ *      })
+ *      public disabled = false;
+ *
+ *      \@Input({
+ *          transform: coerceToTruelean
+ *      })
+ *      public showDetails = true;
+ * }
+ * ```
+ *
+ * @param val The value to coerce/parse to a boolean
+ * @param defaultValue The value to retrun when `val` is `null`.
+ * @return The coerced/parsed boolean of `val`, or `defaultValue` when `null`.
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function coerceToBoolean(val: any, defaultValue: boolean = false): boolean {
@@ -17,29 +62,20 @@ export function coerceToBoolean(val: any, defaultValue: boolean = false): boolea
 }
 
 /**
- * Transformer wrapper for {@link coerceToBoolean}, to be used in {@link Input.transform}.
- * @param defaultValue The default value to apply when the value could not be determined.
- * @returns A boolean value based on the input value.
- *
- * @example
- * ```ts
- * class MyComponent {
- *      \@Input({
- *          transform: transformToBoolean()
- *      })
- *      public disabled = false;
- *
- *      \@Input({
- *          transform: transformToBoolean(true)
- *      })
- *      public showDetails = true;
- * }
- * ```
+ * @see {@link coerceToBoolean}
  */
-export function transformToBoolean(defaultValue: boolean = false): (value: any) => boolean {
-    return (value) => coerceToBoolean(value, defaultValue);
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function coerceToTruelean(val: any): boolean {
+    if (val == null) {
+        return true;
+    }
+
+    return val === true || val === 'true' || val === '';
 }
 
+/**
+ * @deprecated Deprecated since {@link coerceInstance} is deprecated
+ */
 export type CoerceOption<T> = (keyof T | [key: keyof T, defaultValue?: boolean]);
 
 /**
@@ -54,7 +90,7 @@ export type CoerceOption<T> = (keyof T | [key: keyof T, defaultValue?: boolean])
  * }
  * ```
  *
- * @deprecated Use the {@link Input.transform} option with the {@link transformToBoolean} transformer instead.
+ * @deprecated Use the {@link Input.transform} option with the {@link coerceToBoolean}/{@link coerceToTruelean} transformer instead.
  * Will be removed in the next major verison.
  */
 export function coerceInstance<T>(instance: T, options: CoerceOption<T>[], changes: SimpleChanges): (keyof T)[] {

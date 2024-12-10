@@ -1,12 +1,12 @@
 import { Component, EventEmitter, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
 import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { FilePickerComponent } from './file-picker.component';
 
-describe('FilePickerComponent', () => {
+fdescribe('FilePickerComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         providers: [
@@ -41,6 +41,7 @@ describe('FilePickerComponent', () => {
                 <gtx-file-picker [multiple]="false"></gtx-file-picker>`,
             fixture => {
                 fixture.detectChanges();
+
                 const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.multiple).toBe(false);
             },

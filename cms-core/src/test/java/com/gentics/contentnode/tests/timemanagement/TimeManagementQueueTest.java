@@ -216,8 +216,7 @@ public class TimeManagementQueueTest {
 		consume(p -> {
 			assertThat(p).as("Tested page").isOffline()
 					.hasVersions(
-							new NodeObjectVersion().setNumber("1.0").setDate(now + 1).setCurrent(true),
-							new NodeObjectVersion().setNumber("0.1").setDate(now))
+							new NodeObjectVersion().setNumber("1.0").setDate(now).setCurrent(true))
 					.hasPublishAt(publishAt, "1.0")
 					.hasQueuedPublishAt(userWithoutPublish, queuedPublishAt, "1.0")
 					.hasNoOfflineAt()

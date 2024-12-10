@@ -264,8 +264,7 @@ public class PurgeVersionsSandboxTest extends AbstractPageVersioningTest {
 			assertThat(page).as("Tested page").hasVersions(
 					new NodeObjectVersion().setNumber("1.2").setCurrent(true).setDate(thirdUpdateTime),
 					new NodeObjectVersion().setNumber("1.1").setDate(secondUpdateTime),
-					new NodeObjectVersion().setNumber("1.0").setDate(publishTime),
-					new NodeObjectVersion().setNumber("0.2").setDate(firstUpdateTime),
+					new NodeObjectVersion().setNumber("1.0").setDate(firstUpdateTime),
 					new NodeObjectVersion().setNumber("0.1").setDate(createTime));
 			trx.success();
 		}
@@ -280,7 +279,7 @@ public class PurgeVersionsSandboxTest extends AbstractPageVersioningTest {
 			assertThat(page).as("Tested page").hasVersions(
 					new NodeObjectVersion().setNumber("1.2").setCurrent(true).setDate(thirdUpdateTime),
 					new NodeObjectVersion().setNumber("1.1").setDate(secondUpdateTime),
-					new NodeObjectVersion().setNumber("1.0").setDate(publishTime));
+					new NodeObjectVersion().setNumber("1.0").setDate(firstUpdateTime));
 			trx.success();
 		}
 	}

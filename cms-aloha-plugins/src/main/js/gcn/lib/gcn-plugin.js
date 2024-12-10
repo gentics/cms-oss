@@ -708,25 +708,28 @@ define([
 		 *                                     argument.
 		 */
 		setupMagicLinkConstruct: function (callback) {
-			var hasPageIdSetting = !(
-				typeof this.settings.id === 'null' ||
-				typeof this.settings.id === 'undefined'
-			);
-			var source = hasPageIdSetting
-				? GCN.page(this.settings.id).node()
-				: GCN.Admin;
 			var that = this;
-			source.constructs(function (constructs) {
-				if (that.settings.magiclinkconstruct) {
-					that.setMagicLinkOnGCNLib(constructs, parseInt(
-						that.settings.magiclinkconstruct, 10));
+
+			GCMSUI.restClient.construct.listForEditor({
+				page: Aloha.settings.plugins.gcn.id,
+				node: Aloha.settings.plugins.gcn.nodeId,
+				search: GCN.settings.MAGIC_LINK,
+			}).send().then(res => {
+				let magicLinkConstruct;
+				for (const construct of res.constructs) {
+					if (construct.keyword === GCN.settings.MAGIC_LINK) {
+						magicLinkConstruct = construct;
+						break;
+					}
 				}
-				if (constructs[GCN.settings.MAGIC_LINK]) {
-					that.setMagicLinkOnIntergrationPlugin(
-						constructs[GCN.settings.MAGIC_LINK].constructId);
+				if (!magicLinkConstruct) {
+					return;
 				}
-				if (callback) {
-					callback(that.settings.magiclinkconstruct);
+				GCNLinks.magicLink = magicLinkConstruct;
+				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
+				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
+				if (typeof callback === 'function') {
+					callback(magicLinkConstruct);
 				}
 			});
 		},

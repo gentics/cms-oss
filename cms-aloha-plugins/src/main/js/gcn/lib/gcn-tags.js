@@ -137,16 +137,6 @@ define('gcn/gcn-tags', [
 	}
 
 	/**
-	 * Gets the GCN plugin's settings.
-	 *
-	 * @FIXME: We need a better approach to reading Aloha settings.
-	 * @return {object}
-	 */
-	function getGCNPluginSettings() {
-		return Aloha.GCN.settings;
-	}
-
-	/**
 	 * Initialize the blocks by calling alohaBlock() on them.
 	 *
 	 * @param {Array.<object>} blocks
@@ -164,9 +154,7 @@ define('gcn/gcn-tags', [
 			return;
 		}
 
-		var settings = getGCNPluginSettings();
 		var page = GCN.page(pageId);
-		var deleteIcon = '/images/system/delete.gif';
 
 		page.constructs(function (constructs) {
 			var numBlocksToInitialize = blocks.length;

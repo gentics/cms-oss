@@ -212,7 +212,7 @@ export class QueryAssemblerGCMSSearchService {
 
                 case 'AT': {
                     // get 24h interval of day date
-                    const dateValue = new Date(filter.value);
+                    const dateValue = new Date(filter.value * 1000);
                     const dateStart = new Date(dateValue);
                     dateStart.setHours( 0, 0, 0, 0 );
                     const dateEnd = new Date(dateValue);

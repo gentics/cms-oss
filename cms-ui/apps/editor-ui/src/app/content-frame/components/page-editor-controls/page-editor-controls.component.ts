@@ -19,7 +19,7 @@ import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSetting
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf } from '@gentics/ui-core';
-import { BehaviorSubject, Subscription, combineLatest, merge, of } from 'rxjs';
+import { Subscription, combineLatest, merge, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
@@ -120,7 +120,6 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     public brokenLinkElements: HTMLElement[] = [];
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
 
-    protected constructReload = new BehaviorSubject<void>(null);
     protected subscriptions: Subscription[] = [];
     protected currentMenus: MobileMenu[] = [];
 
@@ -164,7 +163,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                 return raw.filter(construct => whitelist.includes(construct.keyword));
             }),
         ).subscribe(constructs => {
-            this.constructs = constructs;
+            this.constructs = structuredClone(constructs);
             this.changeDetector.markForCheck();
         }));
 

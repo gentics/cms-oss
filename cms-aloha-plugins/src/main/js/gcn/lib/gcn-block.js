@@ -226,7 +226,9 @@ define([
 						block,
 						{
 							sourcePageId: srcPageId,
-							sourceTagname: srcTagname
+							sourceTagname: srcTagname,
+							constructId: construct.id,
+							keyword: construct.keyword,
 						},
 						success,
 						error // Tag not copied

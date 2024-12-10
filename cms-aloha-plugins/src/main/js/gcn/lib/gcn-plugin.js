@@ -123,7 +123,7 @@ define([
 	 * @param {function} error Custom error handler.
 	 */
 	function getConstructById(page, id, success, error) {
-		page.constructs(function (constructs) {
+		GCMSUI.getConstructs().then(function (constructs) {
 			var construct;
 			for (construct in constructs) {
 				if (constructs.hasOwnProperty(construct)
@@ -133,7 +133,7 @@ define([
 				}
 			}
 			error('Could not find construct for tag id ' + id + '.');
-		}, error);
+		}).catch(error);
 	}
 
 	var OBJECT_PROPERTY_PREFIX = /^object\.[a-zA-Z0-9]+/i;

@@ -388,6 +388,27 @@
 					"maxVersion": "3.1"
 				}
 			}
+		},
+		{
+			"cmpVersion": "8.2",
+			"productVersions": {
+				"cms": {
+					"minVersion": "6.2",
+					"maxVersion": "6.2"
+				},
+				"mesh": {
+					"minVersion": "3.0",
+					"maxVersion": "3.0"
+				},
+				"portal-java": {
+					"minVersion": "3.2",
+					"maxVersion": "3.2"
+				},
+				"portal-php": {
+					"minVersion": "3.2",
+					"maxVersion": "3.2"
+				}
+			}
 		}
 	]
 }

@@ -13,6 +13,7 @@ import { FavouritesService } from '@editor-ui/app/core/providers/favourites/favo
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ListSearchService } from '@editor-ui/app/core/providers/list-search/list-search.service';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
@@ -66,7 +67,7 @@ import {
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import {  TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
+import { TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
 import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
@@ -89,7 +90,6 @@ import { FolderContentsComponent } from '../folder-contents/folder-contents.comp
 import { GridItemComponent } from '../grid-item/grid-item.component';
 import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from '../item-list/item-list.component';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 const PERMISSIONS = {
     assignPermissions: true,
@@ -750,6 +750,7 @@ describe('FolderContentsComponent', () => {
             expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 10, search: '', recursive: false, skipCount: 10 } );
             expect(folderActions.getItems).toHaveBeenCalledTimes(1);
 
+            tick(10_000);
             discardPeriodicTasks();
         }),
     );
@@ -777,6 +778,7 @@ describe('FolderContentsComponent', () => {
             expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 25, search: '', recursive: false, skipCount: 0 } );
             expect(folderActions.getItems).toHaveBeenCalledTimes(1);
 
+            tick(10_000);
             discardPeriodicTasks();
         }),
     );

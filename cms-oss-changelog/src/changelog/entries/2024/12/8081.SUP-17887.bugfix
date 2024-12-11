@@ -1,0 +1,1 @@
+Editor User Interface: Fixed a race-condition which was introduced in the previous version, which sometimes causes the preview- and edit-mode to not be useable.

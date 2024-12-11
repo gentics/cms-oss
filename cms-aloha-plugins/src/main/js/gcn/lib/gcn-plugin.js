@@ -34,6 +34,7 @@ define([
 	'gcn/tagcopycontenthandler',
 	'gcn/gcn-tags',
 	'gcn/gcn-links',
+	'gcn/gcn-util',
 	'gcn/gcmsui-surface',
 	'i18n!gcn/nls/i18n',
 	'css!gcn/css/aloha-gcn.css'
@@ -55,6 +56,7 @@ define([
 	TagCopyContentHandler,
 	Tags,
 	GCNLinks,
+	Util,
 	GCMSUISurface,
 	i18n,
 ) {
@@ -123,17 +125,19 @@ define([
 	 * @param {function} error Custom error handler.
 	 */
 	function getConstructById(page, id, success, error) {
-		GCMSUI.getConstructs().then(function (constructs) {
-			var construct;
-			for (construct in constructs) {
-				if (constructs.hasOwnProperty(construct)
-					&& id === constructs[construct].id) {
-					success(constructs[construct]);
-					return;
+		Util.withinCMS(function() {
+			GCMSUI.getConstructs().then(function (constructs) {
+				var construct;
+				for (construct in constructs) {
+					if (constructs.hasOwnProperty(construct)
+						&& id === constructs[construct].id) {
+						success(constructs[construct]);
+						return;
+					}
 				}
-			}
-			error('Could not find construct for tag id ' + id + '.');
-		}).catch(error);
+				error('Could not find construct for tag id ' + id + '.');
+			}).catch(error);
+		});
 	}
 
 	var OBJECT_PROPERTY_PREFIX = /^object\.[a-zA-Z0-9]+/i;
@@ -502,15 +506,17 @@ define([
 		init: function () {
 			var that = this;
 
-			// Create the GCMSUI Surface and set it as active.
-			// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
-			var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
-			UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
-
-			// Apply the correct error class from the UI, so we can do correct checks in here as well.
-			if (window.GCMSUI.closeErrorClass) {
-				OverlayElement.OverlayCloseError = window.GCMSUI.closeErrorClass;
-			}
+			Util.withinCMS(function() {
+				// Create the GCMSUI Surface and set it as active.
+				// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
+				var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
+				UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
+	
+				// Apply the correct error class from the UI, so we can do correct checks in here as well.
+				if (window.GCMSUI.closeErrorClass) {
+					OverlayElement.OverlayCloseError = window.GCMSUI.closeErrorClass;
+				}
+			});
 
 			// make some classes ephemeral. Those classes may be added to tags while initializing them
 			// if they are not ephemeral, the modification check of the editables would always detect them
@@ -710,19 +716,21 @@ define([
 		setupMagicLinkConstruct: function (callback) {
 			var that = this;
 
-			GCMSUI.getConstructs().then(constructs => {
-				const magicLinkConstruct = constructs[GCN.settings.MAGIC_LINK];
-
-				if (!magicLinkConstruct) {
-					return;
-				}
-
-				GCNLinks.magicLink = magicLinkConstruct;
-				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
-				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
-				if (typeof callback === 'function') {
-					callback(magicLinkConstruct);
-				}
+			Util.withinCMS(function() {
+				GCMSUI.getConstructs().then(constructs => {
+					const magicLinkConstruct = constructs[GCN.settings.MAGIC_LINK];
+	
+					if (!magicLinkConstruct) {
+						return;
+					}
+	
+					GCNLinks.magicLink = magicLinkConstruct;
+					GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
+					that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
+					if (typeof callback === 'function') {
+						callback(magicLinkConstruct);
+					}
+				});
 			});
 		},
 

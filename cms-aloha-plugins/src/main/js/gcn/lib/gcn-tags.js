@@ -12,30 +12,28 @@ define('gcn/gcn-tags', [
 	) + '/gcnjsapi.js',
 	'jquery',
 	'aloha',
-	'aloha/editable',
 	'aloha/ephemera',
 	'block/block-plugin',
 	'ui/dialog',
 	'util/dom',
 	'util/dom2',
 	'util/browser',
-	'gcn/gcn-util',
 	'util/misc',
-	'block/block-utils'
+	'block/block-utils',
+	'gcn/gcn-util'
 ], function (
 	_GCN_,
 	$,
 	Aloha,
-	Editable,
 	Ephemera,
 	BlockPlugin,
 	Dialog,
 	Dom,
 	Dom2,
 	Browser,
-	Util,
 	Misc,
-	BlockUtils
+	BlockUtils,
+	Util
 ) {
 	'use strict';
 
@@ -156,129 +154,131 @@ define('gcn/gcn-tags', [
 
 		var page = GCN.page(pageId);
 
-		GCMSUI.getConstructs().then(function (constructs) {
-			var numBlocksToInitialize = blocks.length;
-			var processTag = function (tag, block) {
-				--numBlocksToInitialize;
-
-				// Because valid magiclink blocks should not be blockified
-				var $element;
-				var constructId = tag.prop('constructId');
-				var magicLinkId = constructs[GCN.settings.MAGIC_LINK]
-					&& constructs[GCN.settings.MAGIC_LINK].constructId;
-
-				if (constructId === magicLinkId) {
-					$element = $('#' + block.element);
-
-					if ($element[0].nodeName == 'A') {
-						if ($element.hasClass('aloha-block')) {
-							$element.removeClass('aloha-block');
-						}
-					} else {
-						Aloha.log(
-							'error',
-							'gcn-tags',
-							'Root element for gtxalohapagelinks must be A but was ' + $element[0].nodeName);
-					}
-
-					if (0 === numBlocksToInitialize && callback) {
-						callback();
-					}
-
-					return;
-				}
-
-				var construct;
-				var constructName;
-				for (constructName in constructs) {
-					if (constructs.hasOwnProperty(constructName)
-							&& constructs[constructName].constructId
-								=== constructId) {
-						construct = constructs[constructName];
-						break;
-					}
-				}
-
-				if (!construct) {
-					Dialog.alert({
-						title : 'Gentics Content.Node',
-						text  : 'Cannot determine construct '
-						      + tag.prop('constructId')
-					});
-					if (0 === numBlocksToInitialize && callback) {
-						callback();
-					}
-					return;
-				}
-
-				// There should be only one element with a certain ID, but it is
-				// possible to create more for example by copying tags in the tag
-				// fill dialog. Using this selector instead of '#BLOCK_ID' makes
-				// sure we get all of them.
-				var $elements = $('.aloha-block[id = ' + block.element + ']')
-					.map(function () {
-						return ensureCorrectBlockRoot($(this))[0];
-					});
-				// before blockifying the tag, collect all set attributes
-				// all attributes that are added while blockifying will be made
-				// ephemeral. Otherwise the check for (user) modifications would
-				// always detect those attributes
-				var origAttributeNames = [];
-				$.each($elements, function (i, elem) {
-					origAttributeNames[elem] = [];
-					$.each(elem.attributes, function (j, attr) {
-						origAttributeNames[elem].push(attr.name);
-					});
-				});
-
-				$elements.addClass('GENTICS_block')
-					.contentEditable(false);
-
-				if (!Aloha.settings.readonly) {
-					var options = {
-						'aloha-block-type': 'GCNBlock',
-						'gcn-tagname': tag.prop('name'),
-						'gcn-tagid': tag.prop('id'),
-						'gcn-pageid': tag.parent().id(),
-						'gcn-constructid': construct.id,
-						'gcn-construct-ctl-style': (construct.editorControlStyle || 'ASIDE').toLowerCase(),
-						'gcn-construct-ctl-inside': (!!construct.editorControlsInside).toString(),
-					};
-					$elements.alohaBlock(options);
-
-					// make everything ephemeral, that was added
-					$.each($elements, function (i, elem) {
-						$.each(elem.attributes, function (j, attr) {
-							if (origAttributeNames[elem].indexOf(attr.name) < 0) {
-								Ephemera.markAttr($(elem), attr.name);
+		Util.withinCMS(function() {
+			GCMSUI.getConstructs().then(function (constructs) {
+				var numBlocksToInitialize = blocks.length;
+				var processTag = function (tag, block) {
+					--numBlocksToInitialize;
+	
+					// Because valid magiclink blocks should not be blockified
+					var $element;
+					var constructId = tag.prop('constructId');
+					var magicLinkId = constructs[GCN.settings.MAGIC_LINK]
+						&& constructs[GCN.settings.MAGIC_LINK].constructId;
+	
+					if (constructId === magicLinkId) {
+						$element = $('#' + block.element);
+	
+						if ($element[0].nodeName == 'A') {
+							if ($element.hasClass('aloha-block')) {
+								$element.removeClass('aloha-block');
 							}
+						} else {
+							Aloha.log(
+								'error',
+								'gcn-tags',
+								'Root element for gtxalohapagelinks must be A but was ' + $element[0].nodeName);
+						}
+	
+						if (0 === numBlocksToInitialize && callback) {
+							callback();
+						}
+	
+						return;
+					}
+	
+					var construct;
+					var constructName;
+					for (constructName in constructs) {
+						if (constructs.hasOwnProperty(constructName)
+								&& constructs[constructName].constructId
+									=== constructId) {
+							construct = constructs[constructName];
+							break;
+						}
+					}
+	
+					if (!construct) {
+						Dialog.alert({
+							title : 'Gentics Content.Node',
+							text  : 'Cannot determine construct '
+								  + tag.prop('constructId')
+						});
+						if (0 === numBlocksToInitialize && callback) {
+							callback();
+						}
+						return;
+					}
+	
+					// There should be only one element with a certain ID, but it is
+					// possible to create more for example by copying tags in the tag
+					// fill dialog. Using this selector instead of '#BLOCK_ID' makes
+					// sure we get all of them.
+					var $elements = $('.aloha-block[id = ' + block.element + ']')
+						.map(function () {
+							return ensureCorrectBlockRoot($(this))[0];
+						});
+					// before blockifying the tag, collect all set attributes
+					// all attributes that are added while blockifying will be made
+					// ephemeral. Otherwise the check for (user) modifications would
+					// always detect those attributes
+					var origAttributeNames = [];
+					$.each($elements, function (i, elem) {
+						origAttributeNames[elem] = [];
+						$.each(elem.attributes, function (j, attr) {
+							origAttributeNames[elem].push(attr.name);
 						});
 					});
-				}
-
-				// preview forms in block
-				if (Aloha.GCN.settings.forms) {
-					Aloha.GCN.previewForms($elements);
-				}
-
-				if (0 === numBlocksToInitialize) {
-					if (callback) {
-						callback();
+	
+					$elements.addClass('GENTICS_block')
+						.contentEditable(false);
+	
+					if (!Aloha.settings.readonly) {
+						var options = {
+							'aloha-block-type': 'GCNBlock',
+							'gcn-tagname': tag.prop('name'),
+							'gcn-tagid': tag.prop('id'),
+							'gcn-pageid': tag.parent().id(),
+							'gcn-constructid': construct.id,
+							'gcn-construct-ctl-style': (construct.editorControlStyle || 'ASIDE').toLowerCase(),
+							'gcn-construct-ctl-inside': (!!construct.editorControlsInside).toString(),
+						};
+						$elements.alohaBlock(options);
+	
+						// make everything ephemeral, that was added
+						$.each($elements, function (i, elem) {
+							$.each(elem.attributes, function (j, attr) {
+								if (origAttributeNames[elem].indexOf(attr.name) < 0) {
+									Ephemera.markAttr($(elem), attr.name);
+								}
+							});
+						});
 					}
+	
+					// preview forms in block
+					if (Aloha.GCN.settings.forms) {
+						Aloha.GCN.previewForms($elements);
+					}
+	
+					if (0 === numBlocksToInitialize) {
+						if (callback) {
+							callback();
+						}
+					}
+				};
+	
+				function loadAndProcessTag(block) {
+					page.tag(block.tagname, function (tag) {
+						processTag(tag, block);
+					});
 				}
-			};
-
-			function loadAndProcessTag(block) {
-				page.tag(block.tagname, function (tag) {
-					processTag(tag, block);
-				});
-			}
-
-			var i;
-
-			for (i = 0; i < blocks.length; i++) {
-				loadAndProcessTag(blocks[i]);
-			}
+	
+				var i;
+	
+				for (i = 0; i < blocks.length; i++) {
+					loadAndProcessTag(blocks[i]);
+				}
+			});
 		});
 	}
 

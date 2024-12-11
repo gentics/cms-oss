@@ -410,7 +410,8 @@ public abstract class AbstractIndexerTest {
 	}
 
 	/**
-	 * Convert the node into JSON, where all properties are sorted by key
+	 * Convert the node into JSON, where all properties are sorted by key.
+	 * Null values will be removed
 	 * @param node node
 	 * @return sorted JSON or null, if node is null
 	 * @throws NodeException
@@ -423,6 +424,9 @@ public abstract class AbstractIndexerTest {
 		try {
 			// convert node into a Map
 			Map<String, Object> map = mapper.readValue(node.toString(), Map.class);
+
+			// remove null values
+			map.values().removeIf(value -> value == null);
 
 			// convert map into a TreeMap (which sorts entries by natural order of the keys)
 			map = new TreeMap<>(map);

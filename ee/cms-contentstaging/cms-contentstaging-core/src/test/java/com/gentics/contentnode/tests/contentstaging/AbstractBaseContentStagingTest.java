@@ -80,7 +80,7 @@ public abstract class AbstractBaseContentStagingTest<T extends StageableNodeObje
 
 		// import the package
 		assertRequiredPermissions(testGroup, testUser, new ContentStagingResourceImpl(), "importIntoCms",
-				new Class<?>[] { String.class, Long.TYPE }, new Object[] { packageName, 0 },
+				new Class<?>[] { String.class, Long.TYPE, Boolean.TYPE }, new Object[] { packageName, 0, false },
 				perm(TypePerms.admin, PermType.read),
 				perm(TypePerms.contentadmin, PermType.read),
 				perm(TypePerms.contentstagingadmin, PermType.read),
@@ -122,7 +122,7 @@ public abstract class AbstractBaseContentStagingTest<T extends StageableNodeObje
 
 		// import the package
 		assertRequiredPermissions(testGroup, testUser, new ContentStagingResourceImpl(), "importIntoCms",
-				new Class<?>[] { String.class, Long.TYPE }, new Object[] { packageName, 0 },
+				new Class<?>[] { String.class, Long.TYPE, Boolean.TYPE }, new Object[] { packageName, 0, false },
 				perm(TypePerms.admin, PermType.read),
 				perm(TypePerms.contentadmin, PermType.read),
 				perm(TypePerms.contentstagingadmin, PermType.read),
@@ -183,7 +183,7 @@ public abstract class AbstractBaseContentStagingTest<T extends StageableNodeObje
 
 		// import the package
 		assertRequiredPermissions(testGroup, testUser, new ContentStagingResourceImpl(), "importIntoCms",
-				new Class<?>[] { String.class, Long.TYPE }, new Object[] { packageName, 0 },
+				new Class<?>[] { String.class, Long.TYPE, Boolean.TYPE }, new Object[] { packageName, 0, false },
 				perm(TypePerms.admin, PermType.read),
 				perm(TypePerms.contentadmin, PermType.read),
 				perm(TypePerms.contentstagingadmin, PermType.read),

@@ -28,7 +28,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
-import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
@@ -710,10 +709,7 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 
 		// try import (assert that import fails with a proper message and that object is not imported)
 		String message = execute(obj -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			String description = String.format("\n %s '%s' (%s, %d)", I18NHelper.get(t.getTable(obj.getObjectInfo().getObjectClass())),
-					I18NHelper.getName(obj), obj.getGlobalId().toString(), obj.getId());
-			return I18NHelper.get("content.staging.import.implementation_mismatch", PACKAGE_NAME, description);
+			return I18NHelper.get("content.staging.import.errors", PACKAGE_NAME, "1");
 		}, testedEntity);
 		tryImportContentPackage(PACKAGE_NAME, ResponseCode.FAILURE, "Error while importing", new Message(Message.Type.CRITICAL, message));
 		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));

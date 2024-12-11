@@ -375,7 +375,11 @@ public class NodeStagingTest implements ContentStagingMethods {
 				tag.delete(true);
 			}
 			prop.delete(true);
-		}, Node::addObjectTagDefinition, (n, props) -> {
+		}, (n, prop) -> {
+			update(prop, update -> {
+				update.getNodes().add(n);
+			}).build();
+		}, (n, props) -> {
 			assertThat(n).as("Staged node")
 				.isNotNull()
 				.hasObjectProperties(props.toArray(new ObjectTagDefinition[props.size()]));
@@ -560,7 +564,7 @@ public class NodeStagingTest implements ContentStagingMethods {
 
 		// import
 		assertRequiredPermissions(testGroup, testUser, new ContentStagingResourceImpl(), "importIntoCms",
-				new Class<?>[] { String.class, Long.TYPE }, new Object[] { PACKAGE_NAME, 0 },
+				new Class<?>[] { String.class, Long.TYPE, Boolean.TYPE }, new Object[] { PACKAGE_NAME, 0, false },
 				perm(TypePerms.admin, PermType.read),
 				perm(TypePerms.contentadmin, PermType.read),
 				perm(TypePerms.contentstagingadmin, PermType.read),

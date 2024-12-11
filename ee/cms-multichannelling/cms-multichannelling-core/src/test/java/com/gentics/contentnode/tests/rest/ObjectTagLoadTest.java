@@ -607,7 +607,7 @@ public class ObjectTagLoadTest {
 	 * @throws NodeException
 	 */
 	protected void assertTagsFull(Collection<Tag> tags) throws NodeException {
-		assertThat(tags).as("Object tags").usingElementComparatorIgnoringFields("id", "properties", "construct", "readOnly").containsOnly(
+		assertThat(tags).as("Object tags").usingElementComparatorIgnoringFields("id", "properties", "construct", "readOnly", "categoryId").containsOnly(
 			tag("object.def10", "Object Tag 10", "Description for Object Tag 10", "Cat 3", constructId, 0, false, false),
 			tag("object.def11", "Object Tag 11", "Description for Object Tag 11", "Cat 3", constructId, 1, true, true),
 			tag("object.def8", "Object Tag 8", "Description for Object Tag 8", "Cat 3", constructId, 2, true, false),

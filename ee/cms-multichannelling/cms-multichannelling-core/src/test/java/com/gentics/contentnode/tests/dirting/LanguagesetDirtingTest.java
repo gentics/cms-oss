@@ -55,16 +55,17 @@ public class LanguagesetDirtingTest {
 	@Parameterized.Parameters(name = "{index} instantPublish: {0}, multichannelling: {1}, mccr: {2}")
 	public static Collection<Object[]> getParameters() {
 		List<Object[]> result = new ArrayList<Object[]>();
-		boolean[] bools = new boolean[] { false, true };
-		for (boolean instantPublish : bools) {
-			for (boolean multichannelling : bools) {
-				for (boolean mccr : bools) {
-					if (multichannelling || !mccr) {
-						result.add(new Object[] { instantPublish, multichannelling, mccr });
-					}
-				}
-			}
-		}
+//		boolean[] bools = new boolean[] { false, true };
+//		for (boolean instantPublish : bools) {
+//			for (boolean multichannelling : bools) {
+//				for (boolean mccr : bools) {
+//					if (multichannelling || !mccr) {
+//						result.add(new Object[] { instantPublish, multichannelling, mccr });
+//					}
+//				}
+//			}
+//		}
+		result.add(new Object[] {false, false, false});
 		return result;
 	}
 

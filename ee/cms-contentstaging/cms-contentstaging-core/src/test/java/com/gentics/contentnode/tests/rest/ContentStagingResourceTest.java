@@ -54,6 +54,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -834,7 +835,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertResponseOK(cplResponse);
 		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
 			.isNotEmpty()
-			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
+			.contains(supply(()  -> I18NHelper.get("construct.notfound", node1ExtraConstructGlobalId)));
 
 		// List mismatches only
 		cplResponse = supply(() -> {
@@ -843,7 +844,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertResponseOK(cplResponse);
 		assertThat(cplResponse.getPages().values().stream().flatMap(List::stream).filter(p -> p.getId().equals(page3Id)).map(p -> p.getErrors().stream().map(StagedError::getError).collect(Collectors.toList())).findAny().orElse(Collections.emptyList()))
 			.isNotEmpty()
-			.contains("Could not find construct with id " + node1ExtraConstructGlobalId);
+			.contains(supply(()  -> I18NHelper.get("construct.notfound", node1ExtraConstructGlobalId)));
 
 		// List something else
 		cplResponse = supply(() -> {

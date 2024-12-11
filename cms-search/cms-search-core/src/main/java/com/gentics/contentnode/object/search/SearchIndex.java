@@ -844,7 +844,12 @@ public class SearchIndex {
 				} else {
 					renderType.push(object);
 					try {
-						json.put(entry.getMapname(), entry.getRenderedTransformedValue(renderType, new RenderResult(), CnMapPublisher.LINKTRANSFORMER));
+						Object value = entry.getRenderedTransformedValue(renderType, new RenderResult(), CnMapPublisher.LINKTRANSFORMER);
+						if (value == null) {
+							json.put(entry.getMapname(), JSONObject.NULL);
+						} else {
+							json.put(entry.getMapname(), value);
+						}
 					} finally {
 						renderType.pop();
 					}

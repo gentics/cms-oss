@@ -410,7 +410,7 @@ describe('QueryAssemblerElasticSearchService', () => {
     it('correctly assembles string and wildcard fields queries (`name`)', () => {
         function executeStringAndWildcardFieldsTest(stringField: keyof GtxChipSearchSearchFilterMap): void {
             const searchTerm = 'searchTermForTesting-00001';
-            const wildcardField = stringField + '.raw';
+            const wildcardField = `${stringField}.raw`;
             const queryExpected: ElasticSearchQuery = {
                 query: {
                     bool: {
@@ -607,7 +607,7 @@ describe('QueryAssemblerElasticSearchService', () => {
         const filters: GtxChipSearchSearchFilterMap = {
             nodeId: [{ value: 'all', operator: 'IS' }],
             name: [{ value: searchTerm, operator: 'CONTAINS' }],
-            edited: [{ value: searchDate, operator: 'AT' }],
+            edited: [{ value: new Date(2020, 0, 31, 1, 0, 0, 0).getTime() / 1000, operator: 'AT' }],
             language: [{ value: 'de', operator: 'IS' }],
             templateId: [{ value: searchTemplateId, operator: 'IS_NOT' }],
         };

@@ -18,7 +18,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { AppState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
+import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
@@ -97,7 +97,7 @@ export class ListService implements OnDestroy {
 
         this.initOutputStreams();
         this.initNavigationSubscriptions(routeParams$);
-        this.initLanguageChangeSubscriptions(activeFolderId$);
+        this.initLanguageChangeSubscriptions(onLogin$);
         this.initSortSubscriptions();
         this.initFilterSubscriptions(
             searchTerm$,
@@ -228,23 +228,16 @@ export class ListService implements OnDestroy {
     /**
      * Set up a subscription which reacts to changes in the active language of the page list.
      */
-    private initLanguageChangeSubscriptions(activeFolderId$: Observable<number>): void {
+    private initLanguageChangeSubscriptions(onLogin$: Observable<any>): void {
         // Fetch the list of pages when the activeLanguage changes
-        this.subscriptions.push(combineLatest([
-            this.state.select(state => state.folder.activeLanguage).pipe(
-                filter(languageId => languageId != null),
-                distinctUntilChanged(),
-                skip(1),
-            ),
-            activeFolderId$.pipe(
-                filter(folderId => folderId != null),
-                distinctUntilChanged(),
-            ),
-            this.state.select(state => state.folder).pipe(
-                distinctUntilChanged(isEqual),
-            ),
-        ]).subscribe(([, currentFolderId, folderState]) => {
-            this.folderActions.getPages(currentFolderId, false, folderState.searchTerm);
+        this.subscriptions.push(onLogin$.pipe(
+            switchMap(() => this.state.select(state => state.folder.activeLanguage)),
+            debounceTime(50),
+            distinctUntilChanged(isEqual),
+            skip(1),
+        ).subscribe(() => {
+            const folderState = this.state.now.folder;
+            this.folderActions.getPages(folderState.activeFolder, false, folderState.searchTerm);
         }));
     }
 
@@ -305,7 +298,6 @@ export class ListService implements OnDestroy {
                 ),
             ),
             skip(1),
-            distinctUntilChanged(isEqual),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {
             if (!searchFiltersVisible || !searchFiltersValid) {
                 this.folderActions.resetSearchFilters();

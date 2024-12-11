@@ -236,22 +236,22 @@ describe('QueryAssemblerGCMSSearchService', () => {
         'edited',
         'published',
     ].forEach(stringField => {
-        const searchTerm = '2022-02-03';
+        const searchDate = new Date(2022, 1, 3, 1, 0, 0, 0);
         let operator: GtxChipSearchPropertyDateOperators;
 
         operator = 'BEFORE';
         executeDateFieldsTest(
             stringField,
             operator,
-            { [stringField]: [{ value: searchTerm, operator }] },
-            { [`${stringField}before` ]: 1643846400 },
+            { [stringField]: [{ value: searchDate.getTime() / 1000, operator }] },
+            { [`${stringField}before` ]: searchDate.getTime() / 1000 },
         );
         operator = 'AFTER';
         executeDateFieldsTest(
             stringField,
             operator,
-            { [stringField]: [{ value: searchTerm, operator }] },
-            { [`${stringField}since` ]: 1643846400 },
+            { [stringField]: [{ value: searchDate.getTime() / 1000, operator }] },
+            { [`${stringField}since` ]: searchDate.getTime() / 1000 },
         );
         operator = 'AT';
         /*
@@ -263,7 +263,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
         Expected timestamps should be stated explicitly again and the timezone should be
         mocked.
         */
-        const date = new Date(searchTerm);
+        const date = new Date(searchDate.getTime());
         date.setHours( 0, 0, 0, 0 );
         const timestampSince: number = Math.floor( date.getTime() / 1000 );
         date.setHours( 23, 59, 59, 999 );
@@ -271,7 +271,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
         executeDateFieldsTest(
             stringField,
             operator,
-            { [stringField]: [{ value: searchTerm, operator }] },
+            { [stringField]: [{ value: searchDate.getTime() / 1000, operator }] },
             {
                 [`${stringField}before` ]: timestampBefore,
                 [`${stringField}since` ]: timestampSince,
@@ -282,7 +282,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
     it('correctly assembles mixed query', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
         const searchTerm = 'searchTermForTesting-00001';
-        const searchDate = '2022-02-03';
+        const searchDate = new Date(2022, 1, 3, 1, 0, 0, 0); // '2022-02-03';
         const requestOptionsExpected: any = {
             search: searchTerm,
             searchcontent: true,
@@ -290,7 +290,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             folderId: 2,
             nodeId: 2,
             filename: `%${searchTerm}%`,
-            editedsince: 1643846400,
+            editedsince: searchDate.getTime() / 1000,
             language: 'de',
             langfallback: false,
         };
@@ -303,7 +303,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             all: [{ value: searchTerm, operator: 'CONTAINS' }],
             nodeId: [{ value: 2, operator: 'IS' }],
             filename: [{ value: searchTerm, operator: 'CONTAINS' }],
-            edited: [{ value: searchDate as any, operator: 'AFTER' }],
+            edited: [{ value: searchDate.getTime() / 1000, operator: 'AFTER' }],
             language: [{ value: 'de', operator: 'IS' }],
         };
 

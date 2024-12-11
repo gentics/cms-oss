@@ -7,6 +7,7 @@ import {
 } from '@gentics/aloha-models';
 import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
+    Construct,
     File,
     FileOrImage,
     Folder,
@@ -153,6 +154,11 @@ export interface GcmsUiBridge {
      * This should only be used in emergencies and only, if you know what you're doing.
      */
     callDebugTool: () => void;
+    /**
+     * Returns a record of the Constructs which are available for the editor in this page.
+     * The key of the Record is {@link Construct.keyword}.
+     */
+    getConstructs(): Promise<Record<string, Construct>>;
 
     // REST API
     // --------------------------------------------

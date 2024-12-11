@@ -224,7 +224,7 @@ function (
 			}
 
 			// load the file link construct
-			GCN.Admin.constructs(function (constructs) {
+			GCMSUI.getConstructs().then(function (constructs) {
 				plugin.construct = getFileLinkConstruct(constructs, plugin.settings.construct);
 			});
 

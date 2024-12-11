@@ -319,7 +319,7 @@ describe('ListService', () => {
         },
         };
         state.mockState(newState);
-        tick(DEBOUNCE_INTERVAL);
+        tick(DEBOUNCE_INTERVAL * 2);
         expect(folderActions.getPages).toHaveBeenCalledWith(ACTIVE_FOLDER_ID, false, 'foo');
     }));
 

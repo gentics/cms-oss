@@ -14,6 +14,8 @@ type LinkableItem = (Image | Page | File) & {
     nodeId?: number;
 }
 
+let componentId = 0;
+
 @Component({
     selector: 'gtx-aloha-link-target-renderer',
     templateUrl: './aloha-link-target-renderer.component.html',
@@ -26,6 +28,7 @@ export class AlohaLinkTargetRendererComponent
     implements OnInit, OnDestroy {
 
     public loadedTargetElement?: LinkableItem;
+    public uid = `aloha-link-target-${componentId++}`;
     private itemLoaderSubscription: Subscription;
 
     constructor(

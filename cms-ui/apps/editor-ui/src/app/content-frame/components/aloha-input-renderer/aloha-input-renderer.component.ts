@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
 import { AlohaInputComponent } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
+import { patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+
+let componentId = 0;
 
 @Component({
     selector: 'gtx-aloha-input-renderer',
@@ -14,6 +17,23 @@ export class AlohaInputRendererComponent extends BaseAlohaRendererComponent<Aloh
 
     @ViewChild('input')
     public inputRef: ElementRef<HTMLInputElement>;
+
+    public uid = `aloha-input-${componentId++}`;
+
+    protected override setupAlohaHooks(): void {
+        super.setupAlohaHooks();
+
+        patchMultipleAlohaFunctions(this.settings, {
+            setLabel: (label) => {
+                this.settings.label = label;
+                this.changeDetector.markForCheck();
+            },
+            setHint: (hint) => {
+                this.settings.hint = hint;
+                this.changeDetector.markForCheck();
+            },
+        });
+    }
 
     public handleInputChange(force = false): void {
         if (!force && (!this.inputRef || !this.inputRef.nativeElement)) {

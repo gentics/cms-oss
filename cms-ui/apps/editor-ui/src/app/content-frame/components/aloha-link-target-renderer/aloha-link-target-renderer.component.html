@@ -5,6 +5,7 @@
                 class="external-input"
                 type="text"
                 tabindex="1"
+                [attr.id]="uid + '_target'"
                 [value]="value?.target"
                 [disabled]="disabled || value?.isInternal"
                 (change)="handleTargetChange($event)"
@@ -22,7 +23,7 @@
                 <div *ngIf="value?.internalTargetType === 'page'" class="page-language">{{ loadedTargetElement?.language }}</div>
             </div>
 
-            <label>{{ (settings?.targetLabel || (settings?.showPicker
+            <label [attr.for]="uid + '_target'">{{ (settings?.targetLabel || (settings?.showPicker
                 ? 'aloha.linktarget_target_and_ref_label'
                 : 'aloha.linktarget_target_label'
             )) | i18n }}</label>
@@ -57,11 +58,12 @@
             <input
                 type="text"
                 tabindex="4"
+                [attr.id]="uid + '_anchor'"
                 [value]="value?.anchor"
                 [disabled]="disabled"
                 (change)="handleAnchorChange($event)"
             />
-            <label>{{ (settings?.anchorLabel || 'aloha.linktarget_anchor_label') | i18n }}</label>
+            <label [attr.for]="uid + '_anchor'">{{ (settings?.anchorLabel || 'aloha.linktarget_anchor_label') | i18n }}</label>
         </div>
     </div>
 </div>

@@ -4,8 +4,10 @@
         type="text"
         [value]="value || ''"
         [disabled]="disabled"
+        [attr.id]="uid"
         (change)="handleInputChange()"
         (keydown)="handleKeyDown($event)"
     />
-    <label *ngIf="settings?.label">{{ settings?.label }}</label>
+    <label *ngIf="settings?.label" [attr.for]="uid">{{ settings?.label }}</label>
+    <div class="input-hint" *ngIf="settings?.hint">{{ settings?.hint }}</div>
 </div>

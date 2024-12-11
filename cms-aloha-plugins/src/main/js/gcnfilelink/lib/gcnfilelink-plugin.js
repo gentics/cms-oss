@@ -16,10 +16,9 @@ define(
 	'gcnfilelink/gcn-fileblock',
 	'aloha/console',
 	'PubSub',
-	'link/link-plugin',
 	'gcn/gcn-plugin',
 	'gcn/gcn-tags',
-	'util/dom'
+	'gcn/gcn-util'
 ],
 function (
 	jQuery,
@@ -30,10 +29,9 @@ function (
 	GCNFileBlock,
 	Console,
 	PubSub,
-	LinkPlugin,
 	GCNPlugin,
 	Tags,
-	Dom
+	Util,
 ) {
 	"use strict";
 
@@ -223,9 +221,10 @@ function (
 				return;
 			}
 
-			// load the file link construct
-			GCMSUI.getConstructs().then(function (constructs) {
-				plugin.construct = getFileLinkConstruct(constructs, plugin.settings.construct);
+			Util.withinCMS(function() {
+				GCMSUI.getConstructs().then(function (constructs) {
+					plugin.construct = getFileLinkConstruct(constructs, plugin.settings.construct);
+				});
 			});
 
 			BlockManager.registerBlockType('GCNFileBlock', GCNFileBlock);

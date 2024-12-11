@@ -47,9 +47,9 @@ define('gcn/gcn-util', [
 	 */
 	function addBlockAnnotation($block, attributes) {
 		$block.contentEditable(false)
-		      .attr('data-aloha-block-type', 'GCNBlock')
-		      .addClass('GENTICS_block')
-		      .addClass('aloha-block');
+			.attr('data-aloha-block-type', 'GCNBlock')
+			.addClass('GENTICS_block')
+			.addClass('aloha-block');
 
 		var customAnnotation = [];
 		var attr;
@@ -62,7 +62,7 @@ define('gcn/gcn-util', [
 
 		if (0 < customAnnotation.length) {
 			$block.attr('data-gcn-custom-annotation',
-			            customAnnotation.join(','));
+				customAnnotation.join(','));
 		}
 
 		return $block;
@@ -77,10 +77,10 @@ define('gcn/gcn-util', [
 	 */
 	function removeBlockAnnotation($block) {
 		$block.removeAttr('contenteditable')
-		      .attr('data-aloha-block-type', null)
-		      .removeClass('GENTICS_block')
-		      .removeClass('aloha-block')
-		      .removeClass('aloha-block-GCNBlock');
+			.attr('data-aloha-block-type', null)
+			.removeClass('GENTICS_block')
+			.removeClass('aloha-block')
+			.removeClass('aloha-block-GCNBlock');
 
 		var customAnnotation = $block.attr('data-gcn-custom-annotation');
 		if (!customAnnotation) {
@@ -144,10 +144,10 @@ define('gcn/gcn-util', [
 	 */
 	function finishedCopyingBlock(editable) {
 		if (editable &&
-				editable.obj.attr('data-gcn-copy') &&
-					0 === editable.obj.find('[data-gcn-copy]').length) {
+			editable.obj.attr('data-gcn-copy') &&
+			0 === editable.obj.find('[data-gcn-copy]').length) {
 			editable.obj.attr('data-gcn-copy', null);
-			PubSub.pub('gcn.tagcopy.finished', {editable: editable});
+			PubSub.pub('gcn.tagcopy.finished', { editable: editable });
 		}
 	}
 
@@ -186,11 +186,28 @@ define('gcn/gcn-util', [
 		return url;
 	}
 
+	function withinCMS(callback) {
+		if (window.GCMSUI != null) {
+			callback();
+			return;
+		}
+
+		var called = false;
+		Aloha.bind('gcmsui.ready', function () {
+			if (called) {
+				return;
+			}
+			called = true;
+			callback();
+		});
+	}
+
 	return {
-		addBlockAnnotation    : addBlockAnnotation,
-		removeBlockAnnotation : removeBlockAnnotation,
-		finishedCopyingBlock  : finishedCopyingBlock,
-		setPlaceholder        : setPlaceholder,
-		createUrl             : createUrl
+		addBlockAnnotation: addBlockAnnotation,
+		removeBlockAnnotation: removeBlockAnnotation,
+		finishedCopyingBlock: finishedCopyingBlock,
+		setPlaceholder: setPlaceholder,
+		createUrl: createUrl,
+		withinCMS: withinCMS
 	};
 });

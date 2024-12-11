@@ -1,10 +1,10 @@
 {
   "name": "@gentics/cms-rest-client-angular",
-  "version": "6.1.19",
+  "version": "6.1.20",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.19",
-    "@gentics/cms-rest-client": "6.1.19",
+    "@gentics/cms-models": "6.1.20",
+    "@gentics/cms-rest-client": "6.1.20",
     "@gentics/mesh-models": "^6.1.0"
   },
   "peerDependencies": {

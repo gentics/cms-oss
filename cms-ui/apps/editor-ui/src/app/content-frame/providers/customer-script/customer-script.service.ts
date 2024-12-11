@@ -304,6 +304,11 @@ export class CustomerScriptService implements OnDestroy {
         };
 
         iFrameWindow.GCMSUI = gcmsUi;
+        // Aloha might not be defined if the page as a rendering error
+        if (iFrameWindow.Aloha != null) {
+            iFrameWindow.Aloha.trigger('gcmsui.ready', {});
+        }
+
         return gcmsUi;
     }
 

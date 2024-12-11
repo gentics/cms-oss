@@ -1,13 +1,27 @@
 <div class="gtx-link-target" [class.has-picker]="settings?.showPicker">
     <div class="target-wrapper">
-        <div class="gtx-editor-input target-input">
+        <div class="gtx-editor-input target-input" [class.internal]="value?.isInternal">
             <input
+                class="external-input"
                 type="text"
                 tabindex="1"
-                [value]="(value?.isInternal ? value?.internalTargetLabel : value?.target) || ''"
+                [value]="value?.target"
                 [disabled]="disabled || value?.isInternal"
                 (change)="handleTargetChange($event)"
             />
+
+            <div
+                class="internal-input"
+                [attr.data-target-type]="value?.internalTargetType"
+                [attr.data-target-id]="value?.internalTargetId"
+                [attr.data-target-node]="value?.internalTargetNodeId
+                    ?? loadedTargetElement?.nodeId
+                    ?? (loadedTargetElement?.channelId || loadedTargetElement?.masterNodeId)"
+            >
+                <span class="internal-label">{{ value?.internalTargetLabel || '' }}</span>
+                <div *ngIf="value?.internalTargetType === 'page'" class="page-language">{{ loadedTargetElement?.language }}</div>
+            </div>
+
             <label>{{ (settings?.targetLabel || (settings?.showPicker
                 ? 'aloha.linktarget_target_and_ref_label'
                 : 'aloha.linktarget_target_label'

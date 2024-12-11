@@ -17,7 +17,7 @@
         *ngIf="(nodeLanguages$ | async)?.length > 1 && itemType !=='file' && itemType !=='folder' && itemType !== 'image'"
         [availableLanguages]="nodeLanguages$ | async"
         [activeLanguage]="activeLanguage$ | async"
-        (selectLanguage)="languageChanged($event)"
+        (languageChange)="languageChanged($event)"
     ></language-context-selector>
     <gtx-dropdown-list align="right">
         <gtx-dropdown-trigger>

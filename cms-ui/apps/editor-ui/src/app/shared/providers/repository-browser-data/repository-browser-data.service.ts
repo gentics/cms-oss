@@ -98,7 +98,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                 }
 
                 /** if a real node is set, then its languages have to be fetched */
-                this.subscriptions.add(this.api.folders.getLanguagesOfNode(nodeId).subscribe((nodeLanguages: NodeLanguagesResponse) => {
+                this.subscriptions.push(this.api.folders.getLanguagesOfNode(nodeId).subscribe((nodeLanguages: NodeLanguagesResponse) => {
                     const availableLanguages = nodeLanguages.languages;
                     /** update available languages */
                     currentAvailableLanguagesSubject.next(availableLanguages);
@@ -113,7 +113,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     }
                 }));
 
-                this.subscriptions.add(this.api.folders.getNode(nodeId).subscribe(({ node }: NodeResponse) => {
+                this.subscriptions.push(this.api.folders.getNode(nodeId).subscribe(({ node }: NodeResponse) => {
                     currentNodeSubject.next(node);
                 }))
             },
@@ -213,7 +213,8 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         currentContentLanguage?: Language
     ) => Observable<boolean>;
     private selectMultiple: boolean;
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
+    private itemSubscription: Subscription | null;
     private includeMlId: MarkupLanguageType[];
 
     constructor(
@@ -233,7 +234,10 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
+        if (this.itemSubscription != null) {
+            this.itemSubscription.unsubscribe();
+        }
     }
 
     changeFolder(folder: number | Folder): void {
@@ -505,9 +509,6 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     }
 
     private setupObservables(): void {
-        this.subscriptions.unsubscribe();
-        this.subscriptions = new Subscription();
-
         this.canSubmit$ = combineLatest(this.selected$, this.currentParent$).pipe(
             map(([selected, parent]) => {
                 if (this.pickingFolder && parent === this.favouritesFolder && this.parentItems$.value.length === 1) {
@@ -571,21 +572,21 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             distinctUntilChanged(isEqual),
         );
 
-        this.subscriptions.add(
+        this.subscriptions.push(
             this.parentItems$.pipe(
                 map(parents => parents && parents[0] === this.favouritesFolder),
                 distinctUntilChanged(isEqual),
             ).subscribe(this.isDisplayingFavourites$),
         );
 
-        this.subscriptions.add(
+        this.subscriptions.push(
             this.parentItems$.pipe(
                 map(parents => parents && parents.length === 1 && parents[0] === this.favouritesFolder),
                 distinctUntilChanged(isEqual),
             ).subscribe(this.isDisplayingFavouritesFolder$),
         );
 
-        this.subscriptions.add(
+        this.subscriptions.push(
             this.appState.select(state => state.favourites)
                 .subscribe(() => this.determineFavouritesVisibility()),
         );
@@ -615,7 +616,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     }
 
     private fetchNodesFromAPI(): void {
-        this.subscriptions.add(
+        this.subscriptions.push(
             this.api.folders.getNodes()
                 .subscribe(res => {
                     const nodes = res.nodes;
@@ -1102,7 +1103,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                             const pageByRef = this.items$.value.find(item => item.type === 'page' && item.id === page.id);
                             this.selectItem(pageByRef);
                         });
-                        this.subscriptions.add(sub);
+                        this.subscriptions.push(sub);
                         this.fetchContentsFromAPI();
                     }
                 } else {
@@ -1113,7 +1114,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     });
                 }
             });
-        this.subscriptions.add(searchSub);
+        this.subscriptions.push(searchSub);
     }
 
     private isLanguage = (language: any): language is Language => {

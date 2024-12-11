@@ -1,14 +1,18 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { AlohaLinkTargetComponent, ExtendedLinkTarget } from '@gentics/aloha-models';
-import { ItemInNode, ItemRequestOptions } from '@gentics/cms-models';
+import { File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { generateFormProvider } from '@gentics/ui-core';
-import { NEVER, Observable } from 'rxjs';
+import { NEVER, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+
+type LinkableItem = (Image | Page | File) & {
+    nodeId?: number;
+}
 
 @Component({
     selector: 'gtx-aloha-link-target-renderer',
@@ -17,9 +21,12 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaLinkTargetRendererComponent)],
 })
-export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent<AlohaLinkTargetComponent, ExtendedLinkTarget> {
+export class AlohaLinkTargetRendererComponent
+    extends BaseAlohaRendererComponent<AlohaLinkTargetComponent, ExtendedLinkTarget>
+    implements OnInit, OnDestroy {
 
-    public loadedTargetElement?: ItemInNode;
+    public loadedTargetElement?: LinkableItem;
+    private itemLoaderSubscription: Subscription;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -30,6 +37,18 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
         protected i18n: I18nService,
     ) {
         super(changeDetector, element, aloha);
+    }
+
+    public override ngOnInit(): void {
+        super.ngOnInit();
+        this.reloadLoadedElement();
+    }
+
+    public override ngOnDestroy(): void {
+        super.ngOnDestroy();
+        if (this.itemLoaderSubscription != null) {
+            this.itemLoaderSubscription.unsubscribe();
+        }
     }
 
     public handleTargetChange(event: InputEvent): void {
@@ -58,8 +77,17 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
             allowedSelection: ['page', 'file', 'image'],
             selectMultiple: false,
             title,
+            startFolder: this.loadedTargetElement?.folderId,
+            startNode: this.loadedTargetElement?.nodeId
+                // channelId is always set, but may be 0
+                ?? (this.loadedTargetElement?.channelId || this.loadedTargetElement?.masterNodeId),
         }).then(pickedItem => {
-            this.loadedTargetElement = pickedItem as ItemInNode;
+            // The user aborted the select
+            if (pickedItem == null) {
+                return;
+            }
+
+            this.loadedTargetElement = pickedItem as LinkableItem;
             let path: string = (pickedItem as any)?.publishPath || '';
 
             // Remove starting slash
@@ -103,12 +131,12 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
         this.settings.value = this.value;
 
         if (this.value.isInternal && this.value.internalTargetId && !this.value.internalTargetLabel) {
-            this.reloadLabel();
+            this.reloadLoadedElement();
         }
     }
 
-    protected reloadLabel(): void {
-        let name$: Observable<string> = NEVER;
+    protected reloadLoadedElement(): void {
+        let item: Observable<LinkableItem> = NEVER;
 
         const options: ItemRequestOptions = {};
         if (Number.isInteger(this.value.internalTargetNodeId)) {
@@ -117,29 +145,53 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
 
         switch (this.value.internalTargetType) {
             case 'page':
-                name$ = this.client.page.get(this.value.internalTargetId, options).pipe(
-                    map(res => res.page.name),
+                item = this.client.page.get(this.value.internalTargetId, options).pipe(
+                    map(res => res.page),
                 );
                 break;
 
             case 'image':
-                name$ = this.client.image.get(this.value.internalTargetId, options).pipe(
-                    map(res => res.image.name),
+                item = this.client.image.get(this.value.internalTargetId, options).pipe(
+                    map(res => res.image),
                 );
                 break;
 
             case 'file':
-                name$ = this.client.file.get(this.value.internalTargetId, options).pipe(
-                    map(res => res.file.name),
+                item = this.client.file.get(this.value.internalTargetId, options).pipe(
+                    map(res => res.file),
                 );
                 break;
+
+            default:
+                return;
         }
 
-        this.subscriptions.push(name$.subscribe(name => {
-            this.triggerChange({
-                ...this.value,
-                internalTargetLabel: name,
-            });
-        }));
+        // Cancel old request
+        if (this.itemLoaderSubscription != null) {
+            this.itemLoaderSubscription.unsubscribe();
+        }
+
+        this.itemLoaderSubscription = item.subscribe({
+            next: item => {
+                this.loadedTargetElement = {
+                    ...item,
+                    nodeId: item.masterNodeId ?? this.value.internalTargetNodeId,
+                };
+
+                this.triggerChange({
+                    ...this.value,
+                    internalTargetLabel: this.loadedTargetElement.name,
+                });
+            },
+            error: err => {
+                // Item could not be loaded
+                this.loadedTargetElement = null;
+                this.triggerChange({
+                    ...(this.value || ({} as any)),
+                    target: '',
+                    isInternal: false,
+                });
+            },
+        },);
     }
 }

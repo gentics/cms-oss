@@ -1,5 +1,6 @@
 <gtx-select
     *ngIf="settings"
+    [class.in-form]="renderContext === 'modal'"
     [value]="settings.value"
     [label]="settings.label"
     [multiple]="settings.multiple"

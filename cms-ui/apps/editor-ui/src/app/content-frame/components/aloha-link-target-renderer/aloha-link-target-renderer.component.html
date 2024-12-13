@@ -19,6 +19,7 @@
                 *ngIf="value?.isInternal"
                 class="internal-target-clear"
                 tabindex="3"
+                data-action="clear"
                 [title]="'aloha.linktarget_clear_target' | i18n"
                 [disabled]="disabled || !value?.isInternal"
                 (click)="clearInternalTarget()"
@@ -30,6 +31,7 @@
                 class="internal-target-picker"
                 tabindex="2"
                 [disabled]="disabled"
+                data-action="select"
                 [title]="'aloha.linktarget_pick_target' | i18n"
                 (click)="pickInternalTarget()"
             >

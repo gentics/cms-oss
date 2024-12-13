@@ -47,6 +47,7 @@
 
         <repository-browser-list
             *ngIf="(observableForType[type] | async)?.length || ((noItemsOfAnyType$ | async) && allowed[type])"
+            [attr.data-type]="type"
             [itemType]="type"
             [contents]="observableForType[type] | async"
             [currentNodeId]="currentNodeId$ | async"
@@ -72,9 +73,20 @@
 
 </div>
 <div class="modal-footer" [class.no-permissions]="(hasPermissions$ | async) === false">
-    <gtx-button (click)="cancelFn()" flat type="secondary">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button (click)="submitClicked()" type="primary" [disabled]="!(canSubmit$ | async) || !(hasPermissions$ | async)"
-                [title]="(hasPermissions$ | async) === false ? ('modal.repository_browser_insufficient_permissions_title' | i18n) : ''">
+    <gtx-button
+        (click)="cancelFn()"
+        flat
+        data-action="cancel"
+        type="secondary"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        type="primary"
+        data-action="confirm"
+        [disabled]="!(canSubmit$ | async) || !(hasPermissions$ | async)"
+        [title]="(hasPermissions$ | async) === false ? ('modal.repository_browser_insufficient_permissions_title' | i18n) : ''"
+        (click)="submitClicked()"
+    >
         <icon left class="lock">lock</icon><span>{{ submitLabelKey | i18n }}</span>
     </gtx-button>
 </div>

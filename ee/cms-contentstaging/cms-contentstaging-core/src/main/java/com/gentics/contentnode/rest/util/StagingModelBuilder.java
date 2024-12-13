@@ -556,7 +556,6 @@ public class StagingModelBuilder {
 		restPage.setTemplate(new StagedReferencedTemplate(nodePage.getTemplate()).getStagedReference());
 
 		restPage.setCustomCdate(nodePage.getCustomCDate().getIntTimestamp());
-
 		restPage.setCustomEdate(nodePage.getCustomEDate().getIntTimestamp());
 
 		fillMultichannellingData(nodePage, restPage);
@@ -1269,6 +1268,7 @@ public class StagingModelBuilder {
 					.numberNode(TransactionManager.getCurrentTransaction().getLocalId(Page.class, n.asText(), onReferenceNotFound)));
 			form.setData(copy);
 		}
+
 		return form;
 	}
 

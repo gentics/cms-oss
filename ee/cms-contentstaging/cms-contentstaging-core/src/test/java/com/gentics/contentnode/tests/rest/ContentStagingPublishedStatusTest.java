@@ -38,11 +38,11 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 		assertFalse(supply(() -> page111.<Page>reload().isOnline()));
 
 		supply(() -> new ContentStagingResourceImpl().add("MyPackage", "folder", page111.getNode().getFolder().getGlobalId().toString(), true));
-		supply(() -> new ContentStagingResourceImpl().exportFromCms("MyPackage", 1000));
+		supply(() -> new ContentStagingResourceImpl().exportFromCms("MyPackage", 10000));
 
 		operate(() -> page111.delete(true));
 
-		supply(() -> new ContentStagingResourceImpl().importIntoCms("MyPackage", 1000));
+		supply(() -> new ContentStagingResourceImpl().importIntoCms("MyPackage", 10000));
 		assertFalse(supply(trx -> trx.getObject(Page.class, id111).isOnline()));
 	}
 }

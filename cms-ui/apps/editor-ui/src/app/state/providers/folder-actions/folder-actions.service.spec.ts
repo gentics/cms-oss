@@ -242,7 +242,7 @@ describe('FolderActionsService', () => {
             folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
 
             folderActions.updateItem(page.type, page.id, payload, { }).then(value => {
-                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload, deriveFileName: true });
+                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload });
                 expect(folderActions.getItem).toHaveBeenCalledWith(page.id, page.type);
                 expect(value).toEqual(expectedPage);
             });
@@ -262,7 +262,7 @@ describe('FolderActionsService', () => {
                 // spyOn(state.actions.folder, 'fetchItemSuccess');
                 const result = folderActions.updateItem(page.type, page.id, payload);
                 tick();
-                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload, deriveFileName: true });
+                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload });
                 // expect(state.actions.folder.fetchItemSuccess).toHaveBeenCalledWith({ type: expectedPage.type, item: expectedPage });
 
                 let promiseResolved = false;

@@ -159,10 +159,51 @@ describe('Page Management', () => {
             cy.editorAction('save');
 
             // Wait for the update to be actually handled
-            cy.wait(ALIAS_UPDATE_REQ).then(() => {
+            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(intercept => {
+                expect(intercept.request.body.deriveFileName).to.equal(false);
+
                 cy.get(ALIAS_ITEM)
                     .find('.item-name .item-name-only')
                     .should('have.text', CHANGE_PAGE_NAME);
+            });
+        });
+
+        /*
+         * SUP-17885: Page file-names should only be derived, when the properties would
+         * set the file-name to empty.
+         */
+        it('should derive the file-name if none was provided during properties updates', () => {
+            const PAGE = IMPORTER.get(pageOne)!;
+            const ALIAS_ITEM = '@item';
+
+            // Confirm that the original name is correct
+            cy.findList(ITEM_TYPE_PAGE)
+                .findItem(PAGE.id)
+                .as(ALIAS_ITEM)
+                .itemAction('properties');
+
+            cy.get('content-frame combined-properties-editor .properties-content gtx-page-properties')
+                .as(ALIAS_FORM);
+
+            cy.intercept({
+                method: 'POST',
+                pathname: '/rest/page/save/**',
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQ;
+            });
+
+            // Clear the name and enter the new one
+            // eslint-disable-next-line cypress/unsafe-to-chain-command
+            cy.get(ALIAS_FORM)
+                .find('[formcontrolname="fileName"] input')
+                .clear();
+
+            cy.editorAction('save');
+
+            // Wait for the update to be actually handled
+            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(intercept => {
+                expect(intercept.request.body.deriveFileName).to.equal(true);
+                expect(intercept.request.body.page.fileName).to.equal('');
             });
         });
 
@@ -217,13 +258,15 @@ describe('Page Management', () => {
 
             cy.editorAction('save');
 
-            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(data => {
-                const req = data.request.body;
+            cy.wait<PageSaveRequest>(ALIAS_UPDATE_REQ).then(intercept => {
+                const req = intercept.request.body;
                 const tag = req.page.tags?.[`object.${OBJECT_PROPERTY}`];
                 const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
 
                 expect(options).to.have.length(1);
                 expect(options![0].id).to.equal(COLOR_ID);
+                // SUP-17885: Updating the object-properties should never update the file name
+                expect(intercept.request.body.deriveFileName).to.equal(false);
             });
         });
 

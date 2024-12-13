@@ -1118,7 +1118,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			int timeOff = Optional.ofNullable(version.getOnline())
 					.filter(online -> !online)
 					.map(offline -> 0)
-					.or(() -> Optional.ofNullable(version.getTimeOff()).map(Integer::intValue))
+					.or(() -> Optional.ofNullable(version.getTimeOff())
+							.map(Integer::intValue)
+							.filter(time -> time > 0))
 					.orElse(-1);
 			if (timeOff > -1) {
 				versionedNodeObject.takeOffline(timeOff);

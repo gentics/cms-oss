@@ -83,8 +83,8 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
 }
 
-const PUBLISHER_TASK_CMD = "publish";
-const PUBLISHER_SCHEDULE_NAME = "Run Publish Process";
+const PUBLISHER_TASK_CMD = 'publish';
+const PUBLISHER_SCHEDULE_NAME = 'Run Publish Process';
 
 /**
  * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
@@ -188,8 +188,8 @@ export class EntityImporter {
                 name: PUBLISHER_SCHEDULE_NAME,
                 taskId: schedulerTask.id,
                 scheduleData: {
-                    type: ScheduleType.MANUAL
-                }
+                    type: ScheduleType.MANUAL,
+                },
             }).send();
             this.publisherSchedule = response.item;
         }
@@ -240,13 +240,10 @@ export class EntityImporter {
         }
 
         const crListResponse = await this.client.contentRepository.list().send();
-        for (let i = 0; i < crListResponse.items.length; i++) {
-            const cr = crListResponse.items[i];
-
+        for (const cr of crListResponse.items) {
             await this.client.contentRepository.proxyLogin(cr.id).send();
             const projectsList = await this.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${cr.id}/proxy/api/v2/projects`).send();
-            for (let j = 0; j < projectsList.data.length; j++) {
-                const project = projectsList.data[j];
+            for (const project of projectsList.data) {
                 await this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/contentrepositories/${cr.id}/proxy/api/v2/projects/${project.uuid}`).send();
             }
         }
@@ -349,8 +346,9 @@ export class EntityImporter {
         }
     }
 
-    public async clearClient(): Promise<void> {
+    public clearClient(): Promise<void> {
         this.client = null;
+        return Promise.resolve();
     }
 
     public async syncPackages(size: TestSize): Promise<void> {

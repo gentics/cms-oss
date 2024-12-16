@@ -50,6 +50,9 @@
                     currentPage: currentPage
                 }; trackBy: trackById"
                 masonryItem
+                [attr.data-item-type]="itemType"
+                [attr.data-id]="item.id"
+                [attr.data-global-id]="item.globalId"
                 [item]="item"
                 [itemsInfo]="getItemsInfo(itemType) | async"
                 [nodeId]="currentNodeId"

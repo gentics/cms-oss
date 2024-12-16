@@ -139,7 +139,7 @@ export interface PageWorkflow {
  * The user-editable properties of a Page object.
  */
 export type EditablePageProps = Partial<Pick<Page, 'name' | 'fileName' | 'description' | 'niceUrl'
-| 'alternateUrls' |'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate'>>;
+| 'alternateUrls' |'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate' | 'tags'>>;
 
 /**
  * External Link Checker page list item, contains the page and the external links

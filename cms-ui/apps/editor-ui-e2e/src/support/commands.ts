@@ -113,7 +113,7 @@ Cypress.Commands.add('findList', { prevSubject: 'optional' }, (subject, type, op
 
 Cypress.Commands.add('findItem', { prevSubject: 'element' }, (subject, id, options) => {
     return cy.wrap(subject, { log: false })
-        .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`, { log: false, timeout: 20_000 })
+        .find(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"], repository-browser-list-thumbnail[data-id="${id}"]`, { log: false, timeout: 20_000 })
         .then($el => {
             if (options?.log !== false) {
                 Cypress.log({

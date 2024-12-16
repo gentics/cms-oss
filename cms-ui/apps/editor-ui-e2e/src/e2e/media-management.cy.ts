@@ -6,7 +6,7 @@ import {
     TestSize,
     minimalNode,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1 } from '../support/common';
+import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from '../support/common';
 
 describe('Media Management', () => {
 
@@ -113,6 +113,53 @@ describe('Media Management', () => {
                 expect(options).to.have.length(1);
                 expect(options![0].id).to.equal(COLOR_ID);
             });
+        });
+    });
+
+    it('should display the updated value even after switching object-properties', () => {
+        cy.uploadFiles(ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2]).then(allFiles => {
+            const IMAGE = allFiles[FIXTURE_TEST_IMAGE_JPG_2];
+            const OBJECT_PROPERTY_EDITING = 'test_color';
+            const OBJECT_PROPERTY_OTHER = 'copyright';
+
+            const COLOR_ID = 2;
+
+            /* Open the Folder Properties and select a Object-Property to edit
+             * ---------------------------- */
+            cy.findList(ITEM_TYPE_IMAGE)
+                .findItem(IMAGE.id)
+                .itemAction('properties');
+
+            cy.openObjectPropertyEditor(OBJECT_PROPERTY_EDITING)
+                .findTagEditorElement(TagPropertyType.SELECT)
+                .select(COLOR_ID);
+
+            /* Save the Object-Property changes
+             * ---------------------------- */
+            cy.intercept({
+                method: 'POST',
+                pathname: '/rest/image/save/**',
+            }, req => {
+                req.alias = ALIAS_UPDATE_REQUEST;
+            });
+
+            cy.editorAction('save');
+            // Wait for update to be finished
+            cy.wait(ALIAS_UPDATE_REQUEST);
+            // Wait 2sec for the state updates to propagate
+            // eslint-disable-next-line cypress/no-unnecessary-waiting
+            cy.wait(2_000);
+
+            // Switch to another object-property
+            cy.openObjectPropertyEditor(OBJECT_PROPERTY_OTHER);
+            // eslint-disable-next-line cypress/no-unnecessary-waiting
+            cy.wait(1_000);
+
+            // Switch back to the original one
+            cy.openObjectPropertyEditor(OBJECT_PROPERTY_EDITING)
+                .findTagEditorElement(TagPropertyType.SELECT)
+                .find('.view-value')
+                .should('have.attr', 'data-value', COLOR_ID);
         });
     });
 });

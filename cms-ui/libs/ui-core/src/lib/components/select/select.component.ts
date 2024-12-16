@@ -136,7 +136,7 @@ export class SelectComponent
     @ContentChildren(SelectOptionGroupDirective, { descendants: false })
     private selectOptionGroups: QueryList<SelectOptionGroupDirective>;
 
-    private valueArray: (number | string)[] = [];
+    public valueArray: (number | string)[] = [];
 
     // An array of abstracted containers for options, which allows us to treat options and groups in a
     // consistent way.
@@ -172,7 +172,6 @@ export class SelectComponent
             this.updateViewValue();
         }
     }
-
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options

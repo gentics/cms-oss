@@ -153,15 +153,20 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
         req.alias = `_upload_req_${fileName}`;
     });
 
-    // Wait till elements have been reloaded
-    cy.intercept({
-        method: 'GET',
-        pathname: '/rest/folder/getPages/*',
-    }).as('folderLoad');
-
     return cy.loadBinaries(fixtureNames, { applyAlias: true }).then(binaries => {
         const output: Record<string, any> = {};
         let main: Cypress.Chainable<any>;
+
+        if (options?.log !== false) {
+            Cypress.log({
+                type: 'parent',
+                name: 'upload files',
+                message: options?.dragAndDrop ? 'via drag and drop' : 'via regular upload',
+                consoleProps: () => ({
+                    files: fixtureNames,
+                }),
+            });
+        }
 
         if (options?.dragAndDrop) {
             const transfer = new DataTransfer();
@@ -170,21 +175,13 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
                 transfer.items.add(file);
             });
 
-            if (options?.log !== false) {
-                Cypress.log({
-                    name: 'upload',
-                    type: 'parent',
-                    message: `via drag'n'drop: ${Object.values(binaries).map(bin => bin.name).join(', ')}`,
-                });
-            }
-
             main = cy.get('folder-contents > [data-action="file-drop"]', { log: false }).trigger('drop', {
                 dataTransfer: transfer,
                 force: true,
                 log: false,
             });
         } else {
-            main = cy.findList(type)
+            main = cy.findList(type, { log: false })
                 .find('.list-header .header-controls [data-action="upload-item"] input[type="file"]', { log: false })
                 .selectFile(fixtureNames.map(entry => '@' + (typeof entry === 'string' ? entry : entry.fixturePath)), { force: true });
         }
@@ -193,15 +190,22 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
             for (const entry of fixtureNames) {
                 const data = normalizeToImportBinary(entry);
 
-                cy.wait(`@_upload_req_${data.name}`).then(intercept => {
+                cy.wait(`@_upload_req_${data.name}`, { log: false }).then(intercept => {
                     const res = intercept.response?.body;
-                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                    expect(res.success).to.be.true;
+                    expect(res.success).to.equal(true);
                     output[data.fixturePath] = res.file;
+
+                    if (options?.log !== false) {
+                        Cypress.log({
+                            type: 'child',
+                            name: 'file uploaded',
+                            message: data.name,
+                        });
+                    }
                 });
             }
 
-            return cy.wait('@folderLoad').then(() => cy.wrap(output, { log: false }));
+            return cy.wrap(output, { log: false });
         })
     });
 });

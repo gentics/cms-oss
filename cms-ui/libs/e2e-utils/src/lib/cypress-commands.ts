@@ -423,20 +423,20 @@ export function registerCommonCommands(): void {
     });
 
     Cypress.Commands.add('findTableRowContainingText', {prevSubject: 'element'}, (subject, text) => {
-        return cy.wrap(subject)
+        return cy.wrap(subject, { log: false })
             .find('.grid-row')
             .contains(text)
             .parents('.grid-row');
     });
 
     Cypress.Commands.add('selectTableRow', {prevSubject: 'element'}, (subject) => {
-        return cy.wrap(subject)
+        return cy.wrap(subject, { log: false })
             .find('gtx-checkbox.selection-checkbox')
             .click();
     });
 
     Cypress.Commands.add('expandTrableRow', {prevSubject: 'element'}, (subject) => {
-        return cy.wrap(subject)
+        return cy.wrap(subject, { log: false })
             .find('.row-expansion-wrapper')
             .click();
     });

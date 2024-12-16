@@ -18,8 +18,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
-import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
-import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
+import { AppState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';

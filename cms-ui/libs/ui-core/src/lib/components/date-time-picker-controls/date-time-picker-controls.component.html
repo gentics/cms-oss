@@ -11,7 +11,12 @@
     </div>
 </div>
 
-<div class="controls-content">
+<div
+    class="controls-content"
+    [attr.data-value-year]="momentValue.year()"
+    [attr.data-value-month]="momentValue.month()"
+    [attr.data-value-date]="momentValue.date()"
+>
     <div #calendarContainer class="calendar-container"></div>
 
     <div class="time-picker" *ngIf="displayTime">
@@ -26,6 +31,7 @@
                     min="0"
                     max="23"
                     [label]="formatProvider.strings.hours"
+                    [attr.data-value]="time.h"
                     [(ngModel)]="time.h"
                     (blur)="updateTime('hours', time.h)"
                     (keydown)="timeKeyHandler('hours', $event)"
@@ -46,6 +52,7 @@
                     min="0"
                     max="59"
                     [label]="formatProvider.strings.minutes"
+                    [attr.data-value]="time.m"
                     [(ngModel)]="time.m"
                     (blur)="updateTime('minutes', time.m)"
                     (keydown)="timeKeyHandler('minutes', $event)"
@@ -66,6 +73,7 @@
                     min="0"
                     max="59"
                     [label]="formatProvider.strings.seconds"
+                    [attr.data-value]="time.s"
                     [(ngModel)]="time.s"
                     (blur)="updateTime('seconds', time.s)"
                     (keydown)="timeKeyHandler('seconds', $event)"

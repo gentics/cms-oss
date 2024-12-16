@@ -2,7 +2,7 @@ import { LocationStrategy } from '@angular/common';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { File as FileModel, Folder, Form, Image, Node, Normalized, Page } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable, Subscription, combineLatest, merge } from 'rxjs';
 import {
     debounceTime,
@@ -18,6 +18,7 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
+import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';

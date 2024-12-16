@@ -931,11 +931,11 @@ export class QueryAssemblerElasticSearchService {
         });
 
         // add translated filters to query data
-        Object.assign(queryParts.options, queryPartsEquipped.options);
-        queryParts.filtersForSearch.concat(queryPartsEquipped.filtersForSearch);
-        queryParts.filtersForNotSearch.concat(queryPartsEquipped.filtersForNotSearch);
-        queryParts.mustArray.concat(queryPartsEquipped.mustArray);
-        queryParts.mustNotArray.concat(queryPartsEquipped.mustNotArray);
+        Object.assign(queryParts.options, queryPartsEquipped?.options || {});
+        queryParts.filtersForSearch.concat(queryPartsEquipped?.filtersForSearch || []);
+        queryParts.filtersForNotSearch.concat(queryPartsEquipped?.filtersForNotSearch || []);
+        queryParts.mustArray.concat(queryPartsEquipped?.mustArray || []);
+        queryParts.mustNotArray.concat(queryPartsEquipped?.mustNotArray || []);
 
         // initialize Elastic Search request body object
         const query: ElasticSearchQuery = {

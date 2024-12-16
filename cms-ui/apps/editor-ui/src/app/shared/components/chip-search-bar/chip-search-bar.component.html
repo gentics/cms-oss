@@ -21,6 +21,7 @@
                     class="gtx-chip"
                     [formGroup]="chip"
                     [class.gtx-chip-invalid]="chip.invalid"
+                    [attr.data-id]="getPropertyOptionsByIdentifier(chip)?.value"
                 >
                     <!-- Chip PROPERTY -->
                     <span class="gtx-chip-property">
@@ -135,7 +136,7 @@
                             [disabled]="chip.disabled"
                             (click)="removeChipAtIndex(i)"
                         >
-                            <i class="material-icons" [attr.translate]="'no'">close</i>
+                            <icon>close</icon>
                         </gtx-button>
                     </div>
 
@@ -178,10 +179,11 @@
                 icon
                 type="primary"
                 size="regular"
+                data-action="search"
                 [disabled]="loading$ | async"
                 (click)="onButtonSearchClicked()"
             >
-                <i class="material-icons" [attr.translate]="'no'">search</i>
+                <icon>search</icon>
             </gtx-button>
         </div>
         <div
@@ -198,21 +200,23 @@
                 icon
                 type="primary"
                 size="regular"
+                data-action="clear"
                 (click)="clearSearchbarAll()"
                 *ngIf="(!showRecent && !(showRecentButton$ | async)) || showRecent"
             >
-                <i class="material-icons" [attr.translate]="'no'">close</i>
+                <icon>close</icon>
             </gtx-button>
 
             <gtx-button
                 icon
                 type="primary"
                 size="regular"
+                data-action="suggestion"
                 (click)="showSuggestionBar(); focusSearchbarValue()"
                 [title]="'common.history' | i18n"
                 *ngIf="!showRecent && (showRecentButton$ | async)"
             >
-                <i class="material-icons" [attr.translate]="'no'">history</i>
+                <icon>history</icon>
             </gtx-button>
         </div>
     </div>

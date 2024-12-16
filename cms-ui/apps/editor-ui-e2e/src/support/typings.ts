@@ -29,6 +29,12 @@ interface LoginResponse {
     sid: string;
 }
 
+interface SearchChipOptions {
+    property: string;
+    operator?: string;
+    value: string | number | Date | boolean;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare namespace Cypress {
 
@@ -115,5 +121,31 @@ declare namespace Cypress {
         findDynamicDropdown(ref?: string, options?: Partial<Cypress.Loggable>): Chainable<HTMLElement>;
         /** Click the specified action in the editor-toolbar. */
         editorAction(action: string, options?: Partial<Cypress.Loggable>): Chainable<null | HTMLElement>;
+        /**
+         * Subject has to be a `gtx-input-select` element.
+         * Selects the specified option in the select, if found.
+         * @param option The option to select
+         * @param options Additional options to control the behaviour of the selection.
+         */
+        inputSearchSelect(option: string, options?: Partial<Cypress.Loggable>): Chainable<void>;
+        /**
+         * Subject has to be a `chip-search-bar` element.
+         * Adds a new search-chip with the provided options to the search-bar element.
+         * Yields the original subject to enable chaining.
+         * @param options Options for what to search for
+         */
+        addSearchChip(options: SearchChipOptions & Partial<Cypress.Loggable>): Chainable<HTMLElement>;
+        /**
+         * Subject has to be a `chip-search-bar` element.
+         * Removes the specified chip from the search-bar, and yields the original subject for chaining.
+         * @param property The property to remove.
+         * @param options Options for logging
+         */
+        removeSearchChip(property: string, options?: Partial<Cypress.Loggable>): Chainable<HTMLElement>;
+        /**
+         * Subject has to be a `chip-search-bar` element.
+         * Triggers the search with the current content.
+         */
+        search(options?: Partial<Cypress.Loggable>): Chainable<void>;
     }
 }

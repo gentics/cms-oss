@@ -761,7 +761,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         } else {
             // if search value as oure text exists, convert it into a all/any search chip
             this.setDefaultFilters();
-            this.addOrUpdateChip('all', null, term);
+            this.addOrUpdateChip('all', 'CONTAINS', term);
             this.syncChipsToSearchFilters();
             this.clearFilterTerm();
         }

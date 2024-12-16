@@ -367,3 +367,106 @@ Cypress.Commands.add('editorAction', { prevSubject: false }, (action, options) =
             return cy.wrap(null, { log: false });
     }
 });
+
+Cypress.Commands.add('inputSearchSelect', { prevSubject: 'element' }, (subject, option, options) => {
+    cy.wrap(subject, { log: false })
+        .find('button.default-trigger, gtx-button', { log: false })
+        .click({ log: false });
+    cy.wrap(subject, { log: false })
+        .find(`.custom-content-menu .custom-content-menu-button[data-value="${option}"]`, { log: false })
+        .click({ log: false });
+
+    if (options?.log !== false) {
+        Cypress.log({
+            name: 'input-select',
+            type: 'child',
+            $el: subject,
+            message: option,
+        });
+    }
+
+    return cy.wrap(subject, { log: false });
+});
+
+Cypress.Commands.add('addSearchChip', { prevSubject: 'element' }, (subject, options) => {
+    cy.wrap(subject, { log: false })
+        .find('.gtx-chipsearchbar-button-container .gtx-chipsearchbar-menu-filter-properties > gtx-input-select', { log: false })
+        .inputSearchSelect(options.property, { log: false });
+
+    // eslint-disable-next-line cypress/no-assigning-return-values
+    const findChip = () => cy.wrap(subject, { log: false })
+        .find(`.gtx-chip[data-id="${options.property}"]`, { log: false });
+
+    if (options.operator) {
+        findChip().find('.gtx-chip-operator > gtx-input-select', { log: false })
+            .inputSearchSelect(options.operator, { log: false });
+    }
+
+    findChip().find('.gtx-chip-input-value > *').then($el => {
+        switch ($el[0].nodeName) {
+            case 'GTX-INPUT-SELECT':
+                cy.wrap($el, { log: false })
+                    .inputSearchSelect(options.value as any, { log: false });
+                break;
+
+            case 'INPUT':
+                cy.wrap($el, { log: false })
+                    .type(`${options.value as any}`, { log: false });
+                break;
+
+            case 'GTX-CHECKBOX': {
+                const cb = $el.find('input[type="checkbox"]');
+                if (
+                    (cb.is(':checked') && options.value !== true)
+                    || (!cb.is(':checked') && options.value === true)
+                ) {
+                    cy.wrap(cb, { log: false })
+                        .click({ force: true });
+                }
+                break;
+            }
+
+            case 'DIV': {
+                cy.wrap($el, { log: false })
+                    .find('gtx-date-time-picker', { log: false })
+                    .pickDate(options.value as any);
+            }
+        }
+    });
+
+    if (options?.log !== false) {
+        Cypress.log({
+            name: 'add chip',
+            type: 'child',
+            $el: subject,
+            message: `${options.property} ${options.operator || 'IS'} ${options.value}`,
+        });
+    }
+
+    return cy.wrap(subject, { log: false });
+});
+
+Cypress.Commands.add('removeSearchChip', { prevSubject: 'element' }, (subject, property, options) => {
+    cy.wrap(subject, { log: false })
+        .find(`.gtx-chip[data-id="${property}"] .gtx-chip-button-remove gtx-button`, { log: false })
+        .click({ log: false });
+
+    return cy.wrap(subject, { log: false });
+});
+
+Cypress.Commands.add('search', { prevSubject: 'element' }, (subject, options) => {
+    cy.wrap(subject, { log: false })
+        .find('.gtx-chipsearchbar-button-container .gtx-chipsearchbar-button gtx-button[data-action="search"]', { log: false })
+        .click({ log: false });
+
+    if (options?.log !== false) {
+        Cypress.log({
+            name: 'trigger search',
+            type: 'child',
+            $el: subject,
+            message: '',
+        });
+    }
+
+    return cy.wrap(null, { log: false });
+});

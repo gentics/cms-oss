@@ -51,4 +51,10 @@
         position: relative;
         margin-bottom: 4px;
     }
+
+    .input-hint {
+        order: 3;
+        font-size: 0.8rem;
+        color: $gtx-color-mid-gray;
+    }
 }

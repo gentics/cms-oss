@@ -19,6 +19,7 @@ import {
     withLatestFrom,
 } from 'rxjs/operators';
 import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
+import { AppState, FolderState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
@@ -231,20 +232,12 @@ export class ListService implements OnDestroy {
     private initLanguageChangeSubscriptions(onLogin$: Observable<any>): void {
         // Fetch the list of pages when the activeLanguage changes
         this.subscriptions.push(onLogin$.pipe(
-            switchMap(() => this.state.select(state => state.folder)),
+            switchMap(() => this.state.select(state => state.folder.activeLanguage)),
             debounceTime(50),
-            map(state => ({
-                activeFolder: state.activeFolder,
-                activeLanguage: state.activeLanguage,
-                activeNodeLanguages: state.activeNodeLanguages,
-                activeNode: state.activeNode,
-                filterTerm: state.filterTerm,
-                nodesLoaded: state.nodesLoaded,
-                searchTerm: state.searchTerm,
-                searchFilters: structuredClone(state.searchFilters),
-            }) as Partial<FolderState>),
             distinctUntilChanged(isEqual),
-        ).subscribe((folderState) => {
+            skip(1),
+        ).subscribe(() => {
+            const folderState = this.state.now.folder;
             this.folderActions.getPages(folderState.activeFolder, false, folderState.searchTerm);
         }));
     }
@@ -306,7 +299,6 @@ export class ListService implements OnDestroy {
                 ),
             ),
             skip(1),
-            distinctUntilChanged(isEqual),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {
             if (!searchFiltersVisible || !searchFiltersValid) {
                 this.folderActions.resetSearchFilters();

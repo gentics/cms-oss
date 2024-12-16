@@ -331,7 +331,8 @@ export class QueryAssemblerElasticSearchService {
         filters: GtxChipSearchPropertyDate[],
     ): ElasticSearchQueryRequestPayload {
         filters.forEach(filter => {
-            const value = filter.value;
+            const value = new Date(filter.value * 1000).toISOString().slice(0, 10);
+
             if (value) {
                 let gte: string;
                 let lte: string;

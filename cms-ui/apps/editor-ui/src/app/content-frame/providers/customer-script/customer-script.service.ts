@@ -24,6 +24,7 @@ import {
     TagEditorOptions,
 } from '@gentics/cms-integration-api-models';
 import {
+    Construct,
     ItemInNode,
     Page,
     Raw,
@@ -225,6 +226,20 @@ export class CustomerScriptService implements OnDestroy {
 
         // Make sure that child IFrames also have access to the GCMSUI init method.
         iFrameWindow.GCMSUI_childIFrameInit = (iFrameWindow.parent as CNParentWindow).GCMSUI_childIFrameInit;
+        const loadedConstructs = new Promise<Record<string, Construct>>((resolve, reject) => {
+            this.aloha.constructs$.subscribe({
+                next(value) {
+                    const dict: Record<string, Construct> = {};
+                    value.forEach(c => {
+                        dict[c.keyword] = c;
+                    });
+                    resolve(dict);
+                },
+                error(err) {
+                    reject(err)
+                },
+            });
+        });
 
         const gcmsUi: GcmsUiBridge = {
             runPreLoadScript: executePreLoadScript,
@@ -233,6 +248,7 @@ export class CustomerScriptService implements OnDestroy {
             gcmsUiStylesUrl: this.gcmsUiStylesForIFrameBlobUrl,
             appState: this.mapToPartialState(this.state.now),
             onStateChange: (handler) => stateChangedHandler = handler,
+            getConstructs: () => loadedConstructs,
             paths: {
                 apiBaseUrl: API_BASE_URL,
                 alohapageUrl: ALOHAPAGE_URL,

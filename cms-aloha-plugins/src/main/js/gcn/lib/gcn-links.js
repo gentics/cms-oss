@@ -340,30 +340,11 @@ define('gcn/gcn-links', [
 	}
 
 	function getMagiclinkTags(page, report) {
-		var fork = page._fork();
-
-		var releasePageFork = function () {
-			fork._merge();
-		};
-
-		fork.node().constructs(function (constructs) {
-			var magiclink = constructs[GCN.settings.MAGIC_LINK]
-				&& constructs[GCN.settings.MAGIC_LINK].constructId;
-			if (!magiclink) {
-				return releasePageFork();
-			}
-			var links = [];
-			fork.tags(function (tags) {
-				var i;
-				for (i = 0; i < tags.length; i++) {
-					if (magiclink === tags[i].prop('constructId')) {
-						links.push(tags[i]);
-					}
-				}
-				report(links);
-				releasePageFork();
-			}, releasePageFork);
-		}, releasePageFork);
+		page.tags(tags => {
+			report(tags.filter(tag => {
+				return tag.constructId === GCNLinks.magicLink.id;
+			}));
+		});
 	}
 
 	function cleanMagiclinkTags(tags) {
@@ -386,8 +367,11 @@ define('gcn/gcn-links', [
 		$(msg.element).attr('target', '_blank');
 	});
 
-	return {
+	let GCNLinks = {
 		isInternal: isInternal,
 		interjectLinkPlugin: interjectLinkPlugin,
+		magicLink: null,
 	};
+
+	return GCNLinks;
 });

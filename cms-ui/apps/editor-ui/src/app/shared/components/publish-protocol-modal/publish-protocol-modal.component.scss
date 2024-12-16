@@ -1,46 +1,66 @@
 @import 'variables';
-@import 'flex-modal';
 
-@include flex-modal;
 :host {
     width: 1000px;
 }
 
 h5 {
     display: flex;
-    line-height: 1.25em;
-    margin: 0;
-    padding: 0;
     white-space: nowrap;
+    flex-direction: row;
+    align-content: center;
+    gap: 0.25rem;
 
-    .page-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .language-select {
+
+        &,
+        >gtx-dropdown-list {
+            display: contents;
+        }
     }
 
-    .clickable {
-        color: $gtx-color-primary;
+    .trigger-content {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        gap: 0.25rem;
         cursor: pointer;
     }
 
-    .language-select, .pre, .clickable {
-            margin-left: 0.3rem;
+    .language-name {
+        color: $gtx-color-primary;
+    }
+
+    .collapse {
+        font-size: 20px;
     }
 }
 
+.entries {
+    >gtx-contents-list-item {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
 
 .publish-entry {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    width: 100%;
+    gap: 0.25rem;
+
     .date,
     .editor {
         color: $gtx-color-mid-gray;
     }
 
     .state {
-        margin-right: 0.35rem;
-
         &.online {
             color: $gtx-color-success;
         }
+
         &.offline {
             color: $gtx-color-alert;
         }

@@ -236,7 +236,7 @@ describe('PagePropertiesComponent', () => {
                     templateId: instance.properties.templateId,
                     language: 'en',
                     pageName: instance.properties.name,
-                    fileName: 'Außenwirtschaft Oberösterreich',
+                    fileName: '',
                 });
 
                 expect(instance.onChange).toHaveBeenCalledWith(expectedChanges);

@@ -30,7 +30,7 @@ export interface GtxChipSearchPropertyString {
 
 export type GtxChipSearchPropertyDateOperators = 'AT' | 'AFTER' | 'BEFORE' | 'BETWEEN';
 export interface GtxChipSearchPropertyDate {
-    value: string;
+    value: number;
     operator: GtxChipSearchPropertyDateOperators;
 }
 

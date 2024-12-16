@@ -90,10 +90,10 @@ public class HandlebarsPartTypeResolvingTest {
 			new Object[] { LongHTMLTextPartType.class, "text" },
 			new Object[] { NormalTextPartType.class, "text" },
 			new Object[] { ShortTextPartType.class, "text" },
-			new Object[] { FileURLPartType.class , "internal, node, nodeId, target, url" },
-			new Object[] { FolderURLPartType.class, "internal, node, nodeId, target, url" },
-			new Object[] { ImageURLPartType.class, "internal, node, nodeId, target, url"},
-			new Object[] { PageURLPartType.class, "internal, node, nodeId, target, url" }
+			new Object[] { FileURLPartType.class , "externalurl, internal, node, nodeId, target, url" },
+			new Object[] { FolderURLPartType.class, "externalurl, internal, node, nodeId, target, url" },
+			new Object[] { ImageURLPartType.class, "externalurl, internal, node, nodeId, target, url"},
+			new Object[] { PageURLPartType.class, "externalurl, internal, node, nodeId, target, url" }
 		);
 		return data;
 	}

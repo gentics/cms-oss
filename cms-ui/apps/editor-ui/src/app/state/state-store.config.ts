@@ -1,6 +1,6 @@
 import { NgxsDevtoolsOptions } from '@ngxs/devtools-plugin';
 import { NgxsLoggerPluginOptions } from '@ngxs/logger-plugin';
-import { NgxsConfig } from '@ngxs/store/src/symbols';
+import { NgxsConfig } from '@ngxs/store';
 
 import { environment } from '../../environments/environment';
 import { checkStateReduxDevtoolsEnabledForProd } from './state-utils';

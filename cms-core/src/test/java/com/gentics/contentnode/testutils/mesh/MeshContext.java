@@ -78,7 +78,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	 * Create an instance, using the Mesh version of the MeshRestClient
 	 */
 	public MeshContext() {
-		super(StringUtils.isNotBlank(System.getenv(DOCKER_MESH_IMAGE)) ? System.getenv(DOCKER_MESH_IMAGE) : "docker.gentics.com/gentics/mesh:" + TESTED_MESH_VERSION);
+		super(StringUtils.isNotBlank(System.getenv(DOCKER_MESH_IMAGE)) ? System.getenv(DOCKER_MESH_IMAGE) : "docker.gentics.com/gentics/mesh-hsqldb:" + TESTED_MESH_VERSION);
 
 		String dockerNet = System.getenv(DOCKER_NET);
 		if (StringUtils.isNotBlank(dockerNet)) {

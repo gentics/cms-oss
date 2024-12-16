@@ -2084,7 +2084,7 @@ public class TagFactory extends AbstractFactory {
 	 * @throws NodeException
 	 */
 	public static List<ObjectTagDefinition> load(int type, Optional<Node> node) throws NodeException {
-		Set<Integer> ids = DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? and obj_id = 0", pst -> {
+		Set<Integer> ids = DBUtils.select("SELECT objtag.id FROM objtag LEFT JOIN construct c ON c.id = objtag.construct_id WHERE c.id IS NOT NULL AND obj_type = ? AND obj_id = 0", pst -> {
 			pst.setInt(1, type);
 		}, DBUtils.IDS);
 

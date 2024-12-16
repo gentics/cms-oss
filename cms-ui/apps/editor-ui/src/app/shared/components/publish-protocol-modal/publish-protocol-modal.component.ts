@@ -10,18 +10,19 @@ import { Form, Page, PublishLogEntry, PublishLogListOption, PublishType, Respons
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
 
-
 const PAGE_SIZE = 15;
 
 @Component({
     selector: 'gtx-page-publish-protocol-modal',
-    templateUrl: './publish-protocol-modal.html',
-    styleUrls: ['./publish-protocol-modal.scss'],
+    templateUrl: './publish-protocol-modal.component.html',
+    styleUrls: ['./publish-protocol-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublishProtocolModalComponent extends BaseModal<void> implements OnInit {
+
     @Input()
     public item: Page | Form;
+
     public loading = false;
     public languageVariants: Page[];
     public publishLogEntries: PublishLogEntry[];
@@ -33,7 +34,6 @@ export class PublishProtocolModalComponent extends BaseModal<void> implements On
     ) {
         super();
     }
-
 
     ngOnInit(): void {
         this.loading = true;
@@ -79,7 +79,7 @@ export class PublishProtocolModalComponent extends BaseModal<void> implements On
         this.publishLogEntries = response.items.map(item => {
             return {
                 ...item,
-                date: this.formatDate(item.date),
+                date: item.date,
             }
         });
 
@@ -87,16 +87,8 @@ export class PublishProtocolModalComponent extends BaseModal<void> implements On
         this.changeDetector.markForCheck();
     }
 
-    private formatDate(unformattedDate: string): string {
-        const date = new Date(unformattedDate);
-
-        return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} at
-            ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-    }
-
     public selectPageVariant(variant: Page): void {
         this.item = variant;
         this.fetchLogEntries(this.item);
     }
-
 }

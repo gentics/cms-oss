@@ -288,11 +288,11 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "admin", "anonymous", "role_b");
+		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "anonymous", "role_b");
 		List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
 		Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
 		assertThat(optionalDefaultBranch).isPresent();
-		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "admin", "anonymous", "role_b");
+		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "anonymous", "role_b");
 	}
 
 	/**
@@ -316,11 +316,11 @@ public class MeshPublishRolesTest {
 				trx.success();
 			}
 
-			assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "admin", "role_auto");
+			assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "role_auto");
 			List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
 			Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
 			assertThat(optionalDefaultBranch).isPresent();
-			assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "admin", "role_auto");
+			assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "role_auto");
 		}
 	}
 	/**
@@ -341,7 +341,7 @@ public class MeshPublishRolesTest {
 		}
 
 		String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
-		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "admin", "anonymous", "role_b");
+		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "anonymous", "role_b");
 	}
 
 
@@ -367,7 +367,7 @@ public class MeshPublishRolesTest {
 			}
 
 			String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
-			assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "admin", "role_auto");
+			assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "role_auto");
 		}
 	}
 
@@ -388,7 +388,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "anonymous", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "anonymous", "role_c");
 	}
 
 	/**
@@ -413,7 +413,7 @@ public class MeshPublishRolesTest {
 				trx.success();
 			}
 
-			assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_auto");
+			assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_auto");
 		}
 	}
 
@@ -434,7 +434,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "anonymous", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "anonymous", "role_c");
 
 		// dirt "name" on all folders
 		Trx.operate(() -> PublishQueue.dirtFolders(new int[] { node.getId() }, null, 0, 0, Action.DEPENDENCY,
@@ -445,7 +445,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "anonymous", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "anonymous", "role_c");
 	}
 
 	/**
@@ -463,7 +463,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_b");
 
 	}
 
@@ -486,7 +486,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 	/**
@@ -525,7 +525,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 	/**
@@ -552,7 +552,7 @@ public class MeshPublishRolesTest {
 				trx.success();
 			}
 
-			assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_auto");
+			assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_auto");
 		}
 	}
 
@@ -575,7 +575,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
 
 		// dirt "name" on all pages
 		Trx.operate(() -> PublishQueue.dirtPublishedPages(new int[] { node.getId() }, null, 0, 0, Action.DEPENDENCY,
@@ -586,7 +586,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 	/**
@@ -606,7 +606,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_b");
 	}
 
 	/**
@@ -628,7 +628,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_a", "role_b", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_b", "role_c");
 	}
 
 	/**
@@ -655,7 +655,7 @@ public class MeshPublishRolesTest {
 				trx.success();
 			}
 
-			assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_auto");
+			assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_auto");
 		}
 	}
 
@@ -678,7 +678,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_a", "role_b", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_b", "role_c");
 
 		// dirt "name" on all files
 		Trx.operate(() -> PublishQueue.dirtImagesAndFiles(new int[] { node.getId() }, null, 0, 0, Action.DEPENDENCY,
@@ -689,7 +689,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_a", "role_b", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_b", "role_c");
 	}
 
 	/**
@@ -709,7 +709,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_b");
 	}
 
 	/**
@@ -728,7 +728,7 @@ public class MeshPublishRolesTest {
 		}
 
 		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_b");
 
 		Trx.operate(() -> update(folder, f -> setVelocityRoles(f, "role_a", "role_c")));
 
@@ -737,7 +737,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 	/**
@@ -757,7 +757,7 @@ public class MeshPublishRolesTest {
 		}
 
 		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_b");
 
 		update(folder, f -> setVelocityRoles(f, "role_a", "role_c"));
 		update(page, Page::publish);
@@ -767,7 +767,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 	/**
@@ -787,7 +787,7 @@ public class MeshPublishRolesTest {
 		}
 
 		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_b");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_b");
 
 		Trx.operate(() -> update(folder, f -> setVelocityRoles(f, "role_a", "role_c")));
 
@@ -796,7 +796,7 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
 
@@ -814,11 +814,11 @@ public class MeshPublishRolesTest {
 			trx.success();
 		}
 
-		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "admin", "anonymous", "role_b");
+		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "anonymous", "role_b");
 		List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
 		Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
 		assertThat(optionalDefaultBranch).isPresent();
-		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "admin", "anonymous", "role_b");
+		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "anonymous", "role_b");
 	}
 
 	/**
@@ -836,7 +836,7 @@ public class MeshPublishRolesTest {
 		}
 
 		String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
-		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "admin", "anonymous", "role_b");
+		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "anonymous", "role_b");
 	}
 
 	/**

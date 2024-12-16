@@ -1,0 +1,1 @@
+Fixes a bug which lead to content loss in pages when using newer MariaDB versions.

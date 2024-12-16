@@ -1,4 +1,4 @@
-# New changelog numbers must be generated via https://dev.gentics.com/numbercruncher
+G# New changelog numbers must be generated via https://dev.gentics.com/numbercruncher
 ################### start of CN3-STABLE CHANGELOG #################################
 2002-05-21  20020101    LH  COMMENT		##added *.node/dev.doc/CHANGELOG
 2002-05-22  20020101    SH  SQLCREATE	node.imgresizecache ## new table imgresizecache for imgresize class, new workflow tables
@@ -297,5 +297,5 @@
 2023-03-21  CH-1689 NOP SQL DROP TABLE IF EXISTS bundleimportconflict;
 2023-03-21  CH-1690 NOP SQL DROP TABLE IF EXISTS bundleimportobject;
 2024-03-29  CH-1717 SP  SQL DELETE FROM invokerqueue WHERE type NOT IN ('sleep', 'nodecopy', 'error');
-2024-09-02  CH-1724 GO  SQL CREATE TABLE publish_protocol (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, obj_id INT NOT NULL, type VARCHAR(50) NOT NULL, state TINYINT NOT NULL, user INT NOT NULL, date DATETIME NOT NULL DEFAULT CURRENT_DATE());
+2024-09-02  CH-1724 GO  SQL CREATE TABLE publish_protocol (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, obj_id INT NOT NULL, type VARCHAR(50) NOT NULL, state TINYINT NOT NULL, user INT NOT NULL, date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP());
 2024-09-02  CH-1725 GO  SQL CREATE INDEX publish_protocol_obj_id_index ON publish_protocol (obj_id, type);

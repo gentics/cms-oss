@@ -25,7 +25,6 @@ import {
 import {
     filter,
     map,
-    tap,
 } from 'rxjs/operators';
 import {
     GCMSSEARCH_AVAILABLE_FILTERS_FILE,
@@ -204,16 +203,16 @@ export class QueryAssemblerGCMSSearchService {
         filters.forEach(filter => {
             switch (filter.operator) {
                 case 'BEFORE':
-                    mappedOptions[optionsKeyDateBefore] = convertToTimestamp(new Date(filter.value));
+                    mappedOptions[optionsKeyDateBefore] = filter.value;
                     break;
 
                 case 'AFTER':
-                    mappedOptions[optionsKeyDateSince] = convertToTimestamp(new Date(filter.value));
+                    mappedOptions[optionsKeyDateSince] = filter.value;
                     break;
 
                 case 'AT': {
                     // get 24h interval of day date
-                    const dateValue = new Date(filter.value);
+                    const dateValue = new Date(filter.value * 1000);
                     const dateStart = new Date(dateValue);
                     dateStart.setHours( 0, 0, 0, 0 );
                     const dateEnd = new Date(dateValue);

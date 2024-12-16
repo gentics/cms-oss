@@ -323,7 +323,71 @@ export function registerCommonCommands(): void {
         return (originalFn as Cypress.CommandOriginalFnWithSubject<'select', any>)(subject, value, options);
     }) as any);
 
-    // TODO: Override the default `check`/`uncheck` command to include `gtx-checkbox` and `gtx-radio-button` behaviour.
+    Cypress.Commands.overwrite('check', ((originalFn, subject, options) => {
+        if (!isJQueryElement(subject)) {
+            return originalFn(subject, options);
+        }
+
+        if (subject.is('gtx-checkbox')) {
+            const input = subject.find('input[type="checkbox"]');
+            const log = () => {
+                Cypress.log({
+                    $el: subject,
+                    name: 'check',
+                    type: 'child',
+                    message: subject,
+                });
+            };
+
+            if (!input.is(':checked')) {
+                return cy.wrap(subject.find('label'), { log: false })
+                    .click({ log: false })
+                    .then(() => {
+                        log();
+                        return subject;
+                    });
+            } else {
+                log();
+                return cy.wrap(subject, { log: false });
+            }
+        }
+        // TODO: Add gtx-radio-button handling
+
+        return originalFn(subject, options);
+    }));
+
+    Cypress.Commands.overwrite('uncheck', ((originalFn, subject, options) => {
+        if (!isJQueryElement(subject)) {
+            return originalFn(subject, options);
+        }
+
+        if (subject.is('gtx-checkbox')) {
+            const input = subject.find('input[type="checkbox"]');
+            const log = () => {
+                Cypress.log({
+                    $el: subject,
+                    name: 'uncheck',
+                    type: 'child',
+                    message: '',
+                });
+            };
+
+            if (input.is(':checked')) {
+                return cy.wrap(subject.find('label'), { log: false })
+                    .click({ log: false })
+                    .then(() => {
+                        log();
+                        return subject;
+                    });
+            } else {
+                log();
+                return cy.wrap(subject, { log: false });
+            }
+        }
+        // TODO: Add gtx-radio-button handling
+
+        return originalFn(subject, options);
+    }));
 
     Cypress.Commands.add('btn', { prevSubject: 'element' }, (subject, options) => {
         return cy.wrap(resolveClickable(subject, options), { log: false });

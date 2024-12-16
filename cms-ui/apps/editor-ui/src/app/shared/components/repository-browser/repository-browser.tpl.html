@@ -48,6 +48,8 @@
         <repository-browser-list
             *ngIf="(observableForType[type] | async)?.length || ((noItemsOfAnyType$ | async) && allowed[type])"
             [attr.data-type]="type"
+            [attr.data-sort-by]="(sortOrder$ | async)?.[type]?.field"
+            [attr.data-sort-order]="(sortOrder$ | async)?.[type]?.order"
             [itemType]="type"
             [contents]="observableForType[type] | async"
             [currentNodeId]="currentNodeId$ | async"

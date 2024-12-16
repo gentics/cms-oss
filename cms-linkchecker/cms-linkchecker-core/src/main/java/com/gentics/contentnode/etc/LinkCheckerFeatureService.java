@@ -1,6 +1,6 @@
 package com.gentics.contentnode.etc;
 
-import com.gentics.contentnode.LicensedFeature;
+import com.gentics.license.feature.LicenseKeyFeatureDefinition;
 import com.gentics.contentnode.LicenseService;
 
 /**
@@ -9,7 +9,7 @@ import com.gentics.contentnode.LicenseService;
 public class LinkCheckerFeatureService implements FeatureService {
 	@Override
 	public boolean isProvided(Feature feature) {
-		return feature == Feature.LINK_CHECKER && LicenseService.isLicenseSufficient(LicensedFeature.ELC);
+		return feature == Feature.LINK_CHECKER && LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.ELC);
 	}
 
 }

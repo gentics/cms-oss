@@ -234,6 +234,15 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         const options = normalizeDataServiceOptions(this.options);
         this.dataService.init(options);
 
+        const settings = this.userSettings.getSettingsFromAppState();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        (this.dataService.itemTypesToDisplay$ as any).value.forEach((type: string) => {
+            const sorting = settings[`${type}Sorting`];
+            if (sorting != null && typeof sorting === 'object') {
+                this.dataService.setSorting(type as any, sorting.sortBy, sorting.sortOrder);
+            }
+        });
+
         this.allowed = options.allowedSelection;
         this.isPickingFolder = this.dataService.isPickingFolder;
     }

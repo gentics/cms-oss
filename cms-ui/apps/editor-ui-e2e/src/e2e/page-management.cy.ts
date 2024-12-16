@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { PageCreateResponse, PageSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
+import { MultiObjectMoveRequest, PageCreateResponse, PageSaveRequest, SelectTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import {
     EntityImporter,
+    folderA,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_NODE,
@@ -29,7 +30,7 @@ describe('Page Management', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false }).then(() => {\
+        cy.wrap(null, { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
@@ -40,24 +41,27 @@ describe('Page Management', () => {
         cy.muteXHR();
     });
 
-    describe('Minimal Setup', () => {
+    describe('Page Details', () => {
         const OBJ_PROP_CAT_TESTS = '2';
         const DEFAULT_OBJ_PROP_CAT = [
             '_others_',
             OBJ_PROP_CAT_TESTS,
         ];
 
-        beforeEach(async () => {
-            await IMPORTER.cleanupTest();
-            await IMPORTER.setupTest(TestSize.MINIMAL);
-
-            cy.navigateToApp();
-            cy.login(AUTH_ADMIN).then(res => {
+        beforeEach(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            }).then(() => {
+                cy.navigateToApp();
+                return cy.login(AUTH_ADMIN);
+            }).then(res => {
                 cy.window().then(win => {
                     win.localStorage.setItem(`GCMSUI_USER-${res?.user.id}_openObjectPropertyGroups`, JSON.stringify(DEFAULT_OBJ_PROP_CAT));
                 });
+                cy.selectNode(IMPORTER.get(minimalNode)!.id);
             });
-            cy.selectNode(IMPORTER.get(minimalNode)!.id);
         });
 
         it('should be possible to create a new Page', () => {
@@ -247,7 +251,7 @@ describe('Page Management', () => {
         });
     });
 
-    describe('Content without Language Setup', () => {
+    describe('Page Details without Language Setup', () => {
         /*
          * The setup is quite special, since it's quite the edge-case that is tested here.
          * We want the minimal content setup, but without any actual language assigned.
@@ -389,6 +393,84 @@ describe('Page Management', () => {
             cy.get(ALIAS_ITEM)
                 .find(`.language-indicator .language-icon[data-id="${LANG}"]`)
                 .should('have.class', CLASS_AVAILABLE);
+        });
+    });
+
+    describe('List Actions', () => {
+        beforeEach(() => {
+            cy.wrap(null, { log: false }).then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
+            }).then(() => {
+                cy.navigateToApp();
+            });
+        });
+
+        describe('Move', () => {
+            const SORT_BY = 'cdate';
+            const SORT_ORDER = 'desc';
+
+            beforeEach(() => {
+                cy.login(AUTH_ADMIN).then(res => {
+                    cy.window().then(win => {
+                        win.localStorage.setItem(`GCMSUI_USER-${res?.user.id}_folderSorting`, JSON.stringify({
+                            sortBy: SORT_BY,
+                            sortOrder: SORT_ORDER,
+                        }));
+                    });
+                    cy.selectNode(IMPORTER.get(minimalNode)!.id);
+                });
+            });
+
+            it('should move the page to the new folder', () => {
+                const PAGE = IMPORTER.get(pageOne)!;
+                const TARGET_FOLDER = IMPORTER.get(folderA)!;
+
+                const ALIAS_REPO_BROWSER = '@repoBrowser';
+                const ALIAS_MOVE_REQ = '@moveReq';
+
+                cy.findList(PAGE.type)
+                    .findItem(PAGE.id)
+                    .itemAction('move');
+
+                cy.get('gtx-dynamic-modal repository-browser')
+                    .as(ALIAS_REPO_BROWSER)
+                    .find(`repository-browser-list[data-type="${TARGET_FOLDER.type}"]`)
+                    .findItem(TARGET_FOLDER.id)
+                    .find('.item-primary .item-name .item-name-only')
+                    .click();
+
+                cy.intercept({
+                    pathname: '/rest/page/move',
+                }, intercept => {
+                    intercept.alias = ALIAS_MOVE_REQ;
+                });
+
+                cy.get(ALIAS_REPO_BROWSER)
+                    .find('.modal-footer gtx-button[data-action="confirm"]')
+                    .click();
+
+                cy.wait<MultiObjectMoveRequest>(ALIAS_MOVE_REQ).then(intercept => {
+                    const req = intercept.request.body;
+                    expect(req.ids).to.deep.equal([PAGE.id]);
+                    expect(req.folderId).to.equal(TARGET_FOLDER.id);
+                    expect(req.nodeId).to.equal(TARGET_FOLDER.nodeId);
+                });
+            });
+
+            /* SUP-17891: Repo-Browser needs to load the correct sort config from the user-settings */
+            it('should restore the correct sorting in the repository-browser', () => {
+                const PAGE = IMPORTER.get(pageOne)!;
+
+                cy.findList(PAGE.type)
+                    .findItem(PAGE.id)
+                    .itemAction('move');
+
+                cy.get('gtx-dynamic-modal repository-browser repository-browser-list[data-type="folder"]')
+                    .should('have.attr', 'data-sort-by', SORT_BY)
+                    .should('have.attr', 'data-sort-order', SORT_ORDER);
+            });
         });
     });
 });

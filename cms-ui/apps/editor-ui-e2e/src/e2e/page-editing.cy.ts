@@ -54,7 +54,7 @@ describe('Page Editing', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false })
+        cy.wrap(IMPORTER.clearClient(), { log: false })
             .then(() => {
                 return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
             })
@@ -486,7 +486,7 @@ describe('Page Editing', () => {
             });
         });
 
-        describe.only('Links', () => {
+        describe('Links', () => {
             beforeEach(() => {
                 cy.wrap(null, { log: false }).then(() => {
                     return cy.loadBinaries([
@@ -619,8 +619,8 @@ describe('Page Editing', () => {
                     .as(ALIAS_REPO_BROWSER)
                     .find('repository-browser-list[data-type="image"]')
                     .findItem(LINK_ITEM.id)
-                    .find('>icon-checkbox gtx-checkbox label, >.thumbnail-overlay .top-bar gtx-checkbox label')
-                    .click();
+                    .find('>icon-checkbox gtx-checkbox, >.thumbnail-overlay .top-bar gtx-checkbox')
+                    .check();
 
                 cy.get(ALIAS_REPO_BROWSER)
                     .find('.modal-footer gtx-button[data-action="confirm"]')
@@ -717,8 +717,8 @@ describe('Page Editing', () => {
                     .as(ALIAS_REPO_BROWSER)
                     .find('repository-browser-list[data-type="file"]')
                     .findItem(LINK_ITEM.id)
-                    .find('>icon-checkbox gtx-checkbox label, >.thumbnail-overlay .top-bar gtx-checkbox label')
-                    .click();
+                    .find('>icon-checkbox gtx-checkbox, >.thumbnail-overlay .top-bar gtx-checkbox')
+                    .check();
 
                 cy.get(ALIAS_REPO_BROWSER)
                     .find('.modal-footer gtx-button[data-action="confirm"]')
@@ -815,8 +815,8 @@ describe('Page Editing', () => {
                     .as(ALIAS_REPO_BROWSER)
                     .find('repository-browser-list[data-type="page"]')
                     .findItem(LINK_ITEM.id)
-                    .find('>icon-checkbox gtx-checkbox label, >.thumbnail-overlay .top-bar gtx-checkbox label')
-                    .click();
+                    .find('>icon-checkbox gtx-checkbox, >.thumbnail-overlay .top-bar gtx-checkbox')
+                    .check();
 
                 cy.get(ALIAS_REPO_BROWSER)
                     .find('.modal-footer gtx-button[data-action="confirm"]')

@@ -43,10 +43,10 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.1.0</alohaeditor.version>
+		<alohaeditor.version>2.1.1</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>05.12.2024</alohaeditor.date>
+		<alohaeditor.date>17.12.2024</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
 		<mesh.version>3.0.0</mesh.version>
 

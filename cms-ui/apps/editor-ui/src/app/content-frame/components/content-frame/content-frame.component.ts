@@ -188,7 +188,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private onLoadListener: EventListener;
     public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
-    private masterFrameLoaded = false;
+    public masterFrameLoaded = false;
     private contentModifiedByExternalScript = false;
     private childFrameInitTimer: any;
     private childFrameInitialized = false;
@@ -293,6 +293,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
                 // Set the window as unloaded, as we're reloading everything here.
                 this.windowLoaded = false;
+                this.masterFrameLoaded = false;
                 this.changeDetector.markForCheck();
 
                 const options = { nodeId: params.nodeId };
@@ -482,6 +483,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 return;
             }
 
+            this.masterFrameLoaded = true;
             this.windowLoaded = true;
             this.reloadPageConstructs();
 
@@ -678,13 +680,6 @@ ins.gtx-diff {
                 return this.entityResolver.getLanguage(variant.contentGroupId);
             }
         }
-    }
-
-    /**
-     * Used by the IFrameManager to signal that the "load" event has fired in the master frame.
-     */
-    setMasterFrameLoaded(val: boolean): void {
-        this.masterFrameLoaded = val;
     }
 
     /**

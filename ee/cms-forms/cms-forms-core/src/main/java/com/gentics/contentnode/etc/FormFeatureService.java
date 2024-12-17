@@ -1,7 +1,7 @@
 package com.gentics.contentnode.etc;
 
 import com.gentics.contentnode.LicenseService;
-import com.gentics.contentnode.LicensedFeature;
+import com.gentics.license.feature.LicenseKeyFeatureDefinition;
 
 /**
  * Implementation of {@link FeatureService} that provides the {@link Feature#FORMS}
@@ -9,6 +9,6 @@ import com.gentics.contentnode.LicensedFeature;
 public class FormFeatureService implements FeatureService {
 	@Override
 	public boolean isProvided(Feature feature) {
-		return feature == Feature.FORMS && LicenseService.isLicenseSufficient(LicensedFeature.FORMS);
+		return feature == Feature.FORMS && LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.FORMS);
 	}
 }

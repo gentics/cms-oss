@@ -299,8 +299,8 @@ define([
 
                 plugin.brokenLinks.splice(idx, 1);
                 plugin._removeLinkClickHandler($(element));
-                element.classList.remove(CLASS_INVALID_URL);
-                element.classList.add(CLASS_VALID_URL);
+                element.classList.remove(CLASS_UNCHECKED, CLASS_INVALID_URL);
+                element.classList.add(CLASS_LINK_CHECKER_ITEM, CLASS_CHECKED, CLASS_VALID_URL);
                 plugin.validLinks.push(element);
 
                 return true;
@@ -315,10 +315,10 @@ define([
                     return false;
                 }
                 plugin.validLinks.splice(idx, 1);
-                element.classList.remove(CLASS_VALID_URL);
-                element.classList.add(CLASS_INVALID_URL);
+                element.classList.remove(CLASS_UNCHECKED, CLASS_VALID_URL);
+                element.classList.add(CLASS_LINK_CHECKER_ITEM, CLASS_CHECKED, CLASS_INVALID_URL);
                 plugin.brokenLinks.push(element);
-                plugin._addLinkClickHandler(element);
+                plugin._addLinkClickHandler($(element));
 
                 return true;
             }
@@ -403,6 +403,10 @@ define([
         },
 
         _addLinkClickHandler: function ($elem) {
+            if ($elem == null || !$elem.length) {
+                return;
+            }
+
             // Just to be sure, to not add the same click handler twice
             $elem.off('click.gcn-link-checker');
 

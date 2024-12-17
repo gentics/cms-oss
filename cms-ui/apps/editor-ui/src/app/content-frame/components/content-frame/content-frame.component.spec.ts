@@ -751,7 +751,7 @@ describe('ContentFrameComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 openEditModeOfAPage(fixture, ITEM_ID);
                 instance.contentFrame.alohaReady = false;
-                instance.contentFrame.setMasterFrameLoaded(false);
+                instance.contentFrame.masterFrameLoaded = false;
                 const currentState = appState.now;
                 currentState.editor.contentModified = true;
                 currentState.entities.page[ITEM_ID].locked = false;
@@ -766,7 +766,7 @@ describe('ContentFrameComponent', () => {
         it('is enabled when a non-form item is edited despite it has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
-            instance.contentFrame.setMasterFrameLoaded(true);
+            instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = false;
             currentState.entities.page[ITEM_ID].locked = false;
@@ -781,7 +781,9 @@ describe('ContentFrameComponent', () => {
         it('is disabled when a non-form item is edited but it is locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
-            instance.contentFrame.setMasterFrameLoaded(true);
+            instance.contentFrame.masterFrameLoaded = true;
+            (instance.contentFrame.currentItem as Page).locked = true;
+            (instance.contentFrame.currentItem as Page).lockedBy = OTHER_USER_ID;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
             currentState.entities.page[ITEM_ID].locked = true;
@@ -800,7 +802,7 @@ describe('ContentFrameComponent', () => {
              + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
-            instance.contentFrame.setMasterFrameLoaded(true);
+            instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
             currentState.entities.page[ITEM_ID].locked = false;

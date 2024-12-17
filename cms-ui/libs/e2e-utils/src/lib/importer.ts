@@ -85,6 +85,8 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
 
 const PUBLISHER_TASK_CMD = 'publish';
 const PUBLISHER_SCHEDULE_NAME = 'Run Publish Process';
+const GLOBAL_FEATURES = Object.values(Feature);
+const NODE_FEATURES = Object.values(NodeFeature);
 
 /**
  * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
@@ -320,27 +322,36 @@ export class EntityImporter {
 
         for (const entry of Object.entries(features || {})) {
             const [feature, enabled] = entry;
-            if (Feature[feature]) {
 
-                try {
-                    await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/features/${feature}`, null, {
-                        enabled,
-                    }).send();
-                } catch (err) {
-                    // If it's a 404, then we ignore it, as this feature/endpoint doesn't exist.
-                    // TODO: Remove this handling once everything is merged - currently this endpoint is "optional"
-                    if (!(err instanceof GCMSRestClientRequestError) || err.responseCode !== 404) {
-                        throw err;
-                    }
-                }
-                continue;
+            // If it's a global feature
+            if (GLOBAL_FEATURES.includes(feature as any)) {
+                Cypress.log({
+                    type: 'parent',
+                    name: `${enabled ? 'enable' : 'disable'} global feature`,
+                    message: feature,
+                });
+
+                // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
+                // Should not be used aside from e2e tests, as these might have weird side-effects.
+                await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/feature/${feature}`, null, {
+                    enabled,
+                }).send();
             }
 
-            for (const id of nodeIds) {
-                if (enabled) {
-                    await this.client.node.activateFeature(id, feature as NodeFeature).send();
-                } else {
-                    await this.client.node.deactivateFeature(id, feature as NodeFeature).send();
+            // If it's a node specific feature
+            if (NODE_FEATURES.includes(feature as any)) {
+                for (const id of nodeIds) {
+                    Cypress.log({
+                        type: 'parent',
+                        name: `${enabled ? 'enable' : 'disable'} feature`,
+                        message: `${feature} on ${id}`,
+                    });
+
+                    if (enabled) {
+                        await this.client.node.activateFeature(id, feature as NodeFeature).send();
+                    } else {
+                        await this.client.node.deactivateFeature(id, feature as NodeFeature).send();
+                    }
                 }
             }
         }

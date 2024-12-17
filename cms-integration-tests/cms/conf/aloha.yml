@@ -11,6 +11,7 @@ aloha_plugins_global:
   - "common/contenthandler"
   - "common/commands"
   - "gcn/gcn"
+  - "gcn/gcnlinkchecker"
   - "common/dom-to-xhtml"
   - "common/abbr"
   # Disabled until we know how to solve the issue with storing/referecing the

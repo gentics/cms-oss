@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue when editing the Object-Properties of a Page, the file-name would be overritten with a default value.

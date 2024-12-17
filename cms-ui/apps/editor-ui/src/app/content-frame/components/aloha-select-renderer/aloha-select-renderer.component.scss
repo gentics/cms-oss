@@ -1,0 +1,7 @@
+gtx-select {
+    margin: 0;
+
+    &.in-form::ng-deep .view-value {
+        background: #fff !important;
+    }
+}

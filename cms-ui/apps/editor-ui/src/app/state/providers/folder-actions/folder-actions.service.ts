@@ -1705,7 +1705,9 @@ export class FolderActionsService {
      * Update the editable properties of a page.
      */
     updatePageProperties(pageId: number, properties: EditablePageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Page<Raw> | void> {
-        return this.updateItem('page', pageId, properties, {}, postUpdateBehavior);
+        return this.updateItem('page', pageId, properties, {
+            deriveFileName: !properties.fileName,
+        }, postUpdateBehavior);
     }
 
     /**
@@ -1875,14 +1877,9 @@ export class FolderActionsService {
             case 'image':
                 res = this.client.image.update(itemId, { ...requestOptions, image: payload } as any).toPromise();
                 break;
-            case 'page': {
-                const body: any = { ...requestOptions, page: payload };
-                if (!(payload as any).fileName) {
-                    body.deriveFileName = true;
-                }
-                res = this.client.page.update(itemId, body).toPromise();
+            case 'page':
+                res = this.client.page.update(itemId, { ...requestOptions, page: payload } as any).toPromise();
                 break;
-            }
             case 'template':
                 res = this.client.template.update(itemId, { ...requestOptions, template: payload } as any).toPromise();
                 break;

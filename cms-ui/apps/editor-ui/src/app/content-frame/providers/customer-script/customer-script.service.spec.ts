@@ -398,6 +398,7 @@ class MockWindow {
         settings: {
 
         } as any,
+        trigger: function() {},
     };
     addEventListener(): void { }
     removeEventListener(): void { }

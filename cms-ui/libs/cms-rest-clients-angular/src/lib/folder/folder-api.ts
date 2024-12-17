@@ -686,9 +686,6 @@ export class FolderApi {
             ...requestOptions,
             [propName]: payload,
         };
-        if (type === 'page' && (payload as any).fileName === '') {
-            requestBody.deriveFileName = true;
-        }
 
         // Diversity in REST API standards is caused by standard migration per resource
         // POST /${type}/save/${id} might deprecate and be replaced by PUT /${type}/${id} in the future

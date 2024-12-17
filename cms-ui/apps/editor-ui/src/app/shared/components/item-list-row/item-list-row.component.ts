@@ -328,13 +328,13 @@ export class ItemListRowComponent implements OnInit {
         return this.itemsInfo && this.itemsInfo.showPath;
     }
 
-    onPageLanguageIconClicked(data: { page: Page<Raw> | Page<Normalized>; language: Language; }): void {
-        const pageRaw = this.entityResolver.denormalizeEntity('page', data.page);
+    onPageLanguageIconClicked(data: { item: Page<Raw> | Page<Normalized>; language: Language; }): void {
+        const pageRaw = this.entityResolver.denormalizeEntity('page', data.item);
         this.pageLanguageIconClick.emit({ page: pageRaw, language: data.language });
     }
 
-    onFormLanguageIconClicked(data: { form: Form<Raw> | Form<Normalized>; language: Language; }): void {
-        const formRaw = this.entityResolver.denormalizeEntity('form', data.form);
+    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language; }): void {
+        const formRaw = this.entityResolver.denormalizeEntity('form', data.item);
         this.formLanguageIconClick.emit({ form: formRaw, language: data.language });
     }
 

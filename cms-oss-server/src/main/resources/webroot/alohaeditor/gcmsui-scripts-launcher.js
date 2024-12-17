@@ -11,7 +11,15 @@
     }
 
     var runPostLoadScript = function() {
-        GCMSUI.runPostLoadScript();
+        if (window.GCMSUI != null) {
+            GCMSUI.runPostLoadScript();
+        } else if (window.Aloha != null) {
+            function whenReady() {
+                GCMSUI.runPostLoadScript();
+                Aloha.unbind('gcmsui.ready', whenReady);
+            }
+            Aloha.bind('gcmsui.ready', whenReady);
+        }
     }
 
     // Run the Pre-Load Script on DOMContentLoaded

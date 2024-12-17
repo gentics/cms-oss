@@ -773,9 +773,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
      * Saves the specified object property and then set the current item to the updated item.
      */
     private saveObjectProperty(objectProperty: EditableObjectTag | EditableTag, options: SaveChangesOptions, showNotification: boolean): Promise<void> {
-        const objProp = {
-            ...objectProperty,
-        };
+        const objProp = structuredClone(objectProperty);
         delete objProp.tagType;
         const update: Tags = { };
         update[objProp.name] = objProp;

@@ -5,5 +5,9 @@ export interface AlohaInputComponent extends Omit<AlohaComponent, 'type'> {
 
     value?: string;
     label?: string;
+    hint?: string;
     inputType?: string;
+
+    setLabel: (label: string) => void;
+    setHint: (hint: string) => void;
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { PageSaveRequest, StringTagPartProperty } from '@gentics/cms-models';
+import { PagePublishRequest, PageSaveRequest, StringTagPartProperty } from '@gentics/cms-models';
 import {
     EntityImporter,
     ENV_ALOHA_PLUGIN_CITE,
@@ -66,7 +66,7 @@ describe('Page Editing', () => {
     beforeEach(() => {
         cy.muteXHR();
 
-        cy.wrap(null, { log: false })
+        cy.wrap(IMPORTER.clearClient(), { log: false })
             .then(() => {
                 return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 })
             })
@@ -488,7 +488,7 @@ describe('Page Editing', () => {
 
         describe('Links', () => {
             beforeEach(() => {
-                cy.wrap(null, { log: false }).then(() => {
+                cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
                     return cy.loadBinaries([
                         FIXTURE_TEST_IMAGE_JPG_1,
                         FIXTURE_TEST_FILE_DOC_1,
@@ -970,6 +970,40 @@ describe('Page Editing', () => {
                     .should('have.class', CLASS_CUSTOMIZED);
             });
         });
+
+        describe('Actions', () => {
+            it('should be possible to manage the publish time of the page', () => {
+                const ALIAS_MODAL = '@modal';
+                const ALIAS_PUBLISH_REQ = '@publishReq';
+
+                const now = new Date();
+                const oneDay = 1000 * 60 * 60 * 24;
+                const PUBLISH_AT_DATE = new Date(now.getTime() + oneDay);
+
+                cy.editorAction('editor-context')
+                    .find('gtx-dropdown-item[data-action="time-management"]')
+                    .click({ force: true });
+
+                cy.intercept<PagePublishRequest>({
+                    pathname: '/rest/page/publish/*',
+                }, req => {
+                    expect(req.body.alllang).to.equal(false);
+                    expect(req.body.at).to.equal(Math.trunc(PUBLISH_AT_DATE.getTime() / 1000));
+                    req.alias = ALIAS_PUBLISH_REQ;
+                });
+
+                cy.get('gtx-dynamic-modal time-management-modal')
+                    .as(ALIAS_MODAL)
+                    .find('.modal-content .timemgmt-form-current gtx-date-time-picker[data-control="publishAt"]')
+                    .pickDate(PUBLISH_AT_DATE);
+
+                cy.get(ALIAS_MODAL)
+                    .find('.modal-footer gtx-button[data-action="confirm"]')
+                    .click();
+
+                cy.wait(ALIAS_PUBLISH_REQ);
+            });
+        });
     });
 
     /*
@@ -1043,7 +1077,7 @@ describe('Page Preview', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false }).then(() => {
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
@@ -1053,7 +1087,7 @@ describe('Page Preview', () => {
     beforeEach(() => {
         cy.muteXHR();
 
-        cy.wrap(null, { log: false }).then(() => {
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });

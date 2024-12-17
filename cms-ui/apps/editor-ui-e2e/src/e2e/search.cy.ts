@@ -13,13 +13,14 @@ describe('Search', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false })
+        cy.wrap(IMPORTER.clearClient(), { log: false })
             .then(() => cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 }));
     });
 
     beforeEach(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false })
+
+        cy.wrap(IMPORTER.clearClient(), { log: false })
             .then(() => cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 }))
             .then(() => cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 }));
     });
@@ -27,7 +28,7 @@ describe('Search', () => {
     describe('via Gentics CMS', () => {
         before(() => {
             // Disable Elasticsearch for all tests
-            cy.wrap(null, { log: false })
+            cy.wrap(IMPORTER.clearClient(), { log: false })
                 .then(() => cy.wrap(IMPORTER.cleanupTest(), { timeout: 60_000, log: false }))
                 .then(() => cy.wrap(IMPORTER.setupFeatures({
                     [Feature.ELASTICSEARCH]: false,

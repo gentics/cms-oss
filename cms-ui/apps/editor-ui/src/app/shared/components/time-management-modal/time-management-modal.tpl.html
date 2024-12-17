@@ -85,6 +85,7 @@
                 <div class="row date-selection-row">
                     <div class="small-12 medium-6 columns">
                         <gtx-date-time-picker
+                            data-control="publishAt"
                             [label]="(item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n"
                             [disabled]="versionSelect !== VersionManagement.KEEP_VERSION"
                             [required]="versionSelect === VersionManagement.KEEP_VERSION && !existingTakeOfflineAt"
@@ -96,6 +97,7 @@
 
                     <div class="small-12 medium-6 columns">
                         <gtx-date-time-picker
+                            data-control="offlineAt"
                             [label]="(item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n"
                             [disabled]="versionSelect !== VersionManagement.KEEP_VERSION"
                             [required]="versionSelect === VersionManagement.KEEP_VERSION && !existingPublishAt"
@@ -121,6 +123,7 @@
                 <div class="row">
                     <div class="small-12 medium-6 columns">
                         <gtx-date-time-picker
+                            data-control="publishAt"
                             [label]="(item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n"
                             [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
                             [required]="versionSelect === VersionManagement.NEW_VERSION && !takeOfflineAt"
@@ -132,6 +135,7 @@
 
                     <div class="small-12 medium-6 columns">
                         <gtx-date-time-picker
+                            data-control="offlineAt"
                             [label]="(item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n"
                             [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
                             [required]="versionSelect === VersionManagement.NEW_VERSION && !publishAt"
@@ -176,10 +180,12 @@
     <gtx-button
         flat
         type="secondary"
+        data-action="cancel"
         (click)="cancelFn()"
     >{{ 'common.cancel_button' | i18n }}</gtx-button>
 
     <gtx-button
+        data-action="confirm"
         [disabled]="!formValid"
         (click)="btnOkayClicked()"
     >{{ 'common.okay_button' | i18n }}</gtx-button>

@@ -30,7 +30,8 @@ describe('Page Management', () => {
 
     before(() => {
         cy.muteXHR();
-        cy.wrap(null, { log: false }).then(() => {
+
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
@@ -49,7 +50,7 @@ describe('Page Management', () => {
         ];
 
         beforeEach(() => {
-            cy.wrap(null, { log: false }).then(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
                 return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
             }).then(() => {
                 return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });
@@ -270,7 +271,7 @@ describe('Page Management', () => {
                 expect(options).to.have.length(1);
                 expect(options![0].id).to.equal(COLOR_ID);
                 // SUP-17885: Updating the object-properties should never update the file name
-                expect(intercept.request.body.deriveFileName).to.equal(false);
+                expect(intercept.request.body.deriveFileName).to.equal(undefined);
             });
         });
 
@@ -327,16 +328,27 @@ describe('Page Management', () => {
             }
         });
 
-        beforeEach(async () => {
-            IMPORTER.client = null;
-            await IMPORTER.cleanupTest();
-            await IMPORTER.importData(CONTENT);
+        beforeEach(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
+                return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
+            }).then(() => {
+                return cy.wrap(IMPORTER.importData(CONTENT), { log: false, timeout: 60_000 });
+            });
         });
 
-        beforeEach(() => Promise.all([
-            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
-            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
-        ]));
+        beforeEach(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false })
+                .then(() => cy.wrap(IMPORTER.setupClient(), { log: false, timeout: 60_000 }))
+                .then(() => {
+                    return cy.wrap(
+                        Promise.all([
+                            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
+                            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
+                        ]),
+                        { log: false, timeout: 60_000 },
+                    );
+                });
+        });
 
         it('should be possible to assign a language to a page with the language markers', () => {
             cy.navigateToApp();
@@ -441,7 +453,7 @@ describe('Page Management', () => {
 
     describe('List Actions', () => {
         beforeEach(() => {
-            cy.wrap(null, { log: false }).then(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
                 return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
             }).then(() => {
                 return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });

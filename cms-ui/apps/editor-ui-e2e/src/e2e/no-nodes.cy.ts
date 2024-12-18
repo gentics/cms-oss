@@ -9,7 +9,7 @@ describe('No Nodes', () => {
     before(() => {
         cy.muteXHR();
 
-        cy.wrap(null, { log: false }).then(() => {
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(true), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.importData([
@@ -23,6 +23,10 @@ describe('No Nodes', () => {
             username: userAlpha.login,
             password: userAlpha.password,
         }).as(userAlpha[IMPORT_ID]);
+    });
+
+    beforeEach(() => {
+        cy.muteXHR();
     });
 
     describe('Display the "no-nodes" route when no nodes are present', () => {

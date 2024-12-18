@@ -26,7 +26,7 @@ describe('Folder Management', () => {
     before(() => {
         cy.muteXHR();
 
-        cy.wrap(null, { log: false }).then(() => {
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.bootstrapSuite(TestSize.MINIMAL), { log: false, timeout: 60_000 });
@@ -36,7 +36,7 @@ describe('Folder Management', () => {
     beforeEach(() => {
         cy.muteXHR();
 
-        cy.wrap(null, { log: false }).then(() => {
+        cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
             return cy.wrap(IMPORTER.cleanupTest(), { log: false, timeout: 60_000 });
         }).then(() => {
             return cy.wrap(IMPORTER.setupTest(TestSize.MINIMAL), { log: false, timeout: 60_000 });

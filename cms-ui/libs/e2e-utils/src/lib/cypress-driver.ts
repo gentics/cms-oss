@@ -85,6 +85,7 @@ export class CypressDriver implements GCMSClientDriver {
                     method: request.method,
                     headers: request.headers,
                     failOnStatusCode: false,
+                    timeout: 10_000,
                     ...fn(request.url),
                 }).then(res => {
                     let body = res.body;

@@ -29,6 +29,7 @@ const INTIIAL_FEATURES_STATE: FeaturesState = {
     [Feature.MULTICHANNELLING]: false,
     [Feature.MESH_CR]: false,
     [Feature.OBJECT_TAG_SYNC]: false,
+    [Feature.LINK_CHECKER]: false,
 
     nodeFeatures: {},
 };

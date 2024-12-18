@@ -514,7 +514,6 @@ describe('Page Editing', () => {
                 const LINK_LANGUAGE = 'de';
                 const LINK_TITLE = 'This is a title!';
 
-
                 // eslint-disable-next-line cypress/unsafe-to-chain-command
                 cy.get(ALIAS_CONTENT)
                     .clear()

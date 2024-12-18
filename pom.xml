@@ -43,7 +43,7 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.1.1</alohaeditor.version>
+		<alohaeditor.version>2.1.2</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
 		<alohaeditor.date>17.12.2024</alohaeditor.date>

@@ -150,7 +150,7 @@ describe('Constructs Module', () => {
             const ALIAS_NODE_TABLE = '@nodeTable';
             const ALIAS_LINK_REQ = '@linkReq';
 
-            let nodeId: string | undefined;
+            let nodeId: number | undefined;
 
             cy.get('gtx-assign-constructs-to-nodes-modal')
                 .as(ALIAS_MODAL)
@@ -160,7 +160,7 @@ describe('Constructs Module', () => {
                 .find('.data-row:not(.selected) .select-column gtx-checkbox label')
                 .first()
                 .then($elem => {
-                    nodeId = $elem.parents('.data-row').attr('data-id');
+                    nodeId = parseInt($elem.parents('.data-row').attr('data-id') || '', 10);
                     return $elem;
                 })
                 .click();

@@ -159,8 +159,11 @@ describe('Page Editing', () => {
                 // If the cite plugin is not enabled, then the quote button is a regular simple
                 // format, which can be easily tested here.
                 const FORMATS_TO_TEST = ACTION_SIMPLE_FORMAT_KEYS.slice(0);
-                if (envNone(ENV_ALOHA_PLUGIN_CITE)) {
-                    FORMATS_TO_TEST.push(ACTION_FORMAT_QUOTE);
+                if (!envNone(ENV_ALOHA_PLUGIN_CITE)) {
+                    const idx = FORMATS_TO_TEST.indexOf(ACTION_FORMAT_QUOTE);
+                    if (idx > -1) {
+                        FORMATS_TO_TEST.splice(idx, 1);
+                    }
                 }
 
                 for (const action of FORMATS_TO_TEST) {
@@ -680,7 +683,7 @@ describe('Page Editing', () => {
                     });
             });
 
-            it('should be able to select an internal image as link', () => {
+            it('should be able to select an internal file as link', () => {
                 const TEXT_CONTENT = 'Hello ';
                 const ITEM_NODE = IMPORTER.get(minimalNode)!;
                 const LINK_ITEM = IMPORTER.get(fileOne)!;

@@ -153,12 +153,6 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
         req.alias = `_upload_req_${fileName}`;
     });
 
-    // Wait till elements have been reloaded
-    cy.intercept({
-        method: 'GET',
-        pathname: '/rest/folder/getPages/*',
-    }).as('folderLoad');
-
     return cy.loadBinaries(fixtureNames, { applyAlias: true }).then(binaries => {
         const output: Record<string, any> = {};
         let main: Cypress.Chainable<any>;
@@ -201,7 +195,7 @@ Cypress.Commands.add('uploadFiles', { prevSubject: false }, (type, fixtureNames,
                 });
             }
 
-            return cy.wait('@folderLoad').then(() => cy.wrap(output, { log: false }));
+            return cy.wrap(output, { log: false });
         })
     });
 });

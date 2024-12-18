@@ -9,7 +9,7 @@ services:
       file: compose.yml
       service: mesh
     environment:
-      LICENSEKEY: "${CI_LICENSEKEY}"
+      LICENSEKEY: "${CI_LICENSEKEY:-}"
 
   cms:
     extends:
@@ -20,7 +20,7 @@ services:
     environment:
       ELASTICSEARCH_ENABLED: "true"
       ELASTICSEARCH_URL: "http://elasticsearch:9200"
-      LICENSEKEY: "${CI_LICENSEKEY}"
+      LICENSEKEY: "${CI_LICENSEKEY:-}"
 
     volumes:
       - ./cms/ui-conf:/cms/ui-conf

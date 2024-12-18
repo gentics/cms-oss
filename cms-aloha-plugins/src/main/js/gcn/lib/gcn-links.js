@@ -284,10 +284,6 @@ define('gcn/gcn-links', [
 			link += '?' + params.toString();
 		}
 
-		if (data.url.anchor) {
-			link += '#' + data.url.anchor;
-		}
-
 		element.setAttribute(ATTR_REPOSITORY, REPO_INTERNAL_LINK);
 		element.setAttribute(ATTR_TARGET_LABEL, data.url.internalTargetLabel);
 		element.setAttribute(ATTR_OBJECT_ID, objId + '.' + data.url.internalTargetId);

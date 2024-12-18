@@ -351,6 +351,12 @@ export class EntityImporter {
         return Promise.resolve();
     }
 
+    public async setupClient(): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests });
+        }
+    }
+
     public async syncPackages(size: TestSize): Promise<void> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests });
@@ -802,7 +808,7 @@ export class EntityImporter {
     }
 }
 
-export function createClient(options?: ClientOptions): Promise<GCMSRestClient> {
+export async function createClient(options?: ClientOptions): Promise<GCMSRestClient> {
     const client = new GCMSRestClient(
         new CypressDriver(options?.log ?? false),
         {
@@ -814,14 +820,15 @@ export function createClient(options?: ClientOptions): Promise<GCMSRestClient> {
         },
     );
 
-    return client.auth.login({
-        login: Cypress.env(ENV_CMS_USERNAME),
-        password: Cypress.env(ENV_CMS_PASSWORD),
-    })
-        .send()
-        .then(res => {
-            // Set the SID for future requests
-            client.sid = res.sid;
-            return client;
-        });
+    try {
+        const res = await client.auth.login({
+            login: Cypress.env(ENV_CMS_USERNAME),
+            password: Cypress.env(ENV_CMS_PASSWORD),
+        }).send();
+        // Set the SID for future requests
+        client.sid = res.sid;
+        return client;
+    } catch (err) {
+        return client;
+    }
 }

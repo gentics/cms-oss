@@ -271,7 +271,7 @@ describe('Page Management', () => {
                 expect(options).to.have.length(1);
                 expect(options![0].id).to.equal(COLOR_ID);
                 // SUP-17885: Updating the object-properties should never update the file name
-                expect(intercept.request.body.deriveFileName).to.equal(false);
+                expect(intercept.request.body.deriveFileName).to.equal(undefined);
             });
         });
 
@@ -337,15 +337,17 @@ describe('Page Management', () => {
         });
 
         beforeEach(() => {
-            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
-                return cy.wrap(
-                    Promise.all([
-                        IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
-                        IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
-                    ]),
-                    { log: false, timeout: 60_000 },
-                );
-            })
+            cy.wrap(IMPORTER.clearClient(), { log: false })
+                .then(() => cy.wrap(IMPORTER.setupClient(), { log: false, timeout: 60_000 }))
+                .then(() => {
+                    return cy.wrap(
+                        Promise.all([
+                            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['de']).send(),
+                            IMPORTER.client!.node.assignLanguage(IMPORTER.get(minimalNode)!.id, IMPORTER.languages['en']).send(),
+                        ]),
+                        { log: false, timeout: 60_000 },
+                    );
+                });
         });
 
         it('should be possible to assign a language to a page with the language markers', () => {

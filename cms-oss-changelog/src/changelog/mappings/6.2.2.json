@@ -1,0 +1,11 @@
+{
+  "version": "6.2.2",
+  "date": "19.12.2024",
+  "changeLogEntryFileNames": [
+    "8093.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "17.12.2024",
+    "alohaeditor-version": "2.1.2"
+  }
+}

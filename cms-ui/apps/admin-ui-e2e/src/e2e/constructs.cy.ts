@@ -184,7 +184,7 @@ describe('Constructs Module', () => {
                 .click();
 
             cy.wait<ConstructNodeLinkRequest>(ALIAS_LINK_REQ).then(inter => {
-                expect(inter.request.body.ids).to.equal([nodeId]);
+                expect(inter.request.body.ids).to.deep.equal([nodeId]);
             });
         });
     });

@@ -112,8 +112,7 @@ describe('Login', () => {
             cy.get('project-editor').should('exist');
         });
 
-        // TODO: Temporarly skipped, because we can't change the features at runtime currently
-        it('should be able to login (default without skip-sso)', () => {
+        it.skip('should be able to login (default without skip-sso)', () => {
             cy.navigateToApp('', true);
             cy.login(AUTH_KEYCLOAK, true);
 

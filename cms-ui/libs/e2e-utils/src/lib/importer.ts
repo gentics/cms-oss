@@ -331,11 +331,23 @@ export class EntityImporter {
                     message: feature,
                 });
 
-                // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
-                // Should not be used aside from e2e tests, as these might have weird side-effects.
-                await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/feature/${feature}`, null, {
-                    enabled,
-                }).send();
+                try {
+                    // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
+                    // Should not be used aside from e2e tests, as these might have weird side-effects.
+                    await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/feature/${feature}`, null, {
+                        enabled,
+                    }).send();
+                } catch (err) {
+                    if (err instanceof GCMSRestClientRequestError
+                        && (
+                            err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
+                            || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
+                        )
+                    ) {
+                        return;
+                    }
+                    throw err;
+                }
             }
 
             // If it's a node specific feature

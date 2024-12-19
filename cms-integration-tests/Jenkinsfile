@@ -91,13 +91,14 @@ spec:
                 CMS_VARIANT = "${params.variant}"
                 CI_CMS_VERSION = "${params.cmsVersion}"
                 CI_MESH_VERSION = "${params.meshVersion}"
+                CI_LICENSEKEY = "${mesh_enterprise_licensekey_2}"
             }
 
             steps {
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                     withCredentials([ string(credentialsId: 'cms-ui-integration-tests.licensekey', variable: 'CI_LICENSEKEY') ]) {
+                    //  withCredentials([ string(credentialsId: 'mesh_enterprise_licensekey_2', variable: 'CI_LICENSEKEY') ]) {
                         authDockerRegistry("docker.gentics.com", "docker.gentics.com")
 
                         try {
@@ -121,7 +122,7 @@ spec:
                                 sh "docker compose down"
                             }
                         }
-                    }
+                    // }
                 }
             }
 

@@ -13,7 +13,7 @@ describe('Login', () => {
     describe('Without keycloak feature enabled', () => {
         // Make sure to have keycloak disabled for these tests
         before(() => {
-            cy.wrap(null, { log: false }).then(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
                 return cy.wrap(IMPORTER.setupFeatures({
                     [Feature.KEYCLOAK]: false,
                 }), { log: false, timeout: 60_000 });
@@ -31,7 +31,7 @@ describe('Login', () => {
     skipableSuite(isVariant(Variant.ENTERPRISE), 'With keycloak feature enabled', () => {
         // Make sure to have keycloak enabled for these tests
         before(() => {
-            cy.wrap(null, { log: false }).then(() => {
+            cy.wrap(IMPORTER.clearClient(), { log: false }).then(() => {
                 return cy.wrap(IMPORTER.setupFeatures({
                     [Feature.KEYCLOAK]: true,
                 }), { log: false, timeout: 60_000 });

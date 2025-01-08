@@ -331,7 +331,10 @@ export class PermissionService {
             switchMap((folder: Folder) => {
                 return this.api.permissions.getFolderPermissions(folder.id, folder.nodeId).pipe(
                     map((folderPermissions: PermissionResponse) => {
-                        return folder.permissionsMap = folderPermissions.permissionsMap;
+                        if (Object.isExtensible(folder)) {
+                            folder.permissionsMap = folderPermissions.permissionsMap;
+                        }
+                        return folderPermissions.permissionsMap;
                     }),
                 );
             }),

@@ -74,6 +74,8 @@
 	z-index: 100;
 	user-select: none;
 	overflow: hidden;
+	align-content: center;
+  	justify-content: center;
 }
 
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit {

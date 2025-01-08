@@ -7,7 +7,7 @@ import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
  * These are the user-editable properties of a File object.
  */
 export type EditableFileProps = Partial<Pick<FileOrImage, 'name' | 'description' | 'forceOnline'
-| 'niceUrl' | 'alternateUrls' | 'customCdate' | 'customEdate'>>;
+| 'niceUrl' | 'alternateUrls' | 'customCdate' | 'customEdate' | 'tags'>>;
 
 /**
  * Superinterface for CMS files and images.

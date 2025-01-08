@@ -17,6 +17,7 @@
             class="view-value select-input"
             [attr.tabindex]="disabled ? null : 0"
             [attr.disabled]="disabled ? true : null"
+            [attr.data-value]="valueArray"
             [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
             data-context-trigger
             (blur)="inputBlur($event)"

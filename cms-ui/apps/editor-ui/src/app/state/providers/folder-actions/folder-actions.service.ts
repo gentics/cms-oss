@@ -32,7 +32,7 @@ import {
     ElasticSearchQuery,
     ElasticSearchQueryResponse,
     ElasticSearchTypeSearchOptions,
-    File,
+    File as CMSFile,
     FileCopyRequest,
     FileCreateRequest,
     FileListResponse,
@@ -766,7 +766,7 @@ export class FolderActionsService {
     /**
      * Get an individual file.
      */
-    getFile(fileId: number): Promise<File<Raw>> {
+    getFile(fileId: number): Promise<CMSFile<Raw>> {
         return this.getItem(fileId, 'file');
     }
 
@@ -1169,7 +1169,7 @@ export class FolderActionsService {
     getItem(itemId: number, type: 'folder', options?: FolderRequestOptions, throwError?: boolean): Promise<Folder<Raw>>;
     getItem(itemId: number, type: 'page', options?: PageRequestOptions, throwError?: boolean): Promise<Page<Raw>>;
     getItem(itemId: number, type: 'image', options?: ImageRequestOptions, throwError?: boolean): Promise<Image<Raw>>;
-    getItem(itemId: number, type: 'file', options?: FolderRequestOptions, throwError?: boolean): Promise<File<Raw>>;
+    getItem(itemId: number, type: 'file', options?: FolderRequestOptions, throwError?: boolean): Promise<CMSFile<Raw>>;
     getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form<Raw>>;
     getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
     getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
@@ -1753,7 +1753,7 @@ export class FolderActionsService {
     /**
      * Update the editable properties of a file.
      */
-    updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<File<Raw> | void> {
+    updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<CMSFile<Raw> | void> {
         return this.updateItem('file', fileId, properties, {}, postUpdateBehavior);
     }
 
@@ -2042,7 +2042,7 @@ export class FolderActionsService {
         }
     }
 
-    localizeFile(fileId: number, channelId: number): Promise<File<Raw>> {
+    localizeFile(fileId: number, channelId: number): Promise<CMSFile<Raw>> {
         return this.localizeItem('file', fileId, channelId);
     }
 
@@ -2056,7 +2056,7 @@ export class FolderActionsService {
      */
     localizeItem(type: 'folder', itemId: number, channelId: number): Promise<Folder<Raw>>;
     localizeItem(type: 'page', itemId: number, channelId: number): Promise<Page<Raw>>;
-    localizeItem(type: 'file', itemId: number, channelId: number): Promise<File<Raw>>;
+    localizeItem(type: 'file', itemId: number, channelId: number): Promise<CMSFile<Raw>>;
     localizeItem(type: 'image', itemId: number, channelId: number): Promise<Image<Raw>>;
     localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw>>;
     async localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw> | void> {
@@ -2488,7 +2488,7 @@ export class FolderActionsService {
      * Copy a file or image to the target folder. Internally this creates a copy in the source folder and then
      * moves the new object to the target folder.
      */
-    copyFilesToFolder(sourceFiles: File<Raw>[], sourceNodeId: number, targetFolderId: number, targetNodeId: number): Promise<boolean> {
+    copyFilesToFolder(sourceFiles: CMSFile<Raw>[], sourceNodeId: number, targetFolderId: number, targetNodeId: number): Promise<boolean> {
         if (!sourceFiles.length) {
             return Promise.resolve(false);
         }
@@ -2542,7 +2542,7 @@ export class FolderActionsService {
             });
     }
 
-    private moveFileToFolder(file: File, targetFolderId: number, targetNodeId: number): Promise<void> {
+    private moveFileToFolder(file: CMSFile, targetFolderId: number, targetNodeId: number): Promise<void> {
         const type = file.type;
         this.appState.dispatch(new StartListSavingAction(type));
 
@@ -2648,7 +2648,7 @@ export class FolderActionsService {
      * Uploads a file to the backend. If uploads are already in progress,
      * the new files are added to the current upload state.
      */
-    uploadFiles(type: 'file' | 'image', files: any[], folderId: number): Observable<UploadResponse[]> {
+    uploadFiles(type: 'file' | 'image', files: File[], folderId: number): Observable<UploadResponse[]> {
         if (type !== 'image' && type !== 'file') {
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             console.error(`Can not upload ${type}.`);
@@ -2682,6 +2682,7 @@ export class FolderActionsService {
                 if (failed.length > 0) {
                     // If the server provides an error message, show it to the user.
                     const fileErrors = failed.map(res => {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                         const fileError = (res.error.data?.messages?.[0]?.message || res.error.message || '')
                             .replace(/\.$/, '');
                         return [
@@ -2709,7 +2710,7 @@ export class FolderActionsService {
                 if (completed.length > 0) {
                     // Because the dimensions of an Image can only be accessed async, we need to use promises for
                     // all entities. If the dimensions are assumed to be available, a race condition can result.
-                    const entitiesLoader: Promise<File<Raw> | Image<Raw>>[] = completed.map(res => {
+                    const entitiesLoader: Promise<CMSFile<Raw> | Image<Raw>>[] = completed.map(res => {
                         if (type !== 'image') {
                             return Promise.resolve(res.item);
                         }
@@ -2736,7 +2737,7 @@ export class FolderActionsService {
     /**
      * Uploads a file to replace an existing file.
      */
-    replaceFile(type: 'image' | 'file', fileId: number, file: any, fileName?: string, options?: FileReplaceOptions): Observable<UploadResponse> {
+    replaceFile(type: 'image' | 'file', fileId: number, file: File, fileName?: string, options?: FileReplaceOptions): Observable<UploadResponse> {
         if (type !== 'image' && type !== 'file') {
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             console.error(`Can not upload ${type}.`);
@@ -2883,7 +2884,7 @@ export class FolderActionsService {
 
         return this.client.file.create(payload).pipe(
             switchMap(uploadResponse => {
-                let loader: Observable<File | Image>;
+                let loader: Observable<CMSFile | Image>;
 
                 // Refetch uploaded to since response from `POST file/create` differs from default entity data.
                 if (type === 'file') {

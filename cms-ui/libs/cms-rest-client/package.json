@@ -1,15 +1,15 @@
 {
   "name": "@gentics/cms-rest-client",
-  "version": "6.2.2",
+  "version": "6.2.3",
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {
-    "@gentics/cms-models": "^6.2.2",
-    "@gentics/mesh-models": "^2.1.0"
+    "@gentics/cms-models": "^6.2.3",
+    "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
   },
   "devDependencies": {
-    "@gentics/cms-models": "^6.2.2",
-    "@gentics/mesh-models": "^2.1.0"
+    "@gentics/cms-models": "^6.2.3",
+    "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
   },
   "publishConfig": {
     "registry": "https://repo.gentics.com/repository/npm-products/"

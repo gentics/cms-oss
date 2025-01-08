@@ -4,11 +4,11 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {
-    "@gentics/cms-models": "6.2.0-SNAPSHOT",
+    "@gentics/cms-models": "^6.2.2",
     "@gentics/mesh-models": "^2.1.0"
   },
   "devDependencies": {
-    "@gentics/cms-models": "6.2.2",
+    "@gentics/cms-models": "^6.2.2",
     "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {

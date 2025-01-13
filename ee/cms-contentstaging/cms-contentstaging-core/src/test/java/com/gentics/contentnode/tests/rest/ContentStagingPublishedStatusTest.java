@@ -87,7 +87,6 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 				}
 			}
 		}
-//		data.add(new Object[] {true, false, false, true, true, false});
 
 		return data;
 	}

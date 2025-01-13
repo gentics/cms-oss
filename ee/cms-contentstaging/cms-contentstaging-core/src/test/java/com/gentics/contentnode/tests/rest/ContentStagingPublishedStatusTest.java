@@ -34,37 +34,60 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @RunWith(value = Parameterized.class)
 public class ContentStagingPublishedStatusTest extends AbstractContentStagingTest {
 
-	@Parameters(name = "{index}: publish {0}, modify {1}, take offline: {2}, publish at {3}, offline at {4}")
+	@Parameters(name = "{index}: publish {0}, modify {1}, take offline: {2}, offline at (before publish at) {3}, publish at {3}, offline at (after publish at) {5}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 
 		for (boolean publish : Arrays.asList(true, false)) {
 			for (boolean modify : Arrays.asList(true, false)) {
 				for (boolean takeOffline : Arrays.asList(true, false)) {
-					for (boolean publishAt : Arrays.asList(true, false)) {
-						for (boolean offlineAt : Arrays.asList(true, false)) {
-							// remove unnecessary combinations
-							if (modify && !publish) {
-								// modifying only makes sense when the page is published first
-								continue;
-							}
+					for (boolean offlineAtBefore : Arrays.asList(true, false)) {
+						for (boolean publishAt : Arrays.asList(true, false)) {
+							for (boolean offlineAtAfter : Arrays.asList(true, false)) {
+								// remove unnecessary combinations
+								if (modify && !publish) {
+									// modifying only makes sense when the page is published first
+									continue;
+								}
 
-							if (takeOffline && !publish) {
-								// taking offline only makes sense when the page is published first
-								continue;
-							}
+								if (takeOffline && !publish) {
+									// taking offline only makes sense when the page is published first
+									continue;
+								}
 
-							if (publishAt && publish && !takeOffline && !modify) {
-								// republishing a unmodified page does not make sense
-								continue;
-							}
+								if (takeOffline && offlineAtBefore) {
+									// no use in taking a page offline twice
+									continue;
+								}
 
-							data.add(new Object[] {publish, modify, takeOffline, publishAt, offlineAt});
+								if (publishAt && publish && !takeOffline && !offlineAtBefore && !modify) {
+									// republishing a unmodified page does not make sense
+									continue;
+								}
+
+								if (offlineAtBefore && (!publish || takeOffline)) {
+									// "take offline at" does not make sense for offline pages
+									continue;
+								}
+
+								if (offlineAtAfter && offlineAtBefore) {
+									// "take offline at" can only be done once
+									continue;
+								}
+
+								if (offlineAtAfter && (!publish || takeOffline) && !publishAt) {
+									// "taking offline at" only makes sense for pages, which are online or will be "published at"
+									continue;
+								}
+
+								data.add(new Object[] {publish, modify, takeOffline, offlineAtBefore, publishAt, offlineAtAfter});
+							}
 						}
 					}
 				}
 			}
 		}
+//		data.add(new Object[] {true, false, false, true, true, false});
 
 		return data;
 	}
@@ -79,10 +102,13 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 	public boolean takeOffline;
 
 	@Parameter(3)
-	public boolean publishAt;
+	public boolean offlineAtBefore;
 
 	@Parameter(4)
-	public boolean offlineAt;
+	public boolean publishAt;
+
+	@Parameter(5)
+	public boolean offlineAtAfter;
 
 	protected GlobalId pageGlobalId;
 
@@ -107,8 +133,9 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 		int initialPublishAtTime = now + 60;
 		int modifyTime = now + 2 * 60;
 		int takeOfflineTime = now + 3 * 60;
-		int publishAtTime = now + 4 * 60;
-		int takeOfflineAtTime = now + 5 * 60;
+		int takeOfflineAtBeforeTime = now + 4 * 60;
+		int publishAtTime = now + 5 * 60;
+		int takeOfflineAtAfterTime = now + 6 * 60;
 
 		// create the test page
 		Page page = create(Page.class, p -> {
@@ -139,18 +166,24 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 			}).at(takeOfflineTime).takeOffline().unlock().build();
 		}
 
+		if (offlineAtBefore) {
+			page = update(page, p -> {
+			}).takeOffline(takeOfflineAtBeforeTime).unlock().build();
+		}
+
 		if (publishAt) {
 			page = update(page, p -> {
 			}).publish(publishAtTime).unlock().build();
 		}
 
-		if (offlineAt) {
+		if (offlineAtAfter) {
 			page = update(page, p -> {
-			}).takeOffline(takeOfflineAtTime).unlock().build();
+			}).takeOffline(takeOfflineAtAfterTime).unlock().build();
 		}
 
 		// assert that initial state of page is correct
-		doAssertions(page, "Page before content staging", publishAtTime, takeOfflineAtTime);
+		doAssertions(page, "Page before content staging", publishAtTime, publish && modify ? "2.0" : "1.0",
+				offlineAtBefore ? takeOfflineAtBeforeTime : takeOfflineAtAfterTime, Staging.before);
 
 		// put page into content package
 		directCreate("MyPackage", DEFAULT_PACKAGE_DESCRIPTION);
@@ -167,7 +200,9 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 		page = supply(t -> t.getObject(Page.class, pageGlobalId));
 
 		// assert that page exists and is in correct status
-		doAssertions(page, "Page after content staging", publishAtTime, takeOfflineAtTime);
+		doAssertions(page, "Page after content staging", publishAtTime,
+				publish && modify && !takeOffline ? "2.0" : "1.0",
+				offlineAtBefore ? takeOfflineAtBeforeTime : takeOfflineAtAfterTime, Staging.after);
 	}
 
 	/**
@@ -175,10 +210,13 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 	 * @param page page to check
 	 * @param description page description
 	 * @param publishAtTime expected publish at time (if set)
+	 * @param publishAtVersion expected publish at version (if set)
 	 * @param takeOfflineAtTime expected take offline at time (if set)
+	 * @param staging before or after content staging?
 	 * @throws NodeException
 	 */
-	protected void doAssertions(Page page, String description, int publishAtTime, int takeOfflineAtTime) throws NodeException {
+	protected void doAssertions(Page page, String description, int publishAtTime, String publishAtVersion,
+			int takeOfflineAtTime, Staging staging) throws NodeException {
 		PageAssert assertThatPage = GCNAssertions.assertThat(page).as(description);
 
 		operate(() -> {
@@ -190,7 +228,7 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 			} else {
 				assertThatPage.isOffline();
 			}
-			if (modify && !publishAt) {
+			if (modify && !publishAt && (staging == Staging.before || !takeOffline)) {
 				assertThatPage.isModified();
 			} else {
 				assertThatPage.isNotModified();
@@ -200,21 +238,36 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 			} else {
 				assertThatPage.hasFieldOrPropertyWithValue("name", "Original Page");
 			}
-			if (publishAt || offlineAt) {
+			if (publishAt || offlineAtBefore || offlineAtAfter) {
 				assertThatPage.isPlanned();
 			} else {
 				assertThatPage.isNotPlanned();
 			}
 			if (publishAt) {
-				assertThatPage.hasPublishAt(publishAtTime, publish && modify ? "2.0" :"1.0");
+				assertThatPage.hasPublishAt(publishAtTime, publishAtVersion);
 			} else {
 				assertThatPage.hasNoPublishAt();
 			}
-			if (offlineAt) {
+			if (offlineAtBefore || offlineAtAfter) {
 				assertThatPage.hasOfflineAt(takeOfflineAtTime);
 			} else {
 				assertThatPage.hasNoOfflineAt();
 			}
 		});
+	}
+
+	/**
+	 * Enum for asserting before or after content staging
+	 */
+	protected static enum Staging {
+		/**
+		 * Assert before content staging
+		 */
+		before,
+
+		/**
+		 * Assert after content staging
+		 */
+		after
 	}
 }

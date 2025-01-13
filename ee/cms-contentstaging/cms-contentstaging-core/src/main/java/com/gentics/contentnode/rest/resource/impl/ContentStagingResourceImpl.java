@@ -82,9 +82,11 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
@@ -1104,6 +1106,29 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	/**
+	 * Take the node object offline, if applicable.
+	 * 
+	 * @param version staged version to check the offline status at.
+	 * @param versionedNodeObject object to take offline
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	private void maybeTakeVersionedStageableOffline(StagedObjectVersion version, StageableVersionedNodeObject versionedNodeObject) throws ReadOnlyException, NodeException {
+		if (version.getOnline() != null || version.getTimeOff() != null) {
+			int timeOff = Optional.ofNullable(version.getOnline())
+					.filter(online -> !online)
+					.map(offline -> 0)
+					.or(() -> Optional.ofNullable(version.getTimeOff())
+							.map(Integer::intValue)
+							.filter(time -> time > 0))
+					.orElse(-1);
+			if (timeOff > -1) {
+				versionedNodeObject.takeOffline(timeOff);
+			}
+		}
+	}
+
+	/**
 	 * Import a stageable node object with versions from its stored representation
 	 * @param pathRoot package folder
 	 * @param nodeObjectInflater node object inflater method
@@ -1140,7 +1165,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					case current:
 						current.set(storedVersioned);
 						break;
-						}
+					}
 				} catch (NodeException e) {
 					throw new IllegalStateException(e);
 				}
@@ -1150,28 +1175,71 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 		// Process published
 		if (published.get() != null) {
-			Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + published.get().maybeVersioned().get().getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
+			StagedObjectVersion version = published.get().maybeVersioned().get();
+			Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + version.getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
 			result += inflateNodeObject(published.get(), currentNodeObject, nodeObjectInflater, maybeHaveOrphans, currentPath);
 			currentNodeObject.save();
 			versionedNodeObject.publish(0, false);
+
+			int publishAt = version.getPublishAt();
+			int offlineAt = Optional.ofNullable(version.getTimeOff()).map(Integer::intValue).orElse(0);
+
+			if (publishAt > 0) {
+				if (offlineAt > 0) {
+					if (offlineAt < publishAt) {
+						maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+						versionedNodeObject.publish(publishAt, false);
+					} else {
+						versionedNodeObject.publish(publishAt, false);
+						maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+					}
+				} else {
+					versionedNodeObject.publish(publishAt, false);
+				}
+			} else if (offlineAt > 0) {
+				maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+			}
 		}
 
 		// Process scheduled
 		if (scheduled.get() != null) {
 			try (TimestampTrx time = TimestampTrx.add(1, TimeUnit.SECONDS)) {
-				Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + scheduled.get().maybeVersioned().get().getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
+				StagedObjectVersion version = scheduled.get().maybeVersioned().get();
+				Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + version.getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
 				result += inflateNodeObject(scheduled.get(), currentNodeObject, nodeObjectInflater, maybeHaveOrphans, currentPath);
 				currentNodeObject.save();
-				versionedNodeObject.publish(scheduled.get().maybeVersioned().get().getPublishAt(), false);
+
+				int publishAt = version.getPublishAt();
+				int offlineAt = Optional.ofNullable(version.getTimeOff()).map(Integer::intValue).orElse(0);
+
+				if (publishAt > 0) {
+					if (offlineAt > 0) {
+						if (offlineAt < publishAt) {
+							maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+							versionedNodeObject.publish(publishAt, false);
+						} else {
+							versionedNodeObject.publish(publishAt, false);
+							maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+						}
+					} else {
+						versionedNodeObject.publish(publishAt, false);
+					}
+				} else if (offlineAt > 0) {
+					maybeTakeVersionedStageableOffline(version, versionedNodeObject);
+				}
 			}
 		}
 
 		// Process current
 		if (current.get() != null) {
 			try (TimestampTrx time = TimestampTrx.add(2, TimeUnit.SECONDS)) {
-				Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + current.get().maybeVersioned().get().getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
+				StagedObjectVersion version = current.get().maybeVersioned().get();
+				Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + version.getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
 				result += inflateNodeObject(current.get(), currentNodeObject, nodeObjectInflater, maybeHaveOrphans, currentPath);			
 				currentNodeObject.save();
+				currentNodeObject.unlock();
+
+				maybeTakeVersionedStageableOffline(version, versionedNodeObject);
 			}
 
 			// optionally do postsave operations
@@ -1179,7 +1247,6 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				maybeDoPostSave.get().accept(current.get(), currentNodeObject);
 			}
 		}
-
 		return result;
 	}
 
@@ -2050,22 +2117,36 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 		NodeObjectVersion current = nodeObject.getVersion(); 
 		NodeObjectVersion scheduled = nodeObject.getTimePubVersion();
-		NodeObjectVersion published = nodeObject.getPublishedVersion();
+		NodeObjectVersion published = nodeObject.isOnline() ? nodeObject.getPublishedVersion() : null;
 		Map<StagedObjectVersion, N> versions = new HashMap<>(3);
 
-		if (published != null && published.equals(current)) {
-			// The object has only the published version
-			versions.put(StagingModelBuilder.getPublishedVersion(published), nodeObject);
-		} else {
-			// The object has unpublished version
-			versions.put(StagingModelBuilder.getCurrentVersion(current), nodeObject);
-			if (published != null) {
-				versions.put(StagingModelBuilder.getPublishedVersion(published), (N) t.getObject(nodeObject.getObjectInfo().getObjectClass(), nodeObject.getId(), published.getDate().getIntTimestamp()));
+		if (published != null) {
+			// export the published version
+			StagedObjectVersion version = StagingModelBuilder.getPublishedVersion(published);
+			version.setOnline(nodeObject.isOnline());
+			if (scheduled == null || published.equals(scheduled)) {
+				version.setTimeOff(Optional.ofNullable(nodeObject.getTimeOff()).map(ContentNodeDate::getTimestamp).orElse(null));
+				version.setPublishAt(Optional.ofNullable(nodeObject.getTimePub()).map(ContentNodeDate::getTimestamp).orElse(null));
+			}
+			versions.put(version, (N) t.getObject(nodeObject.getObjectInfo().getObjectClass(), nodeObject.getId(), published.getDate().getIntTimestamp()));
+		}
+		if (!current.equals(published)) {
+			// there is a current version, which is different from the published one
+			if (current.equals(scheduled)) {
+				// the current version is also scheduled (for republish or taking offline)
+				StagedObjectVersion version = StagingModelBuilder.getScheduledVersion(scheduled, nodeObject.getTimePub().getIntTimestamp());
+				version.setTimeOff(Optional.ofNullable(nodeObject.getTimeOff()).map(ContentNodeDate::getTimestamp).orElse(null));
+				versions.put(version, (N) t.getObject(nodeObject.getObjectInfo().getObjectClass(), nodeObject.getId(), scheduled.getDate().getIntTimestamp()));
+			} else {
+				// the current version is not scheduled
+				versions.put(StagingModelBuilder.getCurrentVersion(current), nodeObject);
 			}
 		}
-		// The object may have a version scheduled for a publish
-		if (scheduled != null) {
-			versions.put(StagingModelBuilder.getScheduledVersion(scheduled, nodeObject.getTimePub().getIntTimestamp()), (N) t.getObject(nodeObject.getObjectInfo().getObjectClass(), nodeObject.getId(), scheduled.getDate().getIntTimestamp()));
+		if (scheduled != null && !scheduled.equals(current) && !scheduled.equals(published)) {
+			// there is a scheduled version, which is neither the current nor the published one
+			StagedObjectVersion version = StagingModelBuilder.getScheduledVersion(scheduled, nodeObject.getTimePub().getIntTimestamp());
+			version.setTimeOff(Optional.ofNullable(nodeObject.getTimeOff()).map(ContentNodeDate::getTimestamp).orElse(null));
+			versions.put(version, (N) t.getObject(nodeObject.getObjectInfo().getObjectClass(), nodeObject.getId(), scheduled.getDate().getIntTimestamp()));
 		}
 
 		// Store versions

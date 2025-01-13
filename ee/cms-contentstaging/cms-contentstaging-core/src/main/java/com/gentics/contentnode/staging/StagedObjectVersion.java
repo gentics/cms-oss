@@ -24,6 +24,8 @@ public class StagedObjectVersion implements Serializable {
 	private StagedObjectVersionType type;
 	private int timestamp;
 	private int publishAt;
+	private Boolean online;
+	private Integer timeOff;
 
 	/**
 	 * Clone the origin into this version.
@@ -35,6 +37,8 @@ public class StagedObjectVersion implements Serializable {
 		this.type = origin.type;
 		this.timestamp = origin.timestamp;
 		this.publishAt = origin.publishAt;
+		this.online = origin.online;
+		this.timeOff = origin.timeOff;
 	}
 
 	/**
@@ -87,6 +91,22 @@ public class StagedObjectVersion implements Serializable {
 
 	public void setPublishAt(int publishAt) {
 		this.publishAt = publishAt;
+	}
+
+	public Boolean getOnline() {
+		return online;
+	}
+
+	public void setOnline(Boolean online) {
+		this.online = online;
+	}
+
+	public Integer getTimeOff() {
+		return timeOff;
+	}
+
+	public void setTimeOff(Integer timeOff) {
+		this.timeOff = timeOff;
 	}
 
 	@Override

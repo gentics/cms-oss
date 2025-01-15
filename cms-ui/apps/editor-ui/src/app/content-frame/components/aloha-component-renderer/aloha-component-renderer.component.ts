@@ -14,7 +14,7 @@ import {
     SimpleChanges,
     Type,
     ViewChild,
-    ViewContainerRef
+    ViewContainerRef,
 } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 import { AlohaComponent, AlohaCoreComponentNames } from '@gentics/aloha-models';
@@ -91,6 +91,12 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
     public disabled = false;
 
     /**
+     * When the rendered component is initialized
+     */
+    @Output()
+    public initialized = new EventEmitter<void>();
+
+    /**
      * @see BaseAlohaRendererComponent.requiresConfirm
      */
     @Output()
@@ -128,7 +134,7 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
         protected changeDetector: ChangeDetectorRef,
         protected injector: Injector,
         protected envInjector: EnvironmentInjector,
-    ) {}
+    ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
         if ((changes.type || changes.component)) {
@@ -200,6 +206,7 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
 
         this.instanceRef.changeDetectorRef.markForCheck();
         this.changeDetector.markForCheck();
+        this.initialized.emit();
     }
 
     protected forwardInputs(): void {

@@ -30,7 +30,7 @@
         </button>
     </div>
 
-    <div class="context-menu-content">
+    <div #content class="context-menu-content">
         <gtx-aloha-component-renderer
             [renderContext]="RENDERING_CONTEXT_DROPDOWN"
             [type]="configuration?.type"
@@ -39,6 +39,7 @@
             (requiresConfirm)="updateNeedsConfirm($event)"
             (manualConfirm)="handleManualComponentConfirm()"
             (hideHeader)="handleHideHeader($event)"
+            (initialized)="focusFirstElement()"
         ></gtx-aloha-component-renderer>
     </div>
 </div>

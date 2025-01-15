@@ -52,7 +52,6 @@ import {
 import { contentFrameRoutes } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
 import {
-    AlohaIntegrationService,
     CustomerScriptService,
     DynamicOverlayService,
 } from './providers';
@@ -104,7 +103,6 @@ const COMPONENTS = [
 ];
 
 const PROVIDERS = [
-    AlohaIntegrationService,
     CustomerScriptService,
     DynamicOverlayService,
 ];

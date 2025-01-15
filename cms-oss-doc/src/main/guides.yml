@@ -125,6 +125,9 @@ index:
     - title: "GCMSUI Bridge"
       text: "Learn how and for what to use the GCMSUI Bridge in your custom UI implementations"
       url: ui_bridge
+    - title: "Custom Editors"
+      text: "Learn what custom editors are and how to build your own editor implementations"
+      url: ui_custom_editor
 
   Authentication:
     - title: "Authentication via REST API"

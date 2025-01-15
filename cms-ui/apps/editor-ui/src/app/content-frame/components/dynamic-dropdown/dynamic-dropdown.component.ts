@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { RENDERING_CONTEXT_DROPDOWN } from '@editor-ui/app/common/models';
 import { DynamicDropdownConfiguration } from '@gentics/aloha-models';
@@ -6,7 +6,7 @@ import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-ap
 import { BaseComponent } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { applyControl } from '../../utils';
+import { applyControl, focusFirst } from '../../utils';
 
 type CloseFn<T> = (value: T) => void;
 type ErrorFn = (error?: any) => void;
@@ -27,6 +27,9 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
     @Input()
     public label?: string;
 
+    @ViewChild('content')
+    public element: ElementRef<HTMLElement>;
+
     public controlNeedsConfirm = false;
     public showOverlay = false;
     public control: FormControl<T>;
@@ -34,6 +37,12 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
 
     protected closeFn: CloseFn<T> = () => {};
     protected errorFn: ErrorFn = () => {};
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
 
     public ngOnInit(): void {
         this.control = new FormControl(this.configuration.initialValue);
@@ -97,5 +106,11 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
 
     public handleAbortClick(): void {
         this.errorFn(new ModalCloseError(ModalClosingReason.CANCEL));
+    }
+
+    public focusFirstElement(): void {
+        setTimeout(() => {
+            focusFirst(this.element.nativeElement);
+        }, 10);
     }
 }

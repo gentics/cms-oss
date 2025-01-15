@@ -72,7 +72,7 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
     @ViewChildren('iFrame')
     iFrameList: QueryList<ElementRef>;
 
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -103,7 +103,7 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
             switchMap(iFrame => fromEvent(iFrame.contentWindow, 'unload')),
         );
 
-        this.subscriptions.add(
+        this.subscriptions.push(
             iFrame$.subscribe(iFrame => {
                 if (this.checkIfCorrectSrc(iFrame)) {
                     this.iFrameLoaded = true;
@@ -113,8 +113,10 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
                 this.iFrameLoadedStateChange.emit(true);
             }),
         );
-        this.subscriptions.add(
+        this.subscriptions.push(
             iFrameUnload$.subscribe(() => {
+                this.iFrameLoaded = false;
+                this.changeDetector.markForCheck();
                 this.iFrameLoadedStateChange.emit(false);
             }),
         );
@@ -137,7 +139,7 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     private applyIFrameSize(iFrame: HTMLIFrameElement): void {
@@ -160,8 +162,12 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
      * our srcUrl.
      */
     private checkIfCorrectSrc(iFrame: HTMLIFrameElement): boolean {
-        return this.srcUrl && iFrame && iFrame.contentWindow && iFrame.contentWindow.location &&
-            iFrame.contentWindow.location.href && iFrame.contentWindow.location.href.endsWith(this.srcUrl);
+        return this.srcUrl
+            && iFrame?.contentWindow?.location?.href
+            && (
+                iFrame.contentWindow.location.href.endsWith(this.srcUrl)
+                || iFrame.contentWindow.location.href.endsWith(encodeURI(this.srcUrl))
+            );
     }
 
 }

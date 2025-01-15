@@ -2906,7 +2906,9 @@ public class FolderFactory extends AbstractFactory {
 			if (isMaster()) {
 				return this.disinheritDefault;
 			} else {
-				return getMaster().isDisinheritDefault();
+				var master = getMaster();
+
+				return this != master && master.isDisinheritDefault();
 			}
 		}
 

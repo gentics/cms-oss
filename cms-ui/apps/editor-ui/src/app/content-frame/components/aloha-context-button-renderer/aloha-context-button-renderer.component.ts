@@ -62,7 +62,6 @@ export class AlohaContextButtonRendererComponent<T>
             },
             closeContext: () => {
                 this.closeAndClearContext();
-                this.aloha.restoreSelection();
             },
         });
     }
@@ -119,7 +118,6 @@ export class AlohaContextButtonRendererComponent<T>
             this.settings?.contextReject?.(error);
         }).finally(() => {
             this.closeAndClearContext();
-            this.aloha.restoreSelection();
         })
     }
 

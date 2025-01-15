@@ -183,6 +183,7 @@ export class AlohaIntegrationService {
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
     protected activeEditableSub = new BehaviorSubject<AlohaEditable | null>(null);
     protected windowSub = new BehaviorSubject<CNWindow>(null);
+    private currentWindow: CNWindow | null = null;
     protected toolbarReloadSub = new BehaviorSubject<void>(null);
 
     /**
@@ -362,13 +363,24 @@ export class AlohaIntegrationService {
     }
 
     public setWindow(window: CNWindow): void {
+        this.currentWindow = window;
         this.windowSub.next(window);
     }
 
     public restoreSelection(): void {
         setTimeout(() => {
-            this.windowSub.value?.focus?.();
-        });
+            if (!this.currentWindow) {
+                return;
+            }
+
+            if (this.currentWindow.Aloha?.activeEditable?.obj?.[0]) {
+                this.currentWindow.Aloha.activeEditable.obj[0].focus();
+            } else if (typeof (this.currentWindow.document.activeElement as HTMLElement)?.focus === 'function') {
+                (this.currentWindow.document.activeElement as HTMLElement).focus();
+            } else {
+                this.currentWindow.focus();
+            }
+        }, 10);
     }
 
     public registerComponent(slot: string, component: AlohaComponent): void {

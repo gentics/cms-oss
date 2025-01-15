@@ -801,6 +801,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             )
                 .then(updatedItems => {
                     this.item = updatedItems.find(item => item.id === this.item.id);
+                    this.item$.next(this.item);
                     this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
                 });
@@ -815,6 +816,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         )
             .then(updatedItem => {
                 this.item = updatedItem;
+                this.item$.next(this.item);
                 this.itemChange.emit(this.item);
                 this.changeDetector.markForCheck();
             });

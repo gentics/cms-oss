@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue with custom editors not loading correctly, when the editor URL contained escapable characters (such as spaces).

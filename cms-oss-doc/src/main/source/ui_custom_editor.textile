@@ -1,0 +1,264 @@
+h2. Custom Tag- & Property-Editor
+
+Guide for how to implement custom tag- and property-editors for the UI
+
+endprologue.
+
+h3. Introduction
+
+While Constructs are versatile and allow for custom data storage and input for users,
+some data needs special display or input methods.
+
+For example, storing a location.
+This can be done by storing the geo-coordinates in the tag as coordinates as text inputs,
+but a user will have to input them into text boxes in a specific format.
+This is doable, but prone to erronous inputs and is not a great user experience.
+A better approach would be to use an embeded Map (like OpenStreetView), to let the user pick it directly in the CMS.
+
+For usecases like these, constructs can define a custom tag-editor, to handle all of that behaviour
+and to create a satisfactory user experience.
+
+h3. Differences
+
+There are two possible ways to provide custom logic in this manner:
+Handling the whole tag-fill of a construct (tag-editor), or only of single tag-part (property-editor).
+
+A custom propery-editor is the simpler and smaller version of the two, and is responsible to manage a single value of a tag-part.
+On the other hand, a custom tag-editor, replaces the entire tag-fill and has to manage the entirety of the construct.
+
+h3. Limitations
+
+Custom Editors are included in a iframe, and need to be accessible from within the CMS.
+Therefore it's best advised to put it into a devtool-package under @files-internal@.
+
+Additionally, due to how iframes are handled in browsers, usages like dropdowns, modals, and other site-wide positioned elements,
+do not work as one might expect.
+It is advised to not rely on these at all, as workarounds usually only cause problems.
+
+h3. Implementation
+
+h4. Setup Typings & Building
+
+Unless you wish to not use TypeScript or building for your editor for some reason,
+you are strongly advised to setup at the very least a minimal build (for example @parcel@) to catch errors
+and potential type/api changes before deploying them.
+
+# Setup the @gentics namespace/registry for npm
+
+    ** Add the following to the @.npmrc@ file (create this file if not present):
+
+bc. @gentics:registry=https://repo.gentics.com/repository/npm-products/
+
+# Install the @@gentics/cms-integration-api-models@ package via @npm@
+
+# Setup the types
+Define the needed window-types with a type-definition file: @editor.d.ts@
+
+bc..
+import { WindowWithCustomTagPropertyEditor, WindowWithCustomTagEditor } from '@gentics/cms-integration-api-models';
+
+declare global {
+    interface Window extends WindowWithCustomTagEditor, WindowWithCustomTagPropertyEditor {}
+}
+p.
+
+With basic typing setup complete, you're all set to develop your own editor.
+
+h4. Example Template
+
+bc..
+<html>
+    <body>
+        <main>
+            <h1 class="title"></h1>
+            <label>Input
+                <input type="text" />
+            </label>
+        </main>
+    </body>
+</html>
+p.
+
+h4. Example Tag-Editor Implementation
+
+bc..
+import { CustomTagEditor, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty } from '@gentics/cms-models';
+import { MyCustomEditor } from './custom-editor';
+
+const PROPERTY_KEYWORD_TO_CHANGE = 'examplePart';
+
+// For `MyCustomEditor`, see section "Example Size handling"
+class MyCustomTagEditor extends MyCustomEditor implements CustomTagEditor {
+
+    private changeFn?: TagChangedFn;
+    private tag?: EditableTag;
+    private context?: TagEditorContext;
+
+    private input?: HTMLInputElement | null;
+    private deleteButton?: HTMLButtonElement | null;
+
+    editTagLive(tag: EditableTag, context: TagEditorContext, onChangeFn: TagChangedFn): void {
+        this.tag = tag;
+        this.context = context;
+        this.changeFn = onChangeFn;
+
+        this.initialize();
+    }
+
+    private initialize() {
+        const title = document.querySelector('.title');
+        if (title != null) {
+            title.textContent = 'Custom Tag Editor';
+        }
+
+        this.input = document.querySelector('input');
+        this.deleteButton = document.querySelector('button.delete-button');
+        const prop: StringTagPartProperty | undefined = this.tag?.properties?.[PROPERTY_KEYWORD_TO_CHANGE] as any;
+
+        if (this.input != null) {
+            this.input.value = prop?.stringValue || '';
+
+            if (this.context?.readOnly) {
+                this.input.setAttribute('readonly', 'readonly');
+            } else {
+                // Add a event listener to detect changes and forward the change to the tag-editor
+                this.input.addEventListener('change', () => {
+                    if (this.changeFn == null || prop == null) {
+                        return;
+                    }
+
+                    prop.stringValue = this.input?.value;
+
+                    // This example assumes that the property is a String-Part
+                    this.changeFn({
+                        [PROPERTY_KEYWORD_TO_CHANGE]: prop,
+                    });
+                });
+            }
+        }
+
+        // Hide the delete button when it's not allowed
+        if (this.deleteButton != null && !this.context?.withDelete) {
+            this.deleteButton.classList.add('hidden');
+        }
+    }
+}
+
+// Create your editor
+const editor = new MyCustomTagEditor();
+
+// Register your editor
+window.GcmsCustomTagEditor = editor;
+p.
+
+h4. Example Property-Editor Implementation
+
+bc..
+import { CustomTagPropertyEditor, TagEditorContext, TagPropertiesChangedFn } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPart, TagPartProperty, TagPropertyMap } from '@gentics/cms-models';
+import { MyCustomEditor } from './custom-editor';
+
+// For `MyCustomEditor`, see section "Example Size handling"
+class MyCustomPropertyEditor extends MyCustomEditor implements CustomTagPropertyEditor {
+
+    private part?: TagPart;
+    private property?: StringTagPartProperty;
+    private changeFn?: TagPropertiesChangedFn;
+    private input?: HTMLInputElement | null;
+
+    initTagPropertyEditor(tagPart: TagPart, _tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
+        this.part = tagPart;
+        // This example assumes that the property is a String-Part
+        this.property = tagProperty as any;
+        this.input = document.querySelector('input');
+
+        const title = document.querySelector('.title');
+        if (title != null) {
+            title.textContent = 'Custom Property Editor';
+        }
+
+        if (this.input != null) {
+            this.input.value = this.property?.stringValue || '';
+
+            if (context.readOnly) {
+                // If it's read only, then we simply disable the input
+                this.input.setAttribute('disabled', 'disabled');
+            } else {
+                // Add a event listener to detect changes and forward the change to the tag-editor
+                this.input.addEventListener('change', () => {
+                    if (this.changeFn == null) {
+                        return;
+                    }
+
+                    if (this.property == null || this.part == null) {
+                        return;
+                    }
+
+                    this.property.stringValue = this.input?.value;
+
+                    this.changeFn({
+                        [this.part.keyword]: this.property,
+                    });
+                });
+            }
+        }
+    }
+
+    registerOnChange(fn: TagPropertiesChangedFn): void {
+        this.changeFn = fn;
+    }
+
+    writeChangedValues(values: Partial<TagPropertyMap>): void {
+        if (this.part == null || values?.[this.part.keyword] == null) {
+            return;
+        }
+
+        // The tag-editor or another property-editor has changed our value,
+        // therefore we have to update our value in this editor as well.
+        // This example assumes that the property is a String-Part
+        this.property = values[this.part.keyword] as any;
+
+        if (this.input != null) {
+            this.input.value = this.property?.stringValue || '';
+        }
+    }
+}
+
+// Create your editor
+const editor = new MyCustomPropertyEditor();
+
+// Register your editor
+window.GcmsCustomTagPropertyEditor = editor;
+p.
+
+h4. Example Size handling
+
+bc..
+import { CustomEditor, CustomEditorSizeChangedFn } from '@gentics/cms-integration-api-models';
+
+export abstract class MyCustomEditor implements CustomEditor {
+
+    private sizeChangeCb?: CustomEditorSizeChangedFn;
+
+    registerOnSizeChange(fn: CustomEditorSizeChangedFn): void {
+        this.sizeChangeCb = fn;
+        this.updateSize();
+    }
+
+    updateSize(): void {
+        // Return without change fn
+        if (this.sizeChangeCb == null) {
+            return;
+        }
+
+        // This will tell the UI how big your editor is, to properly place it
+        // and reserve space for it.
+        // In this example, it'll always be 300x50
+        this.sizeChangeCb({
+            width: 300,
+            height: 150,
+        });
+    }
+}
+p.

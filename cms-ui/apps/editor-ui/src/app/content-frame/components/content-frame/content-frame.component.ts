@@ -493,7 +493,10 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
             this.masterFrameLoaded = true;
             this.windowLoaded = true;
-            this.reloadPageConstructs();
+
+            if (this.currentItem?.type === 'page') {
+                this.reloadPageConstructs();
+            }
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.
             if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {

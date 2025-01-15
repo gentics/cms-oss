@@ -117,10 +117,7 @@ export class AlohaAttributeButtonRendererComponent
                     return;
                 }
                 console.error(err);
-            })
-            .finally(() => {
-                this.aloha.restoreSelection();
-            })
+            });
     }
 
     protected override onValueChange(): void {

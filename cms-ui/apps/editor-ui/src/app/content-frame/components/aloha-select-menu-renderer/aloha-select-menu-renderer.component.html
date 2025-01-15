@@ -7,9 +7,10 @@
     [class.has-right-icons]="hasRightIcon"
 >
     <div class="select-menu-entries-container">
-        <div
+        <button
             *ngFor="let entry of (settings?.options || [])"
             class="select-menu-entry"
+            tabindex="0"
             [class.multi-step-entry]="entry.isMultiStep"
             [class.active]="entry.id === value"
             (click)="handleOptionClick(entry)"
@@ -25,7 +26,7 @@
                     <icon>chevron_right</icon>
                 </div>
             </ng-container>
-        </div>
+        </button>
     </div>
 
     <div #nextStep class="next-step" [class.with-confirm]="activeMultiStep?.multiStepContext?.requiresConfirm || componentRequiresConfirm">

@@ -492,7 +492,6 @@ The URLs to various parts of the CMS have been changed (shortened), and some par
 | Gentics CMS JS API        | @/[build-timestamp]/gcnjsapi/...@    | @/gcnjsapi/[build-timestamp]/...@    |
 | REST API                  | @/rest/...@                          | @/rest/...@                          |
 | JMX Monitoring API        | @/jmx/...@                           | @/jmx/...@                           |
-| Activation Service        | @/activation@                        | @/activation/...@                    |
 | Keycloak configuration    | @/customer-config/config/keycloak.json@           | @/ui-conf/keycloak.json@             |
 | UI Overrides              | @/customer-config/config/ui-overrides.json@       | @/ui-conf/ui-overrides.json@         |
 | Form Generator Overrides  | @/customer-config/config/config-override.json@    | @/ui-conf/config-override.json@      |

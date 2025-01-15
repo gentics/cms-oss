@@ -1294,10 +1294,13 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			// remove the folders with insufficient permission
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
+				boolean multiChanneling = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING);
+
 				for (Iterator<com.gentics.contentnode.object.Folder> i = folders.iterator(); i.hasNext(); ) {
 					com.gentics.contentnode.object.Folder folder = i.next();
+					boolean skipChannel = !multiChanneling && folder.getChannel() != null;
 
-					if (!PermHandler.ObjectPermission.view.checkObject(folder)) {
+					if (skipChannel || !ObjectPermission.view.checkObject(folder)) {
 						i.remove();
 					}
 				}

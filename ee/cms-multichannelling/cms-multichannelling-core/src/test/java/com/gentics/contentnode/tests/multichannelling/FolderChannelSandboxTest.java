@@ -35,6 +35,7 @@ import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Folder tests for multichannelling support.
@@ -705,9 +706,8 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 	}
 
 	@Test
+	@GCNFeature(unset = Feature.MULTICHANNELLING)
 	public void testListNodes() throws Exception {
-		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature(Feature.MULTICHANNELLING.toString().toLowerCase(), false);
-
 		try (Trx trx = new Trx(Trx.supply(t -> t.getObject(SystemUser.class, 1)))) {
 			FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 

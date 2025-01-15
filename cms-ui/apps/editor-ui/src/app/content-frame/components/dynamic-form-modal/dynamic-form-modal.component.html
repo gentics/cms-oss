@@ -2,15 +2,16 @@
     <h5>{{ configuration?.title | i18n }}</h5>
 </div>
 
-<div class="modal-content">
+<div #content class="modal-content">
     <div class="form-wrapper" [formGroup]="control">
-        <ng-container *ngFor="let ctl of (configuration.controls | gtxEntries)">
+        <ng-container *ngFor="let ctl of (configuration.controls | gtxEntries); let index = index">
             <gtx-aloha-component-renderer
                 class="dynamic-control"
                 [renderContext]="RENDERING_CONTEXT_MODAL"
                 [type]="configuration.controls[ctl.key].type"
                 [settings]="configuration.controls[ctl.key].options"
                 [formControlName]="ctl.key"
+                (initialized)="index === 0 && focusFirstElement()"
             ></gtx-aloha-component-renderer>
         </ng-container>
     </div>

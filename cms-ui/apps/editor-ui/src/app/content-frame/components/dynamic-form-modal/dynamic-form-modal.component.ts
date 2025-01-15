@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { RENDERING_CONTEXT_MODAL } from '@editor-ui/app/common/models';
 import { DynamicFormModalConfiguration } from '@gentics/aloha-models';
 import { BaseModal, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { applyControl } from '../../utils';
+import { applyControl, focusFirst } from '../../utils';
 
 @Component({
     selector: 'gtx-dynamic-form-modal',
@@ -18,6 +18,9 @@ export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestr
 
     @Input()
     public configuration: DynamicFormModalConfiguration<any>;
+
+    @ViewChild('content')
+    public contentEl: ElementRef<HTMLElement>;
 
     public control: FormGroup<FormProperties<T>>;
 
@@ -41,6 +44,12 @@ export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestr
 
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    public focusFirstElement(): void {
+        setTimeout(() => {
+            focusFirst(this.contentEl.nativeElement);
+        }, 100);
     }
 
     public handleConfirmClick(): void {

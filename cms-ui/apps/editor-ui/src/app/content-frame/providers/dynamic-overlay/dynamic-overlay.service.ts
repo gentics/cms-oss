@@ -73,6 +73,7 @@ export class DynamicOverlayService {
                 // Rest will be handled by the on-destroy handler above
                 dropdownRef.destroy();
             }
+            this.aloha.restoreSelection();
         };
 
         const ctl: OverlayElementControl<T> = {
@@ -118,6 +119,7 @@ export class DynamicOverlayService {
             closeOnOverlayClick: configuration.closeOnOverlayClick,
             onClose: () => {
                 open = false;
+                this.aloha.restoreSelection();
             },
         }, {
             configuration,
@@ -135,6 +137,11 @@ export class DynamicOverlayService {
             this.openOverlays.push(ctl);
 
             return ctl;
+        }).catch(err => {
+            if (err instanceof ModalCloseError) {
+                this.aloha.restoreSelection();
+            }
+            throw err;
         });
     }
 }

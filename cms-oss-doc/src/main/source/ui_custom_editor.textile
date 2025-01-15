@@ -6,7 +6,7 @@ endprologue.
 
 h3. Introduction
 
-While Constructs are versitile and allow for custom data storage and input for users,
+While Constructs are versatile and allow for custom data storage and input for users,
 some data needs special display or input methods.
 
 For example, storing a location.
@@ -18,7 +18,7 @@ A better approach would be to use an embeded Map (like OpenStreetView), to let t
 For usecases like these, constructs can define a custom tag-editor, to handle all of that behaviour
 and to create a satisfactory user experience.
 
-h3. Differeces
+h3. Differences
 
 There are two possible ways to provide custom logic in this manner:
 Handling the whole tag-fill of a construct (tag-editor), or only of single tag-part (property-editor).

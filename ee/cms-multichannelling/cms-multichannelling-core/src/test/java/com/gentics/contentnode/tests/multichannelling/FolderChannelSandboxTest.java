@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.factory.Trx.supply;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -9,16 +10,17 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.*;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.object.ContentLanguage;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.FolderListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -33,6 +35,7 @@ import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Folder tests for multichannelling support.
@@ -700,5 +703,27 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		f.getChannelSet();
 		f.save();
 		assertFalse("Channelset must not be empty", f.getChannelSet().isEmpty());
+	}
+
+	@Test
+	@GCNFeature(unset = Feature.MULTICHANNELLING)
+	public void testListNodes() throws Exception {
+		try (Trx trx = new Trx(Trx.supply(t -> t.getObject(SystemUser.class, 1)))) {
+			FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
+
+			LegacyFolderListResponse response = folderResource.getFolders(
+				"0",
+				Collections.emptyList(),
+				false,
+				new InFolderParameterBean(),
+				new FolderListParameterBean(),
+				new LegacyFilterParameterBean(),
+				new LegacySortParameterBean(),
+				new LegacyPagingParameterBean(),
+				new EditableParameterBean(),
+				new WastebinParameterBean());
+
+			assertResponseCode(response);
+		}
 	}
 }

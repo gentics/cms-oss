@@ -193,7 +193,7 @@ public class ContentStagingPublishedStatusTest extends AbstractContentStagingTes
 		consume(p -> p.delete(true), page);
 
 		// import from content package
-		supply(() -> new ContentStagingResourceImpl().importIntoCms("MyPackage", 10000));
+		supply(() -> new ContentStagingResourceImpl().importIntoCms("MyPackage", 10000, true));
 
 		// reload page
 		page = supply(t -> t.getObject(Page.class, pageGlobalId));

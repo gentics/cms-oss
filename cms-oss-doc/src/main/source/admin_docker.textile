@@ -26,7 +26,7 @@ h4. Environment variables
 | JAVA_XMS                | 1024m        | Initial JVM memory allocation pool                        |
 | JAVA_XMX                | 1024m        | Maximum JVM memory allocation pool                        |
 | JAVA_GC_OPTS            | -XX:+PrintGC | JVM GC settings                                           |
-| LICENSEKEY              | 1111-1111-1111-1111-1111-1111-1111-1111  | GCMS License key              |
+| LICENSEKEY              | (empty)      | GCMS License key              |
 | LICENSEKEY_PATH         | /cms/keys/license.key     | Path to license key file in the container |
 | PRIVATEKEY_PATH         | /cms/keys/private-key.jwk | Path to the private key of the CMS in the container |
 | NODE_DB_HOST            | localhost    | MySQL host                                                |
@@ -36,14 +36,20 @@ h4. Environment variables
 | NODE_DB_NAME            | node_utf8    | MySQL database name                                       |
 | NODE_DB_CONNECT_TIMEOUT | 60           | Time in seconds to wait for the database to be reachable before exiting with an error |
 | NODE_USER_PASSWORD      |              | Password to set for the node CMS user                     |
-| APACHE_PORT             | 80           | Port of the internal Apache Http server                   |
-| APACHE_LOG_PREFIX       |              | Optional prefix for log lines of the internal Apache Http Server |
-| CN_EXTERNAL_SERVER      |              | Optional base URL for accessing the CMS. Needed for correctly generating download URLs for form data exports (e.g. @https://cms.domain.com@) |
 
 h4. Volumes
 
-|_.Volume path |_.Description             |
-| /Node/node   | Binary database files and files that should be persisted, should be mount as named Docker volume |
+|_.Volume path            |_.Description             |
+| /cms/keys               | License key and the private used by the CMS to issue JWTs |
+| /cms/data               | Uploaded binary files. |
+| /cms/cache              | Filesystem cache. |
+| /cms/logs               | Log files. |
+| /cms/publish            | Base directory for publishing to filesystem. |
+| /cms/packages           | Devtools packages. |
+| /cms/content-packages   | Content packages. |
+| /cms/scheduler-commands | Shell scripts for execution by the scheduler. |
+| /cms/libs               | Additional library JAR files. |
+| /cms/classes            | Classes replacing ones in the server.jar archive. |
 
 h3. Kubernetes / Openshift
 
@@ -54,22 +60,3 @@ Note: It might be necessary to configure the port of the internal Apache Http Se
 h3. Updating
 
 Updating to a newer version normally doesn't require any special actions besides changing the image tag.
-
-h4. From 5.35.x to 5.36.x
-
-When updating from a version older than 5.36.x, you have to consider the following things:
-
-* The group for writable folders has changed to 0 (root) in order to support Openshift.
-* sudo has been removed. Please change any custom scripts or scheduler tasks to not use sudo anymore.
-* cron has been replaced by the more container friendly "supercronic"
-* All processes are running with the "node" user now. Apache 2 was previously executed with the "www-data" user.
-* The container can be run with any User ID for the "node" user now (Openshift support)
-
-If the container runs with a different User ID after updating, please run the following commands:
-
-<shell>
-	chown -R 1000:0 /Node/node
-	chmod -R u+rwX,g+rwX,o-w /Node/node
-</shell>
-
-If you also have mounted other volumes than /Node/node (e.g.: /var/log/, ...), the above also has to be done for these.

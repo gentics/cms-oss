@@ -1,6 +1,6 @@
 h2. Usage of OpenAPI v3.0 specification for Gentics CMS REST API
 
-It is now possible to generate REST clients for Gentics CMS REST API using the "OpenAPI":https://github.com/OAI/OpenAPI-Specification specification. As the specification is generated directly from the API provided by Gentics CMS, the possibilities of the clients, generated upon the specification, are identical to the ones from the "REST API":rest_general.html.
+It is now possible to generate REST clients for Gentics CMS REST API using the "OpenAPI":https://github.com/OAI/OpenAPI-Specification specification. As the specification is generated directly from the API provided by Gentics CMS, the possibilities of the clients, generated upon the specification, are identical to the ones from the "REST API":https://www.gentics.com/Content.Node/guides/restapi/index.html.
 
 endprologue.
 

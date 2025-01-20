@@ -15,8 +15,8 @@ h4. Download the package
 
 Download the Gentics CMS JAR from our Maven repository:
 
-# OSS version: https://maven.gentics.com/maven2/com/gentics/cms-oss/cms-oss-server
-# Enterprise version: https://maven.gentics.com/maven2/com/gentics/cms/cms-server
+# OSS version: https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms-oss/cms-oss-server/
+# Enterprise version: https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms/cms-server/
 
 Save the JAR file under /cms.
 

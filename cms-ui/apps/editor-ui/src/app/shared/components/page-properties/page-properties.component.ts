@@ -28,7 +28,7 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { forkJoin } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
 import { numberBetween } from '../../../common/utils/custom-validators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
@@ -153,7 +153,7 @@ export class PagePropertiesComponent
             }
         }));
 
-        this.subscriptions.push(forkJoin([
+        this.subscriptions.push(combineLatest([
             // Here we don't need to load any template, we just need to know if any are available.
             this.client.node.listTemplates(this.nodeId, { pageSize: 0 }),
             this.permissions.forFolder(this.folderId, this.nodeId),

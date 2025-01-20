@@ -28,7 +28,7 @@ public class SchedulerCommandSanitationTest {
 
 	@Parameters(name = "{index}: original {0}, sanitized {1}")
 	public static Collection<Object[]> data() {
-		String commandPrefix = ConfigurationValue.SCHEDULER_COMNANDS_PATH.get();
+		String commandPrefix = ConfigurationValue.SCHEDULER_COMMANDS_PATH.get();
 		Collection<Object[]> data = new ArrayList<>();
 
 		data.add(new Object[] { "../../bin/rm -Rf /", commandPrefix + "1....binrm-Rf"});

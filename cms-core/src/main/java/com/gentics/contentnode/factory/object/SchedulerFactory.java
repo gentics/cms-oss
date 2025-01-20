@@ -990,7 +990,7 @@ public class SchedulerFactory extends AbstractFactory {
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.INSECURE_SCHEDULER_COMMAND)) {
 				return getCommand();
 			} else {
-				return ConfigurationValue.SCHEDULER_COMNANDS_PATH.get() + FileUtil.sanitizeName(getCommand(), Collections.emptyMap(), "", null);
+				return ConfigurationValue.SCHEDULER_COMMANDS_PATH.get() + FileUtil.sanitizeName(getCommand(), Collections.emptyMap(), "", null);
 			}
 		}
 
@@ -1035,7 +1035,7 @@ public class SchedulerFactory extends AbstractFactory {
 
 				if (!commandFile.exists() || !commandFile.isFile() || !commandFile.canExecute()) {
 					throw new RestMappedException(I18NHelper.get("scheduler_task.command.invalid.nofile", getCommand(),
-							ConfigurationValue.SCHEDULER_COMNANDS_PATH.get())).setMessageType(Message.Type.CRITICAL)
+							ConfigurationValue.SCHEDULER_COMMANDS_PATH.get())).setMessageType(Message.Type.CRITICAL)
 									.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 				}
 			}

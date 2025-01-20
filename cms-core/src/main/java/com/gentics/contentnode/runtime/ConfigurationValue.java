@@ -89,7 +89,7 @@ public enum ConfigurationValue {
 	/**
 	 * Path for scheduler commands
 	 */
-	SCHEDULER_COMNANDS_PATH("SCHEDULER_COMNANDS_PATH", "com.gentics.contentnode.scheduler_commands.path", () -> "scheduler-commands", path -> {
+	SCHEDULER_COMMANDS_PATH("SCHEDULER_COMMANDS_PATH", "com.gentics.contentnode.scheduler_commands.path", () -> "scheduler-commands", path -> {
 		File dir = new File(path);
 		return StringUtils.appendIfMissing(dir.getAbsolutePath(), "/");
 	}),

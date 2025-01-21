@@ -13,6 +13,7 @@ import {
     PageCreateRequest,
     PagingSortOrder,
     Schedule,
+    ScheduleTask,
     ScheduleType,
     Template,
     User,
@@ -33,6 +34,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_TASK,
     IMPORT_TYPE_USER,
     ImportData,
     ITEM_TYPE_FILE,
@@ -41,6 +43,7 @@ import {
     ITEM_TYPE_PAGE,
     NodeImportData,
     PageImportData,
+    ScheduleTaskImportData,
     TestSize,
     UserImportData,
 } from './common';
@@ -260,6 +263,9 @@ export class EntityImporter {
         // For cleanups, we always create a new client
         this.client = await createClient({ log: this.options?.logRequests });
 
+        // cleanup entities, which were created in tests before
+        await this.cleanupEntities();
+
         // Reset the entity-map
         this.entityMap = {
             ...this.templates,
@@ -407,6 +413,7 @@ export class EntityImporter {
     public get(data: FileImportData): File | null;
     public get(data: GroupImportData): Group | null;
     public get(data: UserImportData): User | null;
+    public get(data: ScheduleTaskImportData): ScheduleTask | null;
     /**
      * Gets the resolved/imported entity based on the Import-ID.
      * Overloads are to get the correct CMS item type based on the import-data type.
@@ -716,6 +723,22 @@ export class EntityImporter {
         }
     }
 
+    private async importTask(
+        data: ScheduleTaskImportData,
+    ): Promise<ScheduleTask | null> {
+        const { ...reqData } = data;
+
+        if (this.options?.logImports) {
+            cy.log(`Importing scheduler task ${data[IMPORT_ID]}`, data);
+        }
+        const created = (await this.client.schedulerTask.create(reqData).send()).item;
+        if (this.options?.logImports) {
+            cy.log(`Imported scheduler task ${data[IMPORT_ID]} -> ${created.id}`);
+        }
+
+        return created;
+    }
+
     private async getLanguageMapping(): Promise<Record<string, number>> {
         const res = await this.client.language.list().send();
         const mapping: Record<string, number> = {};
@@ -765,8 +788,26 @@ export class EntityImporter {
             case IMPORT_TYPE_USER:
                 return this.importUser(entity as UserImportData);
 
+            case IMPORT_TYPE_TASK:
+                return this.importTask(entity as ScheduleTaskImportData);
+
             default:
                 return Promise.resolve(null);
+        }
+    }
+
+    private async cleanupEntities(): Promise<void> {
+        await this.cleanupScheduleTasks();
+    }
+
+    private async cleanupScheduleTasks(): Promise<void> {
+        const tasks = (await this.client.schedulerTask.list().send()).items;
+        for (const task of tasks) {
+            // we remove the non-internal tasks
+            if (task.internal) {
+                continue;
+            }
+            await this.client.schedulerTask.delete(task.id).send();
         }
     }
 

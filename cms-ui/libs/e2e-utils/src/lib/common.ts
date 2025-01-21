@@ -9,6 +9,7 @@ import {
     Page,
     PageCreateRequest,
     PermissionInfo,
+    ScheduleTaskCreateRequest,
 } from '@gentics/cms-models';
 
 export interface LoginInformation {
@@ -58,6 +59,8 @@ export const IMPORT_TYPE_NODE = 'node';
 export const IMPORT_TYPE_USER = 'user';
 export const IMPORT_TYPE_GROUP = 'group';
 
+export const IMPORT_TYPE_TASK = 'task';
+
 export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
 export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
@@ -67,7 +70,7 @@ export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
 
 export type ItemType = typeof ITEM_TYPE_FOLDER | typeof ITEM_TYPE_PAGE | typeof ITEM_TYPE_FILE | typeof ITEM_TYPE_IMAGE | typeof ITEM_TYPE_FORM;
-export type ImportType = ItemType | typeof IMPORT_TYPE_NODE | typeof IMPORT_TYPE_USER | typeof IMPORT_TYPE_GROUP;
+export type ImportType = ItemType | typeof IMPORT_TYPE_NODE | typeof IMPORT_TYPE_USER | typeof IMPORT_TYPE_GROUP | typeof IMPORT_TYPE_TASK;
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -313,4 +316,8 @@ export interface UserImportData extends GroupUserCreateRequest, ImportData {
 
     /** The groups `IMPORT_ID` value */
     group: string;
+}
+
+export interface ScheduleTaskImportData extends ScheduleTaskCreateRequest, ImportData {
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_TASK;
 }

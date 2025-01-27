@@ -10,12 +10,24 @@ import { GcmsPermission } from './permissions';
  * Privileges assignable to roles.
  */
 export enum GcmsRolePrivilege {
+    /** @deprecated Use {@link GcmsRolePrivilege.READ_ITEMS} instead */
     readitems = 'readitems',
+    READ_ITEMS = 'readitems',
+    /** @deprecated Use {@link GcmsRolePrivilege.CREATE_ITEMS} instead */
     createitems = 'createitems',
+    CREATE_ITEMS = 'createitems',
+    /** @deprecated Use {@link GcmsRolePrivilege.UPDATE_ITEMS} instead */
     updateitems = 'updateitems',
+    UPDATE_ITEMS = 'updateitems',
+    /** @deprecated Use {@link GcmsRolePrivilege.DELETE_ITEMS} instead */
     deleteitems = 'deleteitems',
+    DELETE_ITEMS = 'deleteitems',
+    /** @deprecated Use {@link GcmsRolePrivilege.PUBLISH_PAGES} instead */
     publishpages = 'publishpages',
+    PUBLISH_PAGES = 'publishpages',
+    /** @deprecated Use {@link GcmsRolePrivilege.TRANSLATE_PAGES} instead */
     translatepages = 'translatepages',
+    TRANSLATE_PAGES = 'translatepages',
 }
 
 /**

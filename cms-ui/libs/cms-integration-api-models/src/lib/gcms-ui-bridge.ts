@@ -101,6 +101,11 @@ export class ModalCloseError extends Error {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function wasClosedByUser(error: any): error is ModalCloseError {
+    return error != null && error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR;
+}
+
 /**
  * Used to interact with the GCMS UI from editor IFrames.
  *

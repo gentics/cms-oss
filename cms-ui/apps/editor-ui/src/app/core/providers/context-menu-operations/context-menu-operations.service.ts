@@ -23,7 +23,7 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { InitializableServiceBase } from '@gentics/cms-components';
-import { EditMode, ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { EditMode, ModalCloseError, ModalClosingReason, RepositoryBrowserOptions, wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
     CmsFormData,
@@ -168,7 +168,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             try {
                 await modal.open();
             } catch (err) {
-                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                if (!wasClosedByUser(err)) {
                     throw err;
                 }
             }
@@ -184,7 +184,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 startFolder: folderId,
             });
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 throw err;
             }
         }
@@ -217,7 +217,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
             await this.folderActions.getTemplates(folderId, true);
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 throw err;
             }
         }
@@ -337,6 +337,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                         await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
                         return removedItemIds;
                     });
+            })
+            .catch(err => {
+                if (wasClosedByUser(err)) {
+                    return [];
+                }
+                this.errorHandler.catch(err);
+                throw err;
             });
     }
 
@@ -488,7 +495,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 this.folderActions.refreshList('form');
             })
             .catch(err => {
-                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                if (!wasClosedByUser(err)) {
                     throw err;
                 }
             });
@@ -498,14 +505,17 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Publish pages (and possibly their language variants) and
      * then clear the current pages selection.
      */
-    async publishPages(pages: Page[], publishLanguageVariants: boolean = false): Promise<number[]> {
+    async publishPages(pages: Page[], publishLanguageVariants: boolean = false): Promise<void> {
         const pagesNotDeleted = pages.filter(page => !this.isDeleted(page));
-        const pagesToPublish = await this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants)
-        const ids = await this.publishPagesWithTimeManagementCheck(pagesToPublish);
-        const pageLanguages = ids.map(id => this.entityResolver.getPage(id).language);
-        await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
-        await this.folderActions.refreshList('page', pageLanguages);
-        return ids;
+        try {
+            const pagesToPublish = await this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants)
+            const ids = await this.publishPagesWithTimeManagementCheck(pagesToPublish);
+            const pageLanguages = ids.map(id => this.entityResolver.getPage(id).language);
+            await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
+            await this.folderActions.refreshList('page', pageLanguages);
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 
     /**
@@ -556,7 +566,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     /**
      * Take pages (and possibly their language variants) offline.
      */
-    async takePagesOffline(pages: Page[]): Promise<any> {
+    async takePagesOffline(pages: Page[]): Promise<void> {
         try {
             const pagesToTakeOffline = await this.decisionModals.selectPagesToTakeOffline(pages);
             const response = await this.folderActions.takePagesOffline(pagesToTakeOffline);
@@ -722,7 +732,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 }
             })
             .catch(err => {
-                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                if (!wasClosedByUser(err)) {
                     this.errorHandler.catch(err);
                 }
             });
@@ -743,7 +753,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .then(modal => modal.open())
             .then((request: InheritanceRequest) => this.folderActions.updateItemInheritance(item.type, item.id, request))
             .catch(err => {
-                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                if (!wasClosedByUser(err)) {
                     this.errorHandler.catch(err);
                 }
             });
@@ -758,7 +768,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         try {
             syncResponse = await syncModal.open();
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 throw err;
             }
             return;
@@ -782,7 +792,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         try {
             depResponse = await depModal.open();
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 throw err;
             }
             return;

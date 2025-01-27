@@ -1,0 +1,1 @@
+Editor User Interface: The permission checks for publishing, un-publishing, and deleting pages have been fixed. The interface will now only use available languages, and will ignore pages where permissions aren't granted.

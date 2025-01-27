@@ -5,6 +5,8 @@ import {
     File,
     Folder,
     Form,
+    GcmsPermission,
+    GcmsRolePrivilege,
     Image,
     InheritableItem,
     Node,
@@ -12,7 +14,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { switchMap, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import {
     FormLanguageVariantMap,
@@ -26,7 +28,7 @@ import { PublishPagesModalComponent } from '../../../shared/components/publish-p
 import { TakePagesOfflineModal } from '../../../shared/components/take-pages-offline-modal/take-pages-offline-modal.component';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { I18nService } from '../i18n/i18n.service';
-import { LocalizationMap, LocalizationsService } from '../localizations/localizations.service';
+import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
 
 /**
@@ -182,22 +184,37 @@ export class DecisionModalsService {
      *
      * Returns a promise which resolves to a list of page ids.
      */
-    selectPagesToPublish(pages: Page[], publishLanguageVariants: boolean = false): Promise<Page[]> {
-        const selectedLanguages = Array.from( new Set( pages.map( page => page.language ) ) );
-        const pagesToPublish = pages.filter(page => !page.inherited);
-        const pageLanguageVariants = this.createPageLanguageVariantsMap(pagesToPublish);
+    async selectPagesToPublish(pages: Page[], publishLanguageVariants: boolean = false): Promise<Page[]> {
+        const data = this.getPermittedPageLanguages(pages, [GcmsPermission.EDIT, GcmsRolePrivilege.UPDATE_ITEMS]);
 
-        const injectedModalValues = {
-            pagesToPublish,
-            pageLanguageVariants,
-            publishLanguageVariants,
-        };
-        if ( selectedLanguages.length === 1 && !publishLanguageVariants) {
-            // In this case we are simply publish local items if only one kind of language selected
-            // in non variations publish mode, so we can go ahead and resolve without displaying a dialog.
-            return Promise.resolve(pagesToPublish);
+        // If the user has no permission to publish any page to begin with
+        if (data.pages.length === 0) {
+            return [];
         }
-        return this.modalService.fromComponent(PublishPagesModalComponent, null, injectedModalValues)
+
+        const langId = this.appState.now.folder.activeLanguage;
+        const currentLang = this.appState.now.entities.language[langId];
+
+        const pageLanguages = new Set<string>(data.pages.map(page => page.language));
+
+        // If we only want to publish pages in the current language,
+        // and all final pages have the correct language, then we can
+        // skip the modal and simply publish the expected variants.
+        if (
+            !publishLanguageVariants
+            && pageLanguages.size === 1
+            && pageLanguages.has(currentLang.code)
+        ) {
+            return Promise.resolve(data.pages);
+        }
+
+        // Show the modal to the user, so that they can select the variants they
+        // wish to publish manually.
+        return this.modalService.fromComponent(PublishPagesModalComponent, null, {
+            pages: data.pages,
+            variants: data.variants,
+            selectVariants: publishLanguageVariants,
+        })
             .then(modal => modal.open());
     }
 
@@ -208,21 +225,28 @@ export class DecisionModalsService {
      * Returns a promise which resolves to a list of page ids.
      */
     selectPagesToTakeOffline(pages: Page[]): Promise<number[]> {
-        const pagesToTakeOffline = pages.filter(page => !page.inherited);
+        const data = this.getPermittedPageLanguages(pages, [GcmsPermission.EDIT, GcmsRolePrivilege.UPDATE_ITEMS]);
 
-        const pageLanguageVariants = this.createPageLanguageVariantsMap(pagesToTakeOffline);
-        const anyPagesHaveMultipleLanguage = Object.keys(pageLanguageVariants)
-            .some(id => 1 < pageLanguageVariants[+id].length);
-        const injectedModalValues = {
-            pagesToTakeOffline,
-            pageLanguageVariants,
-        };
+        // If the user has no permission to un-publish any page to begin with
+        if (data.pages.length === 0) {
+            return Promise.resolve([]);
+        }
+
+        const pagesToTakeOffline = data.pages;
+
+        const anyPagesHaveMultipleLanguage = Object.values(data.variants)
+            .some(arr => arr.length > 1);
+
         if (!anyPagesHaveMultipleLanguage) {
             // In this case we are simply taking offline local items which do not have any other language
             // variations, so we can go ahead and resolve without displaying a dialog.
             return Promise.resolve(pagesToTakeOffline.map((page) => page.id));
         }
-        return this.modalService.fromComponent(TakePagesOfflineModal, null, injectedModalValues)
+
+        return this.modalService.fromComponent(TakePagesOfflineModal, null, {
+            pagesToTakeOffline,
+            pageLanguageVariants: data.variants,
+        })
             .then(modal => modal.open());
     }
 
@@ -231,23 +255,25 @@ export class DecisionModalsService {
      * and show a list of inherited items which can not be deleted.
      */
     selectItemsToDelete(items: InheritableItem[]): Promise<MultiDeleteResult> {
-
         // If there's no multichanneling enabled, we don't need any of this. Just simply delete the files
         if (!this.appState.now.features[Feature.MULTICHANNELLING]) {
+            const pages = items.filter(item => item.type === 'page') as Page[];
+            const pageData = this.getPermittedPageLanguages(pages, [GcmsPermission.DELETE_ITEMS]);
+
             return this.modalService.fromComponent(MultiDeleteModal, null, {
                 otherItems: items,
                 localizedItems: [],
                 inheritedItems: [],
                 itemLocalizations: {},
-                pageLanguageVariants: this.createPageLanguageVariantsMap(items),
+                pageLanguageVariants: pageData.variants,
                 formLanguageVariants: this.createFormLanguageVariantsMap(items),
             }).then(modal => modal.open());
         }
 
-        const inheritedItems = [] as InheritableItem[];
-        const localizedItems = [] as InheritableItem[];
-        const itemLocalizations = {} as LocalizationMap;
-        const otherItems = [] as InheritableItem[];
+        const inheritedItems: InheritableItem[] = [];
+        const localizedItems: InheritableItem[] = [];
+        const otherItems: InheritableItem[] = [];
+
         for (const item of items) {
             if (item.inherited) {
                 inheritedItems.push(item);
@@ -257,25 +283,27 @@ export class DecisionModalsService {
                 otherItems.push(item);
             }
         }
-        const pageLanguageVariants: PageLanguageVariantMap = this.createPageLanguageVariantsMap([...otherItems, ...localizedItems]);
+
+        const pages = [...otherItems, ...localizedItems].filter(item => item.type === 'page') as Page[];
+        const pageData = this.getPermittedPageLanguages(pages, [GcmsPermission.DELETE_ITEMS]);
         const formLanguageVariants: FormLanguageVariantMap = this.createFormLanguageVariantsMap([...otherItems]);
 
-        const injectedModalValues: any = {
-            otherItems,
-            localizedItems,
-            inheritedItems,
-            pageLanguageVariants,
-            formLanguageVariants,
-            itemLocalizations,
-        };
+        // Remove all pages which aren't allowed
+        const filteredOtherItems = otherItems.filter(item => item.type !== 'page' || pageData.pages.includes(item as Page));
 
-        return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form')).pipe(
-            switchMap((itemLocalizations)  => {
-                injectedModalValues.itemLocalizations = itemLocalizations;
-                return this.modalService.fromComponent(MultiDeleteModal, null, injectedModalValues)
-                    .then(modal => modal.open());
-            }),
-        ).toPromise();
+        return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form'))
+            .toPromise()
+            .then(itemLocalizations => {
+                return this.modalService.fromComponent(MultiDeleteModal, null, {
+                    otherItems: filteredOtherItems,
+                    localizedItems,
+                    inheritedItems,
+                    pageLanguageVariants: pageData.variants,
+                    formLanguageVariants,
+                    itemLocalizations: itemLocalizations,
+                });
+            })
+            .then(modal => modal.open());
     }
 
     /**
@@ -317,32 +345,88 @@ export class DecisionModalsService {
             .then(modal => modal.open());
     }
 
-    /**
-     * Given an array of items, this looks for the language variants for each page, and returns a map with
-     * the page id as a key, and an array of corresponding language variant pages as the value.
-     */
-    private createPageLanguageVariantsMap(items: InheritableItem[]): PageLanguageVariantMap {
-        const variantsPerPageId: PageLanguageVariantMap = {};
-        const pages = items.filter(item => item.type === 'page') as Page[];
-        for (const page of pages) {
-            // Create an array (Page[]) from an ID hash ({ [lang: number]: number })
-            const languageVariantsHash = page.languageVariants;
-            const languageVariantsArray = Object.keys(languageVariantsHash)
-                .map(languageIdAsString => Number(languageIdAsString))
-                .map(langId => {
-                    const pageOrId = page.languageVariants[langId];
-                    if (typeof pageOrId === 'number') {
-                        return this.entityResolver.getPage(pageOrId);
-                    } else {
-                        return pageOrId;
-                    }
-                })
-                .filter(page => !page.inherited);
-
-            // For nodes which do not have languages configured, use the page object
-            variantsPerPageId[page.id] = languageVariantsArray.length ? languageVariantsArray : [page];
+    private getPermittedPageLanguages(
+        pages: Page[],
+        permissions: (GcmsPermission | GcmsRolePrivilege)[],
+    ): {
+            languages: Set<string>,
+            pages: Page[],
+            variants: PageLanguageVariantMap,
         }
-        return variantsPerPageId;
+    {
+        const validPages: Page[] = [];
+        const variationMap: PageLanguageVariantMap = {};
+        const languages = new Set<string>();
+
+        for (const currentPage of pages) {
+            if (currentPage.inherited) {
+                continue;
+            }
+
+            const folderPermissions = this.appState.now.entities.folder[currentPage.folderId]?.permissionsMap;
+
+            // Check the general permissions
+            const hasGeneralPerm = permissions.some(perm => folderPermissions?.permissions?.[perm]);
+            if (!hasGeneralPerm) {
+                let hasValidLangPerm = false;
+
+                for (let langPage of (Object.values(currentPage.languageVariants) as Page[])) {
+                    if (typeof langPage === 'number') {
+                        langPage = this.entityResolver.getPage(langPage);
+                    }
+                    if (langPage == null || typeof langPage !== 'object') {
+                        continue;
+                    }
+
+                    // Check if there's any special role permissions
+                    const lang = langPage.language;
+                    const rolePerms = folderPermissions?.rolePermissions?.pageLanguages?.[lang];
+                    const hasRolePerm = permissions.some(perm => rolePerms?.[perm]);
+                    if (!hasRolePerm) {
+                        continue;
+                    }
+
+                    hasValidLangPerm = true;
+                    if (!variationMap[currentPage.id]) {
+                        variationMap[currentPage.id] = [];
+                    }
+                    variationMap[currentPage.id].push(langPage);
+                    languages.add(lang);
+                }
+
+                if (!hasValidLangPerm) {
+                    continue;
+                }
+            } else {
+                for (let langPage of (Object.values(currentPage.languageVariants) as Page[])) {
+                    if (typeof langPage === 'number') {
+                        langPage = this.entityResolver.getPage(langPage);
+                    }
+                    if (langPage == null || typeof langPage !== 'object') {
+                        continue;
+                    }
+                    if (!variationMap[currentPage.id]) {
+                        variationMap[currentPage.id] = [];
+                    }
+                    variationMap[currentPage.id].push(langPage);
+                    languages.add(langPage.language);
+                }
+            }
+
+            // Edge case, for when the user has no permissions for the `currentPage`,
+            // but for a language variant.
+            if (!variationMap[currentPage.id].includes(currentPage)) {
+                validPages.push(variationMap[currentPage.id][0]);
+            } else {
+                validPages.push(currentPage);
+            }
+        }
+
+        return {
+            languages: languages,
+            pages: validPages,
+            variants: variationMap,
+        };
     }
 
     private createFormLanguageVariantsMap(items: InheritableItem[]): FormLanguageVariantMap {

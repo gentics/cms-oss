@@ -24,7 +24,11 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
     styleUrls: ['./page-language-indicator.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: [
-        trigger('animNgForParent', [transition(':enter, :leave', [query('@animNgForChild', [animateChild()])])]),
+        trigger('animNgForParent', [
+            transition(':enter, :leave', [
+                query('@animNgForChild', [animateChild()], { optional: true }),
+            ]),
+        ]),
         trigger('animNgForChild', [
             transition('void => *', [
                 style({

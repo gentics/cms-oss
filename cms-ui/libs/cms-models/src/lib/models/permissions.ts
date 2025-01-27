@@ -262,7 +262,7 @@ export interface PagePermissions extends ItemPermissions {
     /** Permission to localize an inherited page */
     localize: boolean;
 
-    /** Permission to import pages */
+    /** Permission to publish pages */
     publish: boolean;
 
     /** Permission to delete the local version of an inherited page */

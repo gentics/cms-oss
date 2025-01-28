@@ -200,11 +200,13 @@ class MockI18nNotification { }
 @Pipe({ name: 'permissions' })
 class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
-        return {
+        const val = {
             ...getNoPermissions(),
             // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
-        } as any;
+        };
+        val.page.view = true;
+        return val;
     }
 }
 

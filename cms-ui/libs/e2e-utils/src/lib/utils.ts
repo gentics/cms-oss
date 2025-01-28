@@ -1,4 +1,4 @@
-import { File as CMSFile, Folder, Group, Image, Node, Page, User, Variant } from '@gentics/cms-models';
+import { File as CMSFile, Folder, Group, Image, Node, Page, ScheduleTask, User, Variant } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
 import {
     ENV_CMS_VARIANT,
@@ -12,6 +12,7 @@ import {
     ImportData,
     NodeImportData,
     PageImportData,
+    ScheduleTaskImportData,
     UserImportData,
 } from './common';
 
@@ -22,6 +23,7 @@ export function getItem(data: ImageImportData, entities: Record<string, any>): I
 export function getItem(data: FileImportData, entities: Record<string, any>): CMSFile | null;
 export function getItem(data: GroupImportData, entities: Record<string, any>): Group | null;
 export function getItem(data: UserImportData, entities: Record<string, any>): User | null;
+export function getItem(data: ScheduleTaskImportData, entities: Record<string, any>): ScheduleTask | null;
 export function getItem(data: ImportData | string, entities: Record<string, any>): any {
     const importId = typeof data === 'string' ? data : data[IMPORT_ID];
     return entities[importId] || null;

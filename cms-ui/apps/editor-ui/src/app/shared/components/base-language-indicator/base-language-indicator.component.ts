@@ -10,7 +10,8 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
 export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> | Form<Normalized>>
     implements OnInit, OnChanges, OnDestroy {
 
-    readonly UIMode = UIMode;
+    public readonly UIMode = UIMode;
+    public readonly ItemListRowMode = ItemListRowMode;
 
     /** All available languages of the current node */
     @Input()
@@ -194,10 +195,6 @@ export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> 
      */
     toggleExpand(value: boolean): void {
         this.expandedLocal$.next(value);
-    }
-
-    isModeSelect(): boolean {
-        return this.mode === ItemListRowMode.SELECT;
     }
 
     onIconClicked(language: Language): void {

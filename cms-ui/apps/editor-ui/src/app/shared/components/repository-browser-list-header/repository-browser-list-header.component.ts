@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { FolderItemType, Language, SortField } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -71,7 +71,7 @@ export class RepositoryBrowserListHeader implements OnInit {
                 this.dataService.setSorting(this.itemType, sortBy, sortOrder);
             })
             .catch(err => {
-                if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                if (wasClosedByUser(err)) {
                     return;
                 }
                 console.error(err);

@@ -1,4 +1,4 @@
-<div class="language-select" *ngIf="1 < variants.length || canSelectNone();else one_language_text">
+<div class="language-select" *ngIf="1 < variants?.length || canSelectNone();else one_language_text">
     <gtx-select
         [value]="selected"
         (valueChange)="onSelectChange($event)"

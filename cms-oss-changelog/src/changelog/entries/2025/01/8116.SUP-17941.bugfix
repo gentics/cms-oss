@@ -1,0 +1,1 @@
+Users will no longer be able to publish objects (or put them into the queue) if they do not have at least view and edit permission on the object.

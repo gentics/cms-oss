@@ -2,12 +2,12 @@ import { GroupBO } from '@admin-ui/common';
 import { ErrorHandler, I18nService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Raw, User } from '@gentics/cms-models';
 import { BaseModal, ModalService, TableAction, TableActionClickEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { UserDataService } from '../../providers/user-data/user-data.service';
 import { AssignNodeRestrictionsToUsersModalComponent } from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 
 const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
 
@@ -115,7 +115,7 @@ export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> im
             this.loading = false;
             this.changeDetector.markForCheck();
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 this.errorHandler.catch(err);
             }
             this.loading = false;

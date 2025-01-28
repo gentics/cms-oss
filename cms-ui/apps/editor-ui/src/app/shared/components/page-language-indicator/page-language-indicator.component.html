@@ -11,21 +11,55 @@
         [class.available]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
         [class.statePublished]="(currentLanguage$ | async) && (statePublished$(language?.code) | async)"
         [class.multiLang]="isMultiLanguage$ | async"
-        [ngClass]="{ 'mode-default': !isModeSelect(), 'mode-select': isModeSelect() }"
+        [ngClass]="{
+            'mode-default': mode !== ItemListRowMode.SELECT,
+            'mode-select': mode === ItemListRowMode.SELECT
+        }"
         (click)="onIconClicked(language)"
     >
-        <div [title]="language.name">
-            <gtx-dropdown-list width="contents" [disabled]="isModeSelect()">
+        <div *ngIf="language?.code && (item | permissions:language.code)?.page?.view" [title]="language.name">
+            <gtx-dropdown-list
+                width="contents"
+                [disabled]="mode === ItemListRowMode.SELECT"
+            >
                 <gtx-dropdown-trigger @animNgForChild>
-                    <div class="stateDeleted" [hidden]="!(currentLanguage$ | async) || !((stateDeleted$(language?.code) | async) && (displayDeleted$ | async))"></div>
+                    <div
+                        class="stateDeleted"
+                        [hidden]="!(currentLanguage$ | async)
+                            || !(
+                                (stateDeleted$(language.code) | async)
+                                && (displayDeleted$ | async)
+                            )"
+                    ></div>
 
                     <ng-container *ngIf="uiMode === UIMode.EDIT">
-                        <div class="stateUntranslated" [hidden]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"></div>
-                        <div class="stateModified" [hidden]="!(currentLanguage$ | async) || !(stateModified$(language?.code) | async)"></div>
-                        <div class="stateInQueue" [hidden]="!(currentLanguage$ | async) || !(stateInQueue$(language?.code) | async)"></div>
-                        <div class="statePlanned" [hidden]="!(currentLanguage$ | async) || !(statePlanned$(language?.code) | async)"></div>
-                        <div class="stateInherited" [hidden]="!(currentLanguage$ | async) || !(stateInherited$(language?.code) | async)"></div>
-                        <div class="stateLocalized" [hidden]="!(currentLanguage$ | async) || !(stateLocalized$(language?.code) | async)"></div>
+                        <div
+                            class="stateUntranslated"
+                            [hidden]="(isAvailable$(language) | async) && !(stateDeleted$(language.code) | async)"
+                        ></div>
+                        <div
+                            class="stateModified"
+                            [hidden]="(
+                                !(currentLanguage$ | async)
+                                || !(stateModified$(language.code) | async)
+                            )"
+                        ></div>
+                        <div
+                            class="stateInQueue"
+                            [hidden]="!(currentLanguage$ | async) || !(stateInQueue$(language.code) | async)"
+                        ></div>
+                        <div
+                            class="statePlanned"
+                            [hidden]="!(currentLanguage$ | async) || !(statePlanned$(language.code) | async)"
+                        ></div>
+                        <div
+                            class="stateInherited"
+                            [hidden]="!(currentLanguage$ | async) || !(stateInherited$(language.code) | async)"
+                        ></div>
+                        <div
+                            class="stateLocalized"
+                            [hidden]="!(currentLanguage$ | async) || !(stateLocalized$(language.code) | async)"
+                        ></div>
                     </ng-container>
 
                     <ng-container *ngIf="uiMode === UIMode.STAGING">
@@ -52,14 +86,17 @@
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
-                            *ngIf="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
+                            *ngIf="(isAvailable$(language) | async)
+                                && !(stateDeleted$(language?.code) | async)"
                             (click)="languageClicked(language)"
                         >
                             {{ 'editor.preview_in_language_label' | i18n:{ language: language?.name } }}
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
-                            *ngIf="(isAvailable$(language) | async) && (item$ | async).contentGroupId !== language.id && !(stateDeleted$(language?.code) | async)"
+                            *ngIf="(isAvailable$(language) | async)
+                                && (item$ | async).contentGroupId !== language.id
+                                && !(stateDeleted$(language?.code) | async)"
                             (click)="languageClicked(language, true)"
                         >
                             {{ 'editor.compare_languages_label' | i18n:{
@@ -69,14 +106,19 @@
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
-                            *ngIf="(!(isAvailable$(language) | async) || (stateDeleted$(language?.code) | async)) && (currentLanguage$ | async)"
+                            *ngIf="(
+                                !(isAvailable$(language) | async)
+                                || (stateDeleted$(language?.code) | async)
+                            )
+                            && (currentLanguage$ | async)
+                            && (item | permissions:language.code)?.page?.edit"
                             (click)="languageClicked(language)"
                         >
                             {{ 'editor.translate_into_label' | i18n:{ language: language?.name } }}
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
-                            *ngIf="(stateDeleted$(language?.code) | async) && (item | permissions)?.item?.delete"
+                            *ngIf="(stateDeleted$(language?.code) | async) && (item | permissions)?.wastebin"
                             (click)="languageClicked(language, false, false, true)"
                         >
                             <icon left>restore_from_trash</icon>

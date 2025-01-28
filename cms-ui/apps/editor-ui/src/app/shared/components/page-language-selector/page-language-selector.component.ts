@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange, ViewChild } from '@angular/core';
 import { Language, Page } from '@gentics/cms-models';
-import { SelectComponent } from '@gentics/ui-core';
+import { ChangesOf, SelectComponent } from '@gentics/ui-core';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
 
 @Component({
@@ -9,17 +9,31 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
     styleUrls: ['./page-language-selector.scss'],
 })
 export class PageLanguageSelector implements OnInit, OnChanges {
-    @Input() label = '';
-    @Input() page: Page;
-    @Input() variants: Page[];
-    @Input() selected: number[];
-    @Input() activeLanguage: Language;
-    @Output() selectionChange = new EventEmitter<number[]>();
+
+    @Input()
+    label = '';
+
+    @Input()
+    page: Page;
+
+    @Input()
+    variants: Page[];
+
+    @Input()
+    selected: number[];
+
+    @Input()
+    activeLanguage: Language;
+
+    @Output()
+    selectionChange = new EventEmitter<number[]>();
 
     @ViewChild(SelectComponent)
     langSelector: SelectComponent;
 
-    constructor(private i18n: I18nService) {}
+    constructor(
+        private i18n: I18nService,
+    ) {}
 
     get toggleTitle(): string {
         if (this.allVariantsSelected()) {
@@ -33,7 +47,7 @@ export class PageLanguageSelector implements OnInit, OnChanges {
         }
     }
 
-    ngOnChanges(changes: { [K in keyof PageLanguageSelector]: SimpleChange }): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.selected) {
             this.onSelectChange(this.selected);
         }
@@ -59,7 +73,7 @@ export class PageLanguageSelector implements OnInit, OnChanges {
      */
     showPlaceholder(): void {
         setTimeout(() => {
-            if ( this.selected.length == 0 ) {
+            if (this.selected.length === 0) {
                 this.langSelector.viewValue = this.i18n.translate('common.select_placeholder');
             }
         });
@@ -77,7 +91,7 @@ export class PageLanguageSelector implements OnInit, OnChanges {
      */
     canSelectNone(): boolean {
         if (this.activeLanguage) {
-            return !(this.activeLanguage.code == this.page.language && this.variants.length > 1);
+            return !(this.activeLanguage.code === this.page.language && this.variants.length > 1);
         } else {
             return false;
         }

@@ -11,11 +11,14 @@
         [class.available]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
         [class.statePublished]="(currentLanguage$ | async) && (statePublished$(language?.code) | async)"
         [class.multiLang]="isMultiLanguage$ | async"
-        [ngClass]="{ 'mode-default': !isModeSelect(), 'mode-select': isModeSelect() }"
+        [ngClass]="{
+            'mode-default': mode !== ItemListRowMode.SELECT,
+            'mode-select': mode === ItemListRowMode.SELECT
+        }"
         (click)="onIconClicked(language)"
     >
         <div [title]="language.name">
-            <gtx-dropdown-list width="contents" [disabled]="isModeSelect()">
+            <gtx-dropdown-list width="contents" [disabled]="mode === ItemListRowMode.SELECT">
                 <gtx-dropdown-trigger [@animNgForChild]>
                     <div class="stateUntranslated" [hidden]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"></div>
 

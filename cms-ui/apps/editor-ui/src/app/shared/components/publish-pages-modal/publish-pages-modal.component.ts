@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { LanguageVariantMap } from '@editor-ui/app/common/models';
-import { ItemType, Language, Page } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { Language, Page } from '@gentics/cms-models';
+import { BaseModal } from '@gentics/ui-core';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 
@@ -10,97 +10,113 @@ import { ApplicationStateService } from '../../../state';
  * When closed, the dialog promise will resolve to an array of page ids to be taken offline.
  */
 @Component({
-    selector: 'publish-pages-modal',
-    templateUrl: './publish-pages-modal.tpl.html',
-    styleUrls: ['./publish-pages-modal.scss']
+    selector: 'gtx-publish-pages-modal',
+    templateUrl: './publish-pages-modal.component.html',
+    styleUrls: ['./publish-pages-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PublishPagesModalComponent implements IModalDialog {
+export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnInit {
 
-    closeFn: (pagesToPublish: Page[]) => void;
-    cancelFn: (val?: any) => void;
+    @Input()
+    public pages: Page[];
 
-    // Should be passed in by the function which creates the modal
-    activeLanguage: Language;
-    pagesToPublish: Page[];
-    pagesToPublishWithCurrentLanguage: Page[];
-    pagesToPublishWithoutCurrentLanguage: Page[];
-    pageLanguageVariants: LanguageVariantMap;
-    publishLanguageVariants: Boolean = false; // default is false for publishing the current language by default
+    /**
+     * The available variants to select.
+     */
+    @Input()
+    public variants: LanguageVariantMap;
 
-    itemType: ItemType = 'page';
+    /**
+     * If this modal was opened to publish only the current language (`folderLanguage`).
+     * When this is `true`, it'll only display pages which do *not* have the `folderLanguage` available,
+     * and therefore has to prompt the user what to do with these.
+     * Otherwise, simply show them all available variants to select.
+     */
+    @Input()
+    public selectVariants = false;
+
+    /**
+     * The language of the folder the user is currently in
+     */
+    public folderLanguage: Language;
+
+    // Computed values
+    pagesWithoutCurrentLanguage: Page[];
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
+    selectCount: number;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private entityResolver: EntityResolver,
-        private appState: ApplicationStateService
+        private appState: ApplicationStateService,
     ) {
-        this.activeLanguage = this.entityResolver.getLanguage(this.appState.now.folder.activeLanguage);
-        this.pagesToPublishWithCurrentLanguage = [];
-        this.pagesToPublishWithoutCurrentLanguage = [];
-    }
-
-    get selectCount(): number {
-        return this.flattenMap(this.selectedLanguageVariants).length;
+        super();
     }
 
     ngOnInit(): void {
-        this.pagesToPublish.forEach( item => {
-            if ( item.language == this.activeLanguage.code ) {
-                this.pagesToPublishWithCurrentLanguage.push(item);
-            } else {
-                this.pagesToPublishWithoutCurrentLanguage.push(item);
+        this.folderLanguage = this.entityResolver.getLanguage(this.appState.now.folder.activeLanguage);
+        this.pagesWithoutCurrentLanguage = [];
+
+        this.pages.forEach(item => {
+            if (item.language !== this.folderLanguage.code) {
+                this.pagesWithoutCurrentLanguage.push(item);
             }
         });
+
         this.resetLanguageVariantSelection();
     }
 
     confirm(): void {
         const idsToPublish = this.flattenMap(this.selectedLanguageVariants);
-        const entities: Page[] = idsToPublish.map( id => this.entityResolver.getEntity('page', id) );
+        const entities: Page[] = idsToPublish.map(id => this.entityResolver.getEntity('page', id));
         this.closeFn(entities);
     }
 
     /**
-     * Selects every language variants
+     * Selects all language-variants
      */
-    selectAllLanguageVariant(): void {
-        this.pagesToPublish.forEach( item => {
-            this.selectedLanguageVariants[item.id] = [...(<any> Object).values(item.languageVariants)];
-        });
+    selectAllLanguageVariants(): void {
+        // Clear all previously selected ones
+        this.selectedLanguageVariants = {};
+
+        for (const [id, variants] of Object.entries(this.variants)) {
+            this.selectedLanguageVariants[id] = (variants as Page[]).map(page => page.id);
+        }
+        this.selectCount = this.flattenMap(this.selectedLanguageVariants).length;
+
+        this.changeDetector.markForCheck();
     }
 
     /**
      * Resets selection to the default values
      */
     resetLanguageVariantSelection(): void {
-        this.pagesToPublish.forEach( item => {
-            if ( item.language == this.activeLanguage.code && !this.publishLanguageVariants ) {
-                this.selectedLanguageVariants[item.id] = [item.id];
+        for (const currentPage of this.pages) {
+            if (currentPage.language === this.folderLanguage.code && !this.selectVariants) {
+                this.selectedLanguageVariants[currentPage.id] = [currentPage.id];
             } else {
-                this.selectedLanguageVariants[item.id] = [];
+                this.selectedLanguageVariants[currentPage.id] = [];
             }
-        });
+        }
+        this.selectCount = this.flattenMap(this.selectedLanguageVariants).length;
+
+        this.changeDetector.markForCheck();
     }
 
     /**
      * Handles changes to the language variants selection for pages.
      */
-    onLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
+    onLanguageSelectionChange(itemId: number, variantIds: number[]): void {
         this.selectedLanguageVariants[itemId] = variantIds;
-    }
+        this.selectCount = this.flattenMap(this.selectedLanguageVariants).length;
 
-    registerCloseFn(close: (pagesToPublish: Page[]) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
+        this.changeDetector.markForCheck();
     }
 
     /**
      * Given a map of { id: T[] }, flattens it into an array of T.
      */
     private flattenMap<T>(hashMap: { [id: number]: T[] }): T[] {
-        return Object.keys(hashMap).reduce((all, id) => all.concat(hashMap[+id]), []);
+        return Object.values(hashMap).flatMap(entry => entry);
     }
 }

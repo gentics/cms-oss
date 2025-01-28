@@ -175,7 +175,7 @@
             <gtx-dropdown-content>
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
-                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems"
+                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems && folderPermissions[itemType]?.edit"
                         (click)="publishSelected(itemType)"
                         class="success"
                     >
@@ -183,22 +183,35 @@
                         {{ 'editor.publish_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="itemType === 'page' && selectedItems" (click)="publishLanguageVariantsSelected()">
+                    <gtx-dropdown-item
+                        *ngIf="itemType === 'page' && selectedItems && folderPermissions[itemType]?.edit"
+                        (click)="publishLanguageVariantsSelected()"
+                    >
                         <icon left>cloud_upload</icon>
                         {{ 'editor.publish_language_variants_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="selectedItems && itemType === 'page'" (click)="createVariationsClicked()">
+                    <gtx-dropdown-item
+                        *ngIf="selectedItems && itemType === 'page' && folderPermissions[itemType]?.create"
+                        (click)="createVariationsClicked()"
+                    >
                         <icon left>layers</icon>
                         {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="multiChannelingEnabled && selectedItems | anyItemInherited" (click)="localizeSelected()">
+                    <gtx-dropdown-item
+                        *ngIf="multiChannelingEnabled && selectedItems | anyItemInherited"
+                        (click)="localizeSelected()"
+                    >
                         <icon left>insert_drive_file</icon>
                         {{ 'editor.localize_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="selectedItems | anyItemPublished" class="alert" (click)="takeSelectedOffline(itemType)">
+                    <gtx-dropdown-item
+                        *ngIf="(selectedItems | anyItemPublished) && folderPermissions[itemType]?.edit"
+                        class="alert"
+                        (click)="takeSelectedOffline(itemType)"
+                    >
                         <icon left>cloud_off</icon>
                         {{ 'editor.take_offline_label' | i18n }}
                     </gtx-dropdown-item>

@@ -37,9 +37,9 @@ import { PermissionService } from '../permissions/permission.service';
  *
  * Examples:
  * - When editing an inherited page, asks the user if they want
- *   to edit the master item or create a local copy and edit that one
+ * to edit the master item or create a local copy and edit that one
  * - When deleting multiple items and some are localized, asks
- *   if they should be unlocalized, as that action can not be undone.
+ * if they should be unlocalized, as that action can not be undone.
  */
 @Injectable()
 export class DecisionModalsService {
@@ -185,15 +185,18 @@ export class DecisionModalsService {
      * Returns a promise which resolves to a list of page ids.
      */
     async selectPagesToPublish(pages: Page[], publishLanguageVariants: boolean = false): Promise<Page[]> {
-        const data = this.getPermittedPageLanguages(pages, [GcmsPermission.EDIT, GcmsRolePrivilege.UPDATE_ITEMS]);
+        const langId = this.appState.now.folder.activeLanguage;
+        const currentLang = this.appState.now.entities.language[langId];
+
+        // Sort the pages by language, so that the current language comes first (in order to handle variations correctly)
+        const sortedPages = pages.slice(0).sort((a, b) => (b.language === currentLang.code ? 1 : 0) - (a.language === currentLang.code ? 1 : 0));
+
+        const data = this.getPermittedPageLanguages(sortedPages, [GcmsPermission.EDIT, GcmsRolePrivilege.UPDATE_ITEMS]);
 
         // If the user has no permission to publish any page to begin with
         if (data.pages.length === 0) {
             return [];
         }
-
-        const langId = this.appState.now.folder.activeLanguage;
-        const currentLang = this.appState.now.entities.language[langId];
 
         const pageLanguages = new Set<string>(data.pages.map(page => page.language));
 
@@ -288,8 +291,8 @@ export class DecisionModalsService {
         const pageData = this.getPermittedPageLanguages(pages, [GcmsPermission.DELETE_ITEMS]);
         const formLanguageVariants: FormLanguageVariantMap = this.createFormLanguageVariantsMap([...otherItems]);
 
-        // Remove all pages which aren't allowed
-        const filteredOtherItems = otherItems.filter(item => item.type !== 'page' || pageData.pages.includes(item as Page));
+        // Remove all pages which aren't allowed or referenced
+        const filteredOtherItems = otherItems.filter(item => item.type !== 'page' || pageData.referencedIds.has(item.id));
 
         return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form'))
             .toPromise()
@@ -352,25 +355,65 @@ export class DecisionModalsService {
             languages: Set<string>,
             pages: Page[],
             variants: PageLanguageVariantMap,
+            referencedIds: Set<number>,
         }
     {
-        const validPages: Page[] = [];
-        const variationMap: PageLanguageVariantMap = {};
+        const validPages = new Map<number, Page>();
+        const variations: PageLanguageVariantMap = {};
         const languages = new Set<string>();
+        /**
+         * List of IDs which have already been processed, to prevent duplicates in the resulting output.
+         * Example:
+         * ```
+         * pages = [{ id: 1, languageVariants: { 1: 1, 2: 2} }, { id: 2, languageVariants: { 1: 1, 2: 2 } }]
+         * // would normally result into
+         * {
+         *  pages: [{ id: 1, ... }, { id: 2, ...}],
+         *  variants: {
+         *      1: [{ id: 1, ...}, { id: 2, ...}],
+         *      2: [{ id: 1, ...}, { id: 2, ...}]
+         *  }
+         * }
+         * // but it should actually be this
+         * {
+         *  pages: [{ id: 1, ... }],
+         *  variants: {
+         *      1: [{ id: 1, ...}, { id: 2, ...}]
+         *  }
+         * }
+         * ```
+         * The "main" page is determined by the order they are provided in `pages`.
+         * In the example above, if the page with id `2` were to appear first,
+         * then that page would be in `pages` and the variants would have an index for `2` instead of `1`:
+         * ```
+         * pages = [{ id: 2, languageVariants: { 1: 1, 2: 2} }, { id: 1, languageVariants: { 1: 1, 2: 2 } }]
+         * {
+         *  pages: [{ id: 2, ... }],
+         *  variants: {
+         *      2: [{ id: 1, ...}, { id: 2, ...}]
+         *  }
+         * }
+         * ```
+         */
+        const referencedIds = new Set<number>();
 
         for (const currentPage of pages) {
-            if (currentPage.inherited) {
+            if (currentPage == null || typeof currentPage !== 'object' || currentPage.inherited) {
                 continue;
             }
 
             const folderPermissions = this.appState.now.entities.folder[currentPage.folderId]?.permissionsMap;
+            const langVars = Object.values(currentPage.languageVariants || {}) as Page[];
+            if (langVars.length === 0) {
+                langVars.push(currentPage);
+            }
 
             // Check the general permissions
             const hasGeneralPerm = permissions.some(perm => folderPermissions?.permissions?.[perm]);
             if (!hasGeneralPerm) {
                 let hasValidLangPerm = false;
 
-                for (let langPage of (Object.values(currentPage.languageVariants) as Page[])) {
+                for (let langPage of langVars) {
                     if (typeof langPage === 'number') {
                         langPage = this.entityResolver.getPage(langPage);
                     }
@@ -387,10 +430,13 @@ export class DecisionModalsService {
                     }
 
                     hasValidLangPerm = true;
-                    if (!variationMap[currentPage.id]) {
-                        variationMap[currentPage.id] = [];
+                    if (!referencedIds.has(langPage.id)) {
+                        if (!variations[currentPage.id]) {
+                            variations[currentPage.id] = [];
+                        }
+                        variations[currentPage.id].push(langPage);
                     }
-                    variationMap[currentPage.id].push(langPage);
+                    referencedIds.add(langPage.id);
                     languages.add(lang);
                 }
 
@@ -398,34 +444,43 @@ export class DecisionModalsService {
                     continue;
                 }
             } else {
-                for (let langPage of (Object.values(currentPage.languageVariants) as Page[])) {
+                for (let langPage of langVars) {
                     if (typeof langPage === 'number') {
                         langPage = this.entityResolver.getPage(langPage);
                     }
                     if (langPage == null || typeof langPage !== 'object') {
                         continue;
                     }
-                    if (!variationMap[currentPage.id]) {
-                        variationMap[currentPage.id] = [];
+                    if (!variations[currentPage.id]) {
+                        variations[currentPage.id] = [];
                     }
-                    variationMap[currentPage.id].push(langPage);
+                    variations[currentPage.id].push(langPage);
+                    referencedIds.add(langPage.id);
                     languages.add(langPage.language);
                 }
             }
 
             // Edge case, for when the user has no permissions for the `currentPage`,
             // but for a language variant.
-            if (!variationMap[currentPage.id].includes(currentPage)) {
-                validPages.push(variationMap[currentPage.id][0]);
-            } else {
-                validPages.push(currentPage);
+            if (variations[currentPage.id]) {
+                if (!variations[currentPage.id].includes(currentPage)) {
+                    const variation = variations[currentPage.id][0];
+                    if (!validPages.has(variation.id)) {
+                        validPages.set(variation.id, variation);
+                    }
+                } else {
+                    if (!validPages.has(currentPage.id)) {
+                        validPages.set(currentPage.id, currentPage);
+                    }
+                }
             }
         }
 
         return {
             languages: languages,
-            pages: validPages,
-            variants: variationMap,
+            pages: Array.from(validPages.values()),
+            variants: variations,
+            referencedIds: referencedIds,
         };
     }
 

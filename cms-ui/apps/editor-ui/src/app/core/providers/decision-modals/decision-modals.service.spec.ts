@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { Injectable } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
     Feature,
@@ -6,10 +7,12 @@ import {
     Folder,
     FolderItemType,
     FolderListOptions,
+    GcmsPermission,
     Image,
     InheritableItem,
     ItemPermissions,
     ItemType,
+    Language,
     LocalizationsResponse,
     Node,
     Normalized,
@@ -28,6 +31,7 @@ import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { I18nService } from '../i18n/i18n.service';
 import { LocalizationsService } from '../localizations/localizations.service';
+import { PermissionService } from '../permissions/permission.service';
 import { DecisionModalsService } from './decision-modals.service';
 
 describe('DecisionModalsService', () => {
@@ -39,6 +43,20 @@ describe('DecisionModalsService', () => {
     const OTHERNODE = 9876;
     const FOLDER = 333;
     const OTHERFOLDER = 444;
+    const LANG_DE: Language = {
+        code: 'de',
+        id: 1,
+        name: 'Deutsch',
+    };
+    const LANG_EN: Language = {
+        code: 'en',
+        id: 2,
+        name: 'English',
+    };
+    const LANG_MAP: Record<string, number> = {
+        [LANG_DE.code]: LANG_DE.id,
+        [LANG_EN.code]: LANG_EN.id,
+    };
 
     let decisionModalsService: DecisionModalsService;
     let state: TestApplicationState;
@@ -56,27 +74,28 @@ describe('DecisionModalsService', () => {
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: Api, useClass: MockApi },
+                { provide: EntityResolver, useClass: MockEntityResolver },
+                { provide: ModalService, useClass: MockModalService },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: FolderActionsService, useClass: MockFolderActions },
+                { provide: PermissionService, useClass: MockPermissionService },
+                { provide: FeaturesActionsService, useClass: MockFeaturesActions },
+                LocalizationsService,
+                DecisionModalsService,
             ],
         });
-        state = TestBed.get(ApplicationStateService);
 
-        api = new MockApi();
-        entityResolver = new MockEntityResolver(state);
-        localizationsService = new LocalizationsService(
-            api as any as Api,
-            entityResolver as any as EntityResolver,
-        );
-
-        decisionModalsService = new DecisionModalsService(
-            state,
-            entityResolver as any as EntityResolver,
-            (modalService = new MockModalService()) as any as ModalService,
-            (i18n = new MockI18nService()) as any as I18nService,
-            localizationsService,
-            (folderActions = new MockFolderActions()) as any as FolderActionsService,
-            (permissionService = new MockPermissionService()) as any,
-            (featuresActions = new MockFeaturesActions()) as any as FeaturesActionsService,
-        );
+        state = TestBed.inject(ApplicationStateService) as any;
+        api = TestBed.inject(Api) as any;
+        entityResolver = TestBed.inject(EntityResolver) as any;
+        localizationsService = TestBed.inject(LocalizationsService);
+        modalService = TestBed.inject(ModalService) as any;
+        i18n = TestBed.inject(I18nService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        permissionService = TestBed.inject(PermissionService) as any;
+        featuresActions = TestBed.inject(FeaturesActionsService) as any;
+        decisionModalsService = TestBed.inject(DecisionModalsService);
 
         state.mockState({
             entities: {
@@ -90,36 +109,54 @@ describe('DecisionModalsService', () => {
                         id: MASTERNODE,
                     },
                 },
+                language: {
+                    [LANG_DE.id]: LANG_DE,
+                    [LANG_EN.id]: LANG_EN,
+                },
+                // Grant publish permissions, otherwise we get nothing
+                folder: {
+                    [FOLDER]: {
+                        permissionsMap: {
+                            permissions: {
+                                [GcmsPermission.EDIT]: true,
+                                [GcmsPermission.DELETE_ITEMS]: true,
+                            },
+                        },
+                    },
+                },
             },
             folder: {
                 activeFolder: FOLDER,
+                activeLanguage: LANG_EN.id,
             },
         });
     });
 
     describe('selectPagesToPublish()', () => {
 
-        it('show modal more than one language selected', fakeAsync(() => {
+        it('show modal more than one language selected', (async () => {
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
-                .and.returnValue(Promise.resolve({ open(): void {} }));
+                .and.returnValue(Promise.resolve({ open: () => Promise.resolve([page]) }));
 
             const page = {
                 id: PAGE,
                 type: 'page',
-                language: 'en',
+                folderId: FOLDER,
+                language: LANG_EN.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
                 contentSetId: PAGE,
             } as Partial<Page<Normalized>> as Page<Normalized>;
             const otherPage = {
                 id: OTHERPAGE,
                 type: 'page',
-                language: 'de',
+                folderId: FOLDER,
+                language: LANG_DE.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
             } as Partial<Page<Normalized>> as Page<Normalized>;
 
@@ -132,30 +169,26 @@ describe('DecisionModalsService', () => {
                 },
             });
 
-            decisionModalsService.selectPagesToPublish([page, otherPage]);
-            tick();
+            const selected = await decisionModalsService.selectPagesToPublish([page, otherPage]);
 
             expect(modalService.fromComponent).toHaveBeenCalled();
+            expect(selected).toEqual(jasmine.arrayWithExactContents([
+                page,
+            ]));
         }));
 
-        it('returns the selected pages of selected language variants', fakeAsync(() => {
+        it('returns the selected pages of selected language variants', (async () => {
             const page = {
                 id: PAGE,
                 type: 'page',
-                language: 'en',
-                languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
-                },
+                folderId: FOLDER,
+                language: LANG_EN.code,
             } as Partial<Page<Normalized>> as Page<Normalized>;
             const otherPage = {
                 id: OTHERPAGE,
                 type: 'page',
-                language: 'de',
-                languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
-                },
+                folderId: FOLDER,
+                language: LANG_DE.code,
             } as Partial<Page<Normalized>> as Page<Normalized>;
 
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
@@ -174,40 +207,54 @@ describe('DecisionModalsService', () => {
                 },
             });
 
-            let returnedValues: Page[];
-            decisionModalsService.selectPagesToPublish([page as any, otherPage as any])
-                .then(values => returnedValues = values);
-            tick();
+            const selected = await decisionModalsService.selectPagesToPublish([page, otherPage]);
 
-            expect(returnedValues).toEqual([page, otherPage]);
+            expect(selected).toEqual([page, otherPage]);
         }));
 
         describe('modal not required', () => {
+            const DEFAULT_LANG = LANG_EN;
 
-            function testModalNotRequiredWithPage(page: any): void {
+            async function testModalNotRequiredWithPage(page: Partial<Page>): Promise<void> {
+                page.folderId = FOLDER;
+                let langId: number = DEFAULT_LANG.id;
+                if (page.language && LANG_MAP[page.language]) {
+                    langId = LANG_MAP[page.language];
+                } else {
+                    page.language = DEFAULT_LANG.code;
+                }
+
+                state.mockState({
+                    folder: {
+                        activeLanguage: langId,
+                    },
+                    entities: {
+                        page: {
+                            [page.id]: page as Page,
+                        },
+                    } as any,
+                })
                 modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                     .and.returnValue(Promise.resolve({ open: (): void => {} }));
 
-                let returnedValues: Page[];
-                decisionModalsService.selectPagesToPublish([page ])
-                    .then(values => returnedValues = values);
-                tick();
+                const selected = await decisionModalsService.selectPagesToPublish([page as Page]);
 
                 expect(modalService.fromComponent).not.toHaveBeenCalled();
-                expect(returnedValues).toEqual([page]);
+                expect(selected).toEqual([page as Page]);
             }
 
-            it('does not ask the user for pages with only one language variant', fakeAsync(() => {
-                testModalNotRequiredWithPage({
+            it('does not ask the user for pages with only one language variant', (() => {
+                return testModalNotRequiredWithPage({
                     id: PAGE,
+                    language: LANG_EN.code,
                     languageVariants: {
-                        1: PAGE,
+                        [LANG_EN.id]: PAGE,
                     },
                 });
             }));
 
             it('does not ask the user for pages with no language variants', fakeAsync(() => {
-                testModalNotRequiredWithPage({
+                return testModalNotRequiredWithPage({
                     id: PAGE,
                     languageVariants: {},
                 });
@@ -219,26 +266,29 @@ describe('DecisionModalsService', () => {
 
     describe('selectPagesToTakeOffline()', () => {
 
-        it('shows a modal if the page has language variants', fakeAsync(() => {
+        it('shows a modal if the page has language variants', (async () => {
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                 .and.returnValue(Promise.resolve({ open(): void {} }));
 
             const page = {
                 id: PAGE,
                 type: 'page',
-                language: 'en',
+                folderId: FOLDER,
+                language: LANG_EN.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
                 contentSetId: PAGE,
             } as Partial<Page<Normalized>> as Page<Normalized>;
             const otherPage = {
                 id: OTHERPAGE,
                 type: 'page',
+                folderId: FOLDER,
+                language: LANG_DE.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
             } as Partial<Page<Normalized>> as Page<Normalized>;
 
@@ -251,13 +301,12 @@ describe('DecisionModalsService', () => {
                 },
             });
 
-            decisionModalsService.selectPagesToTakeOffline([page]);
-            tick();
+            await decisionModalsService.selectPagesToTakeOffline([page]);
 
             expect(modalService.fromComponent).toHaveBeenCalled();
         }));
 
-        it('returns the page IDs of the selected language variants', fakeAsync(() => {
+        it('returns the page IDs of the selected language variants', (async () => {
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                 .and.returnValue(
                     Promise.resolve({
@@ -268,17 +317,21 @@ describe('DecisionModalsService', () => {
             const page = {
                 id: PAGE,
                 type: 'page',
+                folderId: FOLDER,
+                language: LANG_EN.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
             } as Partial<Page<Normalized>> as Page<Normalized>;
             const otherPage = {
                 id: OTHERPAGE,
                 type: 'page',
+                folderId: FOLDER,
+                language: LANG_DE.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
             } as Partial<Page<Normalized>> as Page<Normalized>;
 
@@ -291,41 +344,47 @@ describe('DecisionModalsService', () => {
                 },
             });
 
-            let returnedValues: number[];
-            decisionModalsService.selectPagesToTakeOffline([page as any])
-                .then(values => returnedValues = values);
-            tick();
+            const returnedValues = await decisionModalsService.selectPagesToTakeOffline([page as any]);
 
             expect(returnedValues).toEqual([PAGE, OTHERPAGE]);
         }));
 
         describe('modal not required', () => {
 
-            function testModalNotRequiredWithPage(page: any): void {
+            async function testModalNotRequiredWithPage(page: Partial<Page>): Promise<void> {
+                state.mockState({
+                    entities: {
+                        page: {
+                            [page.id]: page as Page,
+                        },
+                    } as any,
+                });
+
                 modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                     .and.returnValue(Promise.resolve({ open: (): void => {} }));
 
-                let returnedValues: number[];
-                decisionModalsService.selectPagesToTakeOffline([page ])
-                    .then(values => returnedValues = values);
-                tick();
+                const returnedValues = await decisionModalsService.selectPagesToTakeOffline([page as Page]);
 
                 expect(modalService.fromComponent).not.toHaveBeenCalled();
                 expect(returnedValues).toEqual([PAGE]);
             }
 
-            it('does not ask the user for pages with only one language variant', fakeAsync(() => {
-                testModalNotRequiredWithPage({
+            it('does not ask the user for pages with only one language variant', (() => {
+                return testModalNotRequiredWithPage({
                     id: PAGE,
+                    folderId: FOLDER,
+                    language: LANG_EN.code,
                     languageVariants: {
-                        1: PAGE,
+                        [LANG_EN.id]: PAGE,
                     },
                 });
             }));
 
-            it('does not ask the user for pages with no language variants', fakeAsync(() => {
-                testModalNotRequiredWithPage({
+            it('does not ask the user for pages with no language variants', (() => {
+                return testModalNotRequiredWithPage({
                     id: PAGE,
+                    folderId: FOLDER,
+                    language: LANG_EN.code,
                     languageVariants: {},
                 });
             }));
@@ -390,17 +449,18 @@ describe('DecisionModalsService', () => {
             expect(api.folders.getLocalizations).toHaveBeenCalledWith('page', OTHERPAGE);
         }));
 
-        it('shows a modal if a page with language variants should be deleted', fakeAsync(() => {
+        it('shows a modal if a page with language variants should be deleted', (async () => {
             modalService.fromComponent = jasmine.createSpy('ModalService.fromComponent')
                 .and.returnValue(Promise.resolve({ open(): void {} }));
 
             const page = {
                 id: PAGE,
                 type: 'page',
-                language: 'en',
+                folderId: FOLDER,
+                language: LANG_EN.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
                 contentSetId: PAGE,
             } as Partial<Page<Normalized>> as Page<Normalized>;
@@ -408,10 +468,11 @@ describe('DecisionModalsService', () => {
             const pageInOtherLanguage = {
                 id: OTHERPAGE,
                 type: 'page',
-                language: 'de',
+                folderId: FOLDER,
+                language: LANG_DE.code,
                 languageVariants: {
-                    1: PAGE,
-                    2: OTHERPAGE,
+                    [LANG_EN.id]: PAGE,
+                    [LANG_DE.id]: OTHERPAGE,
                 },
                 contentSetId: PAGE,
             } as Partial<Page<Normalized>> as Page<Normalized>;
@@ -432,8 +493,7 @@ describe('DecisionModalsService', () => {
                 },
             });
 
-            decisionModalsService.selectItemsToDelete([page]);
-            tick();
+            await decisionModalsService.selectItemsToDelete([page]);
 
             expect(modalService.fromComponent).toHaveBeenCalled();
             const args = (modalService.fromComponent as jasmine.Spy).calls.mostRecent().args;
@@ -442,7 +502,7 @@ describe('DecisionModalsService', () => {
                 inheritedItems: [],
                 otherItems: [page],
                 pageLanguageVariants: {
-                    [PAGE]: [page, pageInOtherLanguage],
+                    [PAGE]: jasmine.arrayWithExactContents([page, pageInOtherLanguage]) as any,
                 },
                 formLanguageVariants: {},
                 itemLocalizations: {
@@ -454,11 +514,12 @@ describe('DecisionModalsService', () => {
             expect(args[2]).toEqual(expected, 'wrong modal parameters');
         }));
 
-        it('returns the selected items to delete/unlocalize', fakeAsync(() => {
+        it('returns the selected items to delete/unlocalize', (async () => {
             const page = {
                 id: PAGE,
                 type: 'page',
-                language: 'en',
+                folderId: FOLDER,
+                language: LANG_EN.code,
                 languageVariants: {
                     1: PAGE,
                     2: OTHERPAGE,
@@ -469,7 +530,8 @@ describe('DecisionModalsService', () => {
             const pageInOtherLanguage = {
                 id: OTHERPAGE,
                 type: 'page',
-                language: 'de',
+                folderId: FOLDER,
+                language: LANG_DE.code,
                 languageVariants: {
                     1: PAGE,
                     2: OTHERPAGE,
@@ -500,23 +562,21 @@ describe('DecisionModalsService', () => {
                 localizations: {},
             });
 
-            let returnedValues: MultiDeleteResult;
-            decisionModalsService.selectItemsToDelete([page as any])
-                .then(values => returnedValues = values);
-            tick();
+            const returnedValues = await decisionModalsService.selectItemsToDelete([page as any]);
 
             expect(returnedValues).toEqual({
-                delete: [page, pageInOtherLanguage],
+                delete: jasmine.arrayWithExactContents([page, pageInOtherLanguage]),
                 deleteForms: {},
                 unlocalize: [],
                 localizations: {},
             });
         }));
 
-        it('works in nodes which have no languages configured', fakeAsync(() => {
+        it('works in nodes which have no languages configured', (async () => {
             const page = {
                 id: PAGE,
                 type: 'page',
+                folderId: FOLDER,
                 languageVariants: {
                     // no languages configured!
                 },
@@ -565,10 +625,7 @@ describe('DecisionModalsService', () => {
             });
 
 
-            let returnedValues: MultiDeleteResult;
-            decisionModalsService.selectItemsToDelete([page])
-                .then(values => returnedValues = values);
-            tick();
+            const returnedValues = await decisionModalsService.selectItemsToDelete([page]);
 
             expect(api.folders.getLocalizations).toHaveBeenCalledWith('page', page.id);
 
@@ -891,8 +948,11 @@ class MockPermissionService {
     }
 }
 
+@Injectable()
 class MockEntityResolver {
+
     constructor(private appState: ApplicationStateService) { }
+
     getNode(id: number): Node {
         return this.appState.now.entities.node[id];
     }

@@ -113,7 +113,7 @@ export class AlohaAttributeButtonRendererComponent
             })
             .catch(err => {
                 this.inputDropdown = null;
-                if (!wasClosedByUser(err)) {
+                if (wasClosedByUser(err)) {
                     return;
                 }
                 console.error(err);

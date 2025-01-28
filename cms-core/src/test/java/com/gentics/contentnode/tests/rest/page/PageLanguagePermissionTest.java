@@ -316,7 +316,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testFolderGetPagesDeNoFallback() throws NodeException {
-		LegacyPageListResponse listResponse = getPages("de", true);
+		LegacyPageListResponse listResponse = getPages("de", false);
 		assertResponseOK(listResponse);
 		assertThat(listResponse.getPages()).as("Page list").hasSize(1);
 		assertThat(listResponse.getPages().get(0)).as("Page").hasFieldOrPropertyWithValue("language", "de");

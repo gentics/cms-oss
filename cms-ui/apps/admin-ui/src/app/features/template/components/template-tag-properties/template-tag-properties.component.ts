@@ -56,6 +56,7 @@ export class TemplateTagPropertiesComponent extends BasePropertiesComponent<Temp
 
         this.subscriptions.push(this.constructHandler.listMapped().subscribe(constructs => {
             this.constructs = constructs.items;
+            this.changeDetector.markForCheck();
         }));
 
         if (!environment.production) {

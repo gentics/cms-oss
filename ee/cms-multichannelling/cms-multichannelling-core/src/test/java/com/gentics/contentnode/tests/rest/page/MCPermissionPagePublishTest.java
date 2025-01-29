@@ -105,7 +105,7 @@ public class MCPermissionPagePublishTest {
 
 		try (Trx trx = new Trx()) {
 			PermHandler.setPermissions(Node.TYPE_NODE, ObjectTransformer.getInt(node.getFolder().getId(), 0), Arrays.asList(editorGroup),
-					new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString());
+					new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_PAGE_UPDATE).toString());
 			PermHandler.setPermissions(Folder.TYPE_FOLDER, ObjectTransformer.getInt(node.getFolder().getId(), 0), Arrays.asList(editorGroup),
 					new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString());
 

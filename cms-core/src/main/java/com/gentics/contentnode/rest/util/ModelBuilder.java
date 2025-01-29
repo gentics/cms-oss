@@ -1239,6 +1239,10 @@ public class ModelBuilder {
 					if (wastebin != null) {
 						wastebin.filter(nodeLangVars);
 					}
+
+					// filter by view permissions (which might be language specific)
+					PermFilter.get(ObjectPermission.view).filter(nodeLangVars);
+
 					Map<Object, com.gentics.contentnode.rest.model.Page> languageVariants = new LinkedHashMap<Object, com.gentics.contentnode.rest.model.Page>(
 							nodeLangVars.size());
 

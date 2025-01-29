@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
 import { AlohaAttributeButtonComponent, OverlayElementControl } from '@gentics/aloha-models';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
 import { patchMultipleAlohaFunctions } from '../../utils';
@@ -117,7 +117,7 @@ export class AlohaAttributeButtonRendererComponent
             })
             .catch(err => {
                 this.inputDropdown = null;
-                if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                if (wasClosedByUser(err)) {
                     return;
                 }
                 console.error(err);

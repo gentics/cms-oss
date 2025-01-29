@@ -302,10 +302,10 @@ h5. CONTENT_PACKAGES_PATH
 |_. Configuration   | -                                                     |
 |_. Default         | @content-packages@                                    |
 
-h5. SCHEDULER_COMNANDS_PATH
+h5. SCHEDULER_COMMANDS_PATH
 
 |_. Description     | Path to the directory containing the scripts, that can be run by the scheduler |
-|_. Env             | @SCHEDULER_COMNANDS_PATH@                                                      |
+|_. Env             | @SCHEDULER_COMMANDS_PATH@                                                      |
 |_. System Property | @com.gentics.contentnode.scheduler_commands.path@                              |
 |_. Configuration   | -                                                                              |
 |_. Default         | @scheduler-commands@                                                           |

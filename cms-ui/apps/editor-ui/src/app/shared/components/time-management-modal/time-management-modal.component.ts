@@ -115,8 +115,14 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             if (this.item.languageVariants && Object.keys(this.item.languageVariants).length > 0) {
                 // eslint-disable-next-line guard-for-in
                 for (const key in this.item.languageVariants) {
-                    const pageID = this.item.languageVariants[key];
-                    this.folderActions.getPage(pageID as number)
+                    let pageID = this.item.languageVariants[key];
+                    if (pageID == null) {
+                        continue;
+                    } else if (typeof pageID === 'object') {
+                        pageID = pageID.id;
+                    }
+
+                    this.folderActions.getPage(pageID)
                         .then(page => {
                             this.itemsToBeModified.push(page);
                         });

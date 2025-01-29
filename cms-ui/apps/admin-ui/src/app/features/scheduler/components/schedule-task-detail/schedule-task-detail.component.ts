@@ -100,6 +100,7 @@ export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTa
         await this.entitiyOperations.update(Number(this.currentEntity.id), this.fgProperties.value).toPromise();
         this.tableLoader.reload();
         this.scheduleLoader.reload();
+        this.fgProperties.markAsPristine();
     }
 
     public initForms(): void {

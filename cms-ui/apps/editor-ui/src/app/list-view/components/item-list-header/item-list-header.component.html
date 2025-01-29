@@ -209,7 +209,7 @@
             <gtx-dropdown-content class="list-selection-context">
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
-                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems"
+                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems && folderPermissions[itemType]?.edit"
                         class="success"
                         data-action="publish"
                         (click)="publishSelected(itemType)"
@@ -219,7 +219,7 @@
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
-                        *ngIf="itemType === 'page' && selectedItems"
+                        *ngIf="itemType === 'page' && selectedItems && folderPermissions[itemType]?.edit"
                         data-action="publish-languages"
                         (click)="publishLanguageVariantsSelected()"
                     >
@@ -228,7 +228,7 @@
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
-                        *ngIf="selectedItems && itemType === 'page'"
+                        *ngIf="selectedItems && itemType === 'page' && folderPermissions[itemType]?.create"
                         data-action="create-variations"
                         (click)="createVariationsClicked()"
                     >
@@ -246,7 +246,7 @@
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
-                        *ngIf="selectedItems | anyItemPublished"
+                        *ngIf="(selectedItems | anyItemPublished) && folderPermissions[itemType]?.edit"
                         class="alert"
                         data-action="take-offline"
                         (click)="takeSelectedOffline(itemType)"

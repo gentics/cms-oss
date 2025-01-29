@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '@editor-ui/app/state';
-import { ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { RepositoryBrowserOptions, wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
@@ -80,7 +80,7 @@ export class RepositoryBrowserClient {
             const selected: R | R[] = await modal.open();
             return selected;
         } catch (err) {
-            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+            if (!wasClosedByUser(err)) {
                 throw err;
             }
             return null;

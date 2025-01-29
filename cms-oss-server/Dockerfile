@@ -15,7 +15,7 @@ ENV CONF_FILES="" \
     GIS_PATH="publish/gis" \
     PACKAGES_PATH="packages" \
     CONTENT_PACKAGES_PATH="content-packages" \
-    SCHEDULER_COMNANDS_PATH="scheduler-commands" \
+    SCHEDULER_COMMANDS_PATH="scheduler-commands" \
     JAVA_TOOL_OPTIONS="-Xmx1g"
 
 EXPOSE 8080

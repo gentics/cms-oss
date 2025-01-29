@@ -334,7 +334,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
         const isLocalized = !isMaster && !inherited;
         const userCan: ItemPermissions = (<any>this.permissions)[type];
-        const canPublish = isPage || isForm;
+        const canPublish = (isPage || isForm) && userCan.edit;
         const templatePermissions = this.permissions['template'];
 
         // Items can be synchronized to master when they are inside a folder
@@ -371,8 +371,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             delete: !this.isDeleted && (isMaster || isForm) && !inherited && userCan.delete,
             restore: this.wastebinEnabled && this.isDeleted && !inherited && userCan.delete,
             unlocalize: this.multiChannelingEnabled && !isForm && !this.isDeleted && isLocalized && userCan.unlocalize,
-            takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited),
-            publish: !this.isDeleted && (isPage || (isForm && this.permissions.form.publish)),
+            takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited) && canPublish,
+            publish: !this.isDeleted && ((isPage && canPublish) || (isForm && this.permissions.form.publish)),
             publishLanguageVariants: !isForm && isPage && !this.isDeleted && this.hasLanguageVariants(this.item as Page) && canPublish,
             timeManagement: (isForm && this.permissions.form.publish || isPage) && !this.isDeleted && userCan.edit,
             stage: !this.isDeleted && userCan.view,

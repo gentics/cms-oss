@@ -21,14 +21,14 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
-import { Favourite, File, Folder, Image, Page } from '@gentics/cms-models';
-import { GenticsUICoreModule } from '@gentics/ui-core';
-import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { Favourite, File, Folder, GcmsPermission, Image, Page, PermissionsMapCollection } from '@gentics/cms-models';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -153,11 +153,13 @@ class MockErrorHandler {
 @Pipe({ name: 'permissions' })
 class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
-        return {
+        const val = {
             ...getNoPermissions(),
             // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
-        } as any;
+        };
+        val.page.view = true;
+        return val;
     }
 }
 
@@ -204,7 +206,30 @@ class MockWastebinActionsService {
 const elementStateIsActive = (
     debugElement: DebugElement,
     cssClass: '.stateUntranslated' | '.stateModified' | '.stateInQueue' | '.statePlanned' | '.stateInherited' | '.stateLocalized',
-): boolean => !debugElement.query(By.css(cssClass)).nativeElement.hasAttribute('hidden');
+): boolean => !(debugElement.query(By.css(cssClass))?.nativeElement?.hasAttribute?.('hidden') ?? true);
+
+function getExampleFolderWithPermissions(
+    { id, userId, publishDir }: { id: number, userId?: number, publishDir?: string } = { id: 115, userId: 3, publishDir: '/' },
+) {
+    const folder = getExampleFolderDataNormalized({ id, userId, publishDir });
+    folder.permissionsMap = getDefaultTestPermissions();
+    return folder;
+}
+
+const TEST_FOLDER_ID = 21;
+function getDefaultTestPermissions(): PermissionsMapCollection {
+    return {
+        permissions: {
+            [GcmsPermission.VIEW]: true,
+            [GcmsPermission.READ]: true,
+            [GcmsPermission.READ_ITEMS]: true,
+            [GcmsPermission.EDIT]: true,
+            [GcmsPermission.DELETE]: true,
+            [GcmsPermission.DELETE_ITEMS]: true,
+            [GcmsPermission.PUBLISH_PAGES]: true,
+        },
+    };
+}
 
 describe('ItemListRow', () => {
 
@@ -266,6 +291,15 @@ describe('ItemListRow', () => {
         state = TestBed.get(ApplicationStateService);
         expect(state instanceof ApplicationStateService).toBeTruthy();
         mockTranslateService = TestBed.get(TranslateService);
+        state.mockState({
+            entities: {
+                folder: {
+                    [TEST_FOLDER_ID]: {
+                        permissionsMap: getDefaultTestPermissions(),
+                    },
+                },
+            },
+        });
     });
 
     it('binds the item name',
@@ -605,8 +639,8 @@ describe('ItemListRow', () => {
                             2: pageDE,
                         },
                         folder: {
-                            [pageEN.folder]: getExampleFolderDataNormalized({ id: pageEN.folder }),
-                            [pageDE.folder]: getExampleFolderDataNormalized({ id: pageDE.folder }),
+                            [pageEN.folder]: getExampleFolderWithPermissions({ id: pageEN.folder }),
+                            [pageDE.folder]: getExampleFolderWithPermissions({ id: pageDE.folder }),
                         },
                     },
                     folder: {

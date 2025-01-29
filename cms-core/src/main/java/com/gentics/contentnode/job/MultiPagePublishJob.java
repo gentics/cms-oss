@@ -1,10 +1,13 @@
 package com.gentics.contentnode.job;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.logging.log4j.Level;
@@ -44,6 +47,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.MultiPagePublishRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.lib.i18n.CNI18nString;
 
 /**
@@ -502,10 +506,88 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 				InsufficientPrivilegesException,
 				ReadOnlyException,
 				NodeException {
+		if (isAlllang) {
+			// get the page (readonly)
+			Page page = PageResourceImpl.getPage(id);
+
+			Node nodeForPermission = page.getChannel();
+			if (nodeForPermission == null) {
+				nodeForPermission = page.getOwningNode();
+			}
+
+			List<Page> pages = null;
+			try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
+				page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
+
+				pages = new ArrayList<>(page.getLanguageVariants(false));
+				PermFilter.get(ObjectPermission.edit).filter(pages);
+			}
+
+			Set<PublishSuccessState> states = new HashSet<>();
+			for (Page p : pages) {
+				String pageId = Integer.toString(p.getId());
+				states.add(publishPage(pageId, at, message, keepPublishAt, keepVersion, feedback));
+			}
+
+			if (states.contains(PublishSuccessState.SKIPPED)) {
+				return PublishSuccessState.SKIPPED;
+			}
+			if (states.contains(PublishSuccessState.INHERITED)) {
+				return PublishSuccessState.INHERITED;
+			}
+			if (states.contains(PublishSuccessState.WORKFLOW)) {
+				return PublishSuccessState.WORKFLOW;
+			}
+			if (states.contains(PublishSuccessState.WORKFLOW_STEP)) {
+				return PublishSuccessState.WORKFLOW_STEP;
+			}
+			if (states.contains(PublishSuccessState.PUBLISHAT)) {
+				return PublishSuccessState.PUBLISHAT;
+			}
+			return PublishSuccessState.PUBLISHED;
+		} else {
+			return publishPage(id, at, message, keepPublishAt, keepVersion, feedback);
+		}
+	}
+
+	/**
+	 * @see com.gentics.contentnode.job.MultiPagePublishJob#publishPage()
+	 *
+	 * @param id
+	 *            the id of the page to be published
+	 * @param isAlllang
+	 *            {@link PagePublishRequest#isAlllang()}
+	 * @param at
+	 *            {@link PagePublishRequest#getAt()}
+	 * @param message
+	 *            {@link PagePublishRequest#getMessage()}
+	 * @param keepPublishAt
+	 *            set to true if you want to keep the pages internal publishAt
+	 *            timestamp effective and dont want to publish it right away if
+	 *            a timestamp is set. If set this will also override the "at"
+	 *            parameter. {@link MultiPagePublishRequest#isKeepPublishAt()}
+	 * @param keepVersion
+	 *            true to keep the publishAt version
+	 * @param feedback
+	 *            A list in which to pass back feedback messages.  Works like an
+	 *            out-parameter.
+	 * @return publish success state, see {@link PublishSuccessState}
+	 * @throws EntityNotFoundException
+	 * @throws InsufficientPrivilegesException
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	public static PublishSuccessState publishPage(String id,
+			int at,
+			String message,
+			boolean keepPublishAt,
+			boolean keepVersion, List<String> feedback) throws EntityNotFoundException,
+				InsufficientPrivilegesException,
+				ReadOnlyException,
+				NodeException {
 		// Load the Page from GCN
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = null;
-		List<Page> pages = new Vector<Page>();
 
 		// get the page (readonly)
 		page = PageResourceImpl.getPage(id);
@@ -516,7 +598,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 		}
 
 		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
-			page = PageResourceImpl.getPage(id, ObjectPermission.view);
+			page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
 
 			// check whether it is inherited
 			if (page.isInherited()) {
@@ -525,11 +607,6 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 			// load the page (and lock it)
 			page = PageResourceImpl.getLockedPage(id, ObjectPermission.view);
-			if (isAlllang) {
-				pages.addAll(PageResourceImpl.getLockedLanguageVariants(id, ObjectPermission.view));
-			} else {
-				pages.add(page);
-			}
 
 			try {
 				Map<?, ?> multilevelWorkFlows = t.getNodeConfig().getDefaultPreferences().getPropertyMap("multilevel_pub_workflow");
@@ -548,17 +625,17 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 				SystemUser user = t.getObject(SystemUser.class, t.getUserId());
 
 				List<Tag> invalidTags = new ArrayList<Tag>();
-				List<Page> skippedPages = new ArrayList<Page>();
 				Map<?, ?> regexConfig = t.getNodeConfig().getDefaultPreferences().getPropertyMap("regex");
 
 				// check whether all pages that need to be published have all mandatory tags filled
-				for (Page p : pages) {
-					List<Tag> invalidMandatoryTags = getInvalidMandatoryTags(p, regexConfig);
+				List<Tag> invalidMandatoryTags = getInvalidMandatoryTags(page, regexConfig);
 
-					if (!invalidMandatoryTags.isEmpty()) {
-						invalidTags.addAll(invalidMandatoryTags);
-						skippedPages.add(p);
+				if (!invalidMandatoryTags.isEmpty()) {
+					invalidTags.addAll(invalidMandatoryTags);
+					if (null != feedback) {
+						feedback.add(generateIncorrectMandatoryTagsError(Arrays.asList(page), invalidTags));
 					}
+					return PublishSuccessState.SKIPPED;
 				}
 
 				// Check permission for publishing the page
@@ -568,60 +645,45 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 					t.addTransactional(messageSender);
 
-					// publish the page(s)
-					for (Page p : pages) {
-						if (skippedPages.contains(p)) {
-							continue;
-						}
+					// check whether the page was in queue
+					SystemUser pubQueueUser = page.getPubQueueUser();
+					NodeObjectVersion publishAtVersion = null;
 
-						// check whether the page was in queue
-						SystemUser pubQueueUser = p.getPubQueueUser();
-						NodeObjectVersion publishAtVersion = null;
-
-						// keep the current publishAt version, if requested
-						if (keepVersion && p.getTimePubVersion() != null) {
-							publishAtVersion = p.getTimePubVersion();
-						}
-
-						// if the page was in queue, we need to inform the user
-						// who put the page into queue, that it is published now
-						// but we only do this, when multilevelworkflow is NOT used
-						// (otherwise, the message would be sent twice)
-						if (!multilevelWorkflow && pubQueueUser != null) {
-							CNI18nString messageTextI18n = null;
-
-							if (keepPublishAt) {
-								at = p.getTimePubQueue().getIntTimestamp();
-								publishAtVersion = p.getTimePubVersionQueue();
-							}
-
-							if (at > 0) {
-								messageTextI18n = new CNI18nString("publishing of page <pageid {0}> at {1} has been approved.");
-								messageTextI18n.setParameter("0", ObjectTransformer.getString(p.getId(), null));
-								messageTextI18n.setParameter("1", new ContentNodeDate(at).getFullFormat());
-							} else {
-								messageTextI18n = new CNI18nString("the page <pageid {0}> has been published.");
-								messageTextI18n.setParameter("0", ObjectTransformer.getString(p.getId(), null));
-							}
-
-							try (LangTrx lTrx = new LangTrx(pubQueueUser)) {
-								messageSender.sendMessage(
-										new com.gentics.contentnode.messaging.Message(t.getUserId(), pubQueueUser.getId(), messageTextI18n.toString()));
-							}
-						}
-
-						p.publish(at, publishAtVersion);
+					// keep the current publishAt version, if requested
+					if (keepVersion && page.getTimePubVersion() != null) {
+						publishAtVersion = page.getTimePubVersion();
 					}
 
-					if (!skippedPages.isEmpty()) {
-						if (null != feedback) {
-							feedback.add(generateIncorrectMandatoryTagsError(skippedPages, invalidTags));
+					// if the page was in queue, we need to inform the user
+					// who put the page into queue, that it is published now
+					// but we only do this, when multilevelworkflow is NOT used
+					// (otherwise, the message would be sent twice)
+					if (!multilevelWorkflow && pubQueueUser != null) {
+						CNI18nString messageTextI18n = null;
+
+						if (keepPublishAt) {
+							at = page.getTimePubQueue().getIntTimestamp();
+							publishAtVersion = page.getTimePubVersionQueue();
 						}
-						return PublishSuccessState.SKIPPED;
+
+						if (at > 0) {
+							messageTextI18n = new CNI18nString("publishing of page <pageid {0}> at {1} has been approved.");
+							messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
+							messageTextI18n.setParameter("1", new ContentNodeDate(at).getFullFormat());
+						} else {
+							messageTextI18n = new CNI18nString("the page <pageid {0}> has been published.");
+							messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
+						}
+
+						try (LangTrx lTrx = new LangTrx(pubQueueUser)) {
+							messageSender.sendMessage(
+									new com.gentics.contentnode.messaging.Message(t.getUserId(), pubQueueUser.getId(), messageTextI18n.toString()));
+						}
 					}
+
+					page.publish(at, publishAtVersion);
 
 					return at > 0 ? PublishSuccessState.PUBLISHAT : PublishSuccessState.PUBLISHED;
-
 				} else if (!multilevelWorkflow) {
 					// get users with publish permission
 					Map<SystemUser, PermHandler> parentUsers = PageFactory.getPublishers(page);
@@ -629,51 +691,39 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 					MessageSender messageSender = new MessageSender();
 
 					t.addTransactional(messageSender);
-					for (Page p : pages) {
-						if (skippedPages.contains(p)) {
-							continue;
-						}
 
-						// queue publishing the page
-						NodeObjectVersion version = null;
-						if (at > 0 && keepVersion && p.getTimePubVersion() != null) {
-							version = p.getTimePubVersion();
-						}
-						p.queuePublish(t.getObject(SystemUser.class, t.getUserId()), at, version);
+					// queue publishing the page
+					NodeObjectVersion version = null;
+					if (at > 0 && keepVersion && page.getTimePubVersion() != null) {
+						version = page.getTimePubVersion();
+					}
+					page.queuePublish(t.getObject(SystemUser.class, t.getUserId()), at, version);
 
-						// inform the group members
-						CNI18nString messageTextI18n = null;
+					// inform the group members
+					CNI18nString messageTextI18n = null;
 
-						if (at > 0) {
-							messageTextI18n = new CNI18nString("message.publishat.queue");
-							messageTextI18n.setParameter("0", user.getFirstname() + " " + user.getLastname());
-							messageTextI18n.setParameter("1", ObjectTransformer.getString(p.getId(), null));
-							messageTextI18n.setParameter("2", new ContentNodeDate(at).getFullFormat());
-						} else {
-							messageTextI18n = new CNI18nString("message.publish.queue");
-							messageTextI18n.setParameter("0", user.getFirstname() + " " + user.getLastname());
-							messageTextI18n.setParameter("1", ObjectTransformer.getString(p.getId(), null));
-						}
-
-						for (Map.Entry<SystemUser, PermHandler> entry : parentUsers.entrySet()) {
-							SystemUser parentUser = entry.getKey();
-							PermHandler permHandler = entry.getValue();
-							// we need to check the publish permission for every user, since this will
-							// consider node restrictions
-							if (permHandler.canPublish(p)) {
-								try (LangTrx lTrx = new LangTrx(parentUser)) {
-									messageSender.sendMessage(new com.gentics.contentnode.messaging.Message(t.getUserId(), ObjectTransformer.getInt(
-											parentUser.getId(), -1), messageTextI18n.toString()));
-								}
-							}
-						}
+					if (at > 0) {
+						messageTextI18n = new CNI18nString("message.publishat.queue");
+						messageTextI18n.setParameter("0", user.getFirstname() + " " + user.getLastname());
+						messageTextI18n.setParameter("1", ObjectTransformer.getString(page.getId(), null));
+						messageTextI18n.setParameter("2", new ContentNodeDate(at).getFullFormat());
+					} else {
+						messageTextI18n = new CNI18nString("message.publish.queue");
+						messageTextI18n.setParameter("0", user.getFirstname() + " " + user.getLastname());
+						messageTextI18n.setParameter("1", ObjectTransformer.getString(page.getId(), null));
 					}
 
-					if (!skippedPages.isEmpty()) {
-						if (null != feedback) {
-							feedback.add(generateIncorrectMandatoryTagsError(skippedPages, invalidTags));
+					for (Map.Entry<SystemUser, PermHandler> entry : parentUsers.entrySet()) {
+						SystemUser parentUser = entry.getKey();
+						PermHandler permHandler = entry.getValue();
+						// we need to check the publish permission for every user, since this will
+						// consider node restrictions
+						if (permHandler.canPublish(page)) {
+							try (LangTrx lTrx = new LangTrx(parentUser)) {
+								messageSender.sendMessage(new com.gentics.contentnode.messaging.Message(t.getUserId(), ObjectTransformer.getInt(
+										parentUser.getId(), -1), messageTextI18n.toString()));
+							}
 						}
-						return PublishSuccessState.SKIPPED;
 					}
 
 					return PublishSuccessState.WORKFLOW;
@@ -743,8 +793,8 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 					}
 				}
 			} finally {
-				for (Page p : pages) {
-					p.unlock();
+				if (page != null) {
+					page.unlock();
 				}
 			}
 		}

@@ -1018,8 +1018,13 @@ ins.gtx-diff {
         // if page has timemanagement set or timemanagement setting request in queue so that publishing it would override those settings
         if ((PublishableStateUtil.statePlanned(page) && PublishableStateUtil.statePlannedOnline(page)) || PublishableStateUtil.stateInQueue(page)) {
             // The modal will handle refreshing the item list and closing the editor.
-            publishReq = this.modalService.fromComponent(PublishTimeManagedPagesModal, {}, { pages: [ page ], allPages: 1, closeEditor })
+            publishReq = this.modalService.fromComponent(
+                PublishTimeManagedPagesModal,
+                {},
+                { pages: [ page ], allPages: 1, closeEditor },
+            )
                 .then(modal => modal.open())
+                .catch(err => this.errorHandler.catch(err));
         } else {
             publishReq = this.folderActions.publishPages([ page ])
                 .then(() => {
@@ -1259,23 +1264,22 @@ ins.gtx-diff {
         }
 
         promise.then(result => {
-            if (typeof result !== 'boolean') {
+            if (typeof result !== 'boolean' || !result) {
                 return;
             }
 
-            setTimeout(() => {
-                this.modalService.fromComponent(TimeManagementModal, {}, { item, currentNodeId: this.currentNode.id })
-                    .then(modal => modal.open())
-                    .then(() => {
-                        // prevent ConfirmNavigationModal pop up a second time triggered by route guard when TimeManagementModal closes editor
-                        this.contentModified = false;
-                        this.markContentAsModifiedInState(false);
-                        // refresh folder content list to display new TimeManagement settings
-                        this.folderActions.refreshList('page');
-                        // then close content frame
-                        this.navigationService.instruction({ detail: null }).navigate();
-                    });
-            }, 1);
+            this.modalService.fromComponent(TimeManagementModal, {}, { item, currentNodeId: this.currentNode.id })
+                .then(modal => modal.open())
+                .then(() => {
+                    // prevent ConfirmNavigationModal pop up a second time triggered by route guard when TimeManagementModal closes editor
+                    this.contentModified = false;
+                    this.markContentAsModifiedInState(false);
+                    // refresh folder content list to display new TimeManagement settings
+                    this.folderActions.refreshList('page');
+                    // then close content frame
+                    this.navigationService.instruction({ detail: null }).navigate();
+                })
+                .catch(err => this.errorHandler.catch(err));
         });
     }
 

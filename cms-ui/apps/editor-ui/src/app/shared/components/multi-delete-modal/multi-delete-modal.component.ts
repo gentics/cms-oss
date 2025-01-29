@@ -72,6 +72,8 @@ export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements On
                 this.selectedFormLanguageVariants[item.id] = (item as Form).languages;
             }
         });
+
+        this.updateDeleteCount();
     }
 
     ngOnDestroy(): void {

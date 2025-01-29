@@ -493,7 +493,7 @@ export class PermissionService {
     forFolderInLanguage(
         folderId: number,
         nodeId: number,
-        languageId: number | null,
+        languageId: number | string | null,
     ): Observable<EditorPermissions> {
         const sid = this.appState.now.auth.sid;
 
@@ -758,7 +758,7 @@ export class PermissionService {
     protected mapToPermissions(
         priv: PrivilegeMap,
         map: PermissionsMapCollection,
-        languageId: number | null,
+        languageId: number | string | null,
     ): EditorPermissions {
         let perm;
         let role;
@@ -768,10 +768,13 @@ export class PermissionService {
             role = map.rolePermissions;
         }
 
-        const language: Language = this.appState.now.entities.language[
-            languageId
-        ];
-        const languageString: string = language && language.code;
+        let languageString: string;
+
+        if (typeof languageId === 'string') {
+            languageString = languageId;
+        } else if (typeof languageId === 'number' && Number.isInteger(languageId)) {
+            languageString = this.appState.now.entities.language[languageId]?.code;
+        }
 
         const result: EditorPermissions = Object.assign({}, getNoPermissions());
 

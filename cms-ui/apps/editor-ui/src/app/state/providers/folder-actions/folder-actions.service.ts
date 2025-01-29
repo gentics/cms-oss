@@ -8,6 +8,7 @@ import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/en
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 import { NavigationInstruction, NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
 import { SortedFiles } from '@editor-ui/app/core/providers/upload-conflict/upload-conflict.service';
@@ -15,7 +16,7 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
     AnyModelType,
@@ -188,7 +189,6 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -257,7 +257,7 @@ export class FolderActionsService {
                 this.client.folder.folders(0),
             ]).pipe(
                 switchMap(([, folderRes]) => {
-                    if (folderRes.folders.length === 0) {
+                    if (folderRes.folders?.length === 0) {
                         return of([folderRes, []]);
                     }
 
@@ -3798,7 +3798,7 @@ export class FolderActionsService {
             await modal.open();
         } catch (err) {
             // If it is an error caused by intentionally closing the modal, then we ignore it
-            if (err != null && err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+            if (wasClosedByUser(err)) {
                 return;
             }
             throw err;

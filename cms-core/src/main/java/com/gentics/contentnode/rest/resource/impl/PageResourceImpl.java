@@ -162,6 +162,7 @@ import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.contentnode.rest.util.PageValidator;
 import com.gentics.contentnode.rest.util.PageValidatorAndErrorCollector;
+import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
 import com.gentics.contentnode.rest.util.StringFilter;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -3674,7 +3675,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			try (ChannelTrx cTrx = new ChannelTrx(node)) {
-				page = getPage(id, ObjectPermission.view);
+				page = getPage(id, ObjectPermission.view, ObjectPermission.edit);
 			}
 
 			PageOfflineResult result = null;
@@ -3682,9 +3683,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// Actually take the page offline
 			if (request != null) {
 				if (request.isAlllang()) {
-					Collection<Page> variants = null;
+					List<Page> variants = null;
 					try (ChannelTrx cTrx = new ChannelTrx(node)) {
-						variants = page.getLanguages();
+						variants = new ArrayList<>(page.getLanguages());
+						PermFilter.get(ObjectPermission.edit).filter(variants);
 					}
 					if (!ObjectTransformer.isEmpty(variants)) {
 						for (Page variant : variants) {

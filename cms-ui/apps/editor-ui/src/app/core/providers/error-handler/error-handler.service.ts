@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { LogoutSuccessAction } from '@editor-ui/app/state/modules/auth/auth.actions';
 import { UpdateSearchFilterAction } from '@editor-ui/app/state/modules/folder/folder.actions';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { ModalCloseError, ModalClosingReason, wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
@@ -67,7 +67,7 @@ export class ErrorHandler {
      */
     catch = (error: Error, options?: { notification: boolean }): void => {
         // Ignore errors which are from modals which have been closed by the user
-        if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+        if (wasClosedByUser(error)) {
             return;
         }
 

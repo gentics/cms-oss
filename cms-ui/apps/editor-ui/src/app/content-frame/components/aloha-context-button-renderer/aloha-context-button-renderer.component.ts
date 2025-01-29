@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
 import { AlohaContextButtonComponent, DynamicDropdownConfiguration, DynamicFormModalConfiguration, OverlayElementControl } from '@gentics/aloha-models';
-import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { ModalCloseError, ModalClosingReason, wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
@@ -109,7 +109,7 @@ export class AlohaContextButtonRendererComponent<T>
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             this.settings?.contextResolve?.(value);
         }).catch(error => {
-            if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+            if (wasClosedByUser(error)) {
                 // This is a "notification" error which can be safely dismissed.
                 return;
             }

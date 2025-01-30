@@ -176,15 +176,12 @@ define([
             livecheck: true,
             /** How long it should wait after editing a link before checking */
             delay: 500,
-            /** Settings which can be defined per editable. */
-            config: {
-                /**
-                 * A list of construct-names, which should be checked/have a indicator.
-                 * Similar to how it works in the gcn-plugin, except when empty, it'll never display anything.
-                 * If the array contains `"*"` however, it'll count it as a wildcard and allow all constructs.
-                 */
-                tagtypeWhitelist: [],
-            },
+            /**
+             * A list of construct-names, which should be checked/have a indicator.
+             * Similar to how it works in the gcn-plugin, except when empty, it'll never display anything.
+             * If the array contains `"*"` however, it'll count it as a wildcard and allow all constructs.
+             */
+            tagtypeWhitelist: [],
         },
 
         /**
@@ -329,9 +326,7 @@ define([
 
             // For tags, we first need to check the whitelist if they are allowed to be displayed.
             GCNUtil.getConstructFromId(element.getAttribute('data-gcn-constructid')).then(function(construct) {
-                const $element = $(element);
-                const config = linkCheckerPlugin.getEditableConfig($element);
-                let whitelist = config?.tagtypeWhitelist;
+                let whitelist = linkCheckerPlugin.settings?.tagtypeWhitelist;
 
                 if (!Array.isArray(whitelist)) {
                     whitelist = [];
@@ -584,7 +579,7 @@ define([
             element.classList.remove(CLASS_CHECKED, CLASS_VALID_URL, CLASS_INVALID_URL);
             element.classList.add(CLASS_LINK_CHECKER_ITEM, CLASS_UNCHECKED);
 
-            if (url) {
+            if (url && !linkCheckerPlugin._isInlineLink(element)) {
                 element.setAttribute(ATTR_LINK_TARGET, url);
             } else {
                 element.removeAttribute(ATTR_LINK_TARGET)
@@ -637,7 +632,7 @@ define([
             element.classList.remove(CLASS_UNCHECKED, CLASS_VALID_URL);
             element.classList.add(CLASS_LINK_CHECKER_ITEM, CLASS_CHECKED, CLASS_INVALID_URL);
 
-            if (linkObj?.url != null) {
+            if (linkObj?.url != null && !linkCheckerPlugin._isInlineLink(element)) {
                 element.setAttribute(ATTR_LINK_TARGET, linkObj.url);
             } else {
                 element.removeAttribute(ATTR_LINK_TARGET);

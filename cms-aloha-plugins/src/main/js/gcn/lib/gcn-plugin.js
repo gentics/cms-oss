@@ -686,7 +686,7 @@ define([
 		setupMagicLinkConstruct: function (callback) {
 			var that = this;
 
-			Util.getConstructFromId(GCN.settings.MAGIC_LINK).then(function (magicLinkConstruct) {
+			Util.getConstructFromKeyword(GCN.settings.MAGIC_LINK).then(function (magicLinkConstruct) {
 				if (!magicLinkConstruct) {
 					return;
 				}
@@ -1249,6 +1249,10 @@ define([
 					openTagFill(tag, gcn, options).then(function() {
 						resolve();
 					}).catch(function(err) {
+						// Ignore use close "errors"
+						if (err instanceof OverlayElement.OverlayCloseError && err.reason !== 'error') {
+							return;
+						}
 						reject(err);
 					});
 				});

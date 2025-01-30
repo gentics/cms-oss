@@ -100,10 +100,6 @@ export interface GCNLinkBrowserPluginSettings {
     objectTypeFilter?: string[];
 }
 
-export interface GCNLinkCheckerPluginConfig {
-    tagtypeWhitelist?: string[];
-}
-
 export interface GCNLinkCheckerPluginSettings {
     absoluteBase?: string;
     defaultProtocol?: string;
@@ -111,8 +107,7 @@ export interface GCNLinkCheckerPluginSettings {
     relativeBase?: string;
     livecheck?: boolean;
     delay?: number;
-
-    config?: GCNLinkCheckerPluginConfig;
+    tagtypeWhitelist?: string[];
 }
 
 export interface GCNAlohaPlugin extends AlohaPlugin {

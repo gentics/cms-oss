@@ -243,7 +243,7 @@ define('gcn/gcn-util', [
 			withinCMS(function() {
 				GCMSUI.getConstructs().then(constructs => {
 					buildConstructCache(constructs);
-					resolve(constructIdCache[keyword]);
+					resolve(constructKeywordCache[keyword]);
 				}).catch(reject);
 			});
 		}));

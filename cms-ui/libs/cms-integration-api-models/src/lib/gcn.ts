@@ -100,6 +100,10 @@ export interface GCNLinkBrowserPluginSettings {
     objectTypeFilter?: string[];
 }
 
+export interface GCNLinkCheckerPluginConfig {
+    tagtypeWhitelist?: string[];
+}
+
 export interface GCNLinkCheckerPluginSettings {
     absoluteBase?: string;
     defaultProtocol?: string;
@@ -107,6 +111,8 @@ export interface GCNLinkCheckerPluginSettings {
     relativeBase?: string;
     livecheck?: boolean;
     delay?: number;
+
+    config?: GCNLinkCheckerPluginConfig;
 }
 
 export interface GCNAlohaPlugin extends AlohaPlugin {
@@ -123,25 +129,33 @@ export interface GCNTags {
 
 export interface GCNLinkCheckerAlohaPluigin extends AlohaPlugin {
     settings: GCNLinkCheckerPluginSettings;
+
     brokenLinks: HTMLElement[];
     validLinks: HTMLElement[];
     uncheckedLinks: HTMLElement[];
 
-    clearBrokenLinks: () => void;
+    /** Sets up the link-checker pluign with the initial data from the backend. */
     initializeBrokenLinks: (links: ExternalLink[]) => HTMLElement[];
+    /** Updates all elements in the arrays from the DOM. */
     refreshLinksFromDom: () => void;
 
-    addLink: (element: HTMLElement, res?: LinkCheckerCheckResponse) => void;
-    addUncheckedLink: (element: HTMLElement) => boolean;
-    addValidLink: (element: HTMLElement) => boolean;
-    addBrokenLink: (element: HTMLElement) => boolean;
-
-    updateLinkStatus: (element: HTMLElement, res?: LinkCheckerCheckResponse) => void;
+    /**
+     * Updates (or adds if not present yet) the element to the provided status.
+     * If no status is provided, the link will be marked as unchecked.
+     */
+    updateLinkStatus: (element: HTMLElement, res?: ExternalLink | LinkCheckerCheckResponse) => void;
+    /**
+     * Removes the link from the link-checker.
+     * @param element The element to remove the link element from
+     * @returns If the link has been successfully removed.
+     */
     removeLink: (element: HTMLElement) => boolean;
 
+    /* Toolbar interaction */
+    /** Selects the specified link/tag */
     selectLinkElement: (element: HTMLElement) => void;
+    /** Opens the link-modal or tag-fill for the element */
     editLink: (element: HTMLElement) => Promise<void>;
+    /** Deletes the entire tag/link from DOM and from the page. */
     deleteLink: (element: HTMLElement) => Promise<void>;
-
-    deleteTag: (element: HTMLElement | JQuery) => void;
 }

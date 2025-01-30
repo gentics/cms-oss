@@ -1,0 +1,1 @@
+Editor User Interface: The link-checker in edit-mode has been updated to work with tags correctly. It requires a configuration for constructs to opt in - @tagtypeWhitelist@ - to enable it for specified constructs.

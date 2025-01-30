@@ -76,13 +76,15 @@ The Aloha Editor plugin can be configured with the following options:
 aloha_settings:
   plugins:
     gcnlinkchecker:
-	  livecheck: true
-	  delay: 500
+      livecheck: true
+      delay: 500
+      tagtypeWhitelist: []
 </shell>
 
-|_. Parameter |_. Description                                        |_. Default |
-| livecheck   | Whether links shall be checked live (during editing) | true      |
-| delay       | Delay in milliseconds for checking an entered link   | 500       |
+|_. Parameter      |_. Description                                        |_. Default |
+| livecheck        | Whether links shall be checked live (during editing) | true      |
+| delay            | Delay in milliseconds for checking an entered link   | 500       |
+| tagtypeWhitelist | Which tagtypes (keyword-list) should be allowed to be validated. Livecheck only - will not be used for the Custom-Tool or for the automatic checks. You may use @["*"]@ as wildcard to allow all tagtypes to be checked. | [] |
 
 h4. Scheduler Task
 
@@ -98,7 +100,7 @@ custom_tools:
   - id: 1 # or whatever ID you want this tool to have
     key: "linkchecker" # this must be the key for this Custom Tool!
     toolUrl: "/tools/link-checker/?sid=${SID}"
-    iconUrl: "link" # Material Icon name or a URL
+    iconUrl: "link" # Material Symbol name or a URL
     newtab: false
     name:
 	  de: "Link Checker"

@@ -202,12 +202,61 @@ define('gcn/gcn-util', [
 		});
 	}
 
+	let constructIdCache = null;
+	let constructKeywordCache = null;
+
+	function buildConstructCache(constructs) {
+		if (constructIdCache == null) {
+			constructIdCache = {};
+			for (const elem of Object.values(constructs || {})) {
+				constructIdCache[elem.id] = structuredClone(elem);
+			}
+		}
+		if (constructKeywordCache == null) {
+			constructKeywordCache = structuredClone(constructs);
+		}
+	}
+
+	function getConstructFromId(id) {
+		return new Promise((function(resolve, reject) {
+			if (constructIdCache != null) {
+				resolve(constructIdCache[id]);
+				return;
+			}
+	
+			withinCMS(function() {
+				GCMSUI.getConstructs().then(constructs => {
+					buildConstructCache(constructs);
+					resolve(constructIdCache[id]);
+				}).catch(reject);
+			});
+		}));
+	}
+
+	function getConstructFromKeyword(keyword) {
+		return new Promise((function(resolve, reject) {
+			if (constructKeywordCache != null) {
+				resolve(constructKeywordCache[keyword]);
+				return;
+			}
+
+			withinCMS(function() {
+				GCMSUI.getConstructs().then(constructs => {
+					buildConstructCache(constructs);
+					resolve(constructKeywordCache[keyword]);
+				}).catch(reject);
+			});
+		}));
+	}
+
 	return {
 		addBlockAnnotation: addBlockAnnotation,
 		removeBlockAnnotation: removeBlockAnnotation,
 		finishedCopyingBlock: finishedCopyingBlock,
 		setPlaceholder: setPlaceholder,
 		createUrl: createUrl,
-		withinCMS: withinCMS
+		withinCMS: withinCMS,
+		getConstructFromId: getConstructFromId,
+		getConstructFromKeyword: getConstructFromKeyword,
 	};
 });

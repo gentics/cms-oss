@@ -8,6 +8,7 @@
 define([
 	'aloha/core',
 	'jquery',
+	'PubSub',
 	'aloha/ephemera',
 	'block/block',
 	'gcn/gcn-util',
@@ -17,6 +18,7 @@ define([
 ], function (
 	Aloha,
 	$,
+	PubSub,
 	Ephemera,
 	Block,
 	Util,
@@ -267,7 +269,7 @@ define([
 					event.preventDefault();
 					var name = $el.attr('data-gcn-tagname');
 					block.confirmedDestroy(function() {
-						deleteBlock(block);
+						block.deleteInstance();
 					}, name);
 				});
 
@@ -294,6 +296,10 @@ define([
 			this._super(force);
 		},
 
+		deleteInstance: function() {
+			deleteBlock(this);
+		},
+
 		/*
 		 * @override
 		 */
@@ -304,6 +310,14 @@ define([
 			// Check whether the handles have already been added (only
 			// do add them "IfNeeded").
 			if ($block.children('.aloha-construct-buttons-container').length) {
+				var editableHost = Aloha.getEditableHost($block);
+
+				PubSub.pub('gcn.block.handles-available', {
+					host: editableHost,
+					block: block,
+					$el: $block,
+				});
+
 				return;
 			}
 
@@ -382,7 +396,7 @@ define([
 					text: 'delete'
 				})).click(function ($event) {
 					block.confirmedDestroy(function () {
-						deleteBlock(block);
+						block.deleteInstance();
 					}, $block.attr('data-gcn-tagname'));
 					$event.preventDefault();
 					return false;
@@ -441,6 +455,12 @@ define([
 			if (editableHost) {
 				editableHost.smartContentChange({type: 'block-change'});
 			}
+
+			PubSub.pub('gcn.block.handles-available', {
+				host: editableHost,
+				block: block,
+				$el: $block,
+			});
 		},
 
 		/**

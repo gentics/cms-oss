@@ -1,7 +1,6 @@
 {
   "name": "@gentics/aloha-models",
-  "version": "6.2.3",
-  "version": "6.1.23",
+  "version": "6.2.4",
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {

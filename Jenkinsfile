@@ -157,6 +157,9 @@ spec:
 
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
+                            mvnArguments += " -am -pl cms-server"
+                        }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
                         runJUnitTests = false

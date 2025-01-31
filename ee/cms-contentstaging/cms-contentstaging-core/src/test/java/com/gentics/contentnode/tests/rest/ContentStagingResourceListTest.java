@@ -3,23 +3,26 @@ package com.gentics.contentnode.tests.rest;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.supply;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.ContentStagingResource;
@@ -27,7 +30,9 @@ import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.testutils.GenericTestUtils;
 
 /**
  * Sorting and filtering tests for {@link ContentStagingResource#list(FilterParameterBean, SortParameterBean, PagingParameterBean)}
@@ -44,25 +49,55 @@ public class ContentStagingResourceListTest extends AbstractListSortAndFilterTes
 	public static void setupOnce() throws NodeException {
 		AbstractListSortAndFilterTest.setupOnce();
 
-		nodes = supply(t -> {
-			return t.getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDLIST));
-		});
+		List<Folder> potentialMotherFolders = new ArrayList<>();
 
-		pages = supply(t -> {
-			return t.getObjects(Page.class, DBUtils.select("SELECT id FROM page", DBUtils.IDS));
-		});
+		// 20 nodes
+		nodes = new ArrayList<>();
+		for (int i = 0; i < 20; i++) {
+			Node node = supply(() -> ContentNodeTestDataUtils.createNode());
+			nodes.add(node);
+			potentialMotherFolders.add(execute(Node::getFolder, node));
+		}
 
-		files = supply(t -> {
-			return t.getObjects(File.class, DBUtils.select("SELECT id FROM contentfile WHERE filetype NOT LIKE 'image/%'", DBUtils.IDS));
-		});
+		Template template = supply(() -> ContentNodeTestDataUtils.createTemplate(nodes.get(0).getFolder(), "Template"));
 
-		images = supply(t -> {
-			return t.getObjects(ImageFile.class, DBUtils.select("SELECT id FROM contentfile WHERE filetype LIKE 'image/%'", DBUtils.IDS));
-		});
+		// 40 folders
+		folders = new ArrayList<>();
+		for (int i = 0; i < 40; i++) {
+			Folder mother = potentialMotherFolders.get(random.nextInt(potentialMotherFolders.size()));
+			Folder folder = supply(() -> ContentNodeTestDataUtils.createFolder(mother, randomStringGenerator.generate(5, 10)));
+			folders.add(folder);
+			potentialMotherFolders.add(folder);
+		}
 
-		folders = supply(t -> {
-			return t.getObjects(Folder.class, DBUtils.select("SELECT id FROM folder", DBUtils.IDS));
-		});
+		// 100 pages
+		pages = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			Folder mother = potentialMotherFolders.get(random.nextInt(potentialMotherFolders.size()));
+			pages.add(supply(() -> ContentNodeTestDataUtils.createPage(mother, template,
+					randomStringGenerator.generate(5, 10))));
+		}
+
+		// 20 files
+		files = new ArrayList<>();
+		for (int i = 0; i < 20; i++) {
+			Folder mother = potentialMotherFolders.get(random.nextInt(potentialMotherFolders.size()));
+			files.add(supply(() -> ContentNodeTestDataUtils.createFile(mother, randomStringGenerator.generate(5, 10),
+					randomStringGenerator.generate(20, 40).getBytes())));
+		}
+
+		// 20 images
+		images = new ArrayList<>();
+		try {
+			byte[] imageData = IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg"));
+			for (int i = 0; i < 20; i++) {
+				Folder mother = potentialMotherFolders.get(random.nextInt(potentialMotherFolders.size()));
+				images.add(supply(() -> (ImageFile) ContentNodeTestDataUtils.createImage(mother,
+						randomStringGenerator.generate(5, 10), imageData)));
+			}
+		} catch (IOException e) {
+			throw new NodeException(e);
+		}
 	}
 
 	@Parameters(name = "{index}: sortBy {0}, ascending {2}, filter {3}")

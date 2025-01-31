@@ -22,9 +22,9 @@ The Gentics CMS server takes the central role in the infrastucture overview. Mos
 
 h5. Gentics Mesh
 
-Gentics Mesh can be clustered in a multi-master setup. More details on the clustering capabilities can be found in the "documentation":https://getmesh.io/docs/clustering/.
+Gentics Mesh can be clustered in a multi-master setup. More details on the clustering capabilities can be found in the "documentation":https://www.gentics.com/mesh/docs/clustering/.
 
-NOTE: It is advised to deploy at least one additional dedicated Gentics Mesh instance which is used to only run the "backup process":https://getmesh.io/docs/administration-guide/#_backup_recovery.
+NOTE: It is advised to deploy at least one additional dedicated Gentics Mesh instance which is used to only run the "backup process":https://www.gentics.com/mesh/docs/administration-guide/#_backup_recovery.
 
 h5. Gentics Portal
 
@@ -49,13 +49,13 @@ h5. Keycloak
 All Gentics Products support keycloak as a IAM provider.
 
 The Keycloak service can also be deployed in a clustered fashion. The central MariaDB cluster should be used to store the service data in this case.
-More details on the setup and configuration can be found in the "Keycloak Clustering Documentation":https://www.keycloak.org/docs/3.3/server_installation/topics/clustering.html.
+More details on the setup and configuration can be found in the "Keycloak Clustering Documentation":https://www.keycloak.org/server/configuration-production#_support_for_keycloak_in_a_cluster.
 
 h5. Language Tool
 
 The Language Tool is the basis for the "Aloha Editor Spellcheck Plugin":aloha_spellcheck_plugin.html.
 
-The "Language Tool Server":http://wiki.languagetool.org/http-server is stateless and does not require any database. We provide a "docker image":https://github.com/gentics/languagetool-docker for this service.
+The "Language Tool Server":https://dev.languagetool.org/http-server is stateless and does not require any database. We provide a "docker image":https://github.com/gentics/languagetool-docker for this service.
 
 h4. Filesystem
 

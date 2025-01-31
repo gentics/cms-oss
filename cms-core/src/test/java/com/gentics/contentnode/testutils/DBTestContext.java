@@ -442,13 +442,13 @@ public class DBTestContext extends TestWatcher {
 		System.setProperty(ConfigurationValue.LOGS_PATH.getSystemPropertyName(), new File(basePath, "logs").getAbsolutePath());
 		System.setProperty(ConfigurationValue.PACKAGES_PATH.getSystemPropertyName(), new File(basePath, "packages").getAbsolutePath());
 		System.setProperty(ConfigurationValue.PUBLISH_PATH.getSystemPropertyName(), new File(basePath, "publish").getAbsolutePath());
+		System.setProperty(ConfigurationValue.KEYS_PATH.getSystemPropertyName(), new File(basePath, "keys").getAbsolutePath());
 
 		System.setProperty(ConfigurationValue.NODE_DB_URL.getSystemPropertyName(),
 				cmsDatabaseSettings.getProperty("url")
 						+ "?characterEncoding=UTF8&includeInnodbStatusInDeadlockExceptions=true&useSSL=false");
 		System.setProperty(ConfigurationValue.NODE_DB_USER.getSystemPropertyName(), cmsDatabaseSettings.getProperty("username"));
 		System.setProperty(ConfigurationValue.NODE_DB_PASSWORD.getSystemPropertyName(), cmsDatabaseSettings.getProperty("passwd"));
-		this.setLicenseKeySystemProperty();
 
 		mapPrefs.set("contentnode.maxfilesize", "1048576");
 		mapPrefs.set("contentnode.feature.symlink_files", "False");
@@ -513,16 +513,6 @@ public class DBTestContext extends TestWatcher {
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new NodeException(e);
 			}
-		}
-	}
-
-	private void setLicenseKeySystemProperty() {
-		URL licenseResource = getClass().getResource("license.key");
-
-		if (licenseResource != null) {
-			File licenseKeyFile = new File(licenseResource.getFile());
-			System.setProperty(ConfigurationValue.KEYS_PATH.getSystemPropertyName(),
-					licenseKeyFile.getParentFile().toString());
 		}
 	}
 

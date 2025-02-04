@@ -2457,7 +2457,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 				progress.setFinished((int) (System.currentTimeMillis() / 1000));
 				if (mismatches.isEmpty()) {
-					JobStatus response = getJobStatus();
+					JobStatus response = new JobStatus().setRunning(false).setProgress(progress);
+					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
 					response.addMessage(new Message(Type.SUCCESS, I18NHelper
 							.get("content.staging.import.success", Integer.toString(progress.getDone()), name)));
 					return response;
@@ -2476,7 +2477,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		 * @return job status
 		 */
 		public JobStatus getJobStatus() {
-			return new JobStatus(I18NHelper.get("content.staging.import", name), running).setProgress(progress);
+			return new JobStatus(I18NHelper.get(running ? "job_running" : "job_not_running",
+					I18NHelper.get("content.staging.import", name)), running).setProgress(progress);
 		}
 
 		/**

@@ -6,6 +6,8 @@ authentications protocols.
 
 endprologue.
 
+NOTE: Gentics CMS supports Keycloak versions 19.x to 24.x.
+
 h3. Server side configuration
 
 Activate the Keycloak feature and add configuration for user creation callbacks and initial groups:

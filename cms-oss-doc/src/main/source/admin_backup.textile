@@ -21,33 +21,29 @@ Create a backup of your MySQL database.
 <shell>
   # stop Gentics CMS
   # dump the database
-  mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 42006 -p node_utf8 > /Node/tmp/node_utf8.sql
-  # NOTE: You can decide if want to backup any contentrepositories
-  # mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 42006 -p contentrepository > /Node/tmp/cr.sql
+  mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 3306 -p node_utf8 > /Node/tmp/node_utf8.sql
 </shell>
 
 h3. File Backup
-
-NOTE: This is the recommended way to backup your system
 
 NOTE: Backup your database first
 
 <shell>
 # stop Gentics CMS
 # create a full backup
-tar cvfz /backup/Node-`date +%F`.tar.gz /Node
+tar cvfz /backup/cms-data-`date +%F`.tar.gz /cms/data
 # start Gentics CMS
 </shell>
 
-h3. Differential Backup
+h4. Differential Backup
 
 NOTE: Backup your database first
 
-@rdiff-backup@ allows you to restore the system to a state at a given point in time.
+The @rdiff-backup@ "package":https://github.com/rdiff-backup/rdiff-backup#installation can be used to create incremental backups of the CMS data.
 
 <shell>
 # stop Gentics CMS
 # create backup using rdiff-backup
-rdiff-backup /cms/ /backup/Node
+rdiff-backup /cms/ /backup/cms
 # start Gentics CMS
 </shell>

@@ -65,7 +65,7 @@ Optional dependencies for "licensed CMS Features":https://www.gentics.com/Conten
 </javascript>
 
 The +[Gentics CMS Version]+ must exactly match the Gentics CMS Version used on the Server.
-The artifact can be downloaded from the "Gentics Maven Repository":https://maven.gentics.com/.
+The artifact can be downloaded from the "Gentics Maven Repository":https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms-oss/cms-restapi/.
 
 h3. Using the client
 
@@ -191,8 +191,8 @@ h4. Processing a response
 
 All data that was returned by the REST service is stored inside the +Response+-object and can
 be accessed with basic Java setters and getters. This includes both general response information
-and specific data objects corresponding to the items listed in the
-"Data Model":http://www.gentics.com/Content.Node/guides/restapi/model.html.
+and specific data objects. Fields contained in a specific response are detail in the
+"REST API documentation":https://www.gentics.com/Content.Node/guides/restapi/index.html.
 
 h4. Logout
 

@@ -9,6 +9,7 @@ import {
     Page,
     PageCreateRequest,
     PermissionInfo,
+    ScheduleCreateReqeust,
     ScheduleTaskCreateRequest,
 } from '@gentics/cms-models';
 
@@ -60,6 +61,7 @@ export const IMPORT_TYPE_USER = 'user';
 export const IMPORT_TYPE_GROUP = 'group';
 
 export const IMPORT_TYPE_TASK = 'task';
+export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
 export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
 export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
@@ -70,7 +72,12 @@ export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
 
 export type ItemType = typeof ITEM_TYPE_FOLDER | typeof ITEM_TYPE_PAGE | typeof ITEM_TYPE_FILE | typeof ITEM_TYPE_IMAGE | typeof ITEM_TYPE_FORM;
-export type ImportType = ItemType | typeof IMPORT_TYPE_NODE | typeof IMPORT_TYPE_USER | typeof IMPORT_TYPE_GROUP | typeof IMPORT_TYPE_TASK;
+export type ImportType = ItemType
+| typeof IMPORT_TYPE_NODE
+| typeof IMPORT_TYPE_USER
+| typeof IMPORT_TYPE_GROUP
+| typeof IMPORT_TYPE_TASK
+| typeof IMPORT_TYPE_SCHEDULE;
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -103,6 +110,25 @@ export const CORE_CONSTRUCTS = [
 
 export const OBJECT_PROPERTY_PAGE_COLOR = '994d.ff379678-37b9-11ef-a38e-0242ac110002';
 export const OBJECT_PROPERTY_FOLDER_COLOR = 'a986.40be20e1-4318-11ef-bf28-0242ac110002';
+
+// Internal tasks, which are defined by their internal commands
+export const TASK_CONVERT_IMAGES = 'convertimages';
+export const TASK_LINK_CHECKER = 'linkchecker';
+export const TASK_PURGE_MESSAGES = 'purgemessages';
+export const TASK_PURGE_LOGS = 'purgelogs';
+export const TASK_PURGE_VERSIONS = 'purgeversions';
+export const TASK_PURGE_WASTEBIN = 'purgebastebin';
+export const TASK_PUBLISH = 'publish';
+
+export const INTERNAL_TASKS = [
+    TASK_CONVERT_IMAGES,
+    TASK_LINK_CHECKER,
+    TASK_PURGE_MESSAGES,
+    TASK_PURGE_LOGS,
+    TASK_PURGE_VERSIONS,
+    TASK_PURGE_WASTEBIN,
+    TASK_PUBLISH,
+];
 
 export const BOUNDARY_NODES = new Set([
     'article',
@@ -320,4 +346,11 @@ export interface UserImportData extends GroupUserCreateRequest, ImportData {
 
 export interface ScheduleTaskImportData extends ScheduleTaskCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_TASK;
+}
+
+export interface ScheduleImportData extends Omit<ScheduleCreateReqeust, 'taskId'>, ImportData {
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_SCHEDULE;
+
+    /** The task import-id or internal command to be executed */
+    task: string;
 }

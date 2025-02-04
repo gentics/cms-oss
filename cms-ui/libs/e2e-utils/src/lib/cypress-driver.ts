@@ -77,64 +77,59 @@ export class CypressDriver implements GCMSClientDriver {
                 return sentRequest;
             }
 
-            sentRequest = new Promise((resolve, reject) => {
-                cy.request({
-                    log: this.log,
-                    url: request.url,
-                    qs: request.params,
-                    method: request.method,
-                    headers: request.headers,
-                    failOnStatusCode: false,
-                    timeout: 10_000,
-                    ...fn(request.url),
-                }).then(res => {
-                    let body = res.body;
-                    let valid = res.isOkStatusCode;
+            sentRequest = cy.request({
+                log: this.log,
+                url: request.url,
+                qs: request.params,
+                method: request.method,
+                headers: request.headers,
+                failOnStatusCode: false,
+                timeout: 10_000,
+                ...fn(request.url),
+            }).then(res => {
+                let body = res.body;
+                let valid = res.isOkStatusCode;
 
-                    // If it isn't a binary response, then we can properly parse the body and inspect it for potential error messages
-                    if (!isBinary && body != null) {
-                        if (Cypress.Buffer.isBuffer(body)) {
-                            body = body.toJSON();
-                        } else if (Buffer.isBuffer(body)) {
-                            body = body.toJSON();
-                        } else if (
-                            // Very hacky, but the types are different between the runtimes which causes this issue
-                            body instanceof ArrayBuffer
+                // If it isn't a binary response, then we can properly parse the body and inspect it for potential error messages
+                if (!isBinary && body != null) {
+                    if (Cypress.Buffer.isBuffer(body)) {
+                        body = body.toJSON();
+                    } else if (Buffer.isBuffer(body)) {
+                        body = body.toJSON();
+                    } else if (
+                    // Very hacky, but the types are different between the runtimes which causes this issue
+                        body instanceof ArrayBuffer
                             || Object.getPrototypeOf(body).constructor.name === 'ArrayBuffer'
-                        ) {
-                            const decoder = new TextDecoder('utf-8', { fatal: true });
-                            body = decoder.decode(body);
-                            body = JSON.parse(body);
-                        } else if (typeof body === 'string') {
-                            try {
-                                body = JSON.parse(body);
-                            } catch (error) {
-                                valid = false;
-                                const err = createError(request, res);
-                                cy.log('Error while from the response body', error, body, err);
-                                reject(err);
-                                return Promise.resolve(body);
-                            }
-                        }
-
+                    ) {
+                        const decoder = new TextDecoder('utf-8', { fatal: true });
+                        body = decoder.decode(body);
+                        body = JSON.parse(body);
+                    } else if (typeof body === 'string') {
                         try {
-                            const err = validateResponseObject(request, body);
-                            valid = err == null;
-                        } catch (err) {
+                            body = JSON.parse(body);
+                        } catch (error) {
                             valid = false;
+                            const err = createError(request, res);
+                            cy.log('Error while from the response body', error, body, err);
+                            throw err;
                         }
                     }
 
-                    if (!valid) {
-                        const err = createError(request, res);
-                        reject(err);
-                        return Promise.resolve(body);
+                    try {
+                        const err = validateResponseObject(request, body);
+                        valid = err == null;
+                    } catch (err) {
+                        valid = false;
                     }
+                }
 
-                    resolve(body);
-                    return Promise.resolve(body);
-                });
-            });
+                if (!valid) {
+                    const err = createError(request, res);
+                    throw err;
+                }
+
+                return body;
+            }) as any;
 
             return sentRequest;
         }

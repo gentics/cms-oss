@@ -1,5 +1,5 @@
 import { AccessControlledType } from '@gentics/cms-models';
-import { EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { EntityImporter, schedulePublisher, TestSize } from '@gentics/e2e-utils';
 import { AUTH_ADMIN } from '../support/app.po';
 import '@gentics/e2e-utils/commands';
 
@@ -386,7 +386,7 @@ describe('Content Repositories Module', () => {
             describe('Role Permissions', () => {
                 beforeEach(() => {
                     cy.wrap(IMPORTER.deleteMeshProjects());
-                    cy.wrap(IMPORTER.runPublish());
+                    cy.wrap(IMPORTER.executeSchedule(schedulePublisher));
                 });
 
                 afterEach(() => {

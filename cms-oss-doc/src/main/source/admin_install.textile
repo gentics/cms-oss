@@ -10,6 +10,7 @@ h3. Pre Requirements
 * All commands have to be executed using the root user.
 * Make sure the locale en_US.UTF-8 is generated
 * Make sure your timezone is correctly set (eg. to CET)
+* Make sure Java 17 is installed on the system. Installation commands differ depending on the operating system (see the "compatibility list":https://www.gentics.com/Content.Node/cmp8/guides-oss/gcn_compatibility_list.html#operating-systems for details on supported operating systems).
 
 h4. Download the package
 
@@ -24,6 +25,14 @@ Save the JAR file under /cms.
 
 h4. Create service
 
+h5. Create node user
+
+Concrete commands may vary depending on the operating system, but the following examples should work on most Linux based operating systems. The examples assume that they are executed as the @root@ user. When executed with another user prefixing all commands with @sudo@ might be necessary.
+
+# Create group for @node@ user: @groupadd node@
+# Create @node@ user, add to @node@ group and assign home directory @/cms@: @useradd -m -d /cms -g node node@
+# (Optional) Set password for @node@ user: @passwd node@
+
 Create the systemd service file:
 
 <shell filename="/cms/cms.service">
@@ -35,8 +44,12 @@ After=basic.target network.target syslog.target
 [Service]
 User=node
 Restart=on-failure
-ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar com.gentics.contentnode.server.Runner
-WorkingDirectory=/ms
+# Replace "YOUR_LICENSE_KEY" in the following line with your actual license key.
+Environment="LICENSEKEY=YOUR_LICENSE_KEY"
+# Only one of the two following lines may be uncommented. This example assumes that the enterprise version is used, adapt the following two lines if the OSS version should be used instead.
+# ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar com.gentics.contentnode.server.Runner
+ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-server.jar com.gentics.contentnode.server.Runner
+WorkingDirectory=/cms
 LimitMEMLOCK=infinity
 LimitNOFILE=65536
 LimitAS=infinity
@@ -47,14 +60,32 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 </shell>
 
+The license key can alternatively also be set by storing the key in @/cms/keys/license.key@.
+
 Create the configuration .yml files under /cms/conf/cms and activate the service with
+
+h5. Database configuration
+
+The configuration for the database access should be put in /cms/conf/cms/db.yml:
+
+<shell filename="/cms/conf/cms/db.yml">
+db:
+  settings:
+    user: "node_cms"
+    password: "PASSWORD_FOR_USER node_cms"
+    # The following setting are only necessary if the database server is not running on the same host as the CMS.
+    host: "DATABASE_HOST"
+</shell>
+
+NOTE: Make sure that the DB configuration file is only readable by the @node@ user.
+
+Alternatively the database configuration can also be set via environment variables. See "Environment variables":https://www.gentics.com/Content.Node/cmp8/guides/admin_docker.html#environment-variables for details.
+
 <shell>
 # systemctl enable /cms/cms.service
 </shell>
 
 h4. Database server
-
-When using the debian package installer with MariaDB, this step will be done automatically.
 
 Please install a "compatible":gcn_compatibility_list.html MySQL Server on your system.
 We suggest a installation of MariaDB on the same server that will host Gentics CMS.
@@ -86,6 +117,10 @@ The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
 [client]
   default-character-set          = utf8
 </shell>
+
+h3. Reverse proxy configuration
+
+Once started the CMS is reachable under http://localhost:8080. To make it reachable under a certain domain, the web server (e.g. Apache or Nginx) must be configured to use a reverse proxy to forward requests for the CMS to localhost:8080.
 
 h3. Migration
 

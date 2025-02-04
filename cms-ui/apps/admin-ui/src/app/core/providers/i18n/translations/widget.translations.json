@@ -37,11 +37,11 @@
     },
     "task_publishing_process_title": {
         "en": "Publish Status",
-        "de": "Publish Status"
+        "de": "Publizierungsstatus"
     },
     "task_queue_title": {
         "en": "Task Queue",
-        "de": "Task Queue"
+        "de": "Aufgaben"
     },
     "task_queue_waiting_title": {
         "en": "Waiting tasks",

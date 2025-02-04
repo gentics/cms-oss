@@ -21,7 +21,7 @@
     },
     "confirm_delete_message_singular": {
         "en": "The following {{entityName}} will be deleted",
-        "de": "Folgende {{entityName}} wird gelöscht"
+        "de": "1 {{entityName}} wird gelöscht"
     },
     "confirm_delete_title": {
         "en": "Delete {{entityName}}",
@@ -440,32 +440,32 @@
         "de": "Durchlauf Informationen"
     },
     "export_content_package_title_singular": {
-        "en": "Export Content-Package to File-System",
+        "en": "Export Content Package to file system",
         "de": "Contentpaket ins Dateisystem exportieren"
     },
     "export_content_package_title_plural": {
-        "en": "Export Content-Packages to File-System",
+        "en": "Export Content Packages to file system",
         "de": "Contentpakete ins Dateisystem exportieren"
     },
     "export_content_package_body_singular": {
-        "en": "Are you sure you want to export the Content-Package \"<b>{{packageName}}</b>\"?",
+        "en": "Are you sure you want to export the Content Package \"<b>{{packageName}}</b>\"?",
         "de": "Sind sie sicher, dass Sie das Contentpaket „<b>{{ packageName }}</b>“ exportieren möchten?"
     },
     "export_content_package_body_plural": {
-        "en": "Are you sure you want to export the following Content-Packages?<br><ul><li>{{packageNames}}</li></ul>",
+        "en": "Are you sure you want to export the following Content Packages?<br><ul><li>{{packageNames}}</li></ul>",
         "de": "Sind sie sicher, dass Sie folgende Contentpakete exportieren möchten?<br><ul><li>{{packageNames}}</li></ul>"
     },
     "import_content_package_title": {
-        "en": "Import Content Package from File-System",
-        "de": "Inhalt Paket aus dem Dateisystem importieren"
+        "en": "Import Content Package from file system",
+        "de": "Contentpaket aus dem Dateisystem importieren"
     },
     "import_content_package_singular": {
-        "en": "Are you sure you want to import the Content Package \"<b>{{packageName}}</b>\" from the File-System?",
-        "de": "Sind sie sicher, dass Sie das Inhalt Paket „<b>{{packageName}}</b>“ aus dem Datei-System importeren möchten?"
+        "en": "Are you sure you want to import the Content Package \"<b>{{packageName}}</b>\" from the file system?",
+        "de": "Sind sie sicher, dass Sie das Contentpaket „<b>{{packageName}}</b>“ aus dem Dateisystem importeren möchten?"
     },
     "import_content_package_plural": {
-        "en": "Are you sure you want to import the following Content Packages from the File-System?<br/><ul><li>{{packageNames}}</li></ul>",
-        "de": "Sind sie sicher, dass Sie die folgenden Inhalt Pakete aus dem Datei-System importeren möchten?<br/><ul><li>{{packageNames}}</li></ul>"
+        "en": "Are you sure you want to import the following Content Packages from the file system?<br/><ul><li>{{packageNames}}</li></ul>",
+        "de": "Sind sie sicher, dass Sie die folgenden Contentpakete aus dem Dateisystem importeren möchten?<br/><ul><li>{{packageNames}}</li></ul>"
     },
     "sort_construct_categories_title": {
         "en": "Sort construct categories",

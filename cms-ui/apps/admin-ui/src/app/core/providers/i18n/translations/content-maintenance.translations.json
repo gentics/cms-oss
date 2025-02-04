@@ -5,7 +5,7 @@
     },
     "title_general": {
         "en": "Content Maintenance",
-        "de": "Content-Wartung"
+        "de": "Inhaltswartung"
     },
     "title_failedTasks": {
         "en": "Failed Tasks",
@@ -28,8 +28,8 @@
         "de": "Objekte als publiziert markieren"
     },
     "stop_publishing": {
-        "en": "Publizierung abbrechen",
-        "de": "Stop publishing"
+        "en": "Stop publishing",
+        "de": "Publizierung abbrechen"
     },
     "reload_configuration": {
         "en": "Reload configuration",

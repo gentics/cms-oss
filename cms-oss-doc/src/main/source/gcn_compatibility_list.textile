@@ -45,7 +45,7 @@ h4. MySQL JDBC Connector
 
 h3. Operating Systems
 
-Compatibility with operating systems is determined by the available Java and database versions. Gentics CMS needs at least Java 11 and MariaDB 10.4 or MySQL 5.1.
+Compatibility with operating systems is determined by the available Java and database versions. Gentics CMS needs at least Java 17 and MariaDB 10.4 or MySQL 5.1.
 
 h4. Debian Linux
 
@@ -79,8 +79,7 @@ h4. OpenJDK
 
 |_.Minor Version |_.Supported |_.Notes       |
 | 17             | Yes        | Since 6.1.0  |
-| 11             | Yes        | Since 5.34.0 |
-| 10 and below   | No         |              |
+| 11 and below   | No         |              |
 
 * "OpenJDK installation":http://openjdk.java.net/install/
 
@@ -88,8 +87,7 @@ h4. Oracle JVM
 
 |_.Minor Version |_.Supported |_.Notes       |
 | 17             | Yes        | Since 6.1.0  |
-| 11             | Yes        | Since 5.34.0 |
-| 10 and below   | No         |              |
+| 11 and below   | No         |              |
 
 * "Oracle Java Downloads":https://www.oracle.com/java/technologies/downloads/
 * "Wikipedia JSE":https://en.wikipedia.org/wiki/Java_Platform,_Standard_Edition

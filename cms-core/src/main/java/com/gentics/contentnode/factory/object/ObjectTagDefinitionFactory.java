@@ -746,6 +746,9 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			if (nameId <= 0) {
 				nameId = CNDictionary.createNewOutputId();
 				this.modified = true;
+				if (editableName == null) {
+					editableName = new EditableI18nString();
+				}
 			}
 			if (editableName != null) {
 				for (UserLanguage lang : UserLanguageFactory.getActive()) {
@@ -763,6 +766,9 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			if (descriptionId <= 0) {
 				descriptionId = CNDictionary.createNewOutputId();
 				this.modified = true;
+				if (editableDescription == null) {
+					editableDescription = new EditableI18nString();
+				}
 			}
 			if (editableDescription != null) {
 				for (UserLanguage lang : UserLanguageFactory.getActive()) {

@@ -5,12 +5,15 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectPropertyDefinition;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
-import com.gentics.contentnode.object.ObjectTag;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -23,8 +26,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.devtools.AbstractSynchronizer;
 import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.Synchronizer;
+import com.gentics.contentnode.devtools.model.ObjectTagDefinitionTypeModel;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.Operator;
@@ -36,6 +41,7 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
+import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.ObjectTagDefinitionCategory;
 import com.gentics.contentnode.object.Page;
@@ -247,6 +253,99 @@ public class ObjectPropertiesSyncTest {
 				Trx.operate(() -> assertThat(objectProperty.getNodes())
 					.as("Linked nodes")
 					.containsExactly(node));
+			}
+		);
+	}
+
+	/**
+	 * Test importing with no description
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNoDescription() throws NodeException {
+		syncTest(
+			objProp -> {
+				objProp.setDescription("", 1);
+				objProp.setDescription("", 2);
+			},
+			objProp -> {
+				objProp.setDescription("Beschreibung", 1);
+				objProp.setDescription("Description", 2);
+			},
+			() -> {
+				// remove the description from the file in the package
+				java.io.File structureFile = Path.of(pack.getPackagePath().toString(), PackageSynchronizer.OBJECTPROPERTIES_DIR,
+						String.format("%s.object.testoe", ObjectTagDefinitionTypeModel.fromValue(type).toString()),
+						AbstractSynchronizer.STRUCTURE_FILE).toFile();
+				assertThat(structureFile).exists().isFile();
+
+				try {
+					Map<?, ?> value = Synchronizer.mapper().readValue(structureFile, Map.class);
+					value.remove("description");
+					Synchronizer.mapper().writeValue(structureFile, value);
+				} catch (IOException e) {
+					fail("Modification of structure file failed", e);
+				}
+			},
+			() -> {
+				Trx.operate(() -> {
+					assertThat(objectProperty).as("Synchronized object property").isNotNull();
+					if (asNew) {
+						assertThat(objectProperty.getDescription()).as("Object property description").isEmpty();
+					} else {
+						assertThat(objectProperty.getDescription()).as("Object property description").isEqualTo("Beschreibung");
+					}
+				});
+			}
+		);
+	}
+
+	/**
+	 * Test importing with empty description
+	 * @throws NodeException
+	 */
+	@Test
+	public void testEmptyDescription() throws NodeException {
+		syncTest(
+			objProp -> {
+				objProp.setDescription("", 1);
+				objProp.setDescription("", 2);
+			},
+			objProp -> {
+				objProp.setDescription("Beschreibung", 1);
+				objProp.setDescription("Description", 2);
+			},
+			() -> { },
+			() -> {
+				Trx.operate(() -> {
+					assertThat(objectProperty).as("Synchronized object property").isNotNull();
+					assertThat(objectProperty.getDescription()).as("Object property description").isEmpty();
+				});
+			}
+		);
+	}
+
+	/**
+	 * Test importing with a non-empty description
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNonEmptyDescription() throws NodeException {
+		syncTest(
+			objProp -> {
+				objProp.setDescription("Beschreibung", 1);
+				objProp.setDescription("Description", 2);
+			},
+			objProp -> {
+				objProp.setDescription("", 1);
+				objProp.setDescription("", 2);
+			},
+			() -> {},
+			() -> {
+				Trx.operate(() -> {
+					assertThat(objectProperty).as("Synchronized object property").isNotNull();
+					assertThat(objectProperty.getDescription()).as("Object property description").isEqualTo("Beschreibung");
+				});
 			}
 		);
 	}

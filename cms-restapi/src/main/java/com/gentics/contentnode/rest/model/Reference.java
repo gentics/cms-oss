@@ -5,7 +5,7 @@
  */
 package com.gentics.contentnode.rest.model;
 
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * Enumeration of references to mark, which references shall be filled when returning objects

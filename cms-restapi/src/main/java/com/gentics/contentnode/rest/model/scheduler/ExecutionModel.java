@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.scheduler;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;

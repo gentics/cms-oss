@@ -1,6 +1,3 @@
-/**
- *
- */
 package com.gentics.node.tests.utils;
 
 import static org.junit.Assert.assertEquals;
@@ -9,12 +6,10 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.gentics.contentnode.tests.category.BaseLibTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
+import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -47,7 +42,7 @@ public class FileUtilsTest {
 		fileTypes.put("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
 		// Images
-		fileTypes.put("ai",   "application/illustrator");
+		fileTypes.put("ai",   "application/postscript");
 		fileTypes.put("bmp",  "image/bmp");
 		fileTypes.put("eps",  "application/postscript");
 		fileTypes.put("gif",  "image/gif");

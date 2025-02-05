@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.ws.rs.DefaultValue;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request object for linking a template to folders or unlinking a template from folders

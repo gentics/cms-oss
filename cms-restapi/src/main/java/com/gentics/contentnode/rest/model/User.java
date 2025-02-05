@@ -8,7 +8,7 @@ package com.gentics.contentnode.rest.model;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * User object, representing a SystemUser in GCN

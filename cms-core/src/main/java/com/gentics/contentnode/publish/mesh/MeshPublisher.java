@@ -37,10 +37,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.core.UriBuilder;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -3401,7 +3401,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response get(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
+	public jakarta.ws.rs.core.Response get(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
 		return get(uriBuilderConsumer, null);
 	}
 
@@ -3412,7 +3412,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response get(Consumer<UriBuilder> uriBuilderConsumer,
+	public jakarta.ws.rs.core.Response get(Consumer<UriBuilder> uriBuilderConsumer,
 			Consumer<Builder> requestBuilderConsumer) throws NodeException {
 		return performRequest("GET", uriBuilderConsumer, requestBuilderConsumer, null);
 	}
@@ -3424,7 +3424,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
+	public jakarta.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
 		return post(uriBuilderConsumer, null, RequestBody.create(null, new byte[0]));
 	}
 
@@ -3435,7 +3435,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer, RequestBody body) throws NodeException {
+	public jakarta.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer, RequestBody body) throws NodeException {
 		return post(uriBuilderConsumer, null, body);
 	}
 
@@ -3447,7 +3447,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer, Consumer<Builder> requestBuilderConsumer, RequestBody body) throws NodeException {
+	public jakarta.ws.rs.core.Response post(Consumer<UriBuilder> uriBuilderConsumer, Consumer<Builder> requestBuilderConsumer, RequestBody body) throws NodeException {
 		return performRequest("POST", uriBuilderConsumer, requestBuilderConsumer, body);
 	}
 
@@ -3472,7 +3472,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return The response from Mesh.
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response performRequest(String method, Consumer<UriBuilder> uriBuilderConsumer, Consumer<Builder> requestBuilderConsumer, RequestBody body) throws NodeException {
+	public jakarta.ws.rs.core.Response performRequest(String method, Consumer<UriBuilder> uriBuilderConsumer, Consumer<Builder> requestBuilderConsumer, RequestBody body) throws NodeException {
 		try {
 			UriBuilder uriBuilder = UriBuilder.fromPath(clientConfig.getBaseUrl());
 
@@ -3488,7 +3488,7 @@ public class MeshPublisher implements AutoCloseable {
 			Call call = okHttpClient.newCall(requestBuilder.build());
 			Response response = call.execute();
 
-			return javax.ws.rs.core.Response.status(response.code())
+			return jakarta.ws.rs.core.Response.status(response.code())
 					.header("Content-Type", response.header("Content-Type"))
 					.header("Content-Disposition", response.header("Content-Disposition"))
 					.entity(new StreamingOutput() {
@@ -3553,7 +3553,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response delete(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
+	public jakarta.ws.rs.core.Response delete(Consumer<UriBuilder> uriBuilderConsumer) throws NodeException {
 		return delete(uriBuilderConsumer, null);
 	}
 
@@ -3564,7 +3564,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return response
 	 * @throws NodeException
 	 */
-	public javax.ws.rs.core.Response delete(Consumer<UriBuilder> uriBuilderConsumer,
+	public jakarta.ws.rs.core.Response delete(Consumer<UriBuilder> uriBuilderConsumer,
 			Consumer<Builder> requestBuilderConsumer) throws NodeException {
 		return performRequest("DELETE", uriBuilderConsumer, requestBuilderConsumer, null);
 	}

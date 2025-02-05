@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.response;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Usage response which contains the total count info for the queried element/s.

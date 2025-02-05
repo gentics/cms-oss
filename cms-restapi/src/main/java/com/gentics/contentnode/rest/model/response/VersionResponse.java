@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.response;
 
 import com.gentics.contentnode.rest.model.CmpVersionInfo;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.Map;
 
 /**

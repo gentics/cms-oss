@@ -38,8 +38,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.client.WebTarget;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;

@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.migration;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Tag Type Migration mapping object

@@ -1,8 +1,3 @@
-/*
- * @author stefan.hurjui
- * @date Apr 20, 2005
- * @version $Id: ObjectTypeBean.java,v 1.10 2010-02-03 09:32:49 norbert Exp $
- */
 package com.gentics.lib.datasource.object;
 
 import java.util.ArrayList;
@@ -17,7 +12,6 @@ import com.gentics.api.lib.resolving.ChangeableBean;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.datasource.object.jaxb.Attributetype;
 import com.gentics.lib.datasource.object.jaxb.Objecttype;
-import com.gentics.lib.datasource.object.jaxb.impl.ObjecttypeImpl;
 
 public class ObjectTypeBean extends ChangeableBean {
 
@@ -145,7 +139,7 @@ public class ObjectTypeBean extends ChangeableBean {
 	 * @return Objecttype instance
 	 */
 	public Objecttype getExportObject() {
-		Objecttype exportObject = new ObjecttypeImpl();
+		Objecttype exportObject = new Objecttype();
 
 		exportObject.setId(type);
 		exportObject.setName(name);

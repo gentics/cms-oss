@@ -17,16 +17,15 @@ import java.util.Vector;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.dbcopy.StructureCopy.ObjectKey;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBPropertiesType.PropertyType;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType;
-import com.gentics.contentnode.dbcopy.jaxb.impl.JAXBreferenceTypeImpl;
-import com.gentics.contentnode.dbcopy.jaxb.impl.JAXBtableTypeImpl;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBPropertiesType.Property;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.lib.etc.StringUtils;
 
 /**
  * Implementation of a table configuration
  */
-public class Table extends JAXBtableTypeImpl {
+public class Table extends JAXBTableType {
 
 	/**
 	 * list of foreign references (tables linking to this table) where foreigndeepcopy is "true"
@@ -184,7 +183,7 @@ public class Table extends JAXBtableTypeImpl {
 		// read the tables properties into a map
 		properties = new HashMap<String, String>();
 		if (isSetProperties() && getProperties().isSetPropertyList()) {
-			PropertyType[] propertyList = getProperties().getPropertyList();
+			Property[] propertyList = getProperties().getPropertyList();
 
 			for (int i = 0; i < propertyList.length; i++) {
 				String id = propertyList[i].getId();
@@ -208,7 +207,7 @@ public class Table extends JAXBtableTypeImpl {
 		// check whether the given table exists
 		ResultSet columns = conn.getMetaData().getColumns(null, null, getName(), null);
 
-		JAXBreferenceType[] ref = isSetReferences() ? getReferences().getRef() : new JAXBreferenceTypeImpl[0];
+		JAXBReferenceType[] ref = isSetReferences() ? getReferences().getRef() : new JAXBReferenceType[0];
 		Map<String, Boolean> checkedReferences = new HashMap<String, Boolean>();
 
 		for (int i = 0; i < ref.length; i++) {
@@ -647,7 +646,7 @@ public class Table extends JAXBtableTypeImpl {
 
 		// follow the references and get referenced objects
 		if (isSetReferences()) {
-			JAXBreferenceType[] ref = getReferences().getRef();
+			JAXBReferenceType[] ref = getReferences().getRef();
 
 			for (int i = 0; i < ref.length; i++) {
 				checkInterrupted();
@@ -877,7 +876,7 @@ public class Table extends JAXBtableTypeImpl {
 		}
 
 		if (isSetReferences()) {
-			JAXBreferenceType[] references = getReferences().getRef();
+			JAXBReferenceType[] references = getReferences().getRef();
 
 			for (int i = 0; i < references.length; i++) {
 				Reference reference = (Reference) references[i];
@@ -902,7 +901,7 @@ public class Table extends JAXBtableTypeImpl {
 			return null;
 		}
 		if (isSetReferences()) {
-			JAXBreferenceType[] references = getReferences().getRef();
+			JAXBReferenceType[] references = getReferences().getRef();
 
 			for (int i = 0; i < references.length; i++) {
 				Reference reference = (Reference) references[i];
@@ -924,7 +923,7 @@ public class Table extends JAXBtableTypeImpl {
 		if (properties == null) {
 			properties = new HashMap<String, String>();
 			if (isSetProperties() && getProperties().isSetPropertyList()) {
-				PropertyType[] propertyList = getProperties().getPropertyList();
+				Property[] propertyList = getProperties().getPropertyList();
 
 				for (int i = 0; i < propertyList.length; i++) {
 					properties.put(propertyList[i].getId(), propertyList[i].getValue());

@@ -1,17 +1,10 @@
-/*
- * @author norbert
- * @date 25.04.2006
- * @version $Id: JAXBHelper.java,v 1.4 2009-12-16 16:12:08 herbert Exp $
- */
 package com.gentics.lib.jaxb;
 
 import java.io.Writer;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Source;
 
 import org.apache.commons.pool.KeyedObjectPool;
 import org.w3c.dom.Document;
@@ -21,9 +14,10 @@ import org.xml.sax.InputSource;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.pooling.PoolFactory;
-import com.gentics.lib.pooling.PortalPool;
-import com.gentics.lib.pooling.PortalPoolException;
-import com.gentics.lib.pooling.PortalPoolProvider;
+
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 
 /**
  * Static helper class to perform JAXB related operations (unmarshalling,
@@ -84,14 +78,14 @@ public final class JAXBHelper {
 	 * @return unmarshalled object
 	 * @throws JAXBException
 	 */
-	public final static Object unmarshall(String contextPath, Node node) throws JAXBException {
+	public final static <T> T unmarshall(String contextPath, Source inputSource, Class<T> declaredType) throws JAXBException {
 		assertIsInitialized();
 		Unmarshaller unmarshaller = null;
 
 		try {
 			// get the unmarshaller from the pool
 			unmarshaller = (Unmarshaller) unmarshallerPool.borrowObject(contextPath);
-			return unmarshaller.unmarshal(node);
+			return unmarshaller.unmarshal(inputSource, declaredType).getValue();
 		} catch (JAXBException ex) {
 			throw ex;
 		} catch (Exception ex) {

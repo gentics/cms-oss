@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.model.response;
 
 import java.io.Serial;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 @XmlRootElement

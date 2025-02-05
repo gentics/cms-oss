@@ -8,8 +8,8 @@ package com.gentics.contentnode.factory;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.gentics.lib.util.QueryStringUtils;
 

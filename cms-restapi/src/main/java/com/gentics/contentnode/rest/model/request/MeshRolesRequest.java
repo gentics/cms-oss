@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.request;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request to set Mesh roles for a Mesh CR

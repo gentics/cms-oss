@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import com.gentics.api.lib.upload.FileInformation;
 import com.gentics.lib.image.GenticsImageStoreVariationTest.ResizeMode;
@@ -113,7 +113,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 		return dim;
 	}
 
-	public boolean compareImage(BufferedImage imga, BufferedImage imgb) {
+	public void compareImage(BufferedImage imga, BufferedImage imgb) {
 
 		Raster ra = imga.getData();
 		DataBuffer dba = ra.getDataBuffer();
@@ -123,23 +123,15 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 		DataBuffer dbb = rb.getDataBuffer();
 		int sizeb = dbb.getSize();
 
-		if (sizea != sizeb) {
-			logger.info("Pixel count does not match");
-			return false;
-		}
+		assertThat(sizea).as("Image size").isEqualTo(sizeb);
 
 		for (int i = 0; i < sizea; i++) {
 			int pxa = dba.getElem(i);
 			int pxb = dbb.getElem(i);
 
-			if (pxa != pxb) {
-				logger.info("Pixel does not match");
-				return false;
-			}
+			assertThat(pxa).as("Pixel at position " + i).isEqualTo(pxb);
 
 		}
-		return true;
-
 	}
 
 	/**

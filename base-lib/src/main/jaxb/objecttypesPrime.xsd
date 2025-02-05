@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb" jaxb:version="3.0">
+	<xs:annotation>
+		<xs:appinfo>
+			<jaxb:globalBindings generateIsSetMethod="true" collectionType="indexed">
+				<jaxb:javaType name="java.lang.Integer" xmlType="xs:integer" parseMethod="valueOf" printMethod="toString"/>
+			</jaxb:globalBindings>
+		</xs:appinfo>
+	</xs:annotation>
+	<!-- main node -->
+	<xs:element name="definition">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="objecttype" type="objecttype" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:appinfo>
+							<jaxb:property name="objectTypes"/>
+						</xs:appinfo>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- type for objecttype definition -->
+	<xs:complexType name="objecttype">
+		<xs:sequence>
+			<xs:element name="attributetype" type="attributetype" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo>
+						<jaxb:property name="attributeTypes"/>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" use="required" type="xs:integer"/>
+		<xs:attribute name="name" use="required" type="xs:string"/>
+		<xs:attribute name="excludeversioning" use="optional" type="xs:boolean" default="false">
+			<xs:annotation>
+				<xs:appinfo>
+					<jaxb:property name="excludeVersioning"/>
+				</xs:appinfo>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<!-- type for attributetype definition -->
+	<xs:complexType name="attributetype">
+		<xs:all>
+			<xs:element name="foreignlinkattribute" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<jaxb:property name="foreignLinkAttribute"/>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="foreignlinkattributerule" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<jaxb:property name="foreignLinkAttributeRule"/>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="quickname" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:appinfo>
+						<jaxb:property name="quickName"/>
+					</xs:appinfo>
+				</xs:annotation>
+			</xs:element>
+		</xs:all>
+		<xs:attribute name="name" use="required" type="xs:string"/>
+		<xs:attribute name="optimized" use="optional" default="false" type="xs:boolean"/>
+		<xs:attribute name="multivalue" use="optional" default="false" type="xs:boolean"/>
+		<xs:attribute name="linkedobjecttype" use="optional" default="0" type="xs:integer"/>
+		<xs:attribute name="attributetype" use="required" type="attributetypedef"/>
+		<xs:attribute name="excludeVersioning" use="optional" type="xs:boolean" default="false"/>
+		<xs:attribute name="filesystem" use="optional" type="xs:boolean" default="false"/>
+	</xs:complexType>
+
+	<!-- attributetypes -->
+	<xs:simpleType name="attributetypedef">
+	  <xs:restriction base="xs:integer">
+		<xs:enumeration value="1"/> <!-- String -->
+		<xs:enumeration value="2"/> <!-- Object Link -->
+		<xs:enumeration value="3"/> <!-- Integer -->
+		<xs:enumeration value="5"/> <!-- Long String -->
+		<xs:enumeration value="6"/> <!-- Binary -->
+		<xs:enumeration value="7"/> <!-- Foreign Link -->
+		<xs:enumeration value="8"/> <!-- Long Integer -->
+		<xs:enumeration value="9"/> <!-- Double -->
+		<xs:enumeration value="10"/> <!-- Date -->
+	  </xs:restriction>
+	</xs:simpleType>
+</xs:schema>

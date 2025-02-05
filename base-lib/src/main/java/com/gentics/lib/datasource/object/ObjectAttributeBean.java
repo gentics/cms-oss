@@ -1,15 +1,9 @@
-/*
- * @author norbert
- * @date 01.09.2005
- * @version $Id: ObjectAttributeBean.java,v 1.11 2009-12-16 16:12:24 herbert Exp $
- */
 package com.gentics.lib.datasource.object;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.resolving.ChangeableBean;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.datasource.object.jaxb.Attributetype;
-import com.gentics.lib.datasource.object.jaxb.impl.AttributetypeImpl;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 
@@ -57,7 +51,7 @@ public class ObjectAttributeBean extends ChangeableBean {
 	 */
 	public ObjectAttributeBean(Attributetype importObject, int objectType) {
 		this(importObject.getName(), importObject.getAttributetype().intValue(), importObject.isOptimized(), importObject.getQuickName(),
-				importObject.isMultivalue(), objectType, importObject.getLinkedobjecttype().intValue(), null, importObject.getForeignLinkAttribute(),
+				importObject.isMultivalue(), objectType, importObject.getLinkedobjecttype(), null, importObject.getForeignLinkAttribute(),
 				importObject.getForeignLinkAttributeRule(), importObject.isExcludeVersioning(), importObject.isFilesystem());
 	}
 
@@ -305,14 +299,14 @@ public class ObjectAttributeBean extends ChangeableBean {
 	 * @return Attributetype instance
 	 */
 	public Attributetype getExportObject() {
-		Attributetype exportObject = new AttributetypeImpl();
+		Attributetype exportObject = new Attributetype();
 
 		exportObject.setName(name);
-		exportObject.setAttributetype(new Integer(attributetype));
+		exportObject.setAttributetype(attributetype);
 		exportObject.setOptimized(optimized);
 		exportObject.setQuickName(quickname);
 		exportObject.setMultivalue(multivalue);
-		exportObject.setLinkedobjecttype(new Integer(linkedobjecttype));
+		exportObject.setLinkedobjecttype(linkedobjecttype);
 		exportObject.setForeignLinkAttribute(foreignlinkattribute);
 		exportObject.setForeignLinkAttributeRule(foreignlinkattributerule);
 		exportObject.setExcludeVersioning(excludeVersioning);

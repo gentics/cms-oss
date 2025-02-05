@@ -10,8 +10,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 import com.gentics.contentnode.validation.ValidatorFactory;
 import com.gentics.contentnode.validation.map.Policy;

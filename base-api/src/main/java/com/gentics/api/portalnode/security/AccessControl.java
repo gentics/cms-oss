@@ -7,18 +7,18 @@ package com.gentics.api.portalnode.security;
 
 import java.security.PrivilegedAction;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Interface for implementation of access control for all parts of the Portal
  * (including the initialization). When configured in the servlet init parameter
  * "accesscontrol.class", an instance of this class is instantiated and used for
  * every access of the PortalServlet's methods {@link HttpServlet#init()},
- * {@link HttpServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)}
+ * {@link HttpServlet#service(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse)}
  * and {@link HttpServlet#destroy()}. When the secured servlet is destroyed,
  * the access control instance is destroyed itself, by calling the
  * {@link #destroy()} method.
@@ -41,7 +41,7 @@ public interface AccessControl {
 	 * <li>Initialization in {@link HttpServlet#init()} (after this instance
 	 * was initialized)</li>
 	 * <li>Request handling in
-	 * {@link HttpServlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)}</li>
+	 * {@link HttpServlet#service(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse)}</li>
 	 * <li>Shutting down in (@link {@link HttpServlet#destroy()} (before this
 	 * instance is destroyed)</li>
 	 * </ul>

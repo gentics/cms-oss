@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.response;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * REST Model external links response. It contains the pages with external links.

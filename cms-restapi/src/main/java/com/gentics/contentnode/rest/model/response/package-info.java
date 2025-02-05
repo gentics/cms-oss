@@ -3,4 +3,4 @@
 )
 package com.gentics.contentnode.rest.model.response;
 
-import javax.xml.bind.annotation.XmlSchema;
+import jakarta.xml.bind.annotation.XmlSchema;

@@ -1,6 +1,6 @@
 package com.gentics.contentnode.exception;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.rest.model.response.Message;

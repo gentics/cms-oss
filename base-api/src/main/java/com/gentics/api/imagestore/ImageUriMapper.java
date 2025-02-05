@@ -2,7 +2,7 @@ package com.gentics.api.imagestore;
 
 import java.net.URI;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Used by the {com.gentics.portalnode.GenticsImageStoreServlet} to map image

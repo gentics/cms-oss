@@ -23,7 +23,7 @@ import com.gentics.contentnode.rest.model.scheduler.ScheduleData;
 import com.gentics.contentnode.rest.model.scheduler.ScheduleModel;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import java.util.List;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 
 /**

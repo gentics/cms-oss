@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.request;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request object for linking multiple templates to or unlink multiple templates from folders

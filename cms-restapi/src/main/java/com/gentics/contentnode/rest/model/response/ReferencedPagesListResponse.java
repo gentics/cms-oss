@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.response;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.gentics.contentnode.rest.model.Page;
 

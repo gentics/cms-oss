@@ -3,7 +3,7 @@ package com.gentics.contentnode.tests.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.internal.AssumptionViolatedException;

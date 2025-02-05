@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.validation.validator.impl;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 
 import com.gentics.contentnode.validation.ValidatorFactory;
 import com.gentics.contentnode.validation.map.Policy;

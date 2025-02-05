@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Abstract base class for REST Model implementations that have a global Id

@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.request;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request containing a list of IDs

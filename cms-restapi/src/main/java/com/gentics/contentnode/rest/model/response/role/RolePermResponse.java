@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.response.role;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.gentics.contentnode.rest.model.RolePermissionsModel;
 import com.gentics.contentnode.rest.model.response.GenericResponse;

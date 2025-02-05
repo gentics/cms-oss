@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.request.migration;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Tag Type Migration Reinvoke Request. This request can be used to reinvoke a migration job.

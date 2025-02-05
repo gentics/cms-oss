@@ -5,4 +5,10 @@
   	<date-format id="short" defaultdate="SHORT" defaulttime="SHORT"/>
     <date-format id="time" defaulttime="SHORT"/>
     <date-format id="date" defaultdate="MEDIUM"/>
+    <date-format id="custom">
+      <date language="en">dd</date>
+      <time language="en">hh</time>
+      <date language="de">MM</date>
+      <time language="de">ss</time>
+    </date-format>
 </date-formats>

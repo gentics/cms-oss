@@ -3,4 +3,4 @@
 )
 package com.gentics.contentnode.rest.resource;
 
-import javax.xml.bind.annotation.XmlSchema;
+import jakarta.xml.bind.annotation.XmlSchema;

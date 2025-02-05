@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.request.page;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Target folder object for a page copy call. A folder is identified by its id

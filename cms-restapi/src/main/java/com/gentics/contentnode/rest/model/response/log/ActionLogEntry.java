@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.response.log;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Model of an entry in the action log

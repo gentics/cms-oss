@@ -18,7 +18,7 @@ import com.gentics.contentnode.dbcopy.StructureCopy;
 import com.gentics.contentnode.dbcopy.StructureCopyException;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 
 /**
  * Implementation of the reference descriptor for the reference part -&gt;
@@ -101,6 +101,6 @@ public class PartDatasourceMapper extends AbstractReferenceDescriptor {
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.dbcopy.ReferenceDescriptor#init(java.sql.Connection, com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType[])
 	 */
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {// nothing to do here
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {// nothing to do here
 	}
 }

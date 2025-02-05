@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.response.devtools;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.gentics.contentnode.rest.model.devtools.ObjectPropertyInPackage;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;

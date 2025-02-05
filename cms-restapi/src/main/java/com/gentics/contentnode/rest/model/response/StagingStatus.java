@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.response;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Content staging package status for an entity.

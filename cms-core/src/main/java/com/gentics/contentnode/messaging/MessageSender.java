@@ -24,7 +24,7 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.mail.MailSender;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

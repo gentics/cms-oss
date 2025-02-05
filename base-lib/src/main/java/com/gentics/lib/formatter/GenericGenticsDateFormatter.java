@@ -1,8 +1,3 @@
-/*
- * @author norbert
- * @date 16.10.2007
- * @version $Id: GenticsDateFormatter.java,v 1.34.2.1 2011-04-07 09:57:54 norbert Exp $
- */
 package com.gentics.lib.formatter;
 
 import java.io.FileInputStream;
@@ -14,17 +9,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
-import org.xml.sax.InputSource;
+import javax.xml.transform.stream.StreamSource;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.portalnode.imp.AbstractGenticsImp;
 import com.gentics.api.portalnode.imp.ImpException;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.formatter.dateformatter.DateFormatConfig;
-import com.gentics.lib.formatter.dateformatter.DateFormats;
-import com.gentics.lib.formatter.dateformatter.JAXBdateFormatType;
+import com.gentics.lib.formatter.dateformatter.JAXBDateFormatType;
+import com.gentics.lib.formatter.dateformatter.JAXBDateFormatsType;
 import com.gentics.lib.i18n.LanguageProviderFactory;
 import com.gentics.lib.jaxb.JAXBHelper;
 
@@ -52,7 +47,7 @@ public class GenericGenticsDateFormatter extends AbstractGenticsImp {
 	/**
 	 * configured date formats (if any)
 	 */
-	protected DateFormats dateFormats;
+	protected JAXBDateFormatsType dateFormats;
 
 	/**
 	 * some basic definitions needed for calculations
@@ -94,7 +89,7 @@ public class GenericGenticsDateFormatter extends AbstractGenticsImp {
 
 		// now try to read and interpret the configuration file
 		try {
-			dateFormats = (DateFormats) JAXBHelper.unmarshall(CONTEXT_PATH, new InputSource(new FileInputStream(configFilePath)));
+			dateFormats = JAXBHelper.unmarshall(CONTEXT_PATH, new StreamSource(new FileInputStream(configFilePath)), JAXBDateFormatsType.class);
 		} catch (FileNotFoundException e) {
 			if (customConfiguration) {
 				logger.error("Could not find the configuration file @ {" + configFilePath + "}. Trying default configuration file.");
@@ -102,7 +97,7 @@ public class GenericGenticsDateFormatter extends AbstractGenticsImp {
 				customConfiguration = false;
 				// do fallback to default configuration
 				try {
-					dateFormats = (DateFormats) JAXBHelper.unmarshall(CONTEXT_PATH, new InputSource(new FileInputStream(configFilePath)));
+					dateFormats = JAXBHelper.unmarshall(CONTEXT_PATH, new StreamSource(new FileInputStream(configFilePath)), JAXBDateFormatsType.class);
 				} catch (FileNotFoundException e1) {
 					logger.error("Could not find default configuration file @ {" + configFilePath + "}. Only default formats supported.");
 				} catch (JAXBException e1) {
@@ -538,7 +533,7 @@ public class GenericGenticsDateFormatter extends AbstractGenticsImp {
 		DateFormatConfig dateFormat = null;
 
 		if (dateFormats != null && formatId != null) {
-			JAXBdateFormatType[] dateFormatsArray = dateFormats.getDateFormat();
+			JAXBDateFormatType[] dateFormatsArray = dateFormats.getDateFormat();
 
 			for (int i = 0; i < dateFormatsArray.length && dateFormat == null; i++) {
 				if (dateFormatsArray[i].getId().equals(formatId)) {

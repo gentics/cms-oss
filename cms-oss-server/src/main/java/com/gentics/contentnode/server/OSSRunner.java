@@ -15,11 +15,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.servlet.DispatcherType;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.ee10.servlet.DefaultServlet;
+import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.rewrite.handler.RedirectRegexRule;
@@ -33,12 +36,7 @@ import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -56,6 +54,8 @@ import com.gentics.contentnode.servlets.GenticsImageStoreServlet;
 import com.gentics.contentnode.servlets.JmxServlet;
 import com.gentics.contentnode.servlets.SelectedSymlinkAllowedResourceAliasChecker;
 import com.gentics.lib.log.NodeLogger;
+
+import jakarta.servlet.DispatcherType;
 
 /**
  * Server Runner for the GCMS
@@ -152,7 +152,7 @@ public class OSSRunner {
 
 		// create context
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setBaseResource(Resource.newClassPathResource("/webroot"));
+		context.setBaseResource(ResourceFactory.of(context).newClassLoaderResource("/webroot", false));
 
 		// add REST API Servlet
 		ResourceConfig resourceConfig = ResourceConfig.forApplication(new RESTApplication());

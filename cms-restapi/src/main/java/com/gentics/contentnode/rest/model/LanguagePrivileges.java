@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Privileges set on a specific language

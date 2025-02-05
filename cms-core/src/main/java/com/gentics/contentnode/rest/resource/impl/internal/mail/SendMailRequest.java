@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.resource.impl.internal.mail;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request to send an email

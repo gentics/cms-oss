@@ -1,18 +1,13 @@
-/*
- * @author Stefan Hurjui
- * @date 10.01.2005
- * @version: $Id: FileUploadProvider.java,v 1.2 2006-04-07 14:45:45 herbert Exp $
- * @gentics.sdk
- */
 package com.gentics.api.lib.upload;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload2.core.FileUploadException;
 
 import com.gentics.lib.upload.FileUploadProviderImpl;
 
@@ -91,13 +86,13 @@ public interface FileUploadProvider {
 	 * Get all non-file parameters as map
 	 * @return parameter map
 	 */
-	Map getParameterMap();
+	Map<String, List<String>> getParameterMap();
 
 	/**
 	 * Get all parameter names of non-file parameters
 	 * @return enumeration of parameter names
 	 */
-	Enumeration getParameterNames();
+	Enumeration<String> getParameterNames();
 
 	/**
 	 * TODO: difference to {@link #saveAs(String, String)}
@@ -121,7 +116,7 @@ public interface FileUploadProvider {
 	/**
 	 * Called (by the portal) when the provided information is no longer needed.
 	 * (when instance is given back to the portal). this removes all information
-	 * prepared in {@link FileUploadProviderImpl#setHttpServletRequest(javax.servlet.http.HttpServletRequest)} by calling delete()
+	 * prepared in {@link FileUploadProviderImpl#setHttpServletRequest(jakarta.servlet.http.HttpServletRequest)} by calling delete()
 	 * for all FileItems
 	 */
 	void invalidate();

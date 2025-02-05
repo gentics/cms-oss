@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.request;
 
 import java.util.Arrays;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request containing a list of page IDs and a flag for whether all language

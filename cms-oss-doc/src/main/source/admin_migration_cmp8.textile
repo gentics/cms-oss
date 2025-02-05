@@ -232,9 +232,9 @@ h5. CONF_FILES
 
 h5. LICENSEKEY
 
-|_. Description     | Path to license key file                   |
+|_. Description     | License Key                                |
 |_. Env             | @LICENSEKEY@                               |
-|_. System Property | @com.gentics.contentnode.license-key.path@ |
+|_. System Property | @com.gentics.contentnode.license-key@      |
 |_. Configuration   | -                                          |
 |_. Default         |                                            |
 

@@ -1076,6 +1076,11 @@ public class SchedulerFactory extends AbstractFactory {
 				return null;
 			}
 		}
+
+		@Override
+		public String toString() {
+			return String.format("SchedulerTask {id: %d, name: %s}", id, name);
+		}
 	}
 
 	/**
@@ -1224,6 +1229,7 @@ public class SchedulerFactory extends AbstractFactory {
 		protected String description;
 
 		@DataField("scheduler_task_id")
+		@Updateable
 		protected int schedulerTaskId;
 
 		@DataField("parallel")

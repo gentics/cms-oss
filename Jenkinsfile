@@ -80,6 +80,10 @@ spec:
         booleanParam(name: 'checkGitCommit',            defaultValue: false, description: 'If set to true, the current git revision is compared with the git revision of the last successful build. If they are equal, the build is skipped and env.BUILD_SKIPPED is set to true')
         booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
+        booleanParam(name: 'skiporacle',                defaultValue: false, description: "Whether to skip base-lib tests with Oracle")
+		booleanParam(name: 'skipmssql',                 defaultValue: false, description: "Whether to skip base-lib tests with MSSQL")
+		booleanParam(name: 'skipmysql',                 defaultValue: false, description: "Whether to skip base-lib tests with MySQL")
+		booleanParam(name: 'skipmariadb',               defaultValue: false, description: "Whether to skip base-lib tests with MariaDB")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'integrationTests',          defaultValue: false,  description: "Whether to run integration tests.")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
@@ -166,8 +170,21 @@ spec:
                         if (!params.runBaseLibTests) {
                             mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
                         }
+                        def skipDBs = ""
+                        if (params.skiporacle) {
+                            skipDBs += " -Dskip.oracle12.2=true"
+                        }
+                        if (params.skipmssql) {
+                            skipDBs += " -Dskip.mssql08=true"
+                        }
+                        if (params.skipmysql) {
+                            skipDBs += " -Dskip.mysql-stable=true"
+                        }
+                        if (params.skipmariadb) {
+                            skipDBs += " -Dskip.mariadb=true"
+                        }
 
-                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
+                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "") + skipDBs
 
                         // Check if triggered by a Gitlab merge request
                         if (env.gitlabTargetBranch) {

@@ -482,17 +482,14 @@ public class GroupResourceImpl implements GroupResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 
-			UserGroup moved = MiscUtils.load(UserGroup.class, subgroupId);
+			UserGroup moved = MiscUtils.load(UserGroup.class, subgroupId, ObjectPermission.delete);
 			UserGroup target = MiscUtils.load(UserGroup.class, id);
 
-			MiscUtils.check(target, PermType.creategroup, (g, ph) -> {
-				return ph.checkGroupPerm(g, p -> p.checkPermissionBit(UserGroup.TYPE_GROUPADMIN, null, PermHandler.PERM_GROUP_CREATE));
-			});
-
-			if (moved.getMother() != null) {
-				MiscUtils.check(moved.getMother(), PermType.deletegroup, (g, ph) -> {
-					return ph.checkGroupPerm(g, p -> p.checkPermissionBit(UserGroup.TYPE_GROUPADMIN, null, PermHandler.PERM_GROUP_DELETE));
-				});
+			if (!t.getPermHandler().canCreate(null, UserGroup.class, null)) {
+				throw new InsufficientPrivilegesException(
+						I18NHelper.get(String.format("%s.nopermission", t.getTable(UserGroup.class)),
+								String.format("%s (%s)", I18NHelper.getName(target), id)),
+						null, null, UserGroup.TYPE_USERGROUP, 0, PermType.creategroup);
 			}
 
 			moved = t.getObject(moved, true);

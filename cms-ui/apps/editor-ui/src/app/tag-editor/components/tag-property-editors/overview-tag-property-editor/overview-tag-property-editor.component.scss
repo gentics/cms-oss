@@ -1,5 +1,53 @@
 @import "variables";
 
+:host {
+    display: flex;
+    width: 100%;
+    min-height: 1px;
+}
+
+.tag-part-editor {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .tag-prop-label {
+        position: static;
+        font-size: 0.8rem;
+    }
+
+    .options-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-content: center;
+        align-items: center;
+        padding-bottom: 1rem;
+
+        &.input-property::ng-deep .wrapper input {
+            margin-bottom: 0;
+        }
+
+        &.checkbox-property {
+            padding-top: 20px;
+        }
+    }
+
+    .overview-property {
+        margin: 0;
+        flex: 1 0 175px;
+    }
+
+    .no-items-label {
+        text-align: center;
+        color: $gtx-color-light-gray;
+        font-size: 2rem;
+        padding: 0.5rem 0;
+    }
+}
+
 @mixin item-icon-color($type, $base-color) {
     .item-icon.#{$type} {
         color: $base-color;
@@ -12,26 +60,11 @@
 :host {
     @include input-label-styles('.tag-prop-label');
 
-    .tag-prop-label {
-        position: static;
-        font-size: 0.8rem;
-    }
-
-    .overview-property {
-        margin: 10px;
-    }
-
     .checkbox-cell,
     .browse-button-cell {
         display: flex;
         flex-direction: column;
         justify-content: center;
-    }
-
-    .no-items-label {
-        text-align: center;
-        color: $gtx-color-light-gray;
-        font-size: 2rem;
     }
 
     .item-icon {
@@ -48,6 +81,10 @@
         @include item-icon-color(template, $gcms-color-template);
         @include item-icon-color(node, $gcms-color-node);
         @include item-icon-color(channel, $gcms-color-channel);
+
+        gtx-contents-list-item {
+            padding-left: 0px;
+        }
 
         .item-primary {
             padding-left: 0px;

@@ -108,7 +108,7 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>generate</goal>
+							<goal>resolve</goal>
 						</goals>
 					</execution>
 				</executions>

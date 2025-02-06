@@ -9,6 +9,7 @@ import static com.gentics.contentnode.runtime.ConfigurationValue.STATIC_SERVE_LI
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
@@ -298,7 +299,7 @@ public class OSSRunner {
 	private static ServletHolder getStaticFileServletForPath(String path) {
 		var defaultServlet = new DefaultServlet();
 		var holderServlet = new ServletHolder("default_" + path, defaultServlet);
-		holderServlet.setInitParameter("resourceBase", path);
+		holderServlet.setInitParameter("baseResource", Path.of(path).toAbsolutePath().toString());
 		// only apply path info to resourceBase
 		holderServlet.setInitParameter("pathInfoOnly", "true");
 		holderServlet.setInitParameter("dirAllowed", "false");

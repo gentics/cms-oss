@@ -115,31 +115,6 @@ define([
 		return 0 === block.$element.closest('.aloha-editable').length;
 	}
 
-	/**
-	 * Do (system-wide) search for a construct matching a specific id.
-	 *
-	 * @param {PageAPI} page The page from which to search for constructs.
-	 * @param {number} id Id of construct to retrieve.
-	 * @param {function} success Callback function that will receive the
-	 *                           construct when on is successfully retrieved.
-	 * @param {function} error Custom error handler.
-	 */
-	function getConstructById(page, id, success, error) {
-		Util.withinCMS(function() {
-			GCMSUI.getConstructs().then(function (constructs) {
-				var construct;
-				for (construct in constructs) {
-					if (constructs.hasOwnProperty(construct)
-						&& id === constructs[construct].id) {
-						success(constructs[construct]);
-						return;
-					}
-				}
-				error('Could not find construct for tag id ' + id + '.');
-			}).catch(error);
-		});
-	}
-
 	var OBJECT_PROPERTY_PREFIX = /^object\.[a-zA-Z0-9]+/i;
 
 	function isObjectTag(tag) {
@@ -157,10 +132,9 @@ define([
 	function openTagFill(tag, gcn, options) {
 		var page = tag.parent();
 		var tagname = tag.prop("name");
-		getConstructById(
-			page,
-			tag.prop('constructId'),
-			function (construct) {
+
+		return new Promise(function (resolve, reject) {
+			Util.getConstructFromId(tag.prop('constructId')).then(function (construct) {
 				// make sure, that the tag contains the current data from the editables
 				// not passing a filter function as a parameter here means,
 				// that all inline editables on the page will be stored in the page object
@@ -169,6 +143,8 @@ define([
 				page._updateEditableBlocks();
 
 				GCMSUI.openTagEditor(tag._data, construct, page._data, options).then(function (result) {
+
+					PubSub.pub('gcn.tag-editor.resolve', result);
 
 					if (result.doDelete) {
 						var $block = $('.aloha-block[id="GENTICS_BLOCK_' + tag._data.id + '"]');
@@ -209,27 +185,21 @@ define([
 					// in order to render what is currently stored in the tag object, not in the DB
 					page.tag(tagname).edit(true, function (html, tag, data) {
 						gcn.handleBlock(data, false, function () {
-							Tags.decorate(tag, data);
+							Tags.decorate(tag, data, function() {
+								resolve();
+							});
 						}, html);
 					});
-				}).catch(function () { });
-			},
-			function (msg) {
-				GCN.handleError(GCN.createError('COULD_NOT_OPEN_TAG', msg, gcn));
-			}
-		);
-	}
+				}).catch(function (err) {
+					reject(err);
+				});
 
-	/**
-	 * Returns true if the Aloha Toolbar is configured to use responsiveMode.
-	 * @return {boolean}
-	 */
-	function isResponsiveMode() {
-		if (Aloha.settings.toolbar && Aloha.settings.toolbar.hasOwnProperty('responsiveMode')) {
-			var value = Aloha.settings.toolbar.responsiveMode;
-			return value.toString() === '1' || value === true || value.toString().toLowerCase() === 'true';
-		}
-		return false;
+			}).catch(function (msg) {
+				const err = GCN.createError('COULD_NOT_OPEN_TAG', msg, gcn);
+				GCN.handleError(err);
+				reject(err);
+			});
+		});
 	}
 
 	/**
@@ -506,12 +476,12 @@ define([
 		init: function () {
 			var that = this;
 
-			Util.withinCMS(function() {
+			Util.withinCMS(function () {
 				// Create the GCMSUI Surface and set it as active.
 				// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
 				var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
 				UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
-	
+
 				// Apply the correct error class from the UI, so we can do correct checks in here as well.
 				if (window.GCMSUI.closeErrorClass) {
 					OverlayElement.OverlayCloseError = window.GCMSUI.closeErrorClass;
@@ -716,21 +686,17 @@ define([
 		setupMagicLinkConstruct: function (callback) {
 			var that = this;
 
-			Util.withinCMS(function() {
-				GCMSUI.getConstructs().then(constructs => {
-					const magicLinkConstruct = constructs[GCN.settings.MAGIC_LINK];
-	
-					if (!magicLinkConstruct) {
-						return;
-					}
-	
-					GCNLinks.magicLink = magicLinkConstruct;
-					GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
-					that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
-					if (typeof callback === 'function') {
-						callback(magicLinkConstruct);
-					}
-				});
+			Util.getConstructFromKeyword(GCN.settings.MAGIC_LINK).then(function (magicLinkConstruct) {
+				if (!magicLinkConstruct) {
+					return;
+				}
+
+				GCNLinks.magicLink = magicLinkConstruct;
+				GCN.settings.MAGIC_LINK = magicLinkConstruct.keyword;
+				that.setMagicLinkOnIntergrationPlugin(magicLinkConstruct.id);
+				if (typeof callback === 'function') {
+					callback(magicLinkConstruct);
+				}
 			});
 		},
 
@@ -1258,14 +1224,9 @@ define([
 		_getEditDo: function (tagid, success, error) {
 			var page = this.page;
 			Tags.getById(page, tagid, function (tag) {
-				getConstructById(
-					page,
-					tag.prop('constructId'),
-					function (construct) {
-						success(construct.editdo);
-					},
-					error
-				);
+				Util.getConstructFromId(tag.prop('constructId')).then(function(construct) {
+					success(construct.editdo);
+				}).catch(error);
 			}, error);
 		},
 
@@ -1283,8 +1244,18 @@ define([
 		openTagFill: function (tagId, pageId, options) {
 			var gcn = this;
 
-			Tags.getById(GCN.page(pageId), tagId, function (tag) {
-				openTagFill(tag, gcn, options);
+			return new Promise(function(resolve, reject) {
+				Tags.getById(GCN.page(pageId), tagId, function (tag) {
+					openTagFill(tag, gcn, options).then(function() {
+						resolve();
+					}).catch(function(err) {
+						// Ignore use close "errors"
+						if (err instanceof OverlayElement.OverlayCloseError && err.reason !== 'error') {
+							return;
+						}
+						reject(err);
+					});
+				});
 			});
 		},
 

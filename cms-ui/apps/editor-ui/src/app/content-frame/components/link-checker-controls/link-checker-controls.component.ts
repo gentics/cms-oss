@@ -47,7 +47,11 @@ export class LinkCheckerControlsComponent implements OnChanges, OnDestroy {
 
     public updateDisplayItems(): void {
         this.displayItems = (this.brokenLinks || []).map(elem => {
-            let href = elem.getAttribute('href');
+            // Try to get the link from the dedicated attribute first
+            let href = elem.getAttribute('data-gcnlinkchecker-href');
+            if (!href) {
+                href = elem.getAttribute('href');
+            }
 
             // If it's a valid URL, we don't need the protocol or query params in the preview
             try {

@@ -78,9 +78,14 @@
   	justify-content: center;
 }
 
+.GENTICS_block > .aloha-block-handle {
+	cursor: default;
+}
+
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit {
 	background: #0096DC;
 	color: #fff;
+	cursor: pointer;
 }
 
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit:hover {
@@ -90,6 +95,7 @@
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-delete {
 	background: #c9302c;
 	color: #fff;
+	cursor: pointer;
 }
 
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-delete:hover {

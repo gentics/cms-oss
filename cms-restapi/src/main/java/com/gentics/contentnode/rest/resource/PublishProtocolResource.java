@@ -45,7 +45,6 @@ public interface PublishProtocolResource {
 	 * @throws Exception if an error occurs during retrieval
 	 */
 	@GET
-	@Path("/")
 	@StatusCodes({
 			@ResponseCode(code = 200, condition = "Publish protocol list is returned.")
 	})

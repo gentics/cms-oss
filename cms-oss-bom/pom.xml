@@ -124,11 +124,6 @@
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.jaxrs</groupId>
-				<artifactId>jackson-jaxrs-json-provider</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.jaxrs</groupId>
 				<artifactId>jackson-jaxrs-base</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
@@ -251,6 +246,21 @@
 				<groupId>com.gentics.mesh</groupId>
 				<artifactId>mesh-rest-client</artifactId>
 				<version>${mesh.version}</version>
+				<!-- Exclude old jaxb api and impl -->
+				<exclusions>
+					<exclusion>
+						<groupId>javax.xml.bind</groupId>
+						<artifactId>jaxb-api</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.sun.xml.bind</groupId>
+						<artifactId>jaxb-core</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.sun.xml.bind</groupId>
+						<artifactId>jaxb-impl</artifactId>
+					</exclusion>
+				</exclusions> 
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.mesh</groupId>

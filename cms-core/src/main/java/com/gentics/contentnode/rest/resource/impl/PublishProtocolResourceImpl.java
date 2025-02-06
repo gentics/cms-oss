@@ -78,7 +78,6 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 
 	@Override
 	@GET
-	@Path("/")
 	public GenericItemList<PublishLogDto> list(
 			@BeanParam PagingParameterBean paging,
 			@BeanParam FilterPublishableObjectBean filter) throws NodeException {

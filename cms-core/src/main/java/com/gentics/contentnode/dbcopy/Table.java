@@ -22,6 +22,8 @@ import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType;
 import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.lib.etc.StringUtils;
 
+import jakarta.xml.bind.annotation.XmlTransient;
+
 /**
  * Implementation of a table configuration
  */
@@ -85,6 +87,7 @@ public class Table extends JAXBTableType {
 	/**
 	 * configured object modificator (may be null)
 	 */
+	@XmlTransient
 	protected ObjectModificator[] modificators;
 
 	/**
@@ -117,6 +120,7 @@ public class Table extends JAXBTableType {
 	 * Map of reference descriptors. Keys are the reference column names, values
 	 * are lists of reference descriptors
 	 */
+	@XmlTransient
 	protected Map<String, List<ReferenceDescriptor>> referenceDescriptorMap = new HashMap<String, List<ReferenceDescriptor>>();
 
 	/**

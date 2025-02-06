@@ -54,7 +54,7 @@
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>
 		<jetty.version>12.0.16</jetty.version>
-		<jackson.version>2.17.0</jackson.version>
+		<jackson.version>2.18.2</jackson.version>
 
 		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>

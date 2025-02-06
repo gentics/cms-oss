@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;

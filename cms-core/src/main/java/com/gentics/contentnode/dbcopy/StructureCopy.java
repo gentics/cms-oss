@@ -20,9 +20,11 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -517,9 +519,7 @@ public class StructureCopy {
 		JAXBContext context = JAXBContext.newInstance(JAXB_CONTEXT);
 		Unmarshaller unmarshaller = context.createUnmarshaller();
 
-		unmarshaller.setValidating(true);
-
-		return (Tables) unmarshaller.unmarshal(new File(configFilePath));
+		return unmarshaller.unmarshal(new StreamSource(new File(configFilePath)), Tables.class).getValue();
 	}
 
 	/**
@@ -532,9 +532,7 @@ public class StructureCopy {
 		JAXBContext context = JAXBContext.newInstance(JAXB_CONTEXT);
 		Unmarshaller unmarshaller = context.createUnmarshaller();
 
-		unmarshaller.setValidating(true);
-
-		return (Tables) unmarshaller.unmarshal(inputStream);
+		return unmarshaller.unmarshal(new StreamSource(inputStream), Tables.class).getValue();
 	}
 
 	/**

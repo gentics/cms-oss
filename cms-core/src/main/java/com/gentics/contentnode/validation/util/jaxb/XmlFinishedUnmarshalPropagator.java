@@ -7,7 +7,7 @@ package com.gentics.contentnode.validation.util.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.Unmarshaller;
 
 /**
  * The SAXB afterUnmarshal() callback that can be implemented in classes that

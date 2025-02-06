@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType;
 
+import jakarta.xml.bind.annotation.XmlTransient;
+
 /**
  * Reference configuration
  */
@@ -19,6 +21,7 @@ public class Reference extends JAXBReferenceType {
 	/**
 	 * reference descriptor 
 	 */
+	@XmlTransient
 	protected ReferenceDescriptor referenceDescriptor;
 
 	/**

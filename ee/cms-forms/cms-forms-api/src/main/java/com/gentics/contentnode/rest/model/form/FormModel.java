@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.form;
 import com.gentics.contentnode.rest.model.PublishableContentItem;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;

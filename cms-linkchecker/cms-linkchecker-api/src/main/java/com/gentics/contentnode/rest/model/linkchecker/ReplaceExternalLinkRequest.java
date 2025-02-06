@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.linkchecker;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request to replace an external Link with another URL

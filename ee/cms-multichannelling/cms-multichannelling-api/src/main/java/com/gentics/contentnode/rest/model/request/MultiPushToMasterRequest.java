@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.request;
 import java.util.List;
 import java.util.Vector;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request to push multiple objects (of same type) to the master

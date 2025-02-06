@@ -3,11 +3,11 @@ package com.gentics.contentnode.server;
 import java.util.EnumSet;
 import java.util.Map;
 
-import javax.servlet.DispatcherType;
+import jakarta.servlet.DispatcherType;
 
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.keycloak.adapters.servlet.KeycloakOIDCFilter;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
+//import org.keycloak.adapters.servlet.KeycloakOIDCFilter;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -60,7 +60,7 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 		final var featureIsEnabled = NodeConfigRuntimeConfiguration.isFeature(Feature.KEYCLOAK);
 		final var AUTH_PATH = "/rest/auth/ssologin/*";
 
-		if (featureIsEnabled) {
+		if (featureIsEnabled && false) {
 			Map<String, Object> keycloakPreferences = NodeConfigRuntimeConfiguration
 					.getPreferences()
 					.getPropertyObject("keycloak");
@@ -73,10 +73,10 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 			ServletHandler servletHandler = context.getServletHandler();
 
 			try {
-				addFilter(servletHandler, OIDC_FILTER_NAME, KeycloakOIDCFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakOidcFilterHolder -> {
-					keycloakOidcFilterHolder.setInitParameter("keycloak.config.file",
-							ConfigurationValue.UI_CONF_PATH.get() + "keycloak.json");
-				});
+//				addFilter(servletHandler, OIDC_FILTER_NAME, KeycloakOIDCFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakOidcFilterHolder -> {
+//					keycloakOidcFilterHolder.setInitParameter("keycloak.config.file",
+//							ConfigurationValue.UI_CONF_PATH.get() + "keycloak.json");
+//				});
 
 				addFilter(servletHandler, INTEGRATION_FILTER_NAME, KeycloakIntegrationFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakServletFilterHolder -> {
 					if (keycloakPreferences.containsKey("user_created_callback")) {

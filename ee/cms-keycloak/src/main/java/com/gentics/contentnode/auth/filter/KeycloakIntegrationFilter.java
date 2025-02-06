@@ -6,17 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
-import org.keycloak.KeycloakPrincipal;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.AccessToken.Access;
+//import org.keycloak.KeycloakPrincipal;
+//import org.keycloak.KeycloakSecurityContext;
+//import org.keycloak.representations.AccessToken;
+//import org.keycloak.representations.AccessToken.Access;
 
 import com.gentics.lib.base.MapResolver;
 
@@ -40,62 +39,60 @@ public class KeycloakIntegrationFilter extends AbstractSSOFilter {
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		AccessToken token = getToken(httpRequest);
-
-		if (token == null) {
-			logger.warn("Could not get access token from request, skipping SSO login.");
-		} else if (StringUtils.isBlank(token.getPreferredUsername())) {
-			logger.error("Could not get preferred username from token, skipping SSO login.");
-		} else {
-			Map<String, Object> attributes = new HashMap<>();
-
-			attributes = new HashMap<>();
-			attributes.put("firstname", token.getGivenName());
-			attributes.put("lastname", token.getFamilyName());
-			attributes.put("email", token.getEmail());
-
-			Map<String, Object> roles = new HashMap<>();
-			Map<String, Set<String>> access = new HashMap<>();
-
-			if (token.getResourceAccess() != null) {
-				for (Map.Entry<String, Access> entry : token.getResourceAccess().entrySet()) {
-					access.put(entry.getKey(), entry.getValue().getRoles());
-				}
-			}
-
-			if (token.getRealmAccess() != null) {
-				roles.put("realm", token.getRealmAccess().getRoles());
-			}
-			roles.put("resource", new MapResolver(access));
-
-			attributes.put("roles", new MapResolver(roles));
-
-			request = doSSOLogin(httpRequest, token.getPreferredUsername(), attributes);
-		}
-
+//		HttpServletRequest httpRequest = (HttpServletRequest) request;
+//		AccessToken token = getToken(httpRequest);
+//
+//		if (token == null) {
+//			logger.warn("Could not get access token from request, skipping SSO login.");
+//		} else {
+//			Map<String, Object> attributes = new HashMap<>();
+//
+//			attributes = new HashMap<>();
+//			attributes.put("firstname", token.getGivenName());
+//			attributes.put("lastname", token.getFamilyName());
+//			attributes.put("email", token.getEmail());
+//
+//			Map<String, Object> roles = new HashMap<>();
+//			Map<String, Set<String>> access = new HashMap<>();
+//
+//			if (token.getResourceAccess() != null) {
+//				for (Map.Entry<String, Access> entry : token.getResourceAccess().entrySet()) {
+//					access.put(entry.getKey(), entry.getValue().getRoles());
+//				}
+//			}
+//
+//			if (token.getRealmAccess() != null) {
+//				roles.put("realm", token.getRealmAccess().getRoles());
+//			}
+//			roles.put("resource", new MapResolver(access));
+//
+//			attributes.put("roles", new MapResolver(roles));
+//
+//			request = doSSOLogin(httpRequest, token.getPreferredUsername(), attributes);
+//		}
+//
 		chain.doFilter(request, response);
 	}
 
-	/**
-	 * Get the access token from the supplied request.
-	 *
-	 * @param request The current servlet request
-	 * @return The Keycloack access token or <code>null</code> when the requests
-	 *		user principal is not a <code>KeycloakPrincipal</code>.
-	 */
-	private AccessToken getToken(HttpServletRequest request) {
-		Principal principal = request.getUserPrincipal();
-
-		if (principal instanceof KeycloakPrincipal) {
-			@SuppressWarnings("unchecked")
-			KeycloakSecurityContext ctx = ((KeycloakPrincipal<KeycloakSecurityContext>) principal).getKeycloakSecurityContext();
-
-			if (ctx != null) {
-				return ctx.getToken();
+//	/**
+//	 * Get the access token from the supplied request.
+//	 *
+//	 * @param request The current servlet request
+//	 * @return The Keycloack access token or <code>null</code> when the requests
+//	 *		user principal is not a <code>KeycloakPrincipal</code>.
+//	 */
+//	private AccessToken getToken(HttpServletRequest request) {
+//		Principal principal = request.getUserPrincipal();
+//
+//		if (principal instanceof KeycloakPrincipal) {
+//			@SuppressWarnings("unchecked")
+//			KeycloakSecurityContext ctx = ((KeycloakPrincipal<KeycloakSecurityContext>) principal).getKeycloakSecurityContext();
+//
+//			if (ctx != null) {
+//				return ctx.getToken();
+//			}
+//		}
+//
+//		return null;
+//	}
 			}
-		}
-
-		return null;
-	}
-}

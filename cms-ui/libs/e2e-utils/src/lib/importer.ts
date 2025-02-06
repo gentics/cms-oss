@@ -18,7 +18,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { GCMSFetchDriver, GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
     BinaryMap,
     CORE_CONSTRUCTS,
@@ -54,6 +54,8 @@ import {
     PACKAGE_MAP,
 } from './entities';
 import { getItem } from './utils';
+import { APIRequestContext, Browser } from '@playwright/test';
+import { GCMSPlaywrightDriver } from './playwright-driver';
 
 /**
  * Options to configure the behaviour of the importer
@@ -79,6 +81,7 @@ export interface ClientOptions {
      * @see https://docs.cypress.io/api/commands/request#Arguments
      */
     log?: boolean;
+    context?: APIRequestContext;
 }
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
@@ -126,6 +129,8 @@ export class EntityImporter {
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
 
+    public apiContext: APIRequestContext;
+
     private publisherSchedule: Schedule;
 
     constructor(
@@ -148,7 +153,7 @@ export class EntityImporter {
         size: TestSize | null = null,
     ): Promise<EntityMap> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         for (const importData of importList) {
@@ -172,7 +177,7 @@ export class EntityImporter {
      */
     public async bootstrapSuite(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         await this.syncTestPackages(size);
@@ -209,7 +214,7 @@ export class EntityImporter {
      */
     public async setupTest(size: TestSize): Promise<EntityMap> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         const map = await this.setupContent(size);
@@ -222,7 +227,7 @@ export class EntityImporter {
      */
     public async runPublish(): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         await this.client.scheduler.execute(this.publisherSchedule.id).send();
@@ -241,7 +246,7 @@ export class EntityImporter {
      */
     public async deleteMeshProjects(): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         const crListResponse = await this.client.contentRepository.list().send();
@@ -261,7 +266,7 @@ export class EntityImporter {
      */
     public async cleanupTest(completeClean: boolean = false): Promise<void> {
         // For cleanups, we always create a new client
-        this.client = await createClient({ log: this.options?.logRequests });
+        this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
 
         // cleanup entities, which were created in tests before
         await this.cleanupEntities();
@@ -304,7 +309,7 @@ export class EntityImporter {
         }
 
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         let size: TestSize;
@@ -331,11 +336,11 @@ export class EntityImporter {
 
             // If it's a global feature
             if (GLOBAL_FEATURES.includes(feature as any)) {
-                Cypress.log({
-                    type: 'parent',
-                    name: `${enabled ? 'enable' : 'disable'} global feature`,
-                    message: feature,
-                });
+                // Cypress.log({
+                //     type: 'parent',
+                //     name: `${enabled ? 'enable' : 'disable'} global feature`,
+                //     message: feature,
+                // });
 
                 try {
                     // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
@@ -359,11 +364,11 @@ export class EntityImporter {
             // If it's a node specific feature
             if (NODE_FEATURES.includes(feature as any)) {
                 for (const id of nodeIds) {
-                    Cypress.log({
-                        type: 'parent',
-                        name: `${enabled ? 'enable' : 'disable'} feature`,
-                        message: `${feature} on ${id}`,
-                    });
+                    // Cypress.log({
+                    //     type: 'parent',
+                    //     name: `${enabled ? 'enable' : 'disable'} feature`,
+                    //     message: `${feature} on ${id}`,
+                    // });
 
                     if (enabled) {
                         await this.client.node.activateFeature(id, feature as NodeFeature).send();
@@ -375,6 +380,10 @@ export class EntityImporter {
         }
     }
 
+    public setApiContext(apiContext: APIRequestContext): void {
+        this.apiContext = apiContext;
+    }
+
     public clearClient(): Promise<void> {
         this.client = null;
         return Promise.resolve();
@@ -382,13 +391,13 @@ export class EntityImporter {
 
     public async setupClient(): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
     }
 
     public async syncPackages(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         await this.syncTestPackages(size);
@@ -396,7 +405,7 @@ export class EntityImporter {
 
     private async syncTestPackages(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         // First import all dev-tool packages from the FS
@@ -874,20 +883,21 @@ export class EntityImporter {
 
 export async function createClient(options?: ClientOptions): Promise<GCMSRestClient> {
     const client = new GCMSRestClient(
-        new CypressDriver(options?.log ?? false),
+        new GCMSPlaywrightDriver(options.context),
+        // new CypressDriver(options?.log ?? false),
         {
             // The baseUrl (aka. protocol/host/port) has to be already setup when started
             connection: {
                 absolute: false,
-                basePath: Cypress.env(ENV_CMS_REST_PATH),
+                basePath: process.env['CMS_REST_PATH'] || 'http://localhost:8080/rest', // Cypress.env(ENV_CMS_REST_PATH),
             },
         },
     );
 
     try {
         const res = await client.auth.login({
-            login: Cypress.env(ENV_CMS_USERNAME),
-            password: Cypress.env(ENV_CMS_PASSWORD),
+            login: process.env['CMS_USERNAME'] || 'node', // Cypress.env(ENV_CMS_USERNAME),
+            password: process.env['CMS_PASSWORD'] || 'node', // Cypress.env(ENV_CMS_PASSWORD),
         }).send();
         // Set the SID for future requests
         client.sid = res.sid;

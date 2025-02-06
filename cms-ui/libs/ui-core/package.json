@@ -3,6 +3,7 @@
   "version": "6.2.4",
   "license": "Apache-2.0",
   "dependencies": {
+    "@gentics/ui-core": "file:",
     "tslib": "^2.5.0"
   },
   "peerDependencies": {
@@ -19,8 +20,8 @@
     "materialize-css": "^1.0.0",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
-    "ngx-pagination": "^6.0.3",
     "ngx-autosize": "^2.0.4",
+    "ngx-pagination": "^6.0.3",
     "roboto-fontface-woff": "^0.8.0",
     "sortablejs": "^1.15.2"
   },
@@ -38,8 +39,8 @@
     "materialize-css": "^1.0.0",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
-    "ngx-pagination": "^6.0.3",
     "ngx-autosize": "^2.0.4",
+    "ngx-pagination": "^6.0.3",
     "roboto-fontface-woff": "^0.8.0",
     "sortablejs": "^1.15.2"
   },

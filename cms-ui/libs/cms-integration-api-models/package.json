@@ -2,7 +2,9 @@
   "name": "@gentics/cms-integration-api-models",
   "version": "6.2.4",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "@gentics/cms-integration-api-models": "file:"
+  },
   "peerDependencies": {
     "@gentics/aloha-models": "^6.2.3",
     "@gentics/cms-models": "^6.2.3",

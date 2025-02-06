@@ -2,7 +2,9 @@
   "name": "@gentics/cms-rest-clients-angular",
   "version": "6.2.4",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "@gentics/cms-rest-clients-angular": "file:"
+  },
   "peerDependencies": {
     "@angular/common": ">=18.0.0",
     "@angular/core": ">=18.0.0",

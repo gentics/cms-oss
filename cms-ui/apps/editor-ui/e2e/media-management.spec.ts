@@ -40,9 +40,9 @@ test.describe('Media Management', () => {
         const FILE = uploadedFiles[FIXTURE_TEST_FILE_TXT_1];
 
         // Open properties
-        await findList(page, ITEM_TYPE_FILE)
-            .then(list => findItem(list, FILE.id))
-            .then(item => itemAction(item, 'properties'));
+        const list = findList(page, ITEM_TYPE_FILE);
+        const item = findItem(list, FILE.id);
+        await itemAction(item, 'properties');
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
@@ -71,9 +71,9 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_1];
 
         // Open properties
-        await findList(page, ITEM_TYPE_IMAGE)
-            .then(list => findItem(list, IMAGE.id))
-            .then(item => itemAction(item, 'properties'));
+        const list = findList(page, ITEM_TYPE_IMAGE);
+        const item = findItem(list, IMAGE.id);
+        await itemAction(item, 'properties');
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
@@ -102,9 +102,9 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_2];
 
         // Open properties
-        await findList(page, ITEM_TYPE_IMAGE)
-            .then(list => findItem(list, IMAGE.id))
-            .then(item => itemAction(item, 'properties'));
+        const list = findList(page, ITEM_TYPE_IMAGE);
+        const item = findItem(list, IMAGE.id);
+        await itemAction(item, 'properties');
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);

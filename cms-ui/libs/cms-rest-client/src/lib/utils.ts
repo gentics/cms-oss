@@ -3,6 +3,9 @@ import { GCMSRestClientRequestError } from './errors';
 import { GCMSRestClientRequestData } from './models';
 
 export function toRelativePath(path: string): string {
+    if (/^https?:\/\//.test(path)) {
+        return path;
+    }
     if (!path.startsWith('/')) {
         return `/${path}`;
     }

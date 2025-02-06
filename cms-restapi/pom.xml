@@ -73,11 +73,12 @@
 					<resourcePackages>
 						<resourcePackage>com.gentics.contentnode.rest.resource</resourcePackage>
 					</resourcePackages>
-					<outputDirectory>${basedir}/../cms-oss-server/src/main/resources/webroot/openapi/</outputDirectory>
-					<outputFilename>openapi</outputFilename>
-					<outputFormats>JSON,YAML</outputFormats>
-					<prettyPrint>true</prettyPrint>
-					<swaggerConfig>
+					<outputPath>${basedir}/../cms-oss-server/src/main/resources/webroot/openapi/</outputPath>
+					<outputFileName>openapi</outputFileName>
+					<outputFormat>JSONANDYAML</outputFormat>
+					<prettyPrint>TRUE</prettyPrint>
+					<!-- TODO: how is this done with this plugin -->
+					<openAPI>
 						<info>
 							<title>GcmsApi</title>
 							<description>${project.name}</description>
@@ -103,7 +104,7 @@
 								</entries>
 							</one>
 						</securityRequirements>
-					</swaggerConfig>
+					</openAPI>
 				</configuration>
 				<executions>
 					<execution>
@@ -112,6 +113,13 @@
 						</goals>
 					</execution>
 				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>jakarta.ws.rs</groupId>
+						<artifactId>jakarta.ws.rs-api</artifactId>
+						<version>3.1.0</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>com.webcohesion.enunciate</groupId>

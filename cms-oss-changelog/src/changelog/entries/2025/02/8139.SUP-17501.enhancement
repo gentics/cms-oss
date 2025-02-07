@@ -1,0 +1,1 @@
+Devtools: Now when a Content Repository is assigned to the Node of a Devtools Package with CR fragments, these fragments are attached to the Content Repository.

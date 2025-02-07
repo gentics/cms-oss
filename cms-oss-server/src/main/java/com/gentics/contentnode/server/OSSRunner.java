@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.ee10.servlet.DefaultServlet;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ResourceServlet;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.http.HttpStatus;
@@ -168,17 +170,17 @@ public class OSSRunner {
 		addAlohaEditor(context);
 
 		// add UIs
-		context.addServlet(DefaultServlet.class, "/editor/*");
-		context.addServlet(DefaultServlet.class, "/admin/*");
+		context.addServlet(getWebrootResourceServlet("editor"), "/editor/*");
+		context.addServlet(getWebrootResourceServlet("admin"), "/admin/*");
 		context.addServlet(
 				getStaticFileServletForPath(ConfigurationValue.UI_CONF_PATH.get()),
 				"/ui-conf/*");
 
 		// add tools
-		context.addServlet(DefaultServlet.class, "/tools/*").setInitParameter("dirAllowed", "false");
+		context.addServlet(getWebrootResourceServlet("tools"), "/tools/*");
 
 		// add openapi
-		context.addServlet(DefaultServlet.class, "/openapi/*").setInitParameter("dirAllowed", "false");
+		context.addServlet(getWebrootResourceServlet("openapi"), "/openapi/*");
 
 		// add other static files
 		addStaticFilesToContext(context);
@@ -198,7 +200,7 @@ public class OSSRunner {
 		rewriteHandler.setHandler(context);
 
 		// set error pages
-		context.addServlet(DefaultServlet.class, "/error/*").setInitParameter("dirAllowed", "false");
+		context.addServlet(getWebrootResourceServlet("error"), "/error/*");
 		ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
 		errorHandler.addErrorPage(HttpStatus.FORBIDDEN_403, "/error/403.html");
 		errorHandler.addErrorPage(HttpStatus.NOT_FOUND_404, "/error/404.html");
@@ -296,17 +298,44 @@ public class OSSRunner {
 		return rewriteHandler;
 	}
 
-	private static ServletHolder getStaticFileServletForPath(String path) {
-		var defaultServlet = new DefaultServlet();
-		var holderServlet = new ServletHolder("default_" + path, defaultServlet);
-		holderServlet.setInitParameter("baseResource", Path.of(path).toAbsolutePath().toString());
-		// only apply path info to resourceBase
-		holderServlet.setInitParameter("pathInfoOnly", "true");
-		holderServlet.setInitParameter("dirAllowed", "false");
-		holderServlet.setInitParameter("etags", "true");
-		holderServlet.setInitParameter("cacheControl", "no-cache");
+	/**
+	 * Get the holder for a {@link ResourceServlet} with the baseResource set to the given
+	 * relative path. Directory listing is forbidden.
+	 * @param path path relative to /webroot of the classpath
+	 * @return servlet holder instance
+	 */
+	private static ServletHolder getWebrootResourceServlet(String path) {
+		return getResourceServlet(Map.of(
+				"baseResource", path,
+				"pahtInfoOnly", "true",
+				"dirAllowed", "false"));
+	}
 
-		return holderServlet;
+	/**
+	 * Get the holder for a {@link ResourceServlet} with the baseResource set to the given path,
+	 * which is made absolute. Directory listing is forbidden, etags will be generated and cacheControl is set to no-cache
+	 * @param path path
+	 * @return servlet holder instance
+	 */
+	private static ServletHolder getStaticFileServletForPath(String path) {
+		path = Path.of(path).toAbsolutePath().toString();
+		return getResourceServlet(Map.of(
+				"baseResource", path,
+				"pathInfoOnly", "true",
+				"dirAllowed", "false",
+				"etags", "true",
+				"cacheControl", "no-cache"));
+	}
+
+	/**
+	 * Get the holder for a {@link ResourceServlet} configured with the given init parameters
+	 * @param initParameters map of init parameters
+	 * @return servlet holder instance
+	 */
+	private static ServletHolder getResourceServlet(Map<String, String> initParameters) {
+		var servletHolder = new ServletHolder(ResourceServlet.class);
+		servletHolder.setInitParameters(initParameters);
+		return servletHolder;
 	}
 
 	/**
@@ -339,7 +368,7 @@ public class OSSRunner {
 			}
 
 			// serve alohaeditor files
-			context.addServlet(DefaultServlet.class, "/alohaeditor/*").setInitParameter("dirAllowed", "false");
+			context.addServlet(getWebrootResourceServlet("alohaeditor"), "/alohaeditor/*");
 		} else {
 			System.setProperty(AlohaRenderer.BUILD_TIMESTAMP, "DEV");
 			System.setProperty(AlohaRenderer.ALOHA_EDITOR_BASE_URL_PARAM,
@@ -351,21 +380,21 @@ public class OSSRunner {
 						"/alohaeditor/DEV/plugins/gcn/*");
 			}
 
-			context.addServlet(DefaultServlet.class, "/alohaeditor/gcmsui-scripts-launcher.js");
+			context.addServlet(ResourceServlet.class, "/alohaeditor/gcmsui-scripts-launcher.js");
 			context.addServlet(getStaticFileServletForPath(alohaEditorPath), "/alohaeditor/DEV/*");
 		}
 
 		String gcnJsApiPath = GCNJSAPI_PATH.get();
 		if (StringUtils.isBlank(gcnJsApiPath)) {
 			// serve gcnjsapi files
-			context.addServlet(DefaultServlet.class, "/gcnjsapi/*").setInitParameter("dirAllowed", "false");
+			context.addServlet(getWebrootResourceServlet("gcnjsapi"), "/gcnjsapi/*");
 		} else {
 			context.addServlet(getStaticFileServletForPath(gcnJsApiPath),
 					String.format("/gcnjsapi/%s/*", System.getProperty(AlohaRenderer.BUILD_TIMESTAMP)));
 		}
 
 		// add servlet for static images
-		context.addServlet(DefaultServlet.class, "/images/*").setInitParameter("dirAllowed", "false");
+		context.addServlet(getWebrootResourceServlet("images"), "/images/*");
 	}
 
 	/**

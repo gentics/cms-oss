@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
@@ -33,24 +34,31 @@ import org.junit.Test;
 import com.gentics.api.lib.cache.PortalCacheException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.rest.model.ContentRepositoryFragmentModel;
 import com.gentics.contentnode.rest.model.request.NodeSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.devtools.PackageResource;
+import com.gentics.contentnode.rest.resource.impl.ContentRepositoryFragmentResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.devtools.PackageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for assigning nodes to CRs
  */
-@GCNFeature(set = { Feature.MULTICHANNELLING, Feature.MCCR, Feature.MESH_CONTENTREPOSITORY, Feature.PUB_DIR_SEGMENT })
+@GCNFeature(set = { Feature.MULTICHANNELLING, Feature.MCCR, Feature.MESH_CONTENTREPOSITORY, Feature.PUB_DIR_SEGMENT, Feature.DEVTOOLS })
 public class CrAssignmentTest {
 	public final static String CR_PROPERTY = "contentrepositoryId";
 
@@ -108,6 +116,8 @@ public class CrAssignmentTest {
 
 		group = supply(() -> createUserGroup("Test", NODE_GROUP_ID));
 		user = supply(() -> createSystemUser("first", "last", null, "tester", "tester", Arrays.asList(group)));
+
+		Synchronizer.start();
 	}
 
 	/**
@@ -190,6 +200,41 @@ public class CrAssignmentTest {
 		assertCr(node, cr1);
 		assertCr(channel1, null);
 		assertCr(channel2, null);
+	}
+
+	/**
+	 * Test assigning a master node to a CR
+	 * @throws Exception 
+	 */
+	@Test
+	public void testNodeToCrDevtoolsFragments() throws Exception {
+		List<String> crFrs = supply(() -> IntStream.range(0, 4).mapToObj(i -> {
+			ContentRepositoryFragmentModel crFr = new ContentRepositoryFragmentModel();
+			crFr.setName("test_cr_fragment_" + i);
+			try {
+				new ContentRepositoryFragmentResourceImpl().add(crFr);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return crFr.getName();
+		}).collect(Collectors.toList()));
+		try (Trx trx = new Trx()) {
+			PackageResource resource = new PackageResourceImpl();
+			resource.add("devtools_package");
+			for (String crFr: crFrs) {
+				resource.addCrFragment("devtools_package", crFr);
+			}
+			resource.addPackage(node.getId().toString(), "devtools_package");
+			trx.success();
+		}
+		assertResponseOK(assign(node.getId(), cr1.getId()));
+
+		assertCr(node, cr1);
+		assertCr(channel1, null);
+		assertCr(channel2, null);
+		try (Trx trx = new Trx()) {
+			assertThat(cr1.getAssignedFragments().stream().map(CrFragment::getName).sorted()).containsExactlyElementsOf(crFrs);
+		}
 	}
 
 	/**

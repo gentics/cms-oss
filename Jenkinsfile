@@ -157,6 +157,9 @@ spec:
 
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
+                            mvnArguments += " -am -pl cms-server"
+                        }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
                         runJUnitTests = false
@@ -228,7 +231,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                     // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${cms_activated_licensekey}"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                     }

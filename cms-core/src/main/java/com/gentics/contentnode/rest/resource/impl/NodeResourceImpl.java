@@ -76,6 +76,8 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.devtools.PackageObject;
+import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
@@ -102,6 +104,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -889,7 +892,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT) && ObjectTransformer.getBoolean(reqNode.isPubDirSegment(), false)) {
 				rootFolder.setPublishDir(rootFolder.getName().toLowerCase());
 			} else {
-			rootFolder.setPublishDir("/");
+				rootFolder.setPublishDir("/");
 			}
 
 			if (!ObjectTransformer.isEmpty(request.getDescription())) {
@@ -1169,6 +1172,26 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 						}
 						response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, "node saving failed"));
 						return response;
+					}
+
+					if (NodeConfigRuntimeConfiguration.isFeature(Feature.DEVTOOLS)) {
+						// when assigning a CR to the node, assigned to the devtools packages, assign all the missing CR fragments of the packages to the CR
+						Set<Integer> crFragmentIds = contentRepository.getAssignedFragments().stream().map(NodeObject::getId).collect(Collectors.toSet());
+						boolean crUpdated = false;
+						for (String pkg: Synchronizer.getPackages(node)) {
+							for (PackageObject<CrFragment> pkgFragment: Synchronizer.getPackage(pkg).getObjects(CrFragment.class)) {
+								if (!crFragmentIds.contains(pkgFragment.getId())) {
+									if (!crUpdated) {
+										contentRepository = t.getObject(contentRepository, true);
+										crUpdated = true;
+									}
+									contentRepository.getAssignedFragments().add(t.getObject(CrFragment.class, pkgFragment.getId()));
+								}
+							}
+						}
+						if (crUpdated) {
+							contentRepository.save();
+						}
 					}
 
 					// when assigning a master to a multichannelling aware CR, we assign all channels as well

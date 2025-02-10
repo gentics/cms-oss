@@ -36,11 +36,11 @@ public class JobStatus extends GenericResponse {
 
 	/**
 	 * Create an instance with running flag and (automatic) message
-	 * @param name job name
+	 * @param message job status
 	 * @param running running flag
 	 */
-	public JobStatus(String name, boolean running) {
-		super(new Message(Type.INFO, String.format("%s Job is %s", name, running ? "running": "not running")), new ResponseInfo(ResponseCode.OK, ""));
+	public JobStatus(String message, boolean running) {
+		super(new Message(Type.INFO, message), new ResponseInfo(ResponseCode.OK, ""));
 		this.running = running;
 	}
 

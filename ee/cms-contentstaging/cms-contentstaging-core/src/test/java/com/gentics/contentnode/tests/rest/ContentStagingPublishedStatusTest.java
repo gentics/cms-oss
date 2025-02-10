@@ -30,7 +30,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 /**
  * Test cases for content staging of pages with different stati
  */
-@GCNFeature(set = { Feature.CONTENT_STAGING })
+@GCNFeature(set = { Feature.CONTENT_STAGING, Feature.MULTICHANNELLING })
 @RunWith(value = Parameterized.class)
 public class ContentStagingPublishedStatusTest extends AbstractContentStagingTest {
 

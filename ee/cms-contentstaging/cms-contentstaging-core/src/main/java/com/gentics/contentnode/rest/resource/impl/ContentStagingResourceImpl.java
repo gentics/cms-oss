@@ -432,19 +432,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 					finalName = model.getName();
 				}
+				updateStoredPackage(path.resolve(finalName), model, stored);
 
-				// Update contents
-				try (OutputStream os = Channels.newOutputStream(FileChannel.open(path.resolve(finalName).resolve(CONTENT_PACKAGE_METADATA_FILENAME), 
-						StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {					
-					stored = StoredContentPackage.REST2NODE.apply(model, stored);
-					mapper.writeValue(os, stored);
-					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
-					return StoredContentPackage.NODE2REST.apply(stored, model);
-				} catch (FileAlreadyExistsException existsException) {
-					throw new DuplicateValueException("name", model.getName());
-				} catch (IOException e) {
-					throw new IllegalStateException(e);
-				}
+				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
+				return StoredContentPackage.NODE2REST.apply(stored, model);
 			});
 			response.setContentPackage(cp);
 			return response;
@@ -539,7 +530,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					break;
 				}
 				fillContentPackageStatistic(path.resolve(name), pkg);
-
+				Integer updateTimestamp = updateStoredPackage(path.resolve(name), pkg);
+				pkg.setTimestamp(updateTimestamp);
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
 				return pkg;
@@ -602,7 +594,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 
 				fillContentPackageStatistic(path.resolve(name), pkg);
-
+				Integer updateTimestamp = updateStoredPackage(path.resolve(name), pkg);
+				pkg.setTimestamp(updateTimestamp);
 				response.setContentPackage(pkg);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
 				return pkg;
@@ -1539,6 +1532,40 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 			}
 			deferDeleting.add(currentPath);
+		}
+	}
+
+	/**
+	 * Update content package at the filesystem, updating its timestamp.
+	 * 
+	 * @param packageFolderPath
+	 * @param pkg
+	 * @return timestamp of an update.
+	 * @throws NodeException
+	 */
+	private static final Integer updateStoredPackage(Path packageFolderPath, StagedContentPackage pkg) throws NodeException {
+		return updateStoredPackage(packageFolderPath, pkg, new StoredContentPackage());
+	}
+
+	/**
+	 * Update content package at the filesystem, updating its timestamp.
+	 * 
+	 * @param packageFolderPath
+	 * @param pkg
+	 * @param stored model to update and save
+	 * @return timestamp of an update.
+	 * @throws NodeException
+	 */
+	private static final Integer updateStoredPackage(Path packageFolderPath, StagedContentPackage pkg, StoredContentPackage stored) throws NodeException {
+		try (OutputStream os = Channels.newOutputStream(FileChannel.open(packageFolderPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME), 
+				StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
+			stored = StoredContentPackage.REST2NODE.apply(pkg, stored);
+			mapper.writeValue(os, stored);
+			return stored.getTimestamp();
+		} catch (FileAlreadyExistsException existsException) {
+			throw new DuplicateValueException("name", pkg.getName());
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
 		}
 	}
 

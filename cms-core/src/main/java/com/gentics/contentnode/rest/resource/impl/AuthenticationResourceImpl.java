@@ -289,9 +289,9 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 	 * @param sid session id
 	 * @return Login response if login was successfully
 	 */
-	private static LoginResponse tryLoginWithService(String username, String password, String sid) {
+	private LoginResponse tryLoginWithService(String username, String password, String sid) {
 		for (LoginService service : loginServiceLoader) {
-			LoginResponse loginResponse = service.login(username, password, sid);
+			LoginResponse loginResponse = service.login(username, password, sid, this);
 			if (loginResponse != null) {
 				return loginResponse;
 			}

@@ -42,7 +42,7 @@ define('gcn/gcn-links', [
 	'i18n!gcn/nls/i18n',
 ], function (
 	GCN,
-	/** @type JQueryStatic */
+	/** @type {JQueryStatic} */
 	$,
 	Aloha,
 	PubSub,

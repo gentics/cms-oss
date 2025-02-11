@@ -984,7 +984,7 @@ describe('Page Editing', () => {
                     .click();
 
                 cy.get(ALIAS_CONTENT)
-                    .should('have.text', 'Δ');
+                    .should('have.text', 'δ');
             });
         });
 

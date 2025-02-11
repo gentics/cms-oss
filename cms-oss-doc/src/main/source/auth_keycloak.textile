@@ -37,6 +37,22 @@ entries correspond exactly to the respective fields in the @keycloak.json@ you c
 generate in the Keycloak admin front-end, and you should put all the entries here even
 when they are not listed in the example above.
 
+h4. Setup Content Security Policy
+
+The Administrator User Interface requires some additional settings in Keycloak, to work as expected.
+Update the "Content Security Policy" of your Keycloak realm:
+
+# Select your Realm in the top left corner
+# Select the tab "Realm Settings" in the "Configure" category on the left sidebar
+# Select the tab "Security Defenses" on the top bar
+
+Adopt the "Content-Security-Policy" to allow the embedding from your CMS installation host:
+
+<shell>
+frame-src 'self'; frame-ancestors 'self'; object-src 'none';
+frame-src 'self'; frame-ancestors 'self' https://yourcmshost.tld; object-src 'none';
+</shell>
+
 h4. Using an Identity Provider
 
 When using an "identity provider":https://www.keycloak.org/docs/latest/server_admin/#_identity_broker

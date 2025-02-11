@@ -1,6 +1,12 @@
 package com.gentics.contentnode.etc;
 
+import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * This interface defines the methods that a login service must implement for authenticating.
@@ -8,12 +14,40 @@ import com.gentics.contentnode.rest.model.response.LoginResponse;
 public interface LoginService {
 
 	/**
+	 * Configuration item name for cookie's SameSite value
+	 */
+	String CONFIGURATION_COOKIE_SAMESITE = "session_cookie_samesite";
+
+	/**
 	 * Login method to authenticate a user.
+	 *
 	 * @param username The username of the user.
 	 * @param password The password of the user in plain text.
-	 * @param sid The session ID
+	 * @param servletRequest The current request.
+	 * @param servletResponse The current response.
+	 *
 	 * @return LoginResponse
 	 */
-	LoginResponse login(String username, String password, String sid);
+	LoginResponse login(String username, String password, ContentNodeFactory factory, HttpServletRequest servletRequest, HttpServletResponse servletResponse);
+
+	/**
+	 * Whether this service is the default login service.
+	 *
+	 * <p>
+	 *     If {@code true} the response of this service should be used for failed login attempts.
+	 * </p>
+	 * @return Whether this service is the default login service.
+	 */
+	default boolean isDefaultService() {
+		return false;
+	}
+
+	/**
+	 * Determine whether the secure flag of the session cookie should be set.
+	 * @return true for secure, false otherwise
+	 */
+	static boolean isCookieSecure() throws TransactionException {
+		return TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences().getFeature("secure_cookie");
+	}
 
 }

@@ -56,6 +56,17 @@ public class ServiceLoaderUtil<S> implements Iterable<S> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public <T extends S> Optional<T> get(Class<T> svc) {
+		for (var service: services) {
+			if (svc.isInstance(service)) {
+				return Optional.of((T) service);
+			}
+		}
+
+		return Optional.empty();
+	}
+
 	@Override
 	public Iterator<S> iterator() {
 		return services.iterator();

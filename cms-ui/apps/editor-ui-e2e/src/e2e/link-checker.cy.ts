@@ -59,6 +59,9 @@ skipableSuite(isVariant(Variant.ENTERPRISE) ,'Link Checker', () => {
                 scheduleLinkChecker,
             ])))
             .then(() => {
+                return cy.wrap(IMPORTER.executeSchedule(scheduleLinkChecker), { log: false, timeout: 60_000 });
+            })
+            .then(() => {
                 cy.navigateToApp();
                 cy.login(AUTH_ADMIN);
                 cy.selectNode(IMPORTER.get(minimalNode)!.id);
@@ -283,7 +286,7 @@ skipableSuite(isVariant(Variant.ENTERPRISE) ,'Link Checker', () => {
         });
     });
 
-    describe.only('Live Constructs', () => {
+    describe('Live Constructs', () => {
         const CLASS_BLOCK_HANDLE = 'aloha-block-handle';
         const CLASS_BLOCK_INDICATOR = 'aloha-gcnlinkchecker-block-indicator';
 
@@ -301,8 +304,21 @@ skipableSuite(isVariant(Variant.ENTERPRISE) ,'Link Checker', () => {
 
             it('should display the construct link status', () => {
                 cy.getAlohaIFrame()
-                    .find(`header .${CLASS_BLOCK_HANDLE}`);
+                    .find(`header .${CLASS_BLOCK_HANDLE} .${CLASS_BLOCK_INDICATOR}`)
+                    .should('exist');
             });
-        })
+        });
+
+        describe('Without configured Constructs', () => {
+            beforeEach(() => {
+                setupEditMode();
+            });
+
+            it('should display the construct link status', () => {
+                cy.getAlohaIFrame()
+                    .find(`header .${CLASS_BLOCK_HANDLE} .${CLASS_BLOCK_INDICATOR}`)
+                    .should('not.exist');
+            });
+        });
     });
 });

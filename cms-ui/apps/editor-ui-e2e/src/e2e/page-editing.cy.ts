@@ -973,6 +973,21 @@ describe('Page Editing', () => {
             });
         });
 
+        describe('Character Picker', () => {
+            it('should be possible to insert special characters', () => {
+                cy.get(ALIAS_CONTENT)
+                    .clear();
+
+                cy.findAlohaComponent({ slot: 'characterPicker', type: 'context-button' })
+                    .openContext()
+                    .find('button.symbol-grid-cell[title="Small delta"]')
+                    .click();
+
+                cy.get(ALIAS_CONTENT)
+                    .should('have.text', 'δ');
+            });
+        });
+
         describe('Actions', () => {
             it('should be possible to manage the publish time of the page', () => {
                 const ALIAS_MODAL = '@modal';

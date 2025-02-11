@@ -4,13 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
-
 /** The Keycloak global is exposed when loading the keycloak.js script from the Keycloak server */
 let keycloak: Keycloak;
 let showSSOButton: boolean;
 
 const NO_CONFIG_FOUND = 'Keycloak config file not found';
-const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
+export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
 const CUSTOMER_CONFIG_PATH = './../ui-conf/';
 export const KEYCLOAK_ERROR_KEY = 'keycloakError'
@@ -36,8 +35,10 @@ export class KeycloakService {
     /** The app will not trigger redirect to Keycloak if ui-overrides.json has showSSOButton: true */
     static readonly uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
 
-
-    constructor(private client: GCMSRestClientService, private router: Router) {}
+    constructor(
+        private client: GCMSRestClientService,
+        private router: Router,
+    ) {}
 
     /**
      * Initializes Keycloak.
@@ -65,6 +66,10 @@ export class KeycloakService {
                 showSSOButton = false;
                 return this.checkKeycloakAuthOnLoad('login-required');
             });
+    }
+
+    ssoSkipped(): boolean {
+        return checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME);
     }
 
     get keycloakEnabled(): boolean {
@@ -169,7 +174,6 @@ export class KeycloakService {
 
 }
 
-
 /**
  * Initialize the Keycloak instance and return a promise.
  */
@@ -186,7 +190,6 @@ async function initKeycloak(keycloak: Keycloak, onLoad: 'check-sso' | 'login-req
         throw error;
     }
 }
-
 
 /**
  * Load a URL and parse the contents as JSON.

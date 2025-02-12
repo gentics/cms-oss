@@ -40,7 +40,7 @@ public enum ConfigurationValue {
 	/**
 	 * License key to use, if license key file does not exist
 	 */
-	LICENSEKEY("LICENSEKEY", "com.gentics.contentnode.license-key.path"),
+	LICENSEKEY("LICENSEKEY", "com.gentics.contentnode.license-key"),
 
 	/**
 	 * Path to the keys directory

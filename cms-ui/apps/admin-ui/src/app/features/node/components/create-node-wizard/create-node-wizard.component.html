@@ -56,7 +56,7 @@
     <gtx-wizard-step
         *ngIf="!isChildNode"
         [title]="'node.create_node_wizard_step_languages' | i18n"
-        [nextEnabled]="fgNodeFeatures.valid"
+        [nextEnabled]="isChildNode || selectedLanguages?.length > 0"
         [nextClick]="finishClickAction"
     >
         <ng-template>

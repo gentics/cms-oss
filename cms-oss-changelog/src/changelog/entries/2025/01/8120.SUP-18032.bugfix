@@ -1,0 +1,2 @@
+When startup of the http server fails (e.g. due to configuration errors), the process will now terminate
+after the error log is written, instead of keep running in an unreponsive state.

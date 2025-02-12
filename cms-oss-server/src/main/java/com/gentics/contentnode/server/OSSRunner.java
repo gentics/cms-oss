@@ -247,7 +247,11 @@ public class OSSRunner {
 			NodeConfigRuntimeConfiguration.runtimeLog.info("Server started successfully");
 			Thread.currentThread().join();
 		} catch (Exception e) {
-			e.printStackTrace();
+			NodeConfigRuntimeConfiguration.runtimeLog.error("Server startup failed", e);
+			try {
+				server.stop();
+			} catch (Exception ignored) {
+			}
 		} finally {
 			Initializer.get().shutdown();
 		}

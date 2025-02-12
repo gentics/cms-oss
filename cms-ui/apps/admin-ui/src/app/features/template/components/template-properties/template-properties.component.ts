@@ -56,7 +56,11 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
 
     public tagsChanged(event: TagEditorChange): void {
         // Ignore all events which are not for the current template
-        if (!event || event.entityType !== 'template' || event.entityId !== this.value?.id || event.nodeId !== this.node?.id) {
+        if (!event
+            || event.entityType !== 'template'
+            || `${event.entityId}` !== `${this.value?.id || ''}`
+            || event.nodeId !== this.node?.id
+        ) {
             return;
         }
 
@@ -78,10 +82,14 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
         ctl.setValue({
             ...ctl.value,
             [event.tagName]: event.tag,
-        });
-        if (!event.modified) {
-            ctl.markAsPristine();
+        }, { emitEvent: false, onlySelf: true });
+
+        if (event.modified) {
+            ctl.markAsDirty({ onlySelf: false });
+        } else {
+            ctl.markAsPristine({ onlySelf: false });
         }
+
         ctl.setValidators(() => event.valid ? null : { 'tag-invalid': event.tagName });
         ctl.updateValueAndValidity();
     }

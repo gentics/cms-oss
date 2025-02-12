@@ -1,9 +1,9 @@
 {
   "name": "@gentics/cms-rest-clients-angular",
-  "version": "6.1.23",
+  "version": "6.1.24",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.23"
+    "@gentics/cms-models": "6.1.24"
   },
   "peerDependencies": {
     "@angular/common": "^16.0.0",

@@ -91,7 +91,7 @@ import com.gentics.contentnode.staging.StagingErrorKind;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
 
-@GCNFeature(set = { Feature.CONTENT_STAGING })
+@GCNFeature(set = { Feature.CONTENT_STAGING, Feature.MULTICHANNELLING })
 public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 
@@ -207,6 +207,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		String packageName = response.getContentPackage().getName();
+		Integer timestamp = response.getContentPackage().getTimestamp();
 		String folder1Id = supply(() -> folder1.getGlobalId().toString());
 		NodeObject folder11 = supply(() -> folder1.getParentObject());
 
@@ -227,6 +228,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove
 		response = assertRequiredPermissions(group, "tester", "tester", restContext, 
@@ -243,6 +246,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove again (double delete test)
 		response = assertRequiredPermissions(group, "tester", "tester", restContext, 
@@ -259,6 +264,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Add recursively
 		// REST API call currently fails because of omissive behavior of adding the inaccessible recursive content
@@ -287,6 +294,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isEqualTo(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 	}
 
 	@Test
@@ -294,6 +303,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		String packageName = response.getContentPackage().getName();
+		Integer timestamp = response.getContentPackage().getTimestamp();
 //		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page11.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page11.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
@@ -322,6 +332,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
 		{
@@ -349,6 +361,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
 		{
@@ -366,6 +380,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		String packageName = response.getContentPackage().getName();
+		Integer timestamp = response.getContentPackage().getTimestamp();
 //		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
@@ -390,6 +405,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove node
 		response = assertRequiredPermissions(group, "tester", "tester", restContext, 
@@ -406,12 +423,15 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 	}
 
 	@Test
 	public void testManageFile() throws Exception {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		Integer timestamp = response.getContentPackage().getTimestamp();
 		String packageName = response.getContentPackage().getName();
 //		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
@@ -440,6 +460,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
 		{
@@ -466,6 +488,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
 		{
@@ -483,6 +507,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		String packageName = response.getContentPackage().getName();
+		Integer timestamp = response.getContentPackage().getTimestamp();
 //		operate(() -> PermHandler.setPermissions(ImageFile.TYPE_IMAGE, image1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, image1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
@@ -509,6 +534,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
 		{
@@ -535,6 +562,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
 		{
@@ -558,6 +587,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
 		String packageName = response.getContentPackage().getName();
+		Integer timestamp = response.getContentPackage().getTimestamp();
 //		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
 //		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
@@ -584,6 +614,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
 		{
@@ -612,6 +644,8 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
 		{
@@ -1247,6 +1281,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 	protected void testUpdate(String description, Optional<String> maybeNewName) throws Exception {
 		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
 		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		Integer timestamp = response.getContentPackage().getTimestamp();
 
 		String newName = maybeNewName.orElse(response.getContentPackage().getName());
 		String sanitizedName = supply(() -> FileFactory.sanitizeName(packageNameHuman));
@@ -1264,5 +1299,6 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 		assertContentPackageResponse(response, start, start + 60, newName, description);
 		assertContentPackageResponse(directRead(supply(() -> FileFactory.sanitizeName(newName))), start, start + 120, newName, description);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
 	}
 }

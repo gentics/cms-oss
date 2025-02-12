@@ -10,7 +10,7 @@ for all features, if not documented otherwise.
 
 The list of features which require no Enterprise Edition licensing is available in the "OSS guides":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_overview.html.
 
-The features listed here need to be activated with a license key. Consult the details of the "activation process":activation.html for more information.
+The features listed here need to be covered by the used license key. Please contact your account manager for details.
 
 h3. Automatic Translation
 
@@ -43,10 +43,6 @@ h3. Link Checker
 
 This feature enables the link checker.
 See "Link Checker":feature_link_checker.html for details.
-
-h3. Migration Tool
-
-See "Migration Tool":feature_migration.html
 
 h3. Multichanneling
 

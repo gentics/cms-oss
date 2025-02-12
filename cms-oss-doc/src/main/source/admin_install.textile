@@ -10,7 +10,7 @@ h3. Pre Requirements
 * All commands have to be executed using the root user.
 * Make sure the locale en_US.UTF-8 is generated
 * Make sure your timezone is correctly set (eg. to CET)
-* Make sure Java 17 is installed on the system. Installation commands differ depending on the operating system (see the "compatibility list":https://www.gentics.com/Content.Node/cmp8/guides-oss/gcn_compatibility_list.html#operating-systems for details on supported operating systems).
+* Make sure Java 17 is installed on the system. Installation commands differ depending on the operating system (see the "compatibility list":gcn_compatibility_list.html#operating-systems for details on supported operating systems).
 
 h4. Download the package
 

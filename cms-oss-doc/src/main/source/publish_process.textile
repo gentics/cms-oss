@@ -15,7 +15,7 @@ An object is scheduled to be (re-)published if
 * The object is new and (in case of pages) "published" by an editor
 * The object itself was changed (and "published")
 * Another object was changed that influences the rendered output of the object
-* The object was scheduled to be republished using the "time management":https://manual.gentics.com/de/editor/seitenbereich/Seitenbereich
+* The object was scheduled to be republished using "content management":https://manual.gentics.com/de/admin/betrieb/Betrieb
 * The object is a page and has to be (re-)published due to time management.
 * The object is an image or file and has to be published due to the feature "file publish dependencies":feature_file_publish_dependencies.html
 
@@ -28,7 +28,7 @@ Objects will be removed from the online content if
 
 Objects will not be changed in their online status (although they were dirted) if
 
-* Publishing of the object was delayed using the "time management":https://manual.gentics.com/de/editor/seitenbereich/Seitenbereich
+* Publishing of the object was delayed using the "content management":https://manual.gentics.com/de/admin/betrieb/Betrieb
 * The node containing the object has updating the contentmap/filesystem deactivated
 
 h4. Status

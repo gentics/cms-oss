@@ -16,10 +16,8 @@ h4. MariaDB
 
 h4. Oracle MySQL
 
-NOTE: Due to a specific support contract we are obliged to support the latest version of the Oracle MySQL Enterprise Edition Server.
-
 |_.Minor Version |_.Supported |_.Notes                                                                |
-| 8.0 and below  | No         |                                                                               |
+| 9.2 and below  | No         |                                                                               |
 
 NOTE: Please note that some custom my.cnf mysqld setting must be applied. Please check the "admin installation guide":admin_install.html
 

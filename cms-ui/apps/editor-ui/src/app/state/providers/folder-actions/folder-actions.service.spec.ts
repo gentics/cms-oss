@@ -329,6 +329,7 @@ describe('FolderActionsService', () => {
             wastebin: 'exclude',
             language: 'en',
             folderId: 42,
+            folder: true,
         };
 
         beforeEach(() => {
@@ -410,6 +411,7 @@ describe('FolderActionsService', () => {
                 recursive: false,
                 langvars: true,
                 folderId: 42,
+                folder: true,
             };
             expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));
@@ -427,6 +429,7 @@ describe('FolderActionsService', () => {
                 recursive: false,
                 langvars: true,
                 folderId: 42,
+                folder: true,
             };
             expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));

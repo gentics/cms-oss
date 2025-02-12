@@ -1,0 +1,51 @@
+:host {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem
+}
+
+.image-controls {
+    display: flex;
+    gap: 1rem;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+.image-preview {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.image-status {
+    width: 100%;
+}
+
+.image-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.image-wrapper .face-detection-wrapper .face-detection-item {
+    position: absolute;
+    border: 1px solid;
+}
+
+.image-wrapper .face-detection-wrapper .face-detection-item-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin-top: -1.8rem;
+    background: black;
+    padding: 2px 1rem;
+    margin-left: -1px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    color: white;
+}

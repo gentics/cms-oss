@@ -121,6 +121,11 @@
                 "{workspaceRoot}/.eslintignore",
                 "{workspaceRoot}/eslint.config.js"
             ]
+        },
+        "@nx/angular:package": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
         }
     },
     "useLegacyCache": true

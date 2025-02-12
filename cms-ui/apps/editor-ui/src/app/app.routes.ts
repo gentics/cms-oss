@@ -7,6 +7,7 @@ import { ToolOverviewComponent } from './embedded-tools/components/tool-overview
 import { ToolProxyComponent } from './embedded-tools/components/tool-proxy/tool-proxy.component';
 import { ProxyRouteComponent, RessourceProxyComponent } from './shared/components';
 import { EditorOutlet } from './common/models';
+import { PiktidEditorComponent } from '@gentics/picktid-editor';
 
 export const APP_ROUTES: Route[] = [
     {
@@ -109,6 +110,10 @@ export const APP_ROUTES: Route[] = [
         path: 'tag-editor/:nodeId/:entityType/:entityId/:tagName',
         component: TagEditorRouteComponent,
         canActivate: [AuthGuard],
+    },
+    {
+        path: 'piktid-editor',
+        component: PiktidEditorComponent,
     },
     {
         path: 'proxy',

@@ -4,6 +4,8 @@ If you want to use Velocity in your tagtypes you have to use at least 2 parts of
 
 endprologue.
 
+NOTE: Using Velocity as template language is deprecated. Since GCMS version 6.2 "Handlebars":handlebars.html is the recommended template language.
+
 h3. Basic Usage
 
 # Add a Velocity part. Do not hide it and don't make it editable.

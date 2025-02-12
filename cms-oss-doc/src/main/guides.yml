@@ -133,9 +133,6 @@ index:
     - title: "Authentication via REST API"
       url: rest_auth
       text: Describes possible authentication methods for the REST API
-    - title: "Keycloak"
-      url: auth_keycloak
-      text: How to authenticate Gentics CMS users using Keycloak
 
   Fileupload:
     - title: "File upload"

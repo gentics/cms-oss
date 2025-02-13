@@ -78,6 +78,18 @@ export interface DetectFacesResponse {
 
 }
 
+export interface UserInfoResponse {
+    username: string;
+    email: string;
+    name: string;
+    surname: string;
+    affiliation: string;
+    credits: string;
+    verified: string;
+    contract: string;
+    app_name: string;
+}
+
 export interface SubstituteFaceOptions {
     flag_reset: number;
     flag_reset_single_face: number;
@@ -87,7 +99,38 @@ export interface SubstituteFaceOptions {
     flag_png: number;
 }
 
-export interface SubstituteFaceResponse {}
+export interface SubstituteFaceResponse {
+    links: string;
+}
+
+export interface ImageDownloadOptions {
+    flag_png: number;
+    flag_quality: number;
+    flag_watermark: number;
+}
+
+export interface ImageDownloadRequest extends Partial<ImageDownloadOptions> {
+    id_image: string;
+}
+
+export interface ImageDownloadResponse {
+    id: string;
+    links: string;
+}
+
+export interface ImageLink {
+    /** Generated image file name */
+    f: string;
+    /** Generated image link */
+    l: string;
+    /** ISO Date string */
+    t: string;
+    w: number;
+    /** Quality of the image? */
+    q: number;
+    o: number;
+    e: number;
+}
 
 export enum NotificationName {
     ERROR = 'error',

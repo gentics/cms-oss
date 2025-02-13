@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { map, Observable, of, tap, throwError } from 'rxjs';
 import {
     AnonymizationOptions,
     AuthenticationResponse,
@@ -13,8 +13,13 @@ import {
     NotificationListResponse,
     NotificationName,
     RandomFaceResponse,
+    ImageLink,
     SubstituteFaceOptions,
     SubstituteFaceResponse,
+    UserInfoResponse,
+    ImageDownloadResponse,
+    ImageDownloadOptions,
+    ImageDownloadRequest,
 } from '../../common/models';
 
 @Injectable()
@@ -26,6 +31,15 @@ export class PiktidAPIService {
     constructor(
         private http: HttpClient,
     ) {}
+
+    public setAuth(accessToken: string, refreshToken: string): void {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
+
+    public isLoggedIn(): boolean {
+        return !!this.accessToken;
+    }
 
     authenticate(username: string, password: string): Observable<AuthenticationResponse> {
         if (this.accessToken) {
@@ -51,7 +65,25 @@ export class PiktidAPIService {
         );
     }
 
+    getUserInfo(): Observable<UserInfoResponse> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
+        return this.http.get<UserInfoResponse>('/piktid/api/me', {
+            observe: 'body',
+            responseType: 'json',
+            headers: new HttpHeaders({
+                Authorization: `Bearer ${this.accessToken}`,
+            }),
+        });
+    }
+
     uploadFile(file: File, options: AnonymizationOptions): Observable<FileUploadResponse> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
         const data = new FormData();
         data.set('options', JSON.stringify(options));
         data.set('file', file);
@@ -66,6 +98,10 @@ export class PiktidAPIService {
     }
 
     detectFaces(imageId: string): Observable<DetectFacesResponse> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
         return this.http.post<DetectFacesResponse>('/piktid/api/detect_faces', {
             id_image: imageId,
         }, {
@@ -78,6 +114,10 @@ export class PiktidAPIService {
     }
 
     generateNewExpression(imageId: string, faceId: number, options?: Partial<GenerateExpressionOptions>): Observable<GenerateExpressionResponse> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
         const req: GenerateExpressionRequest = {
             id_image: imageId,
             id_face: faceId,
@@ -94,6 +134,10 @@ export class PiktidAPIService {
     }
 
     generateNewRandomFace(imageId: string, faceId: number): Observable<RandomFaceResponse> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
         return this.http.post<RandomFaceResponse>('/piktid/api/ask_random_face', {
             id_image: imageId,
             id_face: faceId,
@@ -108,9 +152,13 @@ export class PiktidAPIService {
     }
 
     getNotificationsByName(imageId: string, notificationNames: NotificationName[]): Observable<NotificationListResponse> {
-        return this.http.post<NotificationListResponse>('/piktid/api/notification_by_name', {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
+        return this.http.post<NotificationListResponse>('/piktid/api/notification_by_name_json', {
             id_image: imageId,
-            name_list: notificationNames.join(','),
+            name_list: notificationNames.join(', '),
         }, {
             observe: 'body',
             responseType: 'json',
@@ -125,8 +173,13 @@ export class PiktidAPIService {
         faceId: number,
         generationId: number,
         options?: Partial<SubstituteFaceOptions>,
-    ): Observable<SubstituteFaceResponse> {
-        return this.http.post<SubstituteFaceResponse>('/piktid/api/pick_face2', {
+    ): Observable<ImageLink> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
+        // TODO: Use pick_face2 when it's actually ready - currently only throws errors
+        return this.http.post<SubstituteFaceResponse>('/piktid/api/pick_face', {
             id_image: imageId,
             id_face: faceId,
             id_generation: generationId,
@@ -137,6 +190,35 @@ export class PiktidAPIService {
             headers: new HttpHeaders({
                 Authorization: `Bearer ${this.accessToken}`,
             }),
-        });
+        }).pipe(
+            map((response) => {
+                const links = JSON.parse(response.links);
+                return links;
+            }),
+        );
+    }
+
+    getImageDownloadLink(imageId: string, options?: Partial<ImageDownloadOptions>): Observable<ImageLink> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
+        const body: ImageDownloadRequest = {
+            id_image: imageId,
+            ...options,
+        };
+
+        return this.http.post<ImageDownloadResponse>('/piktid/api/download', body, {
+            observe: 'body',
+            responseType: 'json',
+            headers: new HttpHeaders({
+                Authorization: `Bearer ${this.accessToken}`,
+            }),
+        }).pipe(
+            map((response) => {
+                const links = JSON.parse(response.links);
+                return links;
+            }),
+        );
     }
 }

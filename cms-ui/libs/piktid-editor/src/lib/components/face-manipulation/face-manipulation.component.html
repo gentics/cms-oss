@@ -1,0 +1,60 @@
+<gtx-contents-list-item
+    class="face-manipulation-item"
+    [attr.data-id]="faceId"
+>
+    <gtx-progress-bar *ngIf="progress"[progress]="progress"></gtx-progress-bar>
+
+    <div class="item-avatar">
+        <i class="item-avatar-label">
+            {{ faceId }}
+        </i>
+    </div>
+
+    <div class="item-primary">
+        <div class="generation-list">
+            <div
+                *ngFor="let generation of generations"
+                class="generation-item"
+                [attr.data-id]="generation.g"
+                [class.selected]="selectedGeneration === generation.g"
+                (click)="selectGeneration(generation.g)"
+            >
+                <div class="generated-face-image-wrapper">
+                    <img class="generated-face-image" [src]="generation.link" alt="Generated face" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="item-actions">
+        <gtx-button
+            size="small"
+            type="primary"
+            (click)="generateNewGeneration()"
+            [disabled]="waiting"
+        >
+            <icon left>comedy_mask</icon>
+            {{ 'generate_new_face' }}
+        </gtx-button>
+
+        <gtx-button
+            size="small"
+            type="success"
+            (click)="confirmGeneration()"
+            [disabled]="waiting || confirmed || selectedGeneration === -1"
+        >
+            <icon left>check</icon>
+            {{ 'apply_face' }}
+        </gtx-button>
+
+        <gtx-button
+            size="small"
+            type="alert"
+            (click)="revertGeneration()"
+            [disabled]="waiting || !confirmed"
+        >
+            <icon left>delete</icon>
+            {{ 'revert_face' }}
+        </gtx-button>
+    </div>
+</gtx-contents-list-item>

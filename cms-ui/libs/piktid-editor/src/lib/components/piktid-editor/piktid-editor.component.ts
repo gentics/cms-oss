@@ -1,9 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion,@typescript-eslint/no-non-null-assertion */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { NotificationService } from '@gentics/ui-core';
-import { filter, interval, Subscription } from 'rxjs';
-import { Coordinates, NewGenerationNotificationData, NotificationName } from '../../common/models';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormProperties, NotificationService } from '@gentics/ui-core';
+import { filter, interval, map, Subscription, switchMap } from 'rxjs';
+import { Coordinates, NewGenerationNotificationData, Notification, NotificationName, UserInfoResponse } from '../../common/models';
 import { FaceData } from '../../common/prompt';
 import { PiktidAPIService } from '../../providers/piktid-api/piktid-api.service';
+
+interface LoginFormProperties {
+    username: string;
+    password: string;
+}
+
+const LOCAL_STORAGE_KEY = 'piktid-editor-auth';
 
 @Component({
     selector: 'gtxpict-piktid-editor',
@@ -13,11 +22,25 @@ import { PiktidAPIService } from '../../providers/piktid-api/piktid-api.service'
 })
 export class PiktidEditorComponent implements OnInit, OnDestroy {
 
+    /** Whether the user is logged in. */
+    public loggedIn = false;
+
+    /** The user info. */
+    public userInfo: UserInfoResponse | null = null;
+
+    public loginForm: FormGroup<FormProperties<LoginFormProperties>> | null = null;
+
     /** The image that is currently picked by the user. */
     public pickedImage: File | null = null;
 
     /** The URL of the preview image. */
     public imageUrl: string | null = null;
+
+    /** The URL of the edited image. */
+    public editedImageUrl: string | null = null;
+
+    /** The active image. */
+    public activeImage: 'original' | 'edited' = 'original';
 
     /** The image-id of the uploaded image. If `null`, the image is not uploaded yet. */
     public imageId: string | null = null;
@@ -46,18 +69,7 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
     /** Whether the component is busy. */
     public busy = false;
 
-    /** The list of faces that are waiting for a generation. */
-    public waitingForFaces: number[] = [];
-
-    /** The list of faces that have been confirmed. */
-    public confirmedFaces: number[] = [];
-
-    /** The ids of the notifications that have been processed. */
-    private processedNotifications = new Set<number>([]);
-
     private uploadSubscription: Subscription | null = null;
-    private notificationIntervalSubscription: Subscription | null = null;
-    private notificationSubscription: Subscription | null = null;
     private otherSubscriptions: Subscription[] = [];
 
     constructor(
@@ -67,18 +79,56 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.notificationIntervalSubscription = interval(3_000).pipe(
-            filter(() => this.waitingForFaces.length > 0),
-        ).subscribe(() => {
-            this.fetchNotifications();
+        this.loginForm = new FormGroup<FormProperties<LoginFormProperties>>({
+            username: new FormControl('', Validators.required),
+            password: new FormControl('', Validators.required),
         });
+
+        const storedAuth = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedAuth) {
+            this.api.setAuth(storedAuth.split(':')[0], storedAuth.split(':')[1]);
+        }
+
+        this.loggedIn = this.api.isLoggedIn();
+
+        if (this.loggedIn) {
+            this.otherSubscriptions.push(this.api.getUserInfo().subscribe({
+                next: (response) => {
+                    this.userInfo = response;
+                    this.changeDetector.markForCheck();
+                },
+            }));
+        }
     }
 
     ngOnDestroy(): void {
         this.uploadSubscription?.unsubscribe?.();
-        this.notificationIntervalSubscription?.unsubscribe?.();
-        this.notificationSubscription?.unsubscribe?.();
         this.otherSubscriptions.forEach((subscription) => subscription.unsubscribe());
+    }
+
+    public onLogin(): void {
+        this.busy = true;
+        this.changeDetector.markForCheck();
+
+        this.otherSubscriptions.push(this.api.authenticate(this.loginForm!.value.username!, this.loginForm!.value.password!).pipe(
+            switchMap(auth => this.api.getUserInfo().pipe(
+                map((userInfo) => ({ auth, userInfo })),
+            )),
+        ).subscribe({
+            next: ({ auth, userInfo }) => {
+                this.loggedIn = true;
+                this.busy = false;
+                this.userInfo = userInfo;
+                this.changeDetector.markForCheck();
+
+                localStorage.setItem(LOCAL_STORAGE_KEY, `${auth.access_token}:${auth.refresh_token}`);
+            },
+            error: (error) => {
+                this.busy = false;
+                console.error(error);
+                this.changeDetector.markForCheck();
+            },
+        }));
     }
 
     public onImagePicked(files: File[]): void {
@@ -92,7 +142,9 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
         this.faceIds = [];
         this.facePositions = {};
         this.faceDescriptions = {};
-
+        this.editedImageUrl = null;
+        this.activeImage = 'original';
+        this.selectedGeneration = {};
         this.changeDetector.markForCheck();
     }
 
@@ -135,9 +187,6 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
 
                 this.busy = false;
                 this.changeDetector.markForCheck();
-
-                // Fetch notifications to get the initial list of generated faces
-                this.fetchNotifications();
             },
             error: (error) => {
                 this.imageUploadStatus = 'error';
@@ -154,94 +203,11 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
         });
     }
 
-    public generateFace(faceId: number): void {
-        if (!this.imageId || !this.faceIds.includes(faceId)) {
-            return;
-        }
+    // public confirmEditing(): void {
+    //     if (!this.imageId || this.imageUploadStatus !== 'success' || this.confirmedFaces.size !== this.faceIds.length) {
+    //         return;
+    //     }
 
-        this.otherSubscriptions.push(this.api.generateNewRandomFace(this.imageId, faceId).subscribe({
-            next: (response) => {
-                console.log('new expression generated', response);
-                this.waitingForFaces.push(faceId);
-                this.changeDetector.markForCheck();
-            },
-            error: (error) => {
-                console.error(error);
-            },
-        }));
-    }
-
-    public confirmFaceGeneration(faceId: number): void {
-        if (!this.imageId || !this.faceIds.includes(faceId) || this.selectedGeneration[faceId] === -1) {
-            return;
-        }
-
-        this.otherSubscriptions.push(this.api.substituteFace(this.imageId, faceId, this.selectedGeneration[faceId]).subscribe({
-            next: (response) => {
-                console.log('face generation confirmed', response);
-                this.confirmedFaces.push(faceId);
-                this.changeDetector.markForCheck();
-            },
-            error: (error) => {
-                console.error(error);
-            },
-        }));
-    }
-
-    public fetchNotifications(): void {
-        if (!this.imageId) {
-            return;
-        }
-
-        if (this.notificationSubscription) {
-            this.notificationSubscription.unsubscribe();
-        }
-
-        this.notificationSubscription = this.api.getNotificationsByName(this.imageId, [
-            // NotificationName.ERROR,
-            NotificationName.NEW_GENERATION,
-        ]).subscribe({
-            next: (response) => {
-                const stillInProgress = new Set<number>(this.waitingForFaces);
-                const notifications = response.notifications_list || [];
-
-                for (const singleNotif of notifications) {
-                    if (this.processedNotifications.has(singleNotif.id)) {
-                        continue;
-                    }
-
-                    switch (singleNotif.name) {
-                        case NotificationName.NEW_GENERATION:
-                            if (!this.generatedFaces[singleNotif.data.f]) {
-                                this.generatedFaces[singleNotif.data.f] = [];
-                            }
-
-                            this.generatedFaces[singleNotif.data.f].push(singleNotif.data);
-                            stillInProgress.delete(singleNotif.data.f);
-                            break;
-
-                        case NotificationName.ERROR:
-                            this.notificationService.show({
-                                message: singleNotif.data.msg,
-                                type: 'alert',
-                            });
-                            break;
-                    }
-
-                    this.processedNotifications.add(singleNotif.id);
-                }
-
-                this.waitingForFaces = Array.from(stillInProgress);
-                this.changeDetector.markForCheck();
-            },
-        });
-    }
-
-    public confirmEditing(): void {
-        if (!this.imageId || this.imageUploadStatus !== 'success' || this.confirmedFaces.length !== this.faceIds.length) {
-            return;
-        }
-
-        // TODO: Upload the image to the CMS (Emit event here and do upload in parent)
-    }
+    //     // TODO: Upload the image to the CMS (Emit event here and do upload in parent)
+    // }
 }

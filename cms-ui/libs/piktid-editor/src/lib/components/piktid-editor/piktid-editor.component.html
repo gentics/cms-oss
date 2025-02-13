@@ -1,98 +1,43 @@
 <gtx-progress-bar [active]="busy"></gtx-progress-bar>
 
-<div class="image-controls">
-    <gtx-file-picker
-        class="upload-button"
-        gtxFileDropArea
-        accept="image/*"
-        [multiple]="false"
-        [gtxPreventFileDrop]="false"
-        [disabled]="busy"
-        (fileSelect)="onImagePicked($event)"
-    >
-        <icon left>image</icon>{{ 'select_image' }}
-    </gtx-file-picker>
+<ng-container *ngIf="!loggedIn">
+    <form *ngIf="loginForm" [formGroup]="loginForm">
+        <gtx-input [label]="'username'" type="text" formControlName="username"></gtx-input>
+        <gtx-input [label]="'password'" type="password" formControlName="password"></gtx-input>
+        <gtx-button type="primary" [disabled]="!loginForm.valid" (click)="onLogin()">Login</gtx-button>
+    </form>
+</ng-container>
 
-    <gtx-button
-        type="primary"
-        [disabled]="!pickedImage || busy"
-        (click)="uploadImage()"
-    >
-        <icon left>upload</icon>{{ 'upload_image' }}
-    </gtx-button>
-
-    <gtx-button
-        type="success"
-        [disabled]="!pickedImage || imageUploadStatus !== 'success' || busy || confirmedFaces.length !== faceIds.length"
-        (click)="confirmEditing()"
-    >
-        <icon left>check</icon>{{ 'confirm_editing' }}
-    </gtx-button>
-</div>
-
-<div *ngIf="pickedImage && imageUploadStatus" class="image-status">Image Upload Status: {{ imageUploadStatus }}</div>
-
-<div *ngIf="pickedImage" class="image-preview">
-
-    <div class="image-wrapper">
-        <img class="preview-image" [src]="imageUrl" alt="Your image" />
-
-        <div class="face-detection-wrapper">
-            <div
-                *ngFor="let faceId of faceIds"
-                class="face-detection-item"
-                [attr.data-id]="faceId"
-                [style.left.%]="facePositions[faceId].cornerX * 100"
-                [style.top.%]="facePositions[faceId].cornerY * 100"
-                [style.width.%]="facePositions[faceId].boxWidth * 100"
-                [style.height.%]="facePositions[faceId].boxHeight * 100"
-            >
-                <div class="face-detection-item-label">
-                    {{ faceId }}
-                </div>
-            </div>
+<ng-container *ngIf="loggedIn">
+    <div *ngIf="userInfo" class="user-info">
+        <div class="user-info-item">
+            <span class="user-info-item-label">Username:</span>
+            <span class="user-info-item-value">{{ userInfo.username }}</span>
         </div>
     </div>
 
-    <div *ngIf="faceIds.length > 0" class="face-detection-info">
-        <gtx-contents-list-item *ngFor="let faceId of faceIds" class="face-detection-item">
-            <div class="item-avatar">
-                <i class="item-avatar-label">
-                    {{ faceId }}
-                </i>
-            </div>
-
-            <div class="item-primary">
-                <div class="generated-faces-list">
-                    <div class="generated-face-item" *ngFor="let generation of generatedFaces[faceId]">
-                        <div class="generated-face-image-wrapper">
-                            <img class="generated-face-image" [src]="generation.image_url" alt="Generated face" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="face-detection-item-actions">
-                <gtx-button
-                    size="small"
-                    type="primary"
-                    (click)="generateFace(faceId)"
-                    [disabled]="waitingForFaces | gtxIncludes:faceId"
-                >
-                    <icon left>comedy_mask</icon>
-                    {{ 'generate_new_face' }}
-                </gtx-button>
-
-                <gtx-button
-                    size="small"
-                    type="success"
-                    (click)="confirmFaceGeneration(faceId)"
-                    [disabled]="(waitingForFaces | gtxIncludes:faceId) || selectedGeneration[faceId] === -1"
-                >
-                    <icon left>check</icon>
-                    {{ 'apply_face' }}
-                </gtx-button>
-            </div>
-        </gtx-contents-list-item>
+    <div class="image-controls">
+        <gtx-file-picker
+            class="upload-button"
+            gtxFileDropArea
+            accept="image/*"
+            [multiple]="false"
+            [gtxPreventFileDrop]="false"
+            [disabled]="!loggedIn || busy"
+            (fileSelect)="onImagePicked($event)"
+        >
+            <icon left>image</icon>{{ 'select_image' }}
+        </gtx-file-picker>
     </div>
-</div>
+
+    <gtxpict-anonymization-editor
+        *ngIf="pickedImage"
+        class="image-editor"
+        [imageUrl]="imageUrl"
+        [imageId]="imageId"
+        [faceIds]="faceIds"
+        [facePositions]="facePositions"
+        [uploading]="imageUploadStatus === 'pending'"
+        (uploadImage)="uploadImage()"
+    ></gtxpict-anonymization-editor>
+</ng-container>

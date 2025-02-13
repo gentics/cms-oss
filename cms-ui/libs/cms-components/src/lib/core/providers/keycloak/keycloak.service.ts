@@ -150,13 +150,9 @@ export class KeycloakService {
             const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
             console.info('Keycloak config found');
 
-            // Load the keycloak scripts from the keycloak instance.
-            // Has to be done this way, sadly
-            const keycloakUrl: string = keycloakConfig['auth-server-url'];
-            await loadScripts([
-                `${keycloakUrl}/js/keycloak.js`,
-                `${keycloakUrl}/js/keycloak-authz.js`,
-            ]);
+            // we try to load the well-known configuration endpoint for the realm just to see whether keycloak is available
+            const keycloakUrl = keycloakConfig['auth-server-url'].replace(/\/$/, '') + '/realms/' + keycloakConfig['realm'] + '/.well-known/openid-configuration';
+            await fetch(keycloakUrl);
 
             keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
             return initKeycloak(keycloak, onLoad);
@@ -229,29 +225,6 @@ function loadJSON(url: string): Promise<any> {
             reject(NO_CONFIG_FOUND);
         };
         xhr.send();
-    });
-}
-
-/**
- * Returns a promise which resolves when all the scripts have loaded.
- */
-function loadScripts(sources: string[]): Promise<void[]> {
-    return Promise.all(
-        sources.map(src => loadScript(src)),
-    );
-}
-
-/**
- * Loads a JavaScript file asynchronously.
- */
-function loadScript(src: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.onload = () => resolve();
-        script.onerror = (error) => reject(error);
-        script.src = src;
-
-        document.head.appendChild(script);
     });
 }
 

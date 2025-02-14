@@ -1,0 +1,1 @@
+Logging: Now, if one of the configuration files is flawed, causing the startup procedure to fail, it will be logged with the maximum severity.

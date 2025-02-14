@@ -62,7 +62,11 @@ export class KeycloakService {
                     return this.checkKeycloakAuthOnLoad('login-required');
                 }
             })
-            .catch(() => {
+            .catch(error => {
+                // log error only if the config was found (but could not be parsed)
+                if (error !== NO_CONFIG_FOUND) {
+                    console.error('Parsing UI-Overrides failed: ', error);
+                }
                 showSSOButton = false;
                 return this.checkKeycloakAuthOnLoad('login-required');
             });
@@ -163,8 +167,14 @@ export class KeycloakService {
                 this.router.navigate(['/login'], { state: {
                     [KEYCLOAK_ERROR_KEY]: 'shared.keycloak_not_available',
                 }});
+                console.log(error);
+            } else {
+                // log info that the 404 network error can safely be ignored,
+                // otherwise end-users who look in the console may get confused
+                // about why KeyCloak is being mentioned if they don't use it
+                console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
+                   ' this notice can safely be ignored.');
             }
-            console.log(error);
         }
     }
 
@@ -191,40 +201,16 @@ async function initKeycloak(keycloak: Keycloak, onLoad: 'check-sso' | 'login-req
  * Load a URL and parse the contents as JSON.
  */
 function loadJSON(url: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.overrideMimeType('application/json');
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState !== XMLHttpRequestState.DONE) {
-                return;
+    return fetch(url).then(response => {
+        if (!response.ok) {
+            if (response.status == 404) {
+                return Promise.reject(NO_CONFIG_FOUND);
+            } else {
+                return Promise.reject(response.statusText);
             }
-
-            if (xhr.status === 200) {
-                let json;
-                try {
-                    json = JSON.parse(xhr.responseText);
-                    resolve(json);
-                } catch (e) {
-                    reject('Keycloak config file was found but could not be parsed.\n'
-                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                        + `Error: "${e.message}"\n`
-                        + `File contents: \n${xhr.responseText}`);
-                }
-                return;
-            }
-
-            if (xhr.status === 404) {
-                // log info that the 404 network error can safely be ignored,
-                // otherwise end-users who look in the console may get confused
-                // about why KeyCloak is being mentioned if they don't use it
-                console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
-                    ' this notice can safely be ignored.');
-            }
-
-            reject(NO_CONFIG_FOUND);
-        };
-        xhr.send();
+        } else {
+            return response.json();
+        }
     });
 }
 

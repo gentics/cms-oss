@@ -35,9 +35,19 @@ export class CopyValueComponent extends BaseComponent {
         super(changeDetector);
     }
 
-    async copyToClipboard(): Promise<void> {
+    copyToClipboard(): Promise<void> {
         try {
-            await navigator.clipboard.writeText(this.value);
+			const textArea = document.createElement('textarea');
+			textArea.value = this.value;
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+			try {
+                document.execCommand('copy');
+			} catch (err) {
+                console.error('Unable to copy to clipboard', err);
+			}
+			document.body.removeChild(textArea);
             this.copy.emit();
             if (this.animate) {
                 this.animateCopy(1)
@@ -45,7 +55,26 @@ export class CopyValueComponent extends BaseComponent {
         } catch (err) {
             this.copy.emit(err);
         }
+		return Promise.resolve();
     }
+	// https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1245
+	/*  async copyToClipboard(): Promise<void> {
+	    try {
+			await navigator.clipboard.writeText(this.value);
+	        this.copy.emit();
+	        if (this.animate) {
+	            this.animateCopy(1)
+	        }
+	    } catch (err) {
+	        this.copy.emit(err);
+	    }
+	}
+	async clipboardAllowed(): Promise<boolean> {
+		const queryOpts = { name: 'clipboard-write' as PermissionName };
+        const permissionStatus = await navigator.permissions.query(queryOpts);
+		return permissionStatus.state === 'granted';
+	}*/
+    clipboardAllowed = Promise.resolve(true);
 
     private animateCopy(seconds: number): void {
         this.icon = 'check';

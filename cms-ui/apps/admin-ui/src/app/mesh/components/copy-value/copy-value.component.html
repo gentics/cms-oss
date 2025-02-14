@@ -3,7 +3,7 @@
     <div class="content-wrapper">
         <div class="content">{{ value }}</div>
     </div>
-    <button class="copy-button" [disabled]="disabled" [title]="'shared.copy' | i18n" (click)="copyToClipboard()">
+    <button *ngIf="clipboardAllowed | async" class="copy-button" [disabled]="disabled" [title]="'shared.copy' | i18n" (click)="copyToClipboard()">
         <icon>{{ icon }}</icon>
     </button>
 </div>

@@ -3,7 +3,7 @@
     [formGroup]="form"
     class="row small-12 medium-12"
 >
-    <div class="columns small-6">
+    <div class="columns small-12">
         <gtx-input
             type="text"
             [required]="true"
@@ -12,16 +12,14 @@
             [placeholder]="'shared.enter_dataSource_entry_key' | i18n"
             formControlName="key"
         ></gtx-input>
-    </div>
 
-    <div class="columns small-6">
-        <gtx-input
+		<gtx-textarea
             type="text"
             [required]="true"
-            maxlength="50"
+            maxlength="16383"
             [label]="('shared.dataSource_entry_value' | i18n) + ' *'"
             [placeholder]="'shared.enter_dataSource_entry_value' | i18n"
             formControlName="value"
-        ></gtx-input>
+        ></gtx-textarea>
     </div>
 </form>

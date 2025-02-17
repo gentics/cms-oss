@@ -18,14 +18,8 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -275,24 +269,6 @@ public class NodeConfigRuntimeConfiguration {
 	public static Map<String, Object> loadConfiguration() throws NodeException {
 		// load data
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory()).setDefaultMergeable(true);
-		// customize the mapper: on unknown value type, improper format or improper file contents return null, no exception
-		mapper.addHandler(new DeserializationProblemHandler() {
-			@Override
-			public Object handleInstantiationProblem(DeserializationContext ctxt, Class<?> instClass, Object argument, Throwable t) throws IOException {
-				runtimeLog.error("Problem instantiating " + instClass.getCanonicalName() + " with " + argument, t);
-				return null;
-			}
-			@Override
-			public Object handleMissingInstantiator(DeserializationContext ctxt, Class<?> instClass, ValueInstantiator valueInsta, JsonParser p, String msg) throws IOException {
-				runtimeLog.error("Missing instantiator for " + instClass.getCanonicalName());
-				return null;
-			}
-			@Override
-			public Object handleUnexpectedToken(DeserializationContext ctxt, JavaType targetType, JsonToken t, JsonParser p, String failureMsg) throws IOException {
-				runtimeLog.error("Unexpected token " + t + " causing: " + failureMsg);
-				return null;
-			}
-		});
 		Map<String, Object> data;
 		try {
 			runtimeLog.info("Reading default configuration");

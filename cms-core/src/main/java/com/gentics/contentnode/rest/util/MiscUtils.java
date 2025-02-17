@@ -1632,42 +1632,25 @@ public class MiscUtils {
 		};
 	}
 
-	/**
-	 * Merge nested settings
-	 * @param map original map (will be modified)
-	 * @param other other settings (will be merged into map)
-	 * @return modified map
-	 */
-	public static Map<String, Object> merge(Map<String, Object> map, Map<String, Object> other) {
-		return merge(map, other, true);
-	}
 
 	/**
 	 * Merge nested settings
 	 * @param map original map (will be modified)
 	 * @param other other settings (will be merged into map)
-	 * @param mergeNullValues flag to merge null values from the other map
 	 * @return modified map
 	 */
 	@SuppressWarnings("unchecked")
-	public static Map<String, Object> merge(Map<String, Object> map, Map<String, Object> other, boolean mergeNullValues) {
-		if (other != null && !other.isEmpty()) {
-			for (Map.Entry<String, Object> e : other.entrySet()) {
-				if (e.getKey() == null) {
-					continue;
-				}
-				if (e.getValue() == null) {
-					if (mergeNullValues) {
-						map.put(e.getKey(), null);
+	public static Map<String, Object> merge(Map<String, Object> map, Map<String, Object> other) {
+		for (Map.Entry<String, Object> e : other.entrySet()) {
+			if (e.getValue() == null) {
+				map.put(e.getKey(), null);
+			} else {
+				map.merge(e.getKey(), e.getValue(), (oldVal, newVal) -> {
+					if (oldVal instanceof Map && newVal instanceof Map) {
+						return merge((Map<String, Object>) oldVal, (Map<String, Object>) newVal);
 					}
-				} else {
-					map.merge(e.getKey(), e.getValue(), (oldVal, newVal) -> {
-						if (oldVal instanceof Map && newVal instanceof Map) {
-							return merge((Map<String, Object>) oldVal, (Map<String, Object>) newVal);
-						}
-						return newVal;
-					});
-				}
+					return newVal;
+				});
 			}
 		}
 		return map;

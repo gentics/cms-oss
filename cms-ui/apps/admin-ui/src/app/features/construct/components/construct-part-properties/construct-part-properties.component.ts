@@ -213,11 +213,6 @@ export class ConstructPartPropertiesComponent
                 this.form.get('partOrder').updateValueAndValidity();
             }
         }
-
-        if (changes.mode && this.form) {
-            // Disable the keyword control if it's not creating a new one
-            setControlsEnabled(this.form, ['keyword'], this.mode === ConstructPartPropertiesMode.CREATE, { onlySelf: true, emitEvent: false });
-        }
     }
 
     protected createForm(): UntypedFormGroup {
@@ -355,16 +350,13 @@ export class ConstructPartPropertiesComponent
             return null;
         }
 
-        const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
+        const { globalId: _globalId, id: _id, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
             (output as TagPartPropertiesFormData).globalId = this.value?.globalId ?? formData.globalId;
             (output as TagPartPropertiesFormData).id = this.value?.id ?? formData.id;
-            (output as TagPartPropertiesFormData).keyword = this.value?.keyword ?? this.form.get('keyword').value;
             output.name = this.value?.name;
             output.type = this.value?.type;
-        } else {
-            (output as TagPartPropertiesFormData).keyword = formData.keyword;
         }
 
         return output as TagPartPropertiesFormData;

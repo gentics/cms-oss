@@ -38,6 +38,9 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
     @Input()
     public microschemaNames: string[];
 
+    @Input()
+    public fieldNames: string[];
+
     protected override delayedSetup = true;
 
     protected createForm(): FormGroup<FormProperties<EditableSchemaProperties>> {
@@ -59,8 +62,8 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
         });
     }
 
-    protected configureForm(_value: EditableSchemaProperties, _loud?: boolean): void {
-        // no-op
+    protected configureForm(value: EditableSchemaProperties, _loud?: boolean): void {
+        this.fieldNames = value?.fields?.map?.(field => field.name);
     }
 
     protected assembleValue(value: EditableSchemaProperties): EditableSchemaProperties {

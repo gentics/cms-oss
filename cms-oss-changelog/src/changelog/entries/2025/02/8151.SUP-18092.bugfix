@@ -1,0 +1,4 @@
+The default log level for the logger 'org.eclipse.jetty' has been changed to 'warn' to log errors
+that occur in servlet filters (e.g. used for single-sign-on).
+This change will only take effect, if no custom nodelog.yml file is present. If a custom nodelog.yml file
+is used, it is recommended to set the log level of 'org.eclipse.jetty' to at least 'warn' there.

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.deser.ValueInstantiator;
@@ -328,8 +329,9 @@ public class NodeConfigRuntimeConfiguration {
 						for (File subConfigFile : configurationFiles) {
 							runtimeLog.info(String.format("Reading configuration from %s", subConfigFile.getAbsolutePath()));
 							try {
-								if (!mapper.readTree(subConfigFile).isEmpty()) {
-									data = merge(data, mapper.readValue(subConfigFile, Map.class));
+								JsonNode tree = mapper.readTree(subConfigFile);
+								if (!tree.isEmpty()) {
+									data = merge(data, mapper.treeToValue(tree, Map.class));
 								} else {
 									logger.info("Empty or unreadable config: " + subConfigFile);
 								}
@@ -343,8 +345,9 @@ public class NodeConfigRuntimeConfiguration {
 						} else {
 							runtimeLog.info(String.format("Reading configuration from %s", configFile.getAbsolutePath()));
 							try {
-								if (!mapper.readTree(configFile).isEmpty()) {
-									data = merge(data, mapper.readValue(configFile, Map.class));
+								JsonNode tree = mapper.readTree(configFile);
+								if (!tree.isEmpty()) {
+									data = merge(data, mapper.treeToValue(tree, Map.class));
 								} else {
 									logger.info("Empty or unreadable config: " + configFile);
 								}

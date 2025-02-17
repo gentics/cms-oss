@@ -18,7 +18,13 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.databind.deser.ValueInstantiator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -268,6 +274,24 @@ public class NodeConfigRuntimeConfiguration {
 	public static Map<String, Object> loadConfiguration() throws NodeException {
 		// load data
 		ObjectMapper mapper = new ObjectMapper(new YAMLFactory()).setDefaultMergeable(true);
+		// customize the mapper: on unknown value type, improper format or improper file contents return null, no exception
+		mapper.addHandler(new DeserializationProblemHandler() {
+			@Override
+			public Object handleInstantiationProblem(DeserializationContext ctxt, Class<?> instClass, Object argument, Throwable t) throws IOException {
+				runtimeLog.error("Problem instantiating " + instClass.getCanonicalName() + " with " + argument, t);
+				return null;
+			}
+			@Override
+			public Object handleMissingInstantiator(DeserializationContext ctxt, Class<?> instClass, ValueInstantiator valueInsta, JsonParser p, String msg) throws IOException {
+				runtimeLog.error("Missing instantiator for " + instClass.getCanonicalName());
+				return null;
+			}
+			@Override
+			public Object handleUnexpectedToken(DeserializationContext ctxt, JavaType targetType, JsonToken t, JsonParser p, String failureMsg) throws IOException {
+				runtimeLog.error("Unexpected token " + t + " causing: " + failureMsg);
+				return null;
+			}
+		});
 		Map<String, Object> data;
 		try {
 			runtimeLog.info("Reading default configuration");
@@ -304,7 +328,11 @@ public class NodeConfigRuntimeConfiguration {
 						for (File subConfigFile : configurationFiles) {
 							runtimeLog.info(String.format("Reading configuration from %s", subConfigFile.getAbsolutePath()));
 							try {
-								data = merge(data, mapper.readValue(subConfigFile, Map.class));
+								if (!mapper.readTree(subConfigFile).isEmpty()) {
+									data = merge(data, mapper.readValue(subConfigFile, Map.class));
+								} else {
+									logger.info("Empty or unreadable config: " + subConfigFile);
+								}
 							} catch (Exception e) {
 								throw new NodeException("Error reading configuration from " + subConfigFile, e);
 							}
@@ -315,7 +343,11 @@ public class NodeConfigRuntimeConfiguration {
 						} else {
 							runtimeLog.info(String.format("Reading configuration from %s", configFile.getAbsolutePath()));
 							try {
-								data = merge(data, mapper.readValue(configFile, Map.class));
+								if (!mapper.readTree(configFile).isEmpty()) {
+									data = merge(data, mapper.readValue(configFile, Map.class));
+								} else {
+									logger.info("Empty or unreadable config: " + configFile);
+								}
 							} catch (Exception e) {
 								throw new NodeException("Error reading configuration from " + configFile, e);
 							}

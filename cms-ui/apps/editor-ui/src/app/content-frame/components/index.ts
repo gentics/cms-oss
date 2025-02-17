@@ -29,6 +29,7 @@ export * from './dynamic-form-modal/dynamic-form-modal.component';
 export * from './editor-toolbar/editor-toolbar.component';
 export * from './file-preview/file-preview.component';
 export * from './form-reports-list/form-reports-list.component';
+export * from './image-anonymize-modal/image-anonymize-modal.component';
 export * from './image-properties-modal/image-properties-modal.component';
 export * from './link-checker-controls/link-checker-controls.component';
 export * from './node-properties/node-properties.component';

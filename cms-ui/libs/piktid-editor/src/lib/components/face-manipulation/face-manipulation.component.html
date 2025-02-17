@@ -31,7 +31,7 @@
             size="small"
             type="primary"
             (click)="generateNewGeneration()"
-            [disabled]="waiting"
+            [disabled]="disabled || waiting"
         >
             <icon left>comedy_mask</icon>
             {{ 'generate_new_face' }}
@@ -41,7 +41,7 @@
             size="small"
             type="success"
             (click)="confirmGeneration()"
-            [disabled]="waiting || confirmed || selectedGeneration === -1"
+            [disabled]="disabled || waiting || confirmed || selectedGeneration === -1"
         >
             <icon left>check</icon>
             {{ 'apply_face' }}
@@ -51,7 +51,7 @@
             size="small"
             type="alert"
             (click)="revertGeneration()"
-            [disabled]="waiting || !confirmed"
+            [disabled]="disabled || waiting || !confirmed"
         >
             <icon left>delete</icon>
             {{ 'revert_face' }}

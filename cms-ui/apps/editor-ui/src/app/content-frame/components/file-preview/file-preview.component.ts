@@ -20,7 +20,7 @@ import {
     RotateParameters,
     User,
 } from '@gentics/cms-models';
-import { ProgressBarComponent } from '@gentics/ui-core';
+import { ModalService, ProgressBarComponent } from '@gentics/ui-core';
 import { Observable, Subscription, of } from 'rxjs';
 import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
@@ -31,6 +31,7 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsService } from '../../../state';
+import { ImageAnonymizeModal } from '../image-anonymize-modal/image-anonymize-modal.component';
 
 @Component({
     selector: 'file-preview',
@@ -78,6 +79,7 @@ export class FilePreviewComponent implements OnInit, OnChanges, OnDestroy {
         private entityResolver: EntityResolver,
         private notification: I18nNotification,
         private folderActions: FolderActionsService,
+        private modalService: ModalService,
     ) {}
 
     ngOnInit(): void {
@@ -133,6 +135,19 @@ export class FilePreviewComponent implements OnInit, OnChanges, OnDestroy {
     ngOnDestroy(): void {
         this.dismissErrorMessage();
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    anonymizeImage(): void {
+        const nodeId = this.appState.now.editor.nodeId;
+
+        this.modalService.fromComponent(ImageAnonymizeModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+            width: '100%',
+        }, {
+            imageId: this.file.id,
+            nodeId,
+        }).then(comp => comp.open());
     }
 
     editImage(): void {

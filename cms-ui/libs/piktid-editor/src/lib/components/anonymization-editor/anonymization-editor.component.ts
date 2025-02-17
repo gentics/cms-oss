@@ -5,7 +5,7 @@ import { Coordinates, ImageLink, NewGenerationNotificationData, Notification, No
 import { PiktidAPIService } from '../../providers';
 
 @Component({
-    selector: 'gtxpict-anonymization-editor',
+    selector: 'gtxpikt-anonymization-editor',
     templateUrl: './anonymization-editor.component.html',
     styleUrls: ['./anonymization-editor.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,14 +27,17 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
     @Input()
     public uploading = false;
 
+    @Input()
+    public disabled = false;
+
     @Output()
     public uploadImage = new EventEmitter<void>();
 
     @Output()
-    public confirm = new EventEmitter<ImageLink>();
+    public confirmChange = new EventEmitter<number[]>();
 
     /** If the component is currently working on something. */
-    public busy = false;
+    public loading = false;
 
     /** The list of generated faces for each face-id. */
     public faceGenerations: Record<number, NewGenerationNotificationData[]> = {};
@@ -49,7 +52,7 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
     public activeImage: 'original' | 'edited' = 'original';
 
     /** The list of faces that are waiting for a generation. */
-    public waitingForFaces =new Set<number>();
+    public waitingForFaces = new Set<number>();
 
     /** The list of faces that have been confirmed. */
     public confirmedFaces = new Set<number>();
@@ -118,7 +121,7 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
     }
 
     public confirmFaceGeneration(faceId: number): void {
-        if (!this.imageId || !this.faceIds.includes(faceId) || this.busy) {
+        if (!this.imageId || !this.faceIds.includes(faceId) || this.loading) {
             return;
         }
 
@@ -129,18 +132,19 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
             return;
         }
 
-        this.busy = true;
+        this.loading = true;
         this.changeDetector.markForCheck();
 
         this.otherSubscriptions.push(this.api.substituteFace(this.imageId, faceId, this.selectedGeneration[faceId]).subscribe({
             next: (response) => {
                 this.editedImageUrl = response.l;
                 this.activeImage = 'edited';
-                this.busy = false;
+                this.loading = false;
+                this.confirmChange.emit(Array.from(this.confirmedFaces));
                 this.changeDetector.markForCheck();
             },
             error: (error) => {
-                this.busy = false;
+                this.loading = false;
                 this.confirmedFaces.delete(faceId);
                 this.confirmedFaces = new Set(this.confirmedFaces);
                 this.changeDetector.markForCheck();
@@ -177,11 +181,11 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
     }
 
     public undoFaceGeneration(faceId: number): void {
-        if (!this.imageId || !this.faceIds.includes(faceId) || this.busy) {
+        if (!this.imageId || !this.faceIds.includes(faceId) || this.loading) {
             return;
         }
 
-        this.busy = true;
+        this.loading = true;
         this.confirmedFaces.delete(faceId);
         this.confirmedFaces = new Set(this.confirmedFaces);
         this.waitingForFaces.add(faceId);
@@ -202,7 +206,7 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
                     this.activeImage = 'edited';
                 }
 
-                this.busy = false;
+                this.loading = false;
                 this.waitingForFaces.delete(faceId);
                 this.waitingForFaces = new Set(this.waitingForFaces);
                 this.selectedGeneration[faceId] = -1;
@@ -211,7 +215,7 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
                 this.changeDetector.markForCheck();
             },
             error: (error) => {
-                this.busy = false;
+                this.loading = false;
                 this.waitingForFaces.delete(faceId);
                 this.waitingForFaces = new Set(this.waitingForFaces);
                 this.confirmedFaces.add(faceId);
@@ -280,13 +284,5 @@ export class AnonymizationEditorComponent implements OnInit, OnChanges,OnDestroy
                 this.changeDetector.markForCheck();
             },
         });
-    }
-
-    public confirmChanges(): void {
-        if (!this.imageUrl || this.busy || this.uploading || this.confirmedFaces.size === 0 ) {
-            return;
-        }
-
-        this.confirm.emit();
     }
 }

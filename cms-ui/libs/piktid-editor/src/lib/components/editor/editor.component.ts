@@ -1,37 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion,@typescript-eslint/no-non-null-assertion */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { FormProperties, NotificationService } from '@gentics/ui-core';
-import { filter, interval, map, Subscription, switchMap } from 'rxjs';
-import { Coordinates, NewGenerationNotificationData, Notification, NotificationName, UserInfoResponse } from '../../common/models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
+import { ChangesOf, NotificationService } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
+import { Coordinates, NewGenerationNotificationData } from '../../common/models';
 import { FaceData } from '../../common/prompt';
 import { PiktidAPIService } from '../../providers/piktid-api/piktid-api.service';
 
-interface LoginFormProperties {
-    username: string;
-    password: string;
-}
-
-const LOCAL_STORAGE_KEY = 'piktid-editor-auth';
-
 @Component({
-    selector: 'gtxpict-piktid-editor',
-    templateUrl: './piktid-editor.component.html',
-    styleUrl: './piktid-editor.component.css',
+    selector: 'gtxpict-editor',
+    templateUrl: './editor.component.html',
+    styleUrl: './editor.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PiktidEditorComponent implements OnInit, OnDestroy {
+export class EditorComponent implements OnChanges, OnDestroy {
 
-    /** Whether the user is logged in. */
-    public loggedIn = false;
+    @Input()
+    public imageBlob: Blob | File | null = null;
 
-    /** The user info. */
-    public userInfo: UserInfoResponse | null = null;
+    @Input()
+    public disabled = false;
 
-    public loginForm: FormGroup<FormProperties<LoginFormProperties>> | null = null;
+    @Output()
+    public imageUpload = new EventEmitter<string>();
 
-    /** The image that is currently picked by the user. */
-    public pickedImage: File | null = null;
+    @Output()
+    public confirmChange = new EventEmitter<number[]>();
 
     /** The URL of the preview image. */
     public imageUrl: string | null = null;
@@ -67,7 +60,7 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
     public selectedGeneration: Record<number, number> = {};
 
     /** Whether the component is busy. */
-    public busy = false;
+    public loading = false;
 
     private uploadSubscription: Subscription | null = null;
     private otherSubscriptions: Subscription[] = [];
@@ -78,26 +71,9 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
         private notificationService: NotificationService,
     ) {}
 
-    ngOnInit(): void {
-        this.loginForm = new FormGroup<FormProperties<LoginFormProperties>>({
-            username: new FormControl('', Validators.required),
-            password: new FormControl('', Validators.required),
-        });
-
-        const storedAuth = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (storedAuth) {
-            this.api.setAuth(storedAuth.split(':')[0], storedAuth.split(':')[1]);
-        }
-
-        this.loggedIn = this.api.isLoggedIn();
-
-        if (this.loggedIn) {
-            this.otherSubscriptions.push(this.api.getUserInfo().subscribe({
-                next: (response) => {
-                    this.userInfo = response;
-                    this.changeDetector.markForCheck();
-                },
-            }));
+    ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.imageBlob) {
+            this.updateImage();
         }
     }
 
@@ -106,34 +82,12 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
         this.otherSubscriptions.forEach((subscription) => subscription.unsubscribe());
     }
 
-    public onLogin(): void {
-        this.busy = true;
-        this.changeDetector.markForCheck();
-
-        this.otherSubscriptions.push(this.api.authenticate(this.loginForm!.value.username!, this.loginForm!.value.password!).pipe(
-            switchMap(auth => this.api.getUserInfo().pipe(
-                map((userInfo) => ({ auth, userInfo })),
-            )),
-        ).subscribe({
-            next: ({ auth, userInfo }) => {
-                this.loggedIn = true;
-                this.busy = false;
-                this.userInfo = userInfo;
-                this.changeDetector.markForCheck();
-
-                localStorage.setItem(LOCAL_STORAGE_KEY, `${auth.access_token}:${auth.refresh_token}`);
-            },
-            error: (error) => {
-                this.busy = false;
-                console.error(error);
-                this.changeDetector.markForCheck();
-            },
-        }));
-    }
-
-    public onImagePicked(files: File[]): void {
-        this.pickedImage = files[0];
-        this.imageUrl = URL.createObjectURL(files[0]);
+    public updateImage(): void {
+        if (this.imageBlob != null) {
+            this.imageUrl = URL.createObjectURL(this.imageBlob);
+        } else {
+            this.imageBlob = null;
+        }
 
         // Reset the status of the image upload
         this.imageUploadStatus = null;
@@ -150,16 +104,16 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
 
     public uploadImage(): void {
         // No image or already uploading
-        if (!this.pickedImage || this.imageUploadStatus === 'pending') {
+        if (!this.imageBlob || this.imageUploadStatus === 'pending') {
             return;
         }
 
-        this.busy = true;
+        this.loading = true;
         this.imageUploadStatus = 'pending';
         this.faceDetectionStatus = null;
         this.changeDetector.markForCheck();
 
-        this.uploadSubscription = this.api.uploadFile(this.pickedImage, {
+        this.uploadSubscription = this.api.uploadFile(this.imageBlob, {
             mode: 'random',
             // eslint-disable-next-line @typescript-eslint/naming-convention
             flag_hair: true,
@@ -185,12 +139,13 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
                 }, {} as Record<number, FaceData>);
                 this.faceDetectionStatus = 'success';
 
-                this.busy = false;
+                this.loading = false;
+                this.imageUpload.emit(this.imageId);
                 this.changeDetector.markForCheck();
             },
             error: (error) => {
                 this.imageUploadStatus = 'error';
-                this.busy = false;
+                this.loading = false;
 
                 console.error(error);
                 this.notificationService.show({
@@ -203,11 +158,7 @@ export class PiktidEditorComponent implements OnInit, OnDestroy {
         });
     }
 
-    // public confirmEditing(): void {
-    //     if (!this.imageId || this.imageUploadStatus !== 'success' || this.confirmedFaces.size !== this.faceIds.length) {
-    //         return;
-    //     }
-
-    //     // TODO: Upload the image to the CMS (Emit event here and do upload in parent)
-    // }
+    public handleConfirmationChange(ids: number[]): void {
+        this.confirmChange.emit(ids);
+    }
 }

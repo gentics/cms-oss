@@ -1,4 +1,4 @@
-<gtxpict-image-preview
+<gtxpikt-image-preview
     *ngIf="imageUrl"
     class="image-preview"
     [originalImageUrl]="imageUrl"
@@ -7,21 +7,12 @@
     [faceIds]="faceIds"
     [facePositions]="facePositions"
     (activeImageChange)="onTabChange($event)"
-></gtxpict-image-preview>
+></gtxpikt-image-preview>
 
 <div class="controls">
     <ng-container *ngIf="imageId; else notUploaded">
-        <div class="management-controls">
-            <gtx-button
-                type="success"
-                size="small"
-                [disabled]="!imageUrl || busy || uploading || waitingForFaces.size > 0 || confirmedFaces.size === 0"
-                (click)="confirmChanges()"
-            >{{ 'confirm_changes' }}</gtx-button>
-        </div>
-
         <div *ngIf="faceIds.length > 0" class="face-manipulation-list">
-            <gtxpict-face-manipulation
+            <gtxpikt-face-manipulation
                 *ngFor="let faceId of faceIds"
                 [faceId]="faceId"
                 [progress]="faceProgress[faceId]"
@@ -29,11 +20,12 @@
                 [selectedGeneration]="selectedGeneration[faceId]"
                 [waiting]="waitingForFaces | gtxIncludes:faceId"
                 [confirmed]="confirmedFaces | gtxIncludes:faceId"
+                [disabled]="disabled"
                 (generationSelected)="selectGeneration(faceId, $event)"
                 (generationConfirmed)="confirmFaceGeneration(faceId)"
                 (generateNewFace)="generateFace(faceId)"
                 (undoGeneration)="undoFaceGeneration(faceId)"
-            ></gtxpict-face-manipulation>
+            ></gtxpikt-face-manipulation>
         </div>
     </ng-container>
 
@@ -41,7 +33,7 @@
         <div class="not-uploaded">
             <gtx-button
                 type="primary"
-                [disabled]="!imageUrl || busy || uploading"
+                [disabled]="disabled || !imageUrl || loading || uploading"
                 (click)="triggerUpload()"
             >{{ 'upload_image' }}</gtx-button>
         </div>

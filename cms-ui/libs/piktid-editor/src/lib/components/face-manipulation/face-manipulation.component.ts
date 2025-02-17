@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { NewGenerationNotificationData } from '../../common/models';
 
 @Component({
-    selector: 'gtxpict-face-manipulation',
+    selector: 'gtxpikt-face-manipulation',
     templateUrl: './face-manipulation.component.html',
     styleUrls: ['./face-manipulation.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +27,9 @@ export class FaceManipulationComponent {
     @Input()
     public confirmed = false;
 
+    @Input()
+    public disabled = false;
+
     @Output()
     public generationSelected = new EventEmitter<number>();
 
@@ -40,7 +43,7 @@ export class FaceManipulationComponent {
     public undoGeneration = new EventEmitter<void>();
 
     selectGeneration(generationId: number): void {
-        if (this.confirmed) {
+        if (this.confirmed || this.disabled) {
             return;
         }
 

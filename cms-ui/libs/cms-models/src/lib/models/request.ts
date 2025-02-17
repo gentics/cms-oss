@@ -90,7 +90,7 @@ export interface LoginOptions {
 export interface ItemRequestOptions {
 
     /** ID of the node (channel) for which the item shall be loaded (when multichannelling is used). */
-    nodeId?: number;
+    nodeId?: number | string;
 
     /** true when the item should be fetched for updating  */
     update?: boolean;
@@ -1053,12 +1053,12 @@ export interface FileCreateRequest {
 
 export interface FileUploadOptions {
     folderId: number;
-    nodeId: number;
+    nodeId: number | string;
 }
 
 export interface FileReplaceOptions {
     folderId?: number;
-    nodeId: number;
+    nodeId: number | string;
 }
 
 /**

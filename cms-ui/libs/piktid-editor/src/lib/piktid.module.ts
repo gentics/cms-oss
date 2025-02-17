@@ -6,19 +6,27 @@ import {
     AnonymizationEditorComponent,
     FaceManipulationComponent,
     ImagePreviewComponent,
-    PiktidEditorComponent,
+    EditorComponent,
+    LoginGateComponent,
 } from './components';
 import { PiktidAPIService } from './providers';
+
+const COMPONENTS = [
+    AnonymizationEditorComponent,
+    FaceManipulationComponent,
+    ImagePreviewComponent,
+    EditorComponent,
+    LoginGateComponent,
+];
 
 @NgModule({
     imports: [CommonModule, GenticsUICoreModule, ReactiveFormsModule, FormsModule],
     declarations: [
-        PiktidEditorComponent,
-        ImagePreviewComponent,
-        FaceManipulationComponent,
-        AnonymizationEditorComponent,
+        ...COMPONENTS,
     ],
-    exports: [PiktidEditorComponent],
+    exports: [
+        ...COMPONENTS,
+    ],
     providers: [PiktidAPIService],
 })
 export class PiktidModule {}

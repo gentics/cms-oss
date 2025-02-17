@@ -82,7 +82,12 @@
             "executor": "@nx/angular:dev-server",
             "options": {
                 "proxyConfig": "proxy.conf.json",
-                "liveReload": false
+                "liveReload": false,
+                "headers": {
+                    "Access-Control-Allow-Origin": "https://d3ajjlx2rocmin.cloudfront.net",
+                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                    "Vary": "Origin"
+                }
             },
             "configurations": {
                 "production": {

@@ -22,6 +22,8 @@ import {
     ImageDownloadRequest,
 } from '../../common/models';
 
+const BASE_URL = 'https://id.piktid.com';
+
 @Injectable()
 export class PiktidAPIService {
 
@@ -51,7 +53,7 @@ export class PiktidAPIService {
 
         const auth = btoa(`${username}:${password}`);
 
-        return this.http.post<AuthenticationResponse>('/piktid/api/tokens', null, {
+        return this.http.post<AuthenticationResponse>(BASE_URL + '/api/tokens', null, {
             observe: 'body',
             responseType: 'json',
             headers: new HttpHeaders({
@@ -70,7 +72,7 @@ export class PiktidAPIService {
             return throwError(() => new Error('Not authenticated'));
         }
 
-        return this.http.get<UserInfoResponse>('/piktid/api/me', {
+        return this.http.get<UserInfoResponse>(BASE_URL + '/api/me', {
             observe: 'body',
             responseType: 'json',
             headers: new HttpHeaders({
@@ -79,7 +81,7 @@ export class PiktidAPIService {
         });
     }
 
-    uploadFile(file: File, options: AnonymizationOptions): Observable<FileUploadResponse> {
+    uploadFile(file: File | Blob, options: AnonymizationOptions): Observable<FileUploadResponse> {
         if (!this.accessToken) {
             return throwError(() => new Error('Not authenticated'));
         }
@@ -88,7 +90,7 @@ export class PiktidAPIService {
         data.set('options', JSON.stringify(options));
         data.set('file', file);
 
-        return this.http.post<FileUploadResponse>('/piktid/api/upload_pro', data, {
+        return this.http.post<FileUploadResponse>(BASE_URL + '/api/upload_pro', data, {
             observe: 'body',
             responseType: 'json',
             headers: new HttpHeaders({
@@ -102,7 +104,7 @@ export class PiktidAPIService {
             return throwError(() => new Error('Not authenticated'));
         }
 
-        return this.http.post<DetectFacesResponse>('/piktid/api/detect_faces', {
+        return this.http.post<DetectFacesResponse>(BASE_URL + '/api/detect_faces', {
             id_image: imageId,
         }, {
             observe: 'body',
@@ -124,7 +126,7 @@ export class PiktidAPIService {
             ...options,
         };
 
-        return this.http.post<GenerateExpressionResponse>('/piktid/api/ask_new_expression', req, {
+        return this.http.post<GenerateExpressionResponse>(BASE_URL + '/api/ask_new_expression', req, {
             observe: 'body',
             responseType: 'json',
             headers: new HttpHeaders({
@@ -138,7 +140,7 @@ export class PiktidAPIService {
             return throwError(() => new Error('Not authenticated'));
         }
 
-        return this.http.post<RandomFaceResponse>('/piktid/api/ask_random_face', {
+        return this.http.post<RandomFaceResponse>(BASE_URL + '/api/ask_random_face', {
             id_image: imageId,
             id_face: faceId,
             prompt: '{}',
@@ -156,7 +158,7 @@ export class PiktidAPIService {
             return throwError(() => new Error('Not authenticated'));
         }
 
-        return this.http.post<NotificationListResponse>('/piktid/api/notification_by_name_json', {
+        return this.http.post<NotificationListResponse>(BASE_URL + '/api/notification_by_name_json', {
             id_image: imageId,
             name_list: notificationNames.join(', '),
         }, {
@@ -179,7 +181,7 @@ export class PiktidAPIService {
         }
 
         // TODO: Use pick_face2 when it's actually ready - currently only throws errors
-        return this.http.post<SubstituteFaceResponse>('/piktid/api/pick_face', {
+        return this.http.post<SubstituteFaceResponse>(BASE_URL + '/api/pick_face', {
             id_image: imageId,
             id_face: faceId,
             id_generation: generationId,
@@ -208,7 +210,28 @@ export class PiktidAPIService {
             ...options,
         };
 
-        return this.http.post<ImageDownloadResponse>('/piktid/api/download', body, {
+        return this.http.post<ImageDownloadResponse>(BASE_URL + '/api/download', body, {
+            observe: 'body',
+            responseType: 'json',
+            headers: new HttpHeaders({
+                Authorization: `Bearer ${this.accessToken}`,
+            }),
+        }).pipe(
+            map((response) => {
+                const links = JSON.parse(response.links);
+                return links;
+            }),
+        );
+    }
+
+    deleteImage(imageId: string): Observable<void> {
+        if (!this.accessToken) {
+            return throwError(() => new Error('Not authenticated'));
+        }
+
+        return this.http.post<ImageDownloadResponse>(BASE_URL + '/api/remove', {
+            id_image: imageId,
+        }, {
             observe: 'body',
             responseType: 'json',
             headers: new HttpHeaders({

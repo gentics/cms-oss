@@ -85,11 +85,19 @@
     </div>
 
     <div class="actions">
-        <div *ngIf="file.type === 'image'" class="action-edit">
-            <gtx-button flat (click)="editImage()" [disabled]="!isEditableImage(file)">
-                <icon left>edit</icon> {{ 'editor.edit_image_button' | i18n }}
-            </gtx-button>
-        </div>
+        <ng-container *ngIf="file.type === 'image'">
+            <div class="action-anonymize">
+                <gtx-button flat (click)="anonymizeImage()" [disabled]="!isEditableImage(file)">
+                    <icon left>theater_comedy</icon> {{ 'editor.anonymize_people_button' | i18n }}
+                </gtx-button>
+            </div>
+
+            <div class="action-edit">
+                <gtx-button flat (click)="editImage()" [disabled]="!isEditableImage(file)">
+                    <icon left>edit</icon> {{ 'editor.edit_image_button' | i18n }}
+                </gtx-button>
+            </div>
+        </ng-container>
 
         <div *ngIf="file.type === 'file'" class="action-download">
             <a [href]="downloadUrl" [download]="file.name" target="_blank">

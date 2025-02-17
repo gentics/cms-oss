@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { Coordinates } from '../../common/models';
 
 @Component({
-    selector: 'gtxpict-image-preview',
+    selector: 'gtxpikt-image-preview',
     templateUrl: './image-preview.component.html',
     styleUrls: ['./image-preview.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush,

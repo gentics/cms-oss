@@ -35,46 +35,51 @@ export class CopyValueComponent extends BaseComponent {
         super(changeDetector);
     }
 
-    copyToClipboard(): Promise<void> {
+    // We cannot use navigator.permissions.query({ name: 'clipboard-write' as PermissionName })
+    // because of https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1245
+    async copyToClipboard(): Promise<void> {
+        let error = null;
         try {
-			const textArea = document.createElement('textarea');
-			textArea.value = this.value;
-			document.body.appendChild(textArea);
-			textArea.focus();
-			textArea.select();
-			try {
-                document.execCommand('copy');
-			} catch (err) {
-                console.error('Unable to copy to clipboard', err);
-			}
-			document.body.removeChild(textArea);
+            await navigator.clipboard.writeText(this.value);
             this.copy.emit();
+        } catch (err) {
+            error = err;
+        }
+        if (error !== null) {
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = this.value;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Unable to copy to clipboard', err);
+                }
+                document.body.removeChild(textArea);
+                this.copy.emit();
+                if (this.animate) {
+                    this.animateCopy(1)
+                }
+            } catch (err) {
+                error = err;
+            }
+        }
+        if (error === null) {
             if (this.animate) {
                 this.animateCopy(1)
             }
-        } catch (err) {
-            this.copy.emit(err);
+        } else {
+            this.copy.emit(error);
         }
-		return Promise.resolve();
+        return Promise.resolve();
     }
-	// https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1245
-	/*  async copyToClipboard(): Promise<void> {
-	    try {
-			await navigator.clipboard.writeText(this.value);
-	        this.copy.emit();
-	        if (this.animate) {
-	            this.animateCopy(1)
-	        }
-	    } catch (err) {
-	        this.copy.emit(err);
-	    }
-	}
-	async clipboardAllowed(): Promise<boolean> {
-		const queryOpts = { name: 'clipboard-write' as PermissionName };
+    async clipboardAllowed(): Promise<boolean> {
+        const queryOpts = { name: 'clipboard-write' as PermissionName };
         const permissionStatus = await navigator.permissions.query(queryOpts);
-		return permissionStatus.state === 'granted';
-	}*/
-    clipboardAllowed = Promise.resolve(true);
+        return permissionStatus.state === 'granted';
+    }
 
     private animateCopy(seconds: number): void {
         this.icon = 'check';

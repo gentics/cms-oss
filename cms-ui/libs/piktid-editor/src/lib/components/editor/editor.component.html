@@ -10,6 +10,6 @@
         [facePositions]="facePositions"
         [uploading]="imageUploadStatus === 'pending'"
         (uploadImage)="uploadImage()"
-        (confirmChange)="handleConfirmationChange()"
+        (confirmChange)="handleConfirmationChange($event)"
     ></gtxpikt-anonymization-editor>
 </gtxpikt-login-gate>

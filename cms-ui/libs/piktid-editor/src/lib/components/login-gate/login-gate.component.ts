@@ -65,10 +65,16 @@ export class LoginGateComponent implements OnInit, OnDestroy {
     }
 
     public onLogin(): void {
+        if (!this.loginForm?.valid) {
+            return;
+        }
+
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.api.authenticate(this.loginForm.value.username, this.loginForm.value.password).pipe(
+        const value = this.loginForm.value as LoginFormProperties;
+
+        this.subscriptions.push(this.api.authenticate(value.username, value.password).pipe(
             switchMap(auth => this.api.getUserInfo().pipe(
                 map((userInfo) => ({ auth, userInfo })),
             )),

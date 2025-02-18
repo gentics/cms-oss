@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ADMIN_UI_LINK } from '@editor-ui/app/common/config/config';
 import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
 import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
-import { I18nService } from '@gentics/cms-components';
+import { I18nService, KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 import { cancelEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
@@ -17,7 +17,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
 })
 export class NoNodesComponent implements OnInit, OnDestroy {
 
-    public readonly ADMIN_UI_LINK = ADMIN_UI_LINK;
+    public readonly ADMIN_UI_LINK = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly cancelEvent = cancelEvent;
 
@@ -34,6 +34,7 @@ export class NoNodesComponent implements OnInit, OnDestroy {
         private i18n: I18nService,
         private folderActions: FolderActionsService,
         private navigationService: NavigationService,
+        private keycloak: KeycloakService,
     ) {}
 
     ngOnInit(): void {

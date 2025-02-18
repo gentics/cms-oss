@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ADMIN_UI_LINK } from '../../../common/config/config';
 import { ApplicationStateService } from '../../../state';
 import { EmbeddedToolsService } from '../../providers/embedded-tools/embedded-tools.service';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 
 @Component({
     selector: 'tool-overview',
@@ -20,12 +21,13 @@ export class ToolOverviewComponent implements OnInit {
     constructor(
         private state: ApplicationStateService,
         public toolsService: EmbeddedToolsService,
+        private keycloak: KeycloakService,
     ) { }
 
     ngOnInit(): void {
         this.tools$ = this.state.select(state => state.tools.available);
         this.isAdmin$ = this.state.select(state => state.auth.isAdmin);
-        this.adminUILink = ADMIN_UI_LINK;
+        this.adminUILink = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
     }
 
     adminUIClicked(event: Event): void {

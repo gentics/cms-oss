@@ -114,19 +114,17 @@ export class PostLoadScript {
                     const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.type as any, internalLink.itemId);
                     this.iFrameWindow.open(newUrl, '_blank');
                 }
-
-                return;
+            } else if (
+                (this.scriptHost.editMode === EditMode.EDIT && e.ctrlKey)
+                || (this.scriptHost.editMode !== EditMode.EDIT && !e.ctrlKey && !middleClick)
+            ) {
+                // Links to anchors/markers inside of a page are valid
+                if (!url.startsWith('#') && (this.scriptHost.editMode === EditMode.EDIT || link.target !== '_blank')) {
+                    // Open external links always in a new tab, since we don't want to close our app
+                    this.iFrameWindow.open(url, '_blank');
+                    e.preventDefault();
+                }
             }
-
-            // Links to anchors/markers inside of a page are valid
-            // So are links which have a _blank target set
-            if (url.startsWith('#') || link.target === '_blank') {
-                return;
-            }
-
-            // Open external links always in a new tab, since we don't want to close our app
-            this.iFrameWindow.open(url, '_blank');
-            e.preventDefault();
         };
 
         // Simple left click handler

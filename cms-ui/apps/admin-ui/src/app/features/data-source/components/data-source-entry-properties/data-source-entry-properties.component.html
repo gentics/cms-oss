@@ -7,7 +7,7 @@
         <gtx-input
             type="text"
             [required]="true"
-            maxlength="50"
+            [maxlength]="MAX_KEY_LENGTH"
             [label]="('shared.dataSource_entry_key' | i18n) + ' *'"
             [placeholder]="'shared.enter_dataSource_entry_key' | i18n"
             formControlName="key"
@@ -16,7 +16,7 @@
 		<gtx-textarea
             type="text"
             [required]="true"
-            maxlength="16383"
+            [maxlength]="MAX_VALUE_LENGTH"
             [label]="('shared.dataSource_entry_value' | i18n) + ' *'"
             [placeholder]="'shared.enter_dataSource_entry_value' | i18n"
             formControlName="value"

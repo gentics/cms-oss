@@ -41,7 +41,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 @RunWith(Parameterized.class)
 public abstract class AbstractListSortAndFilterTest<T> {
 	@ClassRule
-	public static DBTestContext context = new DBTestContext(false);
+	public static DBTestContext context = new DBTestContext();
 
 	/**
 	 * Random string generator

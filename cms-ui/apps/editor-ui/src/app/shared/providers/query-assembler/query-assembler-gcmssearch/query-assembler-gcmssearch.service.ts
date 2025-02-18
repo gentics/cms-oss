@@ -327,18 +327,22 @@ export class QueryAssemblerGCMSSearchService {
                     switch (type) {
                         case 'page':
                             isValidFilterForProperty = GCMSSEARCH_AVAILABLE_FILTERS_PAGE.some(p => p === paramfilterKey);
+                            mappedOptions.folder = true;
                             break;
                         case 'form':
                             isValidFilterForProperty = GCMSSEARCH_AVAILABLE_FILTERS_FORM.some(p => p === paramfilterKey);
+                            mappedOptions.folder = true;
                             break;
                         case 'folder':
                             isValidFilterForProperty = GCMSSEARCH_AVAILABLE_FILTERS_FOLDER.some(p => p === paramfilterKey);
                             break;
                         case 'image':
                             isValidFilterForProperty = GCMSSEARCH_AVAILABLE_FILTERS_IMAGE.some(p => p === paramfilterKey);
+                            mappedOptions.folder = true;
                             break;
                         case 'file':
                             isValidFilterForProperty = GCMSSEARCH_AVAILABLE_FILTERS_FILE.some(p => p === paramfilterKey);
+                            mappedOptions.folder = true;
                             break;
                         default:
                             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

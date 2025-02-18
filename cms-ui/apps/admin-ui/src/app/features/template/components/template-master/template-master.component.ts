@@ -196,8 +196,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 return [event.item];
             }
 
-            return this.loader.getEntitiesByIds(this.selected)
-                .map(template => this.loader.mapToBusinessObject(template));
+            return this.loader.getEntitiesByIds(this.selected);
         }
 
         switch (event.actionId as Action) {

@@ -59,3 +59,20 @@ a.aloha-gcnlinkchecker-checked.aloha-gcnlinkchecker-invalid-url::after {
     /* Icon to use */
     content: '\e002';
 }
+
+/* Block-Handle */
+.aloha-block.aloha-gcnlinkchecker-checked {
+    .aloha-block-handle  .aloha-gcnlinkchecker-block-indicator {
+        background-color: #dadada;
+        color: #000;
+    }
+
+    &.aloha-gcnlinkchecker-invalid-url .aloha-block-handle .aloha-gcnlinkchecker-block-indicator {
+        background-color: #f18a4f;
+        color: #352e29;
+    }
+    &.aloha-gcnlinkchecker-valid-url .aloha-block-handle .aloha-gcnlinkchecker-block-indicator {
+        background-color: rgb(25, 179, 25);
+        color: #fff;
+    }
+}

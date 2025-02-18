@@ -4,7 +4,7 @@
 
 export const environment = {
     production: false,
-    editorUrl: 'http://localhost:8080',
+    editorUrl: 'http://localhost:8080/editor',
 };
 
 /*

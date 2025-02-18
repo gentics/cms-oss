@@ -501,11 +501,11 @@
         "en": "Successfully deleted schema \"{{ entityName }}\"!"
     },
     "manage_schema_assignment": {
-        "de": "Schemenzuweisung verwalten",
+        "de": "Schemazuweisung verwalten",
         "en": "Manage schema assignment"
     },
     "assign_schemas_to_projects": {
-        "de": "Schemen zu Projekten zuweisen",
+        "de": "Schemas zu Projekten zuweisen",
         "en": "Assign schemas to projects"
     },
     "assign_schema_to_project_success": {
@@ -513,7 +513,7 @@
         "en": "Successfully assigned schema \"{{ schemaName }}\" to project \"{{ projectName }}\"!"
     },
     "unassign_schemas_from_projects": {
-        "de": "Schemen von Projekten entfernen",
+        "de": "Schemas von Projekten entfernen",
         "en": "Unassign schemas from projects"
     },
     "unassign_schema_from_project_success": {
@@ -550,11 +550,11 @@
         "en": "Successfully deleted microschema \"{{ entityName }}\"!"
     },
     "manage_microschema_assignment": {
-        "de": "Mikroschemenzuweisung verwalten",
+        "de": "Mikroschemazuweisung verwalten",
         "en": "Manage microschema assignment"
     },
     "assign_microschemas_to_projects": {
-        "de": "Mikroschemen zu Projekten zuweisen",
+        "de": "Mikroschemas zu Projekten zuweisen",
         "en": "Assign microschemas to projects"
     },
     "assign_microschema_to_project_success": {
@@ -562,7 +562,7 @@
         "en": "Successfully assigned microschema \"{{ microschemaName }}\" to project \"{{ projectName }}\"!"
     },
     "unassign_microschemas_from_projects": {
-        "de": "Mikroschemen von Projekten entfernen",
+        "de": "Mikroschemas von Projekten entfernen",
         "en": "Unassign microschemas from projects"
     },
     "unassign_microschema_from_project_success": {

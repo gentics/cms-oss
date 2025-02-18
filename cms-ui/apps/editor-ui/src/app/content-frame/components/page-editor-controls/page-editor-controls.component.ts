@@ -79,6 +79,8 @@ function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): stri
     return url;
 }
 
+const ATTR_LINK_CHECKER_HREF = 'data-gcnlinkchecker-href';
+
 @Component({
     selector: 'gtx-page-editor-controls',
     templateUrl: './page-editor-controls.component.html',
@@ -310,6 +312,11 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
             this.brokenLinkCountChange.emit(this.brokenLinkElements.length);
         }));
+
+        this.subscriptions.push(this.aloha.on('gcmsui.update-linkchecker').subscribe(() => {
+            this.updateBrokenLinkCount();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     public ngOnChanges(_changes: ChangesOf<this>): void {
@@ -337,7 +344,8 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     }
 
     public updateBrokenLinkCount(): void {
-        this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
+        this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
+        this.brokenLinkCountChange.emit(this.brokenLinkElements.length);
     }
 
     public identifyTab(_idx: number, tab: NormalizedTabsSettings): string {
@@ -361,11 +369,17 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         if (timerId && !Number.isNaN(timerId)) {
             window.clearTimeout(timerId);
         }
-        this.linkCheckerPlugin.addUncheckedLink(element);
 
         if (!url) {
-            url = (element.getAttribute('href') || '').trim();
+            url = (element.getAttribute(ATTR_LINK_CHECKER_HREF) || element.getAttribute('href') || '').trim();
         }
+
+        // If there's no link to check, do nothing
+        if (!url) {
+            return;
+        }
+
+        this.linkCheckerPlugin.updateLinkStatus(element);
 
         timerId = window.setTimeout(() => {
             (element as HTMLElement).removeAttribute(ATTR_QUEUED_LINK_CHECK);
@@ -394,6 +408,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.subscriptions.push(this.client.linkChecker.check({
             url: normalizeURL(url, this.linkCheckerPlugin.settings),
         }).subscribe(res => {
+            res.url = url;
             this.linkCheckerPlugin.updateLinkStatus(element, res);
             this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
             this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);

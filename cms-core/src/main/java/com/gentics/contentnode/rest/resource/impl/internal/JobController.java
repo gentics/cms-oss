@@ -20,6 +20,7 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
@@ -122,24 +123,24 @@ public class JobController {
 				return running.get(1, TimeUnit.MILLISECONDS);
 			} catch (TimeoutException e) {
 				// job is currently running
-				return new JobStatus(name, true).setProgress(progressSupplier.get());
+				return new JobStatus(I18NHelper.get("job_running", name), true).setProgress(progressSupplier.get());
 			} catch (CancellationException e) {
 				// job has been cancelled
 				JobStatus status = new JobStatus().setProgress(progressSupplier.get());
 				status.setRunning(false);
 				status.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Job was cancelled"));
-				status.addMessage(new Message(Type.INFO, String.format("%s Job has been cancelled", name)));
+				status.addMessage(new Message(Type.INFO, I18NHelper.get("job_cancelled", name)));
 				return status;
 			} catch (Exception e) {
 				JobStatus status = new JobStatus().setProgress(progressSupplier.get());
 				status.setRunning(false);
 				status.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-				status.addMessage(new Message(Type.CRITICAL, String.format("There was an error during the %s Job: %s", name, e.getLocalizedMessage())));
+				status.addMessage(new Message(Type.CRITICAL, I18NHelper.get("job_error", name)));
 				return status;
 			}
 		} else {
 			// job is not running
-			return new JobStatus(name, false).setProgress(progressSupplier.get());
+			return new JobStatus(I18NHelper.get("job_not_running", name), false).setProgress(progressSupplier.get());
 		}
 	}
 
@@ -149,7 +150,7 @@ public class JobController {
 	 */
 	public synchronized JobStatus start() {
 		if (running != null && !running.isDone()) {
-			return new JobStatus(name, true).setProgress(progressSupplier.get());
+			return new JobStatus(I18NHelper.get("job_running", name), true).setProgress(progressSupplier.get());
 		} else {
 			running = Operator.getExecutor().submit(new Callable<JobStatus>() {
 				@Override

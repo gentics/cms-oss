@@ -86,19 +86,14 @@ export class ImageAnonymizeModal extends BaseModal<void> implements OnInit, OnDe
             flag_quality: 0,
         }).pipe(
             // Download the generated image
-            switchMap(links => this.http.get(links.l, {
-                observe: 'body',
-                responseType: 'blob',
+            switchMap(links => this.api.file.uploadFromURL({
+                overwriteExisting: false,
+                folderId: this.loadedImage.folderId,
+                nodeId: this.loadedImage.masterNodeId,
+                sourceURL: links.l,
+                name: `anonymized_${this.loadedImage.name}`,
+                description: this.loadedImage.description,
             })),
-            // Upload the generated image to the CMS
-            switchMap(newImageBlob => {
-                (newImageBlob as any).name = `anonymized_${this.loadedImage.name}`;
-
-                return this.api.file.upload(newImageBlob, {
-                    folderId: this.loadedImage.folderId,
-                    nodeId: this.nodeId,
-                });
-            }),
             // Delete the image from piktid after successful upload
             switchMap(uploaded => {
                 return this.piktid.deleteImage(this.piktidImageId).pipe(

@@ -1051,6 +1051,27 @@ export interface FileCreateRequest {
     properties?: { [key: string]: any };
 }
 
+export interface FileUploadRequest {
+    /** `true` to overwrite existing files with the same name in the folder */
+    overwriteExisting: boolean;
+    /** Target folder ID */
+    folderId: number;
+    /** Target node ID for uploading files in channels */
+    nodeId: number;
+    /** Source URL of the file */
+    sourceURL: string;
+    /** Name of the file */
+    name?: string;
+    /** Description of the file */
+    description?: string;
+    /** Nice URL of the file */
+    niceURL?: string;
+    /** Alternate URLs of the file */
+    alternateURL?: string;
+    /** The additional properties of the file */
+    properties?: Record<string, any>;
+}
+
 export interface FileUploadOptions {
     folderId: number;
     nodeId: number | string;

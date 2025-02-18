@@ -406,6 +406,7 @@ export class GCMSRestClient implements GCMSRootAPI {
             }
             return this.executeMappedFormRequest(POST, '/file/create', data, options);
         },
+        uploadFromURL: (body) => this.executeMappedJsonRequest(POST, '/file/create', body),
         get: (id, options) => this.executeMappedJsonRequest(GET, `/file/load/${id}`, null, options),
         getMultiple: (body) => this.executeMappedJsonRequest(POST, '/file/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/file/save/${id}`, body),

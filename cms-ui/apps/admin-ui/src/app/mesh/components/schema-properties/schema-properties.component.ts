@@ -2,7 +2,7 @@ import { createBlacklistValidator, createWhitelistValidator } from '@admin-ui/co
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { EditableSchemaProperties } from '@gentics/mesh-models';
+import { EditableSchemaProperties, FieldType } from '@gentics/mesh-models';
 import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
@@ -38,6 +38,9 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
     @Input()
     public microschemaNames: string[];
 
+    public fieldNames: string[];
+    public urlFieldNames: string[];
+
     protected override delayedSetup = true;
 
     protected createForm(): FormGroup<FormProperties<EditableSchemaProperties>> {
@@ -51,16 +54,21 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
             autoPurge: new FormControl(this.value?.autoPurge ?? false),
             noIndex: new FormControl(this.value?.noIndex ?? false),
             container: new FormControl(this.value?.container ?? false),
-            displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
-            segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
-            urlFields: new FormControl(this.value?.urlFields || [], createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.fieldNames)),
+            segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.fieldNames)),
+            urlFields: new FormControl(this.value?.urlFields || [], createWhitelistValidator(() => this.urlFieldNames)),
             elasticsearch: new FormControl(this.value?.elasticsearch, createJsonValidator()),
             fields: new FormControl(this.value?.fields || []),
         });
     }
 
-    protected configureForm(_value: EditableSchemaProperties, _loud?: boolean): void {
-        // no-op
+    protected configureForm(value: EditableSchemaProperties, _loud?: boolean): void {
+        this.fieldNames = (value?.fields || [])
+            .filter(field => field.type === FieldType.STRING || field.type === FieldType.BINARY)
+            .map(field => field.name);
+        this.urlFieldNames = (value?.fields || [])
+            .filter(field => field.type === FieldType.STRING)
+            .map(field => field.name);
     }
 
     protected assembleValue(value: EditableSchemaProperties): EditableSchemaProperties {

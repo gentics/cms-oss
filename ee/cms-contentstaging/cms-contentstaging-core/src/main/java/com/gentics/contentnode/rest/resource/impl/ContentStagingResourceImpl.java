@@ -462,19 +462,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 					finalName = model.getName();
 				}
+				updateStoredPackage(path.resolve(finalName), model, stored);
 
-				// Update contents
-				try (OutputStream os = Channels.newOutputStream(FileChannel.open(path.resolve(finalName).resolve(CONTENT_PACKAGE_METADATA_FILENAME), 
-						StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {					
-					stored = StoredContentPackage.REST2NODE.apply(model, stored);
-					mapper.writeValue(os, stored);
-					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
-					return StoredContentPackage.NODE2REST.apply(stored, model);
-				} catch (FileAlreadyExistsException existsException) {
-					throw new DuplicateValueException("name", model.getName());
-				} catch (IOException e) {
-					throw new IllegalStateException(e);
-				}
+				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
+				return StoredContentPackage.NODE2REST.apply(stored, model);
 			});
 			response.setContentPackage(cp);
 			return response;
@@ -569,6 +560,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					break;
 				}
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				Integer updateTimestamp = updateStoredPackage(path.resolve(name), pkg);
+				pkg.setTimestamp(updateTimestamp);
 				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
@@ -633,6 +626,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 
 				fillContentPackageStatistic(path.resolve(name), pkg);
+				Integer updateTimestamp = updateStoredPackage(path.resolve(name), pkg);
+				pkg.setTimestamp(updateTimestamp);
 				addImportProgress(pkg);
 
 				response.setContentPackage(pkg);
@@ -978,7 +973,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		Path path = checkFeatureGetPath();
 
 		final List<PathSegment> segments = rawSegments.stream().filter(s -> StringUtils.isNotBlank(s.getPath())).collect(Collectors.toList());
-		
+
 		try (Trx trx = ContentNodeHelper.trx()) {
 			ContentPackageFolderResponse response;
 			JobStatus importStatus = imports.entrySet().stream()
@@ -999,14 +994,14 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				List<StagingError> errors = new ArrayList<>();
 
 				StagingErrorKind filterByError = Optional.ofNullable(filter).map(StagingErrorKind::fromValue).orElse(null);
-				
+
 				processContentPackageItems(packagePath, cpackage, true,
 						page -> {
 							if (page.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredPage storedPage = loadFromFilesystem(page, StoredPage.class, s -> s);
 								items.add(storedPage);
 							}
-						}, 
+						},
 						folder -> {
 							StoredFolder storedFolder = loadFromFilesystem(folder, StoredFolder.class, s -> s);
 							String folderName = storedFolder.getName();
@@ -1016,7 +1011,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 								// Right folder, use it
 								walker.push(storedFolder.getId());
 							}
-						}, 
+						},
 						file -> {
 							if (segments.size() == walker.size() && file.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredFile storedFile = loadFromFilesystem(file, StoredFile.class, s -> s);
@@ -1027,7 +1022,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 									errors.add(stagingError);
 								}
 							}
-						}, 
+						},
 						image -> {
 							if (segments.size() == walker.size() && image.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredImage storedImage = loadFromFilesystem(image, StoredImage.class, s -> s);
@@ -1038,35 +1033,35 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 									errors.add(stagingError);
 								}
 							}
-						}, 
+						},
 						form -> {
 							if (segments.size() == walker.size() && form.getParent().getFileName().toString().equals(walker.peek())) {
 								StoredForm storedForm = loadFromFilesystem(form, StoredForm.class, s -> s);
 								items.add(storedForm);
 							}
-						}, 
-						binary -> {							
-						}, 
+						},
+						binary -> {
+						},
 						node -> {
 							if (CollectionUtils.isEmpty(segments)) {
 								StoredNode storedNode = loadFromFilesystem(node, StoredNode.class, s -> s);
 								items.add(storedNode);
 							}
-						}, 
+						},
 						channel -> {
 							if (CollectionUtils.isEmpty(segments)) {
 								StoredChannel storedChannel = loadFromFilesystem(channel, StoredChannel.class, s -> s);
 								items.add(storedChannel);
 							}
-						}, 
-						metadata -> {}, 
+						},
+						metadata -> {},
 						error -> {
 							StagingErrors storedFile = loadFromFilesystemUnsafe(error, StagingErrors.class, s -> s.toString());
 							errors.addAll(storedFile.getErrors());
 						},
 						alien -> {
 							logger.warn(String.format("Alien file in the content package [%s]: %s", cpackage.getName(), alien.toString()));
-						}, 
+						},
 						(dup, orig, id) -> {
 							logger.warn(String.format("Duplicated file for id [%s] in the content package [%s]: orig: %s, dup: %s", id, cpackage.getName(), orig.toString(), dup.toString()));
 							var stagingErrorDub = new StagingError(id, dup.toString(), "Duplication of " + orig.toString(), StagingErrorKind.DUPLICATION);
@@ -1156,7 +1151,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param path file to read
 	 * @param storedClass stored stageable class
 	 * @param nameGetter function to get the name/ID from the given path (for generating an error message)
-	 * 
+	 *
 	 * @param <S> stored serializable type
 	 * @param <T> output type
 	 * @return
@@ -1177,7 +1172,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	/**
 	 * Get the Global ID from the stored filesystem model. Type agnostic.
-	 * 
+	 *
 	 * @param path file to read
 	 * @return
 	 */
@@ -1772,11 +1767,45 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	/**
+	 * Update content package at the filesystem, updating its timestamp.
+	 *
+	 * @param packageFolderPath
+	 * @param pkg
+	 * @return timestamp of an update.
+	 * @throws NodeException
+	 */
+	private static final Integer updateStoredPackage(Path packageFolderPath, StagedContentPackage pkg) throws NodeException {
+		return updateStoredPackage(packageFolderPath, pkg, new StoredContentPackage());
+	}
+
+	/**
+	 * Update content package at the filesystem, updating its timestamp.
+	 *
+	 * @param packageFolderPath
+	 * @param pkg
+	 * @param stored model to update and save
+	 * @return timestamp of an update.
+	 * @throws NodeException
+	 */
+	private static final Integer updateStoredPackage(Path packageFolderPath, StagedContentPackage pkg, StoredContentPackage stored) throws NodeException {
+		try (OutputStream os = Channels.newOutputStream(FileChannel.open(packageFolderPath.resolve(CONTENT_PACKAGE_METADATA_FILENAME),
+				StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).lock().channel())) {
+			stored = StoredContentPackage.REST2NODE.apply(pkg, stored);
+			mapper.writeValue(os, stored);
+			return stored.getTimestamp();
+		} catch (FileAlreadyExistsException existsException) {
+			throw new DuplicateValueException("name", pkg.getName());
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	/**
 	 * Fill the package statistics. Remove alien (unrecognizable) content from the package.
 	 * 
 	 * @param path
 	 * @param cp
-	 * @throws NodeException 
+	 * @throws NodeException
 	 */
 	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) throws NodeException {
 		fillContentPackageStatistic(path, cp, false);
@@ -1788,21 +1817,21 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param path
 	 * @param cp
 	 * @param throwOnDuplications set this if you want an exception thrown on a duplicated ID in the package
-	 * @throws NodeException 
+	 * @throws NodeException
 	 */
 	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) throws NodeException {
 		processContentPackageItems(
 				path, cp, false,
-				page -> cp.setPages(cp.getPages() + 1), 
-				folder -> cp.setFolders(cp.getFolders() + 1), 
-				file -> cp.setFiles(cp.getFiles() + 1), 
-				image -> cp.setImages(cp.getImages() + 1), 
-				form -> cp.setForms(cp.getForms() + 1), 
-				binary -> {}, 
-				node -> cp.setNodes(cp.getNodes() + 1), 
-				channel -> cp.setChannels(cp.getChannels() + 1), 
-				metadata -> {}, 
-				error -> {}, 
+				page -> cp.setPages(cp.getPages() + 1),
+				folder -> cp.setFolders(cp.getFolders() + 1),
+				file -> cp.setFiles(cp.getFiles() + 1),
+				image -> cp.setImages(cp.getImages() + 1),
+				form -> cp.setForms(cp.getForms() + 1),
+				binary -> {},
+				node -> cp.setNodes(cp.getNodes() + 1),
+				channel -> cp.setChannels(cp.getChannels() + 1),
+				metadata -> {},
+				error -> {},
 				alien -> {
 					logger.warn("Removing alien file " + alien.toAbsolutePath());
 					try {
@@ -1810,15 +1839,15 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					} catch (IOException e) {
 						logger.error("Cannot remove alien file " + alien.toAbsolutePath(), e);
 					}
-				}, 
+				},
 				(dup, orig, id) -> {
 					if (throwOnDuplications) {
 						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", id, dup, orig));
 					} else {
 						return;
 					}
-					
-				}, 
+
+				},
 				exception -> {
 					logger.error("Failed to collect statistic for ContentPackage " + path.getFileName(), exception);
 					// TODO drop 500 here?
@@ -1827,7 +1856,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	/**
 	 * Walk over content staging package contents, performing operations on `doOnXXX` consumers.
-	 * 
+	 *
 	 * @param path package path
 	 * @param cp package definition
 	 * @param sort set to preserve depth-first order of execution
@@ -2680,7 +2709,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	/**
 	 * Make a binary data filename for the given object.
-	 * 
+	 *
 	 * @param storedObject
 	 * @return
 	 */
@@ -2840,7 +2869,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					TransactionManager.getCurrentTransaction().rollback(false);
 				}
 
-				JobStatus response = getJobStatus();
+				JobStatus response = new JobStatus().setRunning(false).setProgress(progress);
+					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
 				Type status;
 				String i18nKey;
 				String[] i18nParams;
@@ -2888,7 +2918,8 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		 * @return job status
 		 */
 		public JobStatus getJobStatus() {
-			return new JobStatus(I18NHelper.get("content.staging.import", name), running).setProgress(progress);
+			return new JobStatus(I18NHelper.get(running ? "job_running" : "job_not_running",
+					I18NHelper.get("content.staging.import", name)), running).setProgress(progress);
 		}
 
 		/**

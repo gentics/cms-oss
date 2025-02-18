@@ -44,10 +44,6 @@ h3. Link Checker
 This feature enables the link checker.
 See "Link Checker":feature_link_checker.html for details.
 
-h3. Migration Tool
-
-See "Migration Tool":feature_migration.html
-
 h3. Multichanneling
 
 See "Multichannelling":mc_admin.html

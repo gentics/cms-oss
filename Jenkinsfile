@@ -184,6 +184,9 @@ spec:
 
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
+                            mvnArguments += " -am -pl cms-server"
+                        }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
                         runJUnitTests = false
@@ -352,7 +355,7 @@ spec:
 					return env.BUILD_SKIPPED != "true" && params.runDockerBuild && (params.deploy || params.deployTesting) && params.integrationTests
 				}
 			}
-            
+
             steps {
                 script {
                     def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;

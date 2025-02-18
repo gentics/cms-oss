@@ -15,7 +15,6 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NgxsModule } from '@ngxs/store';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ElasticSearchIndexOperations, EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
@@ -48,7 +47,6 @@ describe('ElasticSearchIndexOperations', () => {
         TestBed.configureTestingModule({
             imports: [
                 NgxsModule.forRoot(STATE_MODULES, OPTIONS_CONFIG),
-                LoggerTestingModule,
             ],
             providers: [
                 AppStateService,

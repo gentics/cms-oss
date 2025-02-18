@@ -212,16 +212,6 @@ feature:
 
 If internal links resolve to objects that are not online anymore, the system will send a message to the editor who last published the page.
 
-h3. Keycloak Single Sign Out
-
-<shell filename="conf/features.yml">
-feature:
-	keycloak_signout: true
-</shell>
-
-By activating this feature and using SSO with Keycloak, the user will be logged out from Keycloak, when logging out from the CMS.
-See "Keycloak Single Sign Out":auth_keycloak.html#single-sign-out for details.
-
 h3. Language Code in Filename
 
 <shell filename="conf/features.yml">

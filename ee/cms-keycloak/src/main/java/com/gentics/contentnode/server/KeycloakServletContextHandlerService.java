@@ -1,22 +1,24 @@
 package com.gentics.contentnode.server;
 
+import java.io.File;
+import java.net.URL;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 
-import jakarta.servlet.DispatcherType;
-
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
-//import org.keycloak.adapters.servlet.KeycloakOIDCFilter;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
 import com.gentics.contentnode.auth.filter.KeycloakIntegrationFilter;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
+
+import jakarta.servlet.DispatcherType;
 
 /**
  * Implementation of {@link ServletContextHandlerService} which adds the keycloak filters, if feature {@link Feature#KEYCLOAK} is enabled.
@@ -31,6 +33,16 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 	 * Name of the Integration Filter
 	 */
 	public final static String INTEGRATION_FILTER_NAME = "Keycloak Gentics CMS Integration Filter";
+
+	/**
+	 * Format of the keycloak certs URL
+	 */
+	private static final String CERTS_URL_FORMAT = "%s://%s:%d%s/realms/%s/protocol/openid-connect/certs";
+
+	/**
+	 * Format for the expected issuer
+	 */
+	private static final String ISSUER_FORMAT = "%s://%s:%d%s/realms/%s";
 
 	/**
 	 * Logger
@@ -60,8 +72,8 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 		final var featureIsEnabled = NodeConfigRuntimeConfiguration.isFeature(Feature.KEYCLOAK);
 		final var AUTH_PATH = "/rest/auth/ssologin/*";
 
-		if (featureIsEnabled && false) {
-			Map<String, Object> keycloakPreferences = NodeConfigRuntimeConfiguration
+		if (featureIsEnabled) {
+			Map<String, String> keycloakPreferences = NodeConfigRuntimeConfiguration
 					.getPreferences()
 					.getPropertyObject("keycloak");
 
@@ -70,15 +82,40 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 				return;
 			}
 
+			// TODO: also check that auth-server-url and realm are set
 			ServletHandler servletHandler = context.getServletHandler();
 
 			try {
-//				addFilter(servletHandler, OIDC_FILTER_NAME, KeycloakOIDCFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakOidcFilterHolder -> {
-//					keycloakOidcFilterHolder.setInitParameter("keycloak.config.file",
-//							ConfigurationValue.UI_CONF_PATH.get() + "keycloak.json");
-//				});
+				URL url = new URL(keycloakPreferences.get("auth-server-url"));
+				String proto = url.getProtocol();
+				String host = url.getHost();
+				int port = url.getPort();
+				File keysFile = null;
+
+				if (port == -1) {
+					port = proto.equalsIgnoreCase("https") ? 443 : 80;
+				}
+				String keysFilePath = keycloakPreferences.get("keys");
+				if (!StringUtils.isBlank(keysFilePath)) {
+					keysFile = new File(ConfigurationValue.CONF_PATH.get(), keysFilePath);
+					if (!keysFile.isFile()) {
+						keysFile = null;
+					}
+				}
+
+				String realmName = keycloakPreferences.get("realm");
+				// TODO prefix?
+				String prefix = "";
+
+				// create the URL for downloading the keys from keycloak and pass onto the filter
+				String certsUrl = Optional.ofNullable(keysFile).map(f -> f.toURI().toString())
+						.orElse(String.format(CERTS_URL_FORMAT, proto, host, port, prefix, realmName));
+				String issuer = String.format(ISSUER_FORMAT, proto, host, port, prefix, realmName);
 
 				addFilter(servletHandler, INTEGRATION_FILTER_NAME, KeycloakIntegrationFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakServletFilterHolder -> {
+					keycloakServletFilterHolder.setInitParameter(KeycloakIntegrationFilter.INIT_KEYCLOAK_URL_PARAM, certsUrl);
+					keycloakServletFilterHolder.setInitParameter(KeycloakIntegrationFilter.INIT_KEYCLOAK_ISSUER, issuer);
+
 					if (keycloakPreferences.containsKey("user_created_callback")) {
 						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_CALLBACK,
 								ObjectTransformer.getString(keycloakPreferences.get("user_created_callback"), null));
@@ -94,7 +131,7 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 								ObjectTransformer.getString(keycloakPreferences.get("sync_groups"), null));
 					}
 				});
-			} catch (NodeException e) {
+			} catch (Exception e) {
 				log.error("Error while adding Keycloak filters: " + e.getMessage(), e);
 			}
 

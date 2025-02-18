@@ -44,27 +44,21 @@ export class CopyValueComponent extends BaseComponent {
             this.copy.emit();
         } catch (err) {
             error = err;
+            console.error('Unable to copy to clipboard', err);
         }
         if (error !== null) {
+            const textArea = document.createElement('textarea');
+            textArea.value = this.value;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
             try {
-                const textArea = document.createElement('textarea');
-                textArea.value = this.value;
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {
-                    console.error('Unable to copy to clipboard', err);
-                }
-                document.body.removeChild(textArea);
-                this.copy.emit();
-                if (this.animate) {
-                    this.animateCopy(1)
-                }
+                document.execCommand('copy');
             } catch (err) {
                 error = err;
+                console.error('Unable to fallback copy to clipboard', err);
             }
+            document.body.removeChild(textArea);
         }
         if (error === null) {
             if (this.animate) {

@@ -20,7 +20,7 @@ const EDIT_ACTION = 'edit';
 const FRAGMENT_COLUMN_ID = 'fragmentName';
 
 function mapObjectType(row: TagMapEntryBO): number {
-    return row.object ? row.object : row.objType;
+    return row.object || row.objType;
 }
 
 @Component({

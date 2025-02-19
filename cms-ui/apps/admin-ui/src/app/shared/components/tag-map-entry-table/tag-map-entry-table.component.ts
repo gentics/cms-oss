@@ -68,9 +68,9 @@ export class TagMapEntryTableComponent
             sortable: true,
         },
         {
-            id: 'object',
+            id: 'objType',
             label: 'tagmapEntry.object',
-            fieldPath: 'object',
+            fieldPath: 'objType',
             sortable: true,
         },
         {

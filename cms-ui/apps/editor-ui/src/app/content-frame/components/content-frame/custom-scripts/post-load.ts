@@ -3,6 +3,7 @@ import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers'
 import { typeIdsToName } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page } from '@gentics/cms-models';
+import { cancelEvent } from '@gentics/ui-core';
 import { ALOHAPAGE_URL, API_BASE_URL } from '../../../../common/utils/base-urls';
 import { CNIFrameDocument, CNWindow, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
@@ -80,11 +81,14 @@ export class PostLoadScript {
      * Intercept any clicks on anchor links within the iframe. External links should open in a new window to prevent
      * the UI state getting messed up, and internal links to other pages should cause a regular navigation within the UI app.
      *
-     * This only applies for the master frame, tagfill dialogs are allowed to handle links however they like.
+     * Clicks to links should only be valid when clicking with `CTRL` or with
      */
     handleClickEventsOnLinks(): void {
         const handleClickEvent = (e: MouseEvent, middleClick: boolean) => {
-            if (e.defaultPrevented) { return; }
+            // Ignore already handled events
+            if (e.defaultPrevented) {
+                return;
+            }
 
             const link = e.target;
             if (!isAnchorElement(link)) {
@@ -95,36 +99,45 @@ export class PostLoadScript {
 
             if (internalLink) {
                 // All internal links are handled here, so prevent default handling
-                e.preventDefault();
+                cancelEvent(e);
 
-                // In the edit-mode, links can only be clicked with the ctrl key.
-                // In preview modes, links will navigate in the app on default,
-                // and open it in a new tab if the ctrl key is pressed.
-                if (
-                    (this.scriptHost.editMode === EditMode.EDIT && e.ctrlKey)
-                    || (this.scriptHost.editMode !== EditMode.EDIT && !e.ctrlKey && !middleClick)
-                ) {
-                    // Attempt to internally navigate
-                    if (internalLink.type === 'page') {
-                        this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
-                    } else if (internalLink.type === 'file' || internalLink.type === 'image') {
-                        this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
-                    }
-                } else if (this.scriptHost.editMode !== EditMode.EDIT) {
-                    const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.type as any, internalLink.itemId);
-                    this.iFrameWindow.open(newUrl, '_blank');
+                // Ignore clicks which aren't the CTRL key, and ignore all middle-clicks
+                if ((this.scriptHost.editMode === EditMode.EDIT && !e.ctrlKey) || middleClick) {
+                    return;
                 }
-            } else if (
-                (this.scriptHost.editMode === EditMode.EDIT && e.ctrlKey)
-                || (this.scriptHost.editMode !== EditMode.EDIT && !e.ctrlKey && !middleClick)
-            ) {
-                // Links to anchors/markers inside of a page are valid
-                if (!url.startsWith('#') && (this.scriptHost.editMode === EditMode.EDIT || link.target !== '_blank')) {
-                    // Open external links always in a new tab, since we don't want to close our app
-                    this.iFrameWindow.open(url, '_blank');
-                    e.preventDefault();
+
+                // Edge case handling until SUP-18130 is addressed
+                if (internalLink.nodeId == null) {
+                    return;
                 }
+
+                // Attempt to internally navigate
+                if (internalLink.type === 'page') {
+                    this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.itemId);
+                } else if (internalLink.type === 'file' || internalLink.type === 'image') {
+                    this.scriptHost.navigateToFileOrImagePreview(internalLink.nodeId, internalLink.type, internalLink.itemId);
+                }
+
+                return;
             }
+
+            // While editing, we want to ignore regular clicks to links, as it would interfere with editing
+            // links in general and cause other issues as well.
+            // The default behavior of a middle-click would be, to open a link in a new tab.
+            // This doesn't work in contenteditables however, unless the link has "_blank" for some reason.
+            // Therefore we always handle it manually here.
+            if (this.scriptHost.editMode === EditMode.EDIT && !e.ctrlKey && !middleClick) {
+                // Anchors/Hash links are fine however, as they don't cause a navigation
+                if (!url.startsWith('#')) {
+                    cancelEvent(e);
+                }
+                return;
+            }
+
+            // Open external links always in a new tab, since we don't want to close our app
+            this.iFrameWindow.open(url, '_blank');
+            cancelEvent(e);
+            return;
         };
 
         // Simple left click handler
@@ -160,6 +173,11 @@ export class PostLoadScript {
             const internalLink = parseInternalLink(target);
 
             if (!internalLink || internalLink.type !== 'page') {
+                return;
+            }
+
+            // Edge case handling until SUP-18130 is addressed
+            if (internalLink.nodeId == null) {
                 return;
             }
 
@@ -337,21 +355,26 @@ function isAnchorElement(element: any): element is HTMLAnchorElement {
 /** Checks for an internal alohapage link and if found, parses that link to extract the pageId and nodeId */
 function parseInternalLink(anchor: HTMLAnchorElement): InternalLink | null {
 
+    let attrValue: InternalLink | null = null;
+
     // Attempt to load the link-data from the attributes first, if present
     if (anchor.hasAttribute(ATTR_REPO) && anchor.getAttribute(ATTR_REPO) === REPO_CMS_ITEM) {
         const objId = anchor.getAttribute(ATTR_OBJECT_ID);
-        const nodeId = parseInt(anchor.getAttribute(ATTR_NODE_ID), 10);
+        let nodeId = parseInt(anchor.getAttribute(ATTR_NODE_ID), 10);
+        if (isNaN(nodeId)) {
+            nodeId = null;
+        }
 
-        if (objId && Number.isInteger(nodeId)) {
+        if (objId && (nodeId == null || Number.isInteger(nodeId))) {
             const split = objId.split('.');
             const type = typeIdsToName(parseInt(split[0], 10));
 
             if (type) {
-                return {
+                attrValue = {
                     itemId: parseInt(split[1], 10),
                     type: type as any,
                     nodeId: nodeId,
-                }
+                };
             }
         }
     }
@@ -361,7 +384,7 @@ function parseInternalLink(anchor: HTMLAnchorElement): InternalLink | null {
     try {
         parsed = new URL(href, window.location as any);
     } catch (err) {
-        return null;
+        return attrValue;
     }
 
     if (parsed.pathname.startsWith(ALOHAPAGE_URL)) {
@@ -370,7 +393,7 @@ function parseInternalLink(anchor: HTMLAnchorElement): InternalLink | null {
         return parseInternalFileLink(anchor, parsed);
     }
 
-    return null;
+    return attrValue;
 }
 
 function parseInternalPageLink(anchor: HTMLAnchorElement, parsed: URL): InternalLink | null {

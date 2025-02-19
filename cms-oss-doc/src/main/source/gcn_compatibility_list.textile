@@ -11,24 +11,15 @@ endprologue.
 h3. Databases
 
 h4. MariaDB
-
-|_.Minor Version |_.Supported |_.Notes                   |
-| 10.4-10.11     | Yes¹       | Since Gentics CMS 6.0.0  |
-| 10.3           | Yes¹       |                          |
-| 10.2           | Yes        | Since Gentics CMS 5.29.0 |
-| 10.1           | Yes        | Since Gentics CMS 5.25.0 |
-| 10.0           | Yes        | Since Gentics CMS 5.25.0 |
-|  5.5           | Yes        | Since Gentics CMS 5.25.0 |
+|_.Major Version |_.Minor Version |_.Supported |_.Notes                   |
+| 11             | 11.0-11.6      | Yes        |                          |
+| 10             | 10.4-10.11     | Yes¹      | Since Gentics CMS 6.0.0  |
 
 h4. Oracle MySQL
 
-NOTE: Due to a specific support contract we are obliged to support the latest version of the Oracle MySQL Enterprise Edition Server.
-
-|_.Minor Version |_.Supported |_.Notes                                                                |
-| 5.7            | Yes²       | See note below for additional information                             |
-| 5.6            | Yes²       | Since Gentics CMS 5.12.22 / 5.13.8. See note below for additional information |
-| 5.5            | Yes        | Since Gentics CMS 5.12.22 / 5.13.8. See note below for additional information |
-| 5.1 and below  | No         |                                                                       |
+|_.Major Version |_.Minor Version     |_.Supported |_.Notes                   |
+| 9              | 9.0-9.2 and below  | Yes        |                                                                               |
+| 8              | 8.0-8.4 and below  | Yes        |                                                                               |
 
 NOTE: Please note that some custom my.cnf mysqld setting must be applied. Please check the "admin installation guide":admin_install.html
 

@@ -3,7 +3,6 @@ import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers'
 import { typeIdsToName } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page } from '@gentics/cms-models';
-import { cancelEvent } from '@gentics/ui-core';
 import { ALOHAPAGE_URL, API_BASE_URL } from '../../../../common/utils/base-urls';
 import { CNIFrameDocument, CNWindow, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
@@ -81,7 +80,7 @@ export class PostLoadScript {
      * Intercept any clicks on anchor links within the iframe. External links should open in a new window to prevent
      * the UI state getting messed up, and internal links to other pages should cause a regular navigation within the UI app.
      *
-     * Clicks to links should only be valid when clicking with `CTRL` or with
+     * Clicks to links should only be valid when clicking with `CTRL` or middle-mouse clicks on external links.
      */
     handleClickEventsOnLinks(): void {
         const handleClickEvent = (e: MouseEvent, middleClick: boolean) => {
@@ -99,7 +98,7 @@ export class PostLoadScript {
 
             if (internalLink) {
                 // All internal links are handled here, so prevent default handling
-                cancelEvent(e);
+                e.preventDefault();
 
                 // Ignore clicks which aren't the CTRL key, and ignore all middle-clicks
                 if ((this.scriptHost.editMode === EditMode.EDIT && !e.ctrlKey) || middleClick) {
@@ -121,22 +120,24 @@ export class PostLoadScript {
                 return;
             }
 
+            // Anchors/Hash links are fine, as they don't cause a navigation
+            if (url.startsWith('#')) {
+                return;
+            }
+
             // While editing, we want to ignore regular clicks to links, as it would interfere with editing
             // links in general and cause other issues as well.
             // The default behavior of a middle-click would be, to open a link in a new tab.
             // This doesn't work in contenteditables however, unless the link has "_blank" for some reason.
             // Therefore we always handle it manually here.
             if (this.scriptHost.editMode === EditMode.EDIT && !e.ctrlKey && !middleClick) {
-                // Anchors/Hash links are fine however, as they don't cause a navigation
-                if (!url.startsWith('#')) {
-                    cancelEvent(e);
-                }
+                e.preventDefault();
                 return;
             }
 
             // Open external links always in a new tab, since we don't want to close our app
+            e.preventDefault();
             this.iFrameWindow.open(url, '_blank');
-            cancelEvent(e);
             return;
         };
 

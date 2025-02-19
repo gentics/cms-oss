@@ -64,9 +64,9 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
 
         this.subscriptions.push(intervall$.pipe(
             startWith(0),
-            switchMap(() => this.adminOps.getJobs({failed: true})),
+            switchMap(() => this.schedulerOps.getAll({pageSize: 1, sort: '-edate'})),
         ).subscribe(info => {
-            this.hasFailedJobs = info.items.length > 0;
+            this.hasFailedJobs = info.filter((entry) => !entry.lastExecution?.result).length > 0;
             this.changeDetector.markForCheck();
         }));
 

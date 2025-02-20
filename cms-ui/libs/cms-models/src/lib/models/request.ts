@@ -774,20 +774,22 @@ export interface ElasticSearchTypeSearchOptions {
     wastebin?: 'exclude' | 'include' | 'only';
 }
 
-export interface JobListRequestOptions extends BaseListOptionsWithPaging<Jobs> {
-    /**
-     * If set to true, only active jobs will be returned.
-     * If set to false, only inactive jobs will be returned. If not set (default), all jobs will be returned.
-     */
-    failed?: boolean;
+export interface SchedulableTaskListOptions {
+	/**
+	 * If set to true, only active jobs will be returned.
+	 * If set to false, only inactive jobs will be returned. If not set (default), all jobs will be returned.
+	 */
+	failed?: boolean;
 
-    /**
-     * If set to true, only failed jobs will be returned.
-     * If set to false, only successful jobs will be returned (include jobs that were not yet executed).
-     * If not set (default), all jobs will be returned.
-     */
-    active?: boolean;
+	/**
+	 * If set to true, only failed jobs will be returned.
+	 * If set to false, only successful jobs will be returned (include jobs that were not yet executed).
+	 * If not set (default), all jobs will be returned.
+	 */
+	active?: boolean;
 }
+
+export interface JobListRequestOptions extends BaseListOptionsWithPaging<Jobs>, SchedulableTaskListOptions {}
 
 
 export interface PublishQueueOptions {
@@ -2260,7 +2262,7 @@ export type ScheduleEmbedTypes = 'task';
 /**
  * Query-Parameters for `GET /scheduler/schedule`
  */
-export interface ScheduleListOptions extends BaseListOptionsWithPaging<Schedule>, EmbedListOptions<ScheduleEmbedTypes> {
+export interface ScheduleListOptions extends BaseListOptionsWithPaging<Schedule>, EmbedListOptions<ScheduleEmbedTypes>, SchedulableTaskListOptions {
     perms?: boolean;
 }
 

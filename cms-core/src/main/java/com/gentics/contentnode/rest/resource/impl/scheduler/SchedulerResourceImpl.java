@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -385,22 +386,6 @@ public class SchedulerResourceImpl implements SchedulerResource {
 		}
 	}
 
-	private <T> boolean isFailStatusFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> failStatusGetter) {
-		if (jobFilter != null && jobFilter.failed != null) {
-			return !(failStatusGetter.test(o) ^ ObjectTransformer.getBoolean(jobFilter.failed, false));
-		} else {
-			return true;
-		}
-	}
-
-	private <T> boolean isActivityFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> activityGetter) {
-		if (jobFilter != null && jobFilter.active != null) {
-			return !(activityGetter.test(o) ^ ObjectTransformer.getBoolean(jobFilter.active, true));
-		} else {
-			return true;
-		}
-	}
-
 	@Override
 	@POST
 	@Path("/schedule")
@@ -754,6 +739,51 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			}
 		}
 		return execution;
+	}
+
+	/**
+	 * Check the object for the fail status
+	 * 
+	 * @param <T> object type
+	 * @param o object
+	 * @param jobFilter the filter to get the status value from
+	 * @param failStatusGetter the object status getter
+	 * @return
+	 */
+	private <T> boolean isFailStatusFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> failStatusGetter) {
+		return isFieldFiltered(o, jobFilter, failStatusGetter, f -> f.failed, false);
+	}
+
+	/**
+	 * Check the object for the active status
+	 * 
+	 * @param <T> object type
+	 * @param o object
+	 * @param jobFilter the filter to get the status value from
+	 * @param activityGetter the object status getter
+	 * @return
+	 */
+	private <T> boolean isActivityFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> activityGetter) {
+		return isFieldFiltered(o, jobFilter, activityGetter, f -> f.active, true);
+	}
+
+	/**
+	 * Check the object for the requested Boolean (e.g. nullable) field
+	 * 
+	 * @param <T>
+	 * @param o object type
+	 * @param jobFilter the filter to get the value from
+	 * @param activityGetter the object status getter
+	 * @param filterGetter the filter field value getter
+	 * @param defaultValue the filter field default value
+	 * @return
+	 */
+	private <T> boolean isFieldFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> activityGetter, Function<SchedulerJobFilterParameterBean, Boolean> filterGetter, boolean defaultValue) {
+		if (jobFilter != null && filterGetter.apply(jobFilter) != null) {
+			return !(activityGetter.test(o) ^ ObjectTransformer.getBoolean(filterGetter.apply(jobFilter), defaultValue));
+		} else {
+			return true;
+		}
 	}
 
 	/**

@@ -200,6 +200,7 @@ public interface SchedulerResource {
 	 * @param paging paging parameter bean
 	 * @param perms permissions parameter bean
 	 * @param embed optionally embed the referenced object (task)
+	 * @param jobFilter job filter parameter bean
 	 * @return response containing a list of schedules
 	 * @throws Exception
 	 * @HTTP 200 The list of schedules is returned.
@@ -211,7 +212,8 @@ public interface SchedulerResource {
 			@BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging,
 			@BeanParam PermsParameterBean perms,
-			@BeanParam EmbedParameterBean embed
+			@BeanParam EmbedParameterBean embed,
+			@BeanParam SchedulerJobFilterParameterBean jobFilter
 	) throws Exception;
 
 	/**

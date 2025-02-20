@@ -15,6 +15,7 @@ import com.gentics.contentnode.rest.model.scheduler.ScheduleModel;
 import com.gentics.contentnode.rest.model.scheduler.ScheduleType;
 import com.gentics.contentnode.rest.resource.impl.scheduler.SchedulerResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SchedulerJobFilterParameterBean;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -40,7 +41,6 @@ public class SchedulerResourceImplTest {
 		operate(() -> createNode());
 	}
 
-
 	@Test
 	public void givenScheduleWithEmbeddedTaskRequest_shouldHaveEmbeddedTaskInResponse()
 			throws Exception {
@@ -49,7 +49,7 @@ public class SchedulerResourceImplTest {
 
 		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(
 				null, null, null, null,
-				new EmbedParameterBean().withEmbed("task"));
+				new EmbedParameterBean().withEmbed("task"), null);
 
 
 		ScheduleModel retrievedSchedule = scheduleListResponse.getItems()
@@ -61,6 +61,34 @@ public class SchedulerResourceImplTest {
 				createdTask.getName());
 		assertThat(retrievedSchedule.getTask()).hasFieldOrPropertyWithValue("command",
 				createdTask.getCommand());
+	}
+
+	@Test
+	public void givenSchedule_filterByActive_shouldHaveResponse()
+			throws Exception {
+		SchedulerJobFilterParameterBean filter = new SchedulerJobFilterParameterBean();
+
+		filter.active = true;
+		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> ((ScheduleModel) a).getActive());
+
+		filter.active = false;
+		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> !((ScheduleModel) a).getActive());
+	}
+
+	@Test
+	public void givenSchedule_filterByFailed_shouldHaveResponse()
+			throws Exception {
+		SchedulerJobFilterParameterBean filter = new SchedulerJobFilterParameterBean();
+
+		filter.failed = true;
+		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> ((ScheduleModel) a).getLastExecution().getResult());
+
+		filter.failed = false;
+		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> !((ScheduleModel) a).getLastExecution().getResult());
 	}
 
 	@Test

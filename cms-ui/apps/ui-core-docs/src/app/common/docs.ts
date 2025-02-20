@@ -19,8 +19,10 @@ export interface DocBlock {
 
 export interface InheritanceInfo {
     type: DocumentationType;
-    name: string;
     file: string;
+    id: string;
+    name: string;
+    generics?: string[];
 }
 
 export interface SourceFile {

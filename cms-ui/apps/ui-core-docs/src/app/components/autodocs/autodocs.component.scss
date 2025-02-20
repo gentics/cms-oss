@@ -27,4 +27,14 @@
             border-bottom: 1px solid $bg-color;
         }
     }
+
+    .inheritance-entry {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .full-class-name {
+            display: inline-flex;
+        }
+    }
 }

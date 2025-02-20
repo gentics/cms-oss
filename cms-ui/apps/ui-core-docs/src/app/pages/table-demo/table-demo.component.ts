@@ -106,6 +106,8 @@ export class TableDemoPage implements OnInit {
             fieldPath: 'hobbies',
             label: 'Hobbies',
             sortable: false,
+            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+            mapper: (hobbies: string[]) => (hobbies || []).join(', '),
         },
         {
             id: 'childOf',
@@ -126,7 +128,7 @@ export class TableDemoPage implements OnInit {
             firstName: 'Jane',
             lastName: 'Doe',
             dateOfBirth: new Date(1983, 6, 28),
-            hobbies: ['Crafting'],
+            hobbies: ['Crafting', 'Swimming'],
         },
         {
             firstName: 'Mike',
@@ -134,7 +136,117 @@ export class TableDemoPage implements OnInit {
             dateOfBirth: new Date(1984, 9, 17),
             hobbies: ['Skiing'],
         },
+        {
+            firstName: 'Emily',
+            lastName: 'Johnson',
+            dateOfBirth: new Date(1995, 2, 15),
+            hobbies: ['Reading', 'Traveling'],
+        },
+        {
+            firstName: 'Chris',
+            lastName: 'Smith',
+            dateOfBirth: new Date(1988, 11, 30),
+            hobbies: ['Cooking', 'Hiking'],
+        },
+        {
+            firstName: 'Jessica',
+            lastName: 'Brown',
+            dateOfBirth: new Date(1992, 5, 10),
+            hobbies: ['Photography', 'Yoga'],
+        },
+        {
+            firstName: 'David',
+            lastName: 'Wilson',
+            dateOfBirth: new Date(1980, 8, 22),
+            hobbies: ['Fishing', 'Camping'],
+        },
+        {
+            firstName: 'Sarah',
+            lastName: 'Davis',
+            dateOfBirth: new Date(1993, 3, 5),
+            hobbies: ['Knitting', 'Gardening'],
+        },
+        {
+            firstName: 'Daniel',
+            lastName: 'Garcia',
+            dateOfBirth: new Date(1985, 7, 14),
+            hobbies: ['Running', 'Cycling'],
+        },
+        {
+            firstName: 'Laura',
+            lastName: 'Martinez',
+            dateOfBirth: new Date(1991, 0, 28),
+            hobbies: ['Dancing', 'Singing'],
+        },
+        {
+            firstName: 'Matthew',
+            lastName: 'Hernandez',
+            dateOfBirth: new Date(1987, 9, 19),
+            hobbies: ['Video Games', 'Comics'],
+        },
+        {
+            firstName: 'Sophia',
+            lastName: 'Lopez',
+            dateOfBirth: new Date(1994, 6, 11),
+            hobbies: ['Baking', 'Painting'],
+        },
+        {
+            firstName: 'James',
+            lastName: 'Gonzalez',
+            dateOfBirth: new Date(1982, 12, 2),
+            hobbies: ['Traveling', 'Surfing'],
+        },
+        {
+            firstName: 'Olivia',
+            lastName: 'Perez',
+            dateOfBirth: new Date(1996, 4, 25),
+            hobbies: ['Writing', 'Poetry'],
+        },
+        {
+            firstName: 'Ethan',
+            lastName: 'Wilson',
+            dateOfBirth: new Date(1989, 3, 17),
+            hobbies: ['Basketball', 'Football'],
+        },
+        {
+            firstName: 'Ava',
+            lastName: 'Anderson',
+            dateOfBirth: new Date(1990, 8, 8),
+            hobbies: ['Fashion', 'Shopping'],
+        },
+        {
+            firstName: 'Liam',
+            lastName: 'Thomas',
+            dateOfBirth: new Date(1986, 1, 20),
+            hobbies: ['Music', 'Concerts'],
+        },
+        {
+            firstName: 'Mia',
+            lastName: 'Taylor',
+            dateOfBirth: new Date(1992, 5, 30),
+            hobbies: ['Fitness', 'Wellness'],
+        },
+        {
+            firstName: 'Noah',
+            lastName: 'Moore',
+            dateOfBirth: new Date(1984, 10, 12),
+            hobbies: ['Technology', 'Gadgets'],
+        },
+        {
+            firstName: 'Isabella',
+            lastName: 'Jackson',
+            dateOfBirth: new Date(1995, 7, 4),
+            hobbies: ['Art', 'Crafts'],
+        },
+        {
+            firstName: 'Lucas',
+            lastName: 'Martin',
+            dateOfBirth: new Date(1981, 2, 18),
+            hobbies: ['Sports', 'Fitness'],
+        },
     ];
+
+    allHobbies: string[] = [];
 
     actions: TableAction<User>[] = [
         {
@@ -158,6 +270,12 @@ export class TableDemoPage implements OnInit {
     active: string;
     sortColumn: string;
     sortOrder: TableSortOrder = TableSortOrder.ASCENDING;
+    filters: { hobbies?: string[] } = {};
+    filteredRows: TableRow<User>[] = [];
+
+    page = 1;
+    perPage = 10;
+    paginatedRows: TableRow<User>[] = [];
 
     constructor(
         private notification: NotificationService,
@@ -165,13 +283,14 @@ export class TableDemoPage implements OnInit {
         this.users.push({
             firstName: 'Sophie',
             lastName: 'Doe',
-            hobbies: ['Drawing', 'Dancing'],
+            hobbies: ['Skiing', 'Dancing'],
             dateOfBirth: new Date(2003, 3, 7),
             childOf: [this.users[1], this.users[2]],
         });
     }
 
     ngOnInit(): void {
+        this.allHobbies = Array.from(new Set(this.users.flatMap(user => user.hobbies)));
         this.rebuildRows();
     }
 
@@ -182,15 +301,21 @@ export class TableDemoPage implements OnInit {
     updateSortColumn(columnId: string): void {
         this.sortColumn = columnId;
         this.rows = sortRows(this.rows, this.columns, this.sortColumn, this.sortOrder);
+        this.updatePaginatedRows();
+        this.updateFilteredRows();
     }
 
     updateSortOrder(order: TableSortOrder): void {
         this.sortOrder = order;
         this.rows = sortRows(this.rows, this.columns, this.sortColumn, this.sortOrder);
+        this.updatePaginatedRows();
+        this.updateFilteredRows();
     }
 
     rebuildRows(): void {
         this.rows = sortRows(this.generateRows(this.users), this.columns, this.sortColumn, this.sortOrder);
+        this.updatePaginatedRows();
+        this.updateFilteredRows();
     }
 
     setRowActive(row: TableRow<User>): void {
@@ -213,6 +338,22 @@ export class TableDemoPage implements OnInit {
                 });
                 break;
         }
+    }
+
+    applyFilterValue(key: string, value: any): void {
+        this.filters[key] = value;
+        this.updateFilteredRows();
+    }
+
+    updateFilteredRows(): void {
+        this.filteredRows = this.rows.filter(row => !this.filters.hobbies?.length
+            || row.item.hobbies.some(hobby => this.filters.hobbies.includes(hobby)),
+        );
+    }
+
+    updatePaginatedRows(): void {
+        const from = (this.page - 1) * this.perPage;
+        this.paginatedRows = this.rows.slice(from, from + this.perPage);
     }
 
     generateRows(users: User[]): TableRow<User>[] {

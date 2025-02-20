@@ -1,12 +1,23 @@
 <ng-container *ngIf="docs">
     <div class="title">
-        <h1>{{ docs.name }}</h1>
+        <h1 class="full-class-name">
+            <span class="class-name">{{ docs.name }}</span>
+            <div *ngIf="docs.generics?.length > 0" class="generics-info">
+                <span *ngFor="let generic of docs.generics" class="generic-name">{{ generic }}</span>
+            </div>
+        </h1>
 
         <div *ngIf="docs.inheritance?.length > 0" class="inheritance-info">
             <div
                 *ngFor="let inherit of docs.inheritance"
                 class="inherited-class"
-            >extends <code class="class-name">{{ inherit.name }}</code></div>
+            >
+                <gtx-inheritance-details
+                    class="inheritance-entry"
+                    [prefix]="'extends'"
+                    [info]="inherit"
+                ></gtx-inheritance-details>
+            </div>
         </div>
     </div>
 

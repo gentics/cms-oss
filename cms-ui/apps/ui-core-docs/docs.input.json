@@ -13,6 +13,11 @@
         "sourceFile": "../../libs/ui-core/src/lib/components/base-table/base-table.component.ts",
         "extends": "base.component"
     },
+    "accordion.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/accordion/accordion.component.ts",
+        "extends": "base.component"
+    },
     "button.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/button/button.component.ts"
@@ -41,7 +46,8 @@
     },
     "dropdown-list.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/dropdown-list/dropdown-list.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/dropdown-list/dropdown-list.component.ts",
+        "extends": "base.component"
     },
     "file-drop-area.directive": {
         "type": "component",
@@ -60,6 +66,11 @@
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/input/input.component.ts"
     },
+    "json-input.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/json-input/json-input.component.ts",
+        "extends": "base-form-element.component"
+    },
     "menu-toggle-button.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/menu-toggle-button/menu-toggle-button.component.ts"
@@ -67,6 +78,10 @@
     "overlay-host.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/overlay-host/overlay-host.component.ts"
+    },
+    "paging.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/paging/paging.component.ts"
     },
     "progress-bar.component": {
         "type": "component",
@@ -96,7 +111,8 @@
     },
     "sortable-list.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/sortable-list/sortable-list.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/sortable-list/sortable-list.component.ts",
+        "extends": "base.component"
     },
     "split-button.component": {
         "type": "component",

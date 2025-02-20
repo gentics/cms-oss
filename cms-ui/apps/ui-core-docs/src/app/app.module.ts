@@ -4,16 +4,20 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
-import { GenticsUICoreModule, TableComponent } from '@gentics/ui-core';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { App } from './app.component';
 import { UI_CORE_DOCS_ROUTES } from './app.routes';
 import { AutodocTableComponent } from './components/autodoc-table/autodoc-table.component';
 import { AutodocsComponent } from './components/autodocs/autodocs.component';
 import { DemoBlockComponent } from './components/demo-block/demo-block.component';
-import { DocsSwitcherComponent } from './components/docs-switcher/docs-switcher.component';
 import { HighlightedCodeComponent } from './components/highlighted-code/highlighted-code.component';
+import { InheritanceDetailsComponent } from './components/inheritance-details/inheritance-details.component';
 import { DemoFormatDirective } from './directives/demo-format/demo-format.directive';
+import { AccordionDemoPage } from './pages/accordion-demo/accordion-demo.component';
+import { BaseComponentDemoPage } from './pages/base-component-demo/base-component-demo.component';
+import { BaseFormElementDemoPage } from './pages/base-form-element-demo/base-form-element-demo.component';
+import { BaseTableDemoPage } from './pages/base-table-demo/base-table-demo.component';
 import { BreadcrumbsDemoPage } from './pages/breadcrumbs-demo/breadcrumbs-demo.component';
 import { ButtonDemoPage } from './pages/button-demo/button-demo.component';
 import { CheckboxDemoPage } from './pages/checkbox-demo/checkbox-demo.component';
@@ -31,7 +35,7 @@ import { InputDemoPage } from './pages/input-demo/input-demo.component';
 import { InstructionsPage } from './pages/instructions/instructions.component';
 import { MenuToggleButtonDemoPage } from './pages/menu-toggle-button-demo/menu-toggle-button-demo.component';
 import { ModalServiceDemoPage, MyModalComponent } from './pages/modal-service-demo/modal-service-demo.component';
-import { NotificationDemoPage } from './pages/notification-demo/notification-demo.component';
+import { NotificationServiceDemoPage } from './pages/notification-service-demo/notification-service-demo.component';
 import { OverlayHostDemoPage } from './pages/overlay-host-demo/overlay-host-demo.component';
 import { ProgressBarDemoPage } from './pages/progress-bar-demo/progress-bar-demo.component';
 import { RadioButtonDemoPage } from './pages/radio-button-demo/radio-button-demo.component';
@@ -42,17 +46,26 @@ import { SideMenuDemoPage } from './pages/side-menu-demo/side-menu-demo.componen
 import { SortableListDemoPage } from './pages/sortable-list-demo/sortable-list-demo.component';
 import { SplitButtonDemoPage } from './pages/split-button-demo/split-button-demo.component';
 import { SplitViewContainerDemoPage } from './pages/split-view-container-demo/split-view-container-demo.component';
+import { TableDemoPage } from './pages/table-demo/table-demo.component';
 import { TabsDemoPage } from './pages/tabs-demo/tabs-demo.component';
 import { TextareaDemoPage } from './pages/textarea-demo/textarea-demo.component';
 import { TooltipDemoPage } from './pages/tooltip-demo/tooltip-demo.component';
 import { TopBarDemoPage } from './pages/top-bar-demo/top-bar-demo.component';
+import { TrableDemoPage } from './pages/trable-demo/trable-demo.component';
 import { TypographyDemoPage } from './pages/typography-demo/typography-demo.component';
+import { LinkToPagePipe } from './pipes/link-to-page/link-to-page.pipe';
 import { TrustedHTMLPipe } from './pipes/trusted-html/trusted-html.pipe';
 import { DemoDateFormatService } from './providers/demo-date-format/demo-date-format.service';
-import { TableDemoPage } from './pages/table-demo/table-demo.component';
-import { TrableDemoPage } from './pages/trable-demo/trable-demo.component';
+import { JsonInputDemoPage } from './pages/json-input-demo/json-input-demo.component';
+import { TypeOfPipe } from './pipes/typeof/typeof.pipe';
+import { PagingDemoPage } from './pages/paging-demo/paging-demo.component';
+import { NgxPaginationModule } from 'ngx-pagination';
 
 const DEMO_APP_PAGES: Type<any>[] = [
+    AccordionDemoPage,
+    BaseComponentDemoPage,
+    BaseFormElementDemoPage,
+    BaseTableDemoPage,
     BreadcrumbsDemoPage,
     ButtonDemoPage,
     CheckboxDemoPage,
@@ -69,12 +82,15 @@ const DEMO_APP_PAGES: Type<any>[] = [
     IconsDemoPage,
     InputDemoPage,
     InstructionsPage,
+    JsonInputDemoPage,
     MenuToggleButtonDemoPage,
     ModalServiceDemoPage,
     MyModalComponent,
-    NotificationDemoPage,
+    NotificationServiceDemoPage,
     OverlayHostDemoPage,
+    PagingDemoPage,
     ProgressBarDemoPage,
+    PagingDemoPage,
     RadioButtonDemoPage,
     RangeDemoPage,
     SearchBarDemoPage,
@@ -97,8 +113,10 @@ const DEMO_APP_DECLARATIONS: Type<any>[] = [
     AutodocTableComponent,
     DemoBlockComponent,
     HighlightedCodeComponent,
-    DocsSwitcherComponent,
+    InheritanceDetailsComponent,
+    LinkToPagePipe,
     TrustedHTMLPipe,
+    TypeOfPipe,
     DemoFormatDirective,
     App,
 ];
@@ -118,6 +136,7 @@ export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = 
         GenticsUICoreModule.forRoot(),
         AngularSvgIconModule.forRoot(),
         HttpClientModule,
+        NgxPaginationModule,
     ],
     declarations: DECLARATIONS,
     providers: [

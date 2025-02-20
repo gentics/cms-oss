@@ -4,3 +4,13 @@
     display: block;
     overflow-x: auto;
 }
+
+.block-inheritance {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .full-class-name {
+        display: inline-flex;
+    }
+}

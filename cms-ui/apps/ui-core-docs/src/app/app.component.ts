@@ -33,7 +33,7 @@ export class App implements OnInit, OnDestroy {
     version: string;
     latestBranch: boolean;
     changelogBranch = 'master';
-    contentItems: ContentItem[] = PAGES.map((page: IPageInfo) => {
+    contentItems: ContentItem[] = Object.values(PAGES).map((page: IPageInfo) => {
         return {
             title: kebabToPascal(page.path),
             route: '/' + page.path,

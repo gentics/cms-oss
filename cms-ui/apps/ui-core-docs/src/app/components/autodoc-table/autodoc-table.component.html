@@ -42,7 +42,13 @@
             </tr>
 
             <tr *ngIf="block.inheritance" class="inheritance-row">
-                <td colspan="4">Inherited by: <code>{{ block.inheritance.name }}</code></td>
+                <td colspan="4">
+                    <gtx-inheritance-details
+                        class="block-inheritance"
+                        [prefix]="'Inherited by:'"
+                        [info]="block.inheritance"
+                    ></gtx-inheritance-details>
+                </td>
             </tr>
         </ng-container>
     </tbody>

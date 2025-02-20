@@ -256,3 +256,29 @@ table.autodoc-table {
         }
     }
 }
+
+.full-class-name {
+    display: flex;
+
+    .generics-info {
+        display: flex;
+
+        &::before {
+            content: '<';
+            color: $gtx-color-dark-gray;
+        }
+        &::after {
+            content: '>';
+            color: $gtx-color-dark-gray;
+        }
+
+        .generic-name {
+            color: $gtx-color-primary;
+
+            &:not(:first-child)::before {
+                color: $gtx-color-dark-gray;
+                content: ', ';
+            }
+        }
+    }
+}

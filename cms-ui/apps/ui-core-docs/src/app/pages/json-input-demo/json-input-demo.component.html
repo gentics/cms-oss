@@ -1,0 +1,40 @@
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Basic Usage">
+    <div class="demo-result">
+        <gtx-json-input
+            label="Example"
+            placeholder="Enter json here"
+            [raw]="raw"
+            [formControl]="control"
+        ></gtx-json-input>
+
+        <gtx-checkbox
+            label="Raw output"
+            [(ngModel)]="raw"
+        ></gtx-checkbox>
+
+        <div>
+            Input is valid: <code>{{ control.valid }}</code>
+        </div>
+        <div>
+            Value is: <code>{{ control.value | gtxTypeof }}</code>: <output>{{ (control.value | gtxTypeof) === 'string'
+                ? control.value
+                : (control.value | json)
+            }}</output>
+        </div>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-json-input
+                label="Example"
+                placeholder="Enter json here"
+                [raw]="raw"
+                [formControl]="control"
+            ></gtx-json-input>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

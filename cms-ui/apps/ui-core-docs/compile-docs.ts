@@ -49,8 +49,10 @@ function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocument
     const inherited = map[file.extends];
     docs.inheritance.push({
         type: DocumentationType[inherited.type],
+        id: file.extends,
         name: inherited.name,
         file: inherited.sourceFile,
+        generics: map[file.extends].generics,
     });
     if (inherited.inheritance) {
         docs.inheritance.push(...inherited.inheritance);
@@ -58,11 +60,11 @@ function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocument
 
     for (const part of ['inputs', 'outputs', 'properties', 'methods']) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        docs[part].push(...inherited[part].map(block => blockWithInheritance(block, inherited)));
+        docs[part].unshift(...inherited[part].map(block => blockWithInheritance(block, file.extends, inherited, map)));
     }
 }
 
-function blockWithInheritance(block: DocBlock, inheritance: IDocumentation): DocBlock {
+function blockWithInheritance(block: DocBlock, id: string, inheritance: IDocumentation, map: Record<string, IDocumentation>): DocBlock {
     if (block.inheritance) {
         return block;
     }
@@ -71,8 +73,10 @@ function blockWithInheritance(block: DocBlock, inheritance: IDocumentation): Doc
         ...block,
         inheritance: {
             type: DocumentationType[inheritance.type],
+            id,
             file: inheritance.sourceFile,
             name: inheritance.name,
+            generics: map[id].generics || [],
         },
     };
 }
@@ -131,9 +135,9 @@ function getClassDocumentation(
     classNode: ts.ClassDeclaration,
 ): IDocumentation {
     const docs: IDocumentation = {
+        sourceFile: filePath,
         type,
         name: classNode.name.text,
-        sourceFile: filePath,
         generics: [],
         inheritance: [],
         main: marked(getCommentFromNode(sourceFile, classNode)),
@@ -344,11 +348,37 @@ function getFunctionArgs(node: ts.FunctionLikeDeclaration): string[] {
 
 function getCommentFromNode(sourceFile: ts.SourceFile, node: ts.Node): string {
     const fullText = sourceFile.getFullText();
-    const comment = (ts.getLeadingCommentRanges(sourceFile.getText(), node.getFullStart()) || [])
-        .map(range => fullText.slice(range.pos, range.end))
-        .join('\n');
+    const filteredComments: string[] = [];
 
-    return stripStars(comment);
+    const originalComments = (ts.getLeadingCommentRanges(sourceFile.getText(), node.getFullStart()) || []);
+    let inRegularComment = false;
+
+    // Filtering out all "regular" comments, i.E. which are not /** Documentation comments */
+    for (const range of originalComments) {
+        const comment = fullText.slice(range.pos, range.end);
+
+        // If it's a one-line comment
+        if (comment.startsWith('//')) {
+            continue;
+        }
+
+        // If it's a multi-line comment, but not a document comment, we want to ignore it
+        if (comment.startsWith('/*') && !comment.startsWith('/**')) {
+            inRegularComment = !comment.endsWith('*/');
+            continue;
+        }
+
+        if (inRegularComment) {
+            if (comment.endsWith('*/')) {
+                inRegularComment = false;
+            }
+            continue;
+        }
+
+        filteredComments.push(comment);
+    }
+
+    return stripUnsupportedJsDoc(stripStars(filteredComments.join('\n')));
 }
 
 function getAccessModifer(node: ts.Node): AccessModifer {
@@ -371,4 +401,8 @@ function getAccessModifer(node: ts.Node): AccessModifer {
  */
 function stripStars(body: string): string {
     return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?|\*\//mg, '$1').trim();
+}
+
+function stripUnsupportedJsDoc(body: string): string {
+    return body.replace(/@example[\s]*/, '');
 }

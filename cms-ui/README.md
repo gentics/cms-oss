@@ -5,11 +5,6 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 ## Package repository settings
 
-Authenticate:
-```bash
-npm adduser --registry=https://repo.gentics.com/repository/npm-products/ --always-auth
-```
-
 Setup @gentics scope to the Gentics repository:
 ```bash
 npm config set @gentics:registry https://repo.gentics.com/repository/npm-products/

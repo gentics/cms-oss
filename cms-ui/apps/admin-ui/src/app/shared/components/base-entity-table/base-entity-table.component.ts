@@ -184,6 +184,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             return;
         }
         this.query = newQuery;
+        this.page = 0;
         this.reload();
     }
 

@@ -335,7 +335,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         options: TableLoadOptions,
         additionalOptions?: A,
     ): Observable<TableLoadResponse<O>> {
-		// Edge case: we have no rows at the moment, but the total shows there is still something - reset.
+        // Edge case: we have no rows at the moment, but the total shows there is still something - reset.
         if (this.totalCount > 0 && options.page > this.page && this.rows.length < 1) {
             options.page = 0;
         }

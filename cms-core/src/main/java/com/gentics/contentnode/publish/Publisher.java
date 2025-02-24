@@ -708,13 +708,13 @@ public class Publisher implements Runnable {
 					}
 				}
 
-				myPublishInfo.setPublishedFolderCount(
-					objectsToPublishCount.get(Folder.TYPE_FOLDER_INTEGER));
-				myPublishInfo.setPublishedPageCount(
-					objectsToPublishCount.get(Page.TYPE_PAGE_INTEGER));
-				myPublishInfo.setPublishedFileCount(
-					objectsToPublishCount.get(com.gentics.contentnode.object.File.TYPE_FILE_INTEGER));
-				myPublishInfo.setPublishedFormCount(objectsToPublishCount.get(Form.TYPE_FORM));
+				Map<Integer, Integer> done = objectsToPublishCount;
+				Function<Integer, Integer> count = (type) -> done.getOrDefault(type, 0);
+
+				myPublishInfo.setPublishedFolderCount(count.apply(Folder.TYPE_FOLDER_INTEGER));
+				myPublishInfo.setPublishedPageCount(count.apply(Page.TYPE_PAGE_INTEGER));
+				myPublishInfo.setPublishedFileCount(count.apply(com.gentics.contentnode.object.File.TYPE_FILE_INTEGER));
+				myPublishInfo.setPublishedFormCount(count.apply(Form.TYPE_FORM));
 			} catch (Throwable e) {
 				// if an error was set before, it is the cause for the publish process to fail, so we use that instead of the caught error
 				if (error != null) {
@@ -733,20 +733,19 @@ public class Publisher implements Runnable {
 						try {
 							DependencyManager.rollbackPublishTransaction();
 
-						// handle failed publish process
-						Map<Integer, Integer> notPublishedCount = PublishQueue.handleFailedPublishProcess();
+							// handle failed publish process
+							Map<Integer, Integer> notPublishedCount = PublishQueue.handleFailedPublishProcess();
 
-						myPublishInfo.setPublishedFolderCount(
-							objectsToPublishCount.get(Folder.TYPE_FOLDER_INTEGER)
-								- notPublishedCount.get(Folder.TYPE_FOLDER_INTEGER));
-						myPublishInfo.setPublishedPageCount(
-							objectsToPublishCount.get(Page.TYPE_PAGE_INTEGER)
-								- notPublishedCount.get(Page.TYPE_PAGE_INTEGER));
-						myPublishInfo.setPublishedFileCount(
-							objectsToPublishCount.get(com.gentics.contentnode.object.File.TYPE_FILE_INTEGER)
-								- notPublishedCount.get(com.gentics.contentnode.object.File.TYPE_FILE_INTEGER));
-						myPublishInfo.setPublishedFormCount(
-								objectsToPublishCount.get(Form.TYPE_FORM) - notPublishedCount.get(Form.TYPE_FORM));
+							Map<Integer, Integer> done = objectsToPublishCount;
+
+							Function<Integer, Integer> count = (type) -> {
+								return done.getOrDefault(type, 0) - notPublishedCount.getOrDefault(type, 0);
+							};
+
+							myPublishInfo.setPublishedFolderCount(count.apply(Folder.TYPE_FOLDER_INTEGER));
+							myPublishInfo.setPublishedPageCount(count.apply(Page.TYPE_PAGE_INTEGER));
+							myPublishInfo.setPublishedFileCount(count.apply(com.gentics.contentnode.object.File.TYPE_FILE_INTEGER));
+							myPublishInfo.setPublishedFormCount(count.apply(Form.TYPE_FORM));
 						} finally {
 							t.rollback();
 						}
@@ -830,7 +829,9 @@ public class Publisher implements Runnable {
 			myPublishInfo.setReturnCode(PublishInfo.RETURN_CODE_ERROR);
 			logger.fatal("Error during publish run.", e);
 		} finally {
-			t.resetPublishData();
+			if (t != null) {
+				t.resetPublishData();
+			}
 			publishData = null;
 
 			PublishableTemplate.clearCache();

@@ -17,7 +17,6 @@ import { NavigationService } from '../../providers/navigation/navigation.service
 })
 export class NoNodesComponent implements OnInit, OnDestroy {
 
-    public readonly ADMIN_UI_LINK = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly cancelEvent = cancelEvent;
 
@@ -26,6 +25,8 @@ export class NoNodesComponent implements OnInit, OnDestroy {
     public errorMessage: SafeHtml;
 
     protected subscriptions: Subscription[] = [];
+
+    adminUILink: string;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -38,6 +39,8 @@ export class NoNodesComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
+        this.adminUILink = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
+
         this.subscriptions.push(this.appState.select(state => state.folder.nodesLoaded).pipe(
             filter(loaded => loaded),
             take(1),

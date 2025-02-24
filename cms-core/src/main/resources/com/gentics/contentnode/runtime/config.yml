@@ -78,8 +78,6 @@ aloha_settings:
       - id: view
         merge: 
           components: 'append' 
-        components: 
-          - 'gcnSpellCheck'
       - id: table
       - id: 'gtx.constructs'
         label: 'aloha.tab_gtx_constructs'
@@ -118,7 +116,6 @@ aloha_plugins_global:
   - "common/commands"
   - "gcn/gcn"
   - "common/dom-to-xhtml"
-  - "gcn/spellcheck"
 aloha_plugins_node: []
 http_auth_login: ""
 fileupload_manipulator_url: ""

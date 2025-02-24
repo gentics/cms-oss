@@ -367,10 +367,10 @@ public class SchedulerResourceImpl implements SchedulerResource {
 						ExecutionModel lastExecution = model.getLastExecution();
 						if (lastExecution == null) {
 							// Never executed schedule does not mean it is failed
-							return true;
+							return false;
 						}
 						// So as an execution with no result (yet)
-						return (lastExecution.getResult() == null || lastExecution.getResult());
+						return (lastExecution.getResult() != null && !lastExecution.getResult());
 					}))
 					.filter(o -> isActivityFiltered(o, jobFilter, SchedulerSchedule::isActive))
 					.filter(ResolvableFilter.get(filter, "id", "name", "description", "taskId"))

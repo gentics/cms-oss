@@ -2,7 +2,7 @@ package com.gentics.contentnode.tests.scheduler;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.scheduler.SchedulerSchedule;
@@ -66,29 +66,35 @@ public class SchedulerResourceImplTest {
 	@Test
 	public void givenSchedule_filterByActive_shouldHaveResponse()
 			throws Exception {
+		SchedulerTask createdTask = givenTask();
+		givenScheduleWithTask(createdTask);
+
 		SchedulerJobFilterParameterBean filter = new SchedulerJobFilterParameterBean();
 
 		filter.active = true;
 		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> ((ScheduleModel) a).getActive());
+		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> ((ScheduleModel) a).getActive());
 
 		filter.active = false;
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> !((ScheduleModel) a).getActive());
+		assertThat(scheduleListResponse.getItems()).isEmpty();;
 	}
 
 	@Test
 	public void givenSchedule_filterByFailed_shouldHaveResponse()
 			throws Exception {
+		SchedulerTask createdTask = givenTask();
+		givenScheduleWithTask(createdTask);
+
 		SchedulerJobFilterParameterBean filter = new SchedulerJobFilterParameterBean();
 
 		filter.failed = true;
 		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> ((ScheduleModel) a).getLastExecution().getResult());
+		assertThat(scheduleListResponse.getItems()).isEmpty();;
 
 		filter.failed = false;
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).asList().allMatch(a -> !((ScheduleModel) a).getLastExecution().getResult());
+		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> ((ScheduleModel) a).getLastExecution() == null || !((ScheduleModel) a).getLastExecution().getResult());
 	}
 
 	@Test

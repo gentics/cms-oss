@@ -27,13 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.gentics.api.contentnode.auth.filter.SsoUserCreatedCallback;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.ParserException;
-import com.gentics.api.lib.expressionparser.EvaluableExpression;
-import com.gentics.api.lib.expressionparser.ExpressionEvaluator;
-import com.gentics.api.lib.expressionparser.ExpressionParser;
-import com.gentics.api.lib.expressionparser.ExpressionQueryRequest;
-import com.gentics.api.lib.resolving.PropertyResolver;
-import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
@@ -45,9 +38,7 @@ import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.User;
-import com.gentics.lib.base.MapResolver;
 import com.gentics.lib.log.NodeLogger;
-
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 
@@ -71,6 +62,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	 * Name of the config parameter containing whether the usergroups should synchronizing if parameter is true
 	 */
 	public final static String INIT_GROUPS_SYNC = "syncGroups";
+
 	protected static Boolean syncGroups = false;
 
 	public final static String INIT_CALLBACK = "userCreatedCallback";
@@ -80,10 +72,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	 */
 	private final static KeyLockManager ssoLock = KeyLockManagers.newLock();
 
-	/**
-	 * Expression to determine the initial groups
-	 */
-	protected EvaluableExpression initGroupsExpression;
+	protected Map<String, Map<Integer, Set<Integer>>> initGroupsMapping = new HashMap<>();
 
 	/**
 	 * Pattern for definition of groups, that are restricted to nodes
@@ -92,25 +81,24 @@ public abstract class AbstractSSOFilter implements Filter {
 
 	protected SsoUserCreatedCallback userCreatedCallback;
 
+	protected abstract Set<String> getRoles(Map<String, Object> attributes);
+
 	/* (non-Javadoc)
 	 * @see jakarta.servlet.Filter#init(jakarta.servlet.FilterConfig)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		String initGroupsExpressionString = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), getDefaultInitGroupExpression());
+		String initGroupsDef = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), "");
 
-		if (StringUtils.isEmpty(initGroupsExpressionString)) {
+		if (StringUtils.isEmpty(initGroupsDef)) {
 			throw new ServletException("init-param " + INIT_GROUPS_PARAM + " is empty or missing");
 		}
 
-		try {
-			ExpressionParser parser = ExpressionParser.getInstance();
-
-			initGroupsExpression = (EvaluableExpression) parser.parse(initGroupsExpressionString);
-		} catch (ParserException e) {
-			throw new ServletException("Unable to parse " + INIT_GROUPS_PARAM, e);
-		}
+		initGroupsMapping = Stream.of(initGroupsDef.trim().split(";"))
+			.map(this::createGroupMapping)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
 		syncGroups = ObjectTransformer.getBoolean(config.getInitParameter(INIT_GROUPS_SYNC), false);
 
@@ -134,6 +122,36 @@ public abstract class AbstractSSOFilter implements Filter {
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 			throw new ServletException("Could not create instance of callback class", e);
 		}
+	}
+
+	private Pair<String, Map<Integer, Set<Integer>>> createGroupMapping(String str) {
+		if (org.apache.commons.lang3.StringUtils.isBlank(str)) {
+			return null;
+		}
+
+		var parts = str.split("=");
+
+		if (parts.length != 2) {
+			return null;
+		}
+
+		var groupDefs = Stream.of(parts[1].split(","))
+			.map(String::trim)
+			.map(this::parseGroupId)
+			.reduce(
+				new HashMap<>(),
+				(acc, group) -> {
+					acc.putAll(group);
+
+					return acc;
+				});
+
+		if (groupDefs.isEmpty()) {
+			return null;
+		}
+
+
+		return Pair.of(parts[0].trim(), groupDefs);
 	}
 
 	/* (non-Javadoc)
@@ -243,10 +261,9 @@ public abstract class AbstractSSOFilter implements Filter {
 	 * Get the systemuser from the given principal. If none found, create a
 	 * systemuser, otherwise synchronize firstname, lastname and email
 	 *
-	 * @param principal
-	 *            principal
-	 * @return systemuser
-	 * @throws NodeException
+	 * @param login The username.
+	 * @param attributes The authentication attributes.
+	 * @return The loaded or created system user.
 	 */
 	protected SystemUser getSystemUser(String login, Map<String, Object> attributes) throws NodeException {
 		boolean newUser;
@@ -269,52 +286,60 @@ public abstract class AbstractSSOFilter implements Filter {
 			// set the user active
 			systemUser.setActive(true);
 
-			// now use the expression to find the initial groups
-			Map<String, Resolvable> data = new HashMap<String, Resolvable>();
-
-			data.put("attr", new MapResolver(attributes));
-			data.put("user", systemUser);
-			PropertyResolver propertyResolver = new PropertyResolver(new MapResolver(data));
-			Collection<?> initGroups = ObjectTransformer.getCollection(
-					initGroupsExpression.evaluate(new ExpressionQueryRequest(propertyResolver, null), ExpressionEvaluator.OBJECTTYPE_ANY), null);
-
-			boolean haveGroups = false;
+			var roles = getRoles(attributes);
+			var haveGroups = false;
 
 			Collection<UserGroup> groups = systemUser.getUserGroups();
 			Map<Integer, Set<Integer>> restrictions = systemUser.getGroupNodeRestrictions();
 
-			for (Object object : initGroups) {
-				Map<Integer, Set<Integer>> groupIdsWithRestrictions = parseGroupId(ObjectTransformer.getString(object, ""));
+			for (var role: roles) {
+				var groupIdsWithRestrictions = initGroupsMapping.get(role);
 
-				for (Map.Entry<Integer, Set<Integer>> entry : groupIdsWithRestrictions.entrySet()) {
-					int groupId = entry.getKey();
-					Set<Integer> groupRestrictions = entry.getValue();
+				if (groupIdsWithRestrictions == null) {
+					continue;
+				}
 
-					// we ignore super groups (1 and 2)
-					logger.debug("Resolved group: " + groupId);
-					if (groupId > 2) {
-						UserGroup group = t.getObject(UserGroup.class, groupId);
+				for (var entry: groupIdsWithRestrictions.entrySet()) {
+					var groupId = entry.getKey();
+					var groupRestrictions = entry.getValue();
 
-						if (group != null) {
-							haveGroups = true;
+					// We ignore super groups (1 and 2).
+					if (groupId <= 2) {
+						continue;
+					}
 
-							if (!groups.contains(group)) {
-								groups.add(group);
-							}
+					if (logger.isDebugEnabled()) {
+						logger.debug("Resolved group: " + groupId);
+					}
 
-							if (groupRestrictions != null) {
-								logger.debug("Restrict assignment to group " + groupId + " to nodes: " + groupRestrictions);
-								restrictions.put(groupId, groupRestrictions);
-							} else {
-								logger.debug("Assignment to group " + groupId + " is not restricted to nodes");
-								restrictions.remove(groupId);
-							}
-						} else {
-							logger.warn("Could not find group " + groupId + " when syncing user " + login);
+					var group = t.getObject(UserGroup.class, groupId);
+
+					if (group != null) {
+						haveGroups = true;
+
+						if (!groups.contains(group)) {
+							groups.add(group);
 						}
+
+						if (groupRestrictions != null) {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Restrict assignment to group " + groupId + " to nodes: " + groupRestrictions);
+							}
+
+							restrictions.put(groupId, groupRestrictions);
+						} else {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Assignment to group " + groupId + " is not restricted to nodes");
+							}
+
+							restrictions.remove(groupId);
+						}
+					} else {
+						logger.warn("Could not find group " + groupId + " when syncing user " + login);
 					}
 				}
 			}
+
 			if (!haveGroups) {
 				// NOTE: We assume here that the current transaction will be rolled back in the caller.
 				logger.error("Group expression did not yield any groups, aborting system user creation");
@@ -334,51 +359,65 @@ public abstract class AbstractSSOFilter implements Filter {
 		systemUser.setEmail(email);
 
 		if (syncGroups) {
-			logger.debug("Synchronizing groups for " + systemUser);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Synchronizing groups for " + systemUser);
+			}
 
-			Map<String, Resolvable> data = new HashMap<String, Resolvable>();
-
-			data.put("attr", new MapResolver(attributes));
-			data.put("user", systemUser);
-			PropertyResolver propertyResolver = new PropertyResolver(new MapResolver(data));
-			Collection<?> initGroups = ObjectTransformer.getCollection(
-					initGroupsExpression.evaluate(new ExpressionQueryRequest(propertyResolver, null), ExpressionEvaluator.OBJECTTYPE_ANY), null);
 			Collection<UserGroup> groups = systemUser.getUserGroups();
 			Map<Integer, Set<Integer>> restrictions = systemUser.getGroupNodeRestrictions();
 			Collection<Integer> tmpInitGroups = new ArrayList<Integer>();
+			var roles = getRoles(attributes);
 
-			for (Object object : initGroups) {
-				Map<Integer, Set<Integer>> groupIdsWithRestrictions = parseGroupId(ObjectTransformer.getString(object, ""));
-				for (Map.Entry<Integer, Set<Integer>> entry : groupIdsWithRestrictions.entrySet()) {
-					int groupId = entry.getKey();
-					Set<Integer> groupRestrictions = entry.getValue();
+			for (var role: roles) {
+				var groupIdsWithRestrictions = initGroupsMapping.get(role);
 
-					logger.debug(systemUser + " must be member of group " + groupId);
-
-					tmpInitGroups.add(groupId);
-					// we ignore super groups (1 and 2)
-					if (groupId > 2) {
-						UserGroup group = t.getObject(UserGroup.class, groupId);
-
-						if (group != null) {
-							if (!groups.contains(group)) {
-								logger.debug("Adding " + systemUser + " to " + group);
-								groups.add(group);
-							}
-
-							if (groupRestrictions != null) {
-								logger.debug("Restrict assignment to " + group + " to nodes: " + groupRestrictions);
-								restrictions.put(groupId, groupRestrictions);
-							} else {
-								logger.debug("Assignment to " + group + " is not restricted to nodes");
-								restrictions.remove(groupId);
-							}
-						} else {
-							logger.warn("Could not find group " + groupId + " when syncing user " + login);
-						}
-					}
+				if (groupIdsWithRestrictions == null) {
+					continue;
 				}
 
+				for (var entry: groupIdsWithRestrictions.entrySet()) {
+					var groupId = entry.getKey();
+					var groupRestrictions = entry.getValue();
+
+					if (logger.isDebugEnabled()) {
+						logger.debug(systemUser + " must be member of group " + groupId);
+					}
+
+					tmpInitGroups.add(groupId);
+
+					// We ignore super groups (1 and 2).
+					if (groupId <= 2) {
+						continue;
+					}
+
+					UserGroup group = t.getObject(UserGroup.class, groupId);
+
+					if (group != null) {
+						if (!groups.contains(group)) {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Adding " + systemUser + " to " + group);
+							}
+
+							groups.add(group);
+						}
+
+						if (groupRestrictions != null) {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Restrict assignment to " + group + " to nodes: " + groupRestrictions);
+							}
+
+							restrictions.put(groupId, groupRestrictions);
+						} else {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Assignment to " + group + " is not restricted to nodes");
+							}
+
+							restrictions.remove(groupId);
+						}
+					} else if (logger.isWarnEnabled()) {
+						logger.warn("Could not find group " + groupId + " when syncing user " + login);
+					}
+				}
 			}
 
 			for (Iterator<UserGroup> i = groups.iterator(); i.hasNext();) {
@@ -445,7 +484,7 @@ public abstract class AbstractSSOFilter implements Filter {
 		/**
 		 * Create an instance wrapping the given request
 		 * @param request wrapped request
-		 * @param cookie cookie to be added
+		 * @param session the current session
 		 */
 		public AuthenticatedHttpServletRequestWrapper(HttpServletRequest request, Session session) {
 			super(request);

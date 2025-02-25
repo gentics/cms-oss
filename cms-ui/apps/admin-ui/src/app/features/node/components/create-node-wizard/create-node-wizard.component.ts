@@ -117,21 +117,15 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         const publishingData: NodePublishingPropertiesFormData = this.fgPublishing.value;
 
         const nodeCreateReq: NodeCreateRequest = {
-            node: nodeProperties,
+            node: {
+                ...nodeProperties,
+                ...publishingData,
+            },
             description,
         };
         if (typeof nodeProperties.inheritedFromId === 'number') {
             // Strange, but we need the ID of the parent's root folder.
             nodeCreateReq.node.masterId = this.appState.now.entity.node[nodeProperties.inheritedFromId].folderId;
-        }
-        // if (nodeProperties.description) {
-        //     nodeCreateReq.description = nodeProperties.description;
-        // }
-        if (typeof publishingData.urlRenderWayPages === 'number') {
-            nodeCreateReq.node.urlRenderWayPages = publishingData.urlRenderWayPages;
-        }
-        if (typeof publishingData.urlRenderWayFiles === 'number') {
-            nodeCreateReq.node.urlRenderWayFiles = publishingData.urlRenderWayFiles;
         }
 
         return this.nodeOps.addNode(nodeCreateReq);

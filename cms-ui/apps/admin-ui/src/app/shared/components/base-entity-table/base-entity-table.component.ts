@@ -335,11 +335,25 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         options: TableLoadOptions,
         additionalOptions?: A,
     ): Observable<TableLoadResponse<O>> {
-        // Edge case: we have no rows at the moment, but the total shows there is still something - reset.
-        if (this.totalCount > 0 && options.page > this.page && this.rows.length < 1) {
-            options.page = 0;
-        }
-        return this.loader.loadTablePage(options, additionalOptions);
+        return this.loader.loadTablePage(options, additionalOptions).pipe(
+            switchMap(res => {
+                // Edge-case: When the resolved page has no items, buit there're items present,
+                // then we probably forgot somewhere to reset the pagination. So we do it here.
+                if (res.rows?.length === 0 && res.totalCount > 0 && options.page > 0) {
+                    // Update the internal page to correct the state as well
+                    this.page = 0;
+                    this.changeDetector.markForCheck();
+
+                    const newOptions = {
+                        ...options,
+                        page: 0,
+                    };
+                    return this.loader.loadTablePage(newOptions, additionalOptions);
+                }
+
+                return of(res);
+            }),
+        );
     }
 
     public handleCreateButton(): void {

@@ -1,8 +1,10 @@
 package com.gentics.contentnode.auth.filter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -64,6 +66,12 @@ public class HttpAuthFilter extends AbstractSSOFilter {
 		}
 
 		chain.doFilter(request, response);
+	}
+
+	@Override
+	protected Set<String> getRoles(Map<String, Object> attributes) {
+		// TODO: Do we have roles when doing authentication via Basic Auth?
+		return Collections.emptySet();
 	}
 
 	/**

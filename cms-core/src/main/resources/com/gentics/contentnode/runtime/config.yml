@@ -78,6 +78,8 @@ aloha_settings:
       - id: view
         merge: 
           components: 'append' 
+        components:	
+          - 'gcnSpellCheck'
       - id: table
       - id: 'gtx.constructs'
         label: 'aloha.tab_gtx_constructs'

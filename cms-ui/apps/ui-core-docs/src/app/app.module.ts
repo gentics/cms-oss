@@ -5,7 +5,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { AngularSvgIconModule } from 'angular-svg-icon';
+import { NgxPaginationModule } from 'ngx-pagination';
 import { App } from './app.component';
 import { UI_CORE_DOCS_ROUTES } from './app.routes';
 import { AutodocTableComponent } from './components/autodoc-table/autodoc-table.component';
@@ -33,10 +33,12 @@ import { GroupedTabsDemoPage } from './pages/grouped-tabs-demo/grouped-tabs-demo
 import { IconsDemoPage } from './pages/icons-demo/icons-demo.component';
 import { InputDemoPage } from './pages/input-demo/input-demo.component';
 import { InstructionsPage } from './pages/instructions/instructions.component';
+import { JsonInputDemoPage } from './pages/json-input-demo/json-input-demo.component';
 import { MenuToggleButtonDemoPage } from './pages/menu-toggle-button-demo/menu-toggle-button-demo.component';
 import { ModalServiceDemoPage, MyModalComponent } from './pages/modal-service-demo/modal-service-demo.component';
 import { NotificationServiceDemoPage } from './pages/notification-service-demo/notification-service-demo.component';
 import { OverlayHostDemoPage } from './pages/overlay-host-demo/overlay-host-demo.component';
+import { PagingDemoPage } from './pages/paging-demo/paging-demo.component';
 import { ProgressBarDemoPage } from './pages/progress-bar-demo/progress-bar-demo.component';
 import { RadioButtonDemoPage } from './pages/radio-button-demo/radio-button-demo.component';
 import { RangeDemoPage } from './pages/range-demo/range-demo.component';
@@ -55,11 +57,8 @@ import { TrableDemoPage } from './pages/trable-demo/trable-demo.component';
 import { TypographyDemoPage } from './pages/typography-demo/typography-demo.component';
 import { LinkToPagePipe } from './pipes/link-to-page/link-to-page.pipe';
 import { TrustedHTMLPipe } from './pipes/trusted-html/trusted-html.pipe';
-import { DemoDateFormatService } from './providers/demo-date-format/demo-date-format.service';
-import { JsonInputDemoPage } from './pages/json-input-demo/json-input-demo.component';
 import { TypeOfPipe } from './pipes/typeof/typeof.pipe';
-import { PagingDemoPage } from './pages/paging-demo/paging-demo.component';
-import { NgxPaginationModule } from 'ngx-pagination';
+import { DemoDateFormatService } from './providers/demo-date-format/demo-date-format.service';
 
 const DEMO_APP_PAGES: Type<any>[] = [
     AccordionDemoPage,
@@ -134,7 +133,6 @@ export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = 
         ReactiveFormsModule,
         ROUTER_MODULE_FOR_ROOT,
         GenticsUICoreModule.forRoot(),
-        AngularSvgIconModule.forRoot(),
         HttpClientModule,
         NgxPaginationModule,
     ],

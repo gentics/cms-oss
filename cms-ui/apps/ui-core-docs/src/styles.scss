@@ -8,12 +8,20 @@ body {
 .top-bar {
     background-color: $gtx-color-primary;
     color: white;
+    height: 52px;
+
+    .content,
+    .content-left,
+    .content-right {
+        height: 100%;
+    }
 
     h1 {
         font-size: 1.64rem;
         font-weight: normal;
         line-height: 1.1;
         margin: 0.82rem 0 0.656rem 0;
+
         @media screen and (max-width: $small-screen) {
             font-size: 1.2rem;
         }
@@ -27,59 +35,40 @@ body {
 
     .version-info {
         font-size: $gtx-font-size-lead;
-        display: inline-block;
         background-color: rgba(0, 0, 0, 0.2);
         padding: 2px 5px;
         border-radius: 3px;
         font-weight: 300;
-        a {
-            color: #b6d8e8;
-        }
-        gtx-docs-switcher {
-            button.btn-flat.btn-icon.small {
-                color: #b6d8e8;
-                height: 16px;
-                line-height: 13px;
-                &:hover {
-                    color: #b6d8e8;
-                }
-            }
-        }
+        color: #b6d8e8;
+        display: flex;
+        gap: 0.5rem;
+
         @media screen and (max-width: $small-screen) {
             font-size: $gtx-font-size-small;
         }
     }
 
-    .gentics-logo {
-        flex: 0 !important;
-        height: 38px;
-        padding-right: 10px;
-        svg-icon > svg {
-            width: 32px;
-            height: 38px;
-            g {
-                fill: white;
-            }
+    .gentics-logo,
+    .github-logo {
+        height: 100%;
+        padding: 8px 0;
+
+        > img {
+            height: 100%;
         }
+
+    }
+
+    .gentics-logo {
         @media screen and (max-width: $small-screen) {
             display: none !important;
         }
-    }
-
-    .github-logo {
-        height: 32px;
     }
 
     @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
         .gentics-logo {
             padding-right: 45px;
         }
-    }
-
-    .github-logo, .github-logo svg {
-        fill: white;
-        width: 32px;
-        height: 32px;
     }
 }
 

@@ -20,9 +20,6 @@
             "dependsOn": ["compile"],
             "outputs": ["{options.outputPath}"],
             "options": {
-                "customWebpackConfig": {
-                    "path": "apps/ui-core-docs/webpack.partial.js"
-                },
                 "outputPath": "dist/apps/ui-core-docs",
                 "index": "apps/ui-core-docs/src/index.html",
                 "main": "apps/ui-core-docs/src/main.ts",

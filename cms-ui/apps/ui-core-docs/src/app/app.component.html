@@ -1,27 +1,21 @@
 <div class="wrapper">
     <gtx-top-bar class="top-bar">
         <div class="gentics-logo">
-            <svg-icon src="assets/gentics-logo.svg"></svg-icon>
+            <img src="assets/gentics-logo.svg" />
         </div>
 
         <h1>
             <a class="title" [routerLink]="['index']">Gentics UI Core Docs</a>
         </h1>
 
-        <span
-            class="version-info"
-            title="Click to see changelog"
-        >
-            <a href="https://www.gentics.com/cmp/changelog/">v{{ version }}</a>
-        </span>
-
-        <span class="version-info" title="Click to see previous versions of docs">
-            <a href="https://www.gentics.com/Content.Node/cmp8/ui-docs-history/" target="_blank">
-                <gtx-button icon size="small">
-                    <icon>history</icon>
-                </gtx-button>
-            </a>
-        </span>
+        <a href="https://www.gentics.com/cmp/changelog/" target="_blank">
+            <span
+                class="version-info"
+                title="Click to see changelog"
+            >
+                <icon>manage_history</icon>Changelog
+            </span>
+        </a>
 
         <a
             class="gtx-top-bar-right github-logo"
@@ -29,7 +23,7 @@
             href="https://github.com/gentics/cms-oss/tree/dev/cms-ui/libs/ui-core"
             target="_blank"
         >
-           <svg-icon src="assets/github-logo.svg"></svg-icon>
+           <img src="assets/github-logo.svg" />
         </a>
     </gtx-top-bar>
 

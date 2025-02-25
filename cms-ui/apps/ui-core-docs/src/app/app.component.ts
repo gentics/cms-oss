@@ -1,15 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { IPageInfo, kebabToPascal, PAGES, PageType } from './common/page-list';
-
-// Exposed globally by the Webpack DefinePlugin
-// (see webpack config)
-declare const VERSION: string; /* eslint-disable-line @typescript-eslint/naming-convention */
-declare const LATESTBRANCH: boolean; /* eslint-disable-line @typescript-eslint/naming-convention */
 
 interface ContentItem {
     title: string;
@@ -30,8 +24,6 @@ export class App implements OnInit, OnDestroy {
     @ViewChild(SplitViewContainerComponent, { static: true })
     splitViewContainer: SplitViewContainerComponent;
 
-    version: string;
-    latestBranch: boolean;
     changelogBranch = 'master';
     contentItems: ContentItem[] = Object.values(PAGES).map((page: IPageInfo) => {
         return {
@@ -50,16 +42,8 @@ export class App implements OnInit, OnDestroy {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        private titleService: Title,
     ) {
         this.filteredContentItems = this.contentItems.slice(0);
-        titleService.setTitle(`Gentics UI Core Docs v${VERSION}`);
-        this.version = VERSION;
-        this.latestBranch = LATESTBRANCH;
-
-        if (!this.latestBranch) {
-            this.changelogBranch = `v${VERSION}`;
-        }
     }
 
     ngOnInit(): void {

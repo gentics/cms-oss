@@ -52,7 +52,6 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService, TableRow } from '@gentics/ui-core';
-import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject, combineLatest, Observable, of } from 'rxjs';
 import {
     delay,
@@ -140,7 +139,6 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     private tabHandles: Record<NodeDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -158,7 +156,6 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         private permissions: PermissionsService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

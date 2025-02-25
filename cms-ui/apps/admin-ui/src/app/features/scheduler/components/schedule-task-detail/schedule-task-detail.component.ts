@@ -6,7 +6,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } f
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NormalizableEntityType, Raw, ScheduleTaskBO, SingleInstancePermissionType } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { delay, map, repeat, takeUntil } from 'rxjs/operators';
 import { ScheduleTableLoaderService, ScheduleTaskTableLoaderService } from '../../providers';
@@ -38,7 +37,6 @@ export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTa
     private tabHandles: Record<ScheduleTaskDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -50,7 +48,6 @@ export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTa
         private scheduleLoader: ScheduleTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

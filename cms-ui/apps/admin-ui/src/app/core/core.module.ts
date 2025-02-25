@@ -5,12 +5,11 @@ import {
     I18nNotificationService,
     I18nService,
     LocalTranslateLoader,
-    LoggingHelperService,
 } from '@admin-ui/core';
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
-import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
@@ -19,15 +18,11 @@ import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClient
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { HotkeyModule } from 'angular2-hotkeys';
-import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 import {
     ActivityManagerComponent,
     ChangePasswordModalComponent,
     ConfirmReloadModalComponent,
-    DebugToolModalComponent,
     DiscardChangesModalComponent,
     LoggingInOverlayComponent,
     MessageBodyComponent,
@@ -94,7 +89,6 @@ import {
     UsersnapService,
     UserTableLoaderService,
 } from './providers';
-import { DebugToolService } from './providers/debug-tool/debug-tool.service';
 import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
 import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
@@ -102,7 +96,6 @@ import { MaintenanceModeService } from './providers/maintenance-mode/maintenance
 import { AdminOperations } from './providers/operations/admin/admin.operations';
 import { AuthOperations } from './providers/operations/auth/auth.operations';
 import { NodeOperations } from './providers/operations/node';
-import { TraceErrorHandler } from './providers/trace-error-handler/trace-error-handler';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
 export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select(state => state.auth.sid);
@@ -129,7 +122,6 @@ const COMPONENTS: any[] = [
     ActivityManagerComponent,
     ChangePasswordModalComponent,
     ConfirmReloadModalComponent,
-    DebugToolModalComponent,
     DiscardChangesModalComponent,
     LoggingInOverlayComponent,
     MessageBodyComponent,
@@ -180,7 +172,6 @@ const PROVIDERS: any[] = [
     DataSourceHandlerService,
     DataSourceTableLoaderService,
     DataSourceEntryHandlerService,
-    DebugToolService,
     DevToolPackageHandlerService,
     DevToolPackageManagerService,
     DevToolPackageTableLoaderService,
@@ -197,7 +188,6 @@ const PROVIDERS: any[] = [
     I18nService,
     LanguageHandlerService,
     LanguageTableLoaderService,
-    LoggingHelperService,
     LogoutCleanupService,
     MaintenanceModeService,
     MessageService,
@@ -228,7 +218,6 @@ const PROVIDERS: any[] = [
         useFactory: createSidObservable,
         deps: [AppStateService],
     },
-    { provide: NgErrorHandler, useClass: TraceErrorHandler },
     {
         provide: APP_INITIALIZER,
         useFactory: initializeApp,
@@ -248,11 +237,9 @@ const PROVIDERS: any[] = [
         MeshRestClientModule,
         GenticsUICoreModule,
         CmsComponentsModule,
-        HotkeyModule.forRoot(),
         TranslateModule.forRoot({
             loader: { provide: TranslateLoader, useClass: LocalTranslateLoader },
         }),
-        LoggerModule.forRoot({ disableConsoleLogging: false, level: environment.production ? NgxLoggerLevel.ERROR : NgxLoggerLevel.DEBUG }),
         SharedModule,
         StateModule,
         MeshModule,

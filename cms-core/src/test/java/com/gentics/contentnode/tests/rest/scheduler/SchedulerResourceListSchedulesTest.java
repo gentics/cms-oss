@@ -24,6 +24,7 @@ import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SchedulerJobFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.scheduler.SchedulerResource;
 import com.gentics.contentnode.tests.rest.AbstractListSortAndFilterTest;
@@ -89,6 +90,6 @@ public class SchedulerResourceListSchedulesTest extends AbstractListSortAndFilte
 	@Override
 	protected AbstractListResponse<ScheduleModel> getResult(SortParameterBean sort, FilterParameterBean filter,
 			PagingParameterBean paging) throws NodeException {
-		return new SchedulerResourceImpl().listSchedules(filter, sort, paging, new PermsParameterBean(), new EmbedParameterBean());
+		return new SchedulerResourceImpl().listSchedules(filter, sort, paging, new PermsParameterBean(), new EmbedParameterBean(), new SchedulerJobFilterParameterBean());
 	}
 }

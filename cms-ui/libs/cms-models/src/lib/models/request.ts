@@ -775,22 +775,22 @@ export interface ElasticSearchTypeSearchOptions {
 }
 
 export interface SchedulableTaskListOptions {
-	/**
-	 * If set to true, only active jobs will be returned.
-	 * If set to false, only inactive jobs will be returned. If not set (default), all jobs will be returned.
-	 */
-	failed?: boolean;
+    /**
+     * If set to true, only failed jobs will be returned.
+     * If set to false, only succeeded or running jobs will be returned.
+     * If not set (default), all jobs will be returned.
+     */
+    failed?: boolean;
 
-	/**
-	 * If set to true, only failed jobs will be returned.
-	 * If set to false, only successful jobs will be returned (include jobs that were not yet executed).
-	 * If not set (default), all jobs will be returned.
-	 */
-	active?: boolean;
+    /**
+     * If set to true, only failed jobs will be returned.
+     * If set to false, only successful jobs will be returned (include jobs that were not yet executed).
+     * If not set (default), all jobs will be returned.
+     */
+    active?: boolean;
 }
 
 export interface JobListRequestOptions extends BaseListOptionsWithPaging<Jobs>, SchedulableTaskListOptions {}
-
 
 export interface PublishQueueOptions {
     skipCount?: number;

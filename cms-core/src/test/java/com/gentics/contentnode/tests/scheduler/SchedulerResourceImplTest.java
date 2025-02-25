@@ -1,6 +1,6 @@
 package com.gentics.contentnode.tests.scheduler;
 
-import static com.gentics.contentnode.factory.Trx.*;
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +17,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.scheduler.SchedulerSchedule;
 import com.gentics.contentnode.object.scheduler.SchedulerTask;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.scheduler.ExecutionListResponse;
 import com.gentics.contentnode.rest.model.scheduler.ExecutionModel;
 import com.gentics.contentnode.rest.model.scheduler.ScheduleData;
@@ -94,11 +93,11 @@ public class SchedulerResourceImplTest {
 
 		filter.active = true;
 		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> ((ScheduleModel) a).getActive()).hasSize(1);
+		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> ((ScheduleModel) a).getActive());
 
 		filter.active = false;
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> !((ScheduleModel) a).getActive()).hasSize(1);
+		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> !((ScheduleModel) a).getActive());
 	}
 
 	@Test
@@ -106,6 +105,7 @@ public class SchedulerResourceImplTest {
 			throws Exception {
 		SchedulerJobFilterParameterBean filter = new SchedulerJobFilterParameterBean();
 
+		// 1. No runs
 		filter.failed = true;
 		ScheduleListResponse scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
 		assertThat(scheduleListResponse.getItems()).isEmpty();
@@ -113,9 +113,11 @@ public class SchedulerResourceImplTest {
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
 		assertThat(scheduleListResponse.getItems()).isNotEmpty().allMatch(a -> ((ScheduleModel) a).getLastExecution() == null);
 
+		// 2. Failed run
 		operate(() -> {
 			new SchedulerResourceImpl().executeSchedule(schedule.getId().toString());
 		});
+		Thread.sleep(500);
 		operate(() -> {
 			while (new SchedulerResourceImpl().getExecution(schedule.getId().toString()).getItem().isRunning()) {
 				try {
@@ -128,10 +130,60 @@ public class SchedulerResourceImplTest {
 	
 		filter.failed = true;
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).isNotEmpty().hasSize(1).allMatch(a -> ((ScheduleModel) a).getLastExecution() != null && ((ScheduleModel) a).getLastExecution().getResult() != null && !((ScheduleModel) a).getLastExecution().getResult());
+		assertThat(scheduleListResponse.getItems()).hasSize(1).allMatch(a -> 
+				((ScheduleModel) a).getLastExecution() != null 
+				&& ((ScheduleModel) a).getLastExecution().getResult() != null 
+				&& !((ScheduleModel) a).getLastExecution().getResult() && a.getId().equals(schedule.getId()));
 		filter.failed = false;
 		scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
-		assertThat(scheduleListResponse.getItems()).isEmpty();;
+		assertThat(scheduleListResponse.getItems()).isEmpty();
+
+		// 3. Succeeded run
+		SchedulerTask dummyTask = Builder.create(
+				SchedulerTask.class,
+				task -> {
+					task.setName("Purge logs task");
+					task.setCommand("purgelogs");
+					task.setInternal(true);
+				}).build();
+		SchedulerSchedule dummySchedule = givenScheduleWithTask(dummyTask);
+
+		try {
+			operate(() -> {
+				new SchedulerResourceImpl().executeSchedule(dummySchedule.getId().toString());
+			});
+			Thread.sleep(500);
+			operate(() -> {
+				while (new SchedulerResourceImpl().getExecution(dummySchedule.getId().toString()).getItem().isRunning()) {
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						break;
+					}
+				}
+			});
+		
+			filter.failed = true;
+			scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+			assertThat(scheduleListResponse.getItems()).hasSize(1).allMatch(a -> 
+					((ScheduleModel) a).getLastExecution() != null 
+					&& ((ScheduleModel) a).getLastExecution().getResult() != null 
+					&& !((ScheduleModel) a).getLastExecution().getResult() 
+					&& !a.getId().equals(dummySchedule.getId()));
+			filter.failed = false;
+			scheduleListResponse = new SchedulerResourceImpl().listSchedules(null, null, null, null, null, filter);
+			assertThat(scheduleListResponse.getItems()).hasSize(1).allMatch(a -> 
+					((ScheduleModel) a).getLastExecution() != null 
+					&& ((ScheduleModel) a).getLastExecution().getResult() != null 
+					&& ((ScheduleModel) a).getLastExecution().getResult() 
+					&& a.getId().equals(dummySchedule.getId()));
+		} catch (Throwable e) {
+			Trx.operate(trx -> {
+				trx.getObject(dummySchedule, true).delete();
+				trx.getObject(dummyTask, true).delete();
+			});
+			throw e;
+		}
 	}
 
 	@Test

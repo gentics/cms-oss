@@ -4,10 +4,10 @@ import { IDocumentation } from '../../common/docs';
 import { InjectDocumentation } from '../../common/docs-loader';
 
 @Component({
-    templateUrl: './notification-demo.component.html',
+    templateUrl: './notification-service-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NotificationDemoPage {
+export class NotificationServiceDemoPage {
 
     @InjectDocumentation('notification.service')
     documentation: IDocumentation;

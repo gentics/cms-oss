@@ -283,13 +283,19 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		if (insertFields.isEmpty()) {
 			insertSQL = String.format("INSERT INTO `%s`", tableName);
 		} else {
-			insertSQL = String.format("INSERT INTO `%s` (%s) VALUES (%s)", tableName, insertFields.stream().collect(Collectors.joining(", ")),
-					insertFields.stream().map(s -> "?").collect(Collectors.joining(", ")));
+			insertSQL = String.format(
+				"INSERT INTO `%s` (%s) VALUES (%s)",
+				tableName,
+				insertFields.stream().map(field -> String.format("`%s`", field)).collect(Collectors.joining(", ")),
+				insertFields.stream().map(s -> "?").collect(Collectors.joining(", ")));
 		}
 		String updateSQL = null;
 
 		if (!updateFields.isEmpty()) {
-			updateSQL = String.format("UPDATE `%s` SET %s WHERE id = ?", tableName, updateFields.stream().map(s -> String.format("%s = ?", s)).collect(Collectors.joining(", ")));
+			updateSQL = String.format(
+				"UPDATE `%s` SET %s WHERE id = ?",
+				tableName,
+				updateFields.stream().map(s -> String.format("`%s` = ?", s)).collect(Collectors.joining(", ")));
 		}
 
 		try {

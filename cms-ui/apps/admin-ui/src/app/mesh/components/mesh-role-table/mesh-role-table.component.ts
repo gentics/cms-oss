@@ -129,6 +129,8 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
     }
 
     public override handleAction(event: TableActionClickEvent<MeshRoleBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case EDIT_ACTION:
                 this.openModal(MeshRolePropertiesMode.EDIT, event.item);
@@ -143,11 +145,11 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
                 return;
 
             case ASSIGN_TO_GROUPS_ACTION:
-                this.handleAssignToGroupsAction(this.getAffectedEntityIds(event));
+                this.handleAssignToGroupsAction(items);
                 return;
 
             case UNASSIGN_FROM_GROUPS_ACTION:
-                this.handleUnassignToGroupsAction(this.getAffectedEntityIds(event));
+                this.handleUnassignToGroupsAction(items);
                 return;
         }
 
@@ -192,8 +194,7 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
         this.groupTable.reload();
     }
 
-    async handleAssignToGroupsAction(roleIds: string[]): Promise<void> {
-        const roles = this.loader.getEntitiesByIds(roleIds);
+    async handleAssignToGroupsAction(roles: MeshRoleBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.assign_roles_to_groups',
             multiple: true,
@@ -214,8 +215,7 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
         this.groupTable.reload();
     }
 
-    async handleUnassignToGroupsAction(roleIds: string[]): Promise<void> {
-        const roles = this.loader.getEntitiesByIds(roleIds);
+    async handleUnassignToGroupsAction(roles: MeshRoleBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.unassign_roles_from_groups',
             multiple: true,

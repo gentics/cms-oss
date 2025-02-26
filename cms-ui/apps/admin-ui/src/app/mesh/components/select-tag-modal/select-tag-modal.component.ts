@@ -1,7 +1,7 @@
 import { MeshTagBO } from '@admin-ui/mesh/common';
-import { TagTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { TagTableComponent } from '../tag-table/tag-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-tag-modal',
@@ -20,17 +20,11 @@ export class SelectTagModal extends BaseModal<MeshTagBO | MeshTagBO[]> {
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: TagTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(TagTableComponent)
+    public table: TagTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

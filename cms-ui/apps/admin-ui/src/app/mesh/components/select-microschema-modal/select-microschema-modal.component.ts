@@ -1,7 +1,7 @@
 import { MeshMicroschemaBO } from '@admin-ui/mesh/common';
-import { MicroschemaTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { MicroschemaTableComponent } from '../microschema-table/microschema-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-microschema-modal',
@@ -20,17 +20,11 @@ export class SelectMicroschemaModal extends BaseModal<MeshMicroschemaBO | MeshMi
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: MicroschemaTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(MicroschemaTableComponent)
+    public table: MicroschemaTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

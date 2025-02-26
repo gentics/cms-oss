@@ -1,4 +1,4 @@
-import { TableRow, TableSortOrder } from '@gentics/ui-core';
+import { TableActionClickEvent, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 
 export interface TableLoadOptions {
@@ -46,7 +46,6 @@ export interface TableEntityLoader<T, A = never> {
     loadTablePage(options: TableLoadOptions, additionalOptions?: A): Observable<TableLoadResponse<T>>;
     reload(): void;
 
-    getEntityById(entityId: string | number): T;
     canDelete(entityId: string | number): Promise<boolean>;
     deleteEntity(entityId: string | number): Promise<void>
 }
@@ -62,4 +61,9 @@ export interface TrableRowReloadOptions {
      * If it should reload loaded/expanded descendants of the row as well.
      */
     reloadDescendants?: boolean;
+}
+
+export interface EntityTableActionClickEvent<T> extends TableActionClickEvent<T> {
+    /** The selected items when `selection` is `true` */
+    selectedItems?: T[];
 }

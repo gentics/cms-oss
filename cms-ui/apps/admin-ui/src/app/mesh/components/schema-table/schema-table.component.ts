@@ -107,6 +107,8 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
     }
 
     public override handleAction(event: TableActionClickEvent<MeshSchemaBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case EDIT_ACTION:
                 this.openModal(SchemaPropertiesMode.EDIT, event.item);
@@ -117,11 +119,11 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
                 //     return;
 
             case ASSIGN_TO_PROJECTS_ACTION:
-                this.handleAssignToProjectsAction(this.getAffectedEntityIds(event));
+                this.handleAssignToProjectsAction(items);
                 return;
 
             case UNASSIGN_FROM_PROJECTS_ACTION:
-                this.handleUnassignFromProjectsAction(this.getAffectedEntityIds(event));
+                this.handleUnassignFromProjectsAction(items);
                 return;
         }
 
@@ -159,8 +161,7 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
     //     this.reload();
     // }
 
-    async handleAssignToProjectsAction(schemaIds: string[]): Promise<void> {
-        const schemas = this.loader.getEntitiesByIds(schemaIds);
+    async handleAssignToProjectsAction(schemas: MeshSchemaBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectProjectModal, {}, {
             title: 'mesh.assign_schemas_to_projects',
             multiple: true,
@@ -180,8 +181,7 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
         this.reload();
     }
 
-    async handleUnassignFromProjectsAction(schemaIds: string[]): Promise<void> {
-        const schemas = this.loader.getEntitiesByIds(schemaIds);
+    async handleUnassignFromProjectsAction(schemas: MeshSchemaBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectProjectModal, {}, {
             title: 'mesh.unassign_schemas_from_projects',
             multiple: true,

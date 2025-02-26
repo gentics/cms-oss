@@ -117,9 +117,11 @@ export class TemplateTagStatusTableComponent
     }
 
     public override handleAction(event: TableActionClickEvent<TagStatusBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case SYNC_ACTION:
-                this.askUserToSyncTags(this.loader.getEntitiesByIds(this.getAffectedEntityIds(event)));
+                this.askUserToSyncTags(items);
                 return;
         }
 

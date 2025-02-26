@@ -8,6 +8,7 @@ import { ServiceBase } from '../../../shared/providers/service-base/service.base
 import { AppState, AppStateService, LogoutSuccess } from '../../../state';
 import { I18nNotificationService } from '../i18n-notification/i18n-notification.service';
 import { AdminUIModuleRoutes } from '@admin-ui/common';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 
 /* TODO: Modernize the serialization and deserialization. Usage of atob/btoa is depreacted and may cause errors with utf-8 content */
 
@@ -65,6 +66,11 @@ export class ErrorHandler extends ServiceBase {
      * Can be extended later to log client-side errors to the server.
      */
     catch = (error: Error, options?: { notification: boolean }): string => {
+        // Ignore errors from closing a modal
+        if (wasClosedByUser(error)) {
+            return '';
+        }
+
         let returnValue: string;
         if (!error || (error as any).reason !== 'auth') {
             console.error('Error details: ', error);

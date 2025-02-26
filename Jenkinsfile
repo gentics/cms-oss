@@ -143,7 +143,7 @@ spec:
 
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
-                        mvnArguments += " -pl '!cms-changelog' -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
+                        mvnArguments += " -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
                     }
 
                     if (version) {

@@ -56,3 +56,10 @@ export interface PackageTableEntityLoader<T, A = never> extends TableEntityLoade
     addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void>;
     removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void>;
 }
+
+export interface TrableRowReloadOptions {
+    /**
+     * If it should reload loaded/expanded descendants of the row as well.
+     */
+    reloadDescendants?: boolean;
+}

@@ -1,0 +1,26 @@
+{
+  "version": "6.1.25",
+  "date": "26.02.2025",
+  "changeLogEntryFileNames": [
+    "8166.SUP-16772.bugfix",
+    "8154.SUP-18060.bugfix",
+    "8163.SUP-17216.enhancement",
+    "8158.SUP-17951.bugfix",
+    "8153.SUP-17206.bugfix",
+    "8151.SUP-18092.bugfix",
+    "8155.SUP-17875.bugfix",
+    "8160.SUP-16591.bugfix",
+    "8169.SUP-17177.bugfix",
+    "8168.SUP-17545.bugfix",
+    "8165.SUP-18109.bugfix",
+    "8150.SUP-18083.enhancement",
+    "8149.SUP-18072.enhancement",
+    "8167.SUP-17209.bugfix",
+    "8164.SUP-15751.bugfix",
+    "8161.SUP-18066.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "12.02.2025",
+    "alohaeditor-version": "2.0.8"
+  }
+}

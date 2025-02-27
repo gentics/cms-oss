@@ -77,8 +77,8 @@ aloha_settings:
       - id: insert
       - id: view
         merge: 
-          components: 'append' 
-        components:	
+          components: 'append'
+        components:
           - 'gcnSpellCheck'
       - id: table
       - id: 'gtx.constructs'

@@ -18,6 +18,7 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -303,14 +304,32 @@ public class NodeConfigRuntimeConfiguration {
 						// merge all files
 						for (File subConfigFile : configurationFiles) {
 							runtimeLog.info(String.format("Reading configuration from %s", subConfigFile.getAbsolutePath()));
-							data = merge(data, mapper.readValue(subConfigFile, Map.class));
+							try {
+								JsonNode tree = mapper.readTree(subConfigFile);
+								if (!tree.isEmpty()) {
+									data = merge(data, mapper.treeToValue(tree, Map.class));
+								} else {
+									logger.info("Empty or unreadable config: " + subConfigFile);
+								}
+							} catch (Exception e) {
+								throw new NodeException("Error reading configuration from " + subConfigFile, e);
+							}
 						}
 					} else {
 						if (!configFile.exists() && !configFile.getName().endsWith(".yml") && !configFile.getName().endsWith(".yaml")) {
 							runtimeLog.warn(String.format("Ignoring non-existent directory %s", configFile.getAbsolutePath()));
 						} else {
 							runtimeLog.info(String.format("Reading configuration from %s", configFile.getAbsolutePath()));
-							data = merge(data, mapper.readValue(configFile, Map.class));
+							try {
+								JsonNode tree = mapper.readTree(configFile);
+								if (!tree.isEmpty()) {
+									data = merge(data, mapper.treeToValue(tree, Map.class));
+								} else {
+									logger.info("Empty or unreadable config: " + configFile);
+								}
+							} catch (Exception e) {
+								throw new NodeException("Error reading configuration from " + configFile, e);
+							}
 						}
 					}
 				}

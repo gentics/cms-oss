@@ -31,7 +31,6 @@ import {
 import { getExampleEntityStore, getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { cloneDeep as _cloneDeep } from 'lodash-es';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
@@ -138,7 +137,6 @@ describe('GroupOperations', () => {
         TestBed.configureTestingModule({
             imports: [
                 assembleTestAppStateImports(),
-                LoggerTestingModule,
             ],
             providers: [
                 ActivityManagerService,

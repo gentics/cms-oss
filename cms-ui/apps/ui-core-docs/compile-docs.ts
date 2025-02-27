@@ -1,9 +1,11 @@
-import { AccessModifer, DocBlock, IDocumentation, PropertyGroup } from './src/app/common/docs';
-import * as ts from 'typescript';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import { basename, resolve } from 'path';
+/* eslint-disable import/no-nodejs-modules */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+import hljs from 'highlight.js';
+import { marked } from 'marked';
+import * as ts from 'typescript';
+import { AccessModifer, DocBlock, DocumentationType, IDocumentation, PropertyGroup, SourceFile } from './src/app/common/docs';
 
 marked.setOptions({
     highlight: (code: string, lang: string): string => {
@@ -19,11 +21,6 @@ interface InputFile {
     [id: string]: SourceFile;
 }
 
-interface SourceFile {
-    type: 'component' | 'service';
-    sourceFile: string;
-}
-
 function main(): void {
     const INPUT_FILE = 'docs.input.json';
     const OUTPUT_FILE = 'docs.output.json';
@@ -32,9 +29,10 @@ function main(): void {
     const output: Record<string, IDocumentation> = {};
 
     Object.entries(data).forEach(([id, value]) => {
-        const fileName = basename(value.sourceFile);
         const source = readFileSync(resolve(__dirname, value.sourceFile)).toString();
-        const docs = createDocsFromAST(value.type, fileName, source);
+        const docs = createDocsFromAST(value.type, value.sourceFile, source);
+        appendInheritedDocs(docs, output, value as any);
+
         output[id] = docs;
     });
 
@@ -43,9 +41,50 @@ function main(): void {
 
 main();
 
-function createDocsFromAST(type: 'component' | 'service', fileName: string, sourceCode: string): IDocumentation {
+function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocumentation>, file: SourceFile): void {
+    if (!file.extends || !map[file.extends]) {
+        return;
+    }
+
+    const inherited = map[file.extends];
+    docs.inheritance.push({
+        type: DocumentationType[inherited.type],
+        id: file.extends,
+        name: inherited.name,
+        file: inherited.sourceFile,
+        generics: map[file.extends].generics,
+    });
+    if (inherited.inheritance) {
+        docs.inheritance.push(...inherited.inheritance);
+    }
+
+    for (const part of ['inputs', 'outputs', 'properties', 'methods']) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        docs[part].unshift(...inherited[part].map(block => blockWithInheritance(block, file.extends, inherited, map)));
+    }
+}
+
+function blockWithInheritance(block: DocBlock, id: string, inheritance: IDocumentation, map: Record<string, IDocumentation>): DocBlock {
+    if (block.inheritance) {
+        return block;
+    }
+
+    return {
+        ...block,
+        inheritance: {
+            type: DocumentationType[inheritance.type],
+            id,
+            file: inheritance.sourceFile,
+            name: inheritance.name,
+            generics: map[id].generics || [],
+        },
+    };
+}
+
+function createDocsFromAST(type: 'component' | 'service', filePath: string, sourceCode: string): IDocumentation {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
-    const sourceFile = ts.createSourceFile(baseName(fileName), sourceCode, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+    const fileName = baseName(filePath);
+    const sourceFile = ts.createSourceFile(fileName, sourceCode, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     function traverseChildren(parent: ts.Node): IDocumentation | null {
         const count = parent.getChildCount();
@@ -54,7 +93,7 @@ function createDocsFromAST(type: 'component' | 'service', fileName: string, sour
 
             // Only generate a Documentation for exported classes
             if (isNodeExported(node) && (ts.isClassDeclaration(node) || node.kind === ts.SyntaxKind.ClassDeclaration)) {
-                return getClassDocumentation(type, sourceFile, node as ts.ClassDeclaration);
+                return getClassDocumentation(type, filePath, sourceFile, node as ts.ClassDeclaration);
             }
 
             if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -83,6 +122,7 @@ function baseName(filePath: string): string {
 /** True if this is visible outside this file, false otherwise */
 function isNodeExported(node: ts.Node): boolean {
     return (
+        // eslint-disable-next-line no-bitwise
         (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0
         || (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
     );
@@ -90,11 +130,16 @@ function isNodeExported(node: ts.Node): boolean {
 
 function getClassDocumentation(
     type: 'component' | 'service',
+    filePath: string,
     sourceFile: ts.SourceFile,
     classNode: ts.ClassDeclaration,
 ): IDocumentation {
     const docs: IDocumentation = {
+        sourceFile: filePath,
         type,
+        name: classNode.name.text,
+        generics: [],
+        inheritance: [],
         main: marked(getCommentFromNode(sourceFile, classNode)),
         inputs: [],
         methods: [],
@@ -102,30 +147,36 @@ function getClassDocumentation(
         properties: [],
     };
 
-    for (let i = 0; i < classNode.members.length; i++) {
-        const member = classNode.members[i];
+    if (classNode.typeParameters != null) {
+        for (const generic of classNode.typeParameters) {
+            docs.generics.push(generic.getText());
+        }
+    }
 
-        if (ts.isPropertyDeclaration(member) || (ts.isFunctionLike(member) && !ts.isSetAccessorDeclaration(member))) {
-            const propType = getPropertyGroup(member);
-            const propDocs = getPropertyDocumentation(sourceFile, member as any);
-
-            switch (propType) {
-                case 'property':
-                    if (ts.isFunctionLike(member) && !ts.isGetAccessorDeclaration(member)) {
-                        docs.methods.push(propDocs);
-                    } else {
-                        docs.properties.push(propDocs);
-                    }
-                    break;
-                case 'input':
-                    docs.inputs.push(propDocs);
-                    break;
-                case 'output':
-                    docs.outputs.push(propDocs);
-                    break;
-            }
-
+    for (const member of classNode.members) {
+        if (!ts.isPropertyDeclaration(member)
+            && (!ts.isFunctionLike(member) && !ts.isSetAccessorDeclaration(member))
+        ) {
             continue;
+        }
+
+        const propType = getPropertyGroup(member);
+        const propDocs = getPropertyDocumentation(sourceFile, member as any, propType);
+
+        switch (propType) {
+            case 'property':
+                if (ts.isFunctionLike(member) && !ts.isGetAccessorDeclaration(member)) {
+                    docs.methods.push(propDocs);
+                } else {
+                    docs.properties.push(propDocs);
+                }
+                break;
+            case 'input':
+                docs.inputs.push(propDocs);
+                break;
+            case 'output':
+                docs.outputs.push(propDocs);
+                break;
         }
     }
 
@@ -191,7 +242,11 @@ function getDecoratorNames(decorator: ts.Node): string[] {
     return names;
 }
 
-function getPropertyDocumentation(sourceFile: ts.SourceFile, node: ts.PropertyDeclaration | ts.FunctionLikeDeclaration): DocBlock {
+function getPropertyDocumentation(
+    sourceFile: ts.SourceFile,
+    node: ts.PropertyDeclaration | ts.FunctionLikeDeclaration,
+    propType: PropertyGroup,
+): DocBlock {
     // Ignore anonymous functions/properties
     if (node.name == null) {
         return null;
@@ -208,7 +263,7 @@ function getPropertyDocumentation(sourceFile: ts.SourceFile, node: ts.PropertyDe
     if (ts.isPropertyDeclaration(node)) {
         docs = {
             ...base,
-            type: determinePropertyType(node),
+            type: determinePropertyType(node, propType),
         } as DocBlock;
 
         if (node.initializer) {
@@ -229,26 +284,33 @@ function determineFunctionReturnType(node: ts.FunctionLikeDeclaration): string {
     return node.type != null ? node.type.getText() : 'any';
 }
 
-function determinePropertyType(node: ts.PropertyDeclaration): string {
+function determinePropertyType(node: ts.PropertyDeclaration, propType: PropertyGroup): string {
     if (node.type) {
         return node.type.getText();
     }
 
-    if (node.initializer) {
-        const type = getPrimitiveTypeName(node.initializer);
-        if (type) {
-            return type;
+    if (!node.initializer) {
+        return null;
+    }
+
+    const type = getPrimitiveTypeName(node.initializer);
+    if (type) {
+        return type;
+    }
+
+    // Return the "generics" portion of `new EventEmitter<FooBar123>()` -> `FooBar123`
+    if (propType === 'output' && node.initializer.getChildCount() >= 4) {
+        return node.initializer.getChildAt(3).getText();
+    }
+
+    if (ts.isArrayLiteralExpression(node.initializer)) {
+        if (node.initializer.getChildCount() === 0) {
+            return '[]';
         }
 
-        if (ts.isArrayLiteralExpression(node.initializer)) {
-            if (node.initializer.getChildCount() === 0) {
-                return '[]';
-            }
-
-            const arrType = getPrimitiveTypeName(node.initializer.getChildAt(0));
-            if (arrType) {
-                return arrType + '[]';
-            }
+        const arrType = getPrimitiveTypeName(node.initializer.getChildAt(0));
+        if (arrType) {
+            return arrType + '[]';
         }
     }
 
@@ -286,11 +348,37 @@ function getFunctionArgs(node: ts.FunctionLikeDeclaration): string[] {
 
 function getCommentFromNode(sourceFile: ts.SourceFile, node: ts.Node): string {
     const fullText = sourceFile.getFullText();
-    const comment = (ts.getLeadingCommentRanges(sourceFile.getText(), node.getFullStart()) || [])
-        .map(range => fullText.slice(range.pos, range.end))
-        .join('\n');
+    const filteredComments: string[] = [];
 
-    return stripStars(comment);
+    const originalComments = (ts.getLeadingCommentRanges(sourceFile.getText(), node.getFullStart()) || []);
+    let inRegularComment = false;
+
+    // Filtering out all "regular" comments, i.E. which are not /** Documentation comments */
+    for (const range of originalComments) {
+        const comment = fullText.slice(range.pos, range.end);
+
+        // If it's a one-line comment
+        if (comment.startsWith('//')) {
+            continue;
+        }
+
+        // If it's a multi-line comment, but not a document comment, we want to ignore it
+        if (comment.startsWith('/*') && !comment.startsWith('/**')) {
+            inRegularComment = !comment.endsWith('*/');
+            continue;
+        }
+
+        if (inRegularComment) {
+            if (comment.endsWith('*/')) {
+                inRegularComment = false;
+            }
+            continue;
+        }
+
+        filteredComments.push(comment);
+    }
+
+    return stripUnsupportedJsDoc(stripStars(filteredComments.join('\n')));
 }
 
 function getAccessModifer(node: ts.Node): AccessModifer {
@@ -312,5 +400,9 @@ function getAccessModifer(node: ts.Node): AccessModifer {
  * Remove the `*` and padding from the doc block body.
  */
 function stripStars(body: string): string {
-    return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?/mg, '$1').trim();
+    return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?|\*\//mg, '$1').trim();
+}
+
+function stripUnsupportedJsDoc(body: string): string {
+    return body.replace(/@example[\s]*/, '');
 }

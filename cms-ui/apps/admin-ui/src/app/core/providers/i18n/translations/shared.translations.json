@@ -399,6 +399,10 @@
         "en": "Name",
         "de": "Name"
     },
+    "set_maintenance_mode": {
+        "en": "Set Maintenance Mode",
+        "de": "Wartungsmodus Setzen"
+    },
     "set_maintenance_mode_success": {
         "en": "Configure Maintenance Mode succeeded",
         "de": "Wartungsmodus konfigurieren erfolgreich"
@@ -766,6 +770,10 @@
     "stop_publishing_failed": {
         "en": "Cancel publishing failed",
         "de": "Publizierung abbrechen fehlgeschlagen"
+    },
+    "stop_publishing_delayed": {
+        "en": "Publish process is still running",
+        "de": "Publizierung läuft noch"
     },
     "reload_configuration_success": {
         "en": "Reload configuration successful",

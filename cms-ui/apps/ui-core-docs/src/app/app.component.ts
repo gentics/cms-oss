@@ -1,14 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { IPageInfo, kebabToPascal, PAGES, PageType } from './common/page-list';
-
-// Exposed globally by the Webpack DefinePlugin
-// (see webpack config)
-declare const VERSION: string; /* eslint-disable-line @typescript-eslint/naming-convention */
 
 interface ContentItem {
     title: string;
@@ -29,9 +24,7 @@ export class App implements OnInit, OnDestroy {
     @ViewChild(SplitViewContainerComponent, { static: true })
     splitViewContainer: SplitViewContainerComponent;
 
-    version: string;
-    changelogBranch = 'master';
-    contentItems: ContentItem[] = PAGES.map((page: IPageInfo) => {
+    contentItems: ContentItem[] = Object.values(PAGES).map((page: IPageInfo) => {
         return {
             title: kebabToPascal(page.path),
             route: '/' + page.path,
@@ -48,14 +41,10 @@ export class App implements OnInit, OnDestroy {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        private titleService: Title,
-    ) {
-        this.filteredContentItems = this.contentItems.slice(0);
-        titleService.setTitle(`Gentics UI Core Docs v${VERSION}`);
-        this.version = VERSION;
-    }
+    ) {}
 
     ngOnInit(): void {
+        this.filteredContentItems = this.contentItems.slice(0);
         this.subscription = this.router.events
             .pipe(filter(event => event instanceof NavigationEnd))
             .subscribe(() => {

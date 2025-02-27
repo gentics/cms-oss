@@ -11,9 +11,6 @@
             "executor": "@nx/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "customWebpackConfig": {
-                    "path": "apps/ui-core-docs/webpack.partial.js"
-                },
                 "outputPath": "dist/apps/image-editor-demo",
                 "index": "apps/image-editor-demo/src/index.html",
                 "main": "apps/image-editor-demo/src/main.ts",

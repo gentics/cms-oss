@@ -1,7 +1,9 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
-import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, WindowRef } from '@gentics/cms-components';
 import { EmbeddedTool } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
@@ -16,7 +18,6 @@ import { EmbeddedToolsService } from './embedded-tools.service';
 describe('EmbeddedToolsService', () => {
     let api: Api;
     let router: MockRouter;
-    let modalService: MockModalService;
     let service: EmbeddedToolsService;
     let state: TestApplicationState;
     let testTool: EmbeddedTool;
@@ -32,6 +33,8 @@ describe('EmbeddedToolsService', () => {
                 { provide: TranslateService, useClass: MockTranslateService },
                 { provide: ToolApiChannelService, useClass: MockApiChannelService },
                 { provide: WindowRef, useClass: MockWindowRef },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                KeycloakService,
                 Api,
                 EmbeddedToolsService,
             ],
@@ -50,7 +53,6 @@ describe('EmbeddedToolsService', () => {
             toolUrl: 'tool-url',
         };
 
-        modalService = TestBed.get(ModalService);
         router = TestBed.get(Router);
         service = TestBed.get(EmbeddedToolsService);
     });

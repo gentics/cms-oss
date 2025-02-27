@@ -17,6 +17,7 @@ import {
 } from '../../../common/models/actions';
 import { I18nService } from '../../providers/i18n/i18n.service';
 import { PermissionService } from '../../providers/permissions/permission.service';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-actions-selector',
@@ -49,6 +50,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
         protected stagingActions: ContentStagingActionsService,
         protected toolsService: EmbeddedToolsService,
         protected i18n: I18nService,
+        protected keycloak: KeycloakService,
     ) { }
 
     ngOnInit(): void {
@@ -188,7 +190,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
                     id: ADMIN_TOOL_KEY,
                     type: ActionButtonType.TOOL,
                     i18nLabel: 'editor.administration_tool_label',
-                    toolLink: ADMIN_UI_LINK,
+                    toolLink: ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''),
                     newTab: true,
                     iconType: ActionButtonIconType.FONT,
                     icon: 'tune',

@@ -1,9 +1,9 @@
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
+    OnDestroy,
     Output,
 } from '@angular/core';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
@@ -14,8 +14,7 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
     styleUrls: ['./copy-value.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CopyValueComponent extends BaseComponent {
-    public readonly cancelEvent = cancelEvent;
+export class CopyValueComponent extends BaseComponent implements OnDestroy {
 
     @Input()
     public animate: false;
@@ -28,30 +27,76 @@ export class CopyValueComponent extends BaseComponent {
     @Input()
     public value: string;
 
+    /**
+     * Event which is triggered when the value has been copied via the copy button
+     */
     @Output()
-    public copy = new EventEmitter<void | Error>();
+    public valueCopy = new EventEmitter<null | Error>();
 
-    constructor(protected changeDetector: ChangeDetectorRef) {
-        super(changeDetector);
+    private timeoutId: number;
+
+    ngOnDestroy(): void {
+        super.ngOnDestroy();
+
+        if (this.timeoutId != null) {
+            window.clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
     }
 
     async copyToClipboard(): Promise<void> {
+        let error: Error | null = null;
+
         try {
             await navigator.clipboard.writeText(this.value);
-            this.copy.emit();
-            if (this.animate) {
-                this.animateCopy(1)
-            }
         } catch (err) {
-            this.copy.emit(err);
+            error = err;
+        }
+
+        // In case the writeText didn't work (due to unsecure connection or otherwise)
+        if (error != null) {
+            // Workaround to trigger a copy
+            const textArea = document.createElement('textarea');
+            textArea.value = this.value;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                // Clear the error, as we don't want to display that to the user/mark this as a failure
+                error = null;
+            } catch (err) {
+                error = err;
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // If there's no error we can animate a "success"
+        if (error == null && this.animate) {
+            this.animateCopy(1);
+        }
+
+        this.valueCopy.emit(error);
+    }
+
+    public cancelIfDisabled(event: Event): void {
+        if (this.disabled) {
+            cancelEvent(event);
         }
     }
 
     private animateCopy(seconds: number): void {
+        if (this.timeoutId != null) {
+            window.clearTimeout(this.timeoutId);
+        }
+
         this.icon = 'check';
         this.changeDetector.markForCheck();
 
-        setTimeout(() => {
+        this.timeoutId = window.setTimeout(() => {
+            this.timeoutId = null;
             this.icon = 'content_copy';
             this.changeDetector.markForCheck();
         }, 1000 * seconds);

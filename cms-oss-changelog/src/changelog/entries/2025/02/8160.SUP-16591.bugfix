@@ -1,0 +1,2 @@
+Editor User Interface: Links to the Administrator User Interface will now contain the 'skip-sso' parameter,
+if the Editor User Interface was accessed with this parameter.

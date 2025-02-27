@@ -1,5 +1,5 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
-@Library('jenkins-pipeline-library@nexus') import com.gentics.*
+@Library('jenkins-pipeline-library') import com.gentics.*
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)
@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms") + """
+      image: docker.gentics.com/cms-oss/build-container:latest
       resources:
         requests:
           cpu: '0'
@@ -420,11 +420,9 @@ spec:
         }
     }
 
-    /* TODO: Re-enable when HTTPS access to gitlab is restored. Due to infrastructure issues this is disabled temporarily.
     post {
         always {
             updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
         }
     }
-    */
 }

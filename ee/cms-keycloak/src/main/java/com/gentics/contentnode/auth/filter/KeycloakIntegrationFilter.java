@@ -12,6 +12,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.representations.AccessToken;
@@ -44,6 +45,8 @@ public class KeycloakIntegrationFilter extends AbstractSSOFilter {
 
 		if (token == null) {
 			logger.warn("Could not get access token from request, skipping SSO login.");
+		} else if (StringUtils.isBlank(token.getPreferredUsername())) {
+			logger.error("Could not get preferred username from token, skipping SSO login.");
 		} else {
 			Map<String, Object> attributes = new HashMap<>();
 

@@ -19,8 +19,8 @@
             },
             {
               "name": "Keycloak",
-              "current": "22.0.5",
-              "latest": "23.0.7"
+              "current": "26.1.2",
+              "latest": "26.1.2"
             },
             {
               "name": "MariaDB",

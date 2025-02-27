@@ -70,17 +70,19 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
     }
 
     protected registerAsRendered(): void {
-        if (!this.slot && !this.settings.name) {
+        const name = this.slot || this.settings?.name;
+        if (!name) {
             return;
         }
-        this.aloha.renderedComponents[this.slot || this.settings.name] = this;
+        this.aloha.renderedComponents[name] = this;
     }
 
     protected unregisterAsRendered(): void {
-        if (!this.slot && !this.settings.name) {
+        const name = this.slot || this.settings?.name;
+        if (!name) {
             return;
         }
-        delete this.aloha.renderedComponents[this.slot || this.settings.name];
+        delete this.aloha.renderedComponents[name];
     }
 
     protected setupAlohaHooks(): void {

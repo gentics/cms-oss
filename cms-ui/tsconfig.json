@@ -64,9 +64,5 @@
             "@gentics/ui-core/testing/*": ["libs/ui-core/src/lib/testing/*"]
         }
     },
-    "exclude": [
-        "node_modules",
-        "tmp",
-        "dist"
-    ]
+    "exclude": ["node_modules", "tmp", "dist"]
 }

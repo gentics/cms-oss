@@ -55,7 +55,8 @@
     },
     "file-picker.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/file-picker/file-picker.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/file-picker/file-picker.component.ts",
+        "extends": "base-form-element.component"
     },
     "grouped-tabs.component": {
         "type": "component",
@@ -64,7 +65,8 @@
     },
     "input.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/input/input.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/input/input.component.ts",
+        "extends": "base-form-element.component"
     },
     "json-input.component": {
         "type": "component",

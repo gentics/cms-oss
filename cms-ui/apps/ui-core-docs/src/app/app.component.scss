@@ -16,6 +16,10 @@
             flex: 0 0 auto;
         }
 
+        .top-bar::ng-deep .content-left {
+            gap: 1rem;
+        }
+
         .split-view-container {
             flex: 1 1 auto;
             min-height: 1px;

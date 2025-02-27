@@ -19,7 +19,6 @@ import {
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NgxsModule } from '@ngxs/store';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
@@ -68,7 +67,6 @@ describe('UserOperations', () => {
         TestBed.configureTestingModule({
             imports: [
                 NgxsModule.forRoot(STATE_MODULES, OPTIONS_CONFIG),
-                LoggerTestingModule,
             ],
             providers: [
                 AppStateService,

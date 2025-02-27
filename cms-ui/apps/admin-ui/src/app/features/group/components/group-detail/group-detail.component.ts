@@ -20,7 +20,6 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
 
@@ -65,7 +64,6 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
     private tabHandles: Record<GroupDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -77,7 +75,6 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         private tableLoader: GroupTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

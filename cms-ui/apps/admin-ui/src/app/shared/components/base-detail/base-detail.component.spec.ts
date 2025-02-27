@@ -10,7 +10,6 @@ import { componentTest, configureComponentTest } from '@admin-ui/testing';
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { BaseDetailComponent } from './base-detail.component';
 
 
@@ -61,7 +60,6 @@ describe('TestDetailComponent', () => {
             ],
             providers: [
                 { provide: AppStateService, useClass: TestAppState },
-                { provide: NGXLogger, useClass: MockNGXLogger },
                 { provide: ExtendedEntityDataServiceBase, useClass: MockExtendedEntityDataServiceBase },
                 { provide: OperationsBase, useClass: MockOperations },
             ],

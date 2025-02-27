@@ -46,7 +46,7 @@ public class AlohaPluginsConfigurationTest {
 		TEST_CASES_NODE.put("",
 				new String[] { "gcn/gcn", "common/ui", "common/block", "common/format", "common/autoparagraph",
 						"common/highlighteditables", "common/list", "common/link", "common/table", "common/paste",
-						"common/contenthandler", "common/commands", "common/dom-to-xhtml", "gcn/spellcheck" });
+						"common/contenthandler", "common/commands", "common/dom-to-xhtml" });
 
 		// test case "aloha_plugins_global.yml" (global configuration)
 		TEST_CASES_NODE.put("aloha_plugins_global.yml", new String[] { "gcn/gcn", "project/specific", "extra/ribbon" });

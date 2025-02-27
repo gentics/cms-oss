@@ -5,50 +5,54 @@
         } }}</h5>
     </div>
 
-    <div class="modal-content">
-        <div class="gtx-modal-datagrid-container" [ngSwitch]="entityIdentifier">
-            <gtx-construct-table
-                *ngSwitchCase="'construct'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-construct-table>
+    <div class="modal-content" [ngSwitch]="entityIdentifier">
+        <gtx-construct-table
+            *ngSwitchCase="'construct'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-construct-table>
 
-            <gtx-content-repository-table
-                *ngSwitchCase="'contentRepository'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-content-repository-table>
+        <gtx-content-repository-table
+            *ngSwitchCase="'contentRepository'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-content-repository-table>
 
-            <gtx-cr-fragment-table
-                *ngSwitchCase="'contentRepositoryFragment'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-cr-fragment-table>
+        <gtx-cr-fragment-table
+            *ngSwitchCase="'contentRepositoryFragment'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-cr-fragment-table>
 
-            <gtx-data-source-table
-                *ngSwitchCase="'dataSource'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-data-source-table>
+        <gtx-data-source-table
+            *ngSwitchCase="'dataSource'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-data-source-table>
 
-            <gtx-object-property-table
-                *ngSwitchCase="'objectProperty'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-object-property-table>
+        <gtx-object-property-table
+            *ngSwitchCase="'objectProperty'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-object-property-table>
 
-            <gtx-template-table
-                *ngSwitchCase="'template'"
-                [showSearch]="true"
-                [hideActions]="true"
-                [(selected)]="packageChildEntitySelectedIdsCurrent"
-            ></gtx-template-table>
-        </div>
+        <gtx-template-table
+            *ngSwitchCase="'template'"
+            class="modal-table"
+	        [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="packageChildEntitySelectedIdsCurrent"
+        ></gtx-template-table>
     </div>
 
     <div class="modal-footer">

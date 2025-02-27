@@ -10,7 +10,7 @@ import {
     ToolsFetchingErrorAction,
     ToolsFetchingSuccessAction,
 } from '@editor-ui/app/state';
-import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
 import { EmbeddedTool } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
@@ -43,6 +43,7 @@ export class EmbeddedToolsService implements OnDestroy {
         private router: Router,
         private translate: TranslateService,
         private windowRef: WindowRef,
+        private keycloak : KeycloakService,
     ) {
         // Required to prevent cyclic dependencies.
         channelService.registerToolsService(this);
@@ -146,9 +147,9 @@ export class EmbeddedToolsService implements OnDestroy {
             if (this.isIE11()) {
                 this.adminUITabWindow = window.open(BLANK_PAGE, '_blank');
                 this.adminUITabWindow.location.href = 'about:blank';
-                this.adminUITabWindow.location.href = ADMIN_UI_LINK;
+                this.adminUITabWindow.location.href = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
             } else {
-                this.adminUITabWindow = window.open(ADMIN_UI_LINK, '_blank');
+                this.adminUITabWindow = window.open(ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''), '_blank');
             }
             this.adminUITabWindow.addEventListener('beforeunload', () => {
                 this.adminUITabWindow = null;

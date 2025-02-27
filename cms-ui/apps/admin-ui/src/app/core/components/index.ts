@@ -2,7 +2,6 @@ export * from './activity-manager/activity-manager.component';
 export * from './base-entity-editor/base-entity-editor.component';
 export * from './change-password-modal/change-password-modal.component';
 export * from './confirm-reload-modal/confirm-reload-modal.component';
-export * from './debug-tool-modal/debug-tool-modal.component';
 export * from './discard-changes-modal/discard-changes-modal.component';
 export * from './logging-in-overlay/logging-in-overlay.component';
 export * from './message-body/message-body.component';

@@ -1,5 +1,4 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ENVIRONMENT_TOKEN } from '@editor-ui/app/development/development-tools';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
@@ -87,7 +86,6 @@ describe('UserSettingsService', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PublishQueueActionsService, useClass: MockPublishQueueActions },
-                { provide: ENVIRONMENT_TOKEN, useValue: 'testing' },
                 { provide: UIActionsService, useClass: MockUIActions },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: NotificationService, useClass: MockNotificationService },

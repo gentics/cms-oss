@@ -8,7 +8,6 @@ import {
     ErrorHandler,
     FeatureOperations,
     LanguageHandlerService,
-    LoggingHelperService,
     MarkupLanguageOperations,
     MessageService,
     NodeOperations,
@@ -18,7 +17,6 @@ import {
 } from '@admin-ui/core';
 import { ChangePasswordModalComponent } from '@admin-ui/core/components/change-password-modal/change-password-modal.component';
 import { ConfirmReloadModalComponent } from '@admin-ui/core/components/confirm-reload-modal/confirm-reload-modal.component';
-import { DebugToolService } from '@admin-ui/core/providers/debug-tool/debug-tool.service';
 import { LogoutCleanupService } from '@admin-ui/core/providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from '@admin-ui/core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
@@ -30,7 +28,6 @@ import { KeycloakService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { NGXLogger } from 'ngx-logger';
 import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from './common';
@@ -82,13 +79,10 @@ export class AppComponent implements OnDestroy, OnInit {
         private appState: AppStateService,
         private authOps: AuthOperations,
         private breadcrumbs: BreadcrumbsService,
-        private debugToolService: DebugToolService,
         private editorUiLocalStorage: EditorUiLocalStorageService,
         private entityManager: EntityManagerService,
         private languageHandler: LanguageHandlerService,
         private features: FeatureOperations,
-        private logger: NGXLogger,
-        private loggingHelper: LoggingHelperService,
         private logoutCleanup: LogoutCleanupService,
         private maintenanceMode: MaintenanceModeService,
         private message: MessageService,
@@ -103,13 +97,9 @@ export class AppComponent implements OnDestroy, OnInit {
         private keycloakService: KeycloakService,
         private markupLangOperations: MarkupLanguageOperations,
         private nodeOperations: NodeOperations,
-    ) {
-        this.loggingHelper.init();
-    }
+    ) {}
 
     ngOnInit(): void {
-        this.logger.debug('AppComponent.ngOnInit');
-
         this.logoutCleanup.init();
 
         this.editorUiLocalStorage.init();
@@ -152,7 +142,6 @@ export class AppComponent implements OnDestroy, OnInit {
             this.supportedLanguages$ = this.languageHandler.getBackendLanguages();
         });
 
-        this.debugToolService.init();
         this.usersnapService.init();
 
         this.activitiesCount$ = this.activityManager.activities$.pipe(
@@ -187,7 +176,6 @@ export class AppComponent implements OnDestroy, OnInit {
     }
 
     ngOnDestroy(): void {
-        this.logger.debug('AppComponent.ngOnDestroy');
         this.stopper.stop();
     }
 

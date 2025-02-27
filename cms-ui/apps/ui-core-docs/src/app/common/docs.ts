@@ -14,11 +14,32 @@ export interface DocBlock {
     decorator?: string;
     accessModifier?: AccessModifer;
     methodArgs?: string[];
+    inheritance?: InheritanceInfo;
 }
 
-export interface IDocumentation {
+export interface InheritanceInfo {
+    type: DocumentationType;
+    file: string;
+    id: string;
+    name: string;
+    generics?: string[];
+}
+
+export interface SourceFile {
     type: 'component' | 'service';
+    /** File path to the source-file to load the contents from. */
+    sourceFile: string;
+    /** Which class it extends. Used for referencing and linking. */
+    extends?: string;
+    /** The path where this documentation page is available at. Used in base-classes for linking. */
+    path?: string;
+}
+
+export interface IDocumentation extends SourceFile {
+    name: string;
     main: string;
+    generics?: string[];
+    inheritance?: InheritanceInfo[];
     inputs: DocBlock[];
     outputs: DocBlock[];
     properties: DocBlock[];

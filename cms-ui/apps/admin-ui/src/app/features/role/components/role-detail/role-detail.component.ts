@@ -21,7 +21,6 @@ import {
     RoleUpdateRequest,
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
-import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import { delay, distinctUntilChanged, map, repeat, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
@@ -84,7 +83,6 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
     private tabHandles: Record<RoleDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -97,7 +95,6 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         private tableLoader: RoleTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

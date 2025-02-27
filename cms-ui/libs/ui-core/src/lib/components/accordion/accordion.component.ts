@@ -1,7 +1,12 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, TemplateRef } from '@angular/core';
+import { ChangesOf } from '../../common';
 import { coerceToBoolean } from '../../utils';
+import { BaseComponent } from '../base-component/base.component';
 
+/**
+ * Very basic Accordion/Spoiler component to show/hide content with a customizable header.
+ */
 @Component({
     selector: 'gtx-accordion',
     templateUrl: './accordion.component.html',
@@ -21,32 +26,48 @@ import { coerceToBoolean } from '../../utils';
         ]),
     ],
 })
-export class AccordionComponent implements OnChanges {
+export class AccordionComponent extends BaseComponent implements OnChanges {
 
     /* INPUTS
      * --------------------------------------------------------------------- */
 
+    /**
+     * The text to display, if `trigger` is not defined.
+     */
     @Input()
     public text: string;
 
+    /**
+     * If the accordion is opened/content of the accordion is visible
+     */
     @Input()
     public open = false;
 
+    /**
+     * A reference to a template which will be used as trigger/text.
+     */
     @Input()
     public trigger: TemplateRef<any>;
 
+    /**
+     * If the trigger/text should be able to open/close the content.
+     */
     @Input()
     public triggerToggle = false;
-
-    @Input()
-    public disabled = false;
 
     /* OUTPUTS
      * --------------------------------------------------------------------- */
 
+    /**
+     * When the open status changes
+     */
     @Output()
     public openChange = new EventEmitter<boolean>();
 
+    /**
+     * When the trigger is being clicked.
+     * Is always emitted and is done before `openChange`.
+     */
     @Output()
     public clickTrigger = new EventEmitter<any>();
 
@@ -58,12 +79,16 @@ export class AccordionComponent implements OnChanges {
     /* CONSTRUCTOR
      * --------------------------------------------------------------------- */
 
-    constructor(protected changeDetector: ChangeDetectorRef) { }
+    constructor(changeDetector: ChangeDetectorRef) {
+        super(changeDetector);
+    }
 
     /* LIFE-CYCLE HOOKS
      * --------------------------------------------------------------------- */
 
-    ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
+        super.ngOnChanges(changes);
+
         if (changes.open) {
             this.open = coerceToBoolean(this.open);
             if (this.open) {

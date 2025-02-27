@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ADMIN_UI_LINK } from '../../../common/config/config';
 import { ApplicationStateService } from '../../../state';
 import { EmbeddedToolsService } from '../../providers/embedded-tools/embedded-tools.service';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 
 @Component({
     selector: 'tool-selector',
@@ -27,13 +28,14 @@ export class ToolSelectorComponent implements OnDestroy {
     constructor(
         state: ApplicationStateService,
         public toolsService: EmbeddedToolsService,
+        private keycloak: KeycloakService,
     ) {
         this.tools$ = state.select(state => state.tools.available);
         this.visible$ = state.select(state =>
             ((state.tools.received && state.tools.available.length > 0) || state.auth.isAdmin),
         );
         this.isAdmin$ = state.select(state => state.auth.isAdmin);
-        this.adminUILink = ADMIN_UI_LINK;
+        this.adminUILink = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
     }
 
     dropdownOpened(): void {

@@ -1,0 +1,1 @@
+Editor User Interface: Fixed a potential race-condition which prevented the edit-button to be displayed when previewing a page.

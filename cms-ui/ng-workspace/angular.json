@@ -9,8 +9,12 @@
       "prefix": "gtx",
       "architect": {
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular-builders/custom-webpack:karma",
           "options": {
+            "customWebpackConfig": {
+              "path": "../apps/admin-ui/webpack.tests.js",
+              "replaceDuplicatePlugins": true
+            },
             "main": "../apps/admin-ui/src/test.ts",
             "tsConfig": "../apps/admin-ui/tsconfig.spec.json",
             "karmaConfig": "../apps/admin-ui/karma.conf.js",

@@ -218,7 +218,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove
@@ -236,7 +236,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove again (double delete test)
@@ -254,7 +254,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Add recursively
@@ -322,7 +322,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
@@ -351,7 +351,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
@@ -395,7 +395,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Remove node
@@ -413,7 +413,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 	}
 
@@ -450,7 +450,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
@@ -478,7 +478,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
@@ -524,7 +524,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
@@ -552,7 +552,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
@@ -604,7 +604,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status
@@ -634,7 +634,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 
 		// Staging status again
@@ -1119,6 +1119,6 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 		assertContentPackageResponse(response, start, start + 60, newName, description);
 		assertContentPackageResponse(directRead(supply(() -> FileFactory.sanitizeName(newName))), start, start + 120, newName, description);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThan(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 	}
 }

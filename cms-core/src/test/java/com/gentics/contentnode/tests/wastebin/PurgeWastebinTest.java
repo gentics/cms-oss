@@ -61,7 +61,7 @@ public class PurgeWastebinTest {
 				String name = maxAge.toString();
 				Node node = ContentNodeTestDataUtils.createNode(name, name, PublishTarget.NONE);
 				nodes.put(maxAge, node);
-				
+
 				switch (maxAge) {
 				case off:
 					break;
@@ -81,7 +81,7 @@ public class PurgeWastebinTest {
 				for (TestedType type : TestedType.values()) {
 					NodeObject object = type.create(node.getFolder(), template);
 					maxAgeMap.put(type, object);
-					
+
 					// delete the object (putting it into the wastebin)
 					object.delete();
 

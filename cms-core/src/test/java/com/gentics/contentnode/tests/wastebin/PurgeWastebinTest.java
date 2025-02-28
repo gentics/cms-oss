@@ -18,8 +18,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.object.Node;
@@ -33,11 +32,13 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for the purge job
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = { Feature.WASTEBIN })
 public class PurgeWastebinTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -46,54 +47,53 @@ public class PurgeWastebinTest {
 
 	protected static Map<MaxAge, Map<TestedType, NodeObject>> objects = new HashMap<MaxAge, Map<TestedType, NodeObject>>();
 
+	protected static Map<String, String> configMap = new HashMap<>();
+
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		Transaction t = testContext.startTransaction((int)(System.currentTimeMillis() / 1000) - 10);
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-		prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), true);
-		Map<String, String> configMap = new HashMap<String, String>();
+		testContext.getContext().getTransaction().commit();
 
-		// generate test data
-		for (MaxAge maxAge : MaxAge.values()) {
-			String name = maxAge.toString();
-			Node node = ContentNodeTestDataUtils.createNode(name, name, PublishTarget.NONE);
-			nodes.put(maxAge, node);
+		try (Trx trx = new Trx()) {
+			trx.at((int)(System.currentTimeMillis() / 1000) - 10);
 
-			switch (maxAge) {
-			case off:
-				break;
-			case old:
-				configMap.put(node.getId().toString(), "86400");
-				break;
-			case young:
-				configMap.put(node.getId().toString(), "1");
-				break;
-			}
-
-			// generate objects
-			Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Source", "Template");
-			Map<TestedType, NodeObject> maxAgeMap = new HashMap<TestedType, NodeObject>();
-			objects.put(maxAge, maxAgeMap);
-
-			for (TestedType type : TestedType.values()) {
-				NodeObject object = type.create(node.getFolder(), template);
-				maxAgeMap.put(type, object);
-
-				// delete the object (putting it into the wastebin)
-				object.delete();
-				t.commit(false);
-
-				try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-					object = t.getObject(object);
+			// generate test data
+			for (MaxAge maxAge : MaxAge.values()) {
+				String name = maxAge.toString();
+				Node node = ContentNodeTestDataUtils.createNode(name, name, PublishTarget.NONE);
+				nodes.put(maxAge, node);
+				
+				switch (maxAge) {
+				case off:
+					break;
+				case old:
+					configMap.put(node.getId().toString(), "86400");
+					break;
+				case young:
+					configMap.put(node.getId().toString(), "1");
+					break;
 				}
-				assertNotNull("Object must exist", object);
-				assertTrue("Object must be deleted", object.isDeleted());
+
+				// generate objects
+				Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Source", "Template");
+				Map<TestedType, NodeObject> maxAgeMap = new HashMap<TestedType, NodeObject>();
+				objects.put(maxAge, maxAgeMap);
+
+				for (TestedType type : TestedType.values()) {
+					NodeObject object = type.create(node.getFolder(), template);
+					maxAgeMap.put(type, object);
+					
+					// delete the object (putting it into the wastebin)
+					object.delete();
+
+					try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+						object = trx.getTransaction().getObject(object);
+					}
+					assertNotNull("Object must exist", object);
+					assertTrue("Object must be deleted", object.isDeleted());
+				}
 			}
+			trx.success();
 		}
-
-		prefs.setPropertyMap("wastebin_maxage_node", configMap);
-
-		t = testContext.startSystemUserTransaction();
 
 		purgeWastebin();
 	}
@@ -131,24 +131,26 @@ public class PurgeWastebinTest {
 		NodeObject testedObject = objects.get(maxAge).get(type);
 		assertNotNull("Tested object must not be null", testedObject);
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			testedObject = t.getObject(testedObject);
-		}
+		try (Trx trx = new Trx()) {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				testedObject = trx.getTransaction().getObject(testedObject);
+			}
 
-		switch (maxAge) {
-		case off:
-			// no maxage, no purging
-			assertNotNull("Object must not have been deleted", testedObject);
-			break;
-		case old:
-			// the object is not long enough in the wastebin, so no purging
-			assertNotNull("Object must not have been deleted", testedObject);
-			break;
-		case young:
-			// the object is long enough in the wastebin, so it must have been purged
-			assertNull("Object must have been deleted", testedObject);
-			break;
+			switch (maxAge) {
+			case off:
+				// no maxage, no purging
+				assertNotNull("Object must not have been deleted", testedObject);
+				break;
+			case old:
+				// the object is not long enough in the wastebin, so no purging
+				assertNotNull("Object must not have been deleted", testedObject);
+				break;
+			case young:
+				// the object is long enough in the wastebin, so it must have been purged
+				assertNull("Object must have been deleted", testedObject);
+				break;
+			}
+			trx.success();
 		}
 	}
 
@@ -157,17 +159,22 @@ public class PurgeWastebinTest {
 	 * @throws Exception
 	 */
 	protected static void purgeWastebin() throws Exception {
-		WastebinResource res = new WastebinResource();
+		try (Trx trx = new Trx()) {
+			NodePreferences prefs = trx.getTransaction().getNodeConfig().getDefaultPreferences();
+			prefs.setPropertyMap("wastebin_maxage_node", configMap);
+			WastebinResource res = new WastebinResource();
 
-		// start the job
-		JobStatus jobStatus = res.startPurge();
-		ContentNodeRESTUtils.assertResponse(jobStatus, ResponseCode.OK);
-		assertTrue("Job should be running", jobStatus.isRunning());
-
-		while (jobStatus.isRunning()) {
-			Thread.sleep(100);
-			jobStatus = res.getStatus();
+			// start the job
+			JobStatus jobStatus = res.startPurge();
 			ContentNodeRESTUtils.assertResponse(jobStatus, ResponseCode.OK);
+			assertTrue("Job should be running", jobStatus.isRunning());
+
+			while (jobStatus.isRunning()) {
+				Thread.sleep(100);
+				jobStatus = res.getStatus();
+				ContentNodeRESTUtils.assertResponse(jobStatus, ResponseCode.OK);
+			}
+			trx.success();
 		}
 	}
 

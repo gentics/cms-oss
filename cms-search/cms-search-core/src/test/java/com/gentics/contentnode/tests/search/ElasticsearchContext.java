@@ -142,10 +142,10 @@ public class ElasticsearchContext extends GenericContainer<ElasticsearchContext>
         int major = getMajorVersion(version);
 
         if (major >= 8) {
-            return "docker.apa-it.at/elasticsearch/elasticsearch:" + version;
+            return "docker.gentics.com/elasticsearch/elasticsearch:" + version;
         }
 
-        return "docker.apa-it.at/elasticsearch/elasticsearch-oss:" + version;
+        return "docker.gentics.com/elasticsearch/elasticsearch-oss:" + version;
     }
 
     /**

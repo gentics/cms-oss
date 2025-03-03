@@ -1465,13 +1465,18 @@ public class PageFactory extends AbstractFactory {
 			boolean wasOnline = isOnline();
 			int oldPDate = getPDate().getIntTimestamp();
 			int newPdate = t.getUnixTimestamp();
+			int publisherUserId = version.getEditor().getId();
 
 			DBUtils.update("UPDATE nodeversion SET published = ? WHERE id = ?", 1, version.getId());
 			DBUtils.updateWithPK("nodeversion", "id", "published = ?", new Object[] { 0 }, "o_type = ? AND o_id = ? AND id != ?",
 					new Object[] { Page.TYPE_PAGE, getId(), version.getId() });
 
 			DBUtils.update("UPDATE page SET online = ?, pdate = ?, publisher = ? WHERE id = ?", 1, newPdate,
-					version.getEditor().getId(), getId());
+					publisherUserId, getId());
+			// also set the publisher in the nodeversion, so that it is not different
+			DBUtils.updateWithPK("page_nodeversion", "auto_id", "publisher = ?", new Object[] { publisherUserId },
+					"id = ? AND nodeversiontimestamp = ?",
+					new Object[] { getId(), version.getDate().getIntTimestamp() });
 			setPDate(newPdate);
 
 			recalculateModifiedFlag();
@@ -1515,7 +1520,7 @@ public class PageFactory extends AbstractFactory {
 			// dirt the page cache
 			t.dirtObjectCache(Page.class, getId());
 
-			onPublish(this, wasOnline, t.getUserId());
+			onPublish(this, wasOnline, publisherUserId);
 		}
 
 		/* (non-Javadoc)

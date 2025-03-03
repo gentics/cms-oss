@@ -11,6 +11,7 @@ endprologue.
 h3. Databases
 
 h4. MariaDB
+
 |_.Major Version |_.Minor Version |_.Supported |_.Notes                   |
 | 11             | 11.0-11.6      | Yes        |                          |
 | 10             | 10.4-10.11     | Yes¹       | Since Gentics CMS 6.0.0  |

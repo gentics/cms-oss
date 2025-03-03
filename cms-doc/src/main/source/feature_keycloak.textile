@@ -58,6 +58,18 @@ specific roles @attr.roles.resource.RESOURCENAME@).
 
 WARNING: For security reasons, it is not possible to add users to groups 1 or 2.
 
+h3. Required/Supported claims in the JWT
+
+When using Keycloak, the CMS will access the following claims in the JWT:
+
+|_. Name             |_. Description                               |_. Required |
+| preferred_username | Mapped to the login name of the user        | yes        |
+| given_name         | Mapped to the first name of the user        | no         |
+| family_name        | Mapped to the last name of the user         | no         |
+| email              | Mapped to the email address of the user     | no         |
+| realm_access       | Can be used for mapping roles to CMS groups | no         |
+| resource_access    | Can be used for mapping roles to CMS groups | no         |
+
 h3. Synchronizing group IDs
 
 Setting `sync_groups` to `true` in the Keycloak configuration section will cause synchronization of user groups on every login
@@ -92,6 +104,22 @@ redirect behavior:
 # "Accepts prompt=none forward from client": Set to "Off"
 
 !images/keycloak-ip-config.png(Keycloak - Identity Provider configuration)!
+
+h3. Setup Content Security Policy
+
+The Administrator User Interface requires some additional settings in Keycloak, to work as expected.
+Update the "Content Security Policy" of your Keycloak realm:
+
+# Select your Realm in the top left corner
+# Select the tab "Realm Settings" in the "Configure" category on the left sidebar
+# Select the tab "Security Defenses" on the top bar
+
+Adopt the "Content-Security-Policy" to allow the embedding from your CMS installation host:
+
+<shell>
+frame-src 'self'; frame-ancestors 'self'; object-src 'none';
+frame-src 'self'; frame-ancestors 'self' https://yourcmshost.tld; object-src 'none';
+</shell>
 
 h3. Circumvent Single Sign-on
 

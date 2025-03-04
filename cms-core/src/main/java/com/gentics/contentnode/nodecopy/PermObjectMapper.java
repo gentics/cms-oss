@@ -11,7 +11,7 @@ import com.gentics.contentnode.dbcopy.Reference;
 import com.gentics.contentnode.dbcopy.StructureCopyException;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 
 /**
  * special implementation of the objectmapper for table perm (where o_
@@ -27,7 +27,7 @@ public class PermObjectMapper extends ObjectMapper {
 		super(sourceTable, tables, reference);
 	}
 
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {
 		super.init(conn, parameter);
 
 		// // folder

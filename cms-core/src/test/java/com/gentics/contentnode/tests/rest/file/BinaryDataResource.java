@@ -1,7 +1,7 @@
 package com.gentics.contentnode.tests.rest.file;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 
 /**
  * Binary data provider resource returning text content.

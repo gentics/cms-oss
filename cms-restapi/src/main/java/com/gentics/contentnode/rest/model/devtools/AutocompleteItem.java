@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.devtools;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Item that is returned to autocomplete calls

@@ -18,7 +18,7 @@ import com.gentics.contentnode.dbcopy.Reference;
 import com.gentics.contentnode.dbcopy.StructureCopyException;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 import com.gentics.lib.db.DB;
 
 /**
@@ -42,12 +42,8 @@ public abstract class AbstractValueDSMapper extends AbstractReferenceDescriptor 
 		super(sourceTable, tables, reference);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.dbcopy.ReferenceDescriptor#init(java.sql.Connection,
-	 *      com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType[])
-	 */
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {
+	@Override
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {
 		Statement st = null;
 		ResultSet res = null;
 

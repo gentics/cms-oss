@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.scheduler;
 import com.gentics.contentnode.rest.model.response.AbstractItemResponse;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Response containing a scheduler schedule

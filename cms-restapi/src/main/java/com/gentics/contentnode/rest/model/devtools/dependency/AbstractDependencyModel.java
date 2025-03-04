@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.model.devtools.dependency;
 
 import com.gentics.contentnode.rest.model.AbstractModel;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Abstract base class for PackageDependency and ReferenceDependency implementations

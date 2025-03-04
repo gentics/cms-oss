@@ -1,9 +1,5 @@
 package com.gentics.lib.util;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.log.NodeLogger;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,7 +19,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import javax.activation.MimetypesFileTypeMap;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
@@ -31,9 +27,17 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.log.NodeLogger;
+
+import jakarta.activation.MimetypesFileTypeMap;
 
 /**
  * Utilities Class for File handling
@@ -666,7 +670,7 @@ public class FileUtil {
 		
 		try(TikaInputStream tikaInputStream = TikaInputStream.get(inputStream)) {
 			Metadata metadata = new Metadata();
-			metadata.add(Metadata.RESOURCE_NAME_KEY, fileName);
+			metadata.add(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
 			String mimeType = detector.detect(tikaInputStream, metadata).toString();
 
 			return mimeType;

@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.response.migration;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.gentics.contentnode.rest.model.Part;
 import com.gentics.contentnode.rest.model.response.GenericResponse;

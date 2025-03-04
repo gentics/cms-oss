@@ -12,13 +12,13 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.commons.collections.EnumerationUtils;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
@@ -93,7 +93,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	protected SsoUserCreatedCallback userCreatedCallback;
 
 	/* (non-Javadoc)
-	 * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
+	 * @see jakarta.servlet.Filter#init(jakarta.servlet.FilterConfig)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
@@ -137,7 +137,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	}
 
 	/* (non-Javadoc)
-	 * @see javax.servlet.Filter#destroy()
+	 * @see jakarta.servlet.Filter#destroy()
 	 */
 	@Override
 	public void destroy() {}
@@ -482,7 +482,7 @@ public abstract class AbstractSSOFilter implements Filter {
 		}
 
 		/* (non-Javadoc)
-		 * @see javax.servlet.http.HttpServletRequestWrapper#getCookies()
+		 * @see jakarta.servlet.http.HttpServletRequestWrapper#getCookies()
 		 */
 		@Override
 		public Cookie[] getCookies() {

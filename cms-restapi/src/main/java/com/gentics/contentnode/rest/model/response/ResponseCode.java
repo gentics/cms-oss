@@ -5,7 +5,7 @@
  */
 package com.gentics.contentnode.rest.model.response;
 
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * Response codes that are returned to the client as answers for requests.

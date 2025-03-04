@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model;
 
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * Types of objects, which can be handled with maintenance actions

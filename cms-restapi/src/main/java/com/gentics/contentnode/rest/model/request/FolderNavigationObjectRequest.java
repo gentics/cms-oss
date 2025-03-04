@@ -5,7 +5,7 @@
  */
 package com.gentics.contentnode.rest.model.request;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * This class will be used to map FolderNavigationObject requests to java

@@ -2,7 +2,7 @@ package com.gentics.contentnode.distributed;
 
 import java.io.Serializable;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 import com.gentics.api.lib.exception.NodeException;
 

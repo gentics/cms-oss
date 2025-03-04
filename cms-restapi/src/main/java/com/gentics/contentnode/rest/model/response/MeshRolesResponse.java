@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.response;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Response containing a list of Mesh role names

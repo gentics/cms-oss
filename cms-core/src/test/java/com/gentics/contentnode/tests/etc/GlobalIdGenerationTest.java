@@ -27,7 +27,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.dbcopy.StructureCopy;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBtableType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
@@ -66,7 +66,7 @@ public class GlobalIdGenerationTest {
 		try (InputStream in = NodeConfigRuntimeConfiguration.class.getResourceAsStream("copy_configuration.xml")) {
 			structTables = StructureCopy.readConfiguration(in);
 		}
-		JAXBtableType[] tables = structTables.getTable();
+		JAXBTableType[] tables = structTables.getTable();
 
 		Set<String> tableNames = new HashSet<String>();
 		for (int i = 0; i < tables.length; i++) {

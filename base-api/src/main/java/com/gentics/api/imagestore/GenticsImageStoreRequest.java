@@ -2,7 +2,7 @@ package com.gentics.api.imagestore;
 
 import java.util.Map;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 /**
  * Bean for accessing and modifying request parameters before they are sent to the GenticsImageStore

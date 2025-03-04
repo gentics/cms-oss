@@ -18,7 +18,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.dbcopy.StructureCopy;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBtableType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.PrefixService;
 import com.gentics.contentnode.etc.RandomPrefixService;
@@ -203,7 +203,7 @@ public class UdateChecker {
 			List<String> oldTriggerPrefixes = Arrays.asList("udate_update", "udate_insert", "udate_delete");
 			List<String> newTriggerPrefixes = Arrays.asList("uuid_insert", "uuid_update");
 			Set<String> handledTriggers = new HashSet<String>();
-			JAXBtableType[] tables = structTables.getTable();
+			JAXBTableType[] tables = structTables.getTable();
 
 			for (int i = 0; i < tables.length; i++) {
 				Table table = (Table) tables[i];

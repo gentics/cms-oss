@@ -90,7 +90,7 @@
 		<angus-mail.version>2.0.3</angus-mail.version>
 
 		<!-- TODO: integrate generic-testutils -->
-		<generic-testutils.version>1.15.9-SNAPSHOT</generic-testutils.version>
+		<generic-testutils.version>1.15.9</generic-testutils.version>
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -610,6 +610,7 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			cr.addEntry("folder.description", "description", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, false, false, false, false);
 			cr.addEntry("folder.pub_dir", "pub_dir", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, true, false, false, false);
 			cr.addEntry("object.startpage.parts.url.target", "startpage", Folder.TYPE_FOLDER, Page.TYPE_PAGE, AttributeType.link, false, false, false, false, false, false);
+			cr.addEntry("object.startpage.parts.url.url", "startpageurl", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);
 			cr.addEntry("object.navhidden", "navhidden", Folder.TYPE_FOLDER, 0, AttributeType.bool, false, false, false, false, false, false);
 			cr.addEntry("object.navsortorder", "navsortorder", Folder.TYPE_FOLDER, 0, AttributeType.integer, false, false, false, false, false, false);
 			cr.addEntry("folder.creator", "creator", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);

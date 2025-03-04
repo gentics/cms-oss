@@ -15,10 +15,17 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 
+/**
+ * Resource for providing the keycloak configuration for the UI
+ */
 @Consumes({ MediaType.APPLICATION_JSON })
 @Path("/keycloak")
 @RequiredFeature(Feature.KEYCLOAK)
 public class KeycloakResource {
+	/**
+	 * Get the configuration
+	 * @return configuration in json format
+	 */
 	@GET
 	public JsonNode getConfiguration() {
 		ObjectNode configuration = new ObjectMapper().createObjectNode();

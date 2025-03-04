@@ -116,6 +116,7 @@
     "@angular/platform-browser-dynamic": "^20.3.9",
     "@cypress/schematic": "^2.5.0",
     "@cypress/webpack-dev-server": "4.0.2",
+    "@microsoft/tsdoc": "^0.16.0",
     "@nx/angular": "22.0.3",
     "@nx/cypress": "22.0.3",
     "@nx/devkit": "22.0.3",

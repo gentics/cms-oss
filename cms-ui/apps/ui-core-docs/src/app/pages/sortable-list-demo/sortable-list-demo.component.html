@@ -9,7 +9,7 @@
         <gtx-sortable-item>
           <gtx-contents-list-item>
             <div class="item-avatar">
-              <i class="material-icons">person</i>
+              <icon>person</icon>
             </div>
             <div class="item-primary">
               <strong>{{ person.name }}</strong>
@@ -22,27 +22,27 @@
     <pre>this.items = {{ items | json }}</pre>
   </div>
   <div class="demo-code">
-        <gtx-highlighted-code language="HTML" code='
-                <gtx-sortable-list (dragEnd)="sortList($event)">
-                    <gtx-sortable-item *ngFor="let person of items">
-                        <gtx-contents-list-item>
-                            <div class="item-avatar">
-                                <i class="material-icons">person</i>
-                            </div>
-                            <div class="item-primary">
-                                <strong>(( person.name ))</strong>
-                                Age: (( person.age ))
-                            </div>
-                        </gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
-                <pre>this.items = (( items | json ))</pre>
-        '></gtx-highlighted-code>
-        <gtx-highlighted-code language="typescript" code='
-                sortList(e: ISortableEvent): void {
-                    this.items = e.sort(this.items);
-                }
-        '></gtx-highlighted-code>
+    <gtx-highlighted-code language="HTML" code='
+        <gtx-sortable-list (dragEnd)="sortList($event)">
+            <gtx-sortable-item *ngFor="let person of items">
+                <gtx-contents-list-item>
+                    <div class="item-avatar">
+                        <icon>person</icon>
+                    </div>
+                    <div class="item-primary">
+                        <strong>(( person.name ))</strong>
+                        Age: (( person.age ))
+                    </div>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        </gtx-sortable-list>
+        <pre>this.items = (( items | json ))</pre>
+    '></gtx-highlighted-code>
+    <gtx-highlighted-code language="typescript" code='
+        sortList(e: ISortableEvent): void {
+            this.items = e.sort(this.items);
+        }
+    '></gtx-highlighted-code>
 </div>
 </gtx-demo-block>
 
@@ -57,7 +57,7 @@
         <gtx-sortable-item>
           <gtx-contents-list-item>
             <div class="item-avatar">
-              <i class="material-icons">person</i>
+              <icon>person</icon>
             </div>
             <div class="item-primary">
               <strong>{{ person.name }}</strong>
@@ -70,22 +70,22 @@
     </gtx-sortable-list>
   </div>
   <div class="demo-code">
-        <gtx-highlighted-code language="HTML" code='
-                <gtx-sortable-list (dragEnd)="sortList($event)">
-                    <gtx-sortable-item *ngFor="let person of items">
-                        <gtx-contents-list-item>
-                            <div class="item-avatar">
-                                <i class="material-icons">person</i>
-                            </div>
-                            <div class="item-primary">
-                                <strong>(( person.name ))</strong>
-                                Age: (( person.age ))
-                            </div>
-                            <gtx-drag-handle></gtx-drag-handle>
-                        </gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
-        '></gtx-highlighted-code>
+    <gtx-highlighted-code language="HTML" code='
+        <gtx-sortable-list (dragEnd)="sortList($event)">
+            <gtx-sortable-item *ngFor="let person of items">
+                <gtx-contents-list-item>
+                    <div class="item-avatar">
+                        <icon>person</icon>
+                    </div>
+                    <div class="item-primary">
+                        <strong>(( person.name ))</strong>
+                        Age: (( person.age ))
+                    </div>
+                    <gtx-drag-handle></gtx-drag-handle>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        </gtx-sortable-list>
+    '></gtx-highlighted-code>
   </div>
 </gtx-demo-block>
 
@@ -101,7 +101,7 @@
         <gtx-sortable-item>
           <gtx-contents-list-item>
             <div class="item-avatar">
-              <i class="material-icons">person</i>
+              <icon>person</icon>
             </div>
             <div class="item-primary">
               <strong>{{ person.name }}</strong>
@@ -114,23 +114,23 @@
     </gtx-sortable-list>
   </div>
   <div class="demo-code">
-        <gtx-highlighted-code language="HTML" code='
-                <gtx-checkbox [(ngModel)]="disabled" label="Disable sorting"></gtx-checkbox>
-                <gtx-sortable-list [disabled]="disabled">
-                    <gtx-sortable-item *ngFor="let person of items">
-                        <gtx-contents-list-item>
-                            <div class="item-avatar">
-                                <i class="material-icons">person</i>
-                            </div>
-                            <div class="item-primary">
-                                <strong>(( person.name ))</strong>
-                                Age: (( person.age ))
-                            </div>
-                            <gtx-drag-handle></gtx-drag-handle>
-                        </gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
-        '></gtx-highlighted-code>
+    <gtx-highlighted-code language="HTML" code='
+        <gtx-checkbox [(ngModel)]="disabled" label="Disable sorting"></gtx-checkbox>
+        <gtx-sortable-list [disabled]="disabled">
+            <gtx-sortable-item *ngFor="let person of items">
+                <gtx-contents-list-item>
+                    <div class="item-avatar">
+                        <icon>person</icon>
+                    </div>
+                    <div class="item-primary">
+                        <strong>(( person.name ))</strong>
+                        Age: (( person.age ))
+                    </div>
+                    <gtx-drag-handle></gtx-drag-handle>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        </gtx-sortable-list>
+    '></gtx-highlighted-code>
   </div>
 </gtx-demo-block>
 
@@ -146,7 +146,7 @@
           <gtx-sortable-item>
             <gtx-contents-list-item>
               <div class="item-avatar">
-                <i class="material-icons">person</i>
+                <icon>person</icon>
               </div>
               <div class="item-primary">
                 <strong>{{ item }}</strong>
@@ -158,20 +158,20 @@
     </div>
   </div>
   <div class="demo-code">
-        <gtx-highlighted-code language="HTML" code='
-                <gtx-sortable-list (dragEnd)="sortLongList($event)">
-                    <gtx-sortable-item *ngFor="let item of longList">
-                        <gtx-contents-list-item>
-                            <div class="item-avatar">
-                                <i class="material-icons">person</i>
-                            </div>
-                            <div class="item-primary">
-                                <strong>(( item ))</strong>
-                            </div>
-                        </gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
-        '></gtx-highlighted-code>
+    <gtx-highlighted-code language="HTML" code='
+        <gtx-sortable-list (dragEnd)="sortLongList($event)">
+            <gtx-sortable-item *ngFor="let item of longList">
+                <gtx-contents-list-item>
+                    <div class="item-avatar">
+                        <icon>person</icon>
+                    </div>
+                    <div class="item-primary">
+                        <strong>(( item ))</strong>
+                    </div>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        </gtx-sortable-list>
+    '></gtx-highlighted-code>
   </div>
 </gtx-demo-block>
 
@@ -207,30 +207,30 @@
   </div>
   <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                List 1
-                <gtx-sortable-list (dragEnd)="sortLongList($event)" group="myGroup">
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 1</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 2</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 3</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
-                List 2
-                <gtx-sortable-list (dragEnd)="sortLongList($event)" group="myGroup">
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 1</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 2</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                    <gtx-sortable-item>
-                        <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 3</strong></div></gtx-contents-list-item>
-                    </gtx-sortable-item>
-                </gtx-sortable-list>
+            List 1
+            <gtx-sortable-list (dragEnd)="sortLongList($event)" group="myGroup">
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 1</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 2</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 1, item 3</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+            </gtx-sortable-list>
+            List 2
+            <gtx-sortable-list (dragEnd)="sortLongList($event)" group="myGroup">
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 1</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 2</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+                <gtx-sortable-item>
+                    <gtx-contents-list-item><div class="item-primary"><strong>List 2, item 3</strong></div></gtx-contents-list-item>
+                </gtx-sortable-item>
+            </gtx-sortable-list>
         '></gtx-highlighted-code>
   </div>
 </gtx-demo-block>

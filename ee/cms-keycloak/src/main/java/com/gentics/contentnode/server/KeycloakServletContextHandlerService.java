@@ -104,8 +104,14 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 				}
 
 				String realmName = keycloakPreferences.get("realm");
-				// TODO prefix?
-				String prefix = "";
+
+				// get the optional path prefix
+				String prefix = url.getPath();
+				if (!StringUtils.isBlank(prefix)) {
+					// make sure the prefix starts with /, but does not end with /
+					prefix = StringUtils.prependIfMissing(prefix, "/");
+					prefix = StringUtils.removeEnd(prefix, "/");
+				}
 
 				// create the URL for downloading the keys from keycloak and pass onto the filter
 				String certsUrl = Optional.ofNullable(keysFile).map(f -> f.toURI().toString())

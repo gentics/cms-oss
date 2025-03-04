@@ -1,0 +1,54 @@
+
+<gtx-contents-list-item *ngFor="let di of displayItems | paginate:{
+    id: UNIQUE_ID,
+    currentPage: page,
+    itemsPerPage: perPage,
+    totalItems: totalCount
+}">
+    <icon
+        class="type-icon"
+        [ngClass]="type"
+    >{{ type | gtxTypeIcon }}</icon>
+
+    <div class="item-primary">
+        <div class="name-container">
+            <a
+                *ngIf="type !== 'template'"
+                class="item-name"
+                (click)="triggerItemClick(item, $event)"
+            >{{ di.name }}</a>
+
+            <span *ngIf="type === 'template'">{{ item.name }}</span>
+
+            <item-status-label
+                [item]="di"
+                [nodeLanguages]="languages"
+                [activeNodeId]="activeNodeId"
+            ></item-status-label>
+
+            <div
+                *ngIf="type === 'page'"
+                class="language"
+                [title]="di.languageName"
+            >
+                {{ di.language }}
+            </div>
+        </div>
+
+        <div class="filename">
+            {{ di.path }}{{ di.fileName }}
+        </div>
+    </div>
+
+    <div class="right-details">
+        <detail-chip *ngIf="type === 'page'">
+            <icon>dashboard</icon> {{ di.template?.name }}
+        </detail-chip>
+    </div>
+</gtx-contents-list-item>
+
+<gtx-paging
+    *ngIf="totalCount > perPage"
+    [id]="UNIQUE_ID"
+    (pageChange)="loadPage($event)"
+></gtx-paging>

@@ -35,12 +35,14 @@ import {
     ItemListRowComponent,
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
+    ItemUsageListComponent,
     LanguageContextSelectorComponent,
     LinkTemplateComponent,
     LinkTemplateModal,
     ListFilterComponent,
     ListItemDetails,
     MasonryGridComponent,
+    MessagePropertiesComponent,
     MultiDeleteModal,
     MultiMoveModal,
     MultiRestoreModalComponent,
@@ -65,7 +67,6 @@ import {
     RessourceProxyComponent,
     SearchSuggestionBarComponent,
     SearchSuggestionComponent,
-    MessagePropertiesComponent,
     SendMessageModal,
     SortingModal,
     StartPageIcon,
@@ -74,7 +75,6 @@ import {
     TimeManagementModal,
     TranslatePageModal,
     UploadButtonComponent,
-    UsageListComponent,
     UsageModalComponent,
 } from './components';
 import {
@@ -144,6 +144,7 @@ const COMPONENTS = [
     ItemListRowComponent,
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
+    ItemUsageListComponent,
     LanguageContextSelectorComponent,
     ListFilterComponent,
     ListItemDetails,
@@ -193,7 +194,6 @@ const ENTRY_COMPONENTS = [
     TakePagesOfflineModal,
     TimeManagementModal,
     TranslatePageModal,
-    UsageListComponent,
     UsageModalComponent,
 ];
 

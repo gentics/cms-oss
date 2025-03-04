@@ -755,12 +755,16 @@ export class GCMSRestClient implements GCMSRootAPI {
         deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/page/wastebin/delete/${id}`, null, options),
         deleteMultipleFromWastebin: (body) => this.executeMappedJsonRequest(POST, '/page/wastebin/delete', body),
 
-        usageInFiles: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedFile', null, options),
-        usageInImages: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedImage', null, options),
-        usageInPages: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedPage', null, options),
+        usageInLinkedFiles: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedFile', null, options),
+        usageInLinkedImages: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedImage', null, options),
+        usageInLinkedPages: (options) => this.executeMappedJsonRequest(GET, '/page/usage/linkedPage', null, options),
+        usageInPages: (options) => this.executeMappedJsonRequest(GET, '/page/usage/page', null, options),
+        usageInTags: (options) => this.executeMappedJsonRequest(GET, '/page/usage/tag', null, options),
         usageInTemplates: (options) => this.executeMappedJsonRequest(GET, '/page/usage/template', null, options),
-        usageInSyncableObject: (options) => this.executeMappedJsonRequest(GET, '/page/usage/syncableObjects', null, options),
         usageInTotal: (options) => this.executeMappedJsonRequest(GET, '/page/usage/total', null, options),
+        usageInVariants: (options) => this.executeMappedJsonRequest(GET, '/page/usage/variant', null, options),
+
+        usageInSyncableObject: (options) => this.executeMappedJsonRequest(GET, '/page/usage/syncableObjects', null, options),
     } as const;
 
     public partType: GCMSPartTypeAPI = {
@@ -854,6 +858,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         localize: (id, body) => this.executeMappedJsonRequest(POST, `/template/localize/${id}`, body),
         unlocalize: (id, body) => this.executeMappedJsonRequest(POST, `/template/unlocalize/${id}`, body),
         unlocalizeMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlocalize', body),
+
+        usageInSyncableObject: (options) => this.executeMappedJsonRequest(GET, '/template/usage/syncableObjects', null, options),
     } as const;
 
     public user: GCMSUserAPI = {

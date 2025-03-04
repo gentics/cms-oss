@@ -68,6 +68,7 @@
     "@angular/platform-browser-dynamic": "16.2.12",
     "@angular/router": "16.2.12",
     "@bevacqua/rome": "^3.0.4",
+    "@microsoft/tsdoc": "^0.15.1",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
     "@ngxs/devtools-plugin": "^3.8.1",

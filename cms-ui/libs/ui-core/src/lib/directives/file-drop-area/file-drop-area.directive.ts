@@ -12,7 +12,7 @@ import { matchesMimeType } from '../../utils/matches-mime-type';
  *
  * ```html
  * <gtx-file-drop-area (fileDrop)="files = $event">Upload files via drag & drop</gtx-file-drop-area>
- * <div gtx-file-drop-area (fileDrop)="files = $event">Upload files via drag & drop</div>
+ * <div gtxFileDropArea (fileDrop)="files = $event">Upload files via drag & drop</div>
  * ```
  */
 @Directive({

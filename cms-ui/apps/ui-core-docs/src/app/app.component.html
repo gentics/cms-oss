@@ -45,10 +45,12 @@
         <div class="list-pane" left>
             <gtx-contents-list-item *ngFor="let item of filteredContentItems">
                 <div class="item-avatar" [ngSwitch]="item.type">
-                    <i class="material-icons" *ngSwitchCase="'css'">style</i>
-                    <i class="material-icons" *ngSwitchCase="'info'">info</i>
-                    <i class="material-icons" *ngSwitchCase="'component'">code</i>
-                    <i class="material-icons" *ngSwitchCase="'service'">share</i>
+                    <icon *ngSwitchCase="'css'">style</icon>
+                    <icon *ngSwitchCase="'info'">info</icon>
+                    <icon *ngSwitchCase="'component'">code</icon>
+                    <icon *ngSwitchCase="'service'">share</icon>
+                    <icon *ngSwitchCase="'directive'">extension</icon>
+                    <icon *ngSwitchCase="'pipe'">cable</icon>
                 </div>
 
                 <div class="item-primary">

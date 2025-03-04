@@ -4,6 +4,8 @@ export type AccessModifer = 'public' | 'protected' | 'private';
 export enum DocumentationType {
     COMPONENT = 'component',
     SERVICE = 'service',
+    DIRECTIVE = 'directive',
+    PIPE = 'pipe',
 }
 
 export interface DocBlock {
@@ -26,7 +28,7 @@ export interface InheritanceInfo {
 }
 
 export interface SourceFile {
-    type: 'component' | 'service';
+    type: DocumentationType;
     /** File path to the source-file to load the contents from. */
     sourceFile: string;
     /** Which class it extends. Used for referencing and linking. */
@@ -37,6 +39,7 @@ export interface SourceFile {
 
 export interface IDocumentation extends SourceFile {
     name: string;
+    selectors: string[];
     main: string;
     generics?: string[];
     inheritance?: InheritanceInfo[];

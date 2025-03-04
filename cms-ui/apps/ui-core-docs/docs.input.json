@@ -1,4 +1,9 @@
 {
+    "accordion.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/accordion/accordion.component.ts",
+        "extends": "base.component"
+    },
     "base.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/base-component/base.component.ts"
@@ -13,11 +18,6 @@
         "sourceFile": "../../libs/ui-core/src/lib/components/base-table/base-table.component.ts",
         "extends": "base.component"
     },
-    "accordion.component": {
-        "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/accordion/accordion.component.ts",
-        "extends": "base.component"
-    },
     "button.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/button/button.component.ts"
@@ -29,6 +29,10 @@
     "checkbox.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/checkbox/checkbox.component.ts"
+    },
+    "concat.pipe": {
+        "type": "pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/concat/concat.pipe.ts"
     },
     "contents-list-item.component": {
         "type": "component",
@@ -50,7 +54,7 @@
         "extends": "base.component"
     },
     "file-drop-area.directive": {
-        "type": "component",
+        "type": "directive",
         "sourceFile": "../../libs/ui-core/src/lib/directives/file-drop-area/file-drop-area.directive.ts"
     },
     "file-picker.component": {
@@ -62,6 +66,10 @@
         "sourceFile": "../../libs/ui-core/src/lib/components/grouped-tabs/grouped-tabs.component.ts",
         "extends": "base.component"
     },
+    "includes.pipe": {
+        "type": "pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/includes/includes.pipe.ts"
+    },
     "input.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/input/input.component.ts"
@@ -70,6 +78,10 @@
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/json-input/json-input.component.ts",
         "extends": "base-form-element.component"
+    },
+    "match-mime-type.pipe": {
+        "type":"pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/match-mime-type/matches-mime-type.pipe.ts"
     },
     "menu-toggle-button.component": {
         "type": "component",
@@ -96,6 +108,10 @@
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/range/range.component.ts"
     },
+    "range.pipe": {
+        "type":"pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/range/range.pipe.ts"
+    },
     "search-bar.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/search-bar/search-bar.component.ts"
@@ -108,6 +124,10 @@
     "side-menu.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/side-menu/side-menu.component.ts"
+    },
+    "sort.pipe": {
+        "type":"pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/sort/sort.pipe.ts"
     },
     "sortable-list.component": {
         "type": "component",
@@ -127,14 +147,18 @@
         "sourceFile": "../../libs/ui-core/src/lib/components/table/table.component.ts",
         "extends": "base-table.component"
     },
+    "tabs.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/tabs/tabs.component.ts"
+    },
     "trable.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/trable/trable.component.ts",
         "extends": "base-table.component"
     },
-    "tabs.component": {
-        "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/tabs/tabs.component.ts"
+    "transform.pipe": {
+        "type":"pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/transform/transform.pipe.ts"
     },
     "textarea.component": {
         "type": "component",
@@ -156,5 +180,9 @@
     "notification.service": {
         "type": "service",
         "sourceFile": "../../libs/ui-core/src/lib/providers/notification/notification.service.ts"
+    },
+    "value-path.pipe": {
+        "type":"pipe",
+        "sourceFile": "../../libs/ui-core/src/lib/pipes/value-path/value-path.pipe.ts"
     }
 }

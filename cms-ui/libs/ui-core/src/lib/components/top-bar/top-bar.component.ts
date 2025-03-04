@@ -9,11 +9,11 @@ import { Component } from '@angular/core';
  *
  * ```html
  * <gtx-top-bar>
- *     <i class="material-icons">menu</i>
+ *     <icon>menu</icon>
  *     <h5>Title</h5>
  *
  *     <!-- this icon will be right-aligned -->
- *     <i class="material-icons gtx-top-bar-right">person</i>
+ *     <icon class="gtx-top-bar-right">person</icon>
  * </gtx-top-bar>
  * ```
  */

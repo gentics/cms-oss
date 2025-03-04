@@ -21,6 +21,14 @@
         </div>
     </div>
 
+    <!--
+    <div *ngIf="docs.selectors" class="selectors">
+        <div *ngFor="let selector of docs.selectors">
+            <code>{{ selector | gtxSelectorDisplay:docs.type }}</code>
+        </div>
+    </div>
+    -->
+
     <div [innerHTML]="docs.main | trustedHTML"></div>
 
     <div *ngIf="docs.inputs?.length > 0" class="autodoc-section">

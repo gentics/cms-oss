@@ -41,12 +41,15 @@ import { BaseTableDemoPage } from '../pages/base-table-demo/base-table-demo.comp
 import { AccordionDemoPage } from '../pages/accordion-demo/accordion-demo.component';
 import { JsonInputDemoPage } from '../pages/json-input-demo/json-input-demo.component';
 import { PagingDemoPage } from '../pages/paging-demo/paging-demo.component';
+import { ConcatDemoPage } from '../pages/concat-demo/concat-demo.component';
 
 export enum PageType {
     COMPONENT = 'component',
     SERVICE = 'service',
     STYLING = 'css',
     INFORMATION = 'info',
+    DIRECTIVE = 'directive',
+    PIPE = 'pipe',
 }
 
 export interface IPageInfo {
@@ -98,6 +101,11 @@ export const PAGES: Record<string, IPageInfo> = {
         component: CheckboxDemoPage,
         type: PageType.COMPONENT,
     },
+    'concat.pipe': {
+        path: 'concat',
+        component: ConcatDemoPage,
+        type: PageType.PIPE,
+    },
     _colors: {
         path: 'colors',
         component: ColorsDemoPage,
@@ -129,7 +137,7 @@ export const PAGES: Record<string, IPageInfo> = {
     'file-drop-area.directive': {
         path: 'file-drop-area',
         component: FileDropAreaDemoPage,
-        type: PageType.COMPONENT,
+        type: PageType.DIRECTIVE,
         keywords: ['file', 'upload', 'drag', 'drop'],
     },
     'file-picker.component': {

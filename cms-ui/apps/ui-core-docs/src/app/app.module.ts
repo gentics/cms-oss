@@ -59,6 +59,8 @@ import { LinkToPagePipe } from './pipes/link-to-page/link-to-page.pipe';
 import { TrustedHTMLPipe } from './pipes/trusted-html/trusted-html.pipe';
 import { TypeOfPipe } from './pipes/typeof/typeof.pipe';
 import { DemoDateFormatService } from './providers/demo-date-format/demo-date-format.service';
+import { ConcatDemoPage } from './pages/concat-demo/concat-demo.component';
+import { SelectorDisplayPipe } from './pipes/selector-display/selector-display.pipe';
 
 const DEMO_APP_PAGES: Type<any>[] = [
     AccordionDemoPage,
@@ -69,6 +71,7 @@ const DEMO_APP_PAGES: Type<any>[] = [
     ButtonDemoPage,
     CheckboxDemoPage,
     ColorsDemoPage,
+    ConcatDemoPage,
     ContentsListItemDemoPage,
     DateTimePickerDemoPage,
     DateTimePickerControlsDemoPage,
@@ -114,6 +117,7 @@ const DEMO_APP_DECLARATIONS: Type<any>[] = [
     HighlightedCodeComponent,
     InheritanceDetailsComponent,
     LinkToPagePipe,
+    SelectorDisplayPipe,
     TrustedHTMLPipe,
     TypeOfPipe,
     DemoFormatDirective,

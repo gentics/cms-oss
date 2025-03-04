@@ -3,9 +3,11 @@ import { ControlValueAccessor } from '@angular/forms';
 import { BaseComponent } from '../base-component/base.component';
 
 /**
- * Base class for all components which can/are used in a form (via ngModel or via FormControls).
- * Provides a basic and consistent way to use them and prevents basic boilerplate
- * code in every component.
+ * Base class for all form based elements, which allow a user to change a value.
+ * Used to make usages with two-way bindings (`[(ngModel)]` or `[(value)]`), and
+ * the form based bindings (`[formControl]` / `new FormControl()`) consistent and easy to integrate.
+ *
+ * Takes care of basic control flows, boilerplate, and provides basic type safety via generics.
  */
 @Component({ template: '' })
 export abstract class BaseFormElementComponent<T>

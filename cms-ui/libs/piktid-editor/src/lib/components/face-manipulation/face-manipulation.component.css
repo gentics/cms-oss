@@ -1,0 +1,49 @@
+:host {
+    display: block;
+    width: 100%;
+}
+
+.face-manipulation-item {
+    padding: 0;
+    width: 100%;
+    position: relative;
+
+    .item-primary {
+        display: flex;
+    }
+
+    .generation-list {
+        display: flex;
+
+        .generation-item {
+            border: 3px solid transparent;
+            transition: 300ms;
+
+            &.selected {
+                border-color: #0096DC;
+            }
+
+            .generated-face-image-wrapper {
+                position: relative;
+                display: inline-block;
+                max-width: 256px;
+                max-height: 256px;
+            }
+
+            .generated-face-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+    }
+
+    .item-actions {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        padding: 0.5rem 0;
+    }
+}

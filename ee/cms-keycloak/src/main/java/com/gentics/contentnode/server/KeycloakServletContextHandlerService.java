@@ -35,14 +35,24 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 	public final static String INTEGRATION_FILTER_NAME = "Keycloak Gentics CMS Integration Filter";
 
 	/**
-	 * Format of the keycloak certs URL
+	 * Format of the keycloak certs URL (without a port)
 	 */
-	private static final String CERTS_URL_FORMAT = "%s://%s:%d%s/realms/%s/protocol/openid-connect/certs";
+	private static final String CERTS_URL_FORMAT = "%s://%s%s/realms/%s/protocol/openid-connect/certs";
 
 	/**
-	 * Format for the expected issuer
+	 * Format of the keycloak certs URL (with a port)
 	 */
-	private static final String ISSUER_FORMAT = "%s://%s:%d%s/realms/%s";
+	private static final String CERTS_URL_FORMAT_WITH_PORT = "%s://%s:%d%s/realms/%s/protocol/openid-connect/certs";
+
+	/**
+	 * Format for the expected issuer (without a port)
+	 */
+	private static final String ISSUER_FORMAT = "%s://%s%s/realms/%s";
+
+	/**
+	 * Format for the expected issuer (with a port)
+	 */
+	private static final String ISSUER_FORMAT_WITH_PORT = "%s://%s:%d%s/realms/%s";
 
 	/**
 	 * Logger
@@ -90,10 +100,11 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 				String proto = url.getProtocol();
 				String host = url.getHost();
 				int port = url.getPort();
+				boolean usesDefaultPort = false;
 				File keysFile = null;
 
 				if (port == -1) {
-					port = proto.equalsIgnoreCase("https") ? 443 : 80;
+					usesDefaultPort = true;
 				}
 				String keysFilePath = keycloakPreferences.get("keys");
 				if (!StringUtils.isBlank(keysFilePath)) {
@@ -115,8 +126,10 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 
 				// create the URL for downloading the keys from keycloak and pass onto the filter
 				String certsUrl = Optional.ofNullable(keysFile).map(f -> f.toURI().toString())
-						.orElse(String.format(CERTS_URL_FORMAT, proto, host, port, prefix, realmName));
-				String issuer = String.format(ISSUER_FORMAT, proto, host, port, prefix, realmName);
+						.orElse(usesDefaultPort ? String.format(CERTS_URL_FORMAT, proto, host, prefix, realmName)
+								: String.format(CERTS_URL_FORMAT_WITH_PORT, proto, host, port, prefix, realmName));
+				String issuer = usesDefaultPort ? String.format(ISSUER_FORMAT, proto, host, prefix, realmName)
+						: String.format(ISSUER_FORMAT_WITH_PORT, proto, host, port, prefix, realmName);
 
 				addFilter(servletHandler, INTEGRATION_FILTER_NAME, KeycloakIntegrationFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakServletFilterHolder -> {
 					keycloakServletFilterHolder.setInitParameter(KeycloakIntegrationFilter.INIT_KEYCLOAK_URL_PARAM, certsUrl);

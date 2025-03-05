@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { EntityImporter, ITEM_TYPE_PAGE, minimalNode, pageOne, selectRange, TestSize } from '@gentics/e2e-utils';
+import { EntityImporter, hasMatchingParams, isUrlPath, ITEM_TYPE_PAGE, minimalNode, pageOne, TestSize } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
@@ -20,10 +20,8 @@ import {
     findAlohaComponent,
     findItem,
     findList,
-    hasMatchingParams,
     HelperWindow,
     initPage,
-    isUrlPath,
     itemAction,
     login,
     selectNode,

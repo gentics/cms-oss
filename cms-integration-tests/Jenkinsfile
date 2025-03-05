@@ -116,6 +116,7 @@ spec:
 
                             dir(path: 'cms-ui') {
                                 sh "npm ci --no-fund --no-audit"
+                                sh "npx -y playwright@1.50.1 install --only-shell chromium"
                                 sh "npm run nx -- run-many --targets=e2e --configuration=ci --skipInstall --output-style=static"
                             }
                         } finally {

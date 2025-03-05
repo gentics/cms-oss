@@ -29,7 +29,7 @@ test.describe('Media Management', () => {
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
         // Navigate and login
-        await page.goto('/', { waitUntil: 'networkidle', timeout: 60_000 });
+        await page.goto('/', { timeout: 60_000 });
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

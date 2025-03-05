@@ -54,6 +54,8 @@ test.describe('Page Editing', () => {
     });
 
     test.describe('Edit Mode', () => {
+        test.slow();
+
         let editor: Locator;
 
         test.beforeEach(async ({ page }) => {

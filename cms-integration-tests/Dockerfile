@@ -1,8 +1,6 @@
-# Cypress factory configuration
-ARG NODE_VERSION="20.12.1"
-ARG CHROME_VERSION="127.0.6533.99-1"
+FROM node:20-bookworm
 
-FROM cypress/factory:4.0.2
+RUN npx -y playwright@1.50.1 install --with-deps --only-shell chromium
 
 # Add Docker's official GPG key:
 RUN apt-get update
@@ -24,16 +22,6 @@ RUN apt-get -y install \
     docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
     # Misc & Utils
     build-essential zip unzip vim less tar
-
-# "fake" dbus address to prevent errors
-# https://github.com/SeleniumHQ/docker-selenium/issues/87
-ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
-# Set the image as a proper "CI" image for cypress
-ENV CI=1
-# Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
-ENV XDG_CACHE_HOME "/tmp"
-# Disable mesa cache entirely
-ENV MESA_SHADER_CACHE_DISABLE "true"
 
 # Mount the required modules
 RUN mkdir /opt/app

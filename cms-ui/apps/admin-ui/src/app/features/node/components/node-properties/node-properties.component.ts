@@ -21,7 +21,7 @@ import {
     generateValidatorProvider,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
+export type NodePropertiesFormData = Pick<Node, 'type' | 'name' | 'inheritedFromId' | 'masterName' | 'https' | 'host' | 'hostProperty' |
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
@@ -102,9 +102,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
         this.subscriptions.push(this.appState.select(state => state.features.global[Feature.PUB_DIR_SEGMENT]).subscribe(featureEnabled => {
             this.pubDirSegmentActivated = featureEnabled;
-            if (this.form) {
-                this.form.controls.pubDirSegment.enable();
-            }
             this.changeDetector.markForCheck();
         }));
 
@@ -143,6 +140,8 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
     protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
         return new FormGroup<FormProperties<NodePropertiesFormData>>({
+            type: new FormControl(this.value?.type),
+            masterName: new FormControl(this.value?.masterName),
             name: new FormControl(this.value?.name, [
                 Validators.required,
                 Validators.maxLength(50),
@@ -190,6 +189,16 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
         if (!value) {
             return;
+        }
+
+        if (this.mode === NodePropertiesMode.CREATE) {
+            setControlsEnabled(this.form, ['pubDirSegment'], value.inheritedFromId === undefined || value.inheritedFromId === null, {
+                emitEvent: loud,
+            });
+        } else {
+            setControlsEnabled(this.form, ['pubDirSegment'], value.type !== 'channel' , {
+                emitEvent: loud,
+            });
         }
 
         if (value.previewType) {

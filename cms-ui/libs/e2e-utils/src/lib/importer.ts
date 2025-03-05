@@ -12,6 +12,7 @@ import {
     Page,
     PageCreateRequest,
     PagingSortOrder,
+    ResponseCode,
     Schedule,
     ScheduleTask,
     Template,
@@ -341,6 +342,11 @@ export class EntityImporter {
                         && (
                             err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
                             || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
+                            // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
+                            || (
+                                err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
+                                && !enabled
+                            )
                         )
                     ) {
                         return;
@@ -374,7 +380,7 @@ export class EntityImporter {
 
     public clearClient(): Promise<void> {
         this.client = null;
-        return Cypress.Promise.resolve();
+        return Promise.resolve();
     }
 
     public async setupClient(): Promise<void> {

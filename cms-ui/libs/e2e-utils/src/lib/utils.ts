@@ -364,3 +364,13 @@ export function combinationMatrix<T>(elements: T[]): T[][] {
 
     return out;
 }
+
+export function isUrlPath(url: string, path: string): boolean {
+    const urlObj = new URL(url);
+    return urlObj.pathname === path;
+}
+
+export function hasMatchingParams(url: string, params: Record<string, string>): boolean {
+    const urlObj = new URL(url);
+    return Object.entries(params).every(([key, value]) => urlObj.searchParams.get(key) === value);
+}

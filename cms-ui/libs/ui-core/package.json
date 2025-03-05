@@ -2,10 +2,6 @@
   "name": "@gentics/ui-core",
   "version": "6.2.8",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@gentics/ui-core": "file:",
-    "tslib": "^2.5.0"
-  },
   "peerDependencies": {
     "@angular/animations": ">=18.0.0",
     "@angular/common": ">=18.0.0",
@@ -23,7 +19,8 @@
     "ngx-autosize": "^2.0.4",
     "ngx-pagination": "^6.0.3",
     "roboto-fontface-woff": "^0.8.0",
-    "sortablejs": "^1.15.2"
+    "sortablejs": "^1.15.2",
+    "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@angular/animations": ">=18.0.0",

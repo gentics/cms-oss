@@ -116,6 +116,7 @@ spec:
 
                             dir(path: 'cms-ui') {
                                 sh "npm ci --no-fund --no-audit"
+                                sh "npx playwright install --with-deps chromium"
                                 sh "npm run nx -- run-many --targets=e2e --configuration=ci --output-style=static"
                             }
                         } finally {
@@ -131,7 +132,7 @@ spec:
             post {
                 always {
                     script {
-                        junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
+                        junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }
             }

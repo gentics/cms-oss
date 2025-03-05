@@ -1,5 +1,7 @@
 FROM node:20-bookworm
 
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+
 RUN npx -y playwright@1.50.1 install --with-deps --only-shell chromium
 
 # Add Docker's official GPG key:
@@ -22,12 +24,6 @@ RUN apt-get -y install \
     docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
     # Misc & Utils
     build-essential zip unzip vim less tar
-
-# Mount the required modules
-RUN mkdir /opt/app
-VOLUME /opt/app
-
-WORKDIR /opt/app
 
 # Make the image simply execute bash for jenkins to execute the own stuff later on
 CMD /bin/bash

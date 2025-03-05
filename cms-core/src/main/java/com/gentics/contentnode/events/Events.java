@@ -312,7 +312,7 @@ public final class Events {
 			try (WastebinFilter f = new WastebinFilter(Wastebin.EXCLUDE)) {
 				InstantPublisher.handleInstantPublishing(object, eventMask, null, properties);
 			}
-		} catch (NodeException e) {
+		} catch (Throwable e) {
 			log.error("Error while handling instant publishing for " + object, e);
 			String suffix = (e instanceof UnknownChannelException) ? "error.unknownchannel" : "error";
 			RenderResult renderResult = t.getRenderResult();

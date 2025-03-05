@@ -1,0 +1,3 @@
+When a node published into a Content.Repository with instant publishing enabled, operations which modified objects that should be published into the
+Content.Repository would fail with an internal server error, if the Content.Repository was currently not available or improperly set up.
+This has been fixed. While instant publishing itself will not be possible in such cases, the originating operation will succeed now.

@@ -20,6 +20,8 @@
                         class="properties"
                         [formControl]="fgProperties"
                         [mode]="NodePropertiesMode.UPDATE"
+                        [masterName]="currentEntity?.masterName"
+                        [isChannel]="currentEntity?.type === 'channel'"
                         [pureInitialValue]="true"
                         [(initialValue)]="propertiesClean"
                     ></gtx-node-properties>

@@ -21,7 +21,7 @@ import {
     generateValidatorProvider,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'type' | 'name' | 'inheritedFromId' | 'masterName' | 'https' | 'host' | 'hostProperty' |
+export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
@@ -75,6 +75,12 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
     @Input()
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
+
+    @Input()
+    public masterName: string | null = null;
+
+    @Input()
+    public isChannel: boolean = false;
 
     public nodes: Node<Raw>[];
     protected nodesLoading = false;
@@ -140,8 +146,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
     protected createForm(): FormGroup<FormProperties<NodePropertiesFormData>> {
         return new FormGroup<FormProperties<NodePropertiesFormData>>({
-            type: new FormControl(this.value?.type),
-            masterName: new FormControl(this.value?.masterName),
             name: new FormControl(this.value?.name, [
                 Validators.required,
                 Validators.maxLength(50),
@@ -192,11 +196,11 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         }
 
         if (this.mode === NodePropertiesMode.CREATE) {
-            setControlsEnabled(this.form, ['pubDirSegment'], value.inheritedFromId === undefined || value.inheritedFromId === null, {
+            setControlsEnabled(this.form, ['pubDirSegment'], value.inheritedFromId == null, {
                 emitEvent: loud,
             });
         } else {
-            setControlsEnabled(this.form, ['pubDirSegment'], value.type !== 'channel' , {
+            setControlsEnabled(this.form, ['pubDirSegment'], !this.isChannel , {
                 emitEvent: loud,
             });
         }

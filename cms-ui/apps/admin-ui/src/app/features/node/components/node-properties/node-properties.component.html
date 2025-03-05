@@ -28,9 +28,9 @@
                 </ng-container>
 
                 <ng-template #inheritedFromNotChangeable>
-                    <div *ngIf="value?.type === 'channel'" class="gtx-inheritance-info">
+                    <div *ngIf="isChannel" class="gtx-inheritance-info">
                         <icon>input</icon>
-                        {{ 'node.derives_from' | i18n:{ master: value?.masterName } }}
+                        {{ 'node.derives_from' | i18n:{ master: masterName } }}
                     </div>
                 </ng-template>
             </ng-container>

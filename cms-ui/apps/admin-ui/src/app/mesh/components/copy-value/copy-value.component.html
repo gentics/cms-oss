@@ -1,9 +1,14 @@
 <div *ngIf="label" class="label">{{ label }}</div>
-<div class="wrapper" [class.disabled]="disabled" (copy)="cancelEvent($event)">
+<div class="wrapper" [class.disabled]="disabled" (copy)="cancelIfDisabled($event)">
     <div class="content-wrapper">
         <div class="content">{{ value }}</div>
     </div>
-    <button class="copy-button" [disabled]="disabled" [title]="'shared.copy' | i18n" (click)="copyToClipboard()">
+    <button
+        class="copy-button"
+        [disabled]="disabled"
+        [title]="'shared.copy' | i18n"
+        (click)="copyToClipboard()"
+    >
         <icon>{{ icon }}</icon>
     </button>
 </div>

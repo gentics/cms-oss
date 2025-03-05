@@ -4,13 +4,12 @@ import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
-
 /** The Keycloak global is exposed when loading the keycloak.js script from the Keycloak server */
 let keycloak: Keycloak;
 let showSSOButton: boolean;
 
 const NO_CONFIG_FOUND = 'Keycloak config file not found';
-const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
+export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
 const CUSTOMER_CONFIG_PATH = './../ui-conf/';
 export const KEYCLOAK_ERROR_KEY = 'keycloakError'
@@ -36,8 +35,10 @@ export class KeycloakService {
     /** The app will not trigger redirect to Keycloak if ui-overrides.json has showSSOButton: true */
     static readonly uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
 
-
-    constructor(private client: GCMSRestClientService, private router: Router) {}
+    constructor(
+        private client: GCMSRestClientService,
+        private router: Router,
+    ) {}
 
     /**
      * Initializes Keycloak.
@@ -61,10 +62,18 @@ export class KeycloakService {
                     return this.checkKeycloakAuthOnLoad('login-required');
                 }
             })
-            .catch(() => {
+            .catch(error => {
+                // log error only if the config was found (but could not be parsed)
+                if (error !== NO_CONFIG_FOUND) {
+                    console.error('Parsing UI-Overrides failed: ', error);
+                }
                 showSSOButton = false;
                 return this.checkKeycloakAuthOnLoad('login-required');
             });
+    }
+
+    ssoSkipped(): boolean {
+        return checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME);
     }
 
     get keycloakEnabled(): boolean {
@@ -145,13 +154,9 @@ export class KeycloakService {
             const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
             console.info('Keycloak config found');
 
-            // Load the keycloak scripts from the keycloak instance.
-            // Has to be done this way, sadly
-            const keycloakUrl: string = keycloakConfig['auth-server-url'];
-            await loadScripts([
-                `${keycloakUrl}/js/keycloak.js`,
-                `${keycloakUrl}/js/keycloak-authz.js`,
-            ]);
+            // we try to load the well-known configuration endpoint for the realm just to see whether keycloak is available
+            const keycloakUrl = keycloakConfig['auth-server-url'].replace(/\/$/, '') + '/realms/' + keycloakConfig['realm'] + '/.well-known/openid-configuration';
+            await fetch(keycloakUrl);
 
             keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
             return initKeycloak(keycloak, onLoad);
@@ -162,13 +167,18 @@ export class KeycloakService {
                 this.router.navigate(['/login'], { state: {
                     [KEYCLOAK_ERROR_KEY]: 'shared.keycloak_not_available',
                 }});
+                console.log(error);
+            } else {
+                // log info that the 404 network error can safely be ignored,
+                // otherwise end-users who look in the console may get confused
+                // about why KeyCloak is being mentioned if they don't use it
+                console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
+                   ' this notice can safely be ignored.');
             }
-            console.log(error);
         }
     }
 
 }
-
 
 /**
  * Initialize the Keycloak instance and return a promise.
@@ -189,68 +199,20 @@ async function initKeycloak(keycloak: Keycloak, onLoad: 'check-sso' | 'login-req
     }
 }
 
-
 /**
  * Load a URL and parse the contents as JSON.
  */
 function loadJSON(url: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.overrideMimeType('application/json');
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState !== XMLHttpRequestState.DONE) {
-                return;
+    return fetch(url).then(response => {
+        if (!response.ok) {
+            if (response.status == 404) {
+                return Promise.reject(NO_CONFIG_FOUND);
+            } else {
+                return Promise.reject(response.statusText);
             }
-
-            if (xhr.status === 200) {
-                let json;
-                try {
-                    json = JSON.parse(xhr.responseText);
-                    resolve(json);
-                } catch (e) {
-                    reject('Keycloak config file was found but could not be parsed.\n'
-                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                        + `Error: "${e.message}"\n`
-                        + `File contents: \n${xhr.responseText}`);
-                }
-                return;
-            }
-
-            if (xhr.status === 404) {
-                // log info that the 404 network error can safely be ignored,
-                // otherwise end-users who look in the console may get confused
-                // about why KeyCloak is being mentioned if they don't use it
-                console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
-                    ' this notice can safely be ignored.');
-            }
-
-            reject(NO_CONFIG_FOUND);
-        };
-        xhr.send();
-    });
-}
-
-/**
- * Returns a promise which resolves when all the scripts have loaded.
- */
-function loadScripts(sources: string[]): Promise<void[]> {
-    return Promise.all(
-        sources.map(src => loadScript(src)),
-    );
-}
-
-/**
- * Loads a JavaScript file asynchronously.
- */
-function loadScript(src: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.onload = () => resolve();
-        script.onerror = (error) => reject(error);
-        script.src = src;
-
-        document.head.appendChild(script);
+        } else {
+            return response.json();
+        }
     });
 }
 

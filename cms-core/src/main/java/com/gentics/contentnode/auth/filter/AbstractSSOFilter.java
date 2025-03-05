@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.commons.collections.EnumerationUtils;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.contentnode.auth.filter.SsoUserCreatedCallback;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -45,7 +46,6 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.lib.base.MapResolver;
-import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 
 import de.jkeylockmanager.manager.KeyLockManager;
@@ -176,6 +176,9 @@ public abstract class AbstractSSOFilter implements Filter {
 	 * @throws ServletException
 	 */
 	protected ServletRequest doSSOLogin(HttpServletRequest request, String login, Map<String, Object> attributes) throws ServletException {
+		if (StringUtils.isBlank(login)) {
+			throw new ServletException("Error while SSO: login name was empty");
+		}
 
 		try {
 			return ssoLock.executeLocked(login, () -> {
@@ -410,7 +413,7 @@ public abstract class AbstractSSOFilter implements Filter {
 		Map<Integer, Set<Integer>> groupWithRestrictions = new HashMap<Integer, Set<Integer>>(1);
 		if (m.matches()) {
 			int groupId = ObjectTransformer.getInt(m.group(1), -1);
-			int[] nodeIds = StringUtils.splitInt(m.group(2), "~");
+			int[] nodeIds = com.gentics.lib.etc.StringUtils.splitInt(m.group(2), "~");
 			Set<Integer> nodeIdSet = new HashSet<Integer>();
 			for (int nodeId : nodeIds) {
 				nodeIdSet.add(nodeId);

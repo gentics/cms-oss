@@ -3,7 +3,6 @@ import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakService } from '@gentics/cms-components';
 import { Store } from '@ngxs/store';
-import { NGXLogger } from 'ngx-logger';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ErrorHandler } from '../../../core/providers/error-handler';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
@@ -23,8 +22,6 @@ class MockKeycloakService {
 
     login(): void {}
 }
-
-class MockNGXLogger {}
 
 class MockRouter {}
 
@@ -55,7 +52,6 @@ describe('SingleSignOn', () => {
                 { provide: AuthOperations, useClass: MockAuthOperations },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: KeycloakService, useClass: MockKeycloakService },
-                { provide: NGXLogger, useClass: MockNGXLogger },
                 { provide: Router, useClass: MockRouter },
                 { provide: Store, useClass: MockStore },
             ],

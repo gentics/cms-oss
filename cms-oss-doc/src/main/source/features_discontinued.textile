@@ -282,6 +282,7 @@ tagfill_light
 tagfill2
 tagmap_notsearchable
 tagtype_copy
+tagtypemigration
 task_schedule_ignore_processlogger
 taskrunlog
 template_copy

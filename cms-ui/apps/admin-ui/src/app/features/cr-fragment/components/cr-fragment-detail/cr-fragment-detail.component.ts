@@ -20,7 +20,6 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { delay, repeat, takeUntil } from 'rxjs/operators';
 
@@ -52,7 +51,6 @@ export class ContentRepositoryFragmentDetailComponent
     private tabHandles: Record<ContentRepositoryFragmentDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -63,7 +61,6 @@ export class ContentRepositoryFragmentDetailComponent
         private tableLoader: CRFragmentTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

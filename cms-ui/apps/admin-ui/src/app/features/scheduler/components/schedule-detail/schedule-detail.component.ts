@@ -7,7 +7,6 @@ import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NormalizableEntityType, Raw, ScheduleBO, SingleInstancePermissionType } from '@gentics/cms-models';
 import { isEqual } from'lodash-es'
-import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { delay, distinctUntilChanged, filter, map, repeat, takeUntil } from 'rxjs/operators';
 import { ScheduleTableLoaderService } from '../../providers';
@@ -42,7 +41,6 @@ export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', Sch
     private tabHandles: Record<ScheduleDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -53,7 +51,6 @@ export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', Sch
         private tableLoader: ScheduleTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

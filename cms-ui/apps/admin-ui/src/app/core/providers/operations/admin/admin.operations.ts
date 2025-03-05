@@ -86,7 +86,7 @@ export class AdminOperations extends OperationsBase {
     }
 
     setMaintenanceMode(options: MaintenanceModeRequestOptions): Observable<MaintenanceModeResponse> {
-        this.appState.dispatch(new IncrementMasterLoading('setMaintenanceMode'));
+        this.appState.dispatch(new IncrementMasterLoading('shared.set_maintenance_mode'));
         return this.api.adminInfo.setMaintenanceMode(options).pipe(
             tap(response => {
                 this.appState.dispatch(new FetchMaintenanceStatusSuccess(response));
@@ -155,7 +155,7 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('republishObjects'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.republish_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
@@ -187,7 +187,7 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('delayObjects'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.delay_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
@@ -219,7 +219,7 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('republishDelayedObjects'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.republish_delayed_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
@@ -251,7 +251,7 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('markObjectsAsPublished'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.mark_objects_as_published'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
@@ -269,12 +269,21 @@ export class AdminOperations extends OperationsBase {
     }
 
     stopPublishing(): Observable<PublishInfo> {
-        this.appState.dispatch(new IncrementMasterLoading('stopPublishing'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.stop_publishing'));
         return this.api.adminInfo.stopPublishing().pipe(
-            tap(() => this.notification.show({
-                type: 'success',
-                message: 'shared.stop_publishing_success',
-            })),
+            tap(publishInfo => {
+                if (publishInfo.running) {
+                    this.notification.show({
+                        type: 'warning',
+                        message: 'shared.stop_publishing_delayed',
+                    });
+                } else {
+                    this.notification.show({
+                        type: 'success',
+                        message: 'shared.stop_publishing_success',
+                    });
+                }
+            }),
             catchError(error => {
                 this.notification.show({
                     type: 'alert',
@@ -287,7 +296,7 @@ export class AdminOperations extends OperationsBase {
     }
 
     reloadConfiguration(): Observable<Response> {
-        this.appState.dispatch(new IncrementMasterLoading('reloadConfiguration'));
+        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.reload_configuration'));
         return this.api.adminInfo.reloadConfiguration().pipe(
             tap(() => this.notification.show({
                 type: 'success',

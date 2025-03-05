@@ -9,8 +9,7 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
-import { NGXLogger } from 'ngx-logger';
+import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import {
     catchError,
@@ -57,7 +56,6 @@ export abstract class BaseDetailComponent<
     protected stopper = new ObservableStopper();
 
     constructor(
-        protected logger: NGXLogger,
         protected route: ActivatedRoute,
         protected router: Router,
         protected appState: AppStateService,

@@ -1,8 +1,10 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -36,11 +38,18 @@ public class PublisherResourceImpl {
 	 * @throws NodeException
 	 */
 	@DELETE
-	public GenericResponse stopPublish() throws NodeException {
+	public GenericResponse stopPublish(@QueryParam("block") @DefaultValue("false") boolean block,
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			PublishController.stopPublish();
+			PublishController.stopPublish(block, waitMs);
 
 			PublishInfoResponse response = getPublishInfo();
+
+			// if we waited for the publish process to stop, but it is still running, something went wrong
+			// so we log the states of the publish threads
+			if (block && response.isRunning()) {
+				PublishController.logStackTraces();
+			}
 
 			trx.success();
 			return response;

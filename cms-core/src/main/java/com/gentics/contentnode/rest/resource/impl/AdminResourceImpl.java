@@ -785,15 +785,13 @@ public class AdminResourceImpl implements AdminResource {
 			Feature feature = Feature.getByName(featureName);
 			if (feature != null) {
 				if (feature.isAvailable()) {
-					if (feature.isActivated() && enable) {
-						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-					} else if (!feature.isActivated() && !enable) {
-						responseInfo.setResponseCode(ResponseCode.INVALIDDATA);
-					} else {
+					boolean updated = false;
+					if (feature.isActivated() ^ enable) {
 						NodeConfigRuntimeConfiguration.getPreferences().setFeature(feature, enable);
-						responseInfo.setResponseCode(ResponseCode.OK);
+						updated = true;
 					}
-					responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (ResponseCode.OK == responseInfo.getResponseCode() ? "" : "already ") + (enable ? "activated": "deactivated"));
+					responseInfo.setResponseCode(ResponseCode.OK);
+					responseInfo.setResponseMessage("Feature #" + featureName + " has been " + (updated ? "" : "already ") + (enable ? "activated": "deactivated"));
 				} else {
 					responseInfo.setResponseCode(ResponseCode.NOTLICENSED);
 					responseInfo.setResponseMessage("Feature #" + featureName + " is not licensed");

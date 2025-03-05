@@ -1,0 +1,2 @@
+A column in the table dependencymap2 has been increase to avoid SQL errors during the publish process.
+The update to this CMS version might therefore take longer than usual.

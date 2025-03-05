@@ -4,7 +4,6 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -500,6 +499,71 @@ public class GroupEditPermissionsTest extends AbstractGroupEditTest {
 	}
 
 	/**
+	 * Test moving the tested group into a target group
+	 * @throws NodeException
+	 */
+	@Test
+	public void testMoveFrom() throws NodeException {
+		UserGroup targetGroup = Trx.supply(() -> Creator.createUsergroup("Target Group", "", testGroup));
+
+		UserGroup testedGroup = getTestedGroup();
+
+		if (!adminView || !groupsView || !delete || !create || !tested.isSub()) {
+			if (canView) {
+				if (adminView && groupsView && delete && !create && tested.isSub()) {
+					exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %s (%d).", targetGroup.getName(), targetGroup.getId()));
+				} else {
+					exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %s (%d).", testedGroup.getName(), testedGroup.getId()));
+				}
+			} else {
+				exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", testedGroup.getId()));
+			}
+		}
+
+		try (Trx trx = new Trx(testUser)) {
+			new GroupResourceImpl().move(String.valueOf(targetGroup.getId()), String.valueOf(testedGroup.getId()));
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test moving a source group into the tested group
+	 * @throws NodeException
+	 */
+	@Test
+	public void testMoveTo() throws NodeException {
+		// if the tested group is the test group itself, the test makes no sense
+		if (tested.isOwn()) {
+			return;
+		}
+
+		UserGroup movedGroup = Trx.supply(() -> Creator.createUsergroup("Moved Group", "", testGroup));
+
+		UserGroup testedGroup = getTestedGroup();
+
+		if (!adminView || !groupsView) {
+			exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", movedGroup.getId()));
+		} else if (!delete) {
+			exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %s (%d).", movedGroup.getName(), movedGroup.getId()));
+		} else if (!create || !tested.isSub()) {
+			if (canView) {
+				if (!create && tested.isSub()) {
+					exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %s (%d).", testedGroup.getName(), testedGroup.getId()));
+				} else {
+					exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %s (%d).", movedGroup.getName(), movedGroup.getId()));
+				}
+			} else {
+				exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", testedGroup.getId()));
+			}
+		}
+
+		try (Trx trx = new Trx(testUser)) {
+			new GroupResourceImpl().move(String.valueOf(testedGroup.getId()), String.valueOf(movedGroup.getId()));
+			trx.success();
+		}
+	}
+
+	/**
 	 * Get the tested group
 	 * @return tested group
 	 */
@@ -557,6 +621,14 @@ public class GroupEditPermissionsTest extends AbstractGroupEditTest {
 		 */
 		public boolean isOwnOrSub() {
 			return own || sub;
+		}
+
+		/**
+		 * Return true, if the group is the user's super group
+		 * @return true for the supergroup
+		 */
+		public boolean isSuper() {
+			return !own && !sub;
 		}
 	}
 }

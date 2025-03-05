@@ -200,8 +200,8 @@
         "de": "Single Sign On"
     },
     "message_read_label":{
-        "en": "Gelesen",
-        "de": "Mark as read"
+        "en": "Mark as read",
+        "de": "Gelesen"
     },
     "message_plural": {
         "en": "messages",
@@ -502,5 +502,29 @@
     "general": {
         "en": "General",
         "de": "Allgemein"
+    },
+    "project_singular": {
+        "en": "Project",
+        "de": "Projekt"
+    },
+    "project_plural": {
+        "en": "Projects",
+        "de": "Projekte"
+    },
+    "schema_singular": {
+        "en": "Schema",
+        "de": "Schema"
+    },
+    "schema_plural": {
+        "en": "Schemas",
+        "de": "Schemas"
+    },
+    "microschema_singular": {
+        "en": "Microschema",
+        "de": "Mikroschema"
+    },
+    "microschema_plural": {
+        "en": "Microschemas",
+        "de": "Mikroschemas"
     }
 }

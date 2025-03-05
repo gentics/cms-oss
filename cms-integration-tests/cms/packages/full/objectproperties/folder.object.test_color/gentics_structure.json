@@ -13,6 +13,7 @@
   "constructId" : "994d.d84f0a55-37ad-11ef-a38e-0242ac110002",
   "required" : false,
   "inheritable" : false,
+  "restricted" : false,
   "category" : {
     "globalId" : "994d.e54046e7-37b9-11ef-a38e-0242ac110002",
     "name" : {

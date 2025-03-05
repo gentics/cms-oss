@@ -1,12 +1,10 @@
-/*
- * @author Stefan Hepp
- * @date 23.1.2006
- * @version $Id: PublishController.java,v 1.14 2010-01-08 13:22:43 norbert Exp $
- */
 package com.gentics.contentnode.publish;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import com.gentics.contentnode.distributed.DistributionUtil;
@@ -98,13 +96,13 @@ public class PublishController {
 	 * Stop the running publish process
 	 * @return true if the publish process was stopped, false if it was not running
 	 */
-	public static synchronized boolean stopPublish() {
+	public static synchronized boolean stopPublish(boolean block, long waitMs) {
 		if (!isRunning()) {
 			return false;
 		}
 
 		try {
-			return DistributionUtil.call(new StopPublisherTask());
+			return DistributionUtil.call(new StopPublisherTask().setBlock(block).setWaitMs(waitMs));
 		} catch (Exception e) {
 			logger.error("Error while stopping publish process", e);
 			return false;
@@ -117,6 +115,15 @@ public class PublishController {
 	 * @return true if the publish process was stopped, false if it was not running
 	 */
 	public static synchronized boolean stopPublishLocally(boolean block) {
+		return stopPublishLocally(block, 0);
+	}
+
+	/**
+	 * Stop the locally running publish process
+	 * @param block true to block until the publish process is stopped
+	 * @return true if the publish process was stopped, false if it was not running
+	 */
+	public static synchronized boolean stopPublishLocally(boolean block, long waitMs) {
 		if (!isRunningLocally()) {
 			return false;
 		}
@@ -126,7 +133,7 @@ public class PublishController {
 		runningPublisher.interrupt();
 		if (block) {
 			try {
-				runningPublisher.join();
+				runningPublisher.join(waitMs);
 			} catch (InterruptedException e) {
 				logger.error("Thread got interrupted while waiting for publish thread to exit.", e);
 			}
@@ -339,6 +346,17 @@ public class PublishController {
 	}
 
 	/**
+	 * Let the publisher log stack traces of all publisher related threads
+	 */
+	public static void logStackTraces() {
+		try {
+			DistributionUtil.call(new LogStackTracesTask());
+		} catch (Exception e) {
+			logger.error("Error while logging stack traces", e);
+		}
+	}
+
+	/**
 	 * Callable to check whether publisher is running
 	 */
 	public static class CheckRunStatusTask implements Callable<Boolean>, Serializable {
@@ -404,9 +422,39 @@ public class PublishController {
 		 */
 		private static final long serialVersionUID = 1741276836789795546L;
 
+		/**
+		 * Whether the call should be blocking (wait for the publish process to actually stop)
+		 */
+		protected boolean block;
+
+		/**
+		 * Maximum time (in ms) to wait for the publish process to stop, when {@link #block} is true
+		 */
+		protected long waitMs;
+
+		/**
+		 * Set block flag
+		 * @param block flag
+		 * @return fluent API
+		 */
+		public StopPublisherTask setBlock(boolean block) {
+			this.block = block;
+			return this;
+		}
+
+		/**
+		 * Set the wait time in ms
+		 * @param waitMs wait time in ms
+		 * @return fluent API
+		 */
+		public StopPublisherTask setWaitMs(long waitMs) {
+			this.waitMs = waitMs;
+			return this;
+		}
+
 		@Override
 		public Boolean call() throws Exception {
-			return stopPublishLocally(false);
+			return stopPublishLocally(block, waitMs);
 		}
 	}
 
@@ -437,6 +485,54 @@ public class PublishController {
 		@Override
 		public PublishInfo call() throws Exception {
 			return previousPublishInfo;
+		}
+	}
+
+	/**
+	 * Task to log stack traces of publish related threads
+	 */
+	public static class LogStackTracesTask implements Callable<Void>, Serializable {
+		/**
+		 * Serial Version UID
+		 */
+		private static final long serialVersionUID = -3355875102538525684L;
+
+		@Override
+		public Void call() throws Exception {
+			if (runningPublisher != null) {
+				StringWriter stringWriter = new StringWriter();
+				PrintWriter printWriter = new PrintWriter(stringWriter);
+
+				printWriter.println("Dumps of all publisher related threads:");
+				Optional.ofNullable(runningPublisher.getThreadGroup()).ifPresentOrElse(threadGroup -> {
+					// get all threads of the publisher thread's group
+					final Thread[] threads = new Thread[threadGroup.activeCount()];
+					threadGroup.enumerate(threads);
+					for (Thread thread : threads) {
+						printWriter.println("---");
+						appendStackTrace(thread, printWriter);
+					}
+				}, () -> {
+					// if the publisher thread has no thread group, just dump the publisher thread
+					printWriter.println("---");
+					appendStackTrace(runningPublisher, printWriter);
+				});
+
+				logger.error(stringWriter.toString());
+			}
+			return null;
+		}
+
+		/**
+		 * Append the stack trace of the given thread to the writer
+		 * @param t thread
+		 * @param writer writer
+		 */
+		protected void appendStackTrace(Thread t, PrintWriter writer) {
+			writer.println("Thread " + t.getName());
+			for (StackTraceElement traceElement : t.getStackTrace()) {
+				writer.println("\tat " + traceElement);
+			}
 		}
 	}
 

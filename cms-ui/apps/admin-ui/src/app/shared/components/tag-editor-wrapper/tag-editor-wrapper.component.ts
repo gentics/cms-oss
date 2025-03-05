@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
-import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
 import { TagEditorChange, TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
 import { EntityType } from '@gentics/cms-models';
 import { environment } from '../../../../environments/environment';
@@ -50,6 +50,7 @@ export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 
     constructor(
         private windowRef: WindowRef,
+        private keycloak: KeycloakService,
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -91,22 +92,30 @@ export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 
     verifyBaseUrl(): void {
         if (this.baseUrl == null) {
-            this.baseUrl = new URL(this.windowRef.nativeWindow.location.toString());
+            this.baseUrl = new URL(environment.editorUrl, this.windowRef.nativeWindow.location.toString());
         }
     }
 
     updateURLs(settings: TagEditorURL): void {
         this.verifyBaseUrl();
-        const tmpUrl = this.baseUrl;
+        const tmpUrl = new URL(this.baseUrl);
 
-        // When developing locally, the editor-ui is served on root under a different port.
-        // In production, the editor is always available under /editor/.
-        tmpUrl.pathname = (environment?.production ?? (environment as any)?.environment?.production) ? '/editor/' : '/';
+        // If the admin-ui has been opened to skip the sso-/keycloak-login,
+        // then we want to open the editor-ui with the same flag.
+        if (this.keycloak.ssoSkipped()) {
+            tmpUrl.searchParams.set(SKIP_KEYCLOAK_PARAMETER_NAME, '');
+        }
 
+        // Since we use hash-routing for the apps, we have to write it like this
         tmpUrl.hash = `#/tag-editor/${settings.nodeId}/${settings.entityType}/${settings.entityId}/${settings.tagName}`;
-        // The way angular parses the query-params is different from how the URL.toString() prints it.
-        // Therefore manual setting like this.
-        this.tagEditorUrl = tmpUrl.toString() + `?title=${this.withTitle ? 'true' : 'false'}&transparent=${this.transparent ? 'true' : 'false'}`;
+
+        // These are search-params for the app route. Therefore, we have to pass them manually
+        // at the end, as the params from `tmpUrl` are for the app, but not the route.
+        const params = new URLSearchParams();
+        params.set('title', this.withTitle ? 'true' : 'false');
+        params.set('transparent', this.transparent ? 'true' : 'false');
+
+        this.tagEditorUrl = `${tmpUrl.toString()}?${params.toString()}`;
     }
 
     messageHandler(event: MessageEvent<TagEditorChangeMessage>): void {

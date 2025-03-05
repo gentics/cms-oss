@@ -1,0 +1,9 @@
+<span *ngIf="prefix" class="inheritance-prefix">{{ prefix }}</span>
+<code class="full-class-name">
+    <span class="class-name">
+        <a [routerLink]="info.id | gtxLinkToPage">{{ info.name }}</a>
+    </span>
+    <div *ngIf="info.generics?.length > 0" class="generics-info">
+        <span *ngFor="let generic of info.generics" class="generic-name">{{ generic }}</span>
+    </div>
+</code>

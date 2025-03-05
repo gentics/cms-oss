@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BeanParam;
@@ -192,24 +194,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				return jobs;
 			}), j -> (JobStatus) j)
 				.filter(job -> TypePerms.job.canView(job.getId()))
-				.filter(job -> {
-					if (jobFilter != null && jobFilter.failed != null) {
-						if (ObjectTransformer.getBoolean(jobFilter.failed, false)) {
-							return job.getReturnValue() != 0;
-						} else {
-							return job.getReturnValue() == 0;
-						}
-					} else {
-						return true;
-					}
-				})
-				.filter(job -> {
-					if (jobFilter != null && jobFilter.active != null) {
-						return job.isActive() == ObjectTransformer.getBoolean(jobFilter.active, true);
-					} else {
-						return true;
-					}
-				})
+				.filter(job -> isFailStatusFiltered(job, jobFilter, j -> j.getReturnValue() != 0))
+				.filter(job -> isActivityFiltered(job, jobFilter, ResolvableJobStatus::isActive))
 				.filter(ResolvableFilter.get(filter, "id", "name"))
 				.sort(ResolvableComparator.get(sorting, "id", "name", "start", "end", "returnValue", "active"))
 				.page(paging)
@@ -353,7 +339,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			@BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging,
 			@BeanParam PermsParameterBean perms,
-			@BeanParam EmbedParameterBean embed
+			@BeanParam EmbedParameterBean embed,
+			@BeanParam SchedulerJobFilterParameterBean jobFilter
 	) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
@@ -371,6 +358,21 @@ public class SchedulerResourceImpl implements SchedulerResource {
 								.setLastExecution(scheduleModel.getLastExecution());
 					})
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
+					.filter(o -> isFailStatusFiltered(o, jobFilter, oo -> {
+						ScheduleModel model = scheduleModels.get(oo.getId());
+						if (model == null) {
+							// TODO does a schedule with no corresponding info equal to a failed execution?
+							return false;
+						}
+						ExecutionModel lastExecution = model.getLastExecution();
+						if (lastExecution == null) {
+							// Never executed schedule does not mean it is failed
+							return false;
+						}
+						// So as an execution with no result (yet)
+						return (lastExecution.getResult() != null && !lastExecution.getResult());
+					}))
+					.filter(o -> isActivityFiltered(o, jobFilter, SchedulerSchedule::isActive))
 					.filter(ResolvableFilter.get(filter, "id", "name", "description", "taskId"))
 					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
 					.sort(ResolvableComparator.get(sorting, "id", "name", "description", "taskId", "cdate", "edate"))
@@ -737,6 +739,51 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			}
 		}
 		return execution;
+	}
+
+	/**
+	 * Check the object for the fail status
+	 * 
+	 * @param <T> object type
+	 * @param o object
+	 * @param jobFilter the filter to get the status value from
+	 * @param failStatusGetter the object status getter
+	 * @return
+	 */
+	private <T> boolean isFailStatusFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> failStatusGetter) {
+		return isFieldFiltered(o, jobFilter, failStatusGetter, f -> f.failed, false);
+	}
+
+	/**
+	 * Check the object for the active status
+	 * 
+	 * @param <T> object type
+	 * @param o object
+	 * @param jobFilter the filter to get the status value from
+	 * @param activityGetter the object status getter
+	 * @return
+	 */
+	private <T> boolean isActivityFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> activityGetter) {
+		return isFieldFiltered(o, jobFilter, activityGetter, f -> f.active, true);
+	}
+
+	/**
+	 * Check the object for the requested Boolean (e.g. nullable) field
+	 * 
+	 * @param <T>
+	 * @param o object type
+	 * @param jobFilter the filter to get the value from
+	 * @param activityGetter the object status getter
+	 * @param filterGetter the filter field value getter
+	 * @param defaultValue the filter field default value
+	 * @return
+	 */
+	private <T> boolean isFieldFiltered(T o, SchedulerJobFilterParameterBean jobFilter, Predicate<T> activityGetter, Function<SchedulerJobFilterParameterBean, Boolean> filterGetter, boolean defaultValue) {
+		if (jobFilter != null && filterGetter.apply(jobFilter) != null) {
+			return !(activityGetter.test(o) ^ ObjectTransformer.getBoolean(filterGetter.apply(jobFilter), defaultValue));
+		} else {
+			return true;
+		}
 	}
 
 	/**

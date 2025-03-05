@@ -6,7 +6,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } f
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentPackageBO, NormalizableEntityType, Normalized, Raw } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { delay, repeat, takeUntil } from 'rxjs/operators';
 import { ContentPackageTableLoaderService } from '../../providers';
@@ -38,7 +37,6 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
     private tabHandles: Record<ContentPackageDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -49,7 +47,6 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
         private tableLoader: ContentPackageTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,
@@ -96,11 +93,10 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
     }
 
     override async updateEntity(): Promise<void> {
-        this.entitiyOperations.update(this.currentEntity.id, this.fgProperties.value).subscribe(newEntity => {
-            this.currentEntity = newEntity;
-            this.fgProperties.markAsPristine();
-            this.tableLoader.reload();
-        });
+        const newEntity = await this.entitiyOperations.update(this.currentEntity.id, this.fgProperties.value).toPromise();
+        this.currentEntity = newEntity;
+        this.fgProperties.markAsPristine();
+        this.tableLoader.reload();
     }
 
     btnSavePropertiesOnClick(): void {

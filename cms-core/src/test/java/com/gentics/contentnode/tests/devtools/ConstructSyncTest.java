@@ -409,4 +409,82 @@ public class ConstructSyncTest {
 			assertThat(construct.getValues().getByKeyname("two").getPart()).as("Part two").hasTypeId(21);
 		}, constructs.get(0).getGlobalId());
 	}
+
+	/**
+	 * Test changing the construct keyword
+	 * @throws NodeException
+	 */
+	@Test
+	public void testChangeConstructKeyword() throws NodeException {
+		Synchronizer.disable();
+		String originalKeyword = "original_keyword";
+		String modifiedKeyword = "modified_keyword";
+
+		Construct construct = supply(() -> create(Construct.class, created -> {
+			created.setKeyword(originalKeyword);
+			created.setName("Name", 1);
+		}));
+		GlobalId globalId = supply(() -> construct.getGlobalId());
+
+		consume(c -> pack.synchronize(c, true), construct);
+
+		Construct modifiedConstruct = supply(() -> update(construct, c -> {
+			c.setKeyword(modifiedKeyword);
+		}));
+
+		assertThat(modifiedConstruct).as("Modified construct").hasKeyword(modifiedKeyword);
+
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		operate(t -> {
+			Construct afterSync = t.getObject(Construct.class, globalId);
+			assertThat(afterSync)
+				.as("Construct after sync")
+				.isNotNull()
+				.hasKeyword(originalKeyword);
+		});
+	}
+
+	/**
+	 * Test changing a part keyword
+	 * @throws NodeException
+	 */
+	@Test
+	public void testChangePartKeyword() throws NodeException {
+		Synchronizer.disable();
+		String originalKeyword = "original_keyword";
+		String modifiedKeyword = "modified_keyword";
+
+		Construct construct = supply(() -> create(Construct.class, created -> {
+			created.setKeyword("keyword");
+			created.setName("Name", 1);
+
+			created.getParts().add(create(Part.class, part -> {
+				part.setKeyname(originalKeyword);
+				part.setPartTypeId(getPartTypeId(ShortTextPartType.class));
+			}, false));
+
+		}));
+		GlobalId globalId = supply(() -> construct.getGlobalId());
+
+		consume(c -> pack.synchronize(c, true), construct);
+
+		Construct modifiedConstruct = supply(() -> update(construct, c -> {
+			c.getParts().get(0).setKeyname(modifiedKeyword);
+		}));
+
+		operate(() -> {
+			assertThat(modifiedConstruct.getParts().get(0)).as("Modified part").hasKeyword(modifiedKeyword);
+		});
+
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		operate(t -> {
+			Construct afterSync = t.getObject(Construct.class, globalId);
+			assertThat(afterSync.getParts().get(0))
+				.as("PArt after sync")
+				.isNotNull()
+				.hasKeyword(originalKeyword);
+		});
+	}
 }

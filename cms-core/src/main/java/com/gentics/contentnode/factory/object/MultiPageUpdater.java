@@ -21,12 +21,14 @@ import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
@@ -192,9 +194,9 @@ public class MultiPageUpdater {
 			int numDone = 0;
 			int numNoPermission = 0;
 			int numLocked = 0;
-			List<NodeMessage> msg = null;
+			List<NodeMessage> messages = null;
 			if (commitAfter > 0 && maxMessages > 0) {
-				msg = new ArrayList<NodeMessage>(maxMessages);
+				messages = new ArrayList<NodeMessage>(maxMessages);
 			}
 			int numPages = ids.size();
 			long start = System.currentTimeMillis();
@@ -275,7 +277,9 @@ public class MultiPageUpdater {
 						}
 
 						Level level = Level.ERROR;
+						String message = null;
 						if (e instanceof InsufficientPrivilegesException) {
+							message = e.getLocalizedMessage();
 							numNoPermission++;
 							if (insufficientPermissionIsError) {
 								numErrors++;
@@ -283,6 +287,7 @@ public class MultiPageUpdater {
 								level = Level.INFO;
 							}
 						} else if (e instanceof ReadOnlyException) {
+							message = e.getLocalizedMessage();
 							numLocked++;
 							if (lockedIsError) {
 								numErrors++;
@@ -290,12 +295,14 @@ public class MultiPageUpdater {
 								level = Level.INFO;
 							}
 						} else {
+							message = I18NHelper.get("page.save.error", ModelBuilder.getFolderPath(p.getFolder()) + p.getName());
+							logger.error(String.format("Error while updating page %s", p), e);
 							numErrors++;
 						}
 
 						// collect some errors
-						if (msg != null && msg.size() < maxMessages) {
-							msg.add(new DefaultNodeMessage(level, Template.class, e.getLocalizedMessage()));
+						if (message != null && messages != null && messages.size() < maxMessages) {
+							messages.add(new DefaultNodeMessage(level, Template.class, message));
 						}
 					}
 				}
@@ -315,8 +322,8 @@ public class MultiPageUpdater {
 			getBatch.logStatistics();
 
 			UpdatePagesResult result = new UpdatePagesResult(numUpdated, numPages, numErrors, numNoPermission, numLocked);
-			if (msg != null) {
-				result.getMessages().addAll(msg);
+			if (messages != null) {
+				result.getMessages().addAll(messages);
 			}
 			return result;
 		}

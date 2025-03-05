@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Feature, UsersnapSettings } from '@gentics/cms-models';
-import { NGXLogger } from 'ngx-logger';
 import { filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base';
 import { AppStateService } from '../../../state';
@@ -74,7 +73,6 @@ export class UsersnapService extends InitializableServiceBase {
     constructor(
         private appState: AppStateService,
         private adminOps: AdminOperations,
-        private logger: NGXLogger,
     ) {
         super();
     }
@@ -84,7 +82,7 @@ export class UsersnapService extends InitializableServiceBase {
     }
 
     protected activateUsersnap(settings: UsersnapSettings): void {
-        this.logger.info('Activating Usersnap');
+        console.log('Activating Usersnap');
         this.registerUsersnapLoadEventHandler();
 
         const script = document.createElement('script');

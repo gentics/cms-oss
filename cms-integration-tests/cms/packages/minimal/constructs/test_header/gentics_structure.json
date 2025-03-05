@@ -13,7 +13,7 @@
   "mayContainsSubtags" : false,
   "editOnInsert" : false,
   "editorControlStyle" : "ABOVE",
-  "editorControlsInside" : true,
+  "editorControlsInside" : false,
   "autoEnable" : false,
   "externalEditorUrl" : "",
   "parts" : [ {
@@ -79,6 +79,23 @@
     "order" : 4,
     "mlId" : 0,
     "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  }, {
+    "globalId" : "7e91.63bb27e7-e25b-11ef-8a92-0242ac130002",
+    "name" : {
+      "de" : "Link",
+      "en" : "Link"
+    },
+    "keyword" : "link",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
     "required" : false,
     "inlineEditable" : false,
     "hideInEditor" : false,

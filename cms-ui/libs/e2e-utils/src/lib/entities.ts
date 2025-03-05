@@ -4,7 +4,7 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, TagPropertyType } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
@@ -15,6 +15,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_SCHEDULE,
     IMPORT_TYPE_USER,
     ImportData,
     ITEM_TYPE_FILE,
@@ -25,6 +26,9 @@ import {
     LANGUAGE_EN,
     NodeImportData,
     PageImportData,
+    ScheduleImportData,
+    TASK_LINK_CHECKER,
+    TASK_PUBLISH,
     TestSize,
     UserImportData,
 } from './common';
@@ -110,6 +114,32 @@ export const userBeta: UserImportData = {
     password: 'beta',
     login: 'beta',
     description: 'Test User Beta',
+};
+
+export const schedulePublisher: ScheduleImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_SCHEDULE,
+    [IMPORT_ID]: 'schedulePublish',
+
+    active: true,
+    parallel: false,
+    name: 'Run Publish Process',
+    task: TASK_PUBLISH,
+    scheduleData: {
+        type: ScheduleType.MANUAL,
+    },
+};
+
+export const scheduleLinkChecker: ScheduleImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_SCHEDULE,
+    [IMPORT_ID]: 'scheduleLinkChecker',
+
+    active: true,
+    parallel: false,
+    name: 'Run Link Checker',
+    task: TASK_LINK_CHECKER,
+    scheduleData: {
+        type: ScheduleType.MANUAL,
+    },
 };
 
 /*

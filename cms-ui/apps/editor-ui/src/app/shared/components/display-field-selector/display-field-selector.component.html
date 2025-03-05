@@ -2,16 +2,15 @@
     <h4>{{ 'modal.display_field_selector_title' | i18n }}</h4>
 </div>
 <div class="modal-content">
+    <gtx-contents-list-item *ngIf="type !== 'folder'">
+        <div class="item-primary">
+            <gtx-checkbox [(ngModel)]="showPath"
+                          name="showPath"
+                          [label]="'common.path_label' | i18n">
+            </gtx-checkbox>
+        </div>
+    </gtx-contents-list-item>
     <gtx-sortable-list (dragEnd)="sortList($event)">
-        <gtx-contents-list-item *ngIf="type !== 'folder'">
-            <div class="item-primary">
-                <gtx-checkbox [(ngModel)]="showPath"
-                              name="showPath"
-                              [label]="'common.path_label' | i18n">
-                </gtx-checkbox>
-            </div>
-        </gtx-contents-list-item>
-
         <gtx-sortable-item *ngFor="let field of availableFields">
             <gtx-contents-list-item>
                 <div class="item-primary">

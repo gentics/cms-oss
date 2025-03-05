@@ -5,7 +5,6 @@ import {
     I18nNotificationService,
     I18nService,
     LocalTranslateLoader,
-    LoggingHelperService,
 } from '@admin-ui/core';
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
@@ -19,15 +18,11 @@ import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClient
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { HotkeyModule } from 'angular2-hotkeys';
-import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 import {
     ActivityManagerComponent,
     ChangePasswordModalComponent,
     ConfirmReloadModalComponent,
-    DebugToolModalComponent,
     DiscardChangesModalComponent,
     LoggingInOverlayComponent,
     MessageBodyComponent,
@@ -94,7 +89,6 @@ import {
     UsersnapService,
     UserTableLoaderService,
 } from './providers';
-import { DebugToolService } from './providers/debug-tool/debug-tool.service';
 import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
 import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
@@ -128,7 +122,6 @@ const COMPONENTS: any[] = [
     ActivityManagerComponent,
     ChangePasswordModalComponent,
     ConfirmReloadModalComponent,
-    DebugToolModalComponent,
     DiscardChangesModalComponent,
     LoggingInOverlayComponent,
     MessageBodyComponent,
@@ -179,7 +172,6 @@ const PROVIDERS: any[] = [
     DataSourceHandlerService,
     DataSourceTableLoaderService,
     DataSourceEntryHandlerService,
-    DebugToolService,
     DevToolPackageHandlerService,
     DevToolPackageManagerService,
     DevToolPackageTableLoaderService,
@@ -196,7 +188,6 @@ const PROVIDERS: any[] = [
     I18nService,
     LanguageHandlerService,
     LanguageTableLoaderService,
-    LoggingHelperService,
     LogoutCleanupService,
     MaintenanceModeService,
     MessageService,
@@ -246,11 +237,9 @@ const PROVIDERS: any[] = [
         MeshRestClientModule,
         GenticsUICoreModule,
         CmsComponentsModule,
-        HotkeyModule.forRoot(),
         TranslateModule.forRoot({
             loader: { provide: TranslateLoader, useClass: LocalTranslateLoader },
         }),
-        LoggerModule.forRoot({ disableConsoleLogging: false, level: environment.production ? NgxLoggerLevel.ERROR : NgxLoggerLevel.DEBUG }),
         SharedModule,
         StateModule,
         MeshModule,

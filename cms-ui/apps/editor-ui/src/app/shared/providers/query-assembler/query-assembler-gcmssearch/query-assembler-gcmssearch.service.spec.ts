@@ -58,6 +58,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             nodeId: 2,
             language: 'en',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 2;
@@ -90,6 +91,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             searchcontent: true,
             language: 'en',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -119,6 +121,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             planned: true,
             language: 'en',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -149,6 +152,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             niceurl: `.*${searchTerm}.*`,
             language: 'en',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -179,6 +183,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             filename: `%${searchTerm}%`,
             language: 'en',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;
@@ -211,6 +216,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             let requestOptionsAssembled: GtxCmsQueryOptions;
             const mappedExpected: GtxCmsQueryOptions = {
                 folderId: 1,
+                folder: true,
                 ...requestOptionsExpected,
             };
             const type: FolderItemType = 'page';
@@ -293,6 +299,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             editedsince: searchDate.getTime() / 1000,
             language: 'de',
             langfallback: false,
+            folder: true,
         };
         const type: FolderItemType = 'page';
         const parentId = 1;

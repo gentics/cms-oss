@@ -14,7 +14,7 @@ The following guidelines can be used to enhance your ticket with additional and 
 * Write a clear subject:
     ** Good: "Cancelling a File Copy dialog crashes File Manager"
     ** Bad: "Software crashes"
-* Add information about used software. (e.g: Internet Explorer 9.x, Gentics CMS Version 5.14.3)
+* Add information about used software. (e.g: Firefox 134, Gentics CMS Version 6.2.0)
 * Write precise steps to reproduce the problem.
     ** What happened and what did you expect to happen?
     ** Add Screenshots/Screencasts if possible.

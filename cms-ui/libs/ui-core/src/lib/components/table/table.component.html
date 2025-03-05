@@ -92,7 +92,7 @@
         *ngFor="let row of rows | paginate:{
             id: UNIQUE_ID,
             currentPage: page,
-            itemsPerPage: perPage,
+            itemsPerPage: paginated ? perPage : rows.length,
             totalItems: totalCount,
         }; trackBy: trackRow"
         class="grid-row data-row"

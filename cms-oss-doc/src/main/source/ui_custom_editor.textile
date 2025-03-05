@@ -54,19 +54,20 @@ bc. @gentics:registry=https://repo.gentics.com/repository/npm-products/
 # Setup the types
 Define the needed window-types with a type-definition file: @editor.d.ts@
 
-bc..
+<javascript>
 import { WindowWithCustomTagPropertyEditor, WindowWithCustomTagEditor } from '@gentics/cms-integration-api-models';
 
 declare global {
     interface Window extends WindowWithCustomTagEditor, WindowWithCustomTagPropertyEditor {}
 }
-p.
+</javascript>
 
 With basic typing setup complete, you're all set to develop your own editor.
 
 h4. Example Template
 
-bc..
+<div class="code_container">
+<pre class="brush: xml; toolbar: false; gutter: true;">
 <html>
     <body>
         <main>
@@ -77,11 +78,12 @@ bc..
         </main>
     </body>
 </html>
-p.
+</pre>
+</div>
 
 h4. Example Tag-Editor Implementation
 
-bc..
+<javascript>
 import { CustomTagEditor, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty } from '@gentics/cms-models';
 import { MyCustomEditor } from './custom-editor';
@@ -150,11 +152,11 @@ const editor = new MyCustomTagEditor();
 
 // Register your editor
 window.GcmsCustomTagEditor = editor;
-p.
+</javascript>
 
 h4. Example Property-Editor Implementation
 
-bc..
+<javascript>
 import { CustomTagPropertyEditor, TagEditorContext, TagPropertiesChangedFn } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty, TagPart, TagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { MyCustomEditor } from './custom-editor';
@@ -230,11 +232,11 @@ const editor = new MyCustomPropertyEditor();
 
 // Register your editor
 window.GcmsCustomTagPropertyEditor = editor;
-p.
+</javascript>
 
 h4. Example Size handling
 
-bc..
+<javascript>
 import { CustomEditor, CustomEditorSizeChangedFn } from '@gentics/cms-integration-api-models';
 
 export abstract class MyCustomEditor implements CustomEditor {
@@ -261,4 +263,4 @@ export abstract class MyCustomEditor implements CustomEditor {
         });
     }
 }
-p.
+</javascript>

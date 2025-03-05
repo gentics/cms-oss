@@ -140,7 +140,7 @@ export class AdminInfoApi {
      * Cancel any CMS publishing processes
      */
     stopPublishing(): Observable<PublishInfo> {
-        return this.apiBase.delete('publisher');
+        return this.apiBase.delete('publisher', {"block": "true", "wait": 10000});
     }
 
 }

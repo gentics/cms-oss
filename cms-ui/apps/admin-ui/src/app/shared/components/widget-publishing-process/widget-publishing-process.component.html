@@ -77,7 +77,7 @@
 
         <div *ngIf="hasFailedJobs; else processStatusHealthyContent">
             <span class="warning">{{ 'widget.publishing_process_status_failed' | i18n }}</span> -
-            <a [routerLink]="['/' + AdminUIModuleRoutes.CONTENT_REPOSITORIES]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
+            <a [routerLink]="['/' + AdminUIModuleRoutes.SCHEDULER]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
         </div>
 
         <ng-template #processStatusHealthyContent>

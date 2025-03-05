@@ -1,0 +1,108 @@
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Basic options">
+    <div class="demo-result">
+        <div class="row">
+            <div class="column small-4">
+                <gtx-input label="Message" [(ngModel)]="message"></gtx-input>
+            </div>
+            <div class="column small-4">
+                <gtx-select label="Toast Type" [(ngModel)]="type">
+                    <gtx-option value="default">default</gtx-option>
+                    <gtx-option value="success">success</gtx-option>
+                    <gtx-option value="alert">alert</gtx-option>
+                    <gtx-option value="warning">warning</gtx-option>
+                </gtx-select>
+            </div>
+            <div class="column small-4">
+                <gtx-input label="Delay" [(ngModel)]="delay" type="number" min="0" max="10000" step="500"></gtx-input>
+            </div>
+        </div>
+        <gtx-button (click)="showBasic()">show</gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+               <gtx-button (click)="showBasic()">show</gtx-button>
+                 '></gtx-highlighted-code>
+        <gtx-highlighted-code language="typescript" code='
+               showBasic(): void {
+                   this.notification.show({
+                       message: this.message,
+                       type: this.type,
+                       delay: this.delay
+                   });
+               }
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+
+<gtx-demo-block demoTitle="Actions">
+    <div class="demo-result">
+        <p>
+            A Toast notification can be configured with and action, which can then trigger an onClick callback when
+            it is clicked:
+        </p>
+        <gtx-button (click)="showWithAction()">Send regrettable email</gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+               <gtx-button (click)="showWithAction()">Send regrettable email</gtx-button>
+                 '></gtx-highlighted-code>
+        <gtx-highlighted-code language="typescript" code='
+               showWithAction(): void {
+                   this.notification.show({
+                       message: "Email sent",
+                       action: {
+                           label: "Undo",
+                           onClick: (): any =>  this.notification.show({
+                               message: "Cancelled sending",
+                               type: "success"
+                           })
+                       }
+                   });
+               }
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+
+<gtx-demo-block demoTitle="Multi-Line Notifications">
+    <div class="demo-result">
+        <div class="row">
+            <div class="columns small-12 large-6">
+                <gtx-textarea label="Message" [(ngModel)]="multilineMessage"></gtx-textarea>
+            </div>
+            <div class="columns small-8 large-4">
+                <gtx-select label="Toast Type" [(ngModel)]="type">
+                    <gtx-option value="default">default</gtx-option>
+                    <gtx-option value="success">success</gtx-option>
+                    <gtx-option value="alert">alert</gtx-option>
+                    <gtx-option value="warning">warning</gtx-option>
+                </gtx-select>
+            </div>
+            <div class="columns small-3 small-push-1 large-2 large-push-0">
+                <gtx-button (click)="showMultiline()" style="float: right; margin-top: 20px">show</gtx-button>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-button (click)="showMultiline()">show</gtx-button>
+        '></gtx-highlighted-code>
+        <gtx-highlighted-code language="typescript" code='
+                showMultiline(): void {
+                    const toast = this.notification.show({
+                        message: this.multilineMessage,
+                        type: this.type,
+                        action: {
+                            label: "Dismiss",
+                            onClick: () => toast.dismiss()
+                        }
+                    });
+                }
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

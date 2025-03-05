@@ -2,7 +2,6 @@ import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { UsersnapSettings } from '@gentics/cms-models';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { tap } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
 import { InterfaceOf } from '../../../common';
@@ -38,7 +37,6 @@ describe('UsersnapService', () => {
         TestBed.configureTestingModule({
             imports: [
                 assembleTestAppStateImports(),
-                LoggerTestingModule,
             ],
             providers: [
                 TEST_APP_STATE,

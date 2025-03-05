@@ -1,0 +1,3 @@
+When importing an object property definition from a devtool package, where the object property definition
+does not have a description set, the description would be set to a number instead of an empty string.
+This has been fixed.

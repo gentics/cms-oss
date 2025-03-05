@@ -97,13 +97,7 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
     }
 
     protected override hasChildren(entity: ContentItemBO, options?: ContentItemTrableLoaderOptions): boolean {
-        if (entity.type === 'node' || entity.type === 'channel') {
-            return true;
-        } else if (entity.type === 'folder') {
-            return entity.hasSubfolders;
-        } else {
-            return false;
-        }
+        return entity.type === 'node' || entity.type === 'channel' || entity.type === 'folder';
     }
 
     protected override canBeSelected(entity: ContentItemBO, options?: ContentItemTrableLoaderOptions): boolean {

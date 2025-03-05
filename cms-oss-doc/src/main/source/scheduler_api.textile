@@ -18,7 +18,7 @@ In case of errors the Scheduler is able to send notification mails. Use the arra
 
 NOTE: The Scheduler will send notification emails whenever a command that has been executed returns any other exit status than 0.
 
-See "eMail Sending with Gentics CMS":https://gentics.com/Content.Node/guides/email_sending.html for the necessary configuration items for sending emails.
+See "eMail Sending with Gentics CMS":email_sending.html for the necessary configuration items for sending emails.
 
 <shell filename="conf/*.yml">
 scheduler_job_failure:

@@ -12,6 +12,7 @@
   },
   "constructId" : "3821.174e1f5c-3244-11ef-872a-0242ac110002",
   "required" : false,
+  "restricted" : false,
   "category" : {
     "globalId" : "994d.e54046e7-37b9-11ef-a38e-0242ac110002",
     "name" : {

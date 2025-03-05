@@ -1,0 +1,1 @@
+Administrator User Interface: Now the `Last Scheduler Task Status` shows an actual status of the last scheduled task. The failure logs link is now pointing to the Scheduler instead of Content Repositories.

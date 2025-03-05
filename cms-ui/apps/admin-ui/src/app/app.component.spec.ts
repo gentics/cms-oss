@@ -8,7 +8,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
-import { LoggerTestingModule } from 'ngx-logger/testing';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
 import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 import { componentTest } from '../testing';
@@ -36,10 +35,8 @@ import { MessageBodyComponent } from './core/components/message-body';
 import { MessageInboxComponent } from './core/components/message-inbox/message-inbox.component';
 import { MessageListComponent } from './core/components/message-list/message-list.component';
 import { BreadcrumbsService } from './core/providers/breadcrumbs/breadcrumbs.service';
-import { DebugToolService } from './core/providers/debug-tool/debug-tool.service';
 import { I18nService } from './core/providers/i18n/i18n.service';
 import { MockI18nServiceWithSpies } from './core/providers/i18n/i18n.service.mock';
-import { LoggingHelperService } from './core/providers/logging-helper/logging-helper.service';
 import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './core/providers/operations/admin/admin.operations';
@@ -81,8 +78,6 @@ class MockAdminOperations implements Partial<InterfaceOf<AdminOperations>> {
     getCmsVersion = jasmine.createSpy('getCmsVersion').and.returnValue(of({}));
     getCmsUpdates = jasmine.createSpy('getCmsUpdates').and.returnValue(of({}));
 }
-
-class MockLoggingHelperService extends InitializableService { }
 class MockLanguageHandlerService implements Partial<InterfaceOf<LanguageHandlerService>> {
     getBackendLanguages = jasmine.createSpy('getBackendLanguages').and.stub();
 }
@@ -170,7 +165,6 @@ describe('AppComponent', () => {
                 assembleTestAppStateImports(),
                 NoopAnimationsModule,
                 CmsComponentsModule,
-                LoggerTestingModule,
                 RouterTestingModule,
                 HttpClientTestingModule,
                 AngularSvgIconModule.forRoot(),
@@ -199,13 +193,11 @@ describe('AppComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: AuthOperations, useClass: MockAuthOperations },
                 { provide: BreadcrumbsService, useClass: MockBreadcrumbsService },
-                { provide: DebugToolService, useClass: MockDebugToolService },
                 { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorageService },
                 { provide: EntityManagerService, useClass: MockEntityManager },
                 { provide: FeatureOperations, useClass: MockFeatureOperations },
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
-                { provide: LoggingHelperService, useClass: MockLoggingHelperService },
                 { provide: LogoutCleanupService, useClass: MockLogoutCleanupService },
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },
                 MessageService,
@@ -234,10 +226,8 @@ describe('AppComponent', () => {
     it('initializes services that require initialization',
         componentTest(() => TestComponent, (fixture, instance) => {
             const breadcrumbs: MockBreadcrumbsService = TestBed.get(BreadcrumbsService);
-            const debugTool: MockDebugToolService = TestBed.get(DebugToolService);
             const editorUiLocalStorage: MockEditorUiLocalStorageService = TestBed.get(EditorUiLocalStorageService);
             const entityManager: MockEntityManager = TestBed.get(EntityManagerService);
-            const loggingHelper: MockLoggingHelperService = TestBed.get(LoggingHelperService);
             const logoutCleanup: MockLogoutCleanupService = TestBed.get(LogoutCleanupService);
             const maintenanceMode: MockMaintenanceModeService = TestBed.get(MaintenanceModeService);
             const messageService: MessageService = TestBed.get(MessageService);
@@ -250,7 +240,6 @@ describe('AppComponent', () => {
             fixture.detectChanges();
             tick();
 
-            expect(loggingHelper.init).toHaveBeenCalledTimes(1);
             expect(logoutCleanup.init).toHaveBeenCalledTimes(1);
             expect(userSettings.init).toHaveBeenCalledTimes(1);
             expect(breadcrumbs.init).toHaveBeenCalledTimes(1);
@@ -260,7 +249,6 @@ describe('AppComponent', () => {
             expect(maintenanceMode.refreshOnLogout).toHaveBeenCalledTimes(1);
             expect(maintenanceMode.refreshPeriodically).toHaveBeenCalledTimes(1);
             expect(maintenanceMode.validateSessionWhenActivated).toHaveBeenCalledTimes(1);
-            expect(debugTool.init).toHaveBeenCalledTimes(1);
             expect(usersnapService.init).toHaveBeenCalledTimes(1);
 
             expect(spyOnMessageServicePoll).toHaveBeenCalledTimes(1);

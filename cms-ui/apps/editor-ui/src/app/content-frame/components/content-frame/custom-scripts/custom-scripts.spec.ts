@@ -95,9 +95,9 @@ describe('custom scripts', () => {
             });
         });
 
-        it('ignores links in edit mode', () => {
+        it('prevents regular clicks to internal links (edit-mode)', () => {
             fixture = CustomScriptsTestFixture.withPageEditMode();
-            const link = fixture.addLinkToDifferentPageInEditMode();
+            let link = fixture.addLinkToDifferentPageInEditMode();
             const event = link.leftClick();
             link.middleClick();
             link.shiftClick();
@@ -106,27 +106,42 @@ describe('custom scripts', () => {
             expect(event.defaultPrevented).toBe(true);
             expect(fixture.window.open).not.toHaveBeenCalled();
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
-        });
 
-        it('changes the URL for "target=_blank" links to pages', () => {
-            fixture = CustomScriptsTestFixture.withPagePreview();
-            fixture.addInternalLinkWithTargetBlank().leftClick();
+            link = fixture.addInternalLinkWithTargetBlank();
+            link.leftClick();
+            link.middleClick();
+            link.shiftClick();
 
             expect(fixture.eventPreventedByCustomScript).toBe(true);
-            expect(fixture.window.open).not.toHaveBeenCalled();
-            expect(fixture.scriptHost.navigateToPagePreview).toHaveBeenCalled();
-        });
-
-        it('ignores "target=_blank" links which do not link to pages', () => {
-            fixture = CustomScriptsTestFixture.withPagePreview();
-            fixture.addExternalLinkWithTargetBlank().leftClick();
-
-            expect(fixture.eventPreventedByCustomScript).toBe(false);
             expect(fixture.window.open).not.toHaveBeenCalled();
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
-        it('navigates in the UI when clicking (left-click) links to other pages', () => {
+        it('navigates in the UI when ctrl-clicking links to other pages (edit-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPageEditMode();
+            const link = fixture.addLinkToDifferentPage();
+            const event = link.ctrlClick();
+
+            expect(event.defaultPrevented).toBe(true);
+            expect(fixture.window.open).not.toHaveBeenCalled();
+            expect(fixture.scriptHost.navigateToPagePreview).toHaveBeenCalledWith(
+                fixture.linkToOtherPage.nodeId,
+                fixture.linkToOtherPage.pageId,
+            );
+        });
+
+        it('prevents regular clicks to external links (edit-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPageEditMode();
+            const link = fixture.addExternalLinkWithTargetBlank();
+            link.leftClick();
+            link.shiftClick();
+
+            expect(fixture.eventPreventedByCustomScript).toBe(true);
+            expect(fixture.window.open).not.toHaveBeenCalled();
+            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
+        });
+
+        it('navigates in the UI when clicking links to other pages (preview-mode)', () => {
             fixture = CustomScriptsTestFixture.withPagePreview();
             const link = fixture.addLinkToDifferentPage();
             const event = link.leftClick();
@@ -139,37 +154,54 @@ describe('custom scripts', () => {
             );
         });
 
-        it('opens links in new page when clicked via middle mouse button', () => {
-            fixture = CustomScriptsTestFixture.withPagePreview();
-            const link = fixture.addLinkToDifferentPage();
+        it('opens external links in new page when clicked via middle mouse button (edit-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPageEditMode();
+            const link = fixture.addExternalLinkWithTargetBlank();
             const event = link.middleClick();
 
             expect(event.defaultPrevented).toBe(true);
-            expect(fixture.window.open).toHaveBeenCalledWith(fixture.urlOfInternalLink, '_blank');
+            expect(fixture.window.open).toHaveBeenCalledWith(fixture.ALOHAPAGE_URL_OF_EXTERNAL_PAGE, '_blank');
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
-        it('opens links in new page when clicked via ctrl+click', () => {
-            fixture = CustomScriptsTestFixture.withPagePreview();
-            const link = fixture.addLinkToDifferentPage();
+        it('opens external links in new page when clicked via ctrl+click (edit-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPageEditMode();
+            const link = fixture.addExternalLinkWithTargetBlank();
             const event = link.ctrlClick();
 
             expect(event.defaultPrevented).toBe(true);
-            expect(fixture.window.open).toHaveBeenCalledWith(fixture.urlOfInternalLink, '_blank');
+            expect(fixture.window.open).toHaveBeenCalledWith(fixture.ALOHAPAGE_URL_OF_EXTERNAL_PAGE, '_blank');
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
-        it('navigates to page when clicked via shift+click', () => {
+        it('opens external links in new page when left-clicked (preview-mode)', () => {
             fixture = CustomScriptsTestFixture.withPagePreview();
-            const link = fixture.addLinkToDifferentPage();
-            const event = link.shiftClick();
+            const link = fixture.addExternalLinkWithTargetBlank();
+            const event = link.leftClick();
 
             expect(event.defaultPrevented).toBe(true);
-            expect(fixture.window.open).not.toHaveBeenCalled();
-            expect(fixture.scriptHost.navigateToPagePreview).toHaveBeenCalledWith(
-                fixture.linkToOtherPage.nodeId,
-                fixture.linkToOtherPage.pageId,
-            );
+            expect(fixture.window.open).toHaveBeenCalledWith(fixture.ALOHAPAGE_URL_OF_EXTERNAL_PAGE, '_blank');
+            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
+        });
+
+        it('opens external links in new page when clicked via middle mouse button (preview-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPagePreview();
+            const link = fixture.addExternalLinkWithTargetBlank();
+            const event = link.middleClick();
+
+            expect(event.defaultPrevented).toBe(true);
+            expect(fixture.window.open).toHaveBeenCalledWith(fixture.ALOHAPAGE_URL_OF_EXTERNAL_PAGE, '_blank');
+            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
+        });
+
+        it('opens external links in new page when clicked via ctrl+click (preview-mode)', () => {
+            fixture = CustomScriptsTestFixture.withPagePreview();
+            const link = fixture.addExternalLinkWithTargetBlank();
+            const event = link.ctrlClick();
+
+            expect(event.defaultPrevented).toBe(true);
+            expect(fixture.window.open).toHaveBeenCalledWith(fixture.ALOHAPAGE_URL_OF_EXTERNAL_PAGE, '_blank');
+            expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();
         });
 
         it('changes the URL of links when right-clicked by the user', () => {
@@ -218,8 +250,8 @@ describe('custom scripts', () => {
 
 class CustomScriptsTestFixture {
 
-    private readonly ALOHAPAGE_URL_OF_OTHER_PAGE = '/alohapage?nodeid=1&language=2&sid=123&real=newview&realid=47';
-    private readonly ALOHAPAGE_URL_OF_EXTERNAL_PAGE = '/some/other/page';
+    public readonly ALOHAPAGE_URL_OF_OTHER_PAGE = '/alohapage?nodeid=1&language=2&sid=123&real=newview&realid=47';
+    public readonly ALOHAPAGE_URL_OF_EXTERNAL_PAGE = '/some/other/page';
     readonly linkToOtherPage = { nodeId: 1, pageId: 47 };
     readonly urlOfInternalLink = 'internal link (node 1 page 47)';
 

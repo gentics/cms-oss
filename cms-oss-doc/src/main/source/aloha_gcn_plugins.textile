@@ -30,7 +30,6 @@ aloha_plugins_global:
   - "common/contenthandler"
   - "common/commands"
   - "common/dom-to-xhtml"
-  - "gcn/spellcheck"
 </javascript>
 
 NOTE: The Gentics CMS Integration Plugin "gcn/gcn" will always be added automatically, if not contained in this list.
@@ -52,7 +51,6 @@ aloha_plugins_global:
   - "common/contenthandler"
   - "common/commands"
   - "common/dom-to-xhtml"
-  - "gcn/spellcheck"
   - "extra/cite"
 </javascript>
 
@@ -81,6 +79,5 @@ aloha_plugins_node:
     - "common/contenthandler"
     - "common/commands"
     - "common/dom-to-xhtml"
-    - "gcn/spellcheck"
     - "extra/cite"
 </javascript>

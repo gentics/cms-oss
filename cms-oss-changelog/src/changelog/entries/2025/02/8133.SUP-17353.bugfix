@@ -1,0 +1,1 @@
+Administrator User Interface: Fixed an impossibility of expanding contents of a folder in the content picker dialog, if this folder has no subfolders.

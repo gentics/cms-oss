@@ -75,10 +75,6 @@ feature:
 
 This feature allows copy & paste of tags. Find further information in the section about "Copy Tags":feature_copy_tags.html
 
-h3. Debug Tools
-
-See "Debug Tools":feature_debugtools.html
-
 h3. Devtools
 
 <shell filename="conf/features.yml">

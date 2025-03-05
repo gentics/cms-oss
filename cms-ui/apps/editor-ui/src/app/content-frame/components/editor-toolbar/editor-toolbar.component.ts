@@ -8,7 +8,6 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    SimpleChanges,
 } from '@angular/core';
 import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '@editor-ui/app/common/models';
 import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
@@ -37,7 +36,7 @@ import {
     Page,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
+import { ChangesOf, IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
 import { AlohaIntegrationService } from '../../providers';
@@ -188,12 +187,12 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         this.changeDetector.markForCheck();
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.currentItem || changes.currentNode) {
             this.checkIfInQueue();
             this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         }
-        if (changes.editorState || changes.currentItem || changes.currentNode || changes.itemPermissions) {
+        if (changes.editorState || changes.currentItem || changes.currentNode || changes.itemPermissions || changes.locked) {
             this.buttons = this.determineVisibleButtons();
         }
     }

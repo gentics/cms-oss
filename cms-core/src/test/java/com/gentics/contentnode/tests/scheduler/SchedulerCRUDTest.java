@@ -6,6 +6,7 @@ import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,7 +15,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -264,6 +264,11 @@ public class SchedulerCRUDTest {
 			create.setCommand("publish");
 		}).build();
 
+		SchedulerTask otherTask = Builder.create(SchedulerTask.class, create -> {
+			create.setName("My other scheduler task");
+			create.setCommand("other");
+		}).build();
+
 		SchedulerSchedule schedule = Builder.create(SchedulerSchedule.class, create -> {
 			create.setName("My super duper schedule");
 			create.setSchedulerTask(task);
@@ -271,15 +276,23 @@ public class SchedulerCRUDTest {
 
 		SchedulerSchedule updated = Builder.update(schedule, t -> {
 			t.setName("Even better schedule");
+			t.setSchedulerTask(otherTask);
 		}).build();
 
-		assertThat(updated).as("Updated schedule").hasFieldOrPropertyWithValue("name", "Even better schedule")
-				.hasFieldOrPropertyWithValue("id", schedule.getId());
+		operate(() -> {
+			assertThat(updated).as("Updated schedule")
+				.hasName("Even better schedule")
+				.has(schedule.getId())
+				.has(otherTask);
+		});
 
 		SchedulerSchedule reloaded = execute(SchedulerSchedule::reload, updated);
-		assertThat(reloaded).as("Updated schedule (reloaded)")
-				.hasFieldOrPropertyWithValue("name", "Even better schedule")
-				.hasFieldOrPropertyWithValue("id", schedule.getId());
+		operate(() -> {
+			assertThat(reloaded).as("Updated schedule (reloaded)")
+				.hasName("Even better schedule")
+				.has(schedule.getId())
+				.has(otherTask);
+		});
 	}
 
 	@Test

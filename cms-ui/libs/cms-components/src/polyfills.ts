@@ -57,8 +57,3 @@ import 'zone.js';  // Included with Angular CLI.
 
 // This is necessary, because GUIC uses the Intl library, which requires a global object (like in Node.js).
 (window as any).global = window;
-
-/* Add Buffer support, because serialize-to-js expects Buffer type is there (like in Node.js) */
-// eslint-disable-next-line import/no-nodejs-modules
-// import { Buffer } from 'buffer';
-// (window as any).Buffer = Buffer;

@@ -132,6 +132,7 @@ public class PurgeWastebinTest {
 		assertNotNull("Tested object must not be null", testedObject);
 
 		Transaction t = TransactionManager.getCurrentTransaction();
+
 		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 			testedObject = t.getObject(testedObject);
 		}
@@ -169,6 +170,8 @@ public class PurgeWastebinTest {
 			jobStatus = res.getStatus();
 			ContentNodeRESTUtils.assertResponse(jobStatus, ResponseCode.OK);
 		}
+
+		TransactionManager.getCurrentTransaction().commit(false);
 	}
 
 	/**

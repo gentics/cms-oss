@@ -14,18 +14,15 @@ import {
     PagingSortOrder,
     Schedule,
     ScheduleTask,
-    ScheduleType,
     Template,
     User,
 } from '@gentics/cms-models';
-import { GCMSFetchDriver, GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
     CORE_CONSTRUCTS,
     EntityMap,
-    ENV_CMS_PASSWORD,
-    ENV_CMS_REST_PATH,
-    ENV_CMS_USERNAME,
     FileImportData,
     FolderImportData,
     GroupImportData,
@@ -34,6 +31,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_SCHEDULE,
     IMPORT_TYPE_TASK,
     IMPORT_TYPE_USER,
     ImportData,
@@ -43,19 +41,19 @@ import {
     ITEM_TYPE_PAGE,
     NodeImportData,
     PageImportData,
+    ScheduleImportData,
     ScheduleTaskImportData,
     TestSize,
     UserImportData,
 } from './common';
-import { CypressDriver } from './cypress-driver';
 import {
     emptyNode,
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
+    schedulePublisher,
 } from './entities';
-import { getItem } from './utils';
-import { APIRequestContext, Browser } from '@playwright/test';
 import { GCMSPlaywrightDriver } from './playwright-driver';
+import { getItem } from './utils';
 
 /**
  * Options to configure the behaviour of the importer
@@ -89,8 +87,6 @@ const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
 }
 
-const PUBLISHER_TASK_CMD = 'publish';
-const PUBLISHER_SCHEDULE_NAME = 'Run Publish Process';
 const GLOBAL_FEATURES = Object.values(Feature);
 const NODE_FEATURES = Object.values(NodeFeature);
 
@@ -130,8 +126,6 @@ export class EntityImporter {
     public bootstrapped = false;
 
     public apiContext: APIRequestContext;
-
-    private publisherSchedule: Schedule;
 
     constructor(
         public options?: ImporterOptions,
@@ -187,22 +181,15 @@ export class EntityImporter {
         this.dummyNode = await this.setupDummyNode();
 
         const tasks = await this.client.schedulerTask.list().send();
-        const schedulerTask = tasks.items.find(item => item.internal === true && item.command === PUBLISHER_TASK_CMD);
 
-        const schedules = await this.client.scheduler.list().send();
-        this.publisherSchedule = schedules.items.find(item => item.taskId === schedulerTask.id);
-        if (!this.publisherSchedule) {
-            const response = await this.client.scheduler.create({
-                active: true,
-                parallel: false,
-                name: PUBLISHER_SCHEDULE_NAME,
-                taskId: schedulerTask.id,
-                scheduleData: {
-                    type: ScheduleType.MANUAL,
-                },
-            }).send();
-            this.publisherSchedule = response.item;
+        for (const singleTask of tasks.items) {
+            if (singleTask.internal) {
+                this.entityMap[singleTask.command] = singleTask;
+            }
         }
+
+        // Import default schedules
+        await this.importSchedule(schedulePublisher);
 
         this.bootstrapped = true;
     }
@@ -222,22 +209,27 @@ export class EntityImporter {
         return map;
     }
 
-    /**
-     * Start the scheduler task for the publish process and wait up to 100 seconds for the task to finish
-     */
-    public async runPublish(): Promise<void> {
+    public async executeSchedule(idOrData: string | number | ScheduleImportData): Promise<void> {
         if (!this.client) {
             this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
-        await this.client.scheduler.execute(this.publisherSchedule.id).send();
+        let id = idOrData;
+        if (typeof id === 'object') {
+            id = this.get(id)?.id;
+        }
+
+        await this.client.scheduler.execute(id).send();
+        let schedule: Schedule;
+
         for (let i = 0; i < 100; i++) {
-            this.publisherSchedule = (await this.client.scheduler.get(this.publisherSchedule.id).send()).item;
-            if (!this.publisherSchedule.lastExecution?.running) {
+            schedule = (await this.client.scheduler.get(id).send()).item;
+            if (!schedule.lastExecution?.running) {
                 break;
             }
-            cy.log('Waiting for the publish execution to finish');
-            cy.wait(1000, {log:false});
+
+            cy.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
+            cy.wait(1000, { log: false });
         }
     }
 
@@ -386,7 +378,7 @@ export class EntityImporter {
 
     public clearClient(): Promise<void> {
         this.client = null;
-        return Promise.resolve();
+        return Cypress.Promise.resolve();
     }
 
     public async setupClient(): Promise<void> {
@@ -423,6 +415,7 @@ export class EntityImporter {
     public get(data: GroupImportData): Group | null;
     public get(data: UserImportData): User | null;
     public get(data: ScheduleTaskImportData): ScheduleTask | null;
+    public get(data: ScheduleImportData): Schedule | null;
     /**
      * Gets the resolved/imported entity based on the Import-ID.
      * Overloads are to get the correct CMS item type based on the import-data type.
@@ -674,7 +667,7 @@ export class EntityImporter {
                 cy.log(`Group ${data[IMPORT_ID]} already exists`);
             }
             const foundGroups = (await this.client.group.list({ q: reqData.name }).send()).items || [];
-            importedGroup = foundGroups.filter(g => g.name === reqData.name)?.[0] ?? foundGroups?.[0];
+            importedGroup = foundGroups.find(group => group.name === reqData.name);
         }
 
         if (importedGroup && permissions) {
@@ -726,7 +719,7 @@ export class EntityImporter {
                 cy.log(`User ${data[IMPORT_ID]} already exists`);
             }
             const foundUsers = (await this.client.user.list({ q: data.login }).send()).items || [];
-            const found = foundUsers.filter(g => g.login === data.login)?.[0] ?? foundUsers?.[0];
+            const found = foundUsers.find(user => user.login === data.login);
 
             return found;
         }
@@ -746,6 +739,44 @@ export class EntityImporter {
         }
 
         return created;
+    }
+
+    private async importSchedule(
+        data: ScheduleImportData,
+    ): Promise<Schedule | null> {
+        const { task, ...reqData } = data;
+
+        try {
+            if (this.options?.logImports) {
+                cy.log(`Importing schedule ${data[IMPORT_ID]}`, data);
+            }
+
+            const taskId = this.entityMap[task]?.id;
+            const created = (await this.client.scheduler.create({
+                ...reqData,
+                taskId,
+            }).send())?.item;
+
+            if (this.options?.logImports) {
+                cy.log(`Imported schedule ${data[IMPORT_ID]} -> ${created.id}`);
+            }
+
+            return created;
+        } catch (err) {
+            // If the schedule already exists, ignore it
+            if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
+                throw err;
+            }
+
+            if (this.options?.logImports) {
+                cy.log(`Schedule ${data[IMPORT_ID]} already exists`);
+            }
+
+            const foundSchedules = (await this.client.scheduler.list().send()).items || [];
+            const found = foundSchedules.find(schedule => schedule.name === data.name);
+
+            return found;
+        }
     }
 
     private async getLanguageMapping(): Promise<Record<string, number>> {
@@ -799,6 +830,9 @@ export class EntityImporter {
 
             case IMPORT_TYPE_TASK:
                 return this.importTask(entity as ScheduleTaskImportData);
+
+            case IMPORT_TYPE_SCHEDULE:
+                return this.importSchedule(entity as ScheduleImportData);
 
             default:
                 return Promise.resolve(null);

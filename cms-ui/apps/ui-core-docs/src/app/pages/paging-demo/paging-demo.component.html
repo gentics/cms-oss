@@ -1,0 +1,33 @@
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Basic Usage">
+    <div class="demo-result">
+        <gtx-contents-list-item *ngFor="let user of users | paginate:{
+            id: id,
+            currentPage: page,
+            itemsPerPage: 7,
+            totalItems: users.length
+        }">
+            <div class="item-primary">{{ user.firstName }} {{ user.lastName }}</div>
+        </gtx-contents-list-item>
+
+        <gtx-paging [id]="id" (pageChange)="page = $event"></gtx-paging>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-contents-list-item *ngFor="let user of users | paginate:{
+                id: id,
+                currentPage: page,
+                itemsPerPage: 7,
+                totalItems: users.length
+            }">
+                <div class="item-primary">(( user.firstName )) (( user.lastName ))div>
+            </gtx-contents-list-item>
+
+            <gtx-paging [id]="id" (pageChange)="page = $event"></gtx-paging>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

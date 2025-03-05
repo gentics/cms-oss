@@ -19,6 +19,10 @@ import { CreateTagmapEntryModalComponentMode, CreateUpdateTagmapEntryModalCompon
 const EDIT_ACTION = 'edit';
 const FRAGMENT_COLUMN_ID = 'fragmentName';
 
+function mapObjectType(row: TagMapEntryBO): number {
+    return row.object || row.objType;
+}
+
 @Component({
     selector: 'gtx-tag-map-entry-table',
     templateUrl: './tag-map-entry-table.component.html',
@@ -70,8 +74,8 @@ export class TagMapEntryTableComponent
         {
             id: 'object',
             label: 'tagmapEntry.object',
-            fieldPath: 'object',
             sortable: true,
+            mapper: mapObjectType,
         },
         {
             id: 'tagname',

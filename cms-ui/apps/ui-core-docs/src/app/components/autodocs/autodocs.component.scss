@@ -13,14 +13,6 @@
     display: block;
     margin-bottom: 60px;
 
-    table td, table th {
-        padding: 5px 3px;
-    }
-
-    td {
-        vertical-align: baseline;
-    }
-
     $bg-color: desaturate(darken($gtx-color-secondary, 20%), 10%);
 
     .autodoc-section {
@@ -33,6 +25,16 @@
             padding: 10px;
             margin-top: 0;
             border-bottom: 1px solid $bg-color;
+        }
+    }
+
+    .inheritance-entry {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .full-class-name {
+            display: inline-flex;
         }
     }
 }

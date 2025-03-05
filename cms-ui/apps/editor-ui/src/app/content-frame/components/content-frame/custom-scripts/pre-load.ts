@@ -1,5 +1,3 @@
-import * as Mousetrap from 'mousetrap';
-import { DebugToolService } from '../../../../development/providers/debug-tool.service';
 import { CNIFrameDocument, CNWindow } from '../../../models/content-frame';
 
 /**
@@ -19,23 +17,7 @@ export class PreLoadScript {
     ) { }
 
     run(): void {
-        this.bindExternalDebugHotkey();
         this.removeAlohaUnloadLogic();
-    }
-
-    /** Add Debug Tool hotkey access to iframe */
-    bindExternalDebugHotkey(): void {
-        const mousetrapListener = new Mousetrap(this.iFrameDocument as any);
-        mousetrapListener.bind(DebugToolService.hotkey, (event) => {
-            if (event.preventDefault) {
-                event.preventDefault();
-            } else {
-                event.returnValue = false;
-            }
-
-            this.iFrameWindow.GCMSUI.callDebugTool();
-            return false;
-        });
     }
 
     /**

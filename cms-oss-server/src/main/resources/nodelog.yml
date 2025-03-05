@@ -25,6 +25,9 @@ Configuration:
       -
         name: access_log
         level: info
+      -
+        name: org.eclipse.jetty
+        level: warn
     Root:
       level: error
       AppenderRef:

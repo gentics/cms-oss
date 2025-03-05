@@ -1,12 +1,12 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { RecentItem, SETTING_LAST_NODE_ID, plural } from '@editor-ui/app/common/models';
+import { environment } from '@editor-ui/environments/environment';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { Favourite, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';
 import { Observable, forkJoin } from 'rxjs';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { ENVIRONMENT_TOKEN } from '../../../development/development-tools';
 import {
     ApplicationStateService,
     FavouritesLoadedAction,
@@ -41,7 +41,6 @@ export class UserSettingsService {
         private appState: ApplicationStateService,
         private folderActions: FolderActionsService,
         private publishQueueActions: PublishQueueActionsService,
-        @Inject(ENVIRONMENT_TOKEN) private environment: string,
         private uiActions: UIActionsService,
         private i18nService: I18nService,
         private notification: I18nNotification,
@@ -503,7 +502,7 @@ export class UserSettingsService {
                 break;
 
             default:
-                if (this.environment === 'development') {
+                if (!environment.production) {
                     // eslint-disable-next-line no-console
                     console.info(`UserSettings: Setting "${key}" not handled.`);
                 }

@@ -50,6 +50,18 @@ Additionally, the session secret cookie will be set to the client.
 
 h3. SSO with Keycloak
 
+h4. Required/Supported claims in the JWT
+
+When using Keycloak, the CMS will access the following claims in the JWT:
+
+|_. Name             |_. Description                               |_. Required |
+| preferred_username | Mapped to the login name of the user        | yes        |
+| given_name         | Mapped to the first name of the user        | no         |
+| family_name        | Mapped to the last name of the user         | no         |
+| email              | Mapped to the email address of the user     | no         |
+| realm_access       | Can be used for mapping roles to CMS groups | no         |
+| resource_access    | Can be used for mapping roles to CMS groups | no         |
+
 h4(#keycloak-config). Configuration
 
 Activate the Keycloak feature and add configuration for user creation callbacks and initial groups:

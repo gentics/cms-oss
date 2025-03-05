@@ -18,6 +18,13 @@ ProxyPass /spelling http://localhost:8010/v2
 
 h3. Configuration
 
+The plugin requires a setup in one of the `config.yml` files as following:
+
+<javascript filename="conf/*.yml">
+aloha_plugins_global:
+  - "gcn/spellcheck"
+</javascript>
+
 In the plugin configuration the languages to check against can be specified and certain rules of the spellchecker can be disabled.
 
 h4. Languages

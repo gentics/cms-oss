@@ -13,27 +13,27 @@
     },
     "delete_content_package_error": {
         "en": "An error occurred while deleting the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
-        "de": "Es ist ein Fehler beim löschen des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+        "de": "Es ist ein Fehler beim löschen des Contentpakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
     },
     "import_content_package": {
-        "en": "Import Content Package from File-System",
-        "de": "Contentpaket von Dateisystem importieren"
+        "en": "Import from file system to CMS",
+        "de": "Aus Dateisystem ins CMS importieren"
     },
     "export_content_package": {
-        "en": "Export Content Package to File-System",
-        "de": "Contentpaket ins Dateisystem exportieren"
+        "en": "Export from CMS to file system",
+        "de": "Aus CMS ins Dateisystem exportieren"
     },
     "download_content_package": {
-        "en": "Download Content Package",
-        "de": "Contentpaket herunterladen"
+        "en": "Download from file system",
+        "de": "Aus Dateisystem herunterladen"
     },
     "upload_content_package": {
-        "en": "Upload Content Package",
-        "de": "Contentpaket hochladen"
+        "en": "Upload to file system",
+        "de": "Ins Dateisystem hochladen"
     },
     "upload_area": {
         "en": "Select Content Package archive",
-        "de": "Contentpaket archiv auswählen"
+        "de": "Contentpaket Archiv auswählen"
     },
     "selected_upload_file": {
         "en": "Selected Archive",
@@ -41,39 +41,39 @@
     },
     "download_from_content_package_failed": {
         "en": "An error occurred while downloading the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
-        "de": "Es ist ein Fehler beim herunterladen des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+        "de": "Es ist ein Fehler beim herunterladen des Contentpakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
     },
     "upload_to_content_package_finished": {
         "en": "The Upload to the Content Package \"{{packageName}}\" has finished",
-        "de": "Der Upload zum Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+        "de": "Der Upload zum Contentpaket „{{packageName}}“ ist abgeschlossen"
     },
     "upload_to_content_package_failed": {
         "en": "An error occurred while uploading the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
-        "de": "Es ist ein Fehler beim hochladen zum Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+        "de": "Es ist ein Fehler beim Hochladen des Contentpakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
     },
     "export_content_package_finished": {
         "en": "The export of the Content Package \"{{packageName}}\" has finished",
-        "de": "Der export des Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+        "de": "Der Export des Contentpakets „{{packageName}}“ ist abgeschlossen"
     },
     "export_content_package_failed": {
         "en": "An error occurred while exporting the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
-        "de": "Es ist ein Fehler beim exportieren des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+        "de": "Es ist ein Fehler beim Exportieren des Contentpakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
     },
     "import_content_package_finished": {
         "en": "The import of the Content Package \"{{packageName}}\" has finished",
-        "de": "Der import des Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+        "de": "Der Import des Contentpakets „{{packageName}}“ ist abgeschlossen"
     },
     "import_content_package_failed": {
         "en": "An error occurred while importing the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
-        "de": "Es ist ein Fehler beim importieren des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+        "de": "Es ist ein Fehler beim Importieren des Contentpakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
     },
     "start_import_message": {
         "en": "Starting import of Content Package \"{{packageName}}\" ...",
-        "de": "Starte import des Inhalt Pakets „{{packageName}}“ ..."
+        "de": "Starte Import des Contentpakets „{{packageName}}“ ..."
     },
     "start_export_message": {
         "en": "Starting export of Content Package \"{{packageName}}\" ...",
-        "de": "Starte export des Inhalt Pakets „{{packageName}}“ ..."
+        "de": "Starte Export des Contentpakets „{{packageName}}“ ..."
     },
     "start_import__check_message": {
         "en": "Checking the Content Package \"{{packageName}}\" started",

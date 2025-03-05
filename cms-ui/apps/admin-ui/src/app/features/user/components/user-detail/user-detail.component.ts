@@ -29,7 +29,6 @@ import {
     User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/detail-loading.operator';
@@ -81,7 +80,6 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
     private tabHandles: Record<UserDetailTabs, FormTabHandle>;
 
     constructor(
-        logger: NGXLogger,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
@@ -95,7 +93,6 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         private tableLoader: UserTableLoaderService,
     ) {
         super(
-            logger,
             route,
             router,
             appState,

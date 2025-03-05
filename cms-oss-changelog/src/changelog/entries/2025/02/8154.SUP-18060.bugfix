@@ -1,0 +1,4 @@
+Administrator User Interface: The behaviour of cancelling the publish process has been improved.
+The UI will now wait for up to 10 seconds for the publish process to stop. If the publish process is
+still running after 10 seconds, a warning will be shown and stack traces of all publisher related threads will
+be logged to the server log.

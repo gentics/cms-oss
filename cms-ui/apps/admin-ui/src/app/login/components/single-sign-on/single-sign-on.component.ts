@@ -6,7 +6,6 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakService } from '@gentics/cms-components';
-import { NGXLogger } from 'ngx-logger';
 import { BehaviorSubject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 
@@ -29,7 +28,6 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
         private domSanitizer: DomSanitizer,
         private errorHandler: ErrorHandler,
         public keycloakService: KeycloakService,
-        private logger: NGXLogger,
         private route: ActivatedRoute,
         private router: Router,
     ) { }
@@ -98,7 +96,7 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
 
     private handleSsoResponse(result: string): void {
         if (/^\d+$/.test(result)) {
-            this.logger.log('Logging in via Single-Sign-On');
+            console.debug('Logging in via Single-Sign-On');
             const sid = Number(result);
             this.authOps.validateSessionId(sid);
         }

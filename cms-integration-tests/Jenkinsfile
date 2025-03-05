@@ -73,7 +73,9 @@ spec:
     }
 
     options {
-        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        gitLabConnection('git.gentics.com')
+        gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
         timeout(time: 4, unit: 'HOURS')
         ansiColor('xterm')

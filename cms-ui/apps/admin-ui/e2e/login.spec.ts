@@ -2,7 +2,7 @@ import { Feature } from '@gentics/cms-models';
 import { EntityImporter } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH, AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
-import { navigateToApp } from './helpers';
+import { loginWithForm, navigateToApp } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
@@ -25,12 +25,7 @@ test.describe('Login', () => {
 
         test('should be able to login', async ({ page }) => {
             await navigateToApp(page);
-
-            // Get auth data and login
-            const auth = AUTH[AUTH_ADMIN];
-            await page.fill('gtx-input[formcontrolname="username"] input', auth.username);
-            await page.fill('gtx-input[formcontrolname="password"] input', auth.password);
-            await page.click('button[type="submit"]');
+            await loginWithForm(page, AUTH_ADMIN);
 
             // Verify successful login
             await expect(page.locator('gtx-dashboard')).toBeVisible();

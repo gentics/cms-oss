@@ -1,21 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.LoginService;
@@ -23,7 +7,6 @@ import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.NodeSetup;
 import com.gentics.contentnode.etc.NodeSetupValuePair;
-import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
@@ -31,7 +14,6 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
-import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
@@ -50,18 +32,27 @@ import com.gentics.lib.http.CookieHelper;
 import com.gentics.lib.http.CookieHelper.SameSite;
 import com.gentics.lib.log.NodeLogger;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import java.util.Map;
+
 /**
  * Authentication Resource. This can be used to authenticate an existing SID.
  *
  * @author norbert
  */
 @Path("/auth")
-public class AuthenticationResourceImpl extends AbstractContentNodeResource implements AuthenticationResource {
-
-	/**
-	 * Configuration item name for cookie's SameSite value
-	 */
-	protected final static String CONFIGURATION_COOKIE_SAMESITE = "session_cookie_samesite";
+public class AuthenticationResourceImpl extends AbstractLoginResource implements AuthenticationResource {
 
 	/**
 	 * Logger
@@ -84,12 +75,6 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 	 */
 	private String sessionSecret;
 
-
-	/**
-	 * Service loader that finds implementations of the LoginService interface
-	 */
-	private final static ServiceLoaderUtil<LoginService> loginServiceLoader = ServiceLoaderUtil
-			.load(LoginService.class);
 
 
 	/**
@@ -209,8 +194,8 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 				// set the session secret as cookie
 				if (getResponse() != null) {
 					NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-					String sameSiteString = ObjectTransformer.getString(prefs.getProperty(CONFIGURATION_COOKIE_SAMESITE), null);					
-					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret(), "/", null, isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
+					String sameSiteString = ObjectTransformer.getString(prefs.getProperty(LoginService.CONFIGURATION_COOKIE_SAMESITE), null);
+					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
 				}
 				// return the sid as plaintext
 				return ObjectTransformer.getString(sessionToken.getSessionId(), "");
@@ -222,15 +207,6 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 		} catch (Exception e) {
 			return ResponseCode.FAILURE.toString();
 		}
-	}
-
-	/**
-	 * Determine whether the secure flag of the session cookie should be set.
-	 * @return true for secure, false otherwise
-	 * @throws TransactionException
-	 */
-	private boolean isCookieSecure() throws TransactionException {
-		return TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences().getFeature("secure_cookie");
 	}
 
 	/* (non-Javadoc)
@@ -255,29 +231,17 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 		String password = request.getPassword();
 
 		LoginResponse response = tryLoginWithService(username, password, sidString);
-		if (response != null && response.getResponseInfo().getResponseCode() == ResponseCode.OK) {
+
+		if (response != null) {
 			return response;
 		}
-		// Do a normal login
+
+		var message = "No login service returned a response";
+
+		logger.error("Error while logging in user {" + username + "}: " + message);
+
 		response = new LoginResponse();
-
-		try {
-			SystemUser systemUser = performLogin(username, password, response, true);
-			if (systemUser != null) {
-				response.setSid(createUserSession(systemUser, sidString));
-
-				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully performed login"));
-				response.setUser(ModelBuilder.getUser(systemUser));
-			}
-			Transaction transaction = TransactionManager.getCurrentTransaction();
-			if (transaction != null) {
-				transaction.commit(false);
-			}
-		} catch (NodeException e) {
-			logger.error("Error while logging in user {" + request.getLogin() + "}", e);
-			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-
-		}
+		response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, message));
 
 		return response;
 	}
@@ -289,15 +253,22 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 	 * @param sid session id
 	 * @return Login response if login was successfully
 	 */
-	private static LoginResponse tryLoginWithService(String username, String password, String sid) {
-		for (LoginService service : loginServiceLoader) {
-			LoginResponse loginResponse = service.login(username, password, sid);
+	private LoginResponse tryLoginWithService(String username, String password, String sid) {
+		LoginResponse errorResponse = null;
+
+		for (LoginService service : LOGIN_SERVICE_LOADER) {
+			LoginResponse loginResponse = service.login(username, password, getFactory(), getRequest(), getResponse());
+
 			if (loginResponse != null) {
-				return loginResponse;
+				if (loginResponse.getResponseInfo().getResponseCode() == ResponseCode.OK) {
+					return loginResponse;
+				} else if (errorResponse == null || service.isDefaultService()) {
+					errorResponse = loginResponse;
+				}
 			}
 		}
 
-		return null;
+		return errorResponse;
 	}
 
 	/* (non-Javadoc)
@@ -317,7 +288,7 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 					session.logoutAllSessions();
 					// Remove the session secret cookie
 					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
-							"deleted", "/", 0, isCookieSecure(), true, null, getResponse());
+							"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
 				} else {
 					// Simply log out the current session
 					session.logout();
@@ -488,108 +459,5 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 		return accessVerified;
 	}
 
-	/**
-	 * Does the login with the given user name and password, while the
-	 * password can be null to skip the password check.
-	 * @param username User name
-	 * @param password The password or null to not check it
-	 * @param response The response object, will be used to set a proper response info message
-	 * @param checkPassword Whether to check the given password for match or not
-	 * @return A valid user object or null
-	 * @throws NodeException
-	 */
-	public SystemUser performLogin(
-			String username, String password, LoginResponse response, boolean checkPassword)
-					throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		// Get the user from the given credentials
-		SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
-				.getSystemUser(username, password, checkPassword);
-
-		// Credentials must match and password not be empty
-		// Prohibit login for users that are not member of a single group
-		if (systemUser == null || (password != null && password.isEmpty())
-				|| systemUser.getUserGroups().isEmpty()) {
-			response.setResponseInfo(new ResponseInfo(ResponseCode.NOTFOUND,
-					"Did not find a user with given credentials"));
-			if (checkPassword) {
-				// log failed login attempt
-				ActionLogger.securityLogger.error(String.format("(%s) Login failed", username));
-				ActionLogger.logCmd(ActionLogger.LOGIN_FAILED, SystemUser.TYPE_SYSTEMUSER, -1, t.getUnixTimestamp(),
-						String.format("restApi:auth/login failed for username %s", username));
-			}
-			return null;
-		}
-
-		// We need to create a new session otherwise the permhandler will not be set correctly.
-		Transaction userTransaction = getFactory().startTransaction(null, systemUser.getId(), true);
-
-		try {
-			// Check whether the maintenance mode is enabled and the the user has the permissions to view the maintenance setting.
-			// We allow login only when the user has the permission to view and therefore change the maintenance setting.
-			if (MaintenanceMode.get().isEnabled()) {
-				PermHandler permHandler = userTransaction.getPermHandler();
-
-				// There is only one entry for system maintenance, so there is no need to provide an object id.
-				if (!permHandler.checkPermissionBit(PermHandler.TYPE_MAINTENCANCE, null, PermHandler.PERM_VIEW)) {
-					response.setResponseInfo(
-							new ResponseInfo(ResponseCode.MAINTENANCEMODE, "The maintenance mode is currently enabled. Login was therefore disabled."));
-					return null;
-				}
-			}
-		} finally {
-			userTransaction.commit();
-			TransactionManager.setCurrentTransaction(t);
-		}
-
-		ActionLogger.logCmd(ActionLogger.LOGIN, SystemUser.TYPE_SYSTEMUSER, systemUser.getId(), t.getUnixTimestamp(), "restApi:auth/login");
-
-		return systemUser;
-	}
-
-	/**
-	 * Creates a new user session and sets the SESSION_SECRET cookie
-	 * if possible
-	 * @param systemUser         The user for who to create an authenticated session
-	 * @param existingSessionId  Can be an authenticated session (user_id=-1) ID or 0
-	 * @return A session token (if cookie is not set it contains the secret also)
-	 * @throws NodeException
-	 */
-	public String createUserSession(SystemUser systemUser, String existingSessionId)
-			throws NodeException {
-		// We cast it to an int because jersey doesn't allow passing empty
-		// integers and we don't want to break existing behavior.
-		int sid = 0;
-
-		if (!existingSessionId.isEmpty()) {
-			try {
-				sid = Integer.parseInt(existingSessionId);
-			} catch (NumberFormatException e) {
-				throw new NodeException("Unable to parse {" + existingSessionId + "} as integer");
-			}
-		}
-
-		// Create a new session for the user
-		HttpServletRequest servletRequest = getRequest();
-		Session session = new Session(systemUser, servletRequest != null ? servletRequest.getRemoteAddr() : "",
-				servletRequest != null ? servletRequest.getHeader("user-agent") : "", getSessionSecret(),
-						sid);
-
-		HttpServletResponse servletResponse = getResponse();
-
-		if (servletResponse != null) {
-			NodePreferences prefs = TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences();
-			String sameSiteString = ObjectTransformer.getString(prefs.getProperty(CONFIGURATION_COOKIE_SAMESITE), null);					
-			// Set the session secret as cookie
-			CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
-					session.getSessionSecret(), "/", null, isCookieSecure(),
-					true, SameSite.parse(sameSiteString), servletResponse);
-			return Integer.toString(session.getSessionId());
-		} else {
-			return Integer.toString(session.getSessionId())
-					+ session.getSessionSecret();
-		}
-	}
 }
 

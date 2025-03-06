@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
+import { LinkType, UsageType } from '@editor-ui/app/common/models';
 import { BaseUsageOptions, File, Image, Item, Language, Page, UsageInPagesOptions } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent, ChangesOf } from '@gentics/ui-core';
@@ -33,7 +34,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     public readonly UNIQUE_ID = `item-usage-list-${instanceCounter++}`;
 
     @Input()
-    public type: string;
+    public type: UsageType | LinkType;
 
     @Input()
     public item: Page | Image | File;
@@ -64,7 +65,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     public loaded = false;
 
     // Pagination data
-    public page = 0;
+    public page = 1;
     public perPage = 10;
     public totalCount = 0;
 
@@ -137,12 +138,12 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
                 return this.loadUsageInTags();
             case 'variant':
                 return this.loadUsageInVariants();
-            case 'linkedPages':
-                return this.loadLinkedToFiles();
-            case 'linkedImages':
-                return this.loadLinkedToImages();
-            case 'linkedFiles':
+            case 'linkedPage':
                 return this.loadLinkedToPages();
+            case 'linkedImage':
+                return this.loadLinkedToImages();
+            case 'linkedFile':
+                return this.loadLinkedToFiles();
             default:
                 return of({ totalCount: 0, items: [] });
         }
@@ -153,7 +154,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
             id: [this.item.id],
             nodeId: this.nodeId,
             maxItems: this.perPage,
-            skipCount: this.page * this.perPage,
+            skipCount: Math.max((this.page - 1), 0) * this.perPage,
         };
     }
 
@@ -161,7 +162,6 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
         return {
             ...this.getLoadOptions(),
             template: true,
-            langvars: true,
         };
     }
 
@@ -333,9 +333,9 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     private loadLinkedToFiles(): Observable<ItemUsagePage> {
         switch (this.item.type) {
             case 'page':
-                return this.client.page.usageInLinkedFiles(this.getPageLoadOptions()).pipe(
+                return this.client.page.usageInLinkedFiles(this.getLoadOptions()).pipe(
                     map(res => ({
-                        items: res.pages,
+                        items: res.files,
                         totalCount: res.total,
                     })),
                 );
@@ -348,9 +348,9 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     private loadLinkedToImages(): Observable<ItemUsagePage> {
         switch (this.item.type) {
             case 'page':
-                return this.client.page.usageInLinkedImages(this.getPageLoadOptions()).pipe(
+                return this.client.page.usageInLinkedImages(this.getLoadOptions()).pipe(
                     map(res => ({
-                        items: res.pages,
+                        items: res.files,
                         totalCount: res.total,
                     })),
                 );

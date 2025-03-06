@@ -1,4 +1,5 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, HostBinding } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostBinding, Input, OnChanges, Output } from '@angular/core';
+import { ChangesOf } from '../../common';
 
 /**
  * For documentation, see the Tabs
@@ -8,7 +9,7 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, Change
     templateUrl: './tab.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TabComponent {
+export class TabComponent implements OnChanges {
 
     @Input()
     public title: string;
@@ -38,7 +39,21 @@ export class TabComponent {
     @HostBinding('class.is-active')
     public active = false;
 
+    /**
+     * Reference to the `TabsComponent`, but without typings, as it would be cyclic otherwise.
+     */
+    public parentRef: any;
+
     constructor(
         public changeDetector: ChangeDetectorRef,
     ) {}
+
+    public ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.title || changes.icon || changes.disabled || changes.hidden || changes.routerLink || changes.id) {
+            if (this.parentRef != null) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                this.parentRef.updateDisplayTabs();
+            }
+        }
+    }
 }

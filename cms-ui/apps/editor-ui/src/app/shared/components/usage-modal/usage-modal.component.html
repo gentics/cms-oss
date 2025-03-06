@@ -3,7 +3,7 @@
 </div>
 
 <div class="modal-content">
-    <gtx-progress-bar [active]="(usageIsLoading | gtxValues) > 0 || (linkIsLoading | gtxValues) > 0"></gtx-progress-bar>
+    <gtx-progress-bar [active]="usageIsLoading || (item.type === 'page' && linkIsLoading)"></gtx-progress-bar>
 
     <gtx-tabs>
         <gtx-tab id="used" [title]="'modal.object_usages_label' | i18n: { count: usageCount }">
@@ -35,7 +35,7 @@
 
         </gtx-tab>
 
-        <gtx-tab id="linked" [title]="'modal.object_links_label' | i18n: { count: linkCount }">
+        <gtx-tab *ngIf="item.type === 'page'" id="linked" [title]="'modal.object_links_label' | i18n: { count: linkCount }">
             <div class="empty-message" *ngIf="linkCount < 1 && !linkIsLoading">
                 {{ 'modal.object_has_no_links' | i18n:{ _type: item.type } }}
             </div>

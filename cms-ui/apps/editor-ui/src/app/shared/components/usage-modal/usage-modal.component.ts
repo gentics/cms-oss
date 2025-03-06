@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { LINK_TYPES, LinkType, USAGE_TYPES, UsageType } from '@editor-ui/app/common/models';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     InheritableItem,
@@ -10,36 +11,6 @@ import { Subscription } from 'rxjs';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '../../../state';
 import { PageLoadEndEvent, PageLoadStartEvent } from '../item-usage-list/item-usage-list.component';
-
-type UsageType =
-| 'page'
-| 'variant'
-| 'folder'
-| 'file'
-| 'image'
-| 'template'
-| 'tag';
-
-const USAGE_TYPES: UsageType[] = [
-    'page',
-    'variant',
-    'folder',
-    'file',
-    'image',
-    'template',
-    'tag',
-];
-
-type LinkType =
-| 'linkedPage'
-| 'linkedFile'
-| 'linkedImage';
-
-const LINK_TYPES: LinkType[] = [
-    'linkedPage',
-    'linkedFile',
-    'linkedImage',
-];
 
 @Component({
     selector: 'gtx-usage-modal',
@@ -123,7 +94,8 @@ export class UsageModalComponent extends BaseModal<boolean> implements OnInit, O
         this.usageCountMap[type] = event.totalCount;
         this.loadingUsageTypes.delete(type);
         this.usageIsLoading = this.loadingUsageTypes.size > 0;
-        this.usageCount = Object.values(this.usageCountMap).reduce((acc, val) => acc + val);
+        this.usageCount = Object.values(this.usageCountMap).reduce((acc, val) => acc + val, 0);
+        this.changeDetector.markForCheck();
     }
 
     public updateLinkLoad(type: LinkType, event: PageLoadStartEvent): void {
@@ -137,7 +109,8 @@ export class UsageModalComponent extends BaseModal<boolean> implements OnInit, O
         this.linkCountMap[type] = event.totalCount;
         this.loadingLinkTypes.delete(type);
         this.linkIsLoading = this.loadingLinkTypes.size > 0;
-        this.linkCount = Object.values(this.linkCountMap).reduce((acc, val) => acc + val);
+        this.linkCount = Object.values(this.linkCountMap).reduce((acc, val) => acc + val, 0);
+        this.changeDetector.markForCheck();
     }
 
     /**

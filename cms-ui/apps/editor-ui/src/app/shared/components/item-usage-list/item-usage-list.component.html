@@ -1,5 +1,5 @@
 
-<gtx-contents-list-item *ngFor="let di of displayItems | paginate:{
+<gtx-contents-list-item class="usage-item" *ngFor="let di of displayItems | paginate:{
     id: UNIQUE_ID,
     currentPage: page,
     itemsPerPage: perPage,
@@ -7,18 +7,20 @@
 }">
     <icon
         class="type-icon"
-        [ngClass]="type"
-    >{{ type | gtxTypeIcon }}</icon>
+        [ngClass]="di.type || type"
+    >{{ (di.type || type) | gtxTypeIcon }}</icon>
 
     <div class="item-primary">
         <div class="name-container">
             <a
-                *ngIf="type !== 'template'"
+                *ngIf="type !== 'template'; else templateName"
                 class="item-name"
                 (click)="triggerItemClick(item, $event)"
             >{{ di.name }}</a>
 
-            <span *ngIf="type === 'template'">{{ item.name }}</span>
+            <ng-template #templateName>
+                <span>{{ di.name }}</span>
+            </ng-template>
 
             <item-status-label
                 [item]="di"
@@ -27,7 +29,7 @@
             ></item-status-label>
 
             <div
-                *ngIf="type === 'page'"
+                *ngIf="di.type === 'page'"
                 class="language"
                 [title]="di.languageName"
             >
@@ -41,9 +43,10 @@
     </div>
 
     <div class="right-details">
-        <detail-chip *ngIf="type === 'page'">
-            <icon>dashboard</icon> {{ di.template?.name }}
-        </detail-chip>
+        <div *ngIf="di.type === 'page'" class="template-reference">
+            <icon>dashboard</icon>
+            <span class="template-name">{{ di.template?.name }}</span>
+        </div>
     </div>
 </gtx-contents-list-item>
 

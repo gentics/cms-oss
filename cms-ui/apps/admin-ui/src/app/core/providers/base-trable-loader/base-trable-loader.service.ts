@@ -1,7 +1,7 @@
-import { BO_ID, BusinessObject } from '@admin-ui/common';
+import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
 import { TrableRow } from '@gentics/ui-core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, switchMap, skip, tap } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
+import { map, skip, switchMap } from 'rxjs/operators';
 
 /**
  * Base class for entity/type specific implementations to load and manage trable-components.
@@ -14,24 +14,10 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
      * entity specific implementation (override).
      */
     private reloadSubject = new BehaviorSubject<void>(null);
-    /**
-     * Subject which should be triggered whenever the view of the trable should be refreshed.
-     * This is useful when reloading/modifying a row purely via this service.
-     */
-    private refreshViewSubject = new BehaviorSubject<void>(null);
 
     public reload$ = this.reloadSubject.asObservable().pipe(
         skip(1),
     );
-
-    public refreshView$ = this.refreshViewSubject.asObservable().pipe(
-        skip(1),
-    );
-
-    /**
-     * Store which keeps all loaded rows in memory for later lookups.
-     */
-    public flatStore: { [id: string]: TrableRow<O> } = {};
 
     /**
      * Function to load the children of the specified entity.
@@ -89,31 +75,91 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
      *
      * @param row The row to reload.
      * @param options The options which will be forwarded to `loadEntityRow` as parameters.
-     * @param refreshOnLoad If this should trigger the `refreshView$` observable when the row is updated.
-     * (Once on the beginning, setting it to loading, and once at the end with the updated item and new state).
+     * @param reloadOptions Options for how to reload the row.
      * @returns An Observable which returns the row, updated with the new value (does it in place/per reference).
      */
-    public reloadRow(row: TrableRow<O>, options?: A, refreshOnLoad: boolean = false): Observable<TrableRow<O>> {
+    public reloadRow(row: TrableRow<O>, options?: A, reloadOptions?: TrableRowReloadOptions): Observable<TrableRow<O>> {
         return of(null).pipe(
-            tap(() => {
-                if (this.flatStore[row.id]) {
-                    this.flatStore[row.id].loading = true;
-                }
-                row.loading = true;
-                if (refreshOnLoad) {
-                    this.refreshView();
-                }
-            }),
             switchMap(() => this.loadEntityRow(row.item, options)),
-            map(loadedEntity => {
-                row.item = loadedEntity;
-                row.loading = false;
-                row.hash = this.createRowHash(loadedEntity);
-                this.flatStore[row.id] = row;
-                if (refreshOnLoad) {
-                    this.refreshView();
+            switchMap(loadedEntity => {
+                const newRow = this.mapToTrableRow(loadedEntity, row.parent, options);
+                // Copy state from original row
+                newRow.expanded = row.expanded;
+                newRow.loaded = row.loaded;
+                newRow.children = row.children;
+                newRow.hasChildren = row.hasChildren;
+
+                // If the row has been loaded, then the descendants reload can be done
+                if (row.loaded && reloadOptions?.reloadDescendants) {
+                    return this.reloadDescendants(newRow, options);
                 }
-                return row;
+
+                return of(newRow);
+            }),
+        );
+    }
+
+    public reloadDescendants(row: TrableRow<O>, options?: A): Observable<TrableRow<O>> {
+        // If it has no children, or wasn't loaded yet, we can simply skip this
+        if (!row.hasChildren || !row.loaded) {
+            return of(row);
+        }
+
+        return of(null).pipe(
+            switchMap(() => this.loadEntityChildren(row.item, options)),
+            switchMap(newChildren => {
+                const newRow = this.mapToTrableRow(row.item, row.parent, options);
+                const newChildRows = newChildren.map(child => this.mapToTrableRow(child, row, options));
+                const newChildIds = new Set(newChildRows.map(child => child.id));
+                const oldChildMap: Record<string, TrableRow<O>> = {};
+
+                if (row.children) {
+                    for (const child of row.children) {
+                        if (newChildIds.has(child.id)) {
+                            oldChildMap[child.id] = child;
+                        }
+                    }
+                }
+
+                const toLoad: TrableRow<O>[] = [];
+                newRow.children = newChildRows.map(childRow => {
+                    const old = oldChildMap[childRow.id];
+                    if (old) {
+                        // Restore the state of the old row
+                        childRow.expanded = old.expanded;
+                        childRow.loaded = old.loaded;
+                        childRow.children = old.children;
+                    }
+
+                    if (childRow.loaded) {
+                        toLoad.push(childRow);
+                    }
+
+                    return childRow;
+                });
+
+                newRow.loaded = true;
+                newRow.hasChildren = newRow.children.length > 0;
+                newRow.expanded = row.expanded;
+                newRow.loading = false;
+
+                // If none of the children need further loading, then we're done
+                if (toLoad.length === 0) {
+                    return of(newRow);
+                }
+
+                // Recursively load the descendant data otherwise
+                return forkJoin(toLoad.map(child => this.reloadDescendants(child, options))).pipe(
+                    map(refreshedChildren => {
+                        const map = refreshedChildren.reduce((acc, child) => {
+                            acc[child.id] = child;
+                            return acc;
+                        }, {});
+                        newRow.children = newRow.children.map(child => map[child.id] ? map[child.id] : child);
+
+                        return newRow;
+                    }),
+                );
             }),
         );
     }
@@ -124,54 +170,13 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
      *
      * @param row The row from which the children should be loaded from.
      * @param options The options which are forwarded to `loadEntityChildren` when loading the children.
-     * @param refreshOnLoad If this should trigger the `refreshView$` observable when the children are loaded.
      * @returns An Observable which emits one or multiple children which have been loaded.
      */
-    public loadRowChildren(row: TrableRow<O> | null, options?: A, refreshOnLoad: boolean = false): Observable<TrableRow<O>[]> {
+    public loadRowChildren(row: TrableRow<O> | null, options?: A): Observable<TrableRow<O>[]> {
         return of(null).pipe(
-            tap(() => {
-                if (row) {
-                    if (this.flatStore[row.id]) {
-                        row = this.flatStore[row.id];
-                    }
-                    row.loading = true;
-                    if (refreshOnLoad) {
-                        this.refreshView();
-                    }
-                }
-            }),
             switchMap(() => this.loadEntityChildren(row?.item, options)),
             map(children => children.map(child => this.mapToTrableRow(child, row, options))),
-            map(children => {
-                children.forEach(child => {
-                    this.flatStore[child.id] = child;
-                });
-
-                // If a row/parent exists, then update the state of it.
-                if (row) {
-                    row.children = children;
-                    row.hasChildren = row.children?.length > 0;
-                    row.loaded = true;
-                    row.loading = false;
-                    row.expanded = true;
-                }
-
-                if (refreshOnLoad) {
-                    this.refreshView();
-                }
-
-                return children;
-            }),
         );
-    }
-
-    public getEntityById(entityId: string | number): O {
-        return this.flatStore[entityId]?.item;
-    }
-
-    public getEntitiesByIds(entityIds: (string | number)[]): O[] {
-        return entityIds.map(id => this.flatStore[id]?.item)
-            .filter(item => item != null);
     }
 
     /**
@@ -182,29 +187,13 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     }
 
     /**
-     * Trigger a view-refresh for all trables which are currently active and use this trable loader.
+     * Maps the provided entity to a TrableRow to be displayed in a trable component.
+     *
+     * @param entity The entity/item to map to a row
+     * @param parent The parent of the row, or absent when it's a root element.
+     * @param options The additional options used to load this entity
+     * @returns A trable-row with the entity stored as item and all data resolved to be able to display the row correctly.
      */
-    public refreshView(): void {
-        this.refreshViewSubject.next();
-    }
-
-    public deleteFromStore(id: string): string[] {
-        const toDelete = new Set<string>();
-        toDelete.add(id);
-        this.getChildIds(id, toDelete);
-        const arr = Array.from(toDelete);
-
-        for (const id of arr) {
-            delete this.flatStore[id];
-        }
-
-        return arr;
-    }
-
-    public resetStore(): void {
-        this.flatStore = {};
-    }
-
     protected mapToTrableRow(entity: O, parent?: TrableRow<O>, options?: A): TrableRow<O> {
         return {
             id: entity[BO_ID],
@@ -218,18 +207,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
             loaded: false,
             children: [],
             parent,
-        }
-    }
-
-    protected getChildIds(id: string, buffer: Set<string>): void {
-        const parent: TrableRow<O> = this.flatStore[id];
-        if (parent) {
-            buffer.add(parent.id);
-        }
-        while (parent?.children != null) {
-            for (const child of parent.children) {
-                this.getChildIds(child.id, buffer);
-            }
         }
     }
 }

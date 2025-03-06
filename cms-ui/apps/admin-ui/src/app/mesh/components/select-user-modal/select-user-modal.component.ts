@@ -1,7 +1,7 @@
 import { MeshUserBO } from '@admin-ui/mesh/common';
-import { MeshUserTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { MeshUserTableComponent } from '../mesh-user-table/mesh-user-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-user-modal',
@@ -20,17 +20,11 @@ export class SelectUserModal extends BaseModal<MeshUserBO | MeshUserBO[]> {
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: MeshUserTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(MeshUserTableComponent)
+    public table: MeshUserTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

@@ -160,6 +160,8 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
     }
 
     public override handleAction(event: TableActionClickEvent<UserBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case ASSIGN_TO_GROUP_ACTION:
                 this.changeUserGroups(this.getAffectedEntityIds(event).map(id => Number(id)))
@@ -177,7 +179,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                     return;
                 }
 
-                this.removeUsersFromGroup(this.group.id, this.getAffectedEntityIds(event).map(id => Number(id)))
+                this.removeUsersFromGroup(this.group.id, items)
                     .then(didChange => {
                         if (!didChange) {
                             return;
@@ -233,9 +235,9 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         return this.contextMenu.changeGroupsOfUsersModalOpen(userIds);
     }
 
-    protected async removeUsersFromGroup(groupId: number, userIds: number[]): Promise<boolean> {
+    protected async removeUsersFromGroup(groupId: number, users: UserBO[]): Promise<boolean> {
         const groupName = this.appState.now.entity.group[groupId].name;
-        const userNames = this.loader.getEntitiesByIds(userIds).map(user => user.login);
+        const userNames = users.map(user => user.login);
 
         const dialog = await this.modalService.dialog({
             title: this.i18n.instant('modal.confirm_remove_user_from_group_title'),
@@ -269,9 +271,9 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         }
 
         let didChange = false;
-        for (const id of userIds) {
+        for (const user of users) {
             try {
-                await this.groupOps.removeUserFromGroup(groupId, id).toPromise();
+                await this.groupOps.removeUserFromGroup(groupId, user.id).toPromise();
                 didChange = true;
             } catch (err) {
                 this.errorHandler.catch(err, { notification: true });

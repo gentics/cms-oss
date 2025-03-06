@@ -107,6 +107,8 @@ export class MicroschemaTableComponent extends BaseEntityTableComponent<Microsch
     }
 
     public override handleAction(event: TableActionClickEvent<MeshMicroschemaBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case EDIT_ACTION:
                 this.openModal(MicroschemaPropertiesMode.EDIT, event.item);
@@ -117,11 +119,11 @@ export class MicroschemaTableComponent extends BaseEntityTableComponent<Microsch
                 //     return;
 
             case ASSIGN_TO_PROJECTS_ACTION:
-                this.handleAssignToProjectsAction(this.getAffectedEntityIds(event));
+                this.handleAssignToProjectsAction(items);
                 return;
 
             case UNASSIGN_FROM_PROJECTS_ACTION:
-                this.handleUnassignFromProjectsAction(this.getAffectedEntityIds(event));
+                this.handleUnassignFromProjectsAction(items);
                 return;
         }
 
@@ -159,8 +161,7 @@ export class MicroschemaTableComponent extends BaseEntityTableComponent<Microsch
     //     this.reload();
     // }
 
-    async handleAssignToProjectsAction(microschemaIds: string[]): Promise<void> {
-        const microschemas = this.loader.getEntitiesByIds(microschemaIds);
+    async handleAssignToProjectsAction(microschemas: MeshMicroschemaBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectProjectModal, {}, {
             title: 'mesh.assign_microschemas_to_projects',
             multiple: true,
@@ -180,8 +181,7 @@ export class MicroschemaTableComponent extends BaseEntityTableComponent<Microsch
         this.reload();
     }
 
-    async handleUnassignFromProjectsAction(microschemaIds: string[]): Promise<void> {
-        const microschemas = this.loader.getEntitiesByIds(microschemaIds);
+    async handleUnassignFromProjectsAction(microschemas: MeshMicroschemaBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectProjectModal, {}, {
             title: 'mesh.unassign_microschemas_from_projects',
             multiple: true,

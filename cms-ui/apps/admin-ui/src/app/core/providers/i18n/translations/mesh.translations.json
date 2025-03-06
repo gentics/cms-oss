@@ -71,6 +71,10 @@
         "de": "Suche Version",
         "en": "Search Version"
     },
+    "serverInfo_meshRevision": {
+        "de": "Revision",
+        "en": "Revision"
+    },
     "serverStatus": {
         "de": "Server Status",
         "en": "Server Status"

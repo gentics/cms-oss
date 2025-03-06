@@ -89,7 +89,9 @@ export class GroupTrableComponent extends BaseEntityTrableComponent<Group, Group
     override handleRowClick(row: TrableRow<GroupBO>): void {
         this.dataService.editGroupPermissions(row.item, row.item.permissionSet, this.groupPermissionsByCategory).then(didChange => {
             if (didChange) {
-                this.reloadRow(row);
+                this.reloadRow(row, {
+                    reloadDescendants: didChange.subGroups,
+                });
             }
         });
     }

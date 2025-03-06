@@ -35,7 +35,7 @@ function createRowId(row: TrableRow<any>): string {
     templateUrl: './trable.component.html',
     styleUrls: ['./trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
 
     /**

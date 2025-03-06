@@ -12,7 +12,7 @@ import {
     SchedulerStatus,
     ScheduleSaveReqeust,
 } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { ModalService, TableAction, TableColumn, TableRow, TableSortOrder, TableActionClickEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest, forkJoin, interval, Observable } from 'rxjs';
 import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -208,17 +208,19 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
     }
 
     public override handleAction(event: TableActionClickEvent<ScheduleBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case RUN_SCHEDULE_ACTION:
-                this.runSchedules((this.loader as ScheduleTableLoaderService).getEntitiesByIds(this.getAffectedEntityIds(event)));
+                this.runSchedules(items);
                 return;
 
             case ACTIVATE_SCHEDULE_ACTION:
-                this.activateSchedules((this.loader as ScheduleTableLoaderService).getEntitiesByIds(this.getAffectedEntityIds(event)));
+                this.activateSchedules(items);
                 return;
 
             case DEACTIVATE_SCHEDULE_ACTION:
-                this.deactivateSchedules((this.loader as ScheduleTableLoaderService).getEntitiesByIds(this.getAffectedEntityIds(event)));
+                this.deactivateSchedules(items);
                 return;
         }
 

@@ -1,7 +1,7 @@
 import { MeshGroupBO } from '@admin-ui/mesh/common';
-import { MeshGroupTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { MeshGroupTableComponent } from '../mesh-group-table/mesh-group-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-group-modal',
@@ -20,17 +20,11 @@ export class SelectGroupModal extends BaseModal<MeshGroupBO | MeshGroupBO[]> {
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: MeshGroupTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(MeshGroupTableComponent)
+    public table: MeshGroupTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

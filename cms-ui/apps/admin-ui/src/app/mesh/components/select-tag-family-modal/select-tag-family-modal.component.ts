@@ -1,7 +1,7 @@
 import { MeshTagFamilyBO } from '@admin-ui/mesh/common';
-import { TagFamilyTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { TagFamilyTableComponent } from '../tag-family-table/tag-family-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-tag-family-modal',
@@ -20,17 +20,11 @@ export class SelectTagFamilyModal extends BaseModal<MeshTagFamilyBO | MeshTagFam
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: TagFamilyTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(TagFamilyTableComponent)
+    public table: TagFamilyTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

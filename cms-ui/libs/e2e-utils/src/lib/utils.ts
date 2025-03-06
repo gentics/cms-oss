@@ -31,21 +31,21 @@ export function getItem(data: ImportData | string, entities: Record<string, any>
 
 export function envAll(env: string | string[]): boolean;
 export function envAll(...vars: string[]): boolean {
-    return vars.every(f => Cypress.env(f));
+    return vars.every(envName => process.env[envName]);
 }
 
 export function envAny(env: string | string[]): boolean;
 export function envAny(...vars: string[]): boolean {
-    return vars.some(f => Cypress.env(f));
+    return vars.some(envName => process.env[envName]);
 }
 
 export function envNone(env: string | string[]): boolean;
 export function envNone(...vars: string[]): boolean {
-    return vars.every(f => !Cypress.env(f));
+    return vars.every(envName => !process.env[envName]);
 }
 
 export function isVariant(variant: Variant): boolean {
-    return Cypress.env(ENV_CMS_VARIANT) === variant;
+    return process.env[ENV_CMS_VARIANT] === variant;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

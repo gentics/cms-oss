@@ -11,6 +11,7 @@ import {
     PermissionInfo,
     ScheduleCreateReqeust,
     ScheduleTaskCreateRequest,
+    Variant,
 } from '@gentics/cms-models';
 
 export interface LoginInformation {
@@ -68,6 +69,15 @@ export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace NodeJS {
+        interface ProcessEnv {
+            [ENV_CMS_VARIANT]: Variant;
+        }
+    }
+}
 
 export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
 

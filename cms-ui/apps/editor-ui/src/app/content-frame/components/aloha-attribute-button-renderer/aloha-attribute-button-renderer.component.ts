@@ -102,6 +102,9 @@ export class AlohaAttributeButtonRendererComponent
         this.overlay.openDynamicDropdown({
             type: 'input',
             initialValue: initialValue,
+            options: {
+                label: this.settings?.inputLabel,
+            },
         }, this.slot)
             .then(ctl => {
                 this.inputDropdown = ctl;

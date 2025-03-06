@@ -77,7 +77,7 @@ export class DynamicOverlayService {
         };
 
         const ctl: OverlayElementControl<T> = {
-            close: () => closeDropdown,
+            close: () => closeDropdown(),
             isOpen: () => open,
             value: new Promise((resolve, reject) => {
                 instance.registerCloseFn(value => {

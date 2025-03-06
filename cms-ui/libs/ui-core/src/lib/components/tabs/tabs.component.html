@@ -1,6 +1,6 @@
 <ul class="tab-links" [class.vertical]="vertical" [class.wrap]="wrap">
     <li
-        *ngFor="let tab of tabs"
+        *ngFor="let tab of displayTabs; trackBy: identifyTab"
         class="tab-link"
         role="presentation"
         [attr.data-id]="tab.id"

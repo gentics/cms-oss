@@ -599,8 +599,9 @@ export interface AbstractFileAPI extends BasicAPI {
     usageInFolders: (options?: UsageInFoldersOptions) => FolderUsageResponse;
     usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
     usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
-    usageInSyncableObject: (options: UsageInSyncableObjectsOptions) => SyncObjectsResponse;
     usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
+
+    usageInSyncableObject: (options: UsageInSyncableObjectsOptions) => SyncObjectsResponse;
 }
 
 export interface AbstractFolderAPI extends BasicAPI {
@@ -915,12 +916,16 @@ export interface AbstractPageAPI extends BasicAPI {
     deleteFromWastebin: (id: number | string, options?: WastebinDeleteOptions) => Response;
     deleteMultipleFromWastebin: (body: IdSetRequest, options?: WastebinDeleteOptions) => Response;
 
-    usageInFiles: (options?: UsageInFilesOptions) => FileUsageResponse;
-    usageInImages: (options?: UsageInImagesOptions) => FileUsageResponse;
+    usageInLinkedFiles: (options?: UsageInFilesOptions) => FileUsageResponse;
+    usageInLinkedImages: (options?: UsageInImagesOptions) => FileUsageResponse;
+    usageInLinkedPages: (options?: UsageInPagesOptions) => PageUsageResponse;
     usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
+    usageInTags: (options?: UsageInPagesOptions) => PageUsageResponse;
     usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
-    usageInSyncableObject: (options: UsageInSyncableObjectsOptions) => SyncObjectsResponse;
     usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
+    usageInVariants: (options?: UsageInPagesOptions) => PageUsageResponse;
+
+    usageInSyncableObject: (options: UsageInSyncableObjectsOptions) => SyncObjectsResponse;
 }
 
 export interface AbstractPartTypeAPI extends BasicAPI {
@@ -1014,6 +1019,8 @@ export interface AbstractTemplateAPI extends BasicAPI {
     localize: (id: number | string, body: LocalizeRequest) => Response;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
+
+    usageInSyncableObject: (options: UsageInSyncableObjectsOptions) => SyncObjectsResponse;
 }
 
 export interface AbstractUserAPI extends BasicAPI {

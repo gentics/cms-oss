@@ -1,0 +1,21 @@
+@import "variables";
+
+.empty-message {
+    text-align: center;
+    font-size: $gtx-font-size-lead;
+    color: $gtx-color-mid-gray;
+    margin-top: 50px;
+}
+
+.type-usage-wrapper {
+    .type-usage-header {
+        padding: 10px;
+        border-bottom: 1px dotted $gcms-color-highlight;
+        display: flex;
+        text-transform: uppercase;
+    }
+}
+
+gtx-tabs {
+    margin-top: 20px;
+}

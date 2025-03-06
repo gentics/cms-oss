@@ -12,6 +12,9 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Login service which authenticates user via given username and password.
+ */
 public class UsernamePasswordLoginService extends AbstractLoginService {
 
 	@Override

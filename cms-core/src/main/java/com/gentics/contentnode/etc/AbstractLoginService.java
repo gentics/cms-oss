@@ -2,7 +2,11 @@ package com.gentics.contentnode.etc;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.*;
+import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.SessionToken;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.SystemUser;
@@ -30,6 +34,7 @@ public abstract class AbstractLoginService implements LoginService {
 	 * @param password The password or null to not check it
 	 * @param response The response object, will be used to set a proper response info message
 	 * @param checkPassword Whether to check the given password for match or not
+	 * @param factory The content node factory to use.
 	 *
 	 * @return A valid user object or null
 	 *
@@ -92,7 +97,9 @@ public abstract class AbstractLoginService implements LoginService {
 	/**
 	 * Creates a new user session and sets the SESSION_SECRET cookie
 	 * if possible
-	 * @param systemUser The user for who to create an authenticated session
+	 * @param systemUser The user for whom to create an authenticated session
+	 * @param servletRequest The current servlet request.
+	 * @param servletResponse The current servlet response.
 	 * @return A session token (if cookie is not set it contains the secret also)
 	 */
 	public String createUserSession(SystemUser systemUser, HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws NodeException {

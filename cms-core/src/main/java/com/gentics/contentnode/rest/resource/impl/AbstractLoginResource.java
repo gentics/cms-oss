@@ -3,6 +3,9 @@ package com.gentics.contentnode.rest.resource.impl;
 import com.gentics.contentnode.etc.LoginService;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 
+/**
+ * Base class for login resources with a reference to the respective server loader.
+ */
 public abstract class AbstractLoginResource extends AbstractContentNodeResource {
 
 	/**

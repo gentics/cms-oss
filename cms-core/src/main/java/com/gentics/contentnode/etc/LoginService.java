@@ -23,6 +23,7 @@ public interface LoginService {
 	 *
 	 * @param username The username of the user.
 	 * @param password The password of the user in plain text.
+	 * @param factory The content node factory to use.
 	 * @param servletRequest The current request.
 	 * @param servletResponse The current response.
 	 *

@@ -16,6 +16,9 @@ import com.gentics.lib.log.NodeLogger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * Abstract base class for login services which provides methods for user login and session creation.
+ */
 public abstract class AbstractLoginService implements LoginService {
 
 	protected final NodeLogger logger = NodeLogger.getNodeLogger(getClass());

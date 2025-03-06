@@ -68,12 +68,6 @@ public class HttpAuthFilter extends AbstractSSOFilter {
 		chain.doFilter(request, response);
 	}
 
-	@Override
-	protected Set<String> getRoles(Map<String, Object> attributes) {
-		// TODO: Do we have roles when doing authentication via Basic Auth?
-		return Collections.emptySet();
-	}
-
 	/**
 	 * Get the a header, as defined in the map
 	 * @param httpAuthLogin map defining the header names

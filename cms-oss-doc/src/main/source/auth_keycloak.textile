@@ -17,15 +17,34 @@ feature:
   keycloak: true
 keycloak:
   user_created_callback: your.companyname.custom.SsoUserCreated
-  init_groups: |
-    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
-      [3],
-      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
-        [4],
-        [5]
-      )
-    )
+  sync_groups: true
+  init_groups:
+    roles.realm.realm-role-1: RealmRoleGroup1
+    roles.realm.realm-role-2:
+      - RealmRoleGroup2a
+      - RealmRoleGroup2b
+    roles.realm.realm-role-3:
+      - RealmRoleGroup1
+      - RealmRoleGroupX
+      - group: RealmRoleGroup3
+        nodes: Node 3
+    roles.resource.cms.cms-role:
+      - group: CmsRoleGroup
+        nodes:
+          - Node 1
+          - 4488.c0767dce-f8fd-11ef-8735-769f09e19595
+          - NonExistantNode
 </shell>
+
+h4. Configuration options
+
+The following configuration entries define how SSO login via Keycloak is handled.
+
+1. @user_created_callback@: An implementation of the @SsoUserCreatedCallback@ interface which must implement only the method @void accept(User user, Map<String, Object> attributes)@, where @user@ is the user that was created automatically via an SSO login and @attributes@ is a collection of user information provided by the concrete SSO implementation (e.g. the contents of the users access token from Keycloak).
+
+2. @sync_groups@: Whether an already existing users groups should be checked everytime an SSO login is performed. If the attributes of the user changed (e.g. the assigned roles in Keycloak), the groups of the user will be changed to match the new attributes.
+
+3. @init_groups@: Mappings from user attributes to lists of CMS user groups. In the example above, this means that if @roles.realm.realm-role-1@ can be resolved in the user attributes, the created user will be assigned to the group @RealmRoleGroup1@. The groups may be a single group name or a list of groups. In a list of groups each entry may be a single string which must be the name of the group, or a mapping with the keys @group@ and @nodes@ which hava the group name and a list of nodes to which the group assignment is restricted respectively. Nodes may be specified by their name or their global ID. Non-existing groups and nodes will produce a warning in the logs, but will otherwiese be ignored.
 
 Place the `keycloak.json` generated for the CMS in the UI configuration directory (default: `ui-conf`).
 

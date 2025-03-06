@@ -21,10 +21,20 @@ export default defineConfig({
     use: {
         baseURL,
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-        trace: 'on-first-retry',
+        trace: process.env.CI ? 'off' : 'on-first-retry',
     },
-    // Disable parallelization to avoid race conditions
-    workers: 1,
+    reporter: process.env.CI
+        ? [
+            ['dot'],
+            ['junit', {
+                outputFile: '../../.reports/apps/editor-ui/PLAYWRIGHT-report.xml',
+            }],
+        ]
+        : [
+            ['list'],
+        ],
+    workers: process.env.CI ? 1 : undefined,
+    forbidOnly: !!process.env.CI,
     /* Run your local dev server before starting the tests */
     // webServer: {
     //   command: 'npm run start',

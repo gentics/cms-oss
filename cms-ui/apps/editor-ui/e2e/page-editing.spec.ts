@@ -29,6 +29,9 @@ import {
 } from './helpers';
 
 test.describe('Page Editing', () => {
+    // Mark this suite as slow - Because it is
+    test.slow();
+
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
@@ -54,7 +57,6 @@ test.describe('Page Editing', () => {
     });
 
     test.describe('Edit Mode', () => {
-        test.slow();
 
         let editor: Locator;
 
@@ -68,7 +70,7 @@ test.describe('Page Editing', () => {
             const iframe = page.locator('content-frame iframe.master-frame[loaded="true"]');
             await iframe.waitFor({ timeout: 60_000 });
             editor = iframe.contentFrame().locator('main [contenteditable="true"]');
-            await editor.waitFor({ state: 'visible', timeout: 60_000 });
+            await editor.waitFor({ timeout: 60_000 });
         });
 
         test('should be able to add new text to the content-editable', async ({ page }) => {

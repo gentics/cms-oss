@@ -26,7 +26,9 @@ export default defineConfig({
     reporter: process.env.CI
         ? [
             ['dot'],
-            ['junit', { outputFile: '../../.reports/apps/admin-ui/PLAYWRIGHT-report.xml' }],
+            ['junit', {
+                outputFile: '../../.reports/apps/admin-ui/PLAYWRIGHT-report.xml',
+            }],
         ]
         : [
             ['list'],

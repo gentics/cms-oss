@@ -7,6 +7,24 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
@@ -19,26 +37,11 @@ import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.MultiTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.TagCreateRequest;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(value = Parameterized.class)
 @GCNFeature(set = {Feature.AUTOMATIC_TRANSLATION})
@@ -86,7 +89,7 @@ public class TranslationResourceImplIntegrationTest {
 	 */
 	@Parameters(name = "{index}: contentFileName {0}")
 	public static Collection<Object[]> data() {
-		final var basePath = "translate";
+		final var basePath = "/translate";
 		Collection<Object[]> data = new ArrayList<>();
 		data.add(new Object[] {basePath + "/simple-website.txt"});
 		data.add(new Object[] {basePath + "/content-tag.txt"});
@@ -103,7 +106,7 @@ public class TranslationResourceImplIntegrationTest {
 			var pageToTranslate = createPage(sourceLanguage);
 			createTags(pageToTranslate, contentFileName);
 
-			var response = (GenericResponse) translationResource.translate(
+			var response = translationResource.translate(
 					pageToTranslate.getId(),
 					targetLanguage,
 					true, 0, 0);
@@ -146,10 +149,11 @@ public class TranslationResourceImplIntegrationTest {
 	}
 
 	private String readContentFromFile(String fileName) throws IOException {
-		var filePath =
-				getClass().getClassLoader().getResource(fileName).getPath();
-
-		return new String(Files.readAllBytes(Paths.get(filePath)));
+		StringWriter writer = new StringWriter();
+		try (InputStream in = getClass().getResourceAsStream(fileName)) {
+			IOUtils.copy(in, writer, Charset.forName("UTF-8"));
+		}
+		return writer.toString();
 	}
 
 	private void addTagCreateRequest(Map<String, TagCreateRequest> map, String id,

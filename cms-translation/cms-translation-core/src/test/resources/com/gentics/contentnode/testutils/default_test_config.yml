@@ -21,10 +21,4 @@ mesh:
   prepareThreshold: 1
 
 automatic_translation:
-  implementation: com.gentics.contentnode.translation.GoogleCloudTranslationService
-  auth:
-    token: <api-token>
-  language:
-    en: US
-    pt: BR
-
+  implementation: com.gentics.contentnode.translation.TestTranslationService

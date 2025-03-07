@@ -64,17 +64,16 @@ public class PublishProtocolUtil {
 			var publisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
 			logEntry.setUser(publisherId);
 
-			DBUtils.update("UPDATE "+tableName+" SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
+			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,
 					object.getId());
-			DBUtils.update("UPDATE "+tableName+" SET pdate = ?, publisher = ? WHERE id = ?", timestamp, publisherId,
+			DBUtils.update("UPDATE " + tableName + " SET pdate = ?, publisher = ? WHERE id = ?", timestamp, publisherId,
 					object.getId());
 		} else if (PublishState.OFFLINE.getValue() == logEntry.getState()) {
 			var unpublisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
 			logEntry.setUser(unpublisherId);
 
-			DBUtils.update("UPDATE "+tableName+" SET pdate = ?, publisher = ? WHERE id = ?", 0, 0, object.getId());
-			DBUtils.update("UPDATE "+tableName+" SET unpublished_date = ?, unpublisher = ? WHERE id = ?",
-					timestamp, unpublisherId, object.getId());
+			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ? WHERE id = ?", timestamp,
+					unpublisherId, object.getId());
 		}
 	}
 

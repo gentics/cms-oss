@@ -42,3 +42,7 @@ cache
 conf
 keys
 .nx/
+data/
+logs/
+ui-conf/
+

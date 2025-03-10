@@ -16,6 +16,7 @@ Activate the Keycloak feature and add configuration for user creation callbacks 
 feature:
   keycloak: true
 keycloak:
+  show_sso_button: true
   user_created_callback: your.companyname.custom.SsoUserCreated
    sync_groups: true
    init_groups:
@@ -57,6 +58,12 @@ Except for the @groupMapper@ and @userCreatedCallback@ entries, the configuratio
 entries correspond exactly to the respective fields in the @keycloak.json@ you can
 generate in the Keycloak admin front-end, and you should put all the entries here even
 when they are not listed in the example above.
+
+h4. Showing the SSO login button.
+
+When the setting `keycloak.show_sso_button` is set to `true` (see example configuration above), the login masks
+for the editor-ui and admin-ui will show the login mask with an additional "Login with SSO" button which will redirect
+to Keycloak. When the setting is `false` the UIs will immediately redirect to the Keycloak login mask.
 
 h4. Using an Identity Provider
 

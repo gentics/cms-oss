@@ -8,8 +8,8 @@ package com.gentics.contentnode.rest.model;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Overview object, representing an overview in GCN

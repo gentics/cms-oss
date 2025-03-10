@@ -5,7 +5,7 @@
  */
 package com.gentics.contentnode.rest.model.request;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

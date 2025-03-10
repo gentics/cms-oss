@@ -1,8 +1,3 @@
-/*
- * @author norbert
- * @date 17.10.2007
- * @version $Id: DateFormatConfig.java,v 1.3 2008-05-26 15:05:57 norbert Exp $
- */
 package com.gentics.lib.formatter.dateformatter;
 
 import java.text.DateFormat;
@@ -14,12 +9,13 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.formatter.dateformatter.impl.JAXBdateFormatTypeImpl;
+
+import jakarta.xml.bind.JAXBElement;
 
 /**
  * @author norbert
  */
-public class DateFormatConfig extends JAXBdateFormatTypeImpl {
+public class DateFormatConfig extends JAXBDateFormatType {
 
 	/**
 	 * Map of languagecode specific formats, keys are the languagecodes, values
@@ -98,16 +94,17 @@ public class DateFormatConfig extends JAXBdateFormatTypeImpl {
 			Locale locale = getLocale(languageCode);
 
 			// first get language specific date/time variants
-			JAXBdateOrTimeType[] dateOrTime = getDateOrTime();
+			JAXBElement<JAXBDateOrTimeType>[] dateOrTime = getDateOrTime();
 			String datePart = null;
 			String timePart = null;
 
 			for (int i = 0; i < dateOrTime.length && (datePart == null || timePart == null); i++) {
-				if (languageCode.equalsIgnoreCase(dateOrTime[i].getLanguage())) {
-					if (datePart == null && dateOrTime[i] instanceof Date) {
-						datePart = dateOrTime[i].getValue();
-					} else if (timePart == null && dateOrTime[i] instanceof Time) {
-						timePart = dateOrTime[i].getValue();
+				if (languageCode.equalsIgnoreCase(dateOrTime[i].getValue().getLanguage())) {
+					String localName = dateOrTime[i].getName().getLocalPart();
+					if (datePart == null && "date".equals(localName)) {
+						datePart = dateOrTime[i].getValue().getValue();
+					} else if (timePart == null && "time".equals(localName)) {
+						timePart = dateOrTime[i].getValue().getValue();
 					}
 				}
 			}

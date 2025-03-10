@@ -3,8 +3,8 @@ package com.gentics.contentnode.tests.rest.file;
 import com.gentics.testutils.GenericTestUtils;
 import org.apache.commons.io.IOUtils;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 import java.io.IOException;
 
 /**

@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.devtools.dependency;
 
 
 import java.util.List;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Represents a single package dependency that can be used for a package consistency check

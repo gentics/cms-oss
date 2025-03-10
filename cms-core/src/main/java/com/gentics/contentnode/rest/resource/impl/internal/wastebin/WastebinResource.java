@@ -2,9 +2,9 @@ package com.gentics.contentnode.rest.resource.impl.internal.wastebin;
 
 import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;

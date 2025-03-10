@@ -8,8 +8,8 @@ package com.gentics.contentnode.rest.model.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 import com.gentics.contentnode.rest.model.User;
 

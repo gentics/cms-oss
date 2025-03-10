@@ -11,13 +11,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.gentics.contentnode.dbcopy.jaxb.JAXBtableType;
-import com.gentics.contentnode.dbcopy.jaxb.impl.TablesImpl;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 
 /**
  * Tables implementation
  */
-public class Tables extends TablesImpl {
+public class Tables extends com.gentics.contentnode.dbcopy.jaxb.Tables {
 
 	/**
 	 * map of tables, keys are the names, values are the Table objects
@@ -42,7 +41,7 @@ public class Tables extends TablesImpl {
 		boolean checksOk = true;
 
 		tablesMap = new HashMap<String, Table>();
-		JAXBtableType[] tables = getTable();
+		JAXBTableType[] tables = getTable();
 
 		for (int i = 0; i < tables.length; i++) {
 			if (tablesMap.containsKey(tables[i].getId())) {

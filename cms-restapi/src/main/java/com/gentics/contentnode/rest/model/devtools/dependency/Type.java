@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.devtools.dependency;
 
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlType;
 
 /**
  * The dependency type enum

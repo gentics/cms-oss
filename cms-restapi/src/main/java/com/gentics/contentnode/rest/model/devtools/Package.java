@@ -5,7 +5,7 @@ import com.gentics.contentnode.rest.model.ObjectProperty;
 import java.util.Set;
 
 import java.util.function.Consumer;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Package

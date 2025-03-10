@@ -18,9 +18,9 @@
 		<echo message="transforming ${mainfile} into ${tempfile}" />
 		<xslt in="${mainfile}" out="${tempfile}" style="stripImplClass.xsl" />
 		<echo message="generating classes step 1" />
-		<xjc schema="${tempfile}" target="${build.dir}" package="${package}" extension="true" source="1.0" />
+		<xjc schema="${tempfile}" destdir="${build.dir}" package="${package}" extension="true" encoding="UTF-8" header="false" />
 		<echo message="generating classes step 2" />
-		<xjc schema="${mainfile}" target="${build.dir}" package="${package}" extension="true" source="1.0" />
+		<xjc schema="${mainfile}" destdir="${build.dir}" package="${package}" extension="true" encoding="UTF-8" header="false" />
 	</target>
 
 	<!-- compile Java source files -->

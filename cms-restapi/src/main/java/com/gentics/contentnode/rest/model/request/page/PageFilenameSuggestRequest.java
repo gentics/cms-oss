@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.request.page;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.webcohesion.enunciate.metadata.DocumentationExample;
 

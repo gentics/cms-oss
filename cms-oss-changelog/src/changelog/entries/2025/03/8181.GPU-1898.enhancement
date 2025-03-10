@@ -1,0 +1,23 @@
+Gentics CMS has been refactored to be compatible with Jakarta EE 10.
+
+This especially includes the following list of dependency updates:
+* Jakarta Servlet API 6.0.0 (from Java Servlet API 2.4)
+* Jakarta Mail API 2.1.3 (from JavaMail API 1.6.2)
+* Jakarta Activation API 2.1.3 (from JavaBeans Activation Framework 1.1)
+* Jakarta XML Binding API 4.0.2 (from JAXB API 2.2)
+* Apache Tika 3.0.0
+* Apache Commons FileUpload Jakarta Servlet 6 2.0.0-M2
+* Apache Commons IO 2.17.0
+* Apache Log4j 2.24.3
+* Eclipse Jersey 3.1.10
+* Eclipse Jetty 12.0.16
+* Jackson 2.18.2
+
+The following dependencies have been removed:
+* Java Portlet API
+* JavaServer Pages API
+* Tomcat Annotations API
+* Xalan
+* Neko HTML
+* WSDL4J
+* ASM

@@ -101,32 +101,11 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Dependencies for JAXB -->
-		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.2</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-			<version>2.2</version>
-			<scope>provided</scope>
-		</dependency>
-
 		<!-- These libraries are only needed for compiling the code -->
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
-			<version>2.4</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet.jsp</groupId>
-			<artifactId>jsp-api</artifactId>
-			<scope>provided</scope>
-			<version>2.0</version>
 		</dependency>
 	</dependencies>
 </project>

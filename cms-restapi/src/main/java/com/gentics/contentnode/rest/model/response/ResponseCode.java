@@ -18,21 +18,42 @@ public enum ResponseCode {
 	/**
 	 * Used if everything went ok (eg. page successfully saved)
 	 */
-	OK, /**
+	OK,
+
+	/**
 	 * Used if the request was made with invalid (insufficient) data
-	 */ INVALIDDATA, /**
+	 */
+	INVALIDDATA,
+
+	/**
 	 * Used if insufficient permissions permitted to requested action
-	 */ PERMISSION, /**
+	 */
+	PERMISSION,
+
+	/**
 	 * Used if the maintenancemode was enabled
-	 */ MAINTENANCEMODE, /**
+	 */
+	MAINTENANCEMODE,
+
+	/**
 	 * Used if the requested object was not found
-	 */ NOTFOUND, /**
+	 */
+	NOTFOUND,
+
+	/**
 	 * Used if something unexpected went wrong (eg. page couldn't be successfully saved due to a database error)
-	 */ FAILURE, /**
+	 */
+	FAILURE,
+
+	/**
 	 * Used if a request was made with missing or invalid session identification
-	 */ AUTHREQUIRED, /**
+	 */
+	AUTHREQUIRED,
+
+	/**
 	 * Used if a request was made to a resource that required additional licensing
-	 */ NOTLICENSED,
+	 */
+	NOTLICENSED,
 
 	 /**
 	  * The requested update could be done, because the object was locked by another user

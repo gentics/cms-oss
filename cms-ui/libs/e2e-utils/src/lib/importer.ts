@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {
+    ContentRepository,
     Feature,
     File,
     FileUploadOptions,
@@ -181,9 +182,15 @@ export class EntityImporter {
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
 
-        const tasks = await this.client.schedulerTask.list().send();
+        // Store all CRs in the entity map
+        const crs = (await this.client.contentRepository.list().send()).items || [];
+        for (const singleCr of crs) {
+            this.entityMap[singleCr.globalId] = singleCr;
+        }
 
-        for (const singleTask of tasks.items) {
+        // Store all Tasks in the entity map
+        const tasks = (await this.client.schedulerTask.list().send()).items || [];
+        for (const singleTask of tasks) {
             if (singleTask.internal) {
                 this.entityMap[singleTask.command] = singleTask;
             }

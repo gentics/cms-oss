@@ -65,6 +65,8 @@ describe('DetailTabLinkDirective', () => {
         const destTabId = 'tabB';
         fixture.detectChanges();
         tick();
+        fixture.detectChanges();
+        tick();
 
         const tabLinks = fixture.debugElement.queryAll(By.css('.tab-links .tab-link a'));
         expect(tabLinks.length).toBe(3, 'Could not find the link tags of the gtx-tab elements. Did the gtx-tabs implementation change?');

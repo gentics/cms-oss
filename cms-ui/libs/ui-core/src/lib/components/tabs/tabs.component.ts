@@ -140,11 +140,11 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
             ),
             this.tabs.changes,
         ]).subscribe(([id, tabs]: [string, QueryList<TabComponent>]) => {
-            let hasSet = false;
-
             // In a timeout, so it is performing this a angular tick later, to prevent the annoying
             // changed after checked error.
             setTimeout(() => {
+                let hasSet = false;
+
                 if (tabs != null && tabs.length > 0) {
                     tabs.forEach(singleTab => {
                         singleTab.parentRef = this;
@@ -164,11 +164,9 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
                     initial = false;
                 }
 
+                this.updateDisplayTabs();
                 this.changeDetector.markForCheck();
             });
-
-            this.updateDisplayTabs();
-            this.changeDetector.markForCheck();
         }));
 
         this.tabs.notifyOnChanges();

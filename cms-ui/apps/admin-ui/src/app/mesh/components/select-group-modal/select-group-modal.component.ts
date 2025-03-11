@@ -1,5 +1,5 @@
 import { MeshGroupBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { MeshGroupTableComponent } from '../mesh-group-table/mesh-group-table.component';
 
@@ -20,7 +20,7 @@ export class SelectGroupModal extends BaseModal<MeshGroupBO | MeshGroupBO[]> {
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(MeshGroupTableComponent)
+    @ViewChild(forwardRef(() => MeshGroupTableComponent))
     public table: MeshGroupTableComponent;
 
     confirmSelection(): void {

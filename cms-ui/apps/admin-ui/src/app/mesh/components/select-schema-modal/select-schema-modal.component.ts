@@ -1,5 +1,5 @@
 import { MeshSchemaBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { SchemaTableComponent } from '../schema-table/schema-table.component';
 @Component({
@@ -19,7 +19,7 @@ export class SelectSchemaModal extends BaseModal<MeshSchemaBO | MeshSchemaBO[]> 
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(SchemaTableComponent)
+    @ViewChild(forwardRef(() => SchemaTableComponent))
     public table: SchemaTableComponent;
 
     confirmSelection(): void {

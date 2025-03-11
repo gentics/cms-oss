@@ -1,5 +1,5 @@
 import { MeshMicroschemaBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { MicroschemaTableComponent } from '../microschema-table/microschema-table.component';
 
@@ -20,7 +20,7 @@ export class SelectMicroschemaModal extends BaseModal<MeshMicroschemaBO | MeshMi
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(MicroschemaTableComponent)
+    @ViewChild(forwardRef(() => MicroschemaTableComponent))
     public table: MicroschemaTableComponent;
 
     confirmSelection(): void {

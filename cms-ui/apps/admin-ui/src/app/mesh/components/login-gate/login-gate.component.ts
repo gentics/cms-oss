@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
 import { MeshAPIVersion, MeshClientConnection, MeshRestClientRequestError } from '@gentics/mesh-rest-client';
@@ -168,7 +169,10 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             this.requiresLogin = true;
             this.form.enable();
 
-            if (err instanceof MeshRestClientRequestError && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
+            if ((
+                err instanceof GCMSRestClientRequestError
+                || err instanceof MeshRestClientRequestError
+            ) && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
                 this.form.controls.newPassword.enable();
                 this.notification.show({
                     message: 'mesh.new_password_required_warning',

@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { EntityImporter, hasMatchingParams, isUrlPath, ITEM_TYPE_PAGE, minimalNode, pageOne, TestSize } from '@gentics/e2e-utils';
+import { EntityImporter, hasMatchingParams, matchesPath, ITEM_TYPE_PAGE, minimalNode, pageOne, TestSize } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
@@ -85,7 +85,7 @@ test.describe.skip('Page Editing', () => {
             // Save and verify request
             const saveRequest = page.waitForRequest(request => {
                 const matches = request.method() === 'POST'
-                    && isUrlPath(request.url(), `/rest/page/save/${IMPORTER.get(pageOne).id}`);
+                    && matchesPath(request.url(), `/rest/page/save/${IMPORTER.get(pageOne).id}`);
                 console.log('is save request', request.url(), matches);
                 return matches;
             });
@@ -296,7 +296,7 @@ test.describe.skip('Page Editing', () => {
         // Admin request which shouldn't be used/called
         let adminEndpointCalled = false;
         page.on('request', request => {
-            if (request.method() === 'POST' && isUrlPath(request.url(), '/rest/construct')) {
+            if (request.method() === 'POST' && matchesPath(request.url(), '/rest/construct')) {
                 adminEndpointCalled = true;
             }
         });
@@ -304,7 +304,7 @@ test.describe.skip('Page Editing', () => {
         // Regular endpoint which should be used
         const constructLoadRequest = page.waitForRequest(request =>
             request.method() === 'GET'
-                && isUrlPath(request.url(), '/rest/construct/list')
+                && matchesPath(request.url(), '/rest/construct/list')
                 && hasMatchingParams(request.url(), {
                     nodeId: IMPORTER.get(minimalNode).id.toString(),
                     pageId: IMPORTER.get(pageOne).id.toString(),

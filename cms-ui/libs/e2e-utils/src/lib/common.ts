@@ -69,12 +69,14 @@ export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
+export const ENV_CI = 'CI';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
             [ENV_CMS_VARIANT]: Variant;
+            [ENV_CI]: boolean;
         }
     }
 }
@@ -95,6 +97,9 @@ export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
 export const IMPORT_ID = Symbol('gtx-e2e-import-id');
 
 export const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
+
+export const CONTENT_REPOSITORY_MESH = '7f25.8f630a60-355e-11ef-8e0a-0242ac110002';
+export const CR_PREFIX_MESH = 'example';
 
 export const CONSTRUCT_ALOHA_LINK = 'A547.70950';
 export const CONSTRUCT_ALOHA_TEXT = 'A547.75403';

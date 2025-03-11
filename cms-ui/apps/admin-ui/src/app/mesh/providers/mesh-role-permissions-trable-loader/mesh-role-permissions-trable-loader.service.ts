@@ -100,7 +100,7 @@ function createRoot(): MeshBusinessObject[] {
 function createProjectRoot(project: MeshProjectBO): MeshBusinessObject[] {
     return [
         {
-            [BO_ID]: `_project-${project.name}_tag-families`,
+            [BO_ID]: `_project_${project.uuid}_tag-families`,
             [BO_DISPLAY_NAME]: 'mesh.tag_families',
             [BO_PERMISSIONS]: [],
             [MBO_TYPE]: MeshType.TAG_FAMILY,
@@ -109,7 +109,7 @@ function createProjectRoot(project: MeshProjectBO): MeshBusinessObject[] {
             [MBO_PROJECT_CONTEXT]: project.name,
         }, {
             ...project.rootNode,
-            [BO_ID]: `_project-${project.name}_nodes`,
+            [BO_ID]: `_project_${project.uuid}_nodes`,
             [BO_DISPLAY_NAME]: 'mesh.nodes',
             [BO_PERMISSIONS]: NODE_PERMISSIONS,
             [MBO_TYPE]: MeshType.NODE,

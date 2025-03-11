@@ -1,34 +1,36 @@
-import { AccessControlledType } from '@gentics/cms-models';
-import { EntityImporter, schedulePublisher, TestSize } from '@gentics/e2e-utils';
-import { test, expect } from '@playwright/test';
-import { AUTH_ADMIN } from './common';
+import { AccessControlledType, ContentRepository } from '@gentics/cms-models';
 import {
+    BASIC_TEMPLATE_ID,
+    clickTableRow,
+    clickTableRowAction,
+    CR_PREFIX_MESH,
+    EntityImporter,
+    expandTrableRow,
+    findTableAction,
+    findTableRowById,
+    findTableRowByText,
+    findTrableRowById,
+    findTrableRowByText,
+    folderA,
+    folderB,
+    matchesPath,
+    minimalNode,
+    schedulePublisher,
+    selectTableRow,
+    TestSize,
+} from '@gentics/e2e-utils';
+import { expect, Locator, test } from '@playwright/test';
+import { AUTH, AUTH_ADMIN, AUTH_MESH } from './common';
+import {
+    clickModalAction,
+    loginWithCR,
     loginWithForm,
+    logoutMeshManagement,
     navigateToApp,
     navigateToModule,
-    findTableRowById,
     selectTab,
-    isMeshManagementVisible,
-    loginWithCR,
-    logoutMeshManagement,
-    findTableRowByText,
-    clickTableRowAction,
-    findTrableRowByText,
-    expandTrableRow,
-    clickModalAction,
 } from './helpers';
-
-// Test data constants
-const TEST_DATA = {
-    NEW_PROJECT_NAME: 'New Project',
-    TRABLE_PROJECTS: 'Projekte',
-    TRABLE_NODES: 'Nodes',
-    EXAMPLE_PROJECT: 'example',
-    MINIMAL: 'Minimal',
-    FOLDER_A: 'Folder A',
-    FOLDER_B: 'Folder B',
-    CR_ID: '1',
-} as const;
+import { UserUpdateRequest } from '@gentics/mesh-models';
 
 // Selector constants
 const SELECTORS = {
@@ -53,11 +55,19 @@ const SELECTORS = {
     },
 } as const;
 
+const CLASS_ACTIVE = /active/;
+const CLASS_GRANTED = /granted/;
+
+test.describe.configure({ mode: 'serial' });
 test.describe('Content Repositories Module', () => {
+
     const IMPORTER = new EntityImporter({
         logRequests: false,
         logImports: false,
     });
+
+    let testCr: ContentRepository;
+    let master: Locator;
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
@@ -73,35 +83,40 @@ test.describe('Content Repositories Module', () => {
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
+        testCr = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
+
         await navigateToApp(page);
         await loginWithForm(page, AUTH_ADMIN);
 
         // Wait for table loading
         const tableLoadPromise = page.waitForResponse(response =>
-            response.url().includes('/rest/contentrepositories') && response.ok(),
+            matchesPath(response.url(), '/rest/contentrepositories') && response.ok(),
         );
 
         await navigateToModule(page, 'content-repositories', AccessControlledType.CONTENT_ADMIN);
         await tableLoadPromise;
+
+        master = page.locator('gtx-content-repository-master');
+        await master.waitFor();
     });
 
     test('should have content repositories listed', async ({ page }) => {
-        const rows = page.locator('gtx-table .grid-row');
+        const rows = master.locator('gtx-table .grid-row.data-row');
         await expect(rows).toHaveCount(1);
     });
 
     test('should open the details on click', async ({ page }) => {
-        const row = await findTableRowById(page, TEST_DATA.CR_ID);
-        await row.click({ force: true });
-        await expect(row).toHaveClass(/active/);
+        const row = findTableRowById(master, testCr.id);
+        await clickTableRow(row);
+        await expect(row).toHaveClass(CLASS_ACTIVE);
 
         const editor = page.locator(SELECTORS.EDITOR);
         await expect(editor).toBeVisible();
     });
 
     test('should be possible to select the management tab', async ({ page }) => {
-        const row = await findTableRowById(page, TEST_DATA.CR_ID);
-        await row.click({ force: true });
+        const row = findTableRowById(master, testCr.id);
+        await clickTableRow(row);
 
         const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
         await selectTab(tabs, 'management');
@@ -111,78 +126,111 @@ test.describe('Content Repositories Module', () => {
     });
 
     test.describe('Mesh Management', () => {
+        let management: Locator;
+        let managementContent: Locator;
+
         test.beforeEach(async ({ page }) => {
-            const row = await findTableRowById(page, TEST_DATA.CR_ID);
-            await row.click({ force: true });
+            const row = findTableRowById(master, testCr.id);
+            await clickTableRow(row);
 
             const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
             await selectTab(tabs, 'management');
 
-            const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
+            management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
             await expect(management).toBeVisible();
+            managementContent = management.locator('.management-content');
         });
 
         test('should be possible to login via manual credentials and to logout again', async ({ page }) => {
-            await expect(await isMeshManagementVisible(page)).toBe(false);
+            expect(await managementContent.isVisible()).toBe(false);
 
-            await loginWithForm(page, 'mesh');
-            await expect(await isMeshManagementVisible(page)).toBe(true);
+            const loginReq = page.waitForResponse(response =>
+                response.ok() && (
+                    matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/login')
+                    || matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/')
+                ),
+            );
+
+            await loginWithForm(management, AUTH_MESH);
+            await loginReq;
+            expect(await managementContent.isVisible()).toBe(true);
 
             await logoutMeshManagement(page);
-            await expect(await isMeshManagementVisible(page)).toBe(false);
+            expect(await managementContent.isVisible()).toBe(false);
         });
 
         test('should be possible to login via CR credentials and to logout again', async ({ page }) => {
-            await expect(await isMeshManagementVisible(page)).toBe(false);
+            expect(await managementContent.isVisible()).toBe(false);
 
             await loginWithCR(page);
-            await expect(await isMeshManagementVisible(page)).toBe(true);
+            expect(await managementContent.isVisible()).toBe(true);
 
             await logoutMeshManagement(page);
-            await expect(await isMeshManagementVisible(page)).toBe(false);
+            expect(await managementContent.isVisible()).toBe(false);
         });
 
         test('should force a new password, apply a new one, and reset it manually to the original one', async ({ page }) => {
-            const auth = require('../fixtures/auth.json');
+            const usersReq = page.waitForResponse(response =>
+                response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users'),
+            );
 
             await loginWithCR(page);
+            await selectTab(page, 'users');
+            await usersReq;
 
             // Edit user and force password change
-            await selectTab(page, 'users');
-            const userRow = await findTableRowByText(page, auth.mesh.username);
-            await clickTableRowAction(userRow, 'edit');
+            const userRow = findTableRowByText(managementContent, AUTH[AUTH_MESH].username);
+            await findTableAction(userRow, 'edit').click();
 
-            await page.locator(SELECTORS.FORM.FORCE_PASSWORD).click();
-            await clickModalAction(page, 'confirm');
+            let userModal = page.locator('gtx-mesh-user-modal');
+            await userModal.locator(SELECTORS.FORM.FORCE_PASSWORD).click();
+            await clickModalAction(userModal, 'confirm');
 
             await logoutMeshManagement(page);
 
             // Login with CR should not be possible
             await loginWithCR(page);
-            await expect(await isMeshManagementVisible(page)).toBe(false);
+            expect(await managementContent.isVisible()).toBe(false);
 
             // Attempt manual login and set new password
-            await loginWithForm(page, 'mesh');
+            await loginWithForm(page, AUTH_MESH);
 
-            await page.locator(SELECTORS.FORM.PASSWORD_INPUT).fill(auth.mesh.newPassword);
+            const updateReq = page.waitForResponse(response =>
+                response.ok()
+                && response.request().method() === 'POST'
+                && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users/*'),
+            );
+
+            await page.locator(SELECTORS.FORM.PASSWORD_INPUT).fill(AUTH[AUTH_MESH].newPassword);
             await page.locator(SELECTORS.FORM.SUBMIT).click();
+            await updateReq;
 
-            await expect(await isMeshManagementVisible(page)).toBe(true);
+            expect(await managementContent.isVisible()).toBe(true);
 
             // Reset password to original
             await selectTab(page, 'users');
-            await clickTableRowAction(userRow, 'edit');
+            await findTableAction(userRow, 'edit').click();
 
-            await page.locator(SELECTORS.FORM.PASSWORD_CHECKBOX).click();
-            await page.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(auth.mesh.password);
-            await page.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(auth.mesh.password);
+            userModal = page.locator('gtx-mesh-user-modal');
+            await userModal.locator(SELECTORS.FORM.PASSWORD_CHECKBOX).click();
+            await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH[AUTH_MESH].password);
+            await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH[AUTH_MESH].password);
 
-            await clickModalAction(page, 'confirm');
+            const resetReq = page.waitForResponse(response =>
+                response.ok()
+                && response.request().method() === 'POST'
+                && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users/*'),
+            );
+            await clickModalAction(userModal, 'confirm');
+            const resetRes = await resetReq;
+            const resetReqData: UserUpdateRequest = resetRes.request().postDataJSON();
+            expect(resetReqData.password).toEqual(AUTH[AUTH_MESH].password);
 
             // Logout and verify CR login works again
             await logoutMeshManagement(page);
+
             await loginWithCR(page);
-            await expect(await isMeshManagementVisible(page)).toBe(true);
+            expect(await managementContent.isVisible()).toBe(true);
         });
 
         test.describe('Projects', () => {
@@ -195,23 +243,31 @@ test.describe('Content Repositories Module', () => {
             });
 
             test('should be possible to create a new project', async ({ page }) => {
+                const NEW_PROJECT_NAME = 'New Project';
+
                 await selectTab(page, 'projects');
 
-                await page.locator(`${SELECTORS.PROJECT.TABLE} [data-action="create"]`).click();
+                await managementContent.locator(`${SELECTORS.PROJECT.TABLE} [data-action="create"]`).click();
 
-                await page.locator(`${SELECTORS.PROJECT.MODAL} ${SELECTORS.FORM.NAME_INPUT}`).fill(TEST_DATA.NEW_PROJECT_NAME);
+                const createModal = page.locator(SELECTORS.PROJECT.MODAL);
 
-                await page.locator(`${SELECTORS.PROJECT.MODAL} ${SELECTORS.PROJECT.SCHEMA_PICKER}`).click();
-                const schemaRow = await findTableRowByText(page, 'folder');
-                await schemaRow.locator('.select-column gtx-checkbox label').click();
-                await clickModalAction(page, 'confirm');
+                await createModal.locator(SELECTORS.FORM.NAME_INPUT)
+                    .fill(NEW_PROJECT_NAME);
+                await createModal.locator(SELECTORS.PROJECT.SCHEMA_PICKER)
+                    .click();
 
-                await clickModalAction(page, 'confirm');
+                const schemaSelectModal = page.locator(SELECTORS.PROJECT.SCHEMA_MODAL);
+                const schemaRow = findTableRowByText(schemaSelectModal, 'folder');
+                await selectTableRow(schemaRow);
+                await clickModalAction(schemaSelectModal, 'confirm');
 
-                const projectRow = await findTableRowByText(page, TEST_DATA.NEW_PROJECT_NAME);
+                await clickModalAction(createModal, 'confirm');
+
+                const projectRow = findTableRowByText(managementContent, NEW_PROJECT_NAME);
                 await expect(projectRow).toBeVisible();
 
-                await clickTableRowAction(projectRow, 'delete');
+                await findTableAction(projectRow, 'delete').click();
+
                 await clickModalAction(page, 'confirm');
             });
         });
@@ -230,25 +286,28 @@ test.describe('Content Repositories Module', () => {
             test('should be possible to read and modify role permissions on projects', async ({ page }) => {
                 await selectTab(page, 'roles');
 
-                const anonymousRow = await findTableRowByText(page, 'anonymous');
-                await clickTableRowAction(anonymousRow, 'managePermissions');
+                const anonymousRow = findTableRowByText(page, 'anonymous');
+                await findTableAction(anonymousRow, 'managePermissions').click();
 
                 // Navigate through project structure
-                const projectsRow = await findTrableRowByText(page, TEST_DATA.TRABLE_PROJECTS);
+                const projectsRow = findTrableRowById(page, '_projects');
                 await expandTrableRow(projectsRow);
 
-                const exampleRow = await findTrableRowByText(page, TEST_DATA.EXAMPLE_PROJECT);
+                const exampleRow = findTrableRowByText(page, CR_PREFIX_MESH);
+                const projectId = await exampleRow.evaluate((el) => {
+                    return el.getAttribute('data-id');
+                })
                 await expandTrableRow(exampleRow);
 
-                const nodesRow = await findTrableRowByText(page, TEST_DATA.TRABLE_NODES);
+                const nodesRow = findTrableRowById(page, `_project_${projectId}_nodes`);
                 await expandTrableRow(nodesRow);
 
                 // Verify initial state
-                const minimalRow = await findTrableRowByText(page, TEST_DATA.MINIMAL);
-                await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).not.toHaveClass(/granted/);
+                const minimalRow = findTrableRowByText(page, IMPORTER.get(minimalNode).name);
+                await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).not.toHaveClass(CLASS_GRANTED);
 
                 // Edit permissions
-                await clickTableRowAction(minimalRow, 'edit');
+                await findTableAction(minimalRow, 'edit').click();
                 await page.locator('gtx-mesh-role-permissions-edit-modal gtx-checkbox[formcontrolname="readPublished"] label').click();
 
                 const loadRequest = page.waitForResponse(response =>
@@ -258,21 +317,21 @@ test.describe('Content Repositories Module', () => {
                 await loadRequest;
 
                 // Verify permission was set
-                await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(/granted/);
+                await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
 
                 // Apply permissions recursively
-                await clickTableRowAction(minimalRow, 'applyRecursive');
+                await findTableAction(minimalRow, 'applyRecursive').click();
                 await clickModalAction(page, 'confirm');
 
                 // Expand minimal folder
                 await expandTrableRow(minimalRow);
 
                 // Verify recursive permissions
-                const folderARow = await findTrableRowByText(page, TEST_DATA.FOLDER_A);
-                const folderBRow = await findTrableRowByText(page, TEST_DATA.FOLDER_B);
+                const folderARow = findTrableRowById(page, IMPORTER.get(folderA).id);
+                const folderBRow = findTrableRowById(page, IMPORTER.get(folderB).id);
 
-                await expect(folderARow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(/granted/);
-                await expect(folderBRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(/granted/);
+                await expect(folderARow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
+                await expect(folderBRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
 
                 // Close modal
                 await clickModalAction(page, 'cancel');

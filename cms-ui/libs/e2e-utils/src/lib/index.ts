@@ -5,4 +5,5 @@ export * from './cypress-commands';
 export * from './cypress-driver';
 export * from './entities';
 export * from './importer';
+export * from './table-helpers';
 export * from './utils';

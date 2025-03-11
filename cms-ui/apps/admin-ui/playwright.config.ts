@@ -4,7 +4,7 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:8080';
+const baseURL = process.env['BASE_URL'] || (process.env.CI ? 'http://localhost:8080/admin' : 'http://localhost:4200');
 
 /**
  * Read environment variables from file.
@@ -33,15 +33,19 @@ export default defineConfig({
         : [
             ['list'],
         ],
-    workers: process.env.CI ? 1 : undefined,
+    fullyParallel: false,
+    workers: 1,
     forbidOnly: !!process.env.CI,
     /* Run your local dev server before starting the tests */
-    // webServer: {
-    //   command: 'npm run start',
-    //   url: 'http://127.0.0.1:3000',
-    //   reuseExistingServer: !process.env.CI,
-    //   cwd: workspaceRoot,
-    // },
+    webServer: process.env.CI ? undefined : {
+        command: 'npm start admin-ui',
+        url: 'http://127.0.0.1:4200',
+        reuseExistingServer: true,
+        cwd: workspaceRoot,
+        stdout: 'pipe',
+        // Wait for max of 2min for dev server to be ready
+        timeout: 2 * 60_000,
+    },
     projects: [
         {
             name: 'chromium',

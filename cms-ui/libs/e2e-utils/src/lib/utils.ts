@@ -365,9 +365,85 @@ export function combinationMatrix<T>(elements: T[]): T[][] {
     return out;
 }
 
-export function isUrlPath(url: string, path: string): boolean {
-    const urlObj = new URL(url);
-    return urlObj.pathname === path;
+/**
+ * Very simple glob implementation, which only allows *full* folder globbing.
+ * @example
+ * ```ts
+ * globMatch('/hello/world', '/hello/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/123/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/123/456/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/world')
+ * > false
+ * globMatch('/hello/**\/world', '/hello/123/world')
+ * > true
+ * globMatch('/hello/**\/world', '/hello/world')
+ * > true
+ * globMatch('/hello/**\/world', '/hello/123/456/world')
+ * > true
+ * ```
+ * @param globPattern Pattern which indicates validity
+ * @param str The string to test against
+ * @returns If the `str` value matches against the `globPattern`
+ */
+export function globMatch(globPattern: string, str: string): boolean {
+    const globParts = globPattern.split('/').filter(part => part !== '');
+    const matchParts = str.split('/').filter(part => part !== '');
+
+    let matchIdx = 0;
+    for (let i = 0; i < globParts.length; i++) {
+        // If it isn't a glob part, then we continue
+        if (globParts[i][0] !== '*') {
+            if (globParts[i] !== matchParts[matchIdx]) {
+                return false;
+            }
+            matchIdx++;
+            continue;
+        }
+
+        // Simply allow all paths, so continue
+        if (globParts[i] === '*') {
+            matchIdx++;
+            continue;
+        }
+
+        if (globParts[i] !== '**') {
+            throw new Error(`Unknown glob pattern part "${globParts[i]}"`);
+        }
+
+        // We don't need to check, as this is the last entry
+        if (i + 1 >= globParts.length) {
+            break;
+        }
+
+        for (; matchIdx < matchParts.length; matchIdx++) {
+            // We have a matching path after "**"
+            if (globParts[i + 1] === matchParts[matchIdx]) {
+                break;
+            }
+        }
+
+        // If we couldn't find a match, then that means it's invalid
+        return false;
+    }
+
+    return true;
+}
+
+export function matchesPath(url: string, path: string | RegExp): boolean {
+    try {
+        const urlObj = new URL(url);
+
+        if (typeof path === 'string') {
+            return globMatch(path, urlObj.pathname);
+        }
+
+        return path.test(urlObj.pathname);
+    } catch (err) {
+        return false;
+    }
 }
 
 export function hasMatchingParams(url: string, params: Record<string, string>): boolean {

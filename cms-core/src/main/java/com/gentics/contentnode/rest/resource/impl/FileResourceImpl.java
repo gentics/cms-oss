@@ -717,7 +717,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					if (conversionFailed) {
 						var info = response.getResponseInfo();
 
-						info.setResponseCode(ResponseCode.FAILURE);
+						info.setResponseCode(ResponseCode.OK);
 						info.setResponseMessage("Automatic webp conversion failed");
 
 						var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
@@ -879,7 +879,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						if (conversionFailed) {
 							var info = response.getResponseInfo();
 
-							info.setResponseCode(ResponseCode.FAILURE);
+							info.setResponseCode(ResponseCode.OK);
 							info.setResponseMessage("Automatic webp conversion failed");
 
 							var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");

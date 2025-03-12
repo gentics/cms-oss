@@ -775,7 +775,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 		List<Message> messages = response.getMessages();
 
-//		messages.clear();
 		messages.add(new Message(Type.WARNING, i18nMessage.toString()));
 	}
 

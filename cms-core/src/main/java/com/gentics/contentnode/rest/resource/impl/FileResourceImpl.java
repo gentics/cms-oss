@@ -541,19 +541,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				});
 
 				if (conversionFailed) {
-					var info = response.getResponseInfo();
-
-					info.setResponseCode(ResponseCode.FAILURE);
-					info.setResponseMessage("Automatic webp conversion failed");
-
-					var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
-
-					i18nMessage.setParameter("0", response.getFile().getId());
-
-					List<Message> messages = response.getMessages();
-
-					messages.clear();
-					messages.add(new Message(Type.WARNING, i18nMessage.toString()));
+					addConversionFailedWarning(response);
 				}
 
 				return response;
@@ -715,19 +703,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					}
 
 					if (conversionFailed) {
-						var info = response.getResponseInfo();
-
-						info.setResponseCode(ResponseCode.OK);
-						info.setResponseMessage("Automatic webp conversion failed");
-
-						var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
-
-						i18nMessage.setParameter("0", response.getFile().getId());
-
-						List<Message> messages = response.getMessages();
-
-						messages.clear();
-						messages.add(new Message(Type.WARNING, i18nMessage.toString()));
+						addConversionFailedWarning(response);
 					}
 
 					return response;
@@ -759,6 +735,26 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
+	/**
+	 * Add a warning message to the given response that the automatic image conversion to webp has failed.
+	 * @param response The response to add the message to.
+	 */
+	private void addConversionFailedWarning(FileUploadResponse response) {
+		var info = response.getResponseInfo();
+
+		info.setResponseCode(ResponseCode.OK);
+		info.setResponseMessage("Automatic webp conversion failed");
+
+		var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
+
+		i18nMessage.setParameter("0", response.getFile().getId());
+
+		List<Message> messages = response.getMessages();
+
+//		messages.clear();
+		messages.add(new Message(Type.WARNING, i18nMessage.toString()));
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.api.FileResource#create(com.sun.jersey.multipart.MultiPart)
@@ -786,7 +782,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				folder = MiscUtils.load(Folder.class, metaData.getProperty(META_DATA_FOLDERID_KEY));
 			}
-			Node owningNode = folder.getOwningNode();
 
 			// Create a transaction lock on the filename
 			// This lock doesn't handle all cases of filename collisions because the FUM
@@ -794,14 +789,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			metaData.setFilename(sentFilename);
 
 			String lockKey = FileFactory.sanitizeName(sentFilename);
-			String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
-			boolean isImage = mimeType != null && mimeType.startsWith("image/");
-
-			if (isImage && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, owningNode)) {
-				// Lock on the filename without the extension if WebP conversion will be tried since it may or may not
-				// change the extension.
-				lockKey = FilenameUtils.removeExtension(lockKey);
-			}
 
 			fileUploadResponse = (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, 0));
 		} catch (InsufficientPrivilegesException e) {
@@ -877,19 +864,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						}
 
 						if (conversionFailed) {
-							var info = response.getResponseInfo();
-
-							info.setResponseCode(ResponseCode.OK);
-							info.setResponseMessage("Automatic webp conversion failed");
-
-							var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
-
-							i18nMessage.setParameter("0", response.getFile().getId());
-
-							List<Message> messages = response.getMessages();
-
-							messages.clear();
-							messages.add(new Message(Type.WARNING, i18nMessage.toString()));
+							addConversionFailedWarning(response);
 						}
 
 						return response;

@@ -68,9 +68,9 @@
         </ng-template>
 
         <ng-template #rowExpansionTemplate>
-            <div class="row-expansion-wrapper" (click)="expandRow(row, $event)">
+            <button class="row-expansion" (click)="expandRow(row, $event)">
                 <icon *ngIf="row.hasChildren || !row.loaded">chevron_right</icon>
-            </div>
+            </button>
         </ng-template>
 
         <div

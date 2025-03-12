@@ -1,5 +1,5 @@
 import { MeshProjectBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { ProjectTableComponent } from '../project-table/project-table.component';
 
@@ -20,7 +20,7 @@ export class SelectProjectModal extends BaseModal<MeshProjectBO | MeshProjectBO[
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(ProjectTableComponent)
+    @ViewChild(forwardRef(() => ProjectTableComponent))
     public table: ProjectTableComponent;
 
     confirmSelection(): void {

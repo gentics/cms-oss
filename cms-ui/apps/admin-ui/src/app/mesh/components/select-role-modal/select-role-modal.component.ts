@@ -1,5 +1,5 @@
 import { MeshRoleBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { MeshRoleTableComponent } from '../mesh-role-table/mesh-role-table.component';
 
@@ -20,7 +20,7 @@ export class SelectRoleModal extends BaseModal<MeshRoleBO | MeshRoleBO[]> {
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(MeshRoleTableComponent)
+    @ViewChild(forwardRef(() => MeshRoleTableComponent))
     public table: MeshRoleTableComponent;
 
     confirmSelection(): void {

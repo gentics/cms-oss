@@ -1,6 +1,6 @@
 import { NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -20,7 +20,7 @@ export class AssignLanguagesToNodeModal extends BaseModal<Language[]> {
     @Input()
     public selectedLanguages: string[];
 
-    @ViewChild(LanguageTableComponent)
+    @ViewChild(forwardRef(() => LanguageTableComponent))
     public table: LanguageTableComponent;
 
     constructor(

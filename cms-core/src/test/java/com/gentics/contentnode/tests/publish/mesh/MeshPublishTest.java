@@ -73,6 +73,7 @@ import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.core.rest.node.field.BinaryField;
 import com.gentics.mesh.core.rest.node.field.NodeField;
+import com.gentics.mesh.core.rest.node.field.StringField;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
 import com.gentics.mesh.core.rest.project.ProjectResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaCreateRequest;
@@ -217,13 +218,13 @@ public class MeshPublishTest {
 	 */
 	@Test
 	public void testPublishFolder() throws Exception {
-		Trx.operate(() -> {
+		operate(() -> {
 			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
 			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
 			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
 		});
 
-		Folder folder = Trx.supply(() -> {
+		Folder folder = supply(() -> {
 			return create(Folder.class, f -> {
 				f.setMotherId(node.getFolder().getId());
 				f.setName("Testfolder");
@@ -625,6 +626,49 @@ public class MeshPublishTest {
 				NodeField startPageField = meshFolder.getFields().getNodeField("startpage");
 				assertThat(startPageField).as("Startpage").isNotNull();
 				assertThat(startPageField.getUuid()).as("Startpage").isEqualTo(MeshPublisher.getMeshUuid(page));
+			});
+			assertObject("Check folder startpage URL", mesh.client(), MESH_PROJECT_NAME, folder, true, meshFolder -> {
+				StringField startPageField = meshFolder.getFields().getStringField("startpageurl");
+				assertThat(startPageField).as("Startpage").isNotNull();
+				assertThat(startPageField.getString()).as("Startpage value").isEqualTo(String.format("{{mesh.link(%s, %s, %s)}}", MeshPublisher.getMeshUuid(page), MeshPublisher.getMeshLanguage(page), node.getName()));
+			});
+		});
+	}
+
+	/**
+	 * Test publishing a folder with an external startpage into an empty Mesh CR instance
+	 * @throws Exception
+	 */
+	@Test
+	public void testPublishFolderWithExternalStartpage() throws Exception {
+		operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Folder folder = supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+				getPartType(PageURLPartType.class, f.getObjectTag("startpage"), "url").setExternalTarget("https://gentics.com");
+			});
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		operate(() -> {
+			ProjectResponse project = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet();
+			assertFolders(mesh.client(), MESH_PROJECT_NAME, project.getRootNode().getUuid(), supply(() -> node.getFolder()));
+			assertFolders(mesh.client(), MESH_PROJECT_NAME, MeshPublisher.getMeshUuid(node.getFolder()), folder);
+
+			assertObject("Check folder startpage URL", mesh.client(), MESH_PROJECT_NAME, folder, true, meshFolder -> {
+				StringField startPageField = meshFolder.getFields().getStringField("startpageurl");
+				assertThat(startPageField).as("Startpage").isNotNull();
+				assertThat(startPageField.getString()).as("Startpage value").isEqualTo("https://gentics.com");
 			});
 		});
 	}

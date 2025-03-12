@@ -1,0 +1,1 @@
+Now a plain text property @startpageurl@ is added to the list of folder fields of Mesh Content Repository, allowing using the external URL as a startpage, or just simplifying the start page resolving in the case of single language setup.

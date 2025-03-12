@@ -1,0 +1,4 @@
+Editor User Interface: When displaying pages in preview or edit mode, occasional errors like
+"Record has changed since last read in table 'systemsession'" could occur when using MariaDB and the
+setting 'innodb_snapshot_isolation' was switched on.
+Those errors have been fixed.

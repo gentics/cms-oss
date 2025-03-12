@@ -1,5 +1,5 @@
 import { MeshTagFamilyBO } from '@admin-ui/mesh/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { TagFamilyTableComponent } from '../tag-family-table/tag-family-table.component';
 
@@ -20,7 +20,7 @@ export class SelectTagFamilyModal extends BaseModal<MeshTagFamilyBO | MeshTagFam
     @Input()
     public selected: string[] = [];
 
-    @ViewChild(TagFamilyTableComponent)
+    @ViewChild(forwardRef(() => TagFamilyTableComponent))
     public table: TagFamilyTableComponent;
 
     confirmSelection(): void {

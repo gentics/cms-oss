@@ -190,7 +190,7 @@ public class WebpConversionTest {
 		if (shouldConvert) {
 			ContentNodeTestUtils.assertResponseCodeOk(response);
 		} else {
-			assertThat(response.getMessages().get(0).getMessage())
+			assertThat(response.getMessages().get(1).getMessage())
 					.as("Response message")
 					.isEqualTo(CONVERSION_FAILURE_MESSAGE);
 		}
@@ -218,7 +218,7 @@ public class WebpConversionTest {
 		if (shouldConvert) {
 			ContentNodeTestUtils.assertResponseCodeOk(response);
 		} else {
-			assertThat(response.getMessages().get(0).getMessage())
+			assertThat(response.getMessages().get(1).getMessage())
 				.as("Response message")
 				.isEqualTo(CONVERSION_FAILURE_MESSAGE);
 		}
@@ -253,7 +253,7 @@ public class WebpConversionTest {
 		if (shouldConvert) {
 			ContentNodeTestUtils.assertResponseCodeOk(response);
 		} else {
-			assertThat(response.getMessages().get(0).getMessage())
+			assertThat(response.getMessages().get(1).getMessage())
 				.as("Response message")
 				.isEqualTo(CONVERSION_FAILURE_MESSAGE);
 		}

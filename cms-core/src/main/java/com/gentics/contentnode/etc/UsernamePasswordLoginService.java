@@ -25,7 +25,9 @@ public class UsernamePasswordLoginService extends AbstractLoginService {
 			SystemUser systemUser = performLogin(username, password, response, true, factory);
 
 			if (systemUser == null) {
-				response.setResponseInfo(new ResponseInfo(ResponseCode.NOTFOUND, "Did not find a user with the given credentials"));
+				if (response.getResponseInfo() == null) {
+					response.setResponseInfo(new ResponseInfo(ResponseCode.NOTFOUND, "Did not find a user with the given credentials"));
+				}
 			} else {
 				response.setSid(createUserSession(systemUser, servletRequest, servletResponse));
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully performed login"));

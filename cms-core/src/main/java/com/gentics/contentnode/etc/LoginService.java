@@ -4,6 +4,7 @@ import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,7 +49,7 @@ public interface LoginService {
 	 * @return true for secure, false otherwise
 	 */
 	static boolean isCookieSecure() throws TransactionException {
-		return TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences().getFeature("secure_cookie");
+		return NodeConfigRuntimeConfiguration.getPreferences().getFeature("secure_cookie");
 	}
 
 }

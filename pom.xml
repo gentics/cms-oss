@@ -81,7 +81,7 @@
 		<commons-io.version>2.16.1</commons-io.version>
 
 		<!-- TODO: integrate generic-testutils -->
-		<generic-testutils.version>1.15.10-SNAPSHOT</generic-testutils.version>
+		<generic-testutils.version>1.15.10</generic-testutils.version>
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

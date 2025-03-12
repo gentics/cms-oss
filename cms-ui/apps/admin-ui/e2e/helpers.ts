@@ -11,9 +11,15 @@ export async function navigateToApp(page: Page, path: string = '/', withSSO?: bo
 export async function loginWithForm(source: Page | Locator, login: (keyof typeof AUTH) | LoginData): Promise<void> {
     // Get auth data and login
     const loginData: LoginData = typeof login === 'string' ? AUTH[login] : login;
-    await source.locator('gtx-input[formcontrolname="username"] input').fill(loginData.username);
-    await source.locator('gtx-input[formcontrolname="password"] input').fill(loginData.password);
-    await source.click('button[type="submit"]');
+    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled])')
+        .first()
+        .fill(loginData.username);
+    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled])')
+        .first()
+        .fill(loginData.password);
+    await source.locator('button[type="submit"]:not([disabled])')
+        .first()
+        .click();
 }
 
 export async function navigateToModule(page: Page, moduleId: string, perms?: AccessControlledType): Promise<void> {
@@ -72,17 +78,18 @@ export async function logoutMeshManagement(page: Page): Promise<void> {
 /**
  * Clicks the CR login button and waits for management to be visible
  */
-export async function loginWithCR(page: Page): Promise<void> {
+export async function loginWithCR(page: Page, shouldBeLoggedIn: boolean = true): Promise<void> {
     const req = page.waitForResponse(response =>
-        response.ok() && (
-            matchesPath(response.url(), '/rest/contentrepositories/*/proxylogin')
-            || matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/')
-        ),
+        (shouldBeLoggedIn ? response.ok() : !response.ok())
+            && response.request().method() === 'POST'
+            && matchesPath(response.url(), '/rest/contentrepositories/*/proxylogin'),
     );
     await page.locator('.cr-login-button').click();
     await req;
 
-    await page.locator('.management-container').waitFor({ state: 'visible' });
+    if (shouldBeLoggedIn) {
+        await page.locator('.management-container').waitFor({ state: 'visible' });
+    }
 }
 
 /**
@@ -93,3 +100,6 @@ export async function clickModalAction(source: Page | Locator, action: 'confirm'
     await source.locator(selector).click();
 }
 
+export function findEntityTableActionButton(source: Page | Locator, action: string): Locator {
+    return source.locator(`.entity-table-actions-bar .table-action-button[data-action="${action}"] button`);
+}

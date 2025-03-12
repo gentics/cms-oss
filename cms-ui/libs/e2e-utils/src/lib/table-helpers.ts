@@ -6,7 +6,9 @@ export function findTableRow(source: Page | Locator, id: string | number): Locat
 }
 
 export function findTableAction(source: Page | Locator, id: string): Locator {
-    return source.locator(`.action-column .action-button[data-id="${id}"], .header-row .action-column .action-button[data-id="${id}"]`);
+    return source.locator(`.action-column .action-button[data-id="${id}"]`)
+        .or(source.locator(`.header-row .action-column .action-button[data-id="${id}"]`))
+        .first();
 }
 
 /**
@@ -35,7 +37,7 @@ export async function selectTableRow(row: Locator): Promise<void> {
  * Expands a trable row (tree-table row)
  */
 export async function expandTrableRow(row: Locator): Promise<void> {
-    await row.locator('.row-expansion-wrapper').click();
+    await row.locator('.row-expansion').click();
 }
 
 /**

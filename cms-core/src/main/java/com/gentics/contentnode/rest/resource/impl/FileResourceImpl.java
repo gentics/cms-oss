@@ -1009,10 +1009,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * When the extension is changed, the extensions of nice and alternate URLs are also changed.
 	 * </p>
 	 *
-	 * @param isImage   Whether the file is an image.
-	 * @param request   The request to update.
+	 * @param isImage Whether the file is an image.
+	 * @param request The request to update.
 	 * @param getMethod The response of loading the binary.
-	 * @param node      The node of the target file.
+	 * @param node The node of the target file.
 	 */
 	private void updateRequestName(boolean isImage, FileCreateRequest request, GetMethod getMethod, Node node) throws IOException {
 		if (isImage && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {

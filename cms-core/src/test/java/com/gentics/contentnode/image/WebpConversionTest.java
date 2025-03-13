@@ -16,7 +16,7 @@ import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
-import com.gentics.contentnode.rest.resource.*;
+import com.gentics.contentnode.rest.resource.BinaryOutput;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.scheduler.ConvertImagesJob;
 import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
@@ -26,7 +26,6 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
-import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.testutils.GenericTestUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -49,7 +48,8 @@ import org.junit.runners.Parameterized.Parameter;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +74,7 @@ public class WebpConversionTest {
 
 	private final String CONVERSION_FAILURE_MESSAGE = "Das Bild wurde gespeichert, aber die automatische Konvertierung nach WebP ist fehlgeschlagen.";
 
-	@Parameterized.Parameters(name = "{index}: input file {0}, result file {1}, should convert {2}")
+	@Parameterized.Parameters(name = "{index}: input file {0}, result file {1}, should convert {2}, skip extension {3}")
 	public static Collection<Object[]> data() {
 		var data = new ArrayList<Object[]>();
 
@@ -82,9 +82,11 @@ public class WebpConversionTest {
 			var origFilename = type.filename();
 
 			if (type.canConvert()) {
-				data.add(new Object[] {origFilename, FilenameUtils.removeExtension(origFilename) + ".webp", true});
+				data.add(new Object[] {origFilename, FilenameUtils.removeExtension(origFilename) + ".webp", true, true});
+				data.add(new Object[] {origFilename, FilenameUtils.removeExtension(origFilename) + ".webp", true, false});
 			} else {
-				data.add(new Object[] {origFilename, origFilename, false});
+				data.add(new Object[] {origFilename, origFilename, false, true});
+				data.add(new Object[] {origFilename, origFilename, false, false});
 			}
 		}
 
@@ -107,6 +109,9 @@ public class WebpConversionTest {
 
 	@Parameter(2)
 	public boolean shouldConvert;
+
+	@Parameter(3)
+	public boolean skipExtension;
 
 	private static Node node;
 	private static Folder folder;
@@ -154,24 +159,31 @@ public class WebpConversionTest {
 	 * Check that file created from URL is converted.
 	 */
 	@Test
-	public void testCreateFromUrl() throws NodeException {
+	public void testCreateFromUrl() throws NodeException, IOException {
+		String[] mimeTypeParts = FileUtil.getMimeTypeByExtension(inputFilename).split("/");
+		MediaType uploadedMediaType = new MediaType(mimeTypeParts[0], mimeTypeParts[1]);
+
 		FileUploadResponse response = Trx.supply(systemUser, () -> {
 			FileCreateRequest request = new FileCreateRequest();
 
 			request.setFolderId(folder.getId());
-			request.setName(inputFilename);
+			request.setName(getRequestFilename());
 			request.setNodeId(node.getId());
 			request.setOverwriteExisting(false);
-			request.setSourceURL(binarySourceContext.getBaseUri() + "binary");
+			request.setSourceURL(binarySourceContext.getBaseUri() + "binary/%s".formatted(FilenameUtils.getExtension(inputFilename)));
 
 			return getFileResource().create(request);
 		});
 
 		ContentNodeRESTUtils.assertResponseOK(response);
 
-		assertThat(response.getFile().getFileType())
-			.as("Created file type")
-			.isEqualTo("image/webp");
+		if (!shouldConvert) {
+			assertThat(response.getMessages().get(1).getMessage())
+					.as("Response message")
+					.isEqualTo(CONVERSION_FAILURE_MESSAGE);
+		}
+
+		assertFilenameAndType(response.getFile(), uploadedMediaType, shouldConvert);
 	}
 
 	/**
@@ -183,16 +195,16 @@ public class WebpConversionTest {
 		byte[] inputData = IOUtils.toByteArray(GenericTestUtils.getPictureResource(inputFilename));
 		MultiPart multiPart = Trx.supply(
 			systemUser,
-			() -> createRestFileUploadMultiPart(inputFilename, folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
+			() -> createRestFileUploadMultiPart(folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
 
 		FileUploadResponse response = Trx.supply(systemUser, () -> getFileResource().create(multiPart));
 
-		if (shouldConvert) {
-			ContentNodeTestUtils.assertResponseCodeOk(response);
-		} else {
+		ContentNodeTestUtils.assertResponseCodeOk(response);
+
+		if (!shouldConvert) {
 			assertThat(response.getMessages().get(1).getMessage())
-					.as("Response message")
-					.isEqualTo(CONVERSION_FAILURE_MESSAGE);
+				.as("Response message")
+				.isEqualTo(CONVERSION_FAILURE_MESSAGE);
 		}
 
 		assertFilenameAndType(response.getFile(), uploadedMediaType.get(), shouldConvert);
@@ -215,9 +227,9 @@ public class WebpConversionTest {
 			systemUser,
 			() -> getFileResource().createSimple(httpServletRequest, folder.getId(), node.getId(), "binary", inputFilename, "", true));
 
-		if (shouldConvert) {
-			ContentNodeTestUtils.assertResponseCodeOk(response);
-		} else {
+		ContentNodeTestUtils.assertResponseCodeOk(response);
+
+		if (!shouldConvert) {
 			assertThat(response.getMessages().get(1).getMessage())
 				.as("Response message")
 				.isEqualTo(CONVERSION_FAILURE_MESSAGE);
@@ -235,7 +247,7 @@ public class WebpConversionTest {
 		byte[] inputData = IOUtils.toByteArray(GenericTestUtils.getPictureResource(inputFilename));
 		MultiPart multiPart = Trx.supply(
 			systemUser,
-			() -> createRestFileUploadMultiPart(inputFilename, folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
+			() -> createRestFileUploadMultiPart(folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
 
 		HttpServletRequestWrapper httpServletRequest = mock(HttpServletRequestWrapper.class);
 		FileUploadResponse response = Trx.supply(
@@ -246,13 +258,13 @@ public class WebpConversionTest {
 				folder.getId().toString(),
 				node.getId().toString(),
 				"binary",
-				inputFilename,
+				getRequestFilename(),
 				"",
 				false));
 
-		if (shouldConvert) {
-			ContentNodeTestUtils.assertResponseCodeOk(response);
-		} else {
+		ContentNodeTestUtils.assertResponseCodeOk(response);
+
+		if (!shouldConvert) {
 			assertThat(response.getMessages().get(1).getMessage())
 				.as("Response message")
 				.isEqualTo(CONVERSION_FAILURE_MESSAGE);
@@ -274,7 +286,7 @@ public class WebpConversionTest {
 		try (FeatureClosure feature = new FeatureClosure(Feature.WEBP_CONVERSION, false)) {
 			MultiPart multiPart = Trx.supply(
 				systemUser,
-				() -> createRestFileUploadMultiPart(inputFilename, folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
+				() -> createRestFileUploadMultiPart(folder.getId(), node.getId(), "", true, inputData, uploadedMediaType));
 
 			response = Trx.supply(systemUser, () -> getFileResource().create(multiPart));
 		}
@@ -307,21 +319,21 @@ public class WebpConversionTest {
 
 	/**
 	 * Create a multipart body for a request.
-	 * @param filename The filename.
-	 * @param folderId The folder ID.
-	 * @param nodeId The node ID.
+	 *
+	 * @param folderId    The folder ID.
+	 * @param nodeId      The node ID.
 	 * @param description The file description.
-	 * @param overwrite Whether to override existing files.
-	 * @param inputData The file data.
+	 * @param overwrite   Whether to override existing files.
+	 * @param inputData   The file data.
 	 * @return A multipart body for a file create request.
 	 */
-	private MultiPart createRestFileUploadMultiPart(String filename, Integer folderId, Integer nodeId, String description, boolean overwrite, byte[] inputData, AtomicReference<MediaType> uploadedMediaType) throws TransactionException {
+	private MultiPart createRestFileUploadMultiPart(Integer folderId, Integer nodeId, String description, boolean overwrite, byte[] inputData, AtomicReference<MediaType> uploadedMediaType) throws TransactionException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		BodyPartEntity entity = mock(BodyPartEntity.class);
 
 		when(entity.getInputStream()).thenReturn(new ByteArrayInputStream(inputData));
 
-		String[] mimeTypeParts = FileUtil.getMimeTypeByExtension(filename).split("/");
+		String[] mimeTypeParts = FileUtil.getMimeTypeByExtension(inputFilename).split("/");
 
 		// Make sure that the MIME type for the test image was recognized correctly.
 		assertThat(mimeTypeParts.length).as("MIME type parts").isEqualTo(2);
@@ -337,7 +349,7 @@ public class WebpConversionTest {
 
 		try {
 			binaryData = new FormDataBodyPart(
-				new FormDataContentDisposition("form-data; name=\"fileBinaryData\"; filename=\"" + filename + "\""),
+				new FormDataContentDisposition("form-data; name=\"fileBinaryData\"; filename=\"" + getRequestFilename() + "\""),
 				entity,
 				mediaType);
 		} catch (ParseException e) {
@@ -354,7 +366,7 @@ public class WebpConversionTest {
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"nodeId\""), nodeId.toString()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\""), t.getSessionId()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\""), t.getSession().getSessionSecret()))
-				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"fileName\""), filename))
+				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"fileName\""), getRequestFilename()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"description\""), description))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"overwrite\""), (overwrite ? "true" : "false")))
 				.bodyPart(binaryData);
@@ -437,5 +449,19 @@ public class WebpConversionTest {
 		assertThat(file.getName())
 			.as("Created file name")
 			.endsWith(filename);
+	}
+
+	/**
+	 * Get the filename for the image that should be sent to the FileResource.
+	 *
+	 * <p>
+	 *     When {@link #skipExtension} is {@code true} this is the {@link #inputFilename} without the extension,
+	 *     otherwise it is the unmodified {@link #inputFilename}.
+	 * </p>
+	 *
+	 * @return The filename for the image that should be sent to the FileResource.
+	 */
+	private String getRequestFilename() {
+		return skipExtension ? FilenameUtils.removeExtension(inputFilename) : inputFilename;
 	}
 }

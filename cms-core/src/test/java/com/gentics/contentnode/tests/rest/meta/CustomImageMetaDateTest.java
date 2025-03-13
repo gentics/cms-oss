@@ -41,7 +41,7 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 
 			FileCreateRequest request = new FileCreateRequest();
 			request.setFolderId(node.getFolder().getId());
-			request.setName(BinaryDataImageResource.FILENAME);
+			request.setName(BinaryDataImageResource.ImageType.JPG.filename());
 			request.setSourceURL(appContext.getBaseUri() + "binary");
 			if (maybeInflater.isPresent()) {
 				maybeInflater.get().accept(request);

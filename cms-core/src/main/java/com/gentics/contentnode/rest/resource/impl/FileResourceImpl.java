@@ -642,6 +642,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			if (ObjectTransformer.isEmpty(metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY))) {
 				String partFilename = fileDataBodyPart.getContentDisposition().getFileName();
 
+				if (StringUtils.isEmpty(partFilename)) {
+					partFilename = "new_file";
+				}
+
 				// Fix for IE filename field
 				partFilename = stripFilepath(partFilename);
 				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, partFilename);
@@ -862,6 +866,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				throw new EntityNotFoundException("No folder with ID `" + request.getFolderId() + "'");
 			}
 
+			fixRequestFilename(request, detectedMimeType);
+
 			String lockKey = FileFactory.sanitizeName(request.getName());
 
 			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> {
@@ -871,8 +877,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), mediaType, tmpFile, folder.getNode())) {
 						boolean conversionFailed = false;
-
-						fixRequestFilename(request, mediaType.get());
 
 						if (!mediaType.get().equals(detectedMimeType)) {
 							updateRequestName(isImage, request, getMethod, folder.getNode());

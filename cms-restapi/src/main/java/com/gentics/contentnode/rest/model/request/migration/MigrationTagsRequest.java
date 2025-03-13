@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.request.migration;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request object for a request to retrieve tag types for tag migration

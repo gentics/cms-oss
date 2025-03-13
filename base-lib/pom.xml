@@ -22,7 +22,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<surefire.baselib.excludedGroups></surefire.baselib.excludedGroups>
-		<javax.activation.version>1.2.0</javax.activation.version>
 		<test.forkcount>8</test.forkcount>
 	</properties>
 
@@ -144,35 +143,20 @@
 
 				<dependencies>
 					<dependency>
-						<groupId>javax.xml.bind</groupId>
-						<artifactId>jaxb-api</artifactId>
-						<version>2.2</version>
+						<groupId>jakarta.xml.bind</groupId>
+						<artifactId>jakarta.xml.bind-api</artifactId>
+						<version>${jaxb-api.version}</version>
 					</dependency>
 					<dependency>
-						<groupId>com.sun.xml.bind</groupId>
+						<groupId>org.glassfish.jaxb</groupId>
+						<artifactId>jaxb-runtime</artifactId>
+						<version>${jaxb-impl.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.glassfish.jaxb</groupId>
 						<artifactId>jaxb-xjc</artifactId>
-						<version>2.2</version>
+						<version>${jaxb-impl.version}</version>
 					</dependency>
-					<dependency>
-						<groupId>com.sun.xml.bind</groupId>
-						<artifactId>jaxb-impl</artifactId>
-						<version>2.2</version>
-					</dependency>
-					<!-- dependency>
-						<groupId>com.sun.xml.bind</groupId>
-						<artifactId>jaxb1-impl</artifactId>
-						<version>2.2</version>
-					</dependency -->
-					<dependency>
-						<groupId>com.sun.activation</groupId>
-						<artifactId>javax.activation</artifactId>
-						<version>${javax.activation.version}</version>
-					</dependency>
-					<!-- dependency>
-						<groupId>javax.xml</groupId>
-						<artifactId>jsr173</artifactId>
-						<version>1.0</version>
-					</dependency -->
 				</dependencies>
 			</plugin>
 			<plugin>
@@ -353,21 +337,17 @@
 			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<artifactId>httpunit</artifactId>
-			<groupId>httpunit</groupId>
-			<version>1.7</version>
-			<scope>test</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
+			<version>12.0.16</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-servlet</artifactId>
+			<groupId>org.eclipse.jetty.ee10</groupId>
+			<artifactId>jetty-ee10-servlet</artifactId>
+			<version>12.0.16</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -382,17 +362,25 @@
 			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail-junit4</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 		<!-- Mail Utils -->
 		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>javax.mail-api</artifactId>
-			<version>1.6.2</version>
+			<groupId>jakarta.mail</groupId>
+			<artifactId>jakarta.mail-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.sun.mail</groupId>
-			<artifactId>smtp</artifactId>
-			<version>1.6.7</version>
+			<groupId>org.eclipse.angus</groupId>
+			<artifactId>angus-mail</artifactId>
 		</dependency>
 
 		<!-- Image Utils -->
@@ -522,14 +510,9 @@
 			<artifactId>commons-dbcp</artifactId>
 			<version>1.4</version>
 		</dependency>
-		<!-- dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.8</version>
-		</dependency -->
 		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>
@@ -589,49 +572,21 @@
 		</dependency>
 
 		<!-- Dependencies for JAXB -->
-		<!--dependency>
-			<groupId>com.sun.activation</groupId>
-			<artifactId>javax.activation</artifactId>
-			<version>${javax.activation.version}</version>
-		</dependency -->
 		<dependency>
-			<groupId>javax.xml</groupId>
-			<artifactId>jaxb1-impl</artifactId>
-			<version>2.2</version>
+			<groupId>jakarta.activation</groupId>
+			<artifactId>jakarta.activation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.2</version>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-			<version>2.2</version>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>javax.xml</groupId>
-			<artifactId>jsr173</artifactId>
-			<version>1.0</version>
-		</dependency>
-
-		<!-- dependency>
-			<groupId>javax.portlet</groupId>
-			<artifactId>portlet-api</artifactId>
-			<version>2.0</version>
-		</dependency -->
 
 		<!-- various runtime dependencies -->
-		<!--dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>annotations-api</artifactId>
-			<version>6.0.20</version>
-		</dependency -->
-		<!--dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm</artifactId>
-			<version>3.1</version>
-		</dependency -->
 		<dependency>
 			<groupId>com.sun.medialib</groupId>
 			<artifactId>clibwrapper_jiio</artifactId>
@@ -652,46 +607,11 @@
 			<artifactId>concurrent</artifactId>
 			<version>1.0</version>
 		</dependency>
-		<!--dependency>
-			<groupId>mlibwrapper</groupId>
-			<artifactId>mlibwrapper_jai</artifactId>
-			<version>1.1.3</version>
-		</dependency-->
-		<dependency>
-			<groupId>net.sourceforge.nekohtml</groupId>
-			<artifactId>nekohtml</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>xml-apis</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>serializer</artifactId>
-		</dependency>
-		<!--dependency>
-			<groupId>wsdl4j</groupId>
-			<artifactId>wsdl4j</artifactId>
-			<version>1.5.1</version>
-		</dependency -->
 
 		<!-- These libraries are only needed for compiling the code -->
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.4</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet.jsp</groupId>
-			<artifactId>jsp-api</artifactId>
-			<version>2.0</version>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

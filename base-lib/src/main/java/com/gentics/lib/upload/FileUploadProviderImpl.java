@@ -1,32 +1,28 @@
-/**
- * @author Stefan Hurjui
- * @date 10.01.2005
- * @version: $Id: FileUploadProviderImpl.java,v 1.16 2006-04-07 14:45:45 herbert Exp $
- */
 package com.gentics.lib.upload;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.DiskFileUpload;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletDiskFileUpload;
 
 import com.gentics.api.lib.upload.FileInformation;
 import com.gentics.api.lib.upload.FileUploadProvider;
 import com.gentics.lib.log.NodeLogger;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * concrete implementation of a FileUploadProvider which uses jakarta-commons
@@ -36,11 +32,11 @@ import com.gentics.lib.log.NodeLogger;
  * exception
  */
 public class FileUploadProviderImpl implements FileUploadProvider {
-	private Map parameters = new HashMap();
+	private Map<String, List<String>> parameters = new HashMap<>();
 
-	private Map fileFields = new HashMap();
+	private Map<String, DiskFileItem> fileFields = new HashMap<>();
 
-	private List fileItems = null;
+	private List<DiskFileItem> fileItems = null;
 
 	private HttpServletRequest request;
 
@@ -67,16 +63,16 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	public final void setHttpServletRequest(final HttpServletRequest myRequest) {
 		this.request = myRequest;
 
-		DiskFileUpload diskFileUpload = new DiskFileUpload();
+		JakartaServletDiskFileUpload diskFileUpload = new JakartaServletDiskFileUpload();
 
 		// maximum size before a FileUploadException will be thrown
 		diskFileUpload.setSizeMax(maxFilesize);
 		// maximum size that will be stored in memory
-		diskFileUpload.setSizeThreshold(sizeThreshold);
+//		diskFileUpload.setSizeThreshold(sizeThreshold);
 		// the location for saving data that is larger than getSizeThreshold()
-		diskFileUpload.setRepositoryPath(repositoryPath);
+//		diskFileUpload.setRepositoryPath(repositoryPath);
 		// set encoding manually, according to bug http://issues.apache.org/bugzilla/show_bug.cgi?id=23255 
-		diskFileUpload.setHeaderEncoding(request.getCharacterEncoding());
+		diskFileUpload.setHeaderCharset(Charset.forName(request.getCharacterEncoding()));
 
 		try {
 			fileItems = diskFileUpload.parseRequest(request);
@@ -94,10 +90,10 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 		}
 
 		if (caughtException == null) {
-			Iterator iterator = fileItems.iterator();
+			Iterator<DiskFileItem> iterator = fileItems.iterator();
 
 			while (iterator.hasNext()) {
-				FileItem fileItem = (FileItem) iterator.next();
+				DiskFileItem fileItem = iterator.next();
 				String fieldName = fileItem.getFieldName();
 
 				/*
@@ -116,15 +112,15 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 					 * if the parameter's name starts with "p." this 2 caracters
 					 * will be ignored
 					 */
-					List valueList = (List) parameters.get(fieldName);
+					List<String> valueList = parameters.get(fieldName);
 
 					if (valueList == null) {
-						valueList = new Vector();
+						valueList = new ArrayList<>();
 						parameters.put(fieldName, valueList);
 					}
 					try {
-						valueList.add(fileItem.getString(myRequest.getCharacterEncoding()));
-					} catch (UnsupportedEncodingException e) {
+						valueList.add(fileItem.getString(Charset.forName(myRequest.getCharacterEncoding())));
+					} catch (IOException e) {
 						NodeLogger.getLogger(getClass()).error("cannot get value for fileItem '" + fileItem.getFieldName() + "'", e);
 					}
 				} else {
@@ -173,12 +169,16 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	 */
 	public final void invalidate() {
 		if (fileItems != null) {
-			Iterator iterator = fileItems.iterator();
+			Iterator<DiskFileItem> iterator = fileItems.iterator();
 
 			while (iterator.hasNext()) {
-				FileItem fileItem = (FileItem) iterator.next();
+				DiskFileItem fileItem = iterator.next();
 
-				fileItem.delete();
+				try {
+					fileItem.delete();
+				} catch (IOException e) {
+					NodeLogger.getNodeLogger(getClass()).warn("Error while deleting fileItem " + fileItem.getName(), e);
+				}
 			}
 		}
 	}
@@ -191,7 +191,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	public final InputStream getStream(final String fieldName) throws FileNotFoundException {
 		if (caughtException == null) {
 			if (fileFields.containsKey(fieldName)) {
-				FileItem fileItem = (FileItem) fileFields.get(fieldName);
+				DiskFileItem fileItem = fileFields.get(fieldName);
 
 				try {
 					return fileItem.getInputStream();
@@ -213,7 +213,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	public final FileInformation getFileInformation(final String fieldName) throws FileUploadException {
 		if (caughtException == null) {
 			if (fileFields.containsKey(fieldName)) {
-				FileItem fileItem = (FileItem) fileFields.get(fieldName);
+				DiskFileItem fileItem = fileFields.get(fieldName);
 				FileInformation fileInformation = new FileInformation(fileItem, this);
 
 				return fileInformation;
@@ -230,10 +230,10 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	 * @return parameter value
 	 */
 	public final String getParameter(final String fieldName) {
-		Object valueList = parameters.get(fieldName);
+		List<String> valueList = parameters.get(fieldName);
 
-		if (valueList instanceof List) {
-			return (String) ((List) valueList).get(0);
+		if (!CollectionUtils.isEmpty(valueList)) {
+			return valueList.get(0);
 		} else {
 			return null;
 		}
@@ -244,12 +244,10 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	 * @return Array of Parameters
 	 */
 	public final String[] getParameterValues(final String fieldName) {
-		Object valueListObject = parameters.get(fieldName);
+		List<String> valueList = parameters.get(fieldName);
 
-		if (valueListObject instanceof List) {
-			List valueList = (List) valueListObject;
-
-			return (String[]) valueList.toArray(new String[valueList.size()]);
+		if (!CollectionUtils.isEmpty(valueList)) {
+			return valueList.toArray(new String[valueList.size()]);
 		} else {
 			return null;
 		}
@@ -258,14 +256,14 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	/**
 	 * @return all non file parameters or null if there was any upload error
 	 */
-	public final Map getParameterMap() {
+	public final Map<String, List<String>> getParameterMap() {
 		return parameters;
 	}
 
 	/**
 	 * @return parameterNames
 	 */
-	public final Enumeration getParameterNames() {
+	public final Enumeration<String> getParameterNames() {
 		return request.getParameterNames();
 	}
 
@@ -284,7 +282,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 		if (fileFields.containsKey(fieldName)) {
 			File file = null;
 			String fileName = "";
-			FileItem fileItem = (FileItem) fileFields.get(fieldName);
+			DiskFileItem fileItem = fileFields.get(fieldName);
 
 			StringTokenizer st = new StringTokenizer(fileItem.getName(), "\\");
 
@@ -303,7 +301,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 			}
 
 			try {
-				fileItem.write(file);
+				fileItem.write(file.toPath());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -329,7 +327,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 
 		if (fileFields.containsKey(fieldName)) {
 			File file = null;
-			FileItem fileItem = (FileItem) fileFields.get(fieldName);
+			DiskFileItem fileItem = fileFields.get(fieldName);
 
 			try {
 				// TODO see that happents when filepath points to a directory
@@ -341,7 +339,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 			}
 
 			try {
-				fileItem.write(file);
+				fileItem.write(file.toPath());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -354,7 +352,7 @@ public class FileUploadProviderImpl implements FileUploadProvider {
 	/**
 	 * @return Returns the fileItems.
 	 */
-	public final List getFileItems() {
+	public final List<DiskFileItem> getFileItems() {
 		return fileItems;
 	}
 

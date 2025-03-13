@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class PartType {

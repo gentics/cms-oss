@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.resource;
 
-import javax.ws.rs.QueryParam;
+import jakarta.ws.rs.QueryParam;
 
 public interface AuthenticatedResource {
 

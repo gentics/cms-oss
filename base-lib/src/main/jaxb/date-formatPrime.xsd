@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb" jaxb:version="3.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:appinfo>
+			<jaxb:globalBindings generateIsSetMethod="true" collectionType="indexed"/>
+			<jaxb:schemaBindings>
+				<jaxb:package name="com.gentics.lib.formatter.dateformatter"/>
+				<jaxb:nameXmlTransform>
+					<jaxb:typeName prefix="JAXB"/>
+				</jaxb:nameXmlTransform>
+			</jaxb:schemaBindings>
+		</xs:appinfo>
+	</xs:annotation>
+	<!-- element for the root node -->
+	<xs:element name="date-formats" type="dateFormatsType"/>
+
+	<!-- type for dateformats node -->
+	<xs:complexType name="dateFormatsType">
+		<xs:sequence>
+			<xs:element name="date-format" type="dateFormatType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="default" type="xs:token" use="required"/>
+	</xs:complexType>
+
+	<!-- type for a single date format node -->
+	<xs:complexType name="dateFormatType">
+		<xs:annotation>
+			<xs:appinfo>
+				<jaxb:class implClass="com.gentics.lib.formatter.dateformatter.DateFormatConfig"/>
+			</xs:appinfo>
+		</xs:annotation>
+		<xs:sequence minOccurs="0" maxOccurs="unbounded">
+			<xs:choice>
+				<xs:element name="date" type="dateOrTimeType"/>
+				<xs:element name="time" type="dateOrTimeType"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:token" use="required"/>
+		<xs:attribute name="defaultdate" type="xs:string" use="optional"/>
+		<xs:attribute name="defaulttime" type="xs:string" use="optional"/>
+	</xs:complexType>
+
+	<!-- type for a date/time format node -->
+	<xs:complexType name="dateOrTimeType">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="language" type="xs:token" use="required"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+</xs:schema>

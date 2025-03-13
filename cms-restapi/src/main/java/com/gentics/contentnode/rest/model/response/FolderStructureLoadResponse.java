@@ -5,7 +5,7 @@
  */
 package com.gentics.contentnode.rest.model.response;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Response to a request for loading a folder structure

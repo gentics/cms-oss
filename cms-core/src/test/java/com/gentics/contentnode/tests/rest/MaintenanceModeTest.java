@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.util.Arrays;
 
-import javax.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Entity;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;

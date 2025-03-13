@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.model.request;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request containing the objects selected for export

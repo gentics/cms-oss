@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.response.page;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * The page copy result info contains information about each copy action that

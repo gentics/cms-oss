@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.resource.parameter;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.QueryParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.QueryParam;
 
 /**
  * Parameter bean for paging of legacy list endpoints.

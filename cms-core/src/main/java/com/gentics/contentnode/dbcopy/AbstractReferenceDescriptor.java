@@ -52,7 +52,7 @@ abstract public class AbstractReferenceDescriptor implements ReferenceDescriptor
 		this.sourceTable = sourceTable;
 		this.tables = tables;
 		this.reference = reference;
-		String deepCopy = this.reference.getDeepcopy();
+		String deepCopy = this.reference.getDeepcopy().value();
 
 		if ("false".equals(deepCopy)) {
 			referenceCopyType = COPYTYPE_FALSE;
@@ -61,7 +61,7 @@ abstract public class AbstractReferenceDescriptor implements ReferenceDescriptor
 		} else {
 			referenceCopyType = COPYTYPE_TRUE;
 		}
-		String foreigndeepcopy = this.reference.getForeigndeepcopy();
+		String foreigndeepcopy = this.reference.getForeigndeepcopy().value();
 
 		if ("false".equals(foreigndeepcopy)) {
 			referenceForeignCopyType = COPYTYPE_FALSE;

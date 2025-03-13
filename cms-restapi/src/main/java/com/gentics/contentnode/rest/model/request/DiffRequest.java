@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.request;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Class representing a diff request sent to DiffResource. Encapsulates request data.

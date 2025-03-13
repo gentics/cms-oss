@@ -1,8 +1,3 @@
-/*
- * @author herbert
- * @date 02.03.2007
- * @version $Id: GenticsImageStore.java,v 1.13.4.1 2011-02-04 13:17:26 norbert Exp $
- */
 package com.gentics.contentnode.image;
 
 import static com.gentics.contentnode.factory.Trx.execute;
@@ -37,8 +32,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 
 import com.gentics.lib.image.WEBPEncoder;
 import org.apache.commons.codec.binary.Hex;

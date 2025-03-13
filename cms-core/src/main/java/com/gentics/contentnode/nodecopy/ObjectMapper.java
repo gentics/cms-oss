@@ -19,7 +19,7 @@ import com.gentics.contentnode.dbcopy.StructureCopy;
 import com.gentics.contentnode.dbcopy.StructureCopyException;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 
 /**
  * @author norbert
@@ -88,7 +88,7 @@ public class ObjectMapper extends AbstractReferenceDescriptor implements Referen
 	 * (non-Javadoc)
 	 * @see com.gentics.ReferenceDescriptor#init(java.sql.Connection)
 	 */
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {
 		for (int i = 0; i < parameter.length; i++) {
 			if ("idcol".equals(parameter[i].getId())) {
 				idColumn = parameter[i].getValue();

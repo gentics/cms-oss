@@ -2,9 +2,9 @@ package com.gentics.contentnode.rest.resource.parameter;
 
 import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.Set;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.QueryParam;
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.QueryParam;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * Parameter bean to filter the result of a package check

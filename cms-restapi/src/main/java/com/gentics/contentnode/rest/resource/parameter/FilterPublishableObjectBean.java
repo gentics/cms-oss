@@ -1,8 +1,8 @@
 package com.gentics.contentnode.rest.resource.parameter;
 
 import java.util.Arrays;
-import javax.ws.rs.QueryParam;
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.ws.rs.QueryParam;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * A bean class used to filter publishable objects

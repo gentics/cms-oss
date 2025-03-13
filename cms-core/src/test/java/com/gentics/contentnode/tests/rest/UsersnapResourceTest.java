@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAllowedException;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotAllowedException;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

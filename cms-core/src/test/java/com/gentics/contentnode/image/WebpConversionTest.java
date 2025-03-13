@@ -451,6 +451,16 @@ public class WebpConversionTest {
 			.endsWith(filename);
 	}
 
+	/**
+	 * Get the filename for the image that should be sent to the FileResource.
+	 *
+	 * <p>
+	 *     When {@link #skipExtension} is {@code true} this is the {@link #inputFilename} without the extension,
+	 *     otherwise it is the unmodified {@link #inputFilename}.
+	 * </p>
+	 *
+	 * @return The filename for the image that should be sent to the FileResource.
+	 */
 	private String getRequestFilename() {
 		return skipExtension ? FilenameUtils.removeExtension(inputFilename) : inputFilename;
 	}

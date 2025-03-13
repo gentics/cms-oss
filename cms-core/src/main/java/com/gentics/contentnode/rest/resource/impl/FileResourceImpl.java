@@ -445,9 +445,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						"Needed parameter is missing. Filename parameter {" + FileUploadMetaData.META_DATA_FILE_NAME_KEY + "} is {" + qqFileUploaderFileName + "}");
 			}
 
-			String mimeType = FileUtil.getMimeTypeByExtension(metaData.getFilename());
-			boolean isImage = mimeType != null && mimeType.startsWith("image/");
-
 			metaData.setDescription(ObjectTransformer.getString(description, ""));
 			metaData.setOverwrite(overwrite ? "true" : "false");
 
@@ -648,6 +645,12 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				// Fix for IE filename field
 				partFilename = stripFilepath(partFilename);
 				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, partFilename);
+			}
+
+			if (metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY).toString().indexOf('.') < 0) {
+				metaData.put(
+					FileUploadMetaData.META_DATA_FILE_NAME_KEY,
+					metaData.get(META_DATA_FILE_NAME_KEY) + FileUtil.getExtensionByMimeType(partMediaType));
 			}
 
 			// Load needed information from metaData
@@ -869,6 +872,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), mediaType, tmpFile, folder.getNode())) {
 						boolean conversionFailed = false;
 
+						fixRequestFilename(request, mediaType.get());
+
 						if (!mediaType.get().equals(detectedMimeType)) {
 							updateRequestName(isImage, request, getMethod, folder.getNode());
 						} else if (isImage && !detectedMimeType.equals("image/webp") && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, folder.getNode())) {
@@ -982,25 +987,34 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
-	 * Update the filename in the given request, if it is empty or the extension needs to be replaced with ".webp".
+	 * Make sure the filename of {@code request} is not empty and has an extension.
+	 *
+	 * @param request The file create request.
+	 * @param mimeType The detected filename.
+	 */
+	private void fixRequestFilename(FileCreateRequest request, String mimeType) {
+		if (ObjectTransformer.isEmpty(request.getName())) {
+			request.setName("new_file");
+		}
+
+		if (request.getName().indexOf('.') < 0) {
+			request.setName(request.getName() + FileUtil.getExtensionByMimeType(mimeType));
+		}
+	}
+
+	/**
+	 * Update the filename in the given request, if the extension needs to be replaced with ".webp".
 	 *
 	 * <p>
 	 * When the extension is changed, the extensions of nice and alternate URLs are also changed.
 	 * </p>
 	 *
-	 * @param isImage Whether the file is an image.
-	 * @param request The request to update.
+	 * @param isImage   Whether the file is an image.
+	 * @param request   The request to update.
 	 * @param getMethod The response of loading the binary.
-	 * @param node The node of the target file.
-	 * @return Whether the {@link FileCreateRequest#getName() name} field in the request was changed.
+	 * @param node      The node of the target file.
 	 */
-	private boolean updateRequestName(boolean isImage, FileCreateRequest request, GetMethod getMethod, Node node) throws IOException {
-		String origName = request.getName();
-
-		if (ObjectTransformer.isEmpty(request.getName())) {
-			request.setName("new_file");
-		}
-
+	private void updateRequestName(boolean isImage, FileCreateRequest request, GetMethod getMethod, Node node) throws IOException {
 		if (isImage && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
 			request.setName(adjustImageFilename(request.getName()));
 
@@ -1013,17 +1027,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			request.setAlternateURLs(adaptedAltUrls);
-		} else if (request.getName().indexOf('.') < 0) {
-			String detectedMimeType = FileUtil.getMimeTypeByContent(new ByteArrayInputStream(getMethod.getResponseBody()), request.getName());
-
-			if (!"application/octet-stream".equals(detectedMimeType) && detectedMimeType.lastIndexOf('/') > 0) {
-				String subtype = detectedMimeType.substring(detectedMimeType.lastIndexOf('/') + 1);
-
-				request.setName(request.getName() + "." + subtype);
-			}
 		}
-
-		return !Objects.equals(origName, request.getName());
 	}
 
 	/**

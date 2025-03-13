@@ -127,8 +127,8 @@ h3. Checking the Links
 
 External links are checked by making a *HEAD* request to the URL.
 * The check will follow redirects (validity of the final response will be checked)
-* The following response codes will be considered valid: 200 - 299, 401 (Unauthorized), 403 (Forbidden)
-* If the response has code 400 (Bad Request), 404 (Not Found) or 405 (Method Not Allowed), the check will be repeated with a *GET* request
+* The following response codes will be considered valid: 200 - 299, 301 (Redirect), 401 (Unauthorized), 403 (Forbidden)
+* If the response has code 400 (Bad Request), 404 (Not Found), 405 (Method Not Allowed), 409 (Conflict), 503 (Service Unavailable), or 500 (Internal Server Error), the check will be repeated with a *GET* request
 * All (insecure) SSL Certificates will be accepted for https requests.
 * URLs starting with _mailto:_, _javascript:_, _file:_, _callto:_, _tel:_, _skype:_ or _#_ are not checked.
 

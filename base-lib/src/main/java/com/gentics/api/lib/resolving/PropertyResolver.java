@@ -8,11 +8,13 @@ package com.gentics.api.lib.resolving;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import com.gentics.api.lib.exception.UnknownPropertyException;
+import com.gentics.lib.base.MapResolver;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
@@ -165,6 +167,11 @@ public class PropertyResolver implements Resolvable {
 
 					mother = ret;
 
+					// if the object is a map, but not a resolvable, wrap into into a mapresolver
+					if (ret instanceof Map && !(ret instanceof Resolvable)) {
+						ret = new MapResolver((Map<?, ?>) ret);
+					}
+
 					// if the current object is a resolvable object - starting
 					// with
 					// the first object
@@ -236,7 +243,6 @@ public class PropertyResolver implements Resolvable {
 								path.add(new PropertyPathEntry(resolvedSoFar.toString(), propertyPath.substring(resolvedSoFar.length() + 1), ret, mother));
 							}
 						}
-
 					} else {
 						// this is now not a valid resolvable objecct --> return
 						// null, not an exception

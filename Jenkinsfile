@@ -134,6 +134,7 @@ spec:
 
                 script {
                     def mvnGoal       = "package"
+                    def mvnProjects   = ""
                     def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
 
                     version          = params.forceVersion
@@ -167,7 +168,11 @@ spec:
                             mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
                         }
 
-                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
+                        if (params.singleTest) {
+                            mvnGoal = "test"
+                            mvnProjects = " -am -pl 'cms-core,cms-oss-server'"
+                            mvnArguments += " -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
+                        }
 
                         // Check if triggered by a Gitlab merge request
                         if (env.gitlabTargetBranch) {
@@ -193,7 +198,8 @@ spec:
 
                     // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
-                        mvnArguments += " -Dui.skip.publish -pl '!cms-oss-changelog,!cms-oss-doc'"
+                        mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc'"
+                        mvnArguments += " -Dui.skip.publish"
                     }
 
                     // Update chrome to the latest version
@@ -233,7 +239,8 @@ spec:
                         } else if (params.install) {
                             // Install
                             mvnGoal = "install"
-                            mvnArguments = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui' -DskipTests=true -Dskip.unit.tests -Dui.skip.test=true -Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish"
+                            mvnProjects = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui'"
+                            mvnArguments = " -DskipTests=true -Dskip.unit.tests -Dui.skip.test=true -Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish"
                         }
                     }
 
@@ -254,7 +261,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
-                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
+                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }
 
                     if (params.runReleaseBuild) {

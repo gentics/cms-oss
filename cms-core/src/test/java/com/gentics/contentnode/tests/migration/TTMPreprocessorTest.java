@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.gentics.api.contentnode.migration.IMigrationPreprocessor;
@@ -61,6 +62,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 /**
  * Test cases for Tagtype migrations with Preprocessors
  */
+@Ignore("Ignored since the feature is discontinued")
 public class TTMPreprocessorTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();

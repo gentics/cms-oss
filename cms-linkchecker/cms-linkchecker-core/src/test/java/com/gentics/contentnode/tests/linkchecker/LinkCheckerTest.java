@@ -930,13 +930,31 @@ public class LinkCheckerTest {
 	}
 
 	/**
-	 * Test checking a valid URL, that does not allow HEAD requests and has
+	 * Test checking an invalid URL, that does not allow HEAD requests and has
 	 * status "Service Unavailable" (503)
 	 * @throws NodeException
 	 */
 	@Test
 	public void test404After503() throws NodeException {
 		testCheck(appContext.getBaseUri() + "url/getAfter503/404", false, "404");
+	}
+
+	/**
+	 * Test checking a valid URL, that crashes on HEAD requests with "Internal Server Error" (500)
+	 * @throws NodeException
+	 */
+	@Test
+	public void test200After500() throws NodeException {
+		testCheck(appContext.getBaseUri() + "url/getAfter500/200", true, null);
+	}
+
+	/**
+	 * Test checking an invalid URL, that crashes on HEAD requests with "Internal Server Error" (500)
+	 * @throws NodeException
+	 */
+	@Test
+	public void test404After500() throws NodeException {
+		testCheck(appContext.getBaseUri() + "url/getAfter500/404", false, "404");
 	}
 
 	/**
@@ -1644,6 +1662,28 @@ public class LinkCheckerTest {
 		@Path("/get/{code}")
 		public Response headOnly(@PathParam("code") int code) {
 			return Response.status(HttpStatus.SC_METHOD_NOT_ALLOWED).allow("GET").build();
+		}
+
+		/**
+		 * Return requested code
+		 * @param code code
+		 * @return response
+		 */
+		@GET
+		@Path("/getAfter500/{code}")
+		public Response getOnly500(@PathParam("code") int code) {
+			return Response.status(code).build();
+		}
+
+		/**
+		 * Always return 503 (Service Unavailable) with "allow" header set to "GET"
+		 * @param code code
+		 * @return response
+		 */
+		@HEAD
+		@Path("/getAfter500/{code}")
+		public Response headOnly500(@PathParam("code") int code) {
+			return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).build();
 		}
 
 		/**

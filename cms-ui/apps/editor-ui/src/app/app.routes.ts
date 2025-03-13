@@ -1,4 +1,5 @@
 import { Route } from '@angular/router';
+import { EditorOutlet } from './common/models';
 import { NoNodesComponent, TagEditorRouteComponent } from './core/components';
 import { ProjectEditorComponent } from './core/components/project-editor/project-editor.component';
 import { AuthGuard } from './core/providers/guards/auth-guard';
@@ -6,7 +7,6 @@ import { OpenModalGuard } from './core/providers/guards/open-modal-guard';
 import { ToolOverviewComponent } from './embedded-tools/components/tool-overview/tool-overview.component';
 import { ToolProxyComponent } from './embedded-tools/components/tool-proxy/tool-proxy.component';
 import { ProxyRouteComponent, RessourceProxyComponent } from './shared/components';
-import { EditorOutlet } from './common/models';
 
 export const APP_ROUTES: Route[] = [
     {

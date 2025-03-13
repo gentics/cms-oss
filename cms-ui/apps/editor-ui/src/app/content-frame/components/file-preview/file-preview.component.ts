@@ -6,6 +6,7 @@ import {
     Input,
     OnChanges,
     OnDestroy,
+    OnInit,
     Output,
     SimpleChanges,
     ViewChild,
@@ -19,7 +20,7 @@ import {
     RotateParameters,
     User,
 } from '@gentics/cms-models';
-import { ProgressBarComponent } from '@gentics/ui-core';
+import { ModalService, ProgressBarComponent } from '@gentics/ui-core';
 import { Observable, Subscription, of } from 'rxjs';
 import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
@@ -30,6 +31,7 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsService } from '../../../state';
+import { ImageAnonymizeModal } from '../image-anonymize-modal/image-anonymize-modal.component';
 
 @Component({
     selector: 'file-preview',
@@ -37,7 +39,7 @@ import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsServi
     styleUrls: ['./file-preview.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FilePreviewComponent implements OnChanges, OnDestroy {
+export class FilePreviewComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input()
     public file: FileModel | ImageModel;
@@ -53,10 +55,11 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     fileExtension: string;
     keepFileName = true;
     nodeId: number;
-    private maxImageFullsizeDimensions = this.calculateMaxImageDimensions();
-    private subscriptions = new Subscription();
     isEditableImage = isEditableImage;
     hasFileEditPermission$: Observable<boolean>;
+
+    private maxImageFullsizeDimensions = this.calculateMaxImageDimensions();
+    private subscriptions: Subscription[] = [];
 
     get displayDimensions(): any {
         return (this.file.type === 'image' && this.file.sizeX !== 0 && this.file.sizeY !== 0) ?
@@ -68,35 +71,42 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     private dismissErrorMessage(): void {}
 
-    constructor(private resourceUrlBuilder: ResourceUrlBuilder,
+    constructor(
+        private resourceUrlBuilder: ResourceUrlBuilder,
         private navigationService: NavigationService,
         private appState: ApplicationStateService,
         public permissions: PermissionService,
         private entityResolver: EntityResolver,
         private notification: I18nNotification,
-        private folderActions: FolderActionsService) {
-        this.subscriptions.add(
-            this.appState.select(state => state.entities).subscribe(entities => {
-                this.hasFileEditPermission$ = this.appState.select(() =>
-                    this.file.type === 'file' ? entities.file[this.file.id].folderId : entities.image[this.file.id].folderId)
-                    .pipe(
-                        switchMap(folderId => this.appState.select(state => state.entities.folder[folderId])),
-                        switchMap((folder: Folder) => {
-                            if (folder) {
-                                const permissionsMap = folder.permissionsMap;
-                                const isFile = this.file.type === 'file';
-                                if (!permissionsMap) {
-                                    return this.permissions.getFolderPermissionMap(folder.id).pipe(
-                                        map((permissionsMap: PermissionsMapCollection) => {
-                                            return this.hasEditPermission(permissionsMap, isFile);
-                                        }),
-                                    );
-                                }
-                                return of(this.hasEditPermission(permissionsMap, isFile));
-                            }
-                            return of(false);
-                        }),
-                    );
+        private folderActions: FolderActionsService,
+        private modalService: ModalService,
+    ) {}
+
+    ngOnInit(): void {
+        this.hasFileEditPermission$ = this.appState.select(state => state.entities).pipe(
+            map(entities => {
+                const folderId = this.file.type === 'file'
+                    ? entities.file[this.file.id].folderId
+                    : entities.image[this.file.id].folderId;
+
+                return entities.folder[folderId];
+            }),
+            switchMap((folder: Folder) => {
+                if (!folder) {
+                    return of(false);
+                }
+
+                const permissionsMap = folder.permissionsMap;
+                const isFile = this.file.type === 'file';
+                if (permissionsMap) {
+                    return of(this.hasEditPermission(permissionsMap, isFile));
+                }
+
+                return this.permissions.getFolderPermissionMap(folder.id).pipe(
+                    map((permissionsMap: PermissionsMapCollection) => {
+                        return this.hasEditPermission(permissionsMap, isFile);
+                    }),
+                );
             }),
         );
     }
@@ -124,7 +134,20 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     ngOnDestroy(): void {
         this.dismissErrorMessage();
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    anonymizeImage(): void {
+        const nodeId = this.appState.now.editor.nodeId;
+
+        this.modalService.fromComponent(ImageAnonymizeModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+            width: '100%',
+        }, {
+            imageId: this.file.id,
+            nodeId,
+        }).then(comp => comp.open());
     }
 
     editImage(): void {

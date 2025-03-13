@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ 'modal.anonymize_image_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtxpict-editor
+        *ngIf="imageBlob"
+        [imageBlob]="imageBlob"
+        [disabled]="loading"
+        (imageUpload)="updateImageId($event)"
+        (confirmChange)="updateConfirmation($event)"
+    ></gtxpict-editor>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        type="primary"
+        [disabled]="!piktidImageId || confirmedIds?.length === 0"
+        (click)="processImage()"
+    >{{ 'common.confirm_button' }}</gtx-button>
+</div>
+

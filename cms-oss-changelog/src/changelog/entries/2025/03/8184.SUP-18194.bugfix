@@ -1,0 +1,3 @@
+Administrator User Interface: Several issues with the node properties dialog have been fixed:
+* The checkbox "Publish Directory Segments" will now only be visible, when the feature pub_dir_segments is activated.
+* The checkbox "Publish Directory Segments" will be disabled for channels, since this setting is inherited from the master node.

@@ -76,6 +76,12 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     @Input()
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
 
+    @Input()
+    public masterName: string | null = null;
+
+    @Input()
+    public isChannel: boolean = false;
+
     public nodes: Node<Raw>[];
     protected nodesLoading = false;
     protected nodesLoaded = false;
@@ -102,9 +108,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
         this.subscriptions.push(this.appState.select(state => state.features.global[Feature.PUB_DIR_SEGMENT]).subscribe(featureEnabled => {
             this.pubDirSegmentActivated = featureEnabled;
-            if (this.form) {
-                this.form.controls.pubDirSegment.enable();
-            }
             this.changeDetector.markForCheck();
         }));
 
@@ -191,6 +194,16 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     protected configureForm(value: Partial<NodePropertiesFormData>, loud?: boolean): void {
         if (!value) {
             return;
+        }
+
+        if (this.mode === NodePropertiesMode.CREATE) {
+            setControlsEnabled(this.form, ['pubDirSegment'], value.inheritedFromId == null, {
+                emitEvent: loud,
+            });
+        } else {
+            setControlsEnabled(this.form, ['pubDirSegment'], !this.isChannel , {
+                emitEvent: loud,
+            });
         }
 
         if (value.previewType) {

@@ -1,0 +1,1 @@
+Fixes failing image uploads when automatic webp conversion is enabled and the image cannot be converted. When conversion failed, the original image is uploaded instead.

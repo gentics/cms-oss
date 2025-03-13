@@ -2820,7 +2820,20 @@ export class FolderActionsService {
             .subscribe((allResponses: UploadResponse[][]) => {
                 const successfulUploads = allResponses
                     .flatMap(responses => responses)
-                    .filter(response => response.successfull);
+                    .filter(response => {
+                        const messages = response.response?.messages || [];
+
+                        for (const msg of messages) {
+                            if (msg.type !== 'SUCCESS' && msg.type !== 'INFO') {
+                                this.notification.show({
+                                    type: 'alert',
+                                    message: msg.message,
+                                });
+                            }
+                        }
+
+                        return response.successfull
+                    });
 
                 if (!successfulUploads.length) {
                     return;

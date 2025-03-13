@@ -13,7 +13,6 @@ import { NodeSettingsStateModule } from './node-settings/node-settings.state-mod
 import { PublishQueueStateModule } from './publish-queue/publish-queue.state-module';
 import { ToolsStateModule } from './tools/tools.state-module';
 import { UIStateModule } from './ui/ui.state-module';
-import { UsageStateModule } from './usage/usage.state-module';
 import { WastebinStateModule } from './wastebin/wastebin.state-module';
 
 /** Contains all ngxs state modules. */
@@ -31,6 +30,5 @@ export const STATE_MODULES: (ɵStateClass & Provider)[] = [
     PublishQueueStateModule,
     ToolsStateModule,
     UIStateModule,
-    UsageStateModule,
     WastebinStateModule,
 ];

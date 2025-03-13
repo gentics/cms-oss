@@ -364,6 +364,12 @@ type_folders_article:
 type_folders_dative:
     en: Folders
     de: Ordnern
+type_folder_counts:
+    en: "{{count}} folders"
+    de: "{{count}} Ordner"
+type_folder_singular:
+    en: One folder
+    de: Ein Ordner
 type_page:
     en: Page
     de: Seite
@@ -379,9 +385,21 @@ type_pages_article:
 type_pages_dative:
     en: Pages
     de: Seiten
+type_page_counts:
+    en: "{{count}} Pages"
+    de: "{{count}} Seiten"
+type_page_singular:
+    en: One page
+    de: Eine Seite
 type_linkedPage:
     en: Linked page
     de: Verlinkte Seite
+type_linkedPage_counts:
+    en: "{{count}} linked pages"
+    de: "{{count}} verlinkte Seiten"
+type_linkedPage_singular:
+    en: One linked Page
+    de: Eine verlinkte Seite
 type_linkedPages:
     en: Linked pages
     de: Verlinkte Seiten
@@ -391,6 +409,12 @@ type_linkedPages_dative:
 type_linkedFile:
     en: Linked file
     de: Verlinkte Datei
+type_linkedFile_counts:
+    en: "{{count}} linked files"
+    de: "{{count}} verlinkte Dateien"
+type_linkedFile_singular:
+    en: One linked file
+    de: Eine verlinkte Datei
 type_linkedFiles:
     en: Linked files
     de: Verlinkte Dateien
@@ -400,6 +424,12 @@ type_linkedFiles_dative:
 type_linkedImage:
     en: Linked image
     de: Verlinktes Bild
+type_linkedImage_counts:
+    en: "{{count}} linked images"
+    de: "{{count}} verlinkte Bilder"
+type_linkedImage_singular:
+    en: One linked image
+    de: Ein verlinktes Bild
 type_linkedImages:
     en: Linked images
     de: Verlinkte Bilder
@@ -421,6 +451,9 @@ type_files_article:
 type_files_dative:
     en: Files
     de: Dateien
+type_file_counts:
+    en: "{{count}} files"
+    de: "{{count}} Dateien"
 type_image:
     en: Image
     de: Bild
@@ -436,6 +469,12 @@ type_images_article:
 type_images_dative:
     en: Images
     de: Bildern
+type_image_counts:
+    en: "{{count}} images"
+    de: "{{count}} Bilder"
+type_image_singular:
+    en: One image
+    de: Ein Bild
 type_form:
     en: Form
     de: Formular
@@ -451,6 +490,12 @@ type_forms_article:
 type_forms_dative:
     en: Forms
     de: Formularen
+type_form_counts:
+    en: "{{count}} forms"
+    de: "{{count}} Formulare"
+type_form_singular:
+    en: One form
+    de: Ein Formular
 type_object:
     en: Object
     de: Objekt
@@ -490,6 +535,12 @@ type_templates_article:
 type_templates_dative:
     en: Templates
     de: Vorlagen
+type_template_counts:
+    en: "{{count}} templates"
+    de: "{{count}} Vorlagen"
+type_template_singular:
+    en: One template
+    de: Eine Vorlage
 type_templateTag:
     en: Template tag
     de: Vorlagentag
@@ -514,6 +565,12 @@ type_variants_article:
 type_variants_dative:
     en: Variants
     de: Varianten
+type_variant_counts:
+    en: "{{count}} variants"
+    de: "{{count}} Varianten"
+type_variant_singular:
+    en: One variant
+    de: Eine Variante
 type_node:
     en: Node
     de: Node

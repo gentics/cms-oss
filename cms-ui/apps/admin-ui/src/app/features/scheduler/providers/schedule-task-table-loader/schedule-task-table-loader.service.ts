@@ -10,8 +10,6 @@ import { map } from 'rxjs/operators';
 @Injectable()
 export class ScheduleTaskTableLoaderService extends BaseTableLoaderService<ScheduleTask, ScheduleTaskBO> {
 
-    private store: { [id: string]: ScheduleTaskBO } = {};
-
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
@@ -29,14 +27,6 @@ export class ScheduleTaskTableLoaderService extends BaseTableLoaderService<Sched
         return this.operations.delete(entityId).toPromise();
     }
 
-    public override getEntitiesByIds(entityIds: (string | number)[]): ScheduleTaskBO[] {
-        return entityIds.map(id => this.store[id]);
-    }
-
-    public override getEntityById(entityId: string | number): ScheduleTaskBO {
-        return this.store[entityId];
-    }
-
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ScheduleTaskBO>> {
         const loadOptions: ScheduleTaskListOptions = {
             ...this.createDefaultOptions(options),
@@ -47,7 +37,6 @@ export class ScheduleTaskTableLoaderService extends BaseTableLoaderService<Sched
             map(response => {
                 const entities = response.items.map(task => this.mapToBusinessObject(task));
                 applyPermissions(entities, response);
-                entities.forEach(task => this.store[task[BO_ID]] = task);
 
                 return {
                     entities,

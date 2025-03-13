@@ -11,7 +11,6 @@ import { NodeSettingsState } from './node-settings-state';
 import { PublishQueueState } from './publish-queue-state';
 import { ToolsState } from './tools-state';
 import { UIState } from './ui-state';
-import { UsageState } from './usage-state';
 import { UserState } from './user-state';
 import { WastebinState } from './wastebin-state';
 
@@ -29,7 +28,6 @@ export interface AppState {
     publishQueue: PublishQueueState;
     tools: ToolsState;
     ui: UIState;
-    usage: UsageState;
     user: UserState;
     wastebin: WastebinState;
 }

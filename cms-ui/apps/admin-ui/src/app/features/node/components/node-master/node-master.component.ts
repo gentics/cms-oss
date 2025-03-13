@@ -1,4 +1,4 @@
-import { BO_ID, BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
+import { BO_PERMISSIONS, EntityTableActionClickEvent, NodeBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, NodeOperations, NodeTableLoaderService, TranslatedNotificationOptions } from '@admin-ui/core';
 import { WizardService } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
@@ -6,7 +6,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, GcmsPermission, Node, NodeCopyRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent } from '@gentics/ui-core';
+import { ModalService, TableAction } from '@gentics/ui-core';
 import { CopyNodesModalComponent } from '../copy-nodes-modal/copy-nodes-modal.component';
 import { CreateNodeWizardComponent } from '../create-node-wizard/create-node-wizard.component';
 
@@ -78,22 +78,21 @@ export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> 
         }
     }
 
-    handleActionClick(event: TableActionClickEvent<NodeBO>): void {
+    handleActionClick(event: EntityTableActionClickEvent<NodeBO>): void {
         switch (event.actionId) {
             case COPY_ACTION: {
-                const ids = event.selection ? this.selected : [event.item[BO_ID]];
-                this.copyNodes(ids);
+                const nodes = event.selection ? event.selectedItems : [event.item];
+                this.copyNodes(nodes);
                 break;
             }
         }
     }
 
-    async copyNodes(entityIds: string[]): Promise<void> {
-        if (entityIds.length === 0) {
+    async copyNodes(nodes: NodeBO[]): Promise<void> {
+        if (nodes.length === 0) {
             return;
         }
 
-        const nodes = this.tableLoader.getEntitiesByIds(entityIds);
         const dialog = await this.modalService.fromComponent(
             CopyNodesModalComponent,
             null,

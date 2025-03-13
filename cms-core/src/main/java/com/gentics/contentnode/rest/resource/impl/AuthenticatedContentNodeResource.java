@@ -96,6 +96,12 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 	 * Session id that is injected by JAX-RS.
 	 */
 	private String sessionId;
+
+	/**
+	 * Flag to omit touching the session on {@link #initialize()}
+	 */
+	private boolean omitTouchSession = false;
+
 	/**
 	 * Bodypart name for blueimp uploader data
 	 */
@@ -185,7 +191,9 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 			throw new WebApplicationException(Response.status(Status.UNAUTHORIZED).entity(response).build());
 		}
 		try {
-			session.touch();
+			if (!omitTouchSession) {
+				session.touch();
+			}
 			t.commit(false);
 		} catch (NodeException e) {
 			throw new WebApplicationException(e);
@@ -219,6 +227,13 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 	 */
 	public String getSessionId() {
 		return sessionId;
+	}
+
+	/**
+	 * Omit touching the session on {@link #initialize()}
+	 */
+	public void omitTouchSession() {
+		this.omitTouchSession = true;
 	}
 
 	/**

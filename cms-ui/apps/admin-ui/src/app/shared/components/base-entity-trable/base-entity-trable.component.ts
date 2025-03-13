@@ -1,4 +1,4 @@
-import { BO_ID, BusinessObject } from '@admin-ui/common';
+import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
@@ -12,7 +12,7 @@ import {
     TrableRowExpandEvent,
     coerceInstance,
 } from '@gentics/ui-core';
-import { Observable, Subscription, forkJoin, Subject, combineLatest, of } from 'rxjs';
+import { Observable, Subject, Subscription, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
 
 @Component({ template: '' })
@@ -65,6 +65,8 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     public rows: TrableRow<O>[] = [];
     public actions: TableAction<O>[] = [];
 
+    protected loadedRows: Record<string, TrableRow<O>> = {};
+
     protected subscriptions: Subscription[] = [];
     protected booleanInputs: CoerceOption<this>[] = ['selectable', ['multiple', true], 'hideActions', 'inlineExpansion', 'inlineSelection'];
 
@@ -83,11 +85,6 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
 
         this.subscriptions.push(this.loader.reload$.subscribe(() => {
             this.reload();
-        }));
-
-        this.subscriptions.push(this.loader.refreshView$.subscribe(() => {
-            this.rows = [...this.rows];
-            this.changeDetector.markForCheck();
         }));
 
         this.setupActionLoading();
@@ -144,27 +141,41 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
 
     /**
      * Function to reload the current trable.
-     * Simply reloads all currently loaded/visible rows, via `reloadRow` and waits for all to complete.
-     * Once it's done, re-assigns the rows to trigger a change detection for angular.
+     * Reloads all root-rows and recursively all already loaded descendants.
      */
     public reload(): void {
-        const loaders: Observable<TrableRow<O>>[] = [];
         const options = this.createAdditionalLoadOptions();
 
-        Object.values(this.loader.flatStore).forEach(row => {
-            loaders.push(this.loader.reloadRow(row, options));
+        // Mark all rows as loading
+        Object.values(this.loadedRows).forEach(row => {
+            row.loading = true;
         });
+        // Force view refresh
+        this.rows = [...this.rows];
+        this.changeDetector.markForCheck();
 
-        this.subscriptions.push(forkJoin(loaders).subscribe(() => {
-            this.rows = [...this.rows];
+        this.subscriptions.push(forkJoin(this.rows.map(rootRow => this.loader.reloadRow(rootRow, options, {
+            reloadDescendants: true,
+        }))).subscribe(newRootRows => {
+            this.rows = newRootRows;
+            this.loadedRows = newRootRows.reduce((acc, row) => {
+                acc[row.id] = row;
+                return acc;
+            }, {});
+
             this.onLoad();
             this.changeDetector.markForCheck();
         }));
     }
 
     protected loadRootElements(): void {
-        this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe(rows => {
-            this.rows = rows;
+        this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe(newRootRows => {
+            this.rows = newRootRows;
+            this.loadedRows = newRootRows.reduce((acc, row) => {
+                acc[row.id] = row;
+                return acc;
+            }, {});
+
             this.onLoad();
             this.changeDetector.markForCheck();
         }));
@@ -181,23 +192,70 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         if (event.row) {
             event.row.expanded = event.expanded;
         }
+
+        // Force view refresh
         this.rows = [...this.rows];
         this.changeDetector.markForCheck();
     }
 
-    public reloadRow(row: TrableRow<O>): void {
-        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions()).subscribe(() => {
-            this.rows = [...this.rows];
+    public reloadRow(row: TrableRow<O>, reloadOptions?: TrableRowReloadOptions): void {
+        // Mark the row (and descendants if applicable) as loading
+        if (reloadOptions?.reloadDescendants) {
+            const updateLoading = (currentRow: TrableRow<O>) => {
+                currentRow.loading = true;
+                const children = currentRow.children || [];
+                for (const child of children) {
+                    updateLoading(child);
+                }
+            }
+            updateLoading(row);
+        } else {
+            row.loading = true;
+        }
+
+        // Force view refresh
+        this.rows = [...this.rows];
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions(), reloadOptions).subscribe(reloadedRow => {
+            // Replace the `row` with the `reloadedRow` in the parent element
+            if (row.parent && row.parent.children) {
+                row.parent.children = row.parent.children.map(child => child.id === row.id ? reloadedRow : child);
+                // Force view refresh
+                this.rows = [...this.rows];
+            } else {
+                this.rows = this.rows.map(rootRow => rootRow.id === reloadedRow.id ? reloadedRow : rootRow);
+            }
+            this.loadedRows[row.id] = reloadedRow;
+
             this.changeDetector.markForCheck();
         }));
 
-        row.loading = true;
-        this.rows = [...this.rows];
-        this.changeDetector.markForCheck();
     }
 
     public loadRow(row: TrableRow<O>): void {
-        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions(), true).subscribe(() => {
+        row.loading = true;
+        // Force view refresh
+        this.rows = [...this.rows];
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()).subscribe(loadedChildren => {
+            // Update the row state
+            row.loading = false;
+            row.loaded = true;
+            row.children = loadedChildren;
+            row.hasChildren = loadedChildren.length > 0;
+            row.expanded = true;
+
+            // Add the loaded children to the state for later lookup
+            for (const child of loadedChildren) {
+                this.loadedRows[child.id] = child;
+            }
+
+            // Force view refresh
+            this.rows = [...this.rows];
+            this.changeDetector.markForCheck();
+
             this.onLoad();
         }));
     }

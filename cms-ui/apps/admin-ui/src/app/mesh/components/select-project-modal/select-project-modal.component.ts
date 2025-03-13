@@ -1,7 +1,7 @@
 import { MeshProjectBO } from '@admin-ui/mesh/common';
-import { ProjectTableLoaderService } from '@admin-ui/mesh/providers/project-table-loader/project-table-loader.service';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { ProjectTableComponent } from '../project-table/project-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-project-modal',
@@ -20,17 +20,11 @@ export class SelectProjectModal extends BaseModal<MeshProjectBO | MeshProjectBO[
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: ProjectTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(forwardRef(() => ProjectTableComponent))
+    public table: ProjectTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

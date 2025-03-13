@@ -19,7 +19,6 @@ import {
     PublishQueueState,
     ToolsState,
     UIState,
-    UsageState,
     UserState,
     WastebinState,
 } from '../common/models';
@@ -39,7 +38,6 @@ export type MockAppState = Partial<AppState> | {
     publishQueue?: Partial<PublishQueueState>;
     tools?: Partial<ToolsState>;
     ui?: Partial<UIState>;
-    usage?: Partial<UsageState>;
     user?: Partial<UserState>;
     wastebin?: TwoLevelsPartial<WastebinState>;
 };

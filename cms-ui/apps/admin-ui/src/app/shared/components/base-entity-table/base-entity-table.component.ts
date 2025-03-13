@@ -3,6 +3,7 @@ import {
     BO_ID,
     BusinessObject,
     EditableEntity,
+    EntityTableActionClickEvent,
     TableLoadEndEvent,
     TableLoadOptions,
     TableLoadResponse,
@@ -65,7 +66,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public rowClick = new EventEmitter<TableRow<O>>();
 
     @Output()
-    public actionClick = new EventEmitter<TableActionClickEvent<O>>();
+    public actionClick = new EventEmitter<EntityTableActionClickEvent<O>>();
 
     @Output()
     public selectedChange = new EventEmitter<string[]>();
@@ -105,6 +106,9 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     // Loading state
     public loading = false;
     public hasError = false;
+
+    // Stored rows, for later retrieval
+    protected loadedRows: Record<string, TableRow<O>> = {};
 
     protected loadTrigger = new Subject<void>();
     protected actionRebuildTrigger = new Subject<void>();
@@ -273,6 +277,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             }),
         ).subscribe(page => {
             this.rows = page.rows || [];
+            for (const row of this.rows) {
+                this.loadedRows[row.id] = row;
+            }
+
             this.totalCount = page.totalCount || page.rows?.length || 0;
             this.changeDetector.markForCheck();
         }, error => {
@@ -362,6 +370,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     public handleAction(event: TableActionClickEvent<O>): void {
+        event = {
+            selectedItems: this.getSelectedEntities(),
+        } as EntityTableActionClickEvent<O>;
+
         switch (event.actionId) {
             case DELETE_ACTION:
                 this.deleteEntities(this.getAffectedEntityIds(event)).then(didDelete => {
@@ -374,6 +386,16 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         }
 
         this.actionClick.emit(event);
+    }
+
+    public getEntitiesByIds(ids: string[]): O[] {
+        return (ids || [])
+            .map(id => this.loadedRows[id]?.item)
+            .filter(item => item != null);
+    }
+
+    public getSelectedEntities(): O[] {
+        return this.getEntitiesByIds(this.selected);
     }
 
     protected getAffectedEntityIds(event: TableActionClickEvent<O>): string[] {
@@ -409,8 +431,12 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
         const entities: O[] = [];
         for (const id of entityIds) {
+            const row = this.loadedRows[id];
+            if (!row) {
+                continue;
+            }
             if (await this.loader.canDelete(id)) {
-                entities.push(this.loader.getEntityById(id));
+                entities.push(row.item);
             }
         }
 

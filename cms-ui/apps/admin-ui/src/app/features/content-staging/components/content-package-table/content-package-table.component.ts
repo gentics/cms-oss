@@ -1,4 +1,4 @@
-import { BO_ID, ContentPackageBO } from '@admin-ui/common';
+import { BO_ID, ContentPackageBO, EntityTableActionClickEvent } from '@admin-ui/common';
 import { ContentPackageOperations, I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -162,14 +162,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
     }
 
     public override handleAction(event: TableActionClickEvent<ContentPackageBO>): void {
-        const getPackages = () => {
-            if (!event.selection) {
-                return [event.item];
-            }
-
-            return this.loader.getEntitiesByIds(this.selected)
-                .map(pkg => this.loader.mapToBusinessObject(pkg));
-        }
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
 
         switch (event.actionId) {
             case DOWNLOAD_PACKAGE_ACTION:
@@ -181,11 +174,11 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                 return;
 
             case EXPORT_PACKAGE_ACTION:
-                this.exportPackages(getPackages());
+                this.exportPackages(items);
                 return;
 
             case IMPORT_PACKAGE_ACTION:
-                this.importPackages(getPackages());
+                this.importPackages(items);
                 return;
         }
 

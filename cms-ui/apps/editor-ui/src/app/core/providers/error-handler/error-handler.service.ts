@@ -226,7 +226,6 @@ export class ErrorHandler {
             folder: state.folder,
             publishQueue: state.publishQueue,
             ui: state.ui,
-            usage: state.usage,
             user: state.user,
         };
 

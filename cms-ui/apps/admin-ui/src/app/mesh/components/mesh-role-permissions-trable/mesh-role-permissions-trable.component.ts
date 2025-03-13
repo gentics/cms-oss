@@ -120,7 +120,7 @@ export class MeshRolePermissionsTrableComponent
         });
         const didChange = await dialog.open();
         if (didChange) {
-            this.reloadRow(this.loader.flatStore[entity[BO_ID]]);
+            this.reloadRow(this.loadedRows[entity[BO_ID]]);
         }
     }
 
@@ -149,14 +149,8 @@ export class MeshRolePermissionsTrableComponent
                 permissions: toPermissionInfo(entity[MBO_ROLE_PERMISSIONS]),
                 recursive: true,
             });
-            const row = this.loader.flatStore[entity[BO_ID]];
-
-            // Reset the row children data, as we have to fetch all of them again, but we do that lazyly.
-            // Otherwise we'd need to do a lot of work here which we don't really need
-            row.expanded = false;
-            row.children = [];
-            row.loaded = false;
-            this.reloadRow(row);
+            // Reload the row and it's descendants for accurate data
+            this.reloadRow(this.loadedRows[entity[BO_ID]], { reloadDescendants: true });
         }
     }
 }

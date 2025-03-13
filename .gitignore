@@ -194,3 +194,6 @@ velocity.log
 /*.sh
 .nx/
 !cms-integration-tests/test/resources/cms/conf
+data/
+logs/
+ui-conf/

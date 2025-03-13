@@ -167,7 +167,7 @@ public class CRComparator {
 			String attributeName = ((String) it.next());
 
 			logger.info("CRComparator - Comparing: " + attributeName);
-			if (attributeName.equalsIgnoreCase("startpage")) {
+			if (attributeName.equalsIgnoreCase("startpage") || attributeName.equalsIgnoreCase("startpageurl")) {
 				// TODO handle this diff
 				logger.info("CRComparator - Skipping startpage");
 				continue;

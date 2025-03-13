@@ -1,7 +1,7 @@
 import { MeshRoleBO } from '@admin-ui/mesh/common';
-import { MeshRoleTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { MeshRoleTableComponent } from '../mesh-role-table/mesh-role-table.component';
 
 @Component({
     selector: 'gtx-mesh-select-role-modal',
@@ -20,17 +20,11 @@ export class SelectRoleModal extends BaseModal<MeshRoleBO | MeshRoleBO[]> {
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: MeshRoleTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(forwardRef(() => MeshRoleTableComponent))
+    public table: MeshRoleTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

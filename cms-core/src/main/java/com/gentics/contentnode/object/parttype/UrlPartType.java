@@ -201,7 +201,13 @@ public abstract class UrlPartType extends AbstractPartType implements PartType {
 				logger.error("Error while getting node for " + this, e);
 			}
 		}
-
+		if ("url".equals(key)) {
+			try {
+				return render(new RenderResult(), key);
+			} catch (NodeException e) {
+				logger.error("Error while resolving url of " + this, e);
+			}
+		}
 		// TODO: how to handle 'encoded' and obj-props for file?
 
 		// compatiblity syntax hack

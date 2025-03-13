@@ -1,0 +1,80 @@
+@import "variables";
+
+.type-icon {
+    &.folder {
+        color: $gcms-color-folder;
+    }
+    &.page {
+        color: $gcms-color-page;
+    }
+    &.file {
+        color: $gcms-color-file;
+    }
+    &.image {
+        color: $gcms-color-image;
+    }
+    &.template {
+        color: $gcms-color-template;
+    }
+}
+
+.usage-item {
+    gap: 0.5rem;
+}
+
+.item-primary {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    min-width: 500px;
+
+    .name-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        align-items: center;
+
+        .item-name {
+            cursor: pointer;
+        }
+    }
+}
+
+.language {
+    display: inline-block;
+    text-transform: uppercase;
+    color: $gcms-color-highlight;
+    font-size: $gtx-font-size-small;
+    margin-right: 2px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    border: 1px solid transparent;
+
+    &:first-of-type {
+        border-color: transparentize($gcms-color-highlight, 0.7);
+    }
+}
+
+.filename {
+    color: $gtx-color-dark-gray;
+    font-size: $gtx-font-size-small;
+}
+
+.right-details {
+    display: inline-flex;
+
+    .template-reference {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: $gtx-color-dark-gray;
+
+        icon {
+            font-size: 1.3em;
+        }
+    }
+}

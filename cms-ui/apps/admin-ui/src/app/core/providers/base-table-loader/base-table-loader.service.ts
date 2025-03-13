@@ -17,8 +17,6 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
 
     public reload$ = this.reloadSubject.asObservable();
 
-    protected storedEntities: { [key: string]: O } = {};
-
     constructor(
         protected entityIdentifier: NormalizableEntityType | null,
         protected entityManager: EntityManagerService,
@@ -34,7 +32,6 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
     public loadTablePage(options: TableLoadOptions, addtionalOptions?: A): Observable<TableLoadResponse<O>> {
         return this.loadEntities(options, addtionalOptions).pipe(
             tap(page => {
-                page.entities.forEach(bo => this.storeEntity(bo));
                 if (this.entityIdentifier) {
                     this.entityManager.addEntities(this.entityIdentifier, page.entities as any);
                 }
@@ -48,31 +45,6 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
                 };
             }),
         );
-    }
-
-    public storeEntity(entity: O, id?: string): void {
-        if (!id) {
-            id = entity[BO_ID];
-        }
-        this.storedEntities[id] = entity;
-    }
-
-    public removeEntity(id: string): O {
-        const element = this.storedEntities[id];
-        delete this.storedEntities[id];
-        return element;
-    }
-
-    public resetStore(): void {
-        this.storedEntities = {};
-    }
-
-    public getEntityById(entityId: string | number): O {
-        return this.storedEntities[entityId];
-    }
-
-    public getEntitiesByIds(entityIds: (string | number)[]): O[] {
-        return entityIds.map(id => this.storedEntities[id]);
     }
 
     public reload(): void {

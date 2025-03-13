@@ -1,8 +1,7 @@
 import { MeshSchemaBO } from '@admin-ui/mesh/common';
-import { SchemaTableLoaderService } from '@admin-ui/mesh/providers';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
-
+import { SchemaTableComponent } from '../schema-table/schema-table.component';
 @Component({
     selector: 'gtx-mesh-select-schema-modal',
     templateUrl: './select-schema-modal.component.html',
@@ -20,17 +19,11 @@ export class SelectSchemaModal extends BaseModal<MeshSchemaBO | MeshSchemaBO[]> 
     @Input()
     public selected: string[] = [];
 
-    constructor(
-        private loader: SchemaTableLoaderService,
-    ) {
-        super();
-    }
+    @ViewChild(forwardRef(() => SchemaTableComponent))
+    public table: SchemaTableComponent;
 
     confirmSelection(): void {
-        if (this.multiple) {
-            this.closeFn(this.loader.getEntitiesByIds(this.selected));
-        } else {
-            this.closeFn(this.loader.getEntityById(this.selected[0]));
-        }
+        const entities = this.table.getSelectedEntities();
+        this.closeFn(this.multiple ? entities : entities[0]);
     }
 }

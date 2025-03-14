@@ -149,6 +149,7 @@ spec:
 
                 script {
                     def mvnGoal       = "package"
+                    def mvnProjects   = ""
                     def mvnArguments  = ""
 
                     version          = params.forceVersion
@@ -170,7 +171,8 @@ spec:
 
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
-                        mvnArguments += " -am -pl '!cms-changelog,!cms-doc' -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
+                        mvnArguments += " -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
+                        mvnProjects = " -am -pl '!cms-changelog,!cms-doc'"
                     }
 
                     if (version) {
@@ -183,9 +185,9 @@ spec:
                     }
 
                     if (params.runTests) {
-                        mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
                         if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
-                            mvnArguments += " -am -pl cms-server"
+                            mvnProjects = " -am -pl cms-server"
                         }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
@@ -194,7 +196,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnArguments += " -am -pl cms-server"
+                        mvnProjects = " -am -pl cms-server"
                     }
 
                     // Update chrome to the latest version
@@ -260,7 +262,7 @@ spec:
                     // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
                     withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${mesh_enterprise_licensekey_2}", "KEYS_PATH=target/keys"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
-                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
+                            " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }
 
                     if (params.runReleaseBuild) {

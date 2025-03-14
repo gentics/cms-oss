@@ -137,8 +137,6 @@ public class IndexerTest extends AbstractIndexerTest {
 		String esUrl = String.format("http://%s:%d/", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
 		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
 
-		System.out.printf("Elasticsearch URL: %s\n", esUrl);
-
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {
 				List<Node> toClean = new ArrayList<>();

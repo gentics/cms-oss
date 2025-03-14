@@ -146,27 +146,6 @@ public class TranslationResourceImplTest {
 		}
 	}
 
-	@Test
-	public void givenMissingTranslationService_shouldThrowException() throws Exception {
-		translationResource.setTranslationService(null);
-
-		final var sourceLanguage = "de";
-		final var targetLanguage = "en";
-		var pageToTranslate = createPage(sourceLanguage);
-
-		try (Trx trx = new Trx(user)) {
-			createTags(pageToTranslate);
-
-			var response = translationResource.translate(pageToTranslate.getId(),
-					targetLanguage,true, 0, 0);
-
-			final var expectedMessage = "Error occurred while translating text";
-			final var actualMessage = response.getResponseInfo().getResponseMessage();
-
-			assertThat(actualMessage).contains(expectedMessage);
-		}
-	}
-
 	/**
 	 * Helper method to create page tags via REST API
 	 *

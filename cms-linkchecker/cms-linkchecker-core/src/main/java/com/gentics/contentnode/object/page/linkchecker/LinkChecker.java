@@ -1231,11 +1231,13 @@ public final class LinkChecker {
 					// every 2xx response and 401 or 403 are considered valid
 					// 301 response is also considered valid, because this means that we were redirected to a Location, that the client will not follow (e.g. mailto:)
 					return Pair.of(ExternalLinkStatus.valid, null);
-				} else if (method == CheckMethod.HEAD && (responseCode == 400 || responseCode == 404 || responseCode == 405 || responseCode == 409 || responseCode == 503)) {
+				} else if (method == CheckMethod.HEAD && (responseCode == 400 || responseCode == 404 || responseCode == 405 || responseCode == 409 || responseCode == 503 || responseCode == 500)) {
 					// 400: "bad request" some servers return 400 on HEAD requests, so try GET
 					// 404: "not found" some servers will return 404 on HEAD requests, but 200 on GET
 					// 405: "method not allowed" so we try GET
 					// 409: "conflict"
+					// 503: "service unavailable"
+					// 500: "internal server error" server expects no HEAD requests"
 					return check(url, CheckMethod.GET);
 				} else if (responseCode == 429) {
 					logger.debug(String.format("%s Request to %s returned code %d", method, url, responseCode));

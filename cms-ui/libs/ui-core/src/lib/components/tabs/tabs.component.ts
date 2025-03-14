@@ -11,7 +11,7 @@ import {
     OnDestroy,
     Output,
     QueryList,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
@@ -121,6 +121,8 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
     @ContentChildren(TabComponent)
     protected tabs: QueryList<TabComponent>;
 
+    public displayTabs: TabComponent[] = [];
+
     protected activeTabId$ = new BehaviorSubject<string>(null);
 
     protected subscriptions: Subscription[] = [];
@@ -138,13 +140,14 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
             ),
             this.tabs.changes,
         ]).subscribe(([id, tabs]: [string, QueryList<TabComponent>]) => {
-            let hasSet = false;
-
             // In a timeout, so it is performing this a angular tick later, to prevent the annoying
             // changed after checked error.
             setTimeout(() => {
+                let hasSet = false;
+
                 if (tabs != null && tabs.length > 0) {
                     tabs.forEach(singleTab => {
+                        singleTab.parentRef = this;
                         singleTab.active = id === singleTab.id;
                         singleTab.changeDetector.markForCheck();
                         hasSet = hasSet || singleTab.active;
@@ -161,6 +164,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
                     initial = false;
                 }
 
+                this.updateDisplayTabs();
                 this.changeDetector.markForCheck();
             });
         }));
@@ -194,6 +198,10 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
+    identifyTab(idx: number, tab: TabComponent): string {
+        return tab.id ?? `${idx}`;
+    }
+
     /**
      * Invoked when a tab link is clicked.
      */
@@ -207,6 +215,11 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
         } else {
             tab.select.emit(tab.id);
         }
+    }
+
+    public updateDisplayTabs(): void {
+        this.displayTabs = this.tabs.toArray();
+        this.changeDetector.markForCheck();
     }
 
     private setAsActive(tab: TabComponent): void {

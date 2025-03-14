@@ -1,6 +1,6 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
 import { ErrorHandler, FeatureOperations, LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
-import { Wizard, WizardComponent } from '@admin-ui/shared';
+import { Wizard, WizardComponent, LanguageTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
@@ -31,6 +31,9 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
     @ViewChild(NodePropertiesComponent)
     nodeProperties: NodePropertiesComponent;
+
+    @ViewChild(LanguageTableComponent)
+    public langTable: LanguageTableComponent;
 
     /** Form data of tab 'Properties' */
     fgProperties: FormControl<NodePropertiesFormData>;
@@ -64,7 +67,6 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         private appState: AppStateService,
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
-        private languageLoader: LanguageTableLoaderService,
         private errorHandler: ErrorHandler,
     ) { }
 
@@ -143,7 +145,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             return of(node);
         }
 
-        const nodeLanguages: Language[] = this.languageLoader.getEntitiesByIds(this.selectedLanguages);
+        const nodeLanguages: Language[] = this.langTable.getSelectedEntities();
 
         return this.nodeOps.updateNodeLanguages(node.id, nodeLanguages).pipe(
             map(() => node),

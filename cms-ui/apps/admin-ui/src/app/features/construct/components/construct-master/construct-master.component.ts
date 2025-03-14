@@ -1,4 +1,4 @@
-import { BO_PERMISSIONS, ConstructBO, EditableEntity } from '@admin-ui/common';
+import { BO_PERMISSIONS, ConstructBO, EditableEntity, EntityTableActionClickEvent } from '@admin-ui/common';
 import { ConstructHandlerService, ConstructTableLoaderService, I18nNotificationService, I18nService } from '@admin-ui/core';
 import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
@@ -6,7 +6,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GcmsPermission, TagType } from '@gentics/cms-models';
-import { ModalService, TableActionClickEvent } from '@gentics/ui-core';
+import { ModalService } from '@gentics/ui-core';
 import { combineLatest, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AssignConstructsToCategoryModalComponent } from '../assign-constructs-to-category-modal/assign-constructs-to-category-modal.component';
@@ -60,22 +60,16 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         this.loader.reload();
     }
 
-    public handleAction(event: TableActionClickEvent<ConstructBO>): void {
-        const getConstructs = () => {
-            if (!event.selection) {
-                return [event.item];
-            }
-            const mapped = this.loader.getEntitiesByIds(this.selection);
-            return mapped;
-        }
+    public handleAction(event: EntityTableActionClickEvent<ConstructBO>): void {
+        const entities = event.selection ? event.selectedItems : [event.item];
 
         switch (event.actionId) {
             case ASSIGN_CONSTRUCT_TO_NODES_ACTION:
-                this.assignConstructsToNodes(getConstructs());
+                this.assignConstructsToNodes(entities);
                 break;
 
             case ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION:
-                this.assignConstructsToCategories(getConstructs());
+                this.assignConstructsToCategories(entities);
                 break;
 
             case COPY_CONSTRUCT_ACTION:

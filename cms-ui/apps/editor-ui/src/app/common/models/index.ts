@@ -32,7 +32,6 @@ export * from './publish-queue-state';
 export * from './rendering';
 export * from './tools-state';
 export * from './ui-state';
-export * from './usage-state';
 export * from './user-state';
 export * from './wastebin-state';
 

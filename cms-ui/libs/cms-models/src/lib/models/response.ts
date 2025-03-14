@@ -82,7 +82,7 @@ export interface ResponseMessage {
     id?: number;
     timestamp: UnixTimestamp;
     message?: string;
-    type: 'CRITICAL' | 'INFO' | 'SUCCESS';
+    type: 'CRITICAL' | 'INFO' | 'SUCCESS' | 'WARNING';
     fieldName?: string;
     image?: string;
 }

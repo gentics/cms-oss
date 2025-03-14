@@ -102,6 +102,8 @@ export class MeshGroupTableComponent
     }
 
     public override handleAction(event: TableActionClickEvent<MeshGroupBO>): void {
+        const items = this.getEntitiesByIds(this.getAffectedEntityIds(event));
+
         switch (event.actionId) {
             case EDIT_ACTION:
                 this.openModal(MeshGroupPropertiesMode.EDIT, event.item);
@@ -116,11 +118,11 @@ export class MeshGroupTableComponent
                 return;
 
             case ASSIGN_TO_USERS_ACTION:
-                this.handleAssignToUsersAction(this.getAffectedEntityIds(event));
+                this.handleAssignToUsersAction(items);
                 return;
 
             case UNASSIGN_FROM_USERS_ACTION:
-                this.handleUnassignToUsersAction(this.getAffectedEntityIds(event));
+                this.handleUnassignToUsersAction(items);
                 return;
         }
 
@@ -250,8 +252,7 @@ export class MeshGroupTableComponent
         this.userTable.reload();
     }
 
-    async handleAssignToUsersAction(groupIds: string[]): Promise<void> {
-        const groups = this.loader.getEntitiesByIds(groupIds);
+    async handleAssignToUsersAction(groups: MeshGroupBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectUserModal, {}, {
             title: 'mesh.assign_users_to_groups',
             multiple: true,
@@ -272,8 +273,7 @@ export class MeshGroupTableComponent
         this.userTable.reload();
     }
 
-    async handleUnassignToUsersAction(groupIds: string[]): Promise<void> {
-        const groups = this.loader.getEntitiesByIds(groupIds);
+    async handleUnassignToUsersAction(groups: MeshGroupBO[]): Promise<void> {
         const dialog = await this.modalService.fromComponent(SelectUserModal, {}, {
             title: 'mesh.unassign_users_from_groups',
             multiple: true,

@@ -17,6 +17,7 @@ import { forkJoin, Observable, of, OperatorFunction } from 'rxjs';
 import { first, map, switchMap, tap } from 'rxjs/operators';
 import { EditPermissionsModalComponent } from '../../components/edit-permissions-modal/edit-permissions-modal.component';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 
 @Injectable()
 export class GroupDataService extends ExtendedEntityDataServiceBase<'group', GroupOperations> {
@@ -84,12 +85,24 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
      * @returns An Observable that emits `true` if the user clicked 'Save' and the operation was successful or
      * `false` if the user clicked 'Cancel'.
      */
-    async editGroupPermissions(group: Group, permSet: PermissionsSet, groupPermsByCategory: boolean = true): Promise<boolean> {
+    async editGroupPermissions(group: Group, permSet: PermissionsSet, groupPermsByCategory: boolean = true): Promise<false | {
+        subGroups: boolean;
+        subObjects: boolean;
+    }> {
         const denormalizedGroup = this.entityManager.denormalizeEntity('group', group);
-        const modal = await this.modalService.fromComponent(EditPermissionsModalComponent, {}, {
-            group: denormalizedGroup, permSet, groupPermsByCategory,
-        });
-        const changes: GroupSetPermissionsRequest = await modal.open();
+        let changes: GroupSetPermissionsRequest;
+
+        try {
+            const modal = await this.modalService.fromComponent(EditPermissionsModalComponent, {}, {
+                group: denormalizedGroup, permSet, groupPermsByCategory,
+            });
+            changes = await modal.open();
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return false;
+            }
+            throw err;
+        }
 
         if (!changes) {
             return false;
@@ -103,8 +116,11 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
         }
 
         return await req$.pipe(
-            detailLoading(this.state, 'shared.loading_update_group_permissions'),
-            map(() => true),
+            // detailLoading(this.state, 'shared.loading_update_group_permissions'),
+            map(() => ({
+                subGroups: changes.subGroups,
+                subObjects: changes.subObjects,
+            })),
         )
             .toPromise();
     }

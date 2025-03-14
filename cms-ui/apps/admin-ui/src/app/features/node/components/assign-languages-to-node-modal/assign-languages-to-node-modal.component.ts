@@ -1,5 +1,6 @@
-import { LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { NodeOperations } from '@admin-ui/core';
+import { LanguageTableComponent } from '@admin-ui/shared';
+import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -19,15 +20,17 @@ export class AssignLanguagesToNodeModal extends BaseModal<Language[]> {
     @Input()
     public selectedLanguages: string[];
 
+    @ViewChild(forwardRef(() => LanguageTableComponent))
+    public table: LanguageTableComponent;
+
     constructor(
-        protected loader: LanguageTableLoaderService,
         protected operations: NodeOperations,
     ) {
         super();
     }
 
     async updateLanguages(): Promise<void> {
-        const nodeLanguages: Language[] = this.loader.getEntitiesByIds(this.selectedLanguages);
+        const nodeLanguages: Language[] = this.table.getSelectedEntities();
         const languages = await this.operations.updateNodeLanguages(this.nodeId, nodeLanguages).toPromise();
 
         this.closeFn(languages);

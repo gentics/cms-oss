@@ -84,7 +84,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 */
 	@Test
 	public void testSortOverviewByCDate() throws NodeException {
-		testSortOverviewByCDate(com.gentics.contentnode.object.File.class, "[CDate-File-100.plain, 100][CDate-File-300.plain, 300][CDate-File-400.plain, 600][CDate-File-200.plain, 800]");
+		testSortOverviewByCDate(com.gentics.contentnode.object.File.class, "[CDate-File-100.txt, 100][CDate-File-300.txt, 300][CDate-File-400.txt, 600][CDate-File-200.txt, 800]");
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 */
 	@Test
 	public void testSortOverviewByEDate() throws NodeException {
-		testSortOverviewByEDate(com.gentics.contentnode.object.File.class, "[EDate-File-200.plain, 200][EDate-File-400.plain, 400][EDate-File-300.plain, 700][EDate-File-100.plain, 900]");
+		testSortOverviewByEDate(com.gentics.contentnode.object.File.class, "[EDate-File-200.txt, 200][EDate-File-400.txt, 400][EDate-File-300.txt, 700][EDate-File-100.txt, 900]");
 	}
 
 	/**

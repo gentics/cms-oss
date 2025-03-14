@@ -28,9 +28,9 @@
                 </ng-container>
 
                 <ng-template #inheritedFromNotChangeable>
-                    <div *ngIf="value?.inheritedFromId && value.id !== value?.inheritedFromId && value?.masterName" class="gtx-inheritance-info">
+                    <div *ngIf="isChannel" class="gtx-inheritance-info">
                         <icon>input</icon>
-                        {{ 'node.derives_from' | i18n:{ master: value?.masterName } }}
+                        {{ 'node.derives_from' | i18n:{ master: masterName } }}
                     </div>
                 </ng-template>
             </ng-container>
@@ -150,7 +150,7 @@
 
             <div class="gtx-two-col-options">
                 <gtx-checkbox
-                    *ngIf="pubDirSegmentActivated !== undefined"
+                    *ngIf="pubDirSegmentActivated"
                     [label]="'node.pub_dir_segments' | i18n"
                     formControlName="pubDirSegment"
                 ></gtx-checkbox>

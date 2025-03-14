@@ -12,5 +12,4 @@ export * from './publish-queue';
 export * from './state-modules';
 export * from './tools';
 export * from './ui';
-export * from './usage';
 export * from './wastebin';

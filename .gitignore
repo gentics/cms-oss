@@ -183,6 +183,8 @@ node_modules/
 keys
 cache
 conf
+data
+ui-conf
 
 ### Log Files ###
 gentics.log*
@@ -192,3 +194,6 @@ velocity.log
 /*.sh
 .nx/
 !cms-integration-tests/test/resources/cms/conf
+data/
+logs/
+ui-conf/

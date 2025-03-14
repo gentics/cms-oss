@@ -25,7 +25,12 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { InitializableServiceBase } from '@gentics/cms-components';
-import { EditMode, ModalCloseError, ModalClosingReason, RepositoryBrowserOptions, wasClosedByUser } from '@gentics/cms-integration-api-models';
+import {
+    EditMode,
+    ModalCloseError, ModalClosingReason,
+    RepositoryBrowserOptions,
+    wasClosedByUser
+} from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
     CmsFormData,
@@ -712,7 +717,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)
             .then((targetFolder: Folder<Raw>) => this.folderActions.createSinglePageVariation(page, activeNodeId, targetFolder))
-            .then(() => this.usageActions.getUsage('page', page.id, activeNodeId))
             .catch(this.errorHandler.catch);
     }
 

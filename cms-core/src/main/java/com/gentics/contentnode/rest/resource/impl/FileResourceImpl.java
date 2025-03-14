@@ -1,62 +1,4 @@
-/*
- * @author norbert
- * @date 28.04.2010
- * @version $Id: FileResource.java,v 1.3.6.3 2011-03-28 10:55:36 johannes2 Exp $
- */
 package com.gentics.contentnode.rest.resource.impl;
-
-import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
-import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
-import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.MultiPart;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -120,6 +62,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.resource.BinaryOutput;
 import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
@@ -150,6 +93,58 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.MultiPart;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 
 /**
  * Resource for loading and manipulating Files in GCN
@@ -290,23 +285,9 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				throw new NodeException("Could not open file with id {" + id + "} for reading.");
 			}
 
-			return Response.ok(new StreamingOutput() {
-				public void write(OutputStream outputStream) throws IOException, WebApplicationException {
-
-					// Warning. Keep in mind that the transaction has already been committed when reaching this point.
-					// The CommittingResponseFilter has already committed the transaction.
-					try {
-						byte buf[] = new byte[1024];
-						int len;
-
-						while ((len = inputStream.read(buf)) > 0) {
-							outputStream.write(buf, 0, len);
-						}
-					} catch (Exception e) {
-						throw new WebApplicationException(e);
-					}
-				}
-			}, mediaType).build();
+			// Warning. Keep in mind that the transaction has already been committed when reaching this point.
+			// The CommittingResponseFilter has already committed the transaction.
+			return Response.ok(new BinaryOutput(inputStream), mediaType).build();
 		} catch (NodeException e) {
 			throw new WebApplicationException(e);
 		}
@@ -464,10 +445,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						"Needed parameter is missing. Filename parameter {" + FileUploadMetaData.META_DATA_FILE_NAME_KEY + "} is {" + qqFileUploaderFileName + "}");
 			}
 
-			String mimeType = FileUtil.getMimeTypeByExtension(metaData.getFilename());
-			boolean isImage = mimeType != null && mimeType.startsWith("image/");
-
-			metaData.setFilename(adjustFilename(isImage, metaData.getFilename(), owningNode));
 			metaData.setDescription(ObjectTransformer.getString(description, ""));
 			metaData.setOverwrite(overwrite ? "true" : "false");
 
@@ -530,34 +507,56 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
 				Node node = t.getObject(Node.class, nodeId);
 
-				fileName = adjustFilename(isImage, fileName, node);
-				// The mime type is used later on, so it is updated here in case the filename was changed by the WEBP_CONVERSION feature.
-				mimeType = FileUtil.getMimeTypeByExtension(fileName);
+				AtomicReference<String> mediaType = new AtomicReference<>(mimeType);
+				AtomicReference<java.io.File> tmpFile = new AtomicReference<>();
 
-				String sanitizedFilename = FileFactory.sanitizeName(fileName);
-				Integer fileId = null;
-				if (overwrite) {
-					// If overwrite is enabled and a file with the same filename exists in the given folder,
-					// overwrite it
-					File file = findFileByName(folderId, sanitizedFilename);
-					if (file != null && !file.isInherited()) {
-						fileId = file.getId();
+				try (InputStream inputStream = getFileInputStream(isImage, request.getInputStream(), mediaType, tmpFile, node)) {
+					boolean conversionFailed = false;
+
+					if (!mediaType.get().equals(mimeType)) {
+						fileName = adjustFilename(isImage, fileName, node);
+					} else {
+						if (isImage && !mimeType.equals("image/webp") && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
+							conversionFailed = true;
+						}
+					}
+
+					String sanitizedFilename = FileFactory.sanitizeName(fileName);
+					Integer fileId = null;
+					if (overwrite) {
+						// If overwrite is enabled and a file with the same filename exists in the given folder,
+						// overwrite it
+						File file = findFileByName(folderId, sanitizedFilename);
+						if (file != null && !file.isInherited()) {
+							fileId = file.getId();
+						}
+					}
+
+					Integer finalFileId = fileId;
+					FileUploadResponse response = (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
+						if (finalFileId == null) {
+							// Create a new file
+							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+						} else {
+							// Save data to an existing file
+							return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						}
+					});
+
+					if (conversionFailed) {
+						addConversionFailedWarning(response);
+					}
+
+					return response;
+				} finally {
+					var tmp = tmpFile.get();
+
+					if (tmp != null) {
+						if (!tmp.delete() && logger.isWarnEnabled()) {
+							logger.warn("Could not delete temporary file for upload: %s".formatted(tmp.getAbsolutePath()));
+						}
 					}
 				}
-
-				Integer finalFileId = fileId;
-				AtomicReference<String> mediaType = new AtomicReference<>(mimeType);
-				InputStream inputStream = getFileInputStream(isImage, request.getInputStream(), mediaType, node);
-
-				return (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
-					if (finalFileId == null) {
-						// Create a new file
-						return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
-					} else {
-						// Save data to an existing file
-						return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
-					}
-				});
 			}
 		} catch (Exception e) {
 			// If we encounter an error we just rollback
@@ -643,9 +642,19 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			if (ObjectTransformer.isEmpty(metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY))) {
 				String partFilename = fileDataBodyPart.getContentDisposition().getFileName();
 
+				if (StringUtils.isEmpty(partFilename)) {
+					partFilename = "new_file";
+				}
+
 				// Fix for IE filename field
 				partFilename = stripFilepath(partFilename);
 				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, partFilename);
+			}
+
+			if (metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY).toString().indexOf('.') < 0) {
+				metaData.put(
+					FileUploadMetaData.META_DATA_FILE_NAME_KEY,
+					metaData.get(META_DATA_FILE_NAME_KEY) + FileUtil.getExtensionByMimeType(partMediaType));
 			}
 
 			// Load needed information from metaData
@@ -676,30 +685,58 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 				owningNode = folder.getOwningNode();
 
-				String filename = adjustFilename(isImage, metaData.getFilename(), owningNode);
-				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, filename);
-
-				if (overwriteExisting && fileId == 0) {
-					// If overwrite is enabled and a file with the same filename exists in the given folder,
-					// overwrite it
-					File file = findFileByName(folder.getId(), FileFactory.sanitizeName(filename));
-
-					// Only overwrite local or localized files
-					if (file != null && !file.isInherited()) {
-						fileId = file.getId();
-					}
-				}
-
 				// If webp conversion is enabled and this is an image, the input stream has to be converted to webp.
 				AtomicReference<String> mediaType = new AtomicReference<>(partMediaType);
+				AtomicReference<java.io.File> tmpFile = new AtomicReference<>();
 
-				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, mediaType, folder.getNode())) {
+				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, mediaType, tmpFile, folder.getNode())) {
+					boolean conversionFailed = false;
+					String filename;
+
+					if (!mediaType.get().equals(partMediaType)) {
+						filename = adjustFilename(isImage, metaData.getFilename(), owningNode);
+						metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, filename);
+					} else {
+						if (isImage && !partMediaType.equals("image/webp") && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, owningNode)) {
+							conversionFailed = true;
+						}
+
+						filename = metaData.getFilename();
+					}
+
+					if (overwriteExisting && fileId == 0) {
+						// If overwrite is enabled and a file with the same filename exists in the given folder,
+						// overwrite it
+						File file = findFileByName(folder.getId(), FileFactory.sanitizeName(filename));
+
+						// Only overwrite local or localized files
+						if (file != null && !file.isInherited()) {
+							fileId = file.getId();
+						}
+					}
+
+					FileUploadResponse response;
+
 					if (fileId == 0) {
 						// Create a new file
-						return createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+						response = createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
-						return saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						response = saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+					}
+
+					if (conversionFailed) {
+						addConversionFailedWarning(response);
+					}
+
+					return response;
+				} finally {
+					var tmp = tmpFile.get();
+
+					if (tmp != null) {
+						if (!tmp.delete() && logger.isWarnEnabled()) {
+							logger.warn("Could not delete temporary file for upload: %s".formatted(tmp.getAbsolutePath()));
+						}
 					}
 				}
 			}
@@ -729,6 +766,25 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
+	/**
+	 * Add a warning message to the given response that the automatic image conversion to webp has failed.
+	 * @param response The response to add the message to.
+	 */
+	private void addConversionFailedWarning(FileUploadResponse response) {
+		var info = response.getResponseInfo();
+
+		info.setResponseCode(ResponseCode.OK);
+		info.setResponseMessage("Automatic webp conversion failed");
+
+		var i18nMessage = new CNI18nString("rest.file.upload.conversion.failure");
+
+		i18nMessage.setParameter("0", response.getFile().getId());
+
+		List<Message> messages = response.getMessages();
+
+		messages.add(new Message(Type.WARNING, i18nMessage.toString()));
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.api.FileResource#create(com.sun.jersey.multipart.MultiPart)
@@ -750,23 +806,18 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			// This also calls initialize()
 			authenticate(metaData);
 
-			String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
-			boolean isImage = mimeType != null && mimeType.startsWith("image/");
-
 			// Load needed information from metaData
 			Integer nodeId = metaData.getNodeId();
 			Folder folder = null;
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				folder = MiscUtils.load(Folder.class, metaData.getProperty(META_DATA_FOLDERID_KEY));
 			}
-			Node owningNode = folder.getOwningNode();
-
-			sentFilename = adjustFilename(isImage, sentFilename, owningNode);
-			metaData.setFilename(sentFilename);
 
 			// Create a transaction lock on the filename
 			// This lock doesn't handle all cases of filename collisions because the FUM
 			// can change the filename to anything else, but we ignore this case here.
+			metaData.setFilename(sentFilename);
+
 			String lockKey = FileFactory.sanitizeName(sentFilename);
 
 			fileUploadResponse = (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, 0));
@@ -797,8 +848,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	public FileUploadResponse create(FileCreateRequest request) {
 		int nodeId = request.getNodeId();
 		try (ChannelTrx trx = new ChannelTrx(nodeId)) {
-			int fileId = getOverwriteFileId(request);
-
 			// get source image from URL
 			HttpClient httpClient = new HttpClient();
 			GetMethod getMethod = new GetMethod(request.getSourceURL());
@@ -817,29 +866,51 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				throw new EntityNotFoundException("No folder with ID `" + request.getFolderId() + "'");
 			}
 
-			if (updateRequestName(isImage, request, getMethod, folder.getNode())) {
-				// The filename was changed from the one in the original request, so the file ID needs to be updated.
-				fileId = getOverwriteFileId(request);
-			}
+			fixRequestFilename(request, detectedMimeType);
 
 			String lockKey = FileFactory.sanitizeName(request.getName());
-			final int finalFileId = fileId;
 
 			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> {
 				try (ChannelTrx ctrx = new ChannelTrx(nodeId)) {
-					AtomicReference<String> mediaType = new AtomicReference<>(null);
+					AtomicReference<String> mediaType = new AtomicReference<>(detectedMimeType);
+					AtomicReference<java.io.File> tmpFile = new AtomicReference<>();
 
-					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), mediaType, folder.getNode())) {
-						if (finalFileId == 0) {
+					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), mediaType, tmpFile, folder.getNode())) {
+						boolean conversionFailed = false;
+
+						if (!mediaType.get().equals(detectedMimeType)) {
+							updateRequestName(isImage, request, getMethod, folder.getNode());
+						} else if (isImage && !detectedMimeType.equals("image/webp") && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, folder.getNode())) {
+							conversionFailed = true;
+						}
+
+						int fileId = getOverwriteFileId(request);
+						FileUploadResponse response;
+
+						if (fileId == 0) {
 							// Create a new file
-							return createFile(fileDataInputStream, request.getFolderId(), request.getNodeId(), request.getName(),
+							response = createFile(fileDataInputStream, request.getFolderId(), request.getNodeId(), request.getName(),
 								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
-							return saveFile(fileDataInputStream, finalFileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+							response = saveFile(fileDataInputStream, fileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
 						}
+
+						if (conversionFailed) {
+							addConversionFailedWarning(response);
+						}
+
+						return response;
 					} catch (IOException e) {
 						throw new NodeException(e);
+					} finally {
+						var tmp = tmpFile.get();
+
+						if (tmp != null) {
+							if (!tmp.delete() && logger.isWarnEnabled()) {
+								logger.warn("Could not delete temporary file for upload: %s".formatted(tmp.getAbsolutePath()));
+							}
+						}
 					}
 				}
 			});
@@ -864,13 +935,37 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param inputStream The input stream to convert.
 	 * @return The possibly converted input stream.
 	 */
-	private InputStream getFileInputStream(boolean isImage, InputStream inputStream, AtomicReference<String> mediaType, Node node) throws IOException {
+	private InputStream getFileInputStream(boolean isImage, InputStream inputStream, AtomicReference<String> mediaType, AtomicReference<java.io.File> tmpFile, Node node) throws IOException {
 		if (!isImage || !NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
 			return inputStream;
 		}
 
-		ImmutableImage orig = ImmutableImage.loader().fromStream(inputStream);
+		var tmp = Files.createTempFile("cms-fileupload", null).toFile();
+
+		// To prevent having the whole image in memory, it is written to a temporary file.
+		try (var fileOutputStream = new FileOutputStream(tmp)) {
+			inputStream.transferTo(fileOutputStream);
+		}
+
+		ImmutableImage orig;
+
+		try {
+			orig = ImmutableImage.loader().fromStream(new FileInputStream(tmp));
+
+			// The temp file will be deleted immediately, do not return it via tmpFile.
+			tmpFile.set(null);
+
+			if (!tmp.delete() && logger.isWarnEnabled()) {
+				logger.warn("Could not delete temporary file for upload: %s".formatted(tmp.getAbsolutePath()));
+			}
+		} catch (Exception e) {
+			tmpFile.set(tmp);
+
+			return new FileInputStream(tmp);
+		}
+
 		mediaType.set("image/webp");
+
 		return orig.forWriter(WebpWriter.DEFAULT).stream();
 	}
 
@@ -896,7 +991,23 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
-	 * Update the filename in the given request, if it is empty or the extension needs to be replaced with ".webp".
+	 * Make sure the filename of {@code request} is not empty and has an extension.
+	 *
+	 * @param request The file create request.
+	 * @param mimeType The detected filename.
+	 */
+	private void fixRequestFilename(FileCreateRequest request, String mimeType) {
+		if (ObjectTransformer.isEmpty(request.getName())) {
+			request.setName("new_file");
+		}
+
+		if (request.getName().indexOf('.') < 0) {
+			request.setName(request.getName() + FileUtil.getExtensionByMimeType(mimeType));
+		}
+	}
+
+	/**
+	 * Update the filename in the given request, if the extension needs to be replaced with ".webp".
 	 *
 	 * <p>
 	 * When the extension is changed, the extensions of nice and alternate URLs are also changed.
@@ -906,15 +1017,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param request The request to update.
 	 * @param getMethod The response of loading the binary.
 	 * @param node The node of the target file.
-	 * @return Whether the {@link FileCreateRequest#getName() name} field in the request was changed.
 	 */
-	private boolean updateRequestName(boolean isImage, FileCreateRequest request, GetMethod getMethod, Node node) throws IOException {
-		String origName = request.getName();
-
-		if (ObjectTransformer.isEmpty(request.getName())) {
-			request.setName("new_file");
-		}
-
+	private void updateRequestName(boolean isImage, FileCreateRequest request, GetMethod getMethod, Node node) throws IOException {
 		if (isImage && NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
 			request.setName(adjustImageFilename(request.getName()));
 
@@ -927,17 +1031,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			request.setAlternateURLs(adaptedAltUrls);
-		} else if (request.getName().indexOf('.') < 0) {
-			String detectedMimeType = FileUtil.getMimeTypeByContent(new ByteArrayInputStream(getMethod.getResponseBody()), request.getName());
-
-			if (!"application/octet-stream".equals(detectedMimeType) && detectedMimeType.lastIndexOf('/') > 0) {
-				String subtype = detectedMimeType.substring(detectedMimeType.lastIndexOf('/') + 1);
-
-				request.setName(request.getName() + "." + subtype);
-			}
 		}
-
-		return !Objects.equals(origName, request.getName());
 	}
 
 	/**
@@ -1655,7 +1749,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
-							File file = getFile(String.valueOf(fileId), false);
+							File file = getFile(java.lang.String.valueOf(fileId), false);
 
 							// now delete the file
 							file.delete();
@@ -2141,4 +2235,5 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 		return null;
 	}
+
 }

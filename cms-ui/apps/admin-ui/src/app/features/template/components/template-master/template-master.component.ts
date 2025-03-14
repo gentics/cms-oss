@@ -2,6 +2,7 @@ import {
     AdminUIEntityDetailRoutes,
     AdminUIModuleRoutes,
     BO_PERMISSIONS,
+    EntityTableActionClickEvent,
     NodeBO,
     ROUTE_DETAIL_OUTLET,
     ROUTE_ENTITY_LOADED,
@@ -34,7 +35,7 @@ import {
     UnlocalizeRequest,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { ModalService, TableAction, TableActionClickEvent, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
+import { ModalService, TableAction, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
@@ -190,14 +191,8 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
     }
 
-    public handleAction(event: TableActionClickEvent<TemplateBO>): void {
-        const getTemplates = () => {
-            if (!event.selection) {
-                return [event.item];
-            }
-
-            return this.loader.getEntitiesByIds(this.selected);
-        }
+    public handleAction(event: EntityTableActionClickEvent<TemplateBO>): void {
+        const items = event.selection ? event.selectedItems : [event.item];
 
         switch (event.actionId as Action) {
             case Action.COPY:
@@ -205,19 +200,19 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 return;
 
             case Action.LINK_TO_FOLDER:
-                this.linkTemplatesToFolders(getTemplates());
+                this.linkTemplatesToFolders(items);
                 return;
 
             case Action.LINK_TO_NODE:
-                this.linkTemplatesToNodes(getTemplates());
+                this.linkTemplatesToNodes(items);
                 return;
 
             case Action.LOCALIZE:
-                this.localizeTemplate(getTemplates());
+                this.localizeTemplate(items);
                 return;
 
             case Action.UNLOCALIZE:
-                this.unlocalizeTemplate(getTemplates());
+                this.unlocalizeTemplate(items);
                 return;
         }
     }

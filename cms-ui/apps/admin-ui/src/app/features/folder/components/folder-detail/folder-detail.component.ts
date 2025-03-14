@@ -113,15 +113,7 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
             map((updatedFolder: Folder<Raw>) => this.currentEntity = updatedFolder),
             tap(() => {
                 this.fgProperties.markAsPristine();
-                let didReload = false;
-                const row = this.trableLoader.flatStore[this.currentEntity.id];
-                if (row) {
-                    this.trableLoader.reloadRow(row, null, true).subscribe();
-                    didReload = true;
-                }
-                if (!didReload) {
-                    this.trableLoader.reload();
-                }
+                this.trableLoader.reload();
             }),
         ).toPromise();
     }

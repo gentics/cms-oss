@@ -321,10 +321,11 @@
                         <goals>
                             <goal>npm-transform</goal>
                         </goals>
+                        <phase>process-resources</phase>
 
                         <configuration>
                             <skip>${ui.skip.report}</skip>
-                            <dependenciesFile>${project.build.directory}/dependencies.json</dependenciesFile>
+                            <dependenciesFile>${project.build.directory}/prepared_dependencies.json</dependenciesFile>
                             <outdatedFile>${project.build.directory}/outdated.json</outdatedFile>
                             <componentName>CMS OSS</componentName>
                             <moduleName>User Interface</moduleName>

@@ -19,3 +19,9 @@
         margin-right: 3px;
     }
 }
+
+.property-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}

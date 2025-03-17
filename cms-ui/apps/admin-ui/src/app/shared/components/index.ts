@@ -1,11 +1,11 @@
 export * from './assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
 export * from './assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 export * from './assign-entity-to-package-modal/assign-entity-to-package-modal.component';
+export * from './assign-group-to-users-modal/assign-group-to-users-modal.component';
 export * from './assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';
 export * from './assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
 export * from './assign-packages-to-node-modal/assign-packages-to-node-modal.component';
 export * from './assign-user-to-groups-modal/assign-user-to-groups-modal.component';
-export * from './assign-group-to-users-modal/assign-group-to-users-modal.component';
 export * from './base-detail/base-detail.component';
 export * from './base-entity-table/base-entity-table.component';
 export * from './base-entity-trable/base-entity-trable.component';
@@ -28,6 +28,7 @@ export * from './edit-permissions-modal/edit-permissions-modal.component';
 export * from './entity-detail-header/entity-detail-header.component';
 export * from './entity-picker-modal/entity-picker-modal.component';
 export * from './entity-picker/entity-picker.component';
+export * from './folder-picker/folder-picker.component';
 export * from './folder-trable/folder-trable.component';
 export * from './generic-router-outlet/generic-router-outlet.component';
 export * from './group-table/group-table.component';
@@ -62,3 +63,4 @@ export * from './widget-publishing-process';
 export * from './widget-publishing-process-total';
 export * from './wizard-modal/wizard-modal.component';
 export * from './wizard/wizard.component';
+

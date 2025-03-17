@@ -138,27 +138,29 @@
                 </span>
             </ng-container>
 
-            <div class="gtx-form-section-title">{{ 'node.title_content' | i18n }}</div>
+            <div class="property-section">
+                <div class="gtx-form-section-title">{{ 'node.title_content' | i18n }}</div>
 
-            <div class="gtx-two-col-options">
-                <gtx-checkbox
-                    *ngIf="pubDirSegmentActivated"
-                    [label]="'node.pub_dir_segments' | i18n"
-                    formControlName="pubDirSegment"
-                ></gtx-checkbox>
+                <div class="gtx-two-col-options">
+                    <gtx-checkbox
+                        *ngIf="pubDirSegmentActivated"
+                        [label]="'node.pub_dir_segments' | i18n"
+                        formControlName="pubDirSegment"
+                    ></gtx-checkbox>
+                </div>
+
+                <ng-container *ngIf="mode !== NodePropertiesMode.CREATE">
+                    <gtx-folder-picker
+                        [label]="'node.default_file_folder' | i18n"
+                        formControlName="defaultFileFolderId"
+                    ></gtx-folder-picker>
+
+                    <gtx-folder-picker
+                        [label]="'node.default_image_folder' | i18n"
+                        formControlName="defaultImageFolderId"
+                    ></gtx-folder-picker>
+                </ng-container>
             </div>
-
-            <ng-container *ngIf="mode !== NodePropertiesMode.CREATE">
-                <gtx-input
-                    [label]="'node.default_file_folder' | i18n"
-                    formControlName="defaultFileFolderId"
-                ></gtx-input>
-
-                <gtx-input
-                    [label]="'node.default_file_folder' | i18n"
-                    formControlName="defaultImageFolderId"
-                ></gtx-input>
-            </ng-container>
         </div>
 
     </div>

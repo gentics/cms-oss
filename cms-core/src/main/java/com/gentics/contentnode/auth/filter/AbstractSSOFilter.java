@@ -207,7 +207,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	 * @param restrictions The node restrictions for group assignment.
 	 */
 	private void addInitGroupMapping(Map<Integer, Set<Integer>> mapping, String groupName, Set<Integer> restrictions) throws NodeException {
-		getGroupId(groupName).ifPresent(integer -> mapping.put(integer, restrictions));
+		getGroupId(groupName).ifPresent(groupId -> mapping.put(groupId, restrictions));
 	}
 
 	/**

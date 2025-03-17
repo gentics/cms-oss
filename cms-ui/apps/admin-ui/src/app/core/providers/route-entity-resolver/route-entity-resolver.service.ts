@@ -15,6 +15,7 @@ import {
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
+import { NodeHandlerService } from '../node-handler/node-handler.service';
 import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
 import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
 import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
@@ -64,6 +65,7 @@ export class RouteEntityResolverService {
         private devToolPkg: DevToolPackageHandlerService,
         private lang: LanguageHandlerService,
         private objPropCat: ObjectPropertyCategoryHandlerService,
+        private node: NodeHandlerService,
         private objPro: ObjectPropertyHandlerService,
     ) {}
 
@@ -159,6 +161,9 @@ export class RouteEntityResolverService {
 
             case EditableEntity.OBJECT_PROPERTY_CATEGORY:
                 return this.objPropCat as any;
+
+            case EditableEntity.NODE:
+                return this.node as any;
 
             default:
                 return null;

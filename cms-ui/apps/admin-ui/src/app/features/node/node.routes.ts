@@ -1,9 +1,14 @@
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, NodeDetailTabs, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
-import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
-import { inject } from '@angular/core';
+import {
+    AdminUIEntityDetailRoutes,
+    createEntityEditorRoutes,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    NodeDetailTabs,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+} from '@admin-ui/common';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { NodeDetailComponent, NodeMasterComponent } from './components';
-import { CanActivateNodeGuard } from './providers';
+import { NodeEditorComponent, NodeMasterComponent } from './components';
 
 export const NODE_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -17,30 +22,16 @@ export const NODE_ROUTES: GcmsAdminUiRoute[] = [
             typePermissions: [],
         },
         children: [
-            {
-                path: `:id/:${EDITOR_TAB}`,
-                component: NodeDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.CONTENT,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateNodeGuard],
-                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
-            {
-                path: ':id',
-                redirectTo: `:id/${NodeDetailTabs.PROPERTIES}`,
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.NODE, NodeEditorComponent, NodeDetailTabs.PROPERTIES, {
+                [ROUTE_PERMISSIONS_KEY]: [
+                    {
+                        type: AccessControlledType.CONTENT,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
 

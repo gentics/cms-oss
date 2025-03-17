@@ -202,7 +202,6 @@ const PROVIDERS: any[] = [
     I18nRelativeDateService,
     MarkupLanguageDataService,
     NodeDataService,
-    NodeDataService,
     NotificationService,
     PackageCheckTrableLoaderService,
     RoleDataService,

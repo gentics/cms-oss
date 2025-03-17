@@ -12,11 +12,6 @@ export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'pu
 'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
 'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
 
-const FILE_SYSTEM_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
-    'publishFsPages',
-    'publishFsFiles',
-];
-
 const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishContentMap',
     'publishContentMapFiles',
@@ -54,7 +49,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
     public contentRepositories: ContentRepository<Raw>[] = [];
 
-    public publishDirsLinked: boolean;
+    public publishDirsLinked: boolean = null;
 
     private previousPublishCr = false;
 
@@ -79,6 +74,8 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
     protected createForm(): FormGroup<FormProperties<NodePublishingPropertiesFormData>> {
         this.previousPublishCr = this.value?.publishContentMap ?? false;
+
+        this.initLinkedDir();
 
         return new FormGroup<FormProperties<NodePublishingPropertiesFormData>>({
             disablePublish: new FormControl(this.value?.disablePublish),
@@ -107,13 +104,12 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
         loud = !!loud;
         const options = { emitEvent: loud, onlySelf: true };
 
-        setControlsEnabled(this.form, FILE_SYSTEM_CONTROLS, value?.publishFs, options);
         setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
         const crAllowsDirs = this.checkContentRepository();
 
-        setControlsEnabled(this.form, ['publishDir'], !!value?.publishFs && value?.publishFsPages && crAllowsDirs, options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], !!value?.publishFs && value?.publishFsFiles && crAllowsDirs, options);
+        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && crAllowsDirs, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && crAllowsDirs, options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();
@@ -137,20 +133,14 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
         this.checkPublishDirectories(loud);
     }
 
+    protected override onValueChange(): void {
+        this.initLinkedDir();
+
+        super.onValueChange();
+    }
+
     protected assembleValue(value: NodePublishingPropertiesFormData): NodePublishingPropertiesFormData {
-        const tmp: NodePublishingPropertiesFormData = {...value};
-
-        /* Defaulting is done in the parent before sending it to the API */
-
-        // // Default the controls to false (If they are disabled, the value is `null`)
-        // [...CR_CONTROLS, ...FILE_SYSTEM_CONTROLS].forEach(field => {
-        //     (tmp as any)[field] = tmp[field] ?? false;
-        // });
-        // PUBLISH_DIR_CONTROLS.forEach(field => {
-        //     (tmp  as any)[field] = tmp[field] || '';
-        // });
-
-        return tmp;
+        return value;
     }
 
     protected checkContentRepository(): boolean {
@@ -166,22 +156,35 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
         return enabled;
     }
 
+    protected initLinkedDir(): void {
+        if (
+            this.value != null
+            && this.value.publishDir
+            && this.value.binaryPublishDir
+            && this.publishDirsLinked == null
+        ) {
+            this.publishDirsLinked = this.value.publishDir === this.value.binaryPublishDir;
+        }
+    }
+
     protected checkPublishDirectories(loud: boolean = false): void {
         // Nothing to do if they are not linked
         if (!this.publishDirsLinked) {
             return;
         }
 
-        const dir = this.form.controls.publishDir.value;
-        const binDirCtl = this.form.controls.binaryPublishDir;
+        const value = this.form.value;
 
-        if (dir !== binDirCtl.value) {
-            binDirCtl.setValue(dir, { emitEvent: loud });
+        if (value.publishDir !== value.binaryPublishDir) {
+            this.form.controls.binaryPublishDir.setValue(value.publishDir, {
+                emitEvent: loud,
+            });
+            this.triggerChange(this.form.value as any);
         }
     }
 
     togglePublishDirLink(): void {
         this.publishDirsLinked = !this.publishDirsLinked;
-        this.checkPublishDirectories();
+        this.checkPublishDirectories(true);
     }
 }

@@ -18,42 +18,45 @@
                 formControlName="publishFs"
             ></gtx-checkbox>
 
-            <gtx-checkbox
-                [label]="'node.pub_pages' | i18n"
-                formControlName="publishFsPages"
-            ></gtx-checkbox>
-
             <div class="linkable-fields-wrapper">
-                <gtx-input
-                    type="text"
-                    maxlength="255"
-                    formControlName="publishDir"
-                    [label]="('node.pub_pages_dir' | i18n)"
-                    [placeholder]="'node.pub_pages_dir' | i18n"
-                ></gtx-input>
+                <div class="linkable-fields-content">
+                    <gtx-checkbox
+                        [label]="'node.pub_pages' | i18n"
+                        formControlName="publishFsPages"
+                    ></gtx-checkbox>
+
+                    <gtx-input
+                        type="text"
+                        maxlength="255"
+                        formControlName="publishDir"
+                        [label]="('node.pub_pages_dir' | i18n)"
+                        [placeholder]="'node.pub_pages_dir' | i18n"
+                    ></gtx-input>
+
+                    <gtx-checkbox
+                        formControlName="publishFsFiles"
+                        [label]="'node.pub_files' | i18n"
+                    ></gtx-checkbox>
+
+                    <gtx-input
+                        type="text"
+                        maxlength="255"
+                        formControlName="binaryPublishDir"
+                        [readonly]="publishDirsLinked"
+                        [label]="('node.pub_files_dir' | i18n)"
+                        [placeholder]="'node.pub_files_dir' | i18n"
+                    ></gtx-input>
+                </div>
 
                 <div
                     class="link-inputs no-select"
                     [title]="'editor.node_properties_share_directories' | i18n"
                     [class.active]="publishDirsLinked"
-                    (click)="togglePublishDirLink()"
                 >
-                    <icon>link</icon>
+                    <button class="link-button" [disabled]="disabled" (click)="togglePublishDirLink()">
+                        <icon>{{ publishDirsLinked ? 'link_off' : 'link' }}</icon>
+                    </button>
                 </div>
-
-                <gtx-checkbox
-                    formControlName="publishFsFiles"
-                    [label]="'node.pub_files' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-input
-                    type="text"
-                    maxlength="255"
-                    formControlName="binaryPublishDir"
-                    [readonly]="publishDirsLinked"
-                    [label]="('node.pub_files_dir' | i18n)"
-                    [placeholder]="'node.pub_files_dir' | i18n"
-                ></gtx-input>
             </div>
         </div>
 

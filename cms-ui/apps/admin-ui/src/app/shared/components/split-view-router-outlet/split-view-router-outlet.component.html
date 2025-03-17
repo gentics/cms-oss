@@ -1,6 +1,6 @@
 <gtx-split-view-container
     [initialSplit]="25"
-    [rightPanelVisible]="detailOutlet.isActivated"
+    [rightPanelVisible]="detailsVisible"
     [class.focusMode]="focusMode$ | async"
     [class.rightPanelFocused]="editorIsFocused$ | async"
     [rightPanelVisible]="editorIsOpen$ | async"
@@ -28,7 +28,11 @@
         ></gtx-loading-overlay>
 
         <div class="detail-route-wrapper" [hidden]="loadingDetailDelayed$ | async">
-            <router-outlet name="detail" #detailOutlet="outlet"></router-outlet>
+            <router-outlet
+                name="detail"
+                (activate)="updateDetailsActivation(true)"
+                (deactivate)="updateDetailsActivation(false)"
+            ></router-outlet>
         </div>
     </div>
 </gtx-split-view-container>

@@ -52,9 +52,11 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService, TableRow } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, combineLatest, Observable, of } from 'rxjs';
 import {
     delay,
+    distinctUntilChanged,
     filter,
     map,
     startWith,
@@ -186,6 +188,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             map(([userState]) => userState),
             map((userState: UIStateModel) => this.entityData.getEntity(userState.focusEntityId)),
             filter((entity: Node<Raw>) => entity instanceof Object),
+            distinctUntilChanged(isEqual),
             tap(entity => {
                 this.isChildNode = false;
                 if (entity.id !== entity.masterNodeId) {
@@ -220,7 +223,6 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             takeUntil(this.stopper.stopper$),
         ).subscribe((currRootFolder) => {
             // fill form with entity property values
-            this.onNodeChange(this.currentEntity);
             this.onRootFolderChange(currRootFolder);
             this.changeDetectorRef.markForCheck();
         });
@@ -365,6 +367,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         this.currentEntity = newNode;
         this.currentNodeId = Number(newNode.id);
         this.isLanguagesChanged = false;
+        this.onNodeChange(newNode);
     }
 
     languagesLoaded(event: TableLoadEndEvent<LanguageBO>): void {

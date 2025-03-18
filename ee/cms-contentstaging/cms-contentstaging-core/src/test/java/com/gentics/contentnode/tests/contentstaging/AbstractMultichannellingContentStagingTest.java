@@ -111,9 +111,7 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, localizedGlobalId, false));
 
 		// delete object in CMS
-		consume(f -> f.delete(true), localizedObject);
-		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
-		assertThat(localizedObject).as("Deleted object").isNull();
+		localizedObject = delete(localizedObject);
 
 		cleanDirtQueueAndPublishQueue();
 
@@ -147,9 +145,7 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, objectGlobalId, false));
 
 		// delete object in CMS
-		consume(f -> f.delete(true), stagedObject);
-		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
-		assertThat(stagedObject).as("Deleted object").isNull();
+		stagedObject = delete(stagedObject);
 
 		cleanDirtQueueAndPublishQueue();
 
@@ -188,12 +184,8 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, masterGlobalId, false));
 
 		// delete objects in CMS
-		consume(f -> f.delete(true), localizedObject);
-		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
-		assertThat(localizedObject).as("Deleted object").isNull();
-		consume(f -> f.delete(true), masterObject);
-		masterObject = supply(t -> t.getObject(clazz, masterGlobalId));
-		assertThat(masterObject).as("Deleted object").isNull();
+		localizedObject = delete(localizedObject);
+		masterObject = delete(masterObject);
 
 		cleanDirtQueueAndPublishQueue();
 
@@ -612,5 +604,13 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 				assertDirtedObjects(File.class, dirtNode, (File[]) fileSet.toArray(new File[fileSet.size()]));
 			}
 		});
+	}
+
+	protected T delete(T object) throws NodeException {
+		String globalId = execute(o -> o.getGlobalId().toString(), object);
+		consume(f -> f.delete(true), object);
+		object = supply(t -> t.getObject(clazz, globalId));
+		assertThat(object).as("Deleted object").isNull();
+		return null;
 	}
 }

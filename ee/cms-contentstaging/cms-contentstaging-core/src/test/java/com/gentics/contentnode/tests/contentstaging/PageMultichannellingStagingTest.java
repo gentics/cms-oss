@@ -449,6 +449,13 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 		}).publish().build();
 	}
 
+	/**
+	 * Assert that the object in the CMS exists and is a master in the given folder using the given language
+	 * @param object object to check
+	 * @param folder asserted folder
+	 * @param languageCode asserted language code
+	 * @throws NodeException
+	 */
 	protected void assertMasterObject(Page object, Folder folder, String languageCode) throws NodeException {
 		assertThat(object).as("Staged master page")
 			.isNotNull()
@@ -463,6 +470,14 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 		assertMasterObject(object, folder, "de");
 	}
 
+	/**
+	 * Assert that the given objects are master and localized copy in the given folder using the given language
+	 * @param masterObject master
+	 * @param localizedObject localized copy
+	 * @param folder asserted folder
+	 * @param languageCode asserted language code
+	 * @throws NodeException
+	 */
 	protected void assertLocalizedObject(Page masterObject, Page localizedObject, Folder folder, String languageCode) throws NodeException {
 		assertThat(localizedObject).as("Staged localized page")
 			.isNotNull()
@@ -478,6 +493,14 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 		assertLocalizedObject(masterObject, localizedObject, folder, "de");
 	}
 
+	/**
+	 * Assert that the object in the CMS exists and is local to the channel in the given folder using the given language
+	 * @param object object to check
+	 * @param channel expected channel
+	 * @param folder asserted folder
+	 * @param languageCode asserted language code
+	 * @throws NodeException
+	 */
 	protected void assertLocalObject(Page object, Node channel, Folder folder, String languageCode) throws NodeException {
 		assertThat(object).as("Staged local page")
 			.isNotNull()
@@ -519,6 +542,12 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 			.isDisinheritedByDefault();
 	}
 
+	/**
+	 * Assert that the given pages are language variants of each other
+	 * @param de german language variant
+	 * @param en english language variant
+	 * @throws NodeException
+	 */
 	protected void assertLanguageVariants(Page de, Page en) throws NodeException {
 		assertThat(de).as("Staged german page")
 			.isNotNull()

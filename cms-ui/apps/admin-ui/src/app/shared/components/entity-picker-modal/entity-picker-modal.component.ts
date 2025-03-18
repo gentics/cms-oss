@@ -1,5 +1,8 @@
 import { BO_ID, BO_NODE_ID, ContentItemBO, ContentItemTypes, PickableEntity } from '@admin-ui/common';
+import { ErrorHandler } from '@admin-ui/core';
+import { ContentItemTrableLoaderService } from '@admin-ui/shared/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal, TrableRow } from '@gentics/ui-core';
 
 @Component({
@@ -16,16 +19,24 @@ export class EntityPickerModalComponent
     public types: ContentItemTypes[] = [];
 
     @Input()
+    public nodesAsFolder = false;
+
+    @Input()
     public multiple = false;
 
     @Input()
     public selected: PickableEntity | PickableEntity[];
+
+    public loading = false;
 
     public selectionMap: { [id: string]: ContentItemBO } = {};
     public selectedIds: string[];
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected client: GCMSRestClientService,
+        protected loader: ContentItemTrableLoaderService,
+        protected errorHandler: ErrorHandler,
     ) {
         super();
     }
@@ -46,15 +57,42 @@ export class EntityPickerModalComponent
         this.selectedIds = event;
     }
 
-    confirmSelection(): void {
-        let selected = this.selectedIds
-            .map(id => this.selectionMap[id])
-            .filter(item => item)
-            .map(item => ({
+    async confirmSelection(): Promise<void> {
+        const selected: PickableEntity[] = [];
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
+        for (const id of this.selectedIds) {
+            const item = this.selectionMap[id];
+
+            if (this.nodesAsFolder && (item.type === 'channel' || item.type === 'node')) {
+                try {
+                    const folder = await this.client.folder.get(item.folderId || item.id).toPromise();
+                    const folderBO = this.loader.mapToBusinessObject(folder.folder, item);
+
+                    selected.push({
+                        type: 'folder',
+                        nodeId: item.id,
+                        entity: folderBO,
+                    });
+                    continue;
+                } catch (err) {
+                    this.errorHandler.catch(err);
+                    this.loading = false;
+                    this.changeDetector.markForCheck();
+                    return;
+                }
+            }
+
+            selected.push({
                 type: item.type,
                 nodeId: item[BO_NODE_ID],
                 entity: item,
-            }));
+            });
+        }
+
+        this.loading = false;
+        this.changeDetector.markForCheck();
 
         if (!this.multiple) {
             this.closeFn(selected?.[0]);

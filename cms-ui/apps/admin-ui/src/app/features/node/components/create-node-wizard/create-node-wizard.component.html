@@ -45,8 +45,9 @@
             <div>
                 <form class="gtx-entity-details-form">
                     <gtx-node-features
+                        *ngIf="nodeFeatures$ | async as features"
                         [formControl]="fgNodeFeatures"
-                        [availableFeatures]="nodeFeatures$ | async"
+                        [availableFeatures]="features"
                     ></gtx-node-features>
                 </form>
             </div>

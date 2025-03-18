@@ -830,7 +830,7 @@ export interface AbstractNodeAPI extends BasicAPI {
     settings: (id: number | string) => NodeSettingsResponse;
 
     listFeatures: (options?: NodeFeatureListRequestOptions) => FeatureModelListResponse;
-    instanceFeatures: (id: number | string, options?: NodeFeatureListRequestOptions) => FeatureModelListResponse;
+    instanceFeatures: (id: number | string, options?: NodeFeatureListRequestOptions) => ListResponse<NodeFeature>;
     activateFeature: (id: number | string, feature: NodeFeature) => Response;
     deactivateFeature: (id: number | string, feature: NodeFeature) => Response;
 

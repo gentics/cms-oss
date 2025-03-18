@@ -1,0 +1,145 @@
+h2. SSO with Keycloak
+
+"Keycloak":http://www.keycloak.org/ is an identity and access management system
+providing a trusted way for an application to authenticate a user via different
+authentications protocols.
+
+endprologue.
+
+NOTE: Gentics CMS supports Keycloak versions 19.x to 26.x.
+
+h3. Server side configuration
+
+Activate the Keycloak feature and add configuration of the keycloak server as well as for user creation callbacks and initial groups:
+
+<shell filename="keycloak.yml">
+feature:
+  keycloak: true
+  keycloak_signout: true
+keycloak:
+  auth-server-url: https://your.keycloak.instance/
+  realm: CMP
+  resource: "cms"
+  # keys: "keycloak/keys.json"
+  user_created_callback: your.companyname.custom.SsoUserCreated
+  init_groups: |
+    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
+      [3],
+      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
+        [4],
+        [5]
+      )
+    )
+</shell>
+
+The configuration entries @auth-server-url@, @realm@ and @resource@ correspond exactly
+to the respective fields in the @keycloak.json@ you can
+generate in the Keycloak admin front-end.
+
+If @keys@ is set to the relative path to a .json file (relativ to the conf path) containing the keys, which were downloaded via the URL
+@https://your.keycloak.instance/realms/[realmname]/protocol/openid-connect/certs@, those keys will be used to validate the access tokens.
+Otherwise, the CMS server will try to download the keys directly from keycloak.
+
+The optional setting @user_created_callback@ is the full class name of a callback implementing
+"SsoUserCreatedCallback":https://www.gentics.com/Content.Node/guides/api-javadoc/com/gentics/api/contentnode/auth/filter/SsoUserCreatedCallback.html.
+When a new user is created by the SSO process, the callback will be executed with the data of the new user.
+The @attributes@ map contains the following information:
+* @firstname@: the "given name" claim in the access token
+* @lastname@: the "family name" claim in the access token
+* @email@: the "email" claim in the access token
+* @roles@: a map containing
+** @realm@: the list of realm roles for the user
+** @resource@: a mapping from resource names to the respective resource roles for the user
+
+The init parameter @initGroups@ is an expression that must return the IDs of the initial groups, new users shall
+be put in. The expression can resolve systemuser attributes via @user.*@ or claims from the access token via
+@attr.*@ (the most interesting attributes probably being the realm roles @attr.roles.realm@, and the resource
+specific roles @attr.roles.resource.RESOURCENAME@).
+
+WARNING: For security reasons, it is not possible to add users to groups 1 or 2.
+
+h3. Required/Supported claims in the JWT
+
+When using Keycloak, the CMS will access the following claims in the JWT:
+
+|_. Name             |_. Description                               |_. Required |
+| preferred_username | Mapped to the login name of the user        | yes        |
+| given_name         | Mapped to the first name of the user        | no         |
+| family_name        | Mapped to the last name of the user         | no         |
+| email              | Mapped to the email address of the user     | no         |
+| realm_access       | Can be used for mapping roles to CMS groups | no         |
+| resource_access    | Can be used for mapping roles to CMS groups | no         |
+
+h3. Synchronizing group IDs
+
+Setting `sync_groups` to `true` in the Keycloak configuration section will cause synchronization of user groups on every login
+
+<javascript filename="conf/*.yml">
+keycloak:
+  sync_groups: true
+</javascript>
+
+|_. Name |_. Description |_. Default |
+| keycloak.init_groups | Expression that will return the group IDs for the users. All attributes passed along by the authenticating system will be available in the object +attr+ | attr.group |
+| keycloak.sync_groups | When set to true, groups will be synchronized on every login request, not only when the user is created | false |
+
+h4. Restricting group assignments to nodes
+
+In order to restrict group assignments to nodes/channels, the group IDs must be encoded like +[groupId]|[nodeId]~[nodeId]~[nodeId]...+.
+
+The following example shows the definition of the initial groups statically set to the group +17+ (restricted to nodes +8+ and +11+) and the group +18+ (not restricted to specific nodes):
+
+<javascript>
+keycloak:
+  init_groups: '["17|8~11", 18]'
+</javascript>
+
+h3. Using an Identity Provider
+
+When using an "identity provider":https://www.keycloak.org/docs/latest/server_admin/#_identity_broker
+the following two settings in the advanced OpenID Connect settings are important to prevent unwanted
+redirect behavior:
+
+# "Prompt": Set to "Select account"
+# "Accepts prompt=none forward from client": Set to "Off"
+
+!images/keycloak-ip-config.png(Keycloak - Identity Provider configuration)!
+
+h3. Setup Content Security Policy
+
+The Administrator User Interface requires some additional settings in Keycloak, to work as expected.
+Update the "Content Security Policy" of your Keycloak realm:
+
+# Select your Realm in the top left corner
+# Select the tab "Realm Settings" in the "Configure" category on the left sidebar
+# Select the tab "Security Defenses" on the top bar
+
+Adopt the "Content-Security-Policy" to allow the embedding from your CMS installation host:
+
+<shell>
+frame-src 'self'; frame-ancestors 'self'; object-src 'none';
+frame-src 'self'; frame-ancestors 'self' https://yourcmshost.tld; object-src 'none';
+</shell>
+
+h3. Circumvent Single Sign-on
+
+It can usefull to not use the single sign process although it is enabled.
+The single sign on process will be skipped and users will be forwarded to the login form when the url parameter @skip-sso@ is present.
+Example: @https://yourcmshost.tld/editor/?skip-sso@
+
+h3. Single Sign Out
+
+By activating the feature
+
+<shell filename="keycloak.yml">
+feature:
+	keycloak_signout: true
+</shell>
+
+users will automatically be logged out from Keycloak, if they log out from the CMS using the Editor User Interface or Administration User Interface.
+
+h3. Missing Keycloak
+
+When Keycloak is configured but currently not available, the CMS login will show a message that Single-Sign-On is currently not available.
+
+!images/gcmsui/keycloak-unavailable.png!

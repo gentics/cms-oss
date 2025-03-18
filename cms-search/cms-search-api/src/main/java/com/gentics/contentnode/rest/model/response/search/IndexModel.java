@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.response.search;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * REST Model of a search index

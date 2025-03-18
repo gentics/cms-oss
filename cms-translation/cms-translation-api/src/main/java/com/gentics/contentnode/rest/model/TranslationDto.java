@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.model;
 
 import java.io.Serializable;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Base class for translation requests and responses.

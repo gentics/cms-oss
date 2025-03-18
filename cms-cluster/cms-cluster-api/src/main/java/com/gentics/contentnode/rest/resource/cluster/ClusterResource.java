@@ -1,8 +1,8 @@
 package com.gentics.contentnode.rest.resource.cluster;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
 
 import com.gentics.contentnode.rest.model.response.cluster.ClusterInfo;
 

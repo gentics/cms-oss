@@ -19,7 +19,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.Arrays;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.junit.After;
 import org.junit.Before;

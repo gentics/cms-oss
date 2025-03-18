@@ -52,22 +52,22 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
@@ -75,10 +75,11 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.comparators.ComparatorChain;
-import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -185,7 +186,7 @@ import de.jkeylockmanager.manager.KeyLockManagers;
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
-@javax.ws.rs.Path("/content")
+@jakarta.ws.rs.Path("/content")
 @RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 @RequiredPerm(type = PermHandler.TYPE_CONADMIN, bit = PermHandler.PERM_VIEW)
 @RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_VIEW)
@@ -232,7 +233,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	@SuppressWarnings("unchecked")
 	@Override
 	@GET
-	@javax.ws.rs.Path("/package")
+	@jakarta.ws.rs.Path("/package")
 	public ContentPackageListResponse list(
 				@BeanParam FilterParameterBean filterParams,
 				@BeanParam SortParameterBean sortingParams,
@@ -341,7 +342,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@PUT
-	@javax.ws.rs.Path("/package")
+	@jakarta.ws.rs.Path("/package")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_CREATE)
 	public ContentPackageLoadResponse create(StagedContentPackage model) throws NodeException {
 		Path path = checkFeatureGetPath();
@@ -382,7 +383,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@GET
-	@javax.ws.rs.Path("/package/{name}")
+	@jakarta.ws.rs.Path("/package/{name}")
 	public ContentPackageLoadResponse read(@PathParam("name") String name) throws NodeException {
 		Path path = checkFeatureGetPath();
 		
@@ -418,7 +419,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@POST
-	@javax.ws.rs.Path("/package/{name}")
+	@jakarta.ws.rs.Path("/package/{name}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_UPDATE)
 	public ContentPackageLoadResponse update(@PathParam("name") String name, StagedContentPackage model) throws NodeException {
 		Path path = checkFeatureGetPath();
@@ -476,7 +477,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@DELETE
-	@javax.ws.rs.Path("/package/{name}")
+	@jakarta.ws.rs.Path("/package/{name}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_DELETE)
 	public GenericResponse delete(@PathParam("name") String name) throws NodeException {
 		Path path = checkFeatureGetPath();
@@ -499,7 +500,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@PUT
-	@javax.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public ContentPackageLoadResponse add(
 			@PathParam("name") String name, 
@@ -585,7 +586,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@DELETE
-	@javax.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("type") String objectTypeId, @PathParam("uuid") String objectUuid) throws NodeException {
 		Path path = checkFeatureGetPath();
@@ -649,7 +650,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@GET
-	@javax.ws.rs.Path("/package/{name}/zip")
+	@jakarta.ws.rs.Path("/package/{name}/zip")
 	@Produces({ "application/zip" })
 	public Response download(@PathParam("name") String name) throws NodeException {
 		Path path = checkFeatureGetPath();
@@ -706,7 +707,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							public void write(OutputStream output) throws IOException, WebApplicationException {
 								// Serve the zip stream
 								try (FileInputStream fis = new FileInputStream(tmpFile)) {
-									Streams.copy(fis, output, false);
+									IOUtils.copy(fis, output);
 								} finally {
 									// Delete the temp zip.
 									FileUtils.deleteQuietly(tmpFile);
@@ -729,7 +730,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@POST
-	@javax.ws.rs.Path("/package/{name}/zip")
+	@jakarta.ws.rs.Path("/package/{name}/zip")
 	@Consumes("multipart/form-data")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws NodeException {
@@ -776,7 +777,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				java.io.File tmpFile;
 				try (InputStream is = fileDataInputStream) {
 					tmpFile = java.io.File.createTempFile(fileName, ".in.tmp");
-					Streams.copy(is, new FileOutputStream(tmpFile), true);
+					IOUtils.copy(is, new FileOutputStream(tmpFile));
 				} catch (IOException e1) {
 					throw new IllegalStateException(e1);
 				}
@@ -792,7 +793,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							continue;
 						}
 						try (InputStream is = zipFile.getInputStream(entry); FileOutputStream fos = new FileOutputStream(entryPath.toFile())) {
-							Streams.copy(is, fos, false);
+							IOUtils.copy(is, fos);
 						}
 					}
 				} catch (IOException e) {
@@ -847,7 +848,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@GET
-	@javax.ws.rs.Path("/package/{name}/import/errors")
+	@jakarta.ws.rs.Path("/package/{name}/import/errors")
 	public Response getImportErrors(@PathParam("name") String name) throws NodeException {
 		Path pathRoot = checkFeatureGetPath();
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -874,7 +875,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@POST
-	@javax.ws.rs.Path("/package/{name}/import")
+	@jakarta.ws.rs.Path("/package/{name}/import")
 	public GenericResponse importIntoCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs, @QueryParam("test") @DefaultValue("false") boolean isTest) throws NodeException {
 		Path pathRoot = checkFeatureGetPath();
 
@@ -907,7 +908,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@POST
-	@javax.ws.rs.Path("/package/{name}/export")
+	@jakarta.ws.rs.Path("/package/{name}/export")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public GenericResponse exportFromCms(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		Path pathRoot = checkFeatureGetPath();
@@ -956,7 +957,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@POST
-	@javax.ws.rs.Path("/package/{name}/status")
+	@jakarta.ws.rs.Path("/package/{name}/status")
 	public StagingStatusResponse status(@PathParam("name") String name, IdTypeMapRequest request) throws NodeException {
 		StagingStatusResponse response = new StagingStatusResponse();
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -968,7 +969,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	}
 
 	@GET
-	@javax.ws.rs.Path("/package/{name}/list/{pathSegments: .*}")
+	@jakarta.ws.rs.Path("/package/{name}/list/{pathSegments: .*}")
 	public ContentPackageFolderResponse folderList(@PathParam("name") String name, @PathParam("pathSegments") List<PathSegment> rawSegments, @QueryParam("filter") String filter) throws NodeException {
 		Path path = checkFeatureGetPath();
 

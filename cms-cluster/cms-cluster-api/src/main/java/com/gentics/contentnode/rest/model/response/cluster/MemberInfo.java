@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.response.cluster;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Info about the local member

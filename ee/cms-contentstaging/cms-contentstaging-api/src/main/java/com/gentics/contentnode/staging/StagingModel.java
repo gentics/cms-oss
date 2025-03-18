@@ -3,7 +3,7 @@ package com.gentics.contentnode.staging;
 import java.io.Serializable;
 import java.util.Optional;
 
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

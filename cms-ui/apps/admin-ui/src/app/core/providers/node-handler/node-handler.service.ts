@@ -34,7 +34,7 @@ export class NodeHandlerService
     }
 
     displayName(entity: Node<ModelType.Raw>): string {
-        return entity?.name || 'unknown help';
+        return entity?.name || '';
     }
 
     mapToBusinessObject(entity: Node<ModelType.Raw>, index?: number, context?: any): NodeBO {

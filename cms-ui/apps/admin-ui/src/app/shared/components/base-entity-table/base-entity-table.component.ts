@@ -370,6 +370,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     public handleAction(event: TableActionClickEvent<O>): void {
         event = {
+            ...event,
             selectedItems: this.getSelectedEntities(),
         } as EntityTableActionClickEvent<O>;
 

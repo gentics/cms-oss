@@ -129,7 +129,7 @@
                     <gtx-dev-tool-package-table
                         *ngIf="entity"
                         [nodeId]="entity.masterNodeId || entity.id"
-                        [isMasterNode]="!entity.masterNodeId || (entity.masterNodeId === entity.id)"
+                        [isMasterNode]="!isChildNode"
                         [showSearch]="true"
                         [hideSync]="true"
                     ></gtx-dev-tool-package-table>

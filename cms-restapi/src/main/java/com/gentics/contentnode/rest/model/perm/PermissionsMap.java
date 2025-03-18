@@ -2,7 +2,7 @@ package com.gentics.contentnode.rest.model.perm;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Permissions map

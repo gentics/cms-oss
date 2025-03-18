@@ -3,7 +3,7 @@ package com.gentics.contentnode.etc;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import org.apache.logging.log4j.Level;
 

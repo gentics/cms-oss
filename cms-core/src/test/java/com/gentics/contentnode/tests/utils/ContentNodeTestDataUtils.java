@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MediaType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;

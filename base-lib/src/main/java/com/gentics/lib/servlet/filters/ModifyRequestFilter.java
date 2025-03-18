@@ -1,8 +1,3 @@
-/*
- * @author norbert
- * @date 06.10.2005
- * @version $Id: ModifyRequestFilter.java,v 1.2 2005/10/31 13:00:27 norbert Exp $
- */
 package com.gentics.lib.servlet.filters;
 
 import java.io.File;
@@ -11,17 +6,19 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 /**
  * Servlet filter that can add headers to the servlet request
@@ -32,7 +29,7 @@ public class ModifyRequestFilter implements Filter {
 	/**
 	 * headers to be added to the request
 	 */
-	protected Properties addHeaders = null;
+	protected Map<String, String> addHeaders = null;
 
 	protected File headersFile = null;
 
@@ -40,7 +37,7 @@ public class ModifyRequestFilter implements Filter {
 
 	/*
 	 * (non-Javadoc)
-	 * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
+	 * @see jakarta.servlet.Filter#init(jakarta.servlet.FilterConfig)
 	 */
 	public void init(FilterConfig config) throws ServletException {
 		String headersFileName = config.getInitParameter("headers");
@@ -69,25 +66,22 @@ public class ModifyRequestFilter implements Filter {
 	 */
 	protected void readHeadersFromFile() throws IOException {
 		if (headersFile != null && headersFile.canRead()) {
-			FileInputStream in = null;
-
-			try {
-				in = new FileInputStream(headersFile);
-				addHeaders = new Properties();
-				addHeaders.load(in);
-				lastModificationTime = headersFile.lastModified();
-			} finally {
-				if (in != null) {
-					in.close();
+			try (FileInputStream in = new FileInputStream(headersFile)) {
+				Properties prop = new Properties();
+				prop.load(in);
+				addHeaders = new HashMap<>();
+				for (String name : prop.stringPropertyNames()) {
+					addHeaders.put(name, prop.getProperty(name));
 				}
+				lastModificationTime = headersFile.lastModified();
 			}
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
-	 *      javax.servlet.ServletResponse, javax.servlet.FilterChain)
+	 * @see jakarta.servlet.Filter#doFilter(jakarta.servlet.ServletRequest,
+	 *      jakarta.servlet.ServletResponse, jakarta.servlet.FilterChain)
 	 */
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		if (fileModified()) {
@@ -106,7 +100,7 @@ public class ModifyRequestFilter implements Filter {
 
 	/*
 	 * (non-Javadoc)
-	 * @see javax.servlet.Filter#destroy()
+	 * @see jakarta.servlet.Filter#destroy()
 	 */
 	public void destroy() {}
 
@@ -115,25 +109,25 @@ public class ModifyRequestFilter implements Filter {
 		/**
 		 * additional headers
 		 */
-		protected Properties additionalHeaders;
+		protected Map<String, String> additionalHeaders;
 
 		/**
 		 * Create a filtered servlet request with added headers
 		 * @param request wrapped request
 		 * @param headers additional headers
 		 */
-		public FilteredServletRequest(HttpServletRequest request, Properties headers) {
+		public FilteredServletRequest(HttpServletRequest request, Map<String, String> headers) {
 			super(request);
 			additionalHeaders = headers;
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see javax.servlet.http.HttpServletRequest#getHeader(java.lang.String)
+		 * @see jakarta.servlet.http.HttpServletRequest#getHeader(java.lang.String)
 		 */
 		public String getHeader(String name) {
 			if (additionalHeaders != null && additionalHeaders.containsKey(name)) {
-				return additionalHeaders.getProperty(name);
+				return additionalHeaders.get(name);
 			} else {
 				return super.getHeader(name);
 			}
@@ -141,9 +135,9 @@ public class ModifyRequestFilter implements Filter {
 
 		/*
 		 * (non-Javadoc)
-		 * @see javax.servlet.http.HttpServletRequest#getHeaderNames()
+		 * @see jakarta.servlet.http.HttpServletRequest#getHeaderNames()
 		 */
-		public Enumeration getHeaderNames() {
+		public Enumeration<String> getHeaderNames() {
 			if (additionalHeaders != null) {
 				return new CombinedEnumeration(super.getHeaderNames(), additionalHeaders);
 			} else {
@@ -151,7 +145,7 @@ public class ModifyRequestFilter implements Filter {
 			}
 		}
 
-		public Enumeration getHeaders(String name) {
+		public Enumeration<String> getHeaders(String name) {
 			if (additionalHeaders != null && additionalHeaders.containsKey(name)) {
 				return new CollectionEnumeration(Collections.singletonList(name));
 			} else {
@@ -161,12 +155,12 @@ public class ModifyRequestFilter implements Filter {
 
 	}
 
-	protected class CombinedEnumeration implements Enumeration {
-		protected Enumeration enumeration;
+	protected class CombinedEnumeration implements Enumeration<String> {
+		protected Enumeration<String> enumeration;
 
-		protected Iterator iterator;
+		protected Iterator<String> iterator;
 
-		public CombinedEnumeration(Enumeration enumeration, Properties properties) {
+		public CombinedEnumeration(Enumeration<String> enumeration, Map<String, String> properties) {
 			this.enumeration = enumeration;
 			if (properties != null) {
 				iterator = properties.keySet().iterator();
@@ -187,17 +181,17 @@ public class ModifyRequestFilter implements Filter {
 		 * (non-Javadoc)
 		 * @see java.util.Enumeration#nextElement()
 		 */
-		public Object nextElement() {
+		public String nextElement() {
 			return enumeration.hasMoreElements() ? enumeration.nextElement() : (iterator != null ? iterator.next() : null);
 		}
 	}
 
-	protected class CollectionEnumeration implements Enumeration {
-		protected Collection coll = null;
+	protected class CollectionEnumeration implements Enumeration<String> {
+		protected Collection<String> coll = null;
 
-		protected Iterator it = null;
+		protected Iterator<String> it = null;
 
-		public CollectionEnumeration(Collection coll) {
+		public CollectionEnumeration(Collection<String> coll) {
 			this.coll = coll;
 			it = coll.iterator();
 		}
@@ -206,7 +200,7 @@ public class ModifyRequestFilter implements Filter {
 			return it.hasNext();
 		}
 
-		public Object nextElement() {
+		public String nextElement() {
 			return it.next();
 		}
 	}

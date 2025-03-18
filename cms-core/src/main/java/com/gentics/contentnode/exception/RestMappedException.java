@@ -2,7 +2,7 @@ package com.gentics.contentnode.exception;
 
 import java.util.List;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;

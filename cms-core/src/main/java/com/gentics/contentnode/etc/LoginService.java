@@ -2,12 +2,11 @@ package com.gentics.contentnode.etc;
 
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This interface defines the methods that a login service must implement for authenticating.

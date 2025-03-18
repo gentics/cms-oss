@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Unmarshaller;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.resolving.Changeable;
@@ -243,14 +243,12 @@ public class MCCRTestDataHelper {
 	 * @return map of object types
 	 * @throws Exception
 	 */
-	@SuppressWarnings("deprecation")
 	public static Map<Integer, ObjectTypeBean> loadObjectTypes(InputStream in) throws Exception {
 		Map<Integer, ObjectTypeBean> objectTypes = new HashMap<Integer, ObjectTypeBean>();
 
 		JAXBContext context = JAXBContext.newInstance(ObjectManagementManager.JAXB_PACKAGE);
 		Unmarshaller unmarshaller = context.createUnmarshaller();
 
-		unmarshaller.setValidating(false);
 		Object importedObject = unmarshaller.unmarshal(in);
 
 		if (!(importedObject instanceof Definition)) {

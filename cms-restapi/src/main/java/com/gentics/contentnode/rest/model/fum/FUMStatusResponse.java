@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.fum;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Response model for request to finish postponed FUM action

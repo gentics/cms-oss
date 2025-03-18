@@ -1,14 +1,8 @@
-/*
- * @author Stefan Hurjui
- * @date 10.01.2005
- * @version: $Id: FileInformation.java,v 1.8 2009-12-16 16:12:08 herbert Exp $
- * @gentics.sdk
- */
 package com.gentics.api.lib.upload;
 
 import com.gentics.api.lib.resolving.ResolvableBean;
 import com.gentics.lib.log.NodeLogger;
-import javax.activation.MimetypesFileTypeMap;
+import jakarta.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.DiskFileItem;
 
 /**
  * Provides information about an uploaded file.
@@ -34,7 +28,7 @@ public class FileInformation extends ResolvableBean {
 	/**
 	 * Holds the file item
 	 */
-	private FileItem fileItem;
+	private DiskFileItem fileItem;
 
 	private String fileName;
     
@@ -90,7 +84,7 @@ public class FileInformation extends ResolvableBean {
 	 * @param myFileItem file item
 	 * @param fileUploadProvider file upload provider
 	 */
-	public FileInformation(final FileItem myFileItem, FileUploadProvider fileUploadProvider) {
+	public FileInformation(final DiskFileItem myFileItem, FileUploadProvider fileUploadProvider) {
 		this.fileItem = myFileItem;
 		this.fileUploadProvider = fileUploadProvider;
 		this.fileName = fileItem.getName();
@@ -249,7 +243,7 @@ public class FileInformation extends ResolvableBean {
 				} else {
 					tmpfile = File.createTempFile("upload-", ".tmp", new File(fileUploadProvider.getRepositoryPath()));
 				}
-				fileItem.write(tmpfile);
+				fileItem.write(tmpfile.toPath());
 				tmpfile.deleteOnExit();
 			} catch (Exception e) {
 				logger.error("Error while writing to temporary file.", e);
@@ -276,7 +270,11 @@ public class FileInformation extends ResolvableBean {
 	 */
 	public void invalidate() {
 		if (fileItem != null) {
-			fileItem.delete();
+			try {
+				fileItem.delete();
+			} catch (IOException e) {
+				logger.warn("Error while deleting file " + fileItem.getName(), e);
+			}
 		}
 		if (fileData != null) {
 			fileData = null;

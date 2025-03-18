@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBtableType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBTableType;
 import com.gentics.contentnode.nodecopy.AbstractCopyController;
 import com.gentics.contentnode.nodecopy.ObjectHelper;
 import com.gentics.contentnode.object.Page;
@@ -299,7 +299,7 @@ public class DBCopyController extends AbstractCopyController {
 	 * @return root table or null
 	 */
 	protected Table getRootTable(StructureCopy copy) {
-		JAXBtableType[] tables = copy.getTables().getTable();
+		JAXBTableType[] tables = copy.getTables().getTable();
 
 		for (int i = 0; i < tables.length; i++) {
 			if (ObjectTransformer.getBoolean(((Table) tables[i]).getProperty("roottable"), false)) {

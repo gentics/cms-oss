@@ -1,8 +1,8 @@
 package com.gentics.contentnode.rest;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;

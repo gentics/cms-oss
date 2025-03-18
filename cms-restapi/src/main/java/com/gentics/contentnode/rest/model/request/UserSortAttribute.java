@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.model.request;
 
-import javax.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnum;
 
 /**
  * Attributes, by which the users can be sorted

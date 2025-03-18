@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 
 /**
  * Normal reference from one table to another, the link is defined by exactly
@@ -45,7 +45,7 @@ public class NormalReference extends AbstractReferenceDescriptor implements Refe
 	 * (non-Javadoc)
 	 * @see com.gentics.ReferenceDescriptor#init(java.sql.Connection)
 	 */
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {// nothing to do here
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {// nothing to do here
 	}
 
 	/*

@@ -1,6 +1,6 @@
 package com.gentics.api.imagestore;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Used by the {com.gentics.portalnode.GenticsImageStoreServlet} to modify headers and data in requests to the GenticsImageStore

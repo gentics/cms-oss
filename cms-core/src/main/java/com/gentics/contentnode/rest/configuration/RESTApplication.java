@@ -11,12 +11,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.core.Application;
+import jakarta.ws.rs.core.Application;
 
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ServerProperties;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.gentics.contentnode.rest.CannotModifySubpackageMapper;
 import com.gentics.contentnode.rest.CommittingResponseFilter;
 import com.gentics.contentnode.rest.DuplicateEntityMapper;

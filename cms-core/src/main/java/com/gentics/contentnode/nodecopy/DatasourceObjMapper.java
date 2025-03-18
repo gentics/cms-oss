@@ -23,7 +23,7 @@ import com.gentics.contentnode.dbcopy.StructureCopy;
 import com.gentics.contentnode.dbcopy.StructureCopyException;
 import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
-import com.gentics.contentnode.dbcopy.jaxb.JAXBreferenceType.ParameterType;
+import com.gentics.contentnode.dbcopy.jaxb.JAXBReferenceType.Parameter;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.lib.db.DB;
 
@@ -51,7 +51,7 @@ public class DatasourceObjMapper extends AbstractReferenceDescriptor implements 
 	 * @see com.gentics.ReferenceDescriptor#init(java.sql.Connection,
 	 *      com.gentics.jaxb.JAXBreferenceType.ParameterType[])
 	 */
-	public void init(Connection conn, ParameterType[] parameter) throws StructureCopyException {
+	public void init(Connection conn, Parameter[] parameter) throws StructureCopyException {
 		Statement st = null;
 		ResultSet res = null;
 		List<Table> targetTables = new Vector<Table>();

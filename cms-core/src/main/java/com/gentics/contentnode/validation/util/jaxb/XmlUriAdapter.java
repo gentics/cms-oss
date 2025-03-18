@@ -8,7 +8,7 @@ package com.gentics.contentnode.validation.util.jaxb;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
  * To be used with the JAXB annotation XmlJavaTypeAdapter(XmlUriAdapter.class).

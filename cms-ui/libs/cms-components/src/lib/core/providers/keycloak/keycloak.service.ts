@@ -12,6 +12,7 @@ const NO_CONFIG_FOUND = 'Keycloak config file not found';
 export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
 const CUSTOMER_CONFIG_PATH = './../ui-conf/';
+const REST_PATH = './../rest/';
 export const KEYCLOAK_ERROR_KEY = 'keycloakError'
 
 /**
@@ -30,7 +31,7 @@ enum XMLHttpRequestState {
 export class KeycloakService {
 
     /** Keycloak support will be triggered if there is a keycloak.json file in the /config folder of the UI root. */
-    static readonly keycloakConfigFile = CUSTOMER_CONFIG_PATH + 'keycloak.json';
+    static readonly keycloakConfigFile = REST_PATH + 'keycloak';
 
     /** The app will not trigger redirect to Keycloak if ui-overrides.json has showSSOButton: true */
     static readonly uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';

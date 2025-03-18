@@ -2,8 +2,8 @@ package com.gentics.contentnode.rest.model.request;
 
 import java.util.List;
 
-import javax.ws.rs.QueryParam;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.ws.rs.QueryParam;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Request object for a request to list folders

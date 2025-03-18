@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.resource.parameter;
 
-import javax.ws.rs.QueryParam;
+import jakarta.ws.rs.QueryParam;
 
 /**
  * Parameter bean for filter parameters

@@ -1,27 +1,30 @@
 package com.gentics.lib.formatter;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import javax.xml.bind.JAXBException;
-
-import com.gentics.contentnode.tests.category.BaseLibTest;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.gentics.api.portalnode.imp.ImpException;
+import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.jaxb.JAXBHelper;
-import org.junit.experimental.categories.Category;
+
+import jakarta.xml.bind.JAXBException;
 
 @Category(BaseLibTest.class)
 public class GenticsDateFormatterTest {
@@ -143,5 +146,19 @@ public class GenticsDateFormatterTest {
 		assertFalse("The given object is not a date object", formatter.isDate("1.1.2014"));
 		assertTrue("The given object is a date", formatter.isDate(new Date(1)));
 		assertFalse("The given object is not a date", formatter.isDate(new Integer(1)));
+	}
+
+	@Test
+	public void testCustomFormat() {
+		Date now = new Date();
+		new SimpleDateFormat("dd", Locale.forLanguageTag("en"));
+
+		assertThat(formatter.format(now, "custom", "en"))
+			.describedAs("Date formatter with customer formatter in en")
+				.isEqualTo(new SimpleDateFormat("dd", Locale.forLanguageTag("en")).format(now) + " "
+						+ new SimpleDateFormat("hh", Locale.forLanguageTag("en")).format(now));
+		assertThat(formatter.format(now, "custom", "de")).describedAs("Date formatter with customer formatter in de")
+				.isEqualTo(new SimpleDateFormat("MM", Locale.forLanguageTag("de")).format(now) + " "
+						+ new SimpleDateFormat("ss", Locale.forLanguageTag("de")).format(now));
 	}
 }

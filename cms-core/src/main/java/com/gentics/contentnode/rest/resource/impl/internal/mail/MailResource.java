@@ -1,8 +1,8 @@
 package com.gentics.contentnode.rest.resource.impl.internal.mail;
 
-import javax.mail.MessagingException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import jakarta.mail.MessagingException;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;

@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.resource;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.StreamingOutput;
 import java.io.InputStream;
 import java.io.OutputStream;
 

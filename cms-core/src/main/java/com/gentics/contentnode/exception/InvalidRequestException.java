@@ -2,7 +2,7 @@ package com.gentics.contentnode.exception;
 
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Exception that is thrown, when an invalid request was issued

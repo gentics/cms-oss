@@ -5,9 +5,9 @@
  */
 package com.gentics.contentnode.rest;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -26,7 +26,7 @@ public class EntityNotFoundMapper extends AbstractExceptionMapper implements
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
+	 * @see jakarta.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
 	 */
 	public Response toResponse(EntityNotFoundException ex) {
 		tryRollback(ex);

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb" jaxb:version="3.0">
+    <xs:annotation>
+        <xs:appinfo>
+            <jaxb:globalBindings generateIsSetMethod="true" collectionType="indexed">
+                <!-- jaxb:javaType name="java.lang.Integer" xmlType="xs:integer" 
+                    parseMethod="valueOf" printMethod="toString"/ -->
+            </jaxb:globalBindings>
+            <jaxb:schemaBindings>
+                <jaxb:package name="com.gentics.lib.xnl.result.jaxb"/>
+                <jaxb:nameXmlTransform>
+                    <jaxb:typeName prefix="JAXB"/>
+                </jaxb:nameXmlTransform>
+            </jaxb:schemaBindings>
+        </xs:appinfo>
+    </xs:annotation>
+
+    <xs:element name="result" type="resultType">
+    </xs:element>
+
+    <xs:complexType name="resultType">
+        <xs:all>
+            <xs:element name="dependencies" type="dependenciesType" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="infos" type="infosType" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="returnvalue" type="xs:string" minOccurs="1" maxOccurs="1"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="dependenciesType">
+        <xs:sequence>
+            <xs:element name="dependency" type="dependencyType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="dependencyType">
+        <xs:all>
+            <xs:element name="id" type="xs:token" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="event" type="xs:integer" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="ignore" type="xs:integer" minOccurs="1" maxOccurs="1"/>
+        </xs:all>
+        <xs:attribute name="type" type="xs:integer" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="infosType">
+        <xs:sequence>
+            <xs:element name="info" type="infoType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="infoType">
+        <xs:all>
+            <xs:element name="key" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="text" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="detail" type="xs:string" minOccurs="1" maxOccurs="1"/>
+        </xs:all>
+        <xs:attribute name="type" type="infoTypeType" use="required"/>
+    </xs:complexType>
+
+    <xs:simpleType name="infoTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="error"/>
+            <xs:enumeration value="warning"/>
+            <xs:enumeration value="info"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

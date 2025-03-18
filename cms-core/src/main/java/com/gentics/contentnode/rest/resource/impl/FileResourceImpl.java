@@ -1,5 +1,42 @@
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.MultiPart;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -93,58 +130,23 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 import com.sksamuel.scrimage.ImmutableImage;
 import com.sksamuel.scrimage.webp.WebpWriter;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.MultiPart;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
-import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
-import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource for loading and manipulating Files in GCN
@@ -390,7 +392,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 	/*
 	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FileResource#createSimpleMultiPartFallback(com.sun.jersey.multipart.MultiPart, javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.String, java.lang.String)
+	 * @see com.gentics.contentnode.rest.api.FileResource#createSimpleMultiPartFallback(com.sun.jersey.multipart.MultiPart, jakarta.servlet.http.HttpServletRequest, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@POST
 	@Path("/createSimple")
@@ -481,7 +483,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FileResource#createSimple(javax.servlet.http.HttpServletRequest, int, int, java.lang.String, java.lang.String)
+	 * @see com.gentics.contentnode.rest.api.FileResource#createSimple(jakarta.servlet.http.HttpServletRequest, int, int, java.lang.String, java.lang.String)
 	 */
 	@POST
 	@Path("/createSimple")

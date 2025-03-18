@@ -7,10 +7,10 @@ import com.gentics.contentnode.rest.resource.parameter.FilterPublishableObjectBe
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 
 /**
  * Interface for managing publish protocol resources.
@@ -45,7 +45,6 @@ public interface PublishProtocolResource {
 	 * @throws Exception if an error occurs during retrieval
 	 */
 	@GET
-	@Path("/")
 	@StatusCodes({
 			@ResponseCode(code = 200, condition = "Publish protocol list is returned.")
 	})

@@ -1,11 +1,7 @@
-/*
- * @author johannes2
- * @date 02.04.2008
- * @version $Id: GenticsImageStoreTest.java,v 1.2 2010-09-28 17:08:09 norbert Exp $
- */
 package com.gentics.lib.image;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -19,7 +15,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -116,10 +112,9 @@ public class GenticsImageStoreTest {
 		try {
 			BufferedImage img1 = utils.getBufferedImage(imagefile);
 			BufferedImage img2 = utils.getBufferedImage(referenceFile);
-			assertTrue(utils.compareImage(img1, img2));
+			utils.compareImage(img1, img2);
 		} catch (Exception e) {
-			logger.info("IOException", e);
-			assertTrue(false);
+			fail("Reading images failed", e);
 		}
 
 	}

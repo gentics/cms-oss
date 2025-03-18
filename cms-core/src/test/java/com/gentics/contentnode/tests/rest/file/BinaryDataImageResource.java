@@ -4,9 +4,9 @@ import com.gentics.testutils.GenericTestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.EnumUtils;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import java.io.IOException;
 
 /**

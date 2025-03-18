@@ -22,16 +22,29 @@
         width: 20px;
         display: flex;
         flex-direction: column;
+        gap: 5px;
         justify-content: center;
-        border: 1px solid #000000;
-        border-left: none;
-        margin: 72px 0 40px;
-        padding-left: 8px;
+        padding: 72px 0 40px;
+
+        .top-link-display,
+        .bottom-link-display {
+            border: 1px solid #000000;
+            border-left: none;
+            flex: 1 1 auto;
+        }
+
+        .top-link-display {
+            border-bottom: none;
+        }
+
+        .bottom-link-display {
+            border-top: none;
+        }
 
         .link-button {
-            background: #fff;
             outline: none;
             border: none;
+            background: transparent;
             display: inline-block;
             aspect-ratio: 1/1;
             color: #d6d6d6;
@@ -41,6 +54,7 @@
             height: 20px;
             padding: 2px;
             box-sizing: content-box;
+            margin-left: 8px;
         }
 
         icon {

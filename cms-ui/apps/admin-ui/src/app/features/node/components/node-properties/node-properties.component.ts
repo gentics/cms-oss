@@ -14,11 +14,11 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     FormProperties,
-    generateFormProvider,
-    setControlsEnabled,
-    createPropertyPatternValidator,
     VALIDATOR_REGEX_ERROR_PROPERTY,
+    createPropertyPatternValidator,
+    generateFormProvider,
     generateValidatorProvider,
+    setControlsEnabled,
 } from '@gentics/ui-core';
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
@@ -80,7 +80,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public masterName: string | null = null;
 
     @Input()
-    public isChannel: boolean = false;
+    public isChannel = false;
 
     public nodes: Node<Raw>[];
     protected nodesLoading = false;

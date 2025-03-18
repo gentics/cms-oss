@@ -1481,23 +1481,15 @@ export interface NodeListOptions extends BaseListOptionsWithPaging<Node<Raw>> {
 }
 
 /**
- * Options for saving a `Node`.
- */
-export interface NodeSaveRequestOptions {
-
-    /** The description of the node. */
-    description?: string;
-
-}
-
-/**
  * Request used for saving a `Node`.
  */
-export interface NodeSaveRequest extends NodeSaveRequestOptions {
+export interface NodeSaveRequest {
 
     /** The properties of the node that should be saved/updated. */
     node: Partial<Node<Raw>>;
 
+    /** The description of the node/root folder of the node. */
+    description?: string;
 }
 
 /**
@@ -1670,8 +1662,14 @@ export interface FolderItemSaveOptionsMap {
 
 /** Used to map item types to their save requests for use in generic methods. */
 export interface FolderItemOrNodeSaveOptionsMap extends FolderItemSaveOptionsMap {
-    node: NodeSaveRequestOptions;
-    channel: NodeSaveRequestOptions;
+    node: {
+        /** The description of the node/root folder of the node. */
+        description?: string;
+    };
+    channel: {
+        /** The description of the node/root folder of the node. */
+        description?: string;
+    };
 }
 
 /**

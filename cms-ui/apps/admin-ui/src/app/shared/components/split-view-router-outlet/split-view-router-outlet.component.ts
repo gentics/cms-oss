@@ -48,12 +48,15 @@ export class SplitViewRouterOutletComponent implements OnInit {
     ngOnInit(): void {
         this.editorIsFocused$ = this.stateUI$.pipe(
             map(uiState => uiState.editorIsFocused),
+            delay(0),
         );
         this.focusMode$ = this.stateUI$.pipe(
             map(uiState => uiState.focusMode),
+            delay(0),
         );
         this.editorIsOpen$ = this.stateUI$.pipe(
             map(uiState => uiState.editorIsOpen),
+            delay(0),
         );
 
         this.loadingMaster$ = this.stateLoading$.pipe(

@@ -6,7 +6,7 @@ import { NormalizableEntityType } from '@gentics/cms-models';
 import { TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { delay, distinctUntilChanged, map } from 'rxjs/operators';
 
 @Component({ template: '' })
 export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implements OnInit, OnDestroy {
@@ -42,6 +42,7 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
         this.subscriptions.push(this.appState.select(state => state.ui).pipe(
             map(uiState => uiState.focusEntityType === this.entityIdentifier ? uiState.focusEntityId : null),
             distinctUntilChanged(isEqual),
+            delay(0),
         ).subscribe(entityId => {
             this.activeEntity = String(entityId);
             this.changeDetector.markForCheck();

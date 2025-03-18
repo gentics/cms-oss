@@ -9,21 +9,21 @@ import {
     TableLoadEndEvent,
     TableSortEvent,
 } from '@admin-ui/common';
-import { LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '@admin-ui/core';
+import { ErrorHandler, LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Feature, Folder, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { Feature, Folder, Language, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService, TableRow } from '@gentics/ui-core';
 import { finalize } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
+import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-
-type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
 
 @Component({
     selector: 'gtx-node-editor',
@@ -66,6 +66,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         protected modalService: ModalService,
         protected languageHandler: LanguageHandlerService,
         protected languageTableLoader: LanguageTableLoaderService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             EditableEntity.NODE,
@@ -78,7 +79,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     }
 
     override ngOnInit(): void {
-        this.isChildNode = !!this.entity?.masterId;
+        this.isChildNode = this.entity?.type === 'channel';
 
         this.subcriptions.push(this.appState.select(state => state.features.global[Feature.DEVTOOLS]).subscribe(enabled => {
             this.devtoolsEnabled = enabled;
@@ -117,6 +118,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 ).toPromise();
             },
             reset: () => {
+                this.fgProperties.reset(this.getPropertiesData());
                 return Promise.resolve();
             },
         });
@@ -138,6 +140,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 ).toPromise();
             },
             reset: () => {
+                this.fgPublishing.reset(this.getPublishData());
                 return Promise.resolve();
             },
         });
@@ -150,7 +153,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 ).toPromise();
             },
             reset: () => {
-                this.fgNodeFeatures.reset(this.fgNodeFeatures);
+                this.fgNodeFeatures.reset(this.currentFeatures);
                 return Promise.resolve();
             },
         });
@@ -165,13 +168,15 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     }
 
     protected onEntityChange(): void {
-        this.isChildNode = !!this.entity.masterId;
+        this.isChildNode = this.entity?.type === 'channel';
+
         Promise.all([
             this.loadFeatureData(),
             this.loadRootFolder(),
         ]).then(([nodeFeatures]) => {
             this.currentFeatures = nodeFeatures;
-            this.fgNodeFeatures.reset(this.fgNodeFeatures);
+            this.isLanguagesChanged = false;
+            this.resetTabs();
         });
     }
 
@@ -305,7 +310,10 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 this.changeDetector.markForCheck();
             }
         } catch (err) {
-            console.error(err);
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            this.errorHandler.catch(err);
         }
     }
 }

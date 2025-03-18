@@ -11,13 +11,8 @@
 .gtx-inheritance-info {
     color: $gcms-color-icon-inheritance;
     display: flex;
-    opacity: 1;
-    margin-bottom: 19px;
-    margin-left: 8px;
-
-    icon {
-        margin-right: 3px;
-    }
+    padding-bottom: 1rem;
+    gap: 0.5rem;
 }
 
 .property-section {

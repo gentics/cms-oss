@@ -1,6 +1,6 @@
 import { NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, Component, forwardRef, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, ViewChild } from '@angular/core';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -23,16 +23,31 @@ export class AssignLanguagesToNodeModal extends BaseModal<Language[]> {
     @ViewChild(forwardRef(() => LanguageTableComponent))
     public table: LanguageTableComponent;
 
+    public loading = false;
+
     constructor(
+        protected changeDetector: ChangeDetectorRef,
         protected operations: NodeOperations,
     ) {
         super();
     }
 
     async updateLanguages(): Promise<void> {
-        const nodeLanguages: Language[] = this.table.getSelectedEntities();
-        const languages = await this.operations.updateNodeLanguages(this.nodeId, nodeLanguages).toPromise();
+        try {
+            this.loading = true;
+            this.changeDetector.markForCheck();
 
-        this.closeFn(languages);
+            const nodeLanguages: Language[] = this.table.getSelectedEntities();
+            const languages = await this.operations.updateNodeLanguages(this.nodeId, nodeLanguages).toPromise();
+
+            this.loading = false;
+            this.changeDetector.markForCheck();
+
+            this.closeFn(languages);
+        } catch (err) {
+            // Ignored
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        }
     }
 }

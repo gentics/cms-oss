@@ -53,9 +53,11 @@
                     [title]="'editor.node_properties_share_directories' | i18n"
                     [class.active]="publishDirsLinked"
                 >
+                    <div class="top-link-display"></div>
                     <button class="link-button" [disabled]="disabled" (click)="togglePublishDirLink()">
                         <icon>{{ publishDirsLinked ? 'link_off' : 'link' }}</icon>
                     </button>
+                    <div class="bottom-link-display"></div>
                 </div>
             </div>
         </div>

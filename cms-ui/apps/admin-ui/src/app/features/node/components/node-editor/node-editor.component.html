@@ -21,10 +21,10 @@
                         class="properties"
                         [formControl]="fgProperties"
                         [mode]="NodePropertiesMode.UPDATE"
-                        [masterName]="currentEntity?.masterName"
-                        [isChannel]="currentEntity?.type === 'channel'"
+                        [masterName]="entity?.masterName"
+                        [isChannel]="isChildNode"
                         [pureInitialValue]="true"
-                        [(initialValue)]="propertiesClean"
+                        [(initialValue)]="entityIsClean"
                     ></gtx-node-properties>
                 </div>
             </div>
@@ -50,6 +50,7 @@
                         *ngIf="fgPublishing"
                         class="properties"
                         [formControl]="fgPublishing"
+                        [(initialValue)]="entityIsClean"
                     ></gtx-node-publishing-properties>
                 </div>
             </div>
@@ -76,6 +77,7 @@
                         class="properties"
                         [availableFeatures]="features"
                         [formControl]="fgNodeFeatures"
+                        [(initialValue)]="entityIsClean"
                     ></gtx-node-features>
                 </div>
             </div>

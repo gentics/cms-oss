@@ -33,12 +33,13 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 			p.setFolderId(folder.getId());
 			p.setTemplateId(template.getId());
 			p.setName("Master Page");
-		}).build();
+		}).publish().build();
 	}
 
 	@Override
 	protected Page localizeObject(Page master) throws NodeException {
-		return execute(m -> localize(m, channel), master);
+		Page p = execute(m -> localize(m, channel), master);
+		return update(p, upd -> {}).publish().build();
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class PageMultichannellingStagingTest extends AbstractMultichannellingCon
 			p.setTemplateId(template.getId());
 			p.setName("Local Page");
 			p.setChannelInfo(channel.getId(), null);
-		}).build();
+		}).publish().build();
 	}
 
 	@Override

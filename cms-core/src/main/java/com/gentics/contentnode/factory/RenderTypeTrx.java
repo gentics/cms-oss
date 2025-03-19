@@ -36,7 +36,7 @@ public class RenderTypeTrx implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static RenderTypeTrx publish() throws NodeException {
-		return publish(null);
+		return new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, true, false);
 	}
 
 	/**

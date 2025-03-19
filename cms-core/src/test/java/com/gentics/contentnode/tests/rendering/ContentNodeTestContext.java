@@ -225,7 +225,9 @@ public class ContentNodeTestContext {
 			transaction.commit();
 		}
 		transaction = factory.startTransaction(null, userId, true);
-		transaction.setRenderType(RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, 0));
+		RenderType renderType = RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, 0);
+		renderType.setHandleDependencies(false);
+		transaction.setRenderType(renderType);
 		transaction.setPublishCacheEnabled(false);
 		ContentNodeHelper.setLanguageId(1);
 	}

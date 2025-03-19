@@ -9,6 +9,6 @@ Configuration:
         Pattern: "%d [%t] %-5p %c - %m%n"
   Loggers:
     Root:
-      level: error
+      level: fatal
       AppenderRef:
         ref: STDOUT

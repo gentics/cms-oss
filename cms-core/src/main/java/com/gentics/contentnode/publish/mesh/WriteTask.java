@@ -1,7 +1,6 @@
 package com.gentics.contentnode.publish.mesh;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,11 +74,6 @@ class WriteTask extends AbstractWriteTask {
 	 * Optional postponed tagmap entries
 	 */
 	protected Map<TagmapEntryRenderer, Object> postponed;
-
-	/**
-	 * Optional roles to set
-	 */
-	protected Collection<String> roles;
 
 	/**
 	 * Flag to mark write tasks, which are postponable

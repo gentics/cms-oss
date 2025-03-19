@@ -2668,6 +2668,16 @@ public class MeshPublisher implements AutoCloseable {
 					}
 
 					logger.debug(String.format("Submit task to render %s", form));
+					Set<Object> roleValues = next.tagmapEntries.entrySet().stream()
+							.filter(e -> MeshRoleRenderer.class.isInstance(e.getKey()))
+							.map(e -> e.getValue())
+							.collect(Collectors.toSet());
+					Set<String> roles = roleValues.isEmpty() 
+							? null 
+							: roleValues.stream()
+								.map(e -> getRoles(e).stream())
+								.flatMap(java.util.function.Function.identity())
+								.collect(Collectors.toSet());
 					controller.runRenderTask(() -> {
 						try {
 							Trx.operate(trx -> {
@@ -2689,7 +2699,7 @@ public class MeshPublisher implements AutoCloseable {
 										data.put("downloadBaseUrl", downloadBaseUrl);
 									}
 
-									FormWriteTask task = new FormWriteTask(form, nodeId, this);
+									FormWriteTask task = new FormWriteTask(form, nodeId, this, roles);
 									// task.project is the current project of the node, not necessarily the desired project
 									task.project = project;
 									// target project is the desired project
@@ -3614,6 +3624,15 @@ public class MeshPublisher implements AutoCloseable {
 		return Optional.of(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey).setSource(source));
 	}
 
+	@SuppressWarnings("unchecked")
+	static Collection<String> getRoles(Object value) {
+		if (!ObjectTransformer.isEmpty(value)) {
+			return ObjectTransformer.getCollection(value, Collections.emptyList());
+		} else {
+			return Collections.emptyList();
+		}
+	}
+
 	/**
 	 * Handle rendered tagmap entries.
 	 * Most will be transformed into a FieldMap, which can be handled in the handler.
@@ -3655,11 +3674,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 
 			if (entry instanceof MeshRoleRenderer) {
-				if (!ObjectTransformer.isEmpty(value)) {
-					roles = ObjectTransformer.getCollection(value, Collections.emptyList());
-				} else {
-					roles = Collections.emptyList();
-				}
+				roles = getRoles(value);
 			} else if (value == null) {
 				fields.put(entry.getMapname(), null);
 			} else {
@@ -4274,7 +4289,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param task The current write task.
 	 * @return the request for updating the permissions
 	 */
-	protected ObjectPermissionGrantRequest createPermissionUpdateRequests(WriteTask task) {
+	static ObjectPermissionGrantRequest createPermissionUpdateRequests(AbstractWriteTask task) {
 		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
 		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
 		request.setRead(Collections.emptyList());

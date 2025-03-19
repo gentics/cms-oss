@@ -3,6 +3,7 @@ package com.gentics.contentnode.publish.mesh;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +38,14 @@ class FormWriteTask extends AbstractWriteTask {
 	 * @param publisher publisher
 	 * @throws NodeException
 	 */
-	public FormWriteTask(Form form, int nodeId, MeshPublisher publisher) throws NodeException {
+	public FormWriteTask(Form form, int nodeId, MeshPublisher publisher, Collection<String> roles) throws NodeException {
 		this.objType = Form.TYPE_FORM;
 		this.objId = form.getId();
 		this.description = form.toString();
 		this.nodeId = nodeId;
 		this.uuid = MeshPublisher.getMeshUuid(form);
 		this.publisher = publisher;
+		this.roles = roles;
 
 		for (String language : form.getLanguages()) {
 			dataMap.put(language, form.getData(language).toString());
@@ -56,7 +58,7 @@ class FormWriteTask extends AbstractWriteTask {
 		for (Map.Entry<String, String> entry : dataMap.entrySet()) {
 			String language = entry.getKey();
 			String data = entry.getValue();
-			observableList.add(publish(data, language));
+			observableList.add(publish(data, language).andThen(permit()));
 		}
 
 		publisher.getExistingFormLanguages(project, uuid).flatMapCompletable(langSet -> {
@@ -105,6 +107,16 @@ class FormWriteTask extends AbstractWriteTask {
 	@Override
 	public String toString() {
 		return String.format("Publish form %s (uuid %s)", description, uuid);
+	}
+
+	/**
+	 * Apply permissions to the form
+	 * @return
+	 */
+	protected Completable permit() {
+		return this.roles == null 
+				? Completable.complete() 
+				: publisher.client.grantNodeRolePermissions(project.name, uuid, MeshPublisher.createPermissionUpdateRequests(this)).toCompletable();
 	}
 
 	/**

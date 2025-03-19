@@ -1,5 +1,7 @@
 package com.gentics.contentnode.publish.mesh;
 
+import java.util.Collection;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -59,6 +61,11 @@ abstract class AbstractWriteTask {
 	 * Flag to mark whether the finished task should be reported to the publish queue
 	 */
 	protected boolean reportToPublishQueue;
+
+	/**
+	 * Optional roles to set
+	 */
+	protected Collection<String> roles;
 
 	/**
 	 * Perform this write task

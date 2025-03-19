@@ -21,11 +21,7 @@
 		</encoder>
 	</appender>
 	
-	<logger name="org.apache.jcs" level="WARN" />
-	<logger name="org.quartz" level="WARN" />
-	<logger name="org.testcontainers" level="ERROR" />
-
-	<root level="WARN">
+	<root level="ERROR">
 		<appender-ref ref="STDOUT"/>
 	</root>
 </configuration>

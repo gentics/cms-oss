@@ -576,7 +576,7 @@ feature:
   pidsync: true
   instant_cr_publishing: true
   channelsync: true
-  multichannelling: true
+  multichannelling: false
   resizable_itemlist_columns: true
   publish_cache: true
   multithreaded_publishing: true

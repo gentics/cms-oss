@@ -239,6 +239,9 @@ spec:
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }
 
+                    // DEBUG OUTPUT
+                    sh "ls -al --si cms-core/target/gentics.log"
+
                     if (params.runReleaseBuild) {
                         // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
                         // See: https://www.jfrog.com/jira/browse/RTFACT-17932

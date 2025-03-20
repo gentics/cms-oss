@@ -1,5 +1,5 @@
-import { Feature } from '@gentics/cms-models';
-import { EntityImporter } from '@gentics/e2e-utils';
+import { Feature, Variant } from '@gentics/cms-models';
+import { EntityImporter, isVariant } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH, AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
 import { loginWithForm, navigateToApp } from './helpers';
@@ -32,7 +32,9 @@ test.describe('Login', () => {
         });
     });
 
-    test.describe.skip('With keycloak feature enabled', () => {
+    test.describe('With keycloak feature enabled', () => {
+        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
         test.beforeAll(async ({ request }) => {
             IMPORTER.setApiContext(request);
             await IMPORTER.setupFeatures({

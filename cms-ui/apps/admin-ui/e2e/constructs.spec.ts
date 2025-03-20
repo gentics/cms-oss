@@ -1,6 +1,8 @@
-import { AccessControlledType, ConstructNodeLinkRequest, NodeMultiLinkRequest, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
+import { AccessControlledType, NodeMultiLinkRequest, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
 import {
     EntityImporter,
+    findTableAction,
+    findTableRow,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_NODE,
@@ -10,8 +12,8 @@ import {
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-import { AUTH, AUTH_ADMIN } from './common';
-import { findTableAction, findTableRow, loginWithForm, navigateToApp, navigateToModule } from './helpers';
+import { AUTH_ADMIN } from './common';
+import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
 
 const EXAMPLE_NODE_ONE: NodeImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_NODE,

@@ -97,9 +97,6 @@ spec:
 
                 // Always mark this as a CI run
                 CI = "1"
-
-                // Where the integration test-server is reachable
-                PW_TEST_CONNECT_WS_ENDPOINT = "ws://127.0.0.1:3000/"
             }
 
             steps {

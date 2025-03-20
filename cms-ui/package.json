@@ -156,7 +156,7 @@
     "autoprefixer": "^10.4.0",
     "cypress": "13.13.0",
     "cypress-multi-reporters": "^1.6.4",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.4.7",
     "elastic-types": "^0.1.5",
     "eslint": "8.57.0",
     "eslint-plugin-cypress": "^2.15.1",

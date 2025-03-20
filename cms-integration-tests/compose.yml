@@ -91,6 +91,9 @@ services:
     ports:
       - 3000:3000
 
+    extra_hosts:
+      - hostmachine:host-gateway
+
     healthcheck:
       test: [ "CMD", "curl",
         "--include",

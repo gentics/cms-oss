@@ -125,12 +125,8 @@
             "executor": "@nx/playwright:playwright",
             "outputs": ["{workspaceRoot}/dist/.playwright/apps/admin-ui"],
             "options": {
-                "config": "apps/admin-ui/playwright.config.ts"
-            },
-            "configurations": {
-                "ci": {
-                    "skipInstall": true
-                }
+                "config": "apps/admin-ui/playwright.config.ts",
+                "skipInstall": true
             }
         }
     }

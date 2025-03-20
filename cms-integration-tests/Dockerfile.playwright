@@ -21,9 +21,9 @@ RUN mkdir /scripts
 VOLUME /scripts
 
 # Copy initial scripts into the container
-COPY ./cms-integration-tests/playwright/* /scripts
+ADD --chown=1000:0 ./cms-integration-tests/playwright/*.sh /scripts
 RUN chmod +x /scripts/*.sh
-RUN chown -R node /scripts
+RUN chmod 700 /scripts/entrypoint.sh
 
 USER node
 

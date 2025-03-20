@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo `${ls -lah}`
+
 if ["${CI}" -e "1"]; then
     npm ci
 fi

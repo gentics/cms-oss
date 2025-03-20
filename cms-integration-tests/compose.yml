@@ -91,7 +91,7 @@ services:
       dockerfile: cms-integration-tests/Dockerfile
     volumes:
       - ../cms-ui:/app
-      - ./playwright:/scripts
+      # - ./playwright:/scripts
     ports:
       - 3000:3000
     healthcheck:

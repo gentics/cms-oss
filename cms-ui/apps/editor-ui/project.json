@@ -136,8 +136,8 @@
                 "config": "apps/editor-ui/playwright.config.ts"
             },
             "configurations": {
-                "watch": {
-                    "headed": true
+                "ci": {
+                    "skipInstall": true
                 }
             }
         }

@@ -1,4 +1,4 @@
-import { AccessControlledType, ContentRepository } from '@gentics/cms-models';
+import { AccessControlledType, ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
     BASIC_TEMPLATE_ID,
@@ -13,6 +13,7 @@ import {
     findTrableRowByText,
     folderA,
     folderB,
+    isVariant,
     matchesPath,
     minimalNode,
     schedulePublisher,
@@ -130,7 +131,9 @@ test.describe('Content Repositories Module', () => {
         await expect(management).toBeVisible();
     });
 
-    test.describe('Mesh Management', () => {
+    test.describe.skip('Mesh Management', () => {
+        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
         let management: Locator;
         let managementContent: Locator;
 

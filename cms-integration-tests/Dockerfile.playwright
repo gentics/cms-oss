@@ -16,8 +16,12 @@ RUN mkdir /app
 VOLUME /app
 WORKDIR /app
 
-# Setup entrypoint
+# Setup scripts dir
 RUN mkdir /scripts
+VOLUME /scripts
+
+# Copy initial scripts into the container
 COPY ./cms-integration-tests/playwright/* /scripts
+RUN chmod +x /scripts/*.sh
 
 ENTRYPOINT [ "/scripts/entrypoint.sh"]

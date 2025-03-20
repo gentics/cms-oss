@@ -130,6 +130,7 @@ spec:
             post {
                 always {
                     script {
+                        sh "sleep 50000"
                         junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }

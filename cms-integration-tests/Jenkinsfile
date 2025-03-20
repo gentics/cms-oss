@@ -115,10 +115,10 @@ spec:
 
                         try {
                             dir(path: 'cms-integration-tests') {
-                                // Make sure image is c orrectly built
+                                // Make sure image is freshly built
                                 sh "${composeCmd} build playwright"
                                 // Start services
-                                sh "${composeCmd} up -d --wait --quiet-pull cms"
+                                sh "${composeCmd} up -d --wait --quiet-pull"
                             }
 
                             dir(path: 'cms-ui') {

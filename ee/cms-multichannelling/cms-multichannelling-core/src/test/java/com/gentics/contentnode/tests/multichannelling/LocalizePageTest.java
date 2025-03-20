@@ -20,6 +20,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.job.LocalizePageCallable;
@@ -28,10 +29,12 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for localizing pages
  */
+@GCNFeature(set = { Feature.MULTICHANNELLING })
 public class LocalizePageTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();

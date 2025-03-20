@@ -30,7 +30,7 @@ import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.GCNFeature;
 
-@GCNFeature(set = { Feature.CONTENT_STAGING })
+@GCNFeature(set = { Feature.CONTENT_STAGING, Feature.MULTICHANNELLING })
 public class ContentStagingDataRemovalTest extends AbstractContentStagingTest {
 
 	@Test

@@ -11,27 +11,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.rest.filters.RequiredFeature;
-import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
+import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Tests for creating folders
  */
-@RequiredFeature(Feature.MULTICHANNELLING)
+@GCNFeature(set = { Feature.MULTICHANNELLING })
 public class FolderCreateTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();

@@ -25,6 +25,8 @@ COPY ./cms-integration-tests/playwright/* /scripts
 RUN chmod +x /scripts/*.sh
 RUN chown -R node /scripts
 
+USER node
+
 EXPOSE 3000
 
 ENTRYPOINT [ "/scripts/entrypoint.sh"]

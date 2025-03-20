@@ -126,6 +126,11 @@
             "outputs": ["{workspaceRoot}/dist/.playwright/apps/admin-ui"],
             "options": {
                 "config": "apps/admin-ui/playwright.config.ts"
+            },
+            "configurations": {
+                "ci": {
+                    "skipInstall": true
+                }
             }
         }
     }

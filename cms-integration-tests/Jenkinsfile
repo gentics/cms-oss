@@ -120,8 +120,10 @@ spec:
                             }
 
                             dir(path: 'cms-ui') {
+                                // Install depdendencies
+                                sh "npm ci"
                                 // Run the tests
-                                sh "npm run many -- --targets=e2e --configuration=ci --skipInstall --output-style=static"
+                                sh "npm run many -- --targets=e2e --configuration=ci --output-style=static"
                             }
                         } finally {
                             dir(path: 'cms-integration-tests') {

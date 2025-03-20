@@ -1,26 +1,32 @@
-FROM debian:bookworm-slim
+FROM node:20.12.1-slim
 
-# Add Docker's official GPG key:
-RUN apt-get update
-RUN apt-get install -y ca-certificates curl
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-RUN chmod a+r /etc/apt/keyrings/docker.asc
+# For later installs
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
-# Add the repository to APT sources:
-RUN echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null
-RUN apt-get update
+# Install debugging tools
+RUN apt-get update && \
+    apt-get install -y curl wget gpg ca-certificates && \
+    # clean apt cache
+    rm -rf /var/lib/apt/lists/*
 
-# Install packages via APT
-RUN apt-get -y install \
-    # Docker
-    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
-    # Misc & Utils
-    build-essential zip unzip vim less tar
+# Create app dir for the tests to be mounted into
+RUN mkdir /app
+VOLUME /app
+WORKDIR /app
 
-# Make the image simply execute bash for jenkins to execute the own stuff later on
-CMD /bin/bash
-ENTRYPOINT [ "/bin/bash" ]
+# Setup scripts dir
+RUN mkdir /scripts
+VOLUME /scripts
+
+# Copy initial scripts into the container
+ADD --chown=1000:0 ./cms-integration-tests/playwright/*.sh /scripts
+RUN chmod +x /scripts/*.sh
+RUN chmod 700 /scripts/entrypoint.sh
+
+USER node
+
+EXPOSE 3000
+
+ENTRYPOINT [ "/scripts/entrypoint.sh"]

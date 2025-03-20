@@ -86,16 +86,20 @@ services:
         condition: service_healthy
 
   playwright:
-    build:
-      context: ..
-      dockerfile: cms-integration-tests/Dockerfile
-    volumes:
-      - ../cms-ui:/app
-      # - ./playwright:/scripts
+    image: mcr.microsoft.com/playwright:v1.50.1-noble
+    entrypoint: "npx -y playwright@1.50.1 run-server --port 3000 --host 0.0.0.0"
     ports:
       - 3000:3000
+
     healthcheck:
-      test: ["CMD", "/scripts/healthcheck.sh"]
+      test: [ "CMD", "curl",
+        "--include",
+        "--no-buffer",
+        "--header", "Connection: close",
+        "--header", "Upgrade: websocket",
+        "--header", "Sec-WebSocket-Version: 13",
+        "http://localhost:3000",
+      ]
       start_period: 60s
       interval: 60s
       timeout: 10s

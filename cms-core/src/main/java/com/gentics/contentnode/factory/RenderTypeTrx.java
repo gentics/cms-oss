@@ -36,7 +36,17 @@ public class RenderTypeTrx implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static RenderTypeTrx publish() throws NodeException {
-		return new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, true, false);
+		return publish(false);
+	}
+
+	/**
+	 * Create an instance for the {@link RenderType#EM_PUBLISH}
+	 * @param handleDependencies true if dependencies shall be handled, false if not
+	 * @return instance
+	 * @throws NodeException
+	 */
+	public static RenderTypeTrx publish(boolean handleDependencies) throws NodeException {
+		return new RenderTypeTrx(RenderType.EM_PUBLISH, null, handleDependencies, true, false);
 	}
 
 	/**

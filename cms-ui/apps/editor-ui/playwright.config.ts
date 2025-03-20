@@ -2,15 +2,23 @@ import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { workspaceRoot } from '@nx/devkit';
+import { ENV_CI } from '@gentics/e2e-utils';
+
+const IS_CI = !!process.env[ENV_CI];
+
+// If playwright has a server to connect to, and therefore doesn't need additional local setup.
+const HAS_SERVER = IS_CI || !!process.env['PW_TEST_CONNECT_WS_ENDPOINT'];
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:8080';
-
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config();
+// eslint-disable-next-line @typescript-eslint/naming-convention
+let BASE_URL = process.env['BASE_URL'];
+if (!BASE_URL) {
+    if (HAS_SERVER) {
+        BASE_URL = 'http://cms:8080/editor';
+    } else {
+        BASE_URL = 'http://localhost:4200';
+    }
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -19,11 +27,11 @@ export default defineConfig({
     ...nxE2EPreset(__filename, { testDir: './e2e' }),
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
-        baseURL,
+        baseURL: BASE_URL,
         /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-        trace: process.env.CI ? 'off' : 'on-first-retry',
+        trace: IS_CI ? 'off' : 'on-first-retry',
     },
-    reporter: process.env.CI
+    reporter: IS_CI
         ? [
             ['dot'],
             ['junit', {
@@ -33,49 +41,23 @@ export default defineConfig({
         : [
             ['list'],
         ],
-    workers: process.env.CI ? 1 : undefined,
-    forbidOnly: !!process.env.CI,
+    fullyParallel: false,
+    workers: 1,
+    forbidOnly: IS_CI,
     /* Run your local dev server before starting the tests */
-    // webServer: {
-    //   command: 'npm run start',
-    //   url: 'http://127.0.0.1:3000',
-    //   reuseExistingServer: !process.env.CI,
-    //   cwd: workspaceRoot,
-    // },
+    webServer: HAS_SERVER ? undefined : {
+        command: 'npm start editor-ui',
+        url: 'http://127.0.0.1:4200',
+        reuseExistingServer: true,
+        cwd: workspaceRoot,
+        stdout: 'pipe',
+        // Wait for max of 2min for dev server to be ready
+        timeout: 2 * 60_000,
+    },
     projects: [
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
-
-        // {
-        //     name: 'firefox',
-        //     use: { ...devices['Desktop Firefox'] },
-        // },
-
-        // {
-        //     name: 'webkit',
-        //     use: { ...devices['Desktop Safari'] },
-        // },
-
-        // Uncomment for mobile browsers support
-        /* {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    }, */
-
-        // Uncomment for branded browsers
-        /* {
-      name: 'Microsoft Edge',
-      use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    },
-    {
-      name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    } */
     ],
 });

@@ -1,10 +1,11 @@
-import { Locator, Page } from '@playwright/test';
 import { AccessControlledType } from '@gentics/cms-models';
-import { matchesPath } from '@gentics/e2e-utils';
+import { ENV_CI, ENV_PLAYWRIGHT_TEST_CONNECT, matchesPath } from '@gentics/e2e-utils';
+import { Locator, Page } from '@playwright/test';
 import { AUTH, LoginData } from './common';
 
 export async function navigateToApp(page: Page, path: string = '/', withSSO?: boolean): Promise<void> {
-    const fullPath = `/${!withSSO ? '?skip-sso' : ''}#/${path}`;
+    const needsBasePath = process.env[ENV_CI] || process.env[ENV_PLAYWRIGHT_TEST_CONNECT];
+    const fullPath = `${needsBasePath ? '/admin' : ''}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
     await page.goto(fullPath);
 }
 

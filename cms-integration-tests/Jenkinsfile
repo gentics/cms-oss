@@ -115,9 +115,7 @@ spec:
                             }
 
                             dir(path: 'cms-ui') {
-                                sh "npm ci --no-fund --no-audit"
-                                sh "npx -y playwright@1.50.1 install --only-shell chromium"
-                                sh "npm run nx -- run-many --targets=e2e --configuration=ci --skipInstall --output-style=static"
+                                sh "PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:3000/ npm run many -- --targets=e2e --configuration=ci --skipInstall --output-style=static"
                             }
                         } finally {
                             dir(path: 'cms-integration-tests') {

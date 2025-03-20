@@ -90,40 +90,48 @@ spec:
             }
 
             environment {
+                // Settings to determine what services we're testing against
                 CMS_VARIANT = "${params.variant}"
                 CI_CMS_VERSION = "${params.cmsVersion}"
                 CI_MESH_VERSION = "${params.meshVersion}"
-                CI_LICENSEKEY = "${mesh_enterprise_licensekey_2}"
+
+                // Always mark this as a CI run
+                CI = "1"
+
+                // Where the integration test-server is reachable
+                PW_TEST_CONNECT_WS_ENDPOINT = "ws://127.0.0.1:3000/"
             }
 
             steps {
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                    //  withCredentials([ string(credentialsId: 'mesh_enterprise_licensekey_2', variable: 'CI_LICENSEKEY') ]) {
+                     withCredentials([ string(credentialsId: 'gtx-integration-tests-license', variable: 'CI_LICENSEKEY') ]) {
                         authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                        def composeCmd = 'docker compose'
+                        if (params.variant == 'EE') {
+                            composeCmd = 'docker compose -f ./compose.ee.yml'
+                        }
 
                         try {
                             dir(path: 'cms-integration-tests') {
-                                if (params.variant == 'EE') {
-                                    sh "docker compose -f compose.ee.yml up -d --wait --quiet-pull"
-                                    sh "docker compose -f compose.ee.yml ps"
-                                } else {
-                                    sh "docker compose up -d --wait --quiet-pull"
-                                    sh "docker compose ps"
-                                }
+                                // Make sure image is c orrectly built
+                                sh "${composeCmd} build playwright"
+                                // Start services
+                                sh "${composeCmd} up -d --wait --quiet-pull cms"
                             }
 
                             dir(path: 'cms-ui') {
-                                sh "PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:3000/ npm run many -- --targets=e2e --configuration=ci --skipInstall --output-style=static"
+                                // Run the tests
+                                sh "npm run many -- --targets=e2e --configuration=ci --skipInstall --output-style=static"
                             }
                         } finally {
                             dir(path: 'cms-integration-tests') {
-                                // finally stop the docker containers
-                                sh "docker compose down"
+                                // Stop and cleanup the services
+                                sh "${composeCmd} down"
                             }
                         }
-                    // }
+                    }
                 }
             }
 

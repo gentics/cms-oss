@@ -1,9 +1,4 @@
-FROM node:20-bookworm
-
-RUN npx -y playwright@1.50.1 install --with-deps --only-shell chromium
-
-# For later installs
-ENV PLAYWRIGHT_BROWSERS_PATH=0
+FROM debian:bookworm-slim
 
 # Add Docker's official GPG key:
 RUN apt-get update

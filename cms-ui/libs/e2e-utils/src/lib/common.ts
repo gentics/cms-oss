@@ -70,6 +70,7 @@ export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_CI = 'CI';
+export const ENV_PLAYWRIGHT_TEST_CONNECT = 'PW_TEST_CONNECT_WS_ENDPOINT';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -77,6 +78,7 @@ declare global {
         interface ProcessEnv {
             [ENV_CMS_VARIANT]: Variant;
             [ENV_CI]: boolean;
+            [ENV_PLAYWRIGHT_TEST_CONNECT]?: string;
         }
     }
 }

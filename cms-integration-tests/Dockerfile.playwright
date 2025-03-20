@@ -1,0 +1,23 @@
+FROM node:20.12.1-slim
+
+# For later installs
+ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Install debugging tools
+RUN apt-get update && \
+    apt-get install -y curl wget gpg ca-certificates && \
+    # clean apt cache
+    rm -rf /var/lib/apt/lists/*
+
+# Create app dir for the tests to be mounted into
+RUN mkdir /app
+VOLUME /app
+WORKDIR /app
+
+# Setup entrypoint
+RUN mkdir /scripts
+COPY ./cms-integration-tests/playwright/* /scripts
+
+ENTRYPOINT [ "/scripts/entrypoint.sh"]

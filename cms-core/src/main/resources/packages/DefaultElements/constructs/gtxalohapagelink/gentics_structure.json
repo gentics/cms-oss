@@ -152,6 +152,23 @@
     "hideInEditor" : false,
     "externalEditorUrl" : "",
     "regexId" : 0
+  }, {
+    "globalId" : "A547.85233",
+    "name" : {
+      "de" : "Sprache",
+      "en" : "Language"
+    },
+    "keyword" : "language",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
   } ],
   "category" : {
     "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",

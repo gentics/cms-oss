@@ -14,11 +14,10 @@ function gtx_alohalink(tag, renderMode, options) {
         } else {
             ctx['target'] = ' target="_blank" rel="noopener noreferrer"'
         }
-
     }
     if (parts.language.text) {
-		ctx['language'] = ' hreflang="' + parts.language.text + '"';
-	}
+        ctx['language'] = ' hreflang="' + parts.language.text + '"';
+    }
     if (parts.title.text) {
         ctx['title'] = ' title="' + encodeURIComponent(parts.title.text) + '"';
     }
@@ -31,7 +30,9 @@ function gtx_alohalink(tag, renderMode, options) {
     let href = '';
 
     if (url.target && url.target.id) {
-		ctx['language'] = ' hreflang="' + url.language.code + '"'
+        if (url.language && url.language.code) {
+            ctx['language'] = ' hreflang="' + url.language.code + '"';
+        }
         ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';
         href = url.target.url;
     } else {

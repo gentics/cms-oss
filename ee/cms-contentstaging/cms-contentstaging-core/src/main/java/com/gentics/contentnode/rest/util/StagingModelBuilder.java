@@ -719,10 +719,12 @@ public class StagingModelBuilder {
 
 			// when importing a page with a language, we need to check for conflicting pages with the same contentsetId and language
 			int localContentsetId = ObjectTransformer.getInt(page.getContentsetId(), 0);
+			int localChannelsetId = ObjectTransformer.getInt(page.getChannelSetId(), 0);
 			if (localContentsetId > 0) {
-				Set<Integer> conflictingPageIds = DBUtils.select("SELECT id FROM page WHERE contentset_id = ? AND contentgroup_id = ?", ps -> {
+				Set<Integer> conflictingPageIds = DBUtils.select("SELECT id FROM page WHERE contentset_id = ? AND contentgroup_id = ? AND channelset_id != ?", ps -> {
 					ps.setInt(1, localContentsetId);
 					ps.setInt(2, language.getId());
+					ps.setInt(3, localChannelsetId);
 				}, DBUtils.IDS);
 
 				if (!conflictingPageIds.isEmpty()) {

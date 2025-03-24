@@ -899,12 +899,14 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				rootFolder.setDescription(request.getDescription());
 			}
 
-			newNode.setFolder(rootFolder);
-			newNode.setHostname(reqNode.getHost());
+			newNode.setFolder(rootFolder);			
 			newNode.setHostnameProperty(reqNode.getHostProperty());
 
-			if (reqNode.isHttps() != null) {
-				newNode.setHttps(reqNode.isHttps());
+			if (reqNode.hostnameContainsProtocol()) {
+				newNode.setHttps(reqNode.getHost().startsWith("https://"));
+				newNode.setHostname(reqNode.getHost().substring(reqNode.getHost().indexOf("://") + 3));
+			} else {
+				newNode.setHostname(reqNode.getHost());
 			}
 			if (reqNode.isUtf8() != null) {
 				newNode.setUtf8(reqNode.isUtf8());
@@ -1097,8 +1099,11 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (reqNode.getHostProperty() != null) {
 				node.setHostnameProperty(reqNode.getHostProperty());
 			}
-			if (reqNode.isHttps() != null) {
-				node.setHttps(reqNode.isHttps());
+			if (reqNode.hostnameContainsProtocol()) {
+				node.setHttps(reqNode.getHost().startsWith("https://"));
+				node.setHostname(reqNode.getHost().substring(reqNode.getHost().indexOf("://") + 3));
+			} else if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
+				node.setHostname(reqNode.getHost());
 			}
 			if (reqNode.isUtf8() != null) {
 				node.setUtf8(reqNode.isUtf8());

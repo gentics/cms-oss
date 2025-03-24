@@ -1,9 +1,9 @@
 import { BO_ID, BO_NODE_ID, ContentItemBO, ContentItemTypes, PickableEntity } from '@admin-ui/common';
 import { ErrorHandler } from '@admin-ui/core';
-import { ContentItemTrableLoaderService } from '@admin-ui/shared/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal, TrableRow } from '@gentics/ui-core';
+import { ContentItemTrableLoaderService } from '../../providers/content-item-trable-loader/content-item-trable-loader.service';
 
 @Component({
     selector: 'gtx-entity-picker-modal',

@@ -1,7 +1,6 @@
 import { BO_PERMISSIONS, EntityTableActionClickEvent, NodeBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, NodeOperations, NodeTableLoaderService, TranslatedNotificationOptions } from '@admin-ui/core';
-import { WizardService } from '@admin-ui/shared';
-import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
+import { I18nNotificationService, I18nService, NodeOperations, TranslatedNotificationOptions } from '@admin-ui/core';
+import { BaseTableMasterComponent, NodeTableLoaderService, WizardService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

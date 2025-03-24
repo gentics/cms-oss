@@ -1,5 +1,4 @@
 import {
-    ContentRepositoryHandlerService,
     EntityManagerService,
     ErrorHandler,
     GroupOperations,
@@ -30,6 +29,7 @@ import { STATE_MODULES } from '../../../state/state.module';
 import { TestAppState } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { ActionAllowedDirective } from '../../directives';
 import { GroupDataService, GroupUserDataService, NodeDataService, NotificationService, WizardService } from '../../providers';
+import { ContentRepositoryHandlerService } from '../../providers/content-repository-handler/content-repository-handler.service';
 import { BooleanIconComponent } from '../boolean-icon/boolean-icon.component';
 import { IconComponent } from '../icon/icon.component';
 import { NodeTableComponent } from '../node-table/node-table.component';

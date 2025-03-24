@@ -1,5 +1,4 @@
-import { DataSourceHandlerService } from '@admin-ui/core';
-import { MarkupLanguageDataService } from '@admin-ui/shared';
+import { DataSourceHandlerService, MarkupLanguageDataService } from '@admin-ui/shared';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
     ChangeDetectionStrategy,

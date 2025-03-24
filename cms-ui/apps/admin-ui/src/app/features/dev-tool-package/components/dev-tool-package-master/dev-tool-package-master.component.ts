@@ -1,6 +1,5 @@
 import { EditableEntity } from '@admin-ui/common';
-import { DevToolPackageTableLoaderService } from '@admin-ui/core';
-import { BaseTableMasterComponent } from '@admin-ui/shared';
+import { BaseTableMasterComponent, DevToolPackageTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

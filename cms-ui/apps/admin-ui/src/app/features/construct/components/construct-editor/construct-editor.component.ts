@@ -1,6 +1,6 @@
 import { EditableEntity, FormGroupTabHandle, discard } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService, LanguageHandlerService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
+import { ConstructHandlerService, ConstructTableLoaderService, LanguageHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';

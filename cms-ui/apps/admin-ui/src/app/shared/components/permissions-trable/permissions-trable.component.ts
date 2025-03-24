@@ -1,10 +1,14 @@
 import { CategoryInfo, PermissionsCategorizer, PermissionsSetBO, PermissionsUtils } from '@admin-ui/common';
-import { I18nService, PermissionsTrableLoaderOptions, PermissionsTrableLoaderService } from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AccessControlledType, Group, PermissionsSet } from '@gentics/cms-models';
 import { TableColumn, TrableRow } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
+import {
+    PermissionsTrableLoaderOptions,
+    PermissionsTrableLoaderService,
+} from '../../providers/permissions-trable-loader/permissions-trable-loader.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({

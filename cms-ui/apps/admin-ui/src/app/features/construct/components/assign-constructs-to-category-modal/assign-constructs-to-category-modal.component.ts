@@ -1,4 +1,4 @@
-import { ConstructCategoryHandlerService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ConstructCategory, ConstructCategoryBO } from '@gentics/cms-models';

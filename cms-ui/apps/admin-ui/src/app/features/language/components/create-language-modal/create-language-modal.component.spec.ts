@@ -1,6 +1,7 @@
 import { InterfaceOf } from '@admin-ui/common';
-import { I18nService, LanguageHandlerService } from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';

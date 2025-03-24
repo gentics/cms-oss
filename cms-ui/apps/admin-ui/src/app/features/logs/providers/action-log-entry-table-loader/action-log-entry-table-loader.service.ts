@@ -1,12 +1,12 @@
 import { ActionLogEntryBO, BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActionLogEntry, BaseListOptionsWithPaging, LogTypeListItem, LogsListRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-
 
 export const COLUMN_TO_API_PARAM_MAP = new Map(Object.entries({
     object: 'type',

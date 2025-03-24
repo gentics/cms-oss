@@ -5,11 +5,10 @@ import {
     PermissionsService,
     ResolveBreadcrumbFn,
     UserOperations,
-    UserTableLoaderService,
 } from '@admin-ui/core';
 import { ChangePasswordModalComponent } from '@admin-ui/core/components/change-password-modal/change-password-modal.component';
 import { ErrorHandler } from '@admin-ui/core/providers/error-handler/error-handler.service';
-import { BaseDetailComponent, getPatternEmail, UserDataService } from '@admin-ui/shared';
+import { BaseDetailComponent, getPatternEmail, UserDataService, UserTableLoaderService } from '@admin-ui/shared';
 import { AppStateService, UIStateModel } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,

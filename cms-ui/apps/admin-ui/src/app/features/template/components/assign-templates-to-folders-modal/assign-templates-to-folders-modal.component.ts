@@ -1,10 +1,10 @@
 import { discard, TemplateBO } from '@admin-ui/common';
-import { FolderOperations, FolderTrableLoaderService, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
-import { FolderLinkEvent } from '@admin-ui/shared';
+import { FolderOperations, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
+import { FolderLinkEvent, FolderTrableLoaderService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, Folder } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { intersection } from'lodash-es'
+import { intersection } from 'lodash-es';
 import { combineLatest, Observable, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 

@@ -1,4 +1,3 @@
-import { PASSWORD_VALIDATORS, getPatternEmail } from '@admin-ui/shared/utils';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors } from '@angular/forms';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
@@ -6,6 +5,7 @@ import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { EntityExistsValidator } from '../../providers/entity-exists-validator/entity-exists-validator.service';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
+import { PASSWORD_VALIDATORS, getPatternEmail } from '../../utils';
 
 @Component({
     selector: 'gtx-create-user-modal',

@@ -1,9 +1,5 @@
 import { PackageDependencyEntityBO } from '@admin-ui/common';
-import {
-    I18nService,
-    PackageCheckTrableLoaderOptions,
-    PackageCheckTrableLoaderService,
-} from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -12,6 +8,10 @@ import {
 } from '@angular/core';
 import { PackageDependencyEntity } from '@gentics/cms-models';
 import { TableColumn } from '@gentics/ui-core';
+import {
+    PackageCheckTrableLoaderOptions,
+    PackageCheckTrableLoaderService,
+} from '../../providers/dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({

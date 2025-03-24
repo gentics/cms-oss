@@ -1,6 +1,5 @@
 import { AdminUIEntityDetailRoutes, DataSourceBO, EditableEntity } from '@admin-ui/common';
-import { DataSourceTableLoaderService } from '@admin-ui/core';
-import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
+import { BaseTableMasterComponent, DataSourceTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateTagBO } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, TemplateTagOperations } from '@admin-ui/core';
+import { EntityManagerService, TemplateTagOperations } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { TemplateTag, TemplateTagsRequestOptions } from '@gentics/cms-models';

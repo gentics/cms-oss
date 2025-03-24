@@ -7,7 +7,6 @@ import {
     EntityManagerService,
     ErrorHandler,
     FeatureOperations,
-    LanguageHandlerService,
     MarkupLanguageOperations,
     MessageService,
     NodeOperations,
@@ -31,6 +30,7 @@ import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from './common';
+import { LanguageHandlerService } from './shared';
 import { SetBackendLanguage } from './state/ui/ui.actions';
 
 @Component({

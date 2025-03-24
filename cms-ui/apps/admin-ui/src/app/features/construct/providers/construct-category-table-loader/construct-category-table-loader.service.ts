@@ -4,7 +4,8 @@ import {
     EntityPageResponse,
     TableLoadOptions,
 } from '@admin-ui/common';
-import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService, ConstructCategoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ConstructCategory } from '@gentics/cms-models';
@@ -12,8 +13,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TableSortOrder } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BaseTableLoaderService } from '../../../../core/providers/base-table-loader/base-table-loader.service';
-import { EntityManagerService } from '../../../../core/providers/entity-manager';
 
 @Injectable()
 export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<ConstructCategory, ConstructCategoryBO> {

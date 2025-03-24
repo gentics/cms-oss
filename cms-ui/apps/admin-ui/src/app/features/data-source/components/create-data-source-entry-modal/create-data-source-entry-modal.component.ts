@@ -1,4 +1,4 @@
-import { DataSourceEntryHandlerService } from '@admin-ui/core';
+import { DataSourceEntryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { DataSourceEntry, DataSourceEntryCreateRequest, Raw } from '@gentics/cms-models';

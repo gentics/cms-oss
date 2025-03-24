@@ -1,9 +1,9 @@
 import { EditableEntity, ObservableStopper } from '@admin-ui/common';
-import { DevToolPackageManagerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { DevToolPackageManagerService } from '../../providers/dev-tool-package-manager/dev-tool-package-manager.service';
 
 function entityIdentifierToEditableEntity(identifier: NormalizableEntityType): EditableEntity {
     switch (identifier) {

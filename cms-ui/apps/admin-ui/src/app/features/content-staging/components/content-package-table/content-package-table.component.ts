@@ -1,6 +1,6 @@
-import { BO_ID, ContentPackageBO, EntityTableActionClickEvent } from '@admin-ui/common';
+import { BO_ID, ContentPackageBO, DELETE_ACTION } from '@admin-ui/common';
 import { ContentPackageOperations, I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent, } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, ContentPackage, NormalizableEntityTypesMap } from '@gentics/cms-models';

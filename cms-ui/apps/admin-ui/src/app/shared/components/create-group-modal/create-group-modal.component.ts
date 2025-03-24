@@ -1,10 +1,10 @@
 import { GroupOperations } from '@admin-ui/core';
-import { GroupDataService } from '@admin-ui/shared/providers';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { AbstractControl, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { Group, GroupCreateRequest, Normalized, Raw } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { GroupDataService } from '../../providers/group-data/group-data.service';
 
 @Component({
     selector: 'gtx-create-group-modal',

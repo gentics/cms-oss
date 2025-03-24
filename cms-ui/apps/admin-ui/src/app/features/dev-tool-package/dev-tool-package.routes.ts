@@ -5,8 +5,8 @@ import {
     GcmsAdminUiRoute,
     ROUTE_DETAIL_OUTLET,
     ROUTE_PERMISSIONS_KEY,
-    createEntityEditorRoutes,
 } from '@admin-ui/common';
+import { createEntityEditorRoutes } from '@admin-ui/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { DevToolPackageEditorComponent, DevToolPackageMasterComponent } from './components';
 

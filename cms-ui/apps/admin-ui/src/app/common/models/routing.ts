@@ -1,8 +1,7 @@
-import { RequiredTypePermissions } from '@admin-ui/core';
-import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-info';
 import { Type } from '@angular/core';
 import { ActivatedRouteSnapshot, CanDeactivateFn, Data, DeprecatedGuard, ResolveData, ResolveFn, Route } from '@angular/router';
 import { ConstructorOf } from '../utils/util-types/util-types';
+import { BreadcrumbInfo } from './breadcrumb-info';
 import {
     EditableEntity,
     EditableEntityBusinessObjects,
@@ -11,6 +10,7 @@ import {
     ROUTE_ENTITY_TYPE_KEY,
     ROUTE_IS_EDITOR_ROUTE,
 } from './editors';
+import { RequiredTypePermissions } from './permissions';
 
 export const ROUTE_PERMISSIONS_KEY = 'typePermissions';
 export const ROUTE_BREADCRUMB_KEY = 'breadcrumb';

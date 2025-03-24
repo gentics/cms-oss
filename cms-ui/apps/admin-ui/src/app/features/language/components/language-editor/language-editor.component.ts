@@ -1,5 +1,5 @@
 import { EditableEntity } from '@admin-ui/common';
-import { LanguageHandlerService, LanguageTableLoaderService } from '@admin-ui/core';
+import { LanguageHandlerService, LanguageTableLoaderService } from '@admin-ui/shared';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';

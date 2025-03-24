@@ -1,4 +1,4 @@
-import { I18nKey, RequiredInstancePermissions, RequiredTypePermissions } from '@admin-ui/core';
+import { RequiredTypePermissions, RequiredInstancePermissions, I18nKey } from '@admin-ui/common';
 import { InjectionToken } from '@angular/core';
 import { IndexByKey } from '@gentics/cms-models';
 import { WithOptional } from '../utils';

@@ -16,9 +16,8 @@ import {
     NodeOperations,
     PermissionsService,
     TemplateOperations,
-    TemplateTableLoaderService,
 } from '@admin-ui/core';
-import { BaseTableMasterComponent } from '@admin-ui/shared';
+import { BaseTableMasterComponent, TemplateTableLoaderService } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';

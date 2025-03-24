@@ -1,8 +1,8 @@
-import { BO_PERMISSIONS } from '@admin-ui/common';
+import { BO_PERMISSIONS, DELETE_ACTION, EDIT_ACTION } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { MeshTagBO } from '@admin-ui/mesh/common';
 import { TagHandlerService, TagTableLoaderOptions, TagTableLoaderService } from '@admin-ui/mesh/providers';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Permission, Tag, TagFamilyReference } from '@gentics/mesh-models';
@@ -11,8 +11,6 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TagModal } from '../tag-modal/tag-modal.component';
 import { TagPropertiesMode } from '../tag-properties/tag-properties.component';
-
-const EDIT_ACTION = 'edit';
 
 @Component({
     selector: 'gtx-mesh-tag-table',

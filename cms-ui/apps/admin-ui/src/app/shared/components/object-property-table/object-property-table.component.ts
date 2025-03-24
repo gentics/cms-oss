@@ -1,11 +1,5 @@
 import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
-import {
-    DevToolPackageTableLoaderService,
-    I18nService,
-    ObjectPropertyTableLoaderOptions,
-    ObjectPropertyTableLoaderService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { typeIdsToName } from '@gentics/cms-components';
@@ -14,6 +8,11 @@ import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { DevToolPackageTableLoaderService } from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
+import {
+    ObjectPropertyTableLoaderOptions,
+    ObjectPropertyTableLoaderService,
+} from '../../providers/object-property-table-loader/object-property-table-loader.service';
 import {
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
 } from '../assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';

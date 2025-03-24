@@ -1,15 +1,14 @@
-import { ObservableStopper } from '@admin-ui/common';
+import { EDITOR_TAB, ObservableStopper } from '@admin-ui/common';
 import { AppStateService, SwitchEditorTab } from '@admin-ui/state';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE, TrackedActions } from '@admin-ui/state/utils/test-app-state';
+import { assembleTestAppStateImports, TestAppState, TrackedActions } from '@admin-ui/state/utils/test-app-state';
 import { componentTest, subscribeSafely } from '@admin-ui/testing';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Route, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ActionType, ofActionDispatched } from '@ngxs/store';
-import { takeUntil } from 'rxjs/operators';
-import { EditorTabTrackerService, EDITOR_TAB } from './editor-tab-tracker.service';
+import { ofActionDispatched } from '@ngxs/store';
+import { EditorTabTrackerService } from './editor-tab-tracker.service';
 
 @Component({
     template: `<router-outlet></router-outlet>`,

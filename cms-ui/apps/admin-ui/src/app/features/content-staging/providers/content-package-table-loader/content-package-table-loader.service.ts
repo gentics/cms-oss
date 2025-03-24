@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ContentPackageBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, ContentPackageOperations, EntityManagerService } from '@admin-ui/core';
+import { ContentPackageOperations, EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ContentPackage, Raw } from '@gentics/cms-models';

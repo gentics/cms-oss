@@ -1,6 +1,6 @@
-import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, DELETE_ACTION, discard, ScheduleBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, PermissionsService, ScheduleOperations } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
 import {
@@ -12,7 +12,7 @@ import {
     SchedulerStatus,
     ScheduleSaveReqeust,
 } from '@gentics/cms-models';
-import { ModalService, TableAction, TableColumn, TableRow, TableSortOrder, TableActionClickEvent } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest, forkJoin, interval, Observable } from 'rxjs';
 import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';

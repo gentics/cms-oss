@@ -1,11 +1,15 @@
 import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoaderService, I18nService, PermissionsService } from '@admin-ui/core';
+import { ErrorHandler, GroupOperations, I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {
+    GroupTableLoaderOptions,
+    GroupTableLoaderService,
+} from '../../providers/group-table-loader/group-table-loader.service';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 import { CreateGroupModalComponent } from '../create-group-modal/create-group-modal.component';
 import { MoveGroupsModalComponent } from '../move-groups-modal/move-groups-modal.component';

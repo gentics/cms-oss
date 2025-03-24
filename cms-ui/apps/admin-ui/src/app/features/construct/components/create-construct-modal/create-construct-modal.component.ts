@@ -1,10 +1,11 @@
-import { ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
-import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
+import { I18nNotificationService } from '@admin-ui/core';
+import { ConstructHandlerService, LanguageHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { ConstructPropertiesMode } from '../construct-properties/construct-properties.component';
 
 @Component({
     selector: 'gtx-create-construct-modal',

@@ -1,10 +1,10 @@
 import { ObjectPropertyBO } from '@admin-ui/common';
-import { ObjectPropertyHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { EntityIdType, Node, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { ObjectPropertyHandlerService } from '../../providers/object-property-handler/object-property-handler.service';
 
 @Component({
     selector: 'gtx-assign-node-restriction-to-object-properties-modal',

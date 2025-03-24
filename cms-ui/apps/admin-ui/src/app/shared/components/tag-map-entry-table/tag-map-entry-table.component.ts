@@ -1,5 +1,5 @@
 import { TAGMAP_ENTRY_ATTRIBUTES_MAP, TagMapEntryBO } from '@admin-ui/common';
-import { I18nService, PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import {
@@ -13,6 +13,7 @@ import {
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap } from 'rxjs/operators';
+import { TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '../../providers/tag-map-entry-table-loader/tag-map-entry-table-loader.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { CreateTagmapEntryModalComponentMode, CreateUpdateTagmapEntryModalComponent, TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal';
 

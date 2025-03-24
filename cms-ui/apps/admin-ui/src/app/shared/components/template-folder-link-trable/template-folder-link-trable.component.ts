@@ -1,8 +1,9 @@
 import { BO_ID, FolderBO } from '@admin-ui/common';
-import { FolderTrableLoaderService, I18nService } from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Folder } from '@gentics/cms-models';
 import { TableAction, TableActionClickEvent, TrableRow } from '@gentics/ui-core';
+import { FolderTrableLoaderService } from '../../providers/folder-trable-loader/folder-trable-loader.service';
 
 export interface FolderLinkEvent {
     folder: Folder;

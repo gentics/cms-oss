@@ -9,7 +9,7 @@ import {
     TableLoadResponse,
     TableLoadStartEvent,
 } from '@admin-ui/common';
-import { BaseTableLoaderService, I18nService } from '@admin-ui/core/providers';
+import { I18nService } from '@admin-ui/core';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -27,6 +27,7 @@ import {
 } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
+import { BaseTableLoaderService } from '../../providers/base-table-loader/base-table-loader.service';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
 
 export const DELETE_ACTION = 'delete';

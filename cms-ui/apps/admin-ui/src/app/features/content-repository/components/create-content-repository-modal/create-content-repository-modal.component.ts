@@ -1,5 +1,6 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryHandlerService, ErrorHandler } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';

@@ -1,4 +1,4 @@
-import { LanguageHandlerService } from '@admin-ui/core';
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Language } from '@gentics/cms-models';

@@ -1,12 +1,5 @@
 import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
-import {
-    ContentRepositoryHandlerService,
-    ContentRepositoryTableLoaderOptions,
-    ContentRepositoryTableLoaderService,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,7 +7,13 @@ import { AnyModelType, ContentRepository, ContentRepositoryType, NormalizableEnt
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContentRepositoryHandlerService } from '../../providers/content-repository-handler/content-repository-handler.service';
+import {
+    ContentRepositoryTableLoaderOptions,
+    ContentRepositoryTableLoaderService,
+} from '../../providers/content-repository-table-loader/content-repository-table-loader.service';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { DevToolPackageTableLoaderService } from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 import {
     AssignContentrepositoriesToNodesModalComponent,
 } from '../assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';

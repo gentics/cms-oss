@@ -1,6 +1,6 @@
 import { EditableEntity } from '@admin-ui/common';
-import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
+import { ObjectPropertyCategoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl } from '@angular/forms';

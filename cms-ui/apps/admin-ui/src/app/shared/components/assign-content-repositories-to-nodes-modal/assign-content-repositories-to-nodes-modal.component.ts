@@ -1,8 +1,8 @@
-import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { ContentRepositoryHandlerService } from '../../providers/content-repository-handler/content-repository-handler.service';
 
 @Component({
     selector: 'gtx-assign-content-repositories-to-nodes-modal',

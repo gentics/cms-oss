@@ -1,5 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructHandlerService, LanguageHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
+import { ConstructHandlerService, LanguageHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,

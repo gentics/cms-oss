@@ -1,9 +1,9 @@
 import { EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { TagFamily } from '@gentics/mesh-models';
-import { TableSortOrder } from '@gentics/ui-core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshTagFamilyBO } from '../../common';

@@ -1,3 +1,4 @@
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { AppStateService, AuthStateModel, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
@@ -9,7 +10,6 @@ import { SetBackendLanguage, SetUILanguage, SetUISettings } from '../../../state
 import { INITIAL_USER_SETTINGS, UIStateModel, UIStateSettings } from '../../../state/ui/ui.state';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage/editor-ui-local-storage.service';
 import { I18nService } from '../i18n';
-import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 
 export type UserSettingName = keyof UIStateSettings;

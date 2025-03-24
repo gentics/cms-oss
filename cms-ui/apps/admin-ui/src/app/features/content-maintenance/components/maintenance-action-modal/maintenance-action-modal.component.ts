@@ -1,6 +1,6 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
+import { ContentRepositoryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ContentMaintenanceType, Response } from '@gentics/cms-models';

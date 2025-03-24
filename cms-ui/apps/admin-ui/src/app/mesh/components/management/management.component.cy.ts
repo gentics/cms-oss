@@ -1,18 +1,20 @@
+import { ErrorHandler } from '@admin-ui/core';
 import { CoreModule } from '@admin-ui/core/core.module';
 import { I18nNotificationService } from '@admin-ui/core/providers/i18n-notification/i18n-notification.service';
+import { NodeHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { TestAppState } from '@admin-ui/state/utils/test-app-state/test-app-state.mock';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { MeshRestClientConfig } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { MeshRestClientConfig } from '@gentics/mesh-rest-client';
 import { LoginGateComponent } from '../login-gate/login-gate.component';
 import { ManagementComponent } from './management.component';
-import { CmsComponentsModule } from '@gentics/cms-components';
 
 // TODO: Create a test client service like the cms-client in the mesh package
 class MockMeshRestClientService implements Partial<MeshRestClientService> {
@@ -30,6 +32,14 @@ class MockMeshRestClientService implements Partial<MeshRestClientService> {
 }
 
 class MockI18nNotificationService {}
+
+class MockErrorHandler implements Partial<ErrorHandler> {
+    catch(error: Error, options?: { notification: boolean; }) {
+        return '';
+    }
+}
+
+class MockNodeHandlerService {}
 
 // Yet to find out why the providers aren't overriding anything.
 describe('ManagementComponent', () => {
@@ -56,6 +66,8 @@ describe('ManagementComponent', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: NodeHandlerService, useClass: MockNodeHandlerService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
             ],
             schemas: [CUSTOM_ELEMENTS_SCHEMA],
             componentProperties: {

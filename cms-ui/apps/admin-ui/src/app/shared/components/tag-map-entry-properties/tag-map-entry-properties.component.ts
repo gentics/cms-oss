@@ -3,7 +3,6 @@ import {
     SQL_TAGMAP_ENTRY_ATTRIBUTES,
     TAGMAP_ENTRY_ATTRIBUTES,
 } from '@admin-ui/common';
-import { TagmapEntryDisplayFields } from '@admin-ui/shared/components/create-update-tagmapentry-modal';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -24,6 +23,7 @@ import {
 } from '@gentics/cms-models';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { environment } from 'apps/admin-ui/src/environments/environment';
+import { TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal/create-update-tagmapentry-modal.component';
 
 export enum TagmapEntryPropertiesMode {
     CREATE = 'create',

@@ -1,20 +1,15 @@
 import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
-import {
-    ContentRepositoryHandlerService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import {
     MeshBrowserContentRepositoryTableLoaderService,
     MeshContentRepositoryTableLoaderOptions,
 } from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
-import { BaseEntityTableComponent } from '@admin-ui/shared';
+import { BaseEntityTableComponent, ContentRepositoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
-
 
 @Component({
     selector: 'gtx-mesh-browser-repository-table',

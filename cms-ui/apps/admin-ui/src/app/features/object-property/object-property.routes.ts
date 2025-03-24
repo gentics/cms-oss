@@ -6,8 +6,8 @@ import {
     ObjectPropertyDetailTabs,
     ROUTE_DETAIL_OUTLET,
     ROUTE_PERMISSIONS_KEY,
-    createEntityEditorRoutes,
 } from '@admin-ui/common';
+import { createEntityEditorRoutes } from '@admin-ui/core';
 import {
     ObjectPropertyCategoryEditorComponent,
     ObjectPropertyEditorComponent,

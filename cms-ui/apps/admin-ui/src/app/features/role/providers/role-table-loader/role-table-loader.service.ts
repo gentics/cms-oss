@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, RoleBO, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, RoleOperations } from '@admin-ui/core';
+import { EntityManagerService, RoleOperations } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Raw, Role } from '@gentics/cms-models';

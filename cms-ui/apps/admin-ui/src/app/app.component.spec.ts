@@ -4,12 +4,12 @@ import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
+import { ModelType, Node, NodeListRequestOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
-import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
 import { componentTest } from '../testing';
 import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
@@ -21,7 +21,6 @@ import {
     ErrorHandler,
     FeatureOperations,
     GtxActivityManagerActivity,
-    LanguageHandlerService,
     MarkupLanguageOperations,
     MessageService,
     NodeOperations,
@@ -41,6 +40,7 @@ import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cle
 import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './core/providers/operations/admin/admin.operations';
 import { AuthOperations } from './core/providers/operations/auth';
+import { LanguageHandlerService } from './shared';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-checkbox.component';
 import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';

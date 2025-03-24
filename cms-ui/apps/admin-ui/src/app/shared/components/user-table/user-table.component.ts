@@ -5,8 +5,6 @@ import {
     I18nService,
     PermissionsService,
     UserOperations,
-    UserTableLoaderOptions,
-    UserTableLoaderService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
@@ -15,6 +13,10 @@ import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import {
+    UserTableLoaderOptions,
+    UserTableLoaderService,
+} from '../../providers/user-table-loader/user-table-loader.service';
 import { AssignGroupToUsersModal } from '../assign-group-to-users-modal/assign-group-to-users-modal.component';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { CreateUserModalComponent } from '../create-user-modal/create-user-modal.component';

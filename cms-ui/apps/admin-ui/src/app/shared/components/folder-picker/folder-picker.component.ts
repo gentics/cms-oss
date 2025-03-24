@@ -1,8 +1,8 @@
 import { BO_NODE_ID, PickableEntity } from '@admin-ui/common';
-import { ContentItemTrableLoaderService } from '@admin-ui/shared/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
+import { ContentItemTrableLoaderService } from '../../providers/content-item-trable-loader/content-item-trable-loader.service';
 
 @Component({
     selector: 'gtx-folder-picker',

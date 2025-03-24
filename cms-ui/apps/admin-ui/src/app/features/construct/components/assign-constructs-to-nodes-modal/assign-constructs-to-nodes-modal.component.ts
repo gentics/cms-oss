@@ -1,9 +1,10 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ConstructHandlerService, I18nNotificationService, NodeOperations } from '@admin-ui/core';
+import { I18nNotificationService, NodeOperations } from '@admin-ui/core';
+import { ConstructHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, IndexById, Node, Raw, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { intersection } from'lodash-es'
+import { intersection } from 'lodash-es';
 import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 

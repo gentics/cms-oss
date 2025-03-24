@@ -14,8 +14,8 @@ import {
     ROUTE_PARAM_ENTITY_ID,
     ROUTE_PARAM_NODE_ID,
     discard,
+    EDITOR_TAB,
 } from '@admin-ui/common';
-import { EDITOR_TAB } from '@admin-ui/core/providers';
 import { AppStateService, FocusEditor, OpenEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';

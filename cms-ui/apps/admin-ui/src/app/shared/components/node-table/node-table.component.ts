@@ -3,7 +3,6 @@ import {
     I18nNotificationService,
     I18nService,
     NodeOperations,
-    NodeTableLoaderService,
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
@@ -12,6 +11,7 @@ import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap } from '
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { NodeTableLoaderService } from '../../providers/node-table-loader/node-table-loader.service';
 import { WizardService } from '../../providers/wizard/wizard.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 

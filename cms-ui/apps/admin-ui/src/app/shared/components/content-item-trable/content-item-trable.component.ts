@@ -1,8 +1,8 @@
 import { ContentItem, ContentItemBO, ContentItemTypes } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { ContentItemTrableLoaderOptions, ContentItemTrableLoaderService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { TableAction, TableColumn } from '@gentics/ui-core';
+import { ContentItemTrableLoaderOptions, ContentItemTrableLoaderService } from '../../providers/content-item-trable-loader/content-item-trable-loader.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({

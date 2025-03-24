@@ -1,10 +1,10 @@
-import { ConstructHandlerService } from '@admin-ui/core';
+import { ConstructHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
+import { TagEditorChange } from '@gentics/cms-integration-api-models';
 import { Raw, TagType, TemplateTag } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { TagEditorChange } from '@gentics/cms-integration-api-models';
 import { environment } from '../../../../../environments/environment';
 
 export enum TemplateTagPropertiesMode {

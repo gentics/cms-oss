@@ -17,7 +17,7 @@ import { BehaviorSubject, Observable, combineLatest, of as observableOf } from '
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { I18nService } from '../i18n/i18n.service';
 import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
-import { BreadcrumbInfo } from './breadcrumb-info';
+import { BreadcrumbInfo } from '@admin-ui/common';
 
 interface RouteSegment {
     breadcrumb: BreadcrumbInfo;

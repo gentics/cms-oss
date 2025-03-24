@@ -4,11 +4,8 @@ import {
     EntityPageResponse,
     TableLoadOptions,
 } from '@admin-ui/common';
-import {
-    BaseTableLoaderService,
-    ContentRepositoryHandlerService,
-    EntityManagerService,
-} from '@admin-ui/core';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService, ContentRepositoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ContentRepository, ContentRepositoryType } from '@gentics/cms-models';
@@ -21,11 +18,10 @@ export interface MeshContentRepositoryTableLoaderOptions {
 }
 
 @Injectable()
-export class MeshBrowserContentRepositoryTableLoaderService extends BaseTableLoaderService<
-ContentRepository,
-ContentRepositoryBO,
-MeshContentRepositoryTableLoaderOptions
-> {
+export class MeshBrowserContentRepositoryTableLoaderService
+    extends BaseTableLoaderService<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions>
+{
+
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,

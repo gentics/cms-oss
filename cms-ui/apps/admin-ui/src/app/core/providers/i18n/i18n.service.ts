@@ -1,20 +1,11 @@
 import { Injectable } from '@angular/core';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { IndexByKey } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { FALLBACK_LANGUAGE, UI_LANGUAGES } from '../../../common/config/config';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 import { applyShortcuts, translateParamsInstant } from './i18n-utils';
-
-export interface ParametizedI18nKey {
-    /** The i18n key that will be passed to the I18nService. */
-    key: string;
-
-    /** Parameters that should be passed to the I18nService. */
-    params: IndexByKey<any>;
-}
 
 export interface JoinOptions {
     withLast?: boolean;
@@ -27,8 +18,6 @@ const DEFAULT_JOIN_OPTIONS: JoinOptions = {
     quoted: false,
 };
 
-/** Type alias for specifying that a parameter or property needs to be set to an i18n key. */
-export type I18nKey = string | ParametizedI18nKey;
 
 /**
  * Provides translation services using ngx-translate. Do not use

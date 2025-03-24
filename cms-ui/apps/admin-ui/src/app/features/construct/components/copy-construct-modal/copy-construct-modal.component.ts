@@ -1,5 +1,6 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
+import { ALL_TRANSLATIONS, I18nNotificationService } from '@admin-ui/core';
+import { ConstructHandlerService, LanguageHandlerService } from '@admin-ui/shared';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';

@@ -9,8 +9,9 @@ import {
     TableLoadEndEvent,
     TableSortEvent,
 } from '@admin-ui/common';
-import { ErrorHandler, LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
+import { LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';

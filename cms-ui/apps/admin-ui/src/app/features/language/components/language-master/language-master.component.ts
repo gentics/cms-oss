@@ -1,6 +1,5 @@
 import { EditableEntity, LanguageBO } from '@admin-ui/common';
-import { LanguageTableLoaderService } from '@admin-ui/core';
-import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
+import { BaseTableMasterComponent, LanguageTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

@@ -1,6 +1,6 @@
-import { BO_PERMISSIONS, ScheduleTaskBO } from '@admin-ui/common';
+import { BO_PERMISSIONS, DELETE_ACTION, ScheduleTaskBO } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, ScheduleTask } from '@gentics/cms-models';

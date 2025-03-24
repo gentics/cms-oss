@@ -1,8 +1,15 @@
-import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO, EditableEntity } from '@admin-ui/common';
 import {
-    ConstructTableLoaderOptions,
-    ConstructTableLoaderService,
-    DevToolPackageTableLoaderService,
+    ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION,
+    ASSIGN_CONSTRUCT_TO_NODES_ACTION,
+    AdminUIEntityDetailRoutes,
+    AdminUIModuleRoutes,
+    BO_PERMISSIONS,
+    COPY_CONSTRUCT_ACTION,
+    ConstructBO,
+    DELETE_ACTION,
+    EditableEntity,
+} from '@admin-ui/common';
+import {
     I18nService,
     PermissionsService,
 } from '@admin-ui/core';
@@ -12,13 +19,13 @@ import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, TagType } fro
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {
+    ConstructTableLoaderOptions,
+    ConstructTableLoaderService,
+    DevToolPackageTableLoaderService,
+} from '../../providers';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
-import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
-
-export const ASSIGN_CONSTRUCT_TO_NODES_ACTION = 'assignConstructToNodes';
-export const ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION = 'assignConstructToCategory';
-export const COPY_CONSTRUCT_ACTION = 'copyConstruct';
 
 @Component({
     selector: 'gtx-construct-table',

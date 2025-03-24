@@ -5,8 +5,10 @@ import {
     ObservableStopper,
     PermissionsCheckResult,
     UserActionPermissions,
+    RequiredInstancePermissions,
+    RequiredPermissions,
 } from '@admin-ui/common';
-import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import {
     ChangeDetectorRef,
     Directive,

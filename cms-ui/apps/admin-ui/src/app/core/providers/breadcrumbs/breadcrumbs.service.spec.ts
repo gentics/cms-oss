@@ -14,7 +14,7 @@ import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/
 import { I18nService } from '../i18n/i18n.service';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
-import { BreadcrumbInfo } from './breadcrumb-info';
+import { BreadcrumbInfo } from '../../../common/models/breadcrumb-info';
 import { BreadcrumbsService } from './breadcrumbs.service';
 
 const DASHBOARD = '';

@@ -1,4 +1,4 @@
-import { PackageCheckTrableLoaderService, DevToolPackageHandlerService } from '@admin-ui/core';
+import { PackageCheckTrableLoaderService, DevToolPackageHandlerService } from '@admin-ui/shared';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,

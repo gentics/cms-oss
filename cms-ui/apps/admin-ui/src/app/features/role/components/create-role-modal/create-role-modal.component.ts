@@ -1,4 +1,5 @@
-import { LanguageHandlerService, RoleOperations } from '@admin-ui/core';
+import { RoleOperations } from '@admin-ui/core';
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Language, RoleBO, RoleCreateRequest } from '@gentics/cms-models';

@@ -1,6 +1,5 @@
 import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
-import { ObjectPropertyTableLoaderService } from '@admin-ui/core';
-import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
+import { BaseTableMasterComponent, ObjectPropertyTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

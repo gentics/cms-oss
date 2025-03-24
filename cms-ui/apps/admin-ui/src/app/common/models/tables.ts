@@ -67,3 +67,24 @@ export interface EntityTableActionClickEvent<T> extends TableActionClickEvent<T>
     /** The selected items when `selection` is `true` */
     selectedItems?: T[];
 }
+
+export const DELETE_ACTION = 'delete';
+export const EDIT_ACTION = 'edit';
+
+export const MOVE_TO_TOP_ACTION = 'moveToTop';
+export const MOVE_UP_ACTION = 'moveUp';
+export const MOVE_DOWN_ACTION = 'moveDown';
+export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
+
+export const MANAGE_PROJECT_ASSIGNMENT_ACTION = 'manageProjects';
+export const ASSIGN_TO_PROJECTS_ACTION = 'assignToProjects';
+export const UNASSIGN_FROM_PROJECTS_ACTION = 'unassignFromProjects';
+
+export const MANAGE_TAGS_ACTIONS = 'manageTags';
+
+export const MANAGE_SCHEMA_ASSIGNMENT_ACTION = 'manageSchemaAssignment';
+export const MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION = 'manageMicroschemaAssignment';
+
+export const ASSIGN_CONSTRUCT_TO_NODES_ACTION = 'assignConstructToNodes';
+export const ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION = 'assignConstructToCategory';
+export const COPY_CONSTRUCT_ACTION = 'copyConstruct';

@@ -1,5 +1,6 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryHandlerService, I18nService } from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { BaseModal, TableColumn, TableRow, TableSelectAllType } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';

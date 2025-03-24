@@ -1,4 +1,4 @@
-import { ObjectPropertyHandlerService } from '@admin-ui/core';
+import { ObjectPropertyHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ObjectProperty, ObjectPropertyCreateRequest } from '@gentics/cms-models';

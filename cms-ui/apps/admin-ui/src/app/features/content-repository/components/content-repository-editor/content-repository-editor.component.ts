@@ -4,9 +4,8 @@ import {
     EntityUpdateRequestModel,
     NULL_FORM_TAB_HANDLE,
 } from '@admin-ui/common';
-import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
-import { TagmapEntryDisplayFields } from '@admin-ui/shared';
+import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService, TagmapEntryDisplayFields } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';

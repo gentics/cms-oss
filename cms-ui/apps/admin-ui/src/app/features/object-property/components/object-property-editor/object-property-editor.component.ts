@@ -1,6 +1,6 @@
 import { EditableEntity, EntityUpdateRequestModel } from '@admin-ui/common';
-import { ObjectPropertyHandlerService, ObjectPropertyTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
+import { ObjectPropertyHandlerService, ObjectPropertyTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl } from '@angular/forms';

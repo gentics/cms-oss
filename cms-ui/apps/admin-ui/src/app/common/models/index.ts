@@ -1,3 +1,4 @@
+export * from './breadcrumb-info';
 export * from './business-objects';
 export * from './detail-tabs';
 export * from './editors';

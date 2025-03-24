@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, ScheduleTaskBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, ScheduleTaskOperations } from '@admin-ui/core';
+import { EntityManagerService, ScheduleTaskOperations } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ScheduleTask, ScheduleTaskListOptions } from '@gentics/cms-models';

@@ -1,5 +1,5 @@
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, ROUTE_DETAIL_OUTLET, RoleDetailTabs } from '@admin-ui/common';
-import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
+import { AdminUIEntityDetailRoutes, EDITOR_TAB, GcmsAdminUiRoute, ROUTE_DETAIL_OUTLET, RoleDetailTabs } from '@admin-ui/common';
+import { BreadcrumbResolver, DiscardChangesGuard } from '@admin-ui/core';
 import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { RoleDetailComponent, RoleMasterComponent } from './components';

@@ -1,8 +1,8 @@
 import { EditableEntity, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
-import { DevToolPackageHandlerService, DevToolPackageTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
+import { DevToolPackageHandlerService, DevToolPackageTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, Component, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({

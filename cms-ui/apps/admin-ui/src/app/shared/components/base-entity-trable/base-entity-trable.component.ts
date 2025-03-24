@@ -1,6 +1,5 @@
 import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import {
     CoerceOption,
@@ -14,6 +13,7 @@ import {
 } from '@gentics/ui-core';
 import { Observable, Subject, Subscription, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
+import { BaseTrableLoaderService } from '../../providers/base-trable-loader/base-trable-loader.service';
 
 @Component({ template: '' })
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {

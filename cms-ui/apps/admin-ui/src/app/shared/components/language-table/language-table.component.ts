@@ -1,17 +1,19 @@
-import { createMoveActions, EditableEntity, LanguageBO } from '@admin-ui/common';
-import { I18nService, LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
+import { EditableEntity, LanguageBO } from '@admin-ui/common';
+import { createMoveActions, I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { AnyModelType, Language, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import {
+    LanguageLoaderOptions,
+    LanguageTableLoaderService,
+} from '../../providers/language-table-loader/language-table-loader.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BaseSortableEntityTableComponent } from '../base-sortable-entity-table/base-sortable-entity-table.component';
 
-
 export const UNASSIGN_ACTION = 'unassign';
-
 
 @Component({
     selector: 'gtx-language-table',

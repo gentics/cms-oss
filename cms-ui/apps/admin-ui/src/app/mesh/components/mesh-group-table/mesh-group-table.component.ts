@@ -1,4 +1,4 @@
-import { BO_PERMISSIONS, BusinessObject } from '@admin-ui/common';
+import { BO_PERMISSIONS, BusinessObject, DELETE_ACTION } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { MeshGroupBO, MeshRoleBO, MeshUserBO } from '@admin-ui/mesh/common';
 import {
@@ -9,7 +9,7 @@ import {
     MeshUserTableLoaderService,
 } from '@admin-ui/mesh/providers';
 import { getUserDisplayName } from '@admin-ui/mesh/utils';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';

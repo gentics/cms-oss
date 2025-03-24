@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TagStatusBO } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { TagStatus, TagStatusOptions } from '@gentics/cms-models';

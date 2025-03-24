@@ -4,11 +4,10 @@ import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/det
 import {
     BREADCRUMB_RESOLVER,
     ContentRepositoryFragmentOperations,
-    CRFragmentTableLoaderService,
     EditorTabTrackerService,
     ResolveBreadcrumbFn,
 } from '@admin-ui/core';
-import { BaseDetailComponent, ContentRepositoryFragmentDataService, TagmapEntryDisplayFields } from '@admin-ui/shared';
+import { BaseDetailComponent, ContentRepositoryFragmentDataService, CRFragmentTableLoaderService, TagmapEntryDisplayFields } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';

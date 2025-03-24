@@ -1,5 +1,5 @@
 import { BO_ID, ConstructCategoryBO, TableLoadEndEvent, TableSortEvent, sortEntityRow } from '@admin-ui/common';
-import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
+import { ConstructCategoryHandlerService } from '@admin-ui/shared/providers/construct-category-handler/construct-category-handler.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { BaseModal, TableRow } from '@gentics/ui-core';
 

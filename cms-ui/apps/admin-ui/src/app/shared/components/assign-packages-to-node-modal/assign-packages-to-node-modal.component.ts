@@ -1,9 +1,10 @@
 import { BO_ID } from '@admin-ui/common';
-import { DevToolPackageHandlerService, DevToolPackageManagerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { DevToolPackageHandlerService } from '../../providers/dev-tool-package-handler/dev-tool-package-handler.service';
+import { DevToolPackageManagerService } from '../../providers/dev-tool-package-manager/dev-tool-package-manager.service';
 
 @Component({
     selector: 'gtx-assign-packages-to-node-modal',

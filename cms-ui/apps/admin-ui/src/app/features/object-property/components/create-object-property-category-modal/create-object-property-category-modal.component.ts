@@ -1,4 +1,4 @@
-import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
+import { ObjectPropertyCategoryHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ObjectPropertyCategory } from '@gentics/cms-models';

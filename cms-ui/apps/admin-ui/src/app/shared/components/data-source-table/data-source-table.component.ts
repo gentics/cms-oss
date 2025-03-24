@@ -1,11 +1,5 @@
 import { DataSourceBO, EditableEntity } from '@admin-ui/common';
-import {
-    DataSourceTableLoaderOptions,
-    DataSourceTableLoaderService,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, DataSource, NormalizableEntityTypesMap } from '@gentics/cms-models';
@@ -15,6 +9,11 @@ import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
+import {
+    DataSourceTableLoaderOptions,
+    DataSourceTableLoaderService,
+} from '../../providers/data-source-table-loader/data-source-table-loader.service';
+import { DevToolPackageTableLoaderService } from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 
 @Component({
     selector: 'gtx-data-source-table',

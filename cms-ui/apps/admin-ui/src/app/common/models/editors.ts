@@ -206,6 +206,9 @@ export const ROUTE_ENTITY_LOADED = Symbol('route-entity-loaded');
 export const ROUTE_DETAIL_OUTLET = 'detail';
 export const ROUTE_MESH_BROWSER_OUTLET = 'mesh-browser-list';
 
+/** The name of the editorTab route parameter. */
+export const EDITOR_TAB = 'editorTab';
+
 export enum EntityModelType {
     CREATE_REQUEST_MODEL = 'create-request',
     CREATE_REQUEST_PARAMS = 'create-params',

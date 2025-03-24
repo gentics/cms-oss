@@ -1,5 +1,5 @@
 import { DevToolPackageBO } from '@admin-ui/common';
-import { DevToolPackageHandlerService } from '@admin-ui/core';
+import { DevToolPackageHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { PackageCreateRequest } from '@gentics/cms-models';

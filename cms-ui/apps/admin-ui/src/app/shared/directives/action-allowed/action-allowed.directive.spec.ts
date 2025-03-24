@@ -1,5 +1,12 @@
-import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
-import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
+import {
+    InterfaceOf,
+    MultiModuleUserActionPermissions,
+    USER_ACTION_PERMISSIONS,
+    UserActionPermissions,
+    RequiredInstancePermissions,
+    RequiredPermissions,
+} from '@admin-ui/common';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { componentTest } from '@admin-ui/testing';
 import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';

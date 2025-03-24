@@ -1,17 +1,16 @@
 import { DevToolPackageBO, EditableEntity } from '@admin-ui/common';
-import {
-    DevToolPackageHandlerService,
-    DevToolPackageTableLoaderOptions,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, combineLatest, interval } from 'rxjs';
 import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { DevToolPackageHandlerService } from '../../providers/dev-tool-package-handler/dev-tool-package-handler.service';
+import {
+    DevToolPackageTableLoaderOptions,
+    DevToolPackageTableLoaderService,
+} from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 import { AssignPackagesToNodeModalComponent } from '../assign-packages-to-node-modal/assign-packages-to-node-modal.component';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 

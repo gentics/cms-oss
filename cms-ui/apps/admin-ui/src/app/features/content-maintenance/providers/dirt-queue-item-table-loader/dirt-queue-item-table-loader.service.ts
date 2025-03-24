@@ -1,5 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, DirtQueueItemBO, discard, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
-import { AdminOperations, BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
+import { AdminOperations, EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { DirtQueueItem, DirtQueueListOptions } from '@gentics/cms-models';

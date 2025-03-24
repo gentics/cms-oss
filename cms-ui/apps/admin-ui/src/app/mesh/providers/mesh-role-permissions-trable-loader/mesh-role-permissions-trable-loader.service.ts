@@ -1,6 +1,5 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import {
     BASIC_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -16,6 +15,7 @@ import {
     NODE_PERMISSIONS,
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
+import { BaseTrableLoaderService } from '@admin-ui/shared';
 import { Injectable } from '@angular/core';
 import { NodeResponse, Permission } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';

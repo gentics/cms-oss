@@ -1,8 +1,8 @@
-import { BO_PERMISSIONS } from '@admin-ui/common';
+import { ASSIGN_TO_PROJECTS_ACTION, BO_PERMISSIONS, DELETE_ACTION, EDIT_ACTION, UNASSIGN_FROM_PROJECTS_ACTION } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { MeshMicroschemaBO, MeshProjectBO } from '@admin-ui/mesh/common';
 import { MicroschemaHandlerService, MicroschemaTableLoaderService } from '@admin-ui/mesh/providers';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Microschema, Permission } from '@gentics/mesh-models';
@@ -12,11 +12,6 @@ import { map } from 'rxjs/operators';
 import { MicroschemaModal } from '../microschema-modal/microschema-modal.component';
 import { MicroschemaPropertiesMode } from '../microschema-properties/microschema-properties.component';
 import { SelectProjectModal } from '../select-project-modal/select-project-modal.component';
-
-const EDIT_ACTION = 'edit';
-const MANAGE_PROJECT_ASSIGNMENT_ACTION = 'manageProjects';
-const ASSIGN_TO_PROJECTS_ACTION = 'assignToProjects';
-const UNASSIGN_FROM_PROJECTS_ACTION = 'unassignFromProjects';
 
 @Component({
     selector: 'gtx-mesh-microschema-table',

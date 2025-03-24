@@ -6,15 +6,14 @@ import {
     NodeOperations,
     ResolveBreadcrumbFn,
     TemplateOperations,
-    TemplateTableLoaderService,
 } from '@admin-ui/core';
-import { BaseDetailComponent, TemplateDataService } from '@admin-ui/shared';
+import { BaseDetailComponent, TemplateDataService, TemplateTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Node, NormalizableEntityType, Normalized, Raw, TemplateBO, TemplateSaveRequest } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable, of, Subscription } from 'rxjs';
 import { delay, distinctUntilChanged, filter, first, map, repeat, startWith, switchMap, takeUntil } from 'rxjs/operators';
 

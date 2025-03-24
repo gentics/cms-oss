@@ -1,9 +1,10 @@
 import { BusinessObject, PackageTableEntityLoader } from '@admin-ui/common';
-import { DevToolPackageTableLoaderService, I18nService } from '@admin-ui/core/providers';
+import { I18nService } from '@admin-ui/core/providers';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ModalService, TableActionClickEvent } from '@gentics/ui-core';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import { DevToolPackageTableLoaderService } from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
 export const UNASSIGN_FROM_PACKAGE_ACTION = 'unassignFromPackage';

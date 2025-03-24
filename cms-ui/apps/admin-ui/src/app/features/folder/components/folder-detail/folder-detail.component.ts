@@ -1,6 +1,6 @@
 import { detailLoading, FolderDetailTabs, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
-import { EditorTabTrackerService, FolderOperations, FolderTrableLoaderService, PermissionsService } from '@admin-ui/core';
-import { BaseDetailComponent, FolderDataService } from '@admin-ui/shared';
+import { EditorTabTrackerService, FolderOperations, PermissionsService } from '@admin-ui/core';
+import { BaseDetailComponent, FolderDataService, FolderTrableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';

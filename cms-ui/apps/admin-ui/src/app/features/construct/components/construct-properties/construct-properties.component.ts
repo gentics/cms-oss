@@ -1,6 +1,6 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructCategoryHandlerService, PermissionsService } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
+import { PermissionsService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService, NodeDataService } from '@admin-ui/shared';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,

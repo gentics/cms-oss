@@ -1,5 +1,5 @@
-import { I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
-import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
+import { I18nNotificationService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService, LanguageHandlerService } from '@admin-ui/shared';
 import { ConstructCategoryPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';

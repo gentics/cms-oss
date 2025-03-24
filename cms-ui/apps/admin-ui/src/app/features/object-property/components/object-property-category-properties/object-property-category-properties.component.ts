@@ -1,5 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { LanguageHandlerService } from '@admin-ui/core';
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';

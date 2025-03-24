@@ -1,5 +1,6 @@
 import { discard, EntityPageResponse, ObjectPropertyCategoryBO, TableLoadOptions } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService, ObjectPropertyCategoryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ObjectPropertyCategory } from '@gentics/cms-models';

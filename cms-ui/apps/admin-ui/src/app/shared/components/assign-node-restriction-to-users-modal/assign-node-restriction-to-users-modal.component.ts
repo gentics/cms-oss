@@ -1,8 +1,8 @@
-import { GroupUserDataService } from '@admin-ui/shared/providers/group-user-data/group-user-data.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UserGroupNodeRestrictionsResponse } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { GroupUserDataService } from '../../providers/group-user-data/group-user-data.service';
 
 @Component({
     selector: 'gtx-assign-node-restriction-to-users-modal',

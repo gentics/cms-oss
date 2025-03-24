@@ -1,5 +1,5 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_NODE_ID, BO_PERMISSIONS, ContentItem, ContentItemBO, ContentItemTypes } from '@admin-ui/common';
-import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
+import { BaseTrableLoaderService } from '../../providers/base-trable-loader/base-trable-loader.service';
 import { Injectable } from '@angular/core';
 import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';

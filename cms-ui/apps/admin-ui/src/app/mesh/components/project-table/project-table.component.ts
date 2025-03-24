@@ -1,25 +1,27 @@
-import { BO_PERMISSIONS } from '@admin-ui/common';
+import {
+    BO_PERMISSIONS,
+    DELETE_ACTION,
+    EDIT_ACTION,
+    MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION,
+    MANAGE_SCHEMA_ASSIGNMENT_ACTION,
+    MANAGE_TAGS_ACTIONS,
+} from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { MeshMicroschemaBO, MeshProjectBO, MeshSchemaBO } from '@admin-ui/mesh/common';
 import { MicroschemaHandlerService, SchemaHandlerService } from '@admin-ui/mesh/providers';
 import { ProjectTableLoaderService } from '@admin-ui/mesh/providers/project-table-loader/project-table-loader.service';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Permission, Project } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ManageTagFamiliesModal } from '../manage-tag-families-modal/manage-tag-families-modal.component';
 import { ProjectModal } from '../project-modal/project-modal.component';
 import { ProjectPropertiesMode } from '../project-properties/project-properties.component';
 import { SelectMicroschemaModal } from '../select-microschema-modal/select-microschema-modal.component';
 import { SelectSchemaModal } from '../select-schema-modal/select-schema-modal.component';
-import { ManageTagFamiliesModal } from '../manage-tag-families-modal/manage-tag-families-modal.component';
-
-const EDIT_ACTION = 'edit';
-const MANAGE_TAGS_ACTIONS = 'manageTags';
-const MANAGE_SCHEMA_ASSIGNMENT_ACTION = 'manageSchemaAssignment';
-const MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION = 'manageMicroschemaAssignment';
 
 @Component({
     selector: 'gtx-mesh-project-table',

@@ -1,4 +1,5 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
+import { LanguageHandlerService } from '@admin-ui/shared';
 import { AppStateService, INITIAL_AUTH_STATE } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
@@ -10,7 +11,6 @@ import { SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage';
 import { I18nService } from '../i18n';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
-import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 import { UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
 

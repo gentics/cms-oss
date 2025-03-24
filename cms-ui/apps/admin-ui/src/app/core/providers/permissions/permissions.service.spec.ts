@@ -1,4 +1,11 @@
-import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
+import {
+    ConstructorOf, ObservableStopper,
+    USER_ACTION_PERMISSIONS,
+    USER_ACTION_PERMISSIONS_DEF,
+    RequiredTypePermissions,
+    RequiredInstancePermissions,
+    RequiredPermissions,
+} from '@admin-ui/common';
 import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
 import { AddTypePermissionsMap, AppStateService } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
@@ -26,7 +33,7 @@ import { switchMap, takeUntil } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
 import { ErrorHandler } from '../error-handler';
 import { MockErrorHandler } from '../error-handler/error-handler.mock';
-import { PermissionsService, RequiredInstancePermissions, RequiredPermissions, RequiredTypePermissions } from './permissions.service';
+import { PermissionsService } from './permissions.service';
 
 const MOCK_PERM_MAP1: PermissionsMapCollection = {
     permissions: {

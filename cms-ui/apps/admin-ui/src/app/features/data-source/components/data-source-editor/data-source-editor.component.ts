@@ -8,12 +8,8 @@ import {
     sortEntityRow,
 } from '@admin-ui/common';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
-import {
-    DataSourceEntryHandlerService,
-    DataSourceHandlerService,
-    DataSourceTableLoaderService,
-    PermissionsService,
-} from '@admin-ui/core/providers';
+import { PermissionsService } from '@admin-ui/core/providers';
+import { DataSourceEntryHandlerService, DataSourceHandlerService, DataSourceTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';

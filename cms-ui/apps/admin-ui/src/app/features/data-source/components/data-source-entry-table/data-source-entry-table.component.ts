@@ -1,6 +1,6 @@
-import { BO_NEW_SORT_ORDER, createMoveActions, DataSourceEntryBO } from '@admin-ui/common';
-import { I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BO_NEW_SORT_ORDER, DataSourceEntryBO, DELETE_ACTION } from '@admin-ui/common';
+import { createMoveActions, I18nService, PermissionsService } from '@admin-ui/core';
+import { BaseSortableEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, DataSourceEntry, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';

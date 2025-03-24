@@ -1,11 +1,5 @@
 import { ContentRepositoryFragmentBO } from '@admin-ui/common';
-import {
-    CRFragmentTableLoaderOptions,
-    CRFragmentTableLoaderService,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, ContentRepositoryFragment, NormalizableEntityTypesMap } from '@gentics/cms-models';
@@ -13,6 +7,11 @@ import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
+import {
+    CRFragmentTableLoaderOptions,
+    CRFragmentTableLoaderService,
+} from '../../providers/cr-fragment-table-loader/cr-fragment-table-loader.service';
+import { DevToolPackageTableLoaderService } from '../../providers/dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 import { CreateContentRepositoryFragmentModalComponent } from '../create-cr-fragment-modal/create-cr-fragment-modal.component';

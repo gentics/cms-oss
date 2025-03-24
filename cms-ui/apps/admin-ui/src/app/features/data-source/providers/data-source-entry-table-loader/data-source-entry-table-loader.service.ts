@@ -8,15 +8,14 @@ import {
     EntityPageResponse,
     TableLoadOptions,
 } from '@admin-ui/common';
+import { EntityManagerService } from '@admin-ui/core';
+import { BaseTableLoaderService, DataSourceEntryHandlerService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { DataSourceEntry, Raw } from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BaseTableLoaderService } from '../../../../core/providers/base-table-loader/base-table-loader.service';
-import { DataSourceEntryHandlerService } from '../../../../core/providers/data-source-entry-handler/data-source-entry-handler.service';
-import { EntityManagerService } from '../../../../core/providers/entity-manager';
 
 export interface DataSourceEntryTableLoaderOptions {
     dataSourceId: string | number;

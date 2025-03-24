@@ -9,8 +9,8 @@ import {
     ROUTE_PARAM_MESH_TAB,
     ROUTE_PATH_MESH,
     ROUTE_PERMISSIONS_KEY,
-    createEntityEditorRoutes,
 } from '@admin-ui/common';
+import { createEntityEditorRoutes } from '@admin-ui/core';
 import { ManagementTabsComponent } from '@admin-ui/mesh';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ContentRepositoryEditorComponent, ContentRepositoryMasterComponent } from './components';

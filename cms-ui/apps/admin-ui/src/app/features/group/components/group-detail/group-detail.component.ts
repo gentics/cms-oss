@@ -3,11 +3,10 @@ import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
     GroupOperations,
-    GroupTableLoaderService,
     PermissionsService,
     ResolveBreadcrumbFn,
 } from '@admin-ui/core';
-import { BaseDetailComponent, GroupDataService } from '@admin-ui/shared';
+import { BaseDetailComponent, GroupDataService, GroupTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';

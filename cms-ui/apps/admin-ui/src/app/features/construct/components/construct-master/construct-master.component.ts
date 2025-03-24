@@ -1,7 +1,14 @@
-import { BO_PERMISSIONS, ConstructBO, EditableEntity, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService, I18nNotificationService, I18nService } from '@admin-ui/core';
-import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
-import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
+import {
+    ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION,
+    ASSIGN_CONSTRUCT_TO_NODES_ACTION,
+    BO_PERMISSIONS,
+    ConstructBO,
+    COPY_CONSTRUCT_ACTION,
+    EditableEntity,
+    EntityTableActionClickEvent,
+} from '@admin-ui/common';
+import { I18nNotificationService, I18nService } from '@admin-ui/core';
+import { BaseTableMasterComponent, ConstructHandlerService, ConstructTableLoaderService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';

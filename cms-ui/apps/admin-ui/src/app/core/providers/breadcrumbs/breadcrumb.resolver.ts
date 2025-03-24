@@ -1,8 +1,7 @@
 import { Injectable, Injector } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
-
-import { BreadcrumbInfo } from './breadcrumb-info';
+import { BreadcrumbInfo } from '@admin-ui/common';
 
 /** The name of the static method used to resolve the `BreadcrumbInfo` in a component' class. */
 export const BREADCRUMB_RESOLVER = 'resolveBreadcrumb';

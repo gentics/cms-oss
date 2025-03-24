@@ -1,6 +1,6 @@
-import { AdminUIEntityDetailRoutes, TemplateTagBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, TemplateTagBO, DELETE_ACTION } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, TemplateTag } from '@gentics/cms-models';

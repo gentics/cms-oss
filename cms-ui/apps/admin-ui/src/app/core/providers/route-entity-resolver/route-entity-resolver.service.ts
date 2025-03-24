@@ -12,18 +12,20 @@ import {
     ROUTE_PARAM_ENTITY_ID,
     ROUTE_PARAM_NODE_ID,
 } from '@admin-ui/common';
+import {
+    ConstructCategoryHandlerService,
+    ConstructHandlerService,
+    ContentRepositoryHandlerService,
+    DataSourceHandlerService,
+    DevToolPackageHandlerService,
+    LanguageHandlerService,
+    NodeHandlerService,
+    ObjectPropertyCategoryHandlerService,
+    ObjectPropertyHandlerService,
+} from '@admin-ui/shared';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
-import { NodeHandlerService } from '../node-handler/node-handler.service';
-import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
-import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
-import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
-import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
-import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
-import { LanguageHandlerService } from '../language-handler/language-handler.service';
-import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
-import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 
 export function runEntityResolver(
     from: ActivatedRouteSnapshot,

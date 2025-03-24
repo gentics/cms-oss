@@ -1,3 +1,5 @@
+import { IndexByKey } from '@gentics/cms-models';
+
 export type BooleanFn = () => boolean;
 
 /** Interface necessary to implement for the guarded component */
@@ -13,3 +15,14 @@ export interface OnDiscardChanges {
     /** Reset entity data of invoking component */
     resetEntity: () => Promise<void>;
 }
+
+export interface ParametizedI18nKey {
+    /** The i18n key that will be passed to the I18nService. */
+    key: string;
+
+    /** Parameters that should be passed to the I18nService. */
+    params: IndexByKey<any>;
+}
+
+/** Type alias for specifying that a parameter or property needs to be set to an i18n key. */
+export type I18nKey = string | ParametizedI18nKey;

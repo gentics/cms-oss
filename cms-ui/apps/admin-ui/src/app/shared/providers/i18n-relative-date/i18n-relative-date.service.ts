@@ -1,9 +1,9 @@
 import { I18nService } from '@admin-ui/core';
-import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMapTo } from 'rxjs/operators';
+import { InitializableServiceBase } from '../initializable-service-base/initializable-service.base';
 
 export interface RelativeTimeTranslation {
     /** Translation key used for the i18nService */

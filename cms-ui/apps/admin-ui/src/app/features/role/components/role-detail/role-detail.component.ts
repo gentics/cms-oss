@@ -1,7 +1,7 @@
 import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, RoleDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
-import { EditorTabTrackerService, LanguageHandlerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
-import { RoleDataService } from '@admin-ui/shared';
+import { EditorTabTrackerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
+import { RoleDataService, LanguageHandlerService } from '@admin-ui/shared';
 import { BaseDetailComponent } from '@admin-ui/shared/components';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';

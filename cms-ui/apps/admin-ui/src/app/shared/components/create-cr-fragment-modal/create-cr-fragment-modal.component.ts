@@ -1,9 +1,9 @@
 import { ContentRepositoryFragmentOperations } from '@admin-ui/core';
-import { EntityExistsValidator } from '@admin-ui/shared/providers';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ContentRepositoryFragmentBO, ContentRepositoryFragmentCreateRequest, Normalized } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
+import { EntityExistsValidator } from '../../providers/entity-exists-validator/entity-exists-validator.service';
 
 @Component({
     selector: 'gtx-create-cr-fragment-modal',

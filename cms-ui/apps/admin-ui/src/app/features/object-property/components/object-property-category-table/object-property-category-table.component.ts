@@ -1,6 +1,6 @@
-import { EditableEntity, ObjectPropertyCategoryBO } from '@admin-ui/common';
+import { DELETE_ACTION, EditableEntity, ObjectPropertyCategoryBO } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertyCategory } from '@gentics/cms-models';

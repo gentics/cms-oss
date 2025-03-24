@@ -1,12 +1,10 @@
+import { EDITOR_TAB } from '@admin-ui/common';
 import { AppStateService, SwitchEditorTab } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
-
-/** The name of the editorTab route parameter. */
-export const EDITOR_TAB = 'editorTab';
 
 /**
  * Facilitates the tracking of the currently active editor tab parameter in the routes

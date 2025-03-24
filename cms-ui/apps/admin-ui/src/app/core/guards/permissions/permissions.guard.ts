@@ -1,11 +1,11 @@
-import { ROUTE_PERMISSIONS_KEY, RouteData } from '@admin-ui/common/models/routing';
+import { RequiredTypePermissions, ROUTE_PERMISSIONS_KEY, RouteData } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
 import { I18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service';
-import { PermissionsService, RequiredTypePermissions } from '../../providers/permissions';
+import { PermissionsService } from '../../providers/permissions';
 
 /**
  * A guard to prevent users from navigating to routes, for which they do not have permissions.

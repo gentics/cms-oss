@@ -22,6 +22,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 /**
  * Test cases for translations of pages in channels
  */
+@GCNFeature(set = { Feature.MULTICHANNELLING })
 public class MCPageTranslationSandboxTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -31,7 +32,6 @@ public class MCPageTranslationSandboxTest {
 	 * @throws Exception
 	 */
 	@Test
-	@GCNFeature(set={Feature.MULTICHANNELLING})
 	public void testTranslateTwiceinChannel() throws Exception {
 		com.gentics.contentnode.object.Node channel = null;
 		com.gentics.contentnode.object.Page page    = null;

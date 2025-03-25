@@ -146,7 +146,7 @@ public abstract class AbstractSSOFilter implements Filter {
 			var groupMapping = initGroupsMapping.computeIfAbsent(key, k -> new HashMap<>());
 
 			// The groupExists() call will also return true for a number that is actually a group name ...
-			if (value instanceof Integer groupId && groupExists(groupId)) {
+			if (value instanceof Integer groupId) {
 				// ... and addInitGroupMapping() will handle a String representing a group ID correctly.
 				addInitGroupMapping(groupMapping, groupId.toString(), null);
 			} else if (value instanceof String groupName) {
@@ -155,7 +155,7 @@ public abstract class AbstractSSOFilter implements Filter {
 				addInitGroupMappingWithRestrictions(key, groupMapping, groupDefWithRestrictions);
 			} else if (value instanceof List<?> groupList) {
 				for (var groupDef: groupList) {
-					if (groupDef instanceof Integer groupId && groupExists(groupId)) {
+					if (groupDef instanceof Integer groupId) {
 						addInitGroupMapping(groupMapping, groupId.toString(), null);
 					} else if (groupDef instanceof String groupName) {
 						addInitGroupMapping(groupMapping, groupName, null);
@@ -167,10 +167,6 @@ public abstract class AbstractSSOFilter implements Filter {
 				logger.warn("Unexpected value for key '%s' (%s): %s".formatted(key, value == null ? "N/A" : value.getClass(), value));
 			}
 		}
-	}
-
-	private boolean groupExists(Integer id) throws NodeException {
-		return !getGroupId(id).isEmpty();
 	}
 
 	/**
@@ -267,20 +263,6 @@ public abstract class AbstractSSOFilter implements Filter {
 			stmt -> stmt.setString(1, groupName),
 			DBUtils.IDS);
 
-		if (groupIds.isEmpty() && StringUtils.isNumeric(groupName)) {
-			try (Trx trx = new Trx()) {
-				var id = Integer.parseInt(groupName);
-
-				if (trx.getTransaction().getObject(UserGroup.class, id) != null) {
-					groupIds.add(id);
-				}
-
-				trx.success();
-			} catch (NumberFormatException e) {
-				// Nothing to do here.
-			}
-		}
-
 		if (groupIds.isEmpty()) {
 			logger.warn("No group found with name '" + groupName + "'");
 		}
@@ -305,19 +287,16 @@ public abstract class AbstractSSOFilter implements Filter {
 	private Set<Integer> getNodeIds(List<String> nodeNamesOrGlobalIds) throws NodeException {
 		var nodeIds = new HashSet<Integer>(nodeNamesOrGlobalIds.size());
 		var remaining = new HashSet<String>();
+		var t = TransactionManager.getCurrentTransaction();
 
-		try (Trx trx = new Trx()) {
-			for (var nodeId: nodeNamesOrGlobalIds) {
-				var node = trx.getTransaction().getObject(Node.class, nodeId);
+		for (var nodeId: nodeNamesOrGlobalIds) {
+			var node = t.getObject(Node.class, nodeId);
 
-				if (node != null) {
-					nodeIds.add(node.getId());
-				} else {
-					remaining.add(nodeId);
-				}
+			if (node != null) {
+				nodeIds.add(node.getId());
+			} else {
+				remaining.add(nodeId);
 			}
-
-			trx.success();
 		}
 
 		var numRemaining = remaining.size();

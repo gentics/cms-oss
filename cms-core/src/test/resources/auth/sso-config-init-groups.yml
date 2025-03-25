@@ -1,5 +1,5 @@
 # The group "Group1" is created with ID 18.
-roles.realm.realm-role-1: "18"
+roles.realm.realm-role-1: "${sys:GROUP1_ID}"
 roles.realm.realm-role-2:
   - Group2
   - 4711

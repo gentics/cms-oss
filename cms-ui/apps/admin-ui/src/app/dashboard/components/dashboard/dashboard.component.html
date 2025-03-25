@@ -6,8 +6,8 @@
                 icon="user-management"
                 [attr.data-id]="AdminUIModuleRoutes.USERS"
                 [title]="'dashboard.item_users' | i18n"
-                [class.disabled]="!(usersModuleEnabled$ | async)"
-                [disabled]="!(usersModuleEnabled$ | async)"
+                [class.disabled]="!usersModuleEnabled"
+                [disabled]="!usersModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -15,8 +15,8 @@
                 icon="group-management"
                 [attr.data-id]="AdminUIModuleRoutes.GROUPS"
                 [title]="'dashboard.item_groups' | i18n"
-                [class.disabled]="!(groupsModuleEnabled$ | async)"
-                [disabled]="!(groupsModuleEnabled$ | async)"
+                [class.disabled]="!groupsModuleEnabled"
+                [disabled]="!groupsModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -24,8 +24,8 @@
                 icon="role-management"
                 [attr.data-id]="AdminUIModuleRoutes.ROLES"
                 [title]="'dashboard.item_roles' | i18n"
-                [class.disabled]="!(rolesModuleEnabled$ | async)"
-                [disabled]="!(rolesModuleEnabled$ | async)"
+                [class.disabled]="!rolesModuleEnabled"
+                [disabled]="!rolesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -33,8 +33,8 @@
                 icon="folder-management"
                 [attr.data-id]="AdminUIModuleRoutes.FOLDERS"
                 [title]="'dashboard.item_folders' | i18n"
-                [class.disabled]="!(foldersModuleEnabled$ | async)"
-                [disabled]="!(foldersModuleEnabled$ | async)"
+                [class.disabled]="!foldersModuleEnabled"
+                [disabled]="!foldersModuleEnabled"
             ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
@@ -44,8 +44,8 @@
                 icon="node-management"
                 [attr.data-id]="AdminUIModuleRoutes.NODES"
                 [title]="'dashboard.item_node_management' | i18n"
-                [class.disabled]="!(nodesModuleEnabled$ | async)"
-                [disabled]="!(nodesModuleEnabled$ | async)"
+                [class.disabled]="!nodesModuleEnabled"
+                [disabled]="!nodesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -53,8 +53,8 @@
                 icon="languages"
                 [attr.data-id]="AdminUIModuleRoutes.LANGUAGES"
                 [title]="'dashboard.item_languages' | i18n"
-                [class.disabled]="!(languagesModuleEnabled$ | async)"
-                [disabled]="!(languagesModuleEnabled$ | async)"
+                [class.disabled]="!languagesModuleEnabled"
+                [disabled]="!languagesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -62,8 +62,8 @@
                 icon="content-repositories"
                 [attr.data-id]="AdminUIModuleRoutes.CONTENT_REPOSITORIES"
                 [title]="'dashboard.item_content_repositories' | i18n"
-                [class.disabled]="!(contentRepositoriesModuleEnabled$ | async)"
-                [disabled]="!(contentRepositoriesModuleEnabled$ | async)"
+                [class.disabled]="!contentRepositoriesModuleEnabled"
+                [disabled]="!contentRepositoriesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -71,8 +71,8 @@
                 icon="mesh"
                 [attr.data-id]="AdminUIModuleRoutes.MESH_BROWSER"
                 [title]="'dashboard.mesh_browser' | i18n"
-                [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
-                [disabled]="!(meshBrowserModuleEnabled$ | async)"
+                [class.disabled]="!meshBrowserModuleEnabled"
+                [disabled]="!meshBrowserModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -80,8 +80,8 @@
                 icon="license"
                 [attr.data-id]="AdminUIModuleRoutes.LICENSE_MANAGEMENT"
                 [title]="'dashboard.license_management' | i18n"
-                [class.disabled]="!(licenseModuleEnabled$ | async)"
-                [disabled]="!(licenseModuleEnabled$ | async)"
+                [class.disabled]="!licenseModuleEnabled"
+                [disabled]="!licenseModuleEnabled"
             ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
@@ -91,8 +91,8 @@
                 icon="search-index-maintenance"
                 [attr.data-id]="AdminUIModuleRoutes.SEARCH_INDEX_MAINTENANCE"
                 [title]="'dashboard.search_index_maintenance' | i18n"
-                [class.disabled]="!(searchMaintenanceModuleEnabled$ | async)"
-                [disabled]="!(searchMaintenanceModuleEnabled$ | async)"
+                [class.disabled]="!searchMaintenanceModuleEnabled"
+                [disabled]="!searchMaintenanceModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -100,8 +100,8 @@
                 icon="logs"
                 [attr.data-id]="AdminUIModuleRoutes.LOGS"
                 [title]="'dashboard.item_logs' | i18n"
-                [class.disabled]="!(logsModuleEnabled$ | async)"
-                [disabled]="!(logsModuleEnabled$ | async)"
+                [class.disabled]="!logsModuleEnabled"
+                [disabled]="!logsModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -109,8 +109,8 @@
                 icon="scheduler"
                 [attr.data-id]="AdminUIModuleRoutes.SCHEDULER"
                 [title]="'dashboard.item_scheduler' | i18n"
-                [class.disabled]="!(schedulerModuleEnabled$ | async)"
-                [disabled]="!(schedulerModuleEnabled$ | async)"
+                [class.disabled]="!schedulerModuleEnabled"
+                [disabled]="!schedulerModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -118,8 +118,8 @@
                 icon="system-maintenance"
                 [attr.data-id]="AdminUIModuleRoutes.CONTENT_MAINTENANCE"
                 [title]="'dashboard.item_content_maintenance' | i18n"
-                [class.disabled]="!(contentMaintenanceModuleEnabled$ | async)"
-                [disabled]="!(contentMaintenanceModuleEnabled$ | async)"
+                [class.disabled]="!contentMaintenanceModuleEnabled"
+                [disabled]="!contentMaintenanceModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -127,8 +127,8 @@
                 icon="maintenance"
                 [attr.data-id]="AdminUIModuleRoutes.MAINTENANCE_MODE"
                 [title]="'dashboard.item_maintenance_mode' | i18n"
-                [class.disabled]="!(maintenancemodeModuleEnabled$ | async)"
-                [disabled]="!(maintenancemodeModuleEnabled$ | async)"
+                [class.disabled]="!maintenancemodeModuleEnabled"
+                [disabled]="!maintenancemodeModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -136,8 +136,8 @@
                 icon="import-export"
                 [attr.data-id]="AdminUIModuleRoutes.CONTENT_STAGING"
                 [title]="'dashboard.item_content_staging' | i18n"
-                [class.disabled]="!(contentStagingModuleEnabled$ | async)"
-                [disabled]="!(contentStagingModuleEnabled$ | async)"
+                [class.disabled]="!contentStagingModuleEnabled"
+                [disabled]="!contentStagingModuleEnabled"
             ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
@@ -147,8 +147,8 @@
                 icon="object-properties"
                 [attr.data-id]="AdminUIModuleRoutes.OBJECT_PROPERTIES"
                 [title]="'dashboard.item_object_properties' | i18n"
-                [class.disabled]="!(objectPropertiesModuleEnabled$ | async)"
-                [disabled]="!(objectPropertiesModuleEnabled$ | async)"
+                [class.disabled]="!objectPropertiesModuleEnabled"
+                [disabled]="!objectPropertiesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -156,8 +156,8 @@
                 icon="tagtypes"
                 [attr.data-id]="AdminUIModuleRoutes.CONSTRUCTS"
                 [title]="'dashboard.item_tagtypes_constructs' | i18n"
-                [class.disabled]="!(constructsModuleEnabled$ | async)"
-                [disabled]="!(constructsModuleEnabled$ | async)"
+                [class.disabled]="!constructsModuleEnabled"
+                [disabled]="!constructsModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -165,8 +165,8 @@
                 icon="datasources"
                 [attr.data-id]="AdminUIModuleRoutes.DATA_SOURCES"
                 [title]="'dashboard.item_data_sources' | i18n"
-                [class.disabled]="!(dataSourcesModuleEnabled$ | async)"
-                [disabled]="!(dataSourcesModuleEnabled$ | async)"
+                [class.disabled]="!dataSourcesModuleEnabled"
+                [disabled]="!dataSourcesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -174,8 +174,8 @@
                 icon="cr-fragments"
                 [attr.data-id]="AdminUIModuleRoutes.CR_FRAGMENTS"
                 [title]="'dashboard.item_cr_fragments' | i18n"
-                [class.disabled]="!(crFragmentsModuleEnabled$ | async)"
-                [disabled]="!(crFragmentsModuleEnabled$ | async)"
+                [class.disabled]="!crFragmentsModuleEnabled"
+                [disabled]="!crFragmentsModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -183,8 +183,8 @@
                 icon="packages"
                 [attr.data-id]="AdminUIModuleRoutes.DEV_TOOL_PACKAGES"
                 [title]="'dashboard.item_packages' | i18n"
-                [class.disabled]="!(packagesModuleEnabled$ | async)"
-                [disabled]="!(packagesModuleEnabled$ | async)"
+                [class.disabled]="!packagesModuleEnabled"
+                [disabled]="!packagesModuleEnabled"
             ></gtx-dashboard-item>
 
             <gtx-dashboard-item
@@ -192,8 +192,8 @@
                 icon="template-management"
                 [attr.data-id]="AdminUIModuleRoutes.TEMPLATES"
                 [title]="'dashboard.item_templates' | i18n"
-                [class.disabled]="!(templatesModuleEnabled$ | async)"
-                [disabled]="!(templatesModuleEnabled$ | async)"
+                [class.disabled]="!templatesModuleEnabled"
+                [disabled]="!templatesModuleEnabled"
             ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
     </div>

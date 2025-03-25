@@ -1,10 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { ClickOptions } from './playwright-types';
 
-export function findTableRow(source: Page | Locator, id: string | number): Locator {
-    return source.locator(`gtx-table .data-row[data-id="${id}"]`);
-}
-
 export function findTableAction(source: Page | Locator, id: string): Locator {
     return source.locator(`.action-column .action-button[data-id="${id}"]`)
         .or(source.locator(`.header-row .action-column .action-button[data-id="${id}"]`))
@@ -14,8 +10,10 @@ export function findTableAction(source: Page | Locator, id: string): Locator {
 /**
  * Finds a table row that contains the specified text
  */
-export function findTableRowByText(source: Page | Locator, text: string): Locator {
-    return source.locator('gtx-table .data-row').filter({ hasText: text });
+export function findTableRowByText(source: Page | Locator, text: string, exact: boolean = false): Locator {
+    return source.locator('gtx-table .data-row .data-column', {
+        hasText: exact ? new RegExp(`^[\\s]*${text}[\\s]*$`) : text,
+    }).locator('..');
 }
 
 /**
@@ -50,6 +48,8 @@ export function findTrableRowById(source: Page | Locator, id: number | string): 
 /**
  * Finds a trable row by its text content
  */
-export function findTrableRowByText(source: Page | Locator, text: string): Locator {
-    return source.locator('gtx-trable .data-row').filter({ hasText: text });
+export function findTrableRowByText(source: Page | Locator, text: string, exact: boolean = false): Locator {
+    return source.locator('gtx-trable .data-row .data-column', {
+        hasText: exact ? new RegExp(`^[\\s]*${text}[\\s]*$`) : text,
+    }).locator('..');
 }

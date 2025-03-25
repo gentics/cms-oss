@@ -1,6 +1,7 @@
 import { File as CMSFile, Folder, Group, Image, Node, Page, ScheduleTask, User, Variant } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
 import {
+    ENV_CI,
     ENV_CMS_VARIANT,
     FileImportData,
     FolderImportData,
@@ -435,12 +436,19 @@ export function globMatch(globPattern: string, str: string): boolean {
 export function matchesPath(url: string | URL, path: string | RegExp): boolean {
     try {
         const urlObj = new URL(url);
+        let matches = false;
 
         if (typeof path === 'string') {
-            return globMatch(path, urlObj.pathname);
+            matches = globMatch(path, urlObj.pathname);
+        } else {
+            matches = path.test(urlObj.pathname);
         }
 
-        return path.test(urlObj.pathname);
+        // if (matches) {
+        //     console.log('Found matching path', { url, path });
+        // }
+
+        return matches;
     } catch (err) {
         return false;
     }
@@ -449,4 +457,18 @@ export function matchesPath(url: string | URL, path: string | RegExp): boolean {
 export function hasMatchingParams(url: string, params: Record<string, string>): boolean {
     const urlObj = new URL(url);
     return Object.entries(params).every(([key, value]) => urlObj.searchParams.get(key) === value);
+}
+
+/**
+ * Simple helper function to convert/"parse" a environment value as bool.
+ * Checks for `1`, `"1"`, `true`, and `"true"`.
+ * @param value The value of the environment value
+ * @returns A properly checked/converted boolean from the value.
+ */
+export function isEnvBool(value: string | number | boolean): boolean {
+    return value === 1 || value === '1' || value === true || value === 'true';
+}
+
+export function isCIEnvironment(): boolean {
+    return isEnvBool(process.env[ENV_CI]);
 }

@@ -596,7 +596,7 @@
       "enabled" : true,
       "alwaysDisplayInConsole" : false,
       "clientAuthenticatorType" : "client-secret",
-      "redirectUris" : [ "http://localhost:8080/*", "http://localhost:4200/*", "http://cms.localhost.gentics.com/*", "http://cms:8080/*" ],
+      "redirectUris" : [ "http://localhost:8080/*", "http://localhost:4200/*", "http://cms.localhost.gentics.com/*", "http://cms:8080/*", "http://hostmachine:4200/*" ],
       "webOrigins" : [ "", "+" ],
       "notBefore" : 0,
       "bearerOnly" : false,

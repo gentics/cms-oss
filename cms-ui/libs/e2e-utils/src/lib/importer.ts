@@ -233,7 +233,9 @@ export class EntityImporter {
                 break;
             }
 
-            console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
+            if (this.options?.logImports) {
+                console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
+            }
             await new Promise(resolve => setTimeout(resolve, 1_000));
         }
     }

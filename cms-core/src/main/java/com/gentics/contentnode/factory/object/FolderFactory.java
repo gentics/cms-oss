@@ -108,6 +108,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.request.Permission;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
@@ -6273,7 +6274,15 @@ public class FolderFactory extends AbstractFactory {
 			if (!org.apache.commons.lang3.StringUtils.isBlank(this.hostProperty)) {
 				String resolvedHost = substituteSingleProperty(this.hostProperty, Node.NODE_HOST_FILTER);
 				if (!StringUtils.isEqual(this.host, resolvedHost)) {
-					this.host = resolvedHost;
+					try {
+						MiscUtils.setHostAndProtocol(resolvedHost, https -> this.https = https, host -> this.host = host);
+					} catch (NodeException e) {
+						if (e instanceof ReadOnlyException) {
+							throw ReadOnlyException.class.cast(e);
+						} else {
+							throw new IllegalStateException(e);
+						}
+					}				
 					this.modified = true;
 				}
 			}

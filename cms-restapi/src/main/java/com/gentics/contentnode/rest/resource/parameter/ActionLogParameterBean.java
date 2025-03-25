@@ -9,7 +9,7 @@ import javax.ws.rs.QueryParam;
  */
 public class ActionLogParameterBean {
 	/**
-	 * Search string for filtering by user. The string may be contained in the firstname, lastname or login of the user.
+	 * Search string for filtering by user. The string may be contained in the <code>firstname</code>, <code>lastname</code> or <code>login</code> of the user.
 	 */
 	@QueryParam("user")
 	public String user;

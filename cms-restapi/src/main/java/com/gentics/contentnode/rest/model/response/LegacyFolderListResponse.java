@@ -16,7 +16,7 @@ import com.gentics.contentnode.rest.model.Folder;
  *
  */
 @XmlRootElement
-public class LegacyFolderListResponse extends StagingResponse<String> {
+public class LegacyFolderListResponse extends AbstractStagingResponse<String> {
 
 	private static final long serialVersionUID = -407622727941885997L;
 

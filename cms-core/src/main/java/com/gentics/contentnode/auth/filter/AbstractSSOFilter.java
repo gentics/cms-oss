@@ -2,11 +2,15 @@ package com.gentics.contentnode.auth.filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -22,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.commons.collections.EnumerationUtils;
 import org.apache.commons.collections.iterators.IteratorEnumeration;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.contentnode.auth.filter.SsoUserCreatedCallback;

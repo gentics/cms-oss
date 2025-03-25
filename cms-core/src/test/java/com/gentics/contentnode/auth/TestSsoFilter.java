@@ -5,13 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import org.apache.commons.lang3.NotImplementedException;
 
 /**
@@ -29,7 +27,7 @@ public class TestSsoFilter extends AbstractSSOFilter {
 	private int createdUserCount = 0;
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
 		// The tests don't use doFilter() but all call getSystemUser() with a non-existing username and the SSO attributes.
 		throw new NotImplementedException();
 	}

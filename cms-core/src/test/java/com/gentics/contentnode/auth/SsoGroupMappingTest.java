@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.ServletException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.gentics.api.lib.exception.NodeException;
@@ -20,6 +18,7 @@ import com.gentics.contentnode.rest.util.PropertySubstitutionUtil;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import jakarta.servlet.ServletException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

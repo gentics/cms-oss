@@ -1,0 +1,23 @@
+# The group "Group1" is created with ID 18.
+roles.realm.realm-role-1: "18"
+roles.realm.realm-role-2:
+  - Group2
+  - 4711
+roles.realm.realm-role-3:
+  - Group1
+  - NonExistentGroup
+  - group: "4711"
+    nodes: Node1
+roles.realm.realm-role-4: 4711
+roles.realm.realm-role-5: "4711"
+roles.resource.cms.cms-role-1:
+  group: 4711
+  nodes:
+    - "1337"
+    - NonExistentNode
+roles.resource.cms.cms-role-2:
+  - "4711"
+  - group: Group2
+    nodes:
+      - "1337"
+      - NonExistentNode

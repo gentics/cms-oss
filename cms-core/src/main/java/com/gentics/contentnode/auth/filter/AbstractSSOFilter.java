@@ -75,6 +75,11 @@ public abstract class AbstractSSOFilter implements Filter {
 	 */
 	private final static KeyLockManager ssoLock = KeyLockManagers.newLock();
 
+	/**
+	 * Mapping from attribute paths to group IDs with optional node restrictions (the keys in the
+	 * Map<Integer, Set<Integer>> map are the group IDs and the values are the IDs of the nodes
+	 * the group assignment is restricted to).
+	 */
 	protected Map<String, Map<Integer, Set<Integer>>> initGroupsMapping = new HashMap<>();
 
 	/**
@@ -84,19 +89,20 @@ public abstract class AbstractSSOFilter implements Filter {
 
 	protected SsoUserCreatedCallback userCreatedCallback;
 
+	private final Map<Object, Set<Integer>> groupIdCache = new HashMap<>();
+
 	/* (non-Javadoc)
 	 * @see jakarta.servlet.Filter#init(jakarta.servlet.FilterConfig)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		String initGroupsPath = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), "");
-
-		if (StringUtils.isEmpty(initGroupsPath)) {
-			throw new ServletException("init-param " + INIT_GROUPS_PARAM + " is empty or missing");
-		}
-
+		var initGroupsPath = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), "");
 		var initGroupsDef = NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap(initGroupsPath);
+
+		if (MapUtils.isEmpty(initGroupsDef)) {
+			throw new ServletException("The initial group configuration under \"%s\" is missing or empty.".formatted(initGroupsPath));
+		}
 
 		try (Trx trx = new Trx()) {
 			prepareInitGroupsMapping(initGroupsDef);
@@ -139,11 +145,19 @@ public abstract class AbstractSSOFilter implements Filter {
 			var value = entry.getValue();
 			var groupMapping = initGroupsMapping.computeIfAbsent(key, k -> new HashMap<>());
 
-			if (value instanceof String groupName) {
+			// The groupExists() call will also return true for a number that is actually a group name ...
+			if (value instanceof Integer groupId && groupExists(groupId)) {
+				// ... and addInitGroupMapping() will handle a String representing a group ID correctly.
+				addInitGroupMapping(groupMapping, groupId.toString(), null);
+			} else if (value instanceof String groupName) {
 				addInitGroupMapping(groupMapping, groupName, null);
+			} else if (value instanceof Map<?, ?> groupDefWithRestrictions) {
+				addInitGroupMappingWithRestrictions(key, groupMapping, groupDefWithRestrictions);
 			} else if (value instanceof List<?> groupList) {
 				for (var groupDef: groupList) {
-					if (groupDef instanceof String groupName) {
+					if (groupDef instanceof Integer groupId && groupExists(groupId)) {
+						addInitGroupMapping(groupMapping, groupId.toString(), null);
+					} else if (groupDef instanceof String groupName) {
 						addInitGroupMapping(groupMapping, groupName, null);
 					} else if (groupDef instanceof Map<?, ?> groupDefWithRestrictions) {
 						addInitGroupMappingWithRestrictions(key, groupMapping, groupDefWithRestrictions);
@@ -153,6 +167,10 @@ public abstract class AbstractSSOFilter implements Filter {
 				logger.warn("Unexpected value for key '%s' (%s): %s".formatted(key, value == null ? "N/A" : value.getClass(), value));
 			}
 		}
+	}
+
+	private boolean groupExists(Integer id) throws NodeException {
+		return !getGroupId(id).isEmpty();
 	}
 
 	/**
@@ -207,28 +225,69 @@ public abstract class AbstractSSOFilter implements Filter {
 	 * @param restrictions The node restrictions for group assignment.
 	 */
 	private void addInitGroupMapping(Map<Integer, Set<Integer>> mapping, String groupName, Set<Integer> restrictions) throws NodeException {
-		getGroupId(groupName).ifPresent(groupId -> mapping.put(groupId, restrictions));
+		for (var groupId: getGroupId(groupName)) {
+			mapping.put(groupId, restrictions);
+		}
 	}
 
 	/**
 	 * Get the ID for the given group name.
-	 * @param groupName The group name to search the ID for.
-	 * @return An {@link Optional} containing the found group ID or an empty optional if there is no group with the
-	 * 		specified name.
+	 * @param groupNameOrId The group name or ID to search for.
+	 * @return An {@link Set} containing the found group IDs for the specified name or ID.
 	 */
-	private Optional<Integer> getGroupId(String groupName) throws NodeException {
+	private Set<Integer> getGroupId(Object groupNameOrId) throws NodeException {
+		if (groupNameOrId == null) {
+			return Collections.emptySet();
+		}
+
+		if (groupIdCache.containsKey(groupNameOrId)) {
+			return groupIdCache.get(groupNameOrId);
+		}
+
+		// Case 1: It's actually an ID.
+		if (groupNameOrId instanceof Integer possibleId) {
+			var group = Trx.supply(t -> t.getObject(UserGroup.class, possibleId));
+
+			if (group != null) {
+				return groupIdCache.computeIfAbsent(groupNameOrId, key -> Collections.singleton(possibleId));
+			}
+		}
+
+		// Case 2 & 3: It's a Global ID or a String form of a local ID.
+		var group = Trx.supply(t -> t.getObject(UserGroup.class, groupNameOrId.toString()));
+
+		if (group != null) {
+			return groupIdCache.computeIfAbsent(groupNameOrId, key -> Collections.singleton(group.getId()));
+		}
+
+		// Case 4: It's the group name.
+		var groupName = groupNameOrId.toString();
 		var groupIds = DBUtils.select(
 			"SELECT `id` FROM `usergroup` WHERE name = ?",
 			stmt -> stmt.setString(1, groupName),
 			DBUtils.IDS);
 
-		if (groupIds.isEmpty()) {
-			logger.warn("No group found with name '" + groupName + "'");
-		} else if (groupIds.size() > 1) {
-			logger.warn("More than one group found with name '" + groupName + "'");
+		if (groupIds.isEmpty() && StringUtils.isNumeric(groupName)) {
+			try (Trx trx = new Trx()) {
+				var id = Integer.parseInt(groupName);
+
+				if (trx.getTransaction().getObject(UserGroup.class, id) != null) {
+					groupIds.add(id);
+				}
+
+				trx.success();
+			} catch (NumberFormatException e) {
+				// Nothing to do here.
+			}
 		}
 
-		return groupIds.stream().findFirst();
+		if (groupIds.isEmpty()) {
+			logger.warn("No group found with name '" + groupName + "'");
+		}
+
+		groupIdCache.put(groupNameOrId, groupIds);
+
+		return groupIds;
 	}
 
 	/**
@@ -257,6 +316,8 @@ public abstract class AbstractSSOFilter implements Filter {
 					remaining.add(nodeId);
 				}
 			}
+
+			trx.success();
 		}
 
 		var numRemaining = remaining.size();
@@ -423,20 +484,22 @@ public abstract class AbstractSSOFilter implements Filter {
 			Collection<UserGroup> groups = systemUser.getUserGroups();
 			Map<Integer, Set<Integer>> restrictions = systemUser.getGroupNodeRestrictions();
 
-			for (var key: initGroupsMapping.keySet()) {
+			for (var mappingEntry: initGroupsMapping.entrySet()) {
+				var key = mappingEntry.getKey();
+
 				if (!checkAttribute(attributes, key)) {
 					continue;
 				}
 
-				var groupIdsWithRestrictions = initGroupsMapping.get(key);
+				var groupIdsWithRestrictions = mappingEntry.getValue();
 
 				if (groupIdsWithRestrictions == null) {
 					continue;
 				}
 
-				for (var entry: groupIdsWithRestrictions.entrySet()) {
-					var groupId = entry.getKey();
-					var groupRestrictions = entry.getValue();
+				for (var groupWithRestrictionsEntry: groupIdsWithRestrictions.entrySet()) {
+					var groupId = groupWithRestrictionsEntry.getKey();
+					var groupRestrictions = groupWithRestrictionsEntry.getValue();
 
 					// We ignore super groups (1 and 2).
 					if (groupId <= 2) {
@@ -461,7 +524,7 @@ public abstract class AbstractSSOFilter implements Filter {
 								logger.debug("Restrict assignment to group " + groupId + " to nodes: " + groupRestrictions);
 							}
 
-							restrictions.put(groupId, groupRestrictions);
+							restrictions.computeIfAbsent(groupId, ignored -> new HashSet<>()).addAll(groupRestrictions);
 						} else {
 							if (logger.isDebugEnabled()) {
 								logger.debug("Assignment to group " + groupId + " is not restricted to nodes");
@@ -502,20 +565,22 @@ public abstract class AbstractSSOFilter implements Filter {
 			Map<Integer, Set<Integer>> restrictions = systemUser.getGroupNodeRestrictions();
 			Collection<Integer> tmpInitGroups = new ArrayList<Integer>();
 
-			for (var key: initGroupsMapping.keySet()) {
+			for (var mappingEntry: initGroupsMapping.entrySet()) {
+				var key = mappingEntry.getKey();
+
 				if (!checkAttribute(attributes, key)) {
 					continue;
 				}
 
-				var groupIdsWithRestrictions = initGroupsMapping.get(key);
+				var groupIdsWithRestrictions = mappingEntry.getValue();
 
 				if (groupIdsWithRestrictions == null) {
 					continue;
 				}
 
-				for (var entry: groupIdsWithRestrictions.entrySet()) {
-					var groupId = entry.getKey();
-					var groupRestrictions = entry.getValue();
+				for (var groupWithRestrictionsEntry: groupIdsWithRestrictions.entrySet()) {
+					var groupId = groupWithRestrictionsEntry.getKey();
+					var groupRestrictions = groupWithRestrictionsEntry.getValue();
 
 					if (logger.isDebugEnabled()) {
 						logger.debug(systemUser + " must be member of group " + groupId);
@@ -544,7 +609,7 @@ public abstract class AbstractSSOFilter implements Filter {
 								logger.debug("Restrict assignment to " + group + " to nodes: " + groupRestrictions);
 							}
 
-							restrictions.put(groupId, groupRestrictions);
+							restrictions.computeIfAbsent(groupId, ignored -> new HashSet<>()).addAll(groupRestrictions);
 						} else {
 							if (logger.isDebugEnabled()) {
 								logger.debug("Assignment to " + group + " is not restricted to nodes");
@@ -616,16 +681,19 @@ public abstract class AbstractSSOFilter implements Filter {
 		}
 
 		var keyHead = key.substring(0, idx);
+		var keyTail =  key.substring(idx + 1);
 		var value = attributes.get(keyHead);
 
 		if (value instanceof Map<?, ?> subAttributes) {
-			return checkAttribute(subAttributes, key.substring(idx + 1));
-		} else if (value instanceof Collection<?> collection) {
-			var keyTail =  key.substring(idx + 1);
+			return checkAttribute(subAttributes, keyTail);
+		}
 
+		if (value instanceof Collection<?> collection) {
 			return collection.contains(keyTail);
-		} else if (value instanceof String string) {
-			return string.equals(key);
+		}
+
+		if (value instanceof String string) {
+			return string.equals(keyTail);
 		}
 
 		return false;

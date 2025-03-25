@@ -13,13 +13,16 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 
+@GCNFeature(set = {Feature.MULTICHANNELLING})
 public class FolderMCSandboxTest {
 	@Rule
 	public DBTestContext testContext = new DBTestContext();

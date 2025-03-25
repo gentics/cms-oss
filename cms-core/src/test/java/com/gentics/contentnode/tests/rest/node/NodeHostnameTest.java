@@ -21,7 +21,7 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
- * Test cases for creation of nodes
+ * Test cases for manipulating hostnames/http flags of a node
  */
 public class NodeHostnameTest {
 

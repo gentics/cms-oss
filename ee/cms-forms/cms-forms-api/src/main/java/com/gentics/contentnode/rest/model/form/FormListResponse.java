@@ -2,13 +2,13 @@ package com.gentics.contentnode.rest.model.form;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.gentics.contentnode.rest.model.response.AbstractListResponse;
+import com.gentics.contentnode.rest.model.response.AbstractStagingStatusListResponse;
 
 /**
  * Response containing a list of forms
  */
 @XmlRootElement
-public class FormListResponse extends AbstractListResponse<FormModel> {
+public class FormListResponse extends AbstractStagingStatusListResponse<FormModel> {
 	/**
 	 * Serial Version UID
 	 */

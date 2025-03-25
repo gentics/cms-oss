@@ -5,6 +5,11 @@
 		<rest defaultRestSubcontext="/rest" />
 	</services>
 
+	<api-classes>
+		<include pattern="com.gentics.contentnode.rest.resource.**"/>
+		<include pattern="com.gentics.contentnode.rest.model.**"/>
+	</api-classes>
+
 	<modules>
 		<!-- Docs -->
 		<docs splashPackage="com.gentics.contentnode.rest" title="Gentics CMS REST API"

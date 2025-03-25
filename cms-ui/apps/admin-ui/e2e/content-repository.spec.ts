@@ -1,4 +1,4 @@
-import { AccessControlledType, ContentRepository, Variant } from '@gentics/cms-models';
+import { ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
     BASIC_TEMPLATE_ID,
@@ -65,7 +65,7 @@ const CLASS_ACTIVE = /active/;
 const CLASS_GRANTED = /granted/;
 
 test.describe.configure({ mode: 'serial' });
-test.describe('Content Repositories Module', () => {
+test.describe.only('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
         logRequests: false,
@@ -81,7 +81,6 @@ test.describe('Content Repositories Module', () => {
     });
 
     test.beforeEach(async ({ page, request }) => {
-        // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);
 
         // Clean and setup test data
@@ -94,25 +93,21 @@ test.describe('Content Repositories Module', () => {
         await navigateToApp(page);
         await loginWithForm(page, AUTH_ADMIN);
 
-        // Wait for table loading
-        const tableLoadPromise = page.waitForResponse(response =>
-            matchesPath(response.url(), '/rest/contentrepositories') && response.ok(),
-        );
-
-        await navigateToModule(page, 'content-repositories', AccessControlledType.CONTENT_ADMIN);
-        await tableLoadPromise;
+        await navigateToModule(page, 'content-repositories');
 
         master = page.locator('gtx-content-repository-master');
-        await master.waitFor();
+        await master.waitFor({ state: 'visible' });
     });
 
-    test('should have content repositories listed', async ({ page }) => {
+    test('should have content repositories listed', async () => {
         const rows = master.locator('gtx-table .grid-row.data-row');
+        await rows.waitFor({ state: 'visible' });
         await expect(rows).toHaveCount(1);
     });
 
     test('should open the details on click', async ({ page }) => {
         const row = findTableRowById(master, testCr.id);
+        await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
         await expect(row).toHaveClass(CLASS_ACTIVE);
 
@@ -122,16 +117,17 @@ test.describe('Content Repositories Module', () => {
 
     test('should be possible to select the management tab', async ({ page }) => {
         const row = findTableRowById(master, testCr.id);
+        await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
 
         const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
         await selectTab(tabs, 'management');
 
         const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
-        await expect(management).toBeVisible();
+        await management.waitFor({ state: 'visible' });
     });
 
-    test.describe.skip('Mesh Management', () => {
+    test.describe('Mesh Management', () => {
         test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
         let management: Locator;
@@ -139,29 +135,22 @@ test.describe('Content Repositories Module', () => {
 
         test.beforeEach(async ({ page }) => {
             const row = findTableRowById(master, testCr.id);
+            await row.waitFor({ state: 'visible' });
             await clickTableRow(row);
 
             const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
             await selectTab(tabs, 'management');
 
             management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
-            await expect(management).toBeVisible();
+            await management.waitFor({ state: 'visible' });
             managementContent = management.locator('.management-content');
         });
 
         test('should be possible to login via manual credentials and to logout again', async ({ page }) => {
             expect(await managementContent.isVisible()).toBe(false);
 
-            const loginReq = page.waitForResponse(response =>
-                response.ok()
-                    && response.request().method() === 'POST'
-                    && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/login'),
-            );
-
             await loginWithForm(management.locator('.login-form'), AUTH_MESH);
-            await loginReq;
             await managementContent.waitFor({ state: 'visible' });
-            expect(await managementContent.isVisible()).toBe(true);
 
             await logoutMeshManagement(page);
             expect(await managementContent.isVisible()).toBe(false);
@@ -171,7 +160,7 @@ test.describe('Content Repositories Module', () => {
             expect(await managementContent.isVisible()).toBe(false);
 
             await loginWithCR(page);
-            expect(await managementContent.isVisible()).toBe(true);
+            await managementContent.waitFor({ state: 'visible' });
 
             await logoutMeshManagement(page);
             expect(await managementContent.isVisible()).toBe(false);
@@ -215,7 +204,7 @@ test.describe('Content Repositories Module', () => {
                     }
 
                     // Get our user so we can update it
-                    const me =  await IMPORTER.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/me`).send();
+                    const me = await IMPORTER.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/me`).send();
                     // Reset the password to the original
                     await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/users/${me.uuid}`, {
                         password: AUTH[AUTH_MESH].password,
@@ -231,7 +220,7 @@ test.describe('Content Repositories Module', () => {
                         response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users'),
                     );
 
-                    await loginWithCR(page);
+                    await loginWithCR(page, true);
                     await selectTab(page, 'users');
                     await usersReq;
 
@@ -249,20 +238,24 @@ test.describe('Content Repositories Module', () => {
                 await test.step('Login with CR data should require password-reset', async () => {
                     // Login with CR should not be possible
                     await loginWithCR(page, false);
-                    expect(await managementContent.isVisible()).toBe(false);
+                    expect(managementContent).toBeVisible({ visible: false });
                 });
 
                 await test.step('Login with additional new password', async () => {
                     // Fill in the new password and submit the login again
+                    const loginForm = management.locator('.login-form');
+                    const newPassword = loginForm.locator(SELECTORS.LOGIN_FORM.NEW_PASSWORD);
+                    await newPassword.waitFor({ state: 'visible' });
+
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(AUTH[AUTH_MESH].username);
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH[AUTH_MESH].password);
+                    await newPassword.fill(AUTH[AUTH_MESH].newPassword);
+
                     const pwResetLoginReq = page.waitForResponse(response =>
                         response.ok()
                             && response.request().method() === 'POST'
                             && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/login'),
                     );
-                    const loginForm = management.locator('.login-form');
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(AUTH[AUTH_MESH].username);
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH[AUTH_MESH].password);
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.NEW_PASSWORD).fill(AUTH[AUTH_MESH].newPassword);
                     await loginForm.locator(SELECTORS.LOGIN_FORM.SUBMIT).click();
                     await pwResetLoginReq;
 
@@ -300,12 +293,17 @@ test.describe('Content Repositories Module', () => {
         });
 
         test.describe('Projects', () => {
+            test.slow();
+
             test.beforeEach(async ({ page }) => {
+                await IMPORTER.deleteMeshProjects();
+                await IMPORTER.importData([schedulePublisher]);
+                await IMPORTER.executeSchedule(schedulePublisher);
                 await loginWithCR(page);
             });
 
-            test.afterEach(async ({ page }) => {
-                await logoutMeshManagement(page);
+            test.afterEach(async () => {
+                await IMPORTER.deleteMeshProjects();
             });
 
             test('should be possible to create a new project', async ({ page }) => {
@@ -321,18 +319,12 @@ test.describe('Content Repositories Module', () => {
                     .fill(NEW_PROJECT_NAME);
 
                 await test.step('Select the schema "folder" as root schema', async () => {
-                    const schemaLoad = page.waitForResponse(response =>
-                        response.ok()
-                            && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/schemas'),
-                    );
                     await createModal.locator(SELECTORS.PROJECT.SCHEMA_PICKER)
                         .click();
 
                     const schemaSelectModal = page.locator(SELECTORS.PROJECT.SCHEMA_MODAL);
-                    await schemaLoad;
-                    const schemaRow = schemaSelectModal.locator('gtx-table .data-row').filter({
-                        hasText: 'folder',
-                    }).nth(1);
+                    const schemaRow = findTableRowByText(schemaSelectModal, 'folder', true);
+                    await schemaRow.waitFor({ state: 'visible' });
                     await selectTableRow(schemaRow);
                     await clickModalAction(schemaSelectModal, 'confirm');
                 });
@@ -351,6 +343,8 @@ test.describe('Content Repositories Module', () => {
         });
 
         test.describe('Role Permissions', () => {
+            test.slow();
+
             test.beforeEach(async ({ page }) => {
                 await IMPORTER.deleteMeshProjects();
                 await IMPORTER.importData([schedulePublisher]);

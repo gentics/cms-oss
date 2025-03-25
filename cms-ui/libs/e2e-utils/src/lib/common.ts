@@ -70,8 +70,10 @@ export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_CI = 'CI';
-export const ENV_PLAYWRIGHT_TEST_CONNECT = 'PW_TEST_CONNECT_WS_ENDPOINT';
+export const ENV_BASE_URL = 'BASE_URL';
 export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
+export const ENV_FORCE_REPEATS = 'FORCE_REPEATS';
+export const ENV_REUSE_LOCAL_SERVE = 'REUSE_LOCAL_SERVE';
 
 export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
@@ -79,10 +81,18 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
+            /** The CMS Variant that is being tested. */
             [ENV_CMS_VARIANT]: Variant;
-            [ENV_CI]: boolean;
-            [ENV_PLAYWRIGHT_TEST_CONNECT]?: string;
+            /** Flag which determines if we're running in a CI context. */
+            [ENV_CI]: boolean | string | number;
+            /** Override for the URL where the app to test is reachable. */
+            [ENV_BASE_URL]?: string;
+            /** Override for the URL where keycloak is reachable. */
             [ENV_KEYCLOAK_URL]?: string;
+            /** If it should force repeats of intergration tests. */
+            [ENV_FORCE_REPEATS]?: boolean | string | number;
+            /** If it should reuse an already running local serve. */
+            [ENV_REUSE_LOCAL_SERVE]?: boolean | string | number;
         }
     }
 }

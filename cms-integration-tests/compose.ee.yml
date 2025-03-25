@@ -119,4 +119,5 @@ services:
       service: playwright
 
     extra_hosts:
+      - hostmachine:host-gateway
       - "keycloak.localhost.gentics.com:host-gateway"

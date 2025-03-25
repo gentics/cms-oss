@@ -103,7 +103,7 @@ spec:
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                     withCredentials([ string(credentialsId: 'gtx-integration-tests-license', variable: 'CI_LICENSEKEY') ]) {
+                    withCredentials([ string(credentialsId: 'gtx-integration-tests-license', variable: 'CI_LICENSEKEY') ]) {
                         authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                         def composeCmd = 'docker compose'
                         if (params.variant == 'EE') {

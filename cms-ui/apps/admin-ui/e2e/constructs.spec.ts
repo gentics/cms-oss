@@ -1,8 +1,8 @@
-import { AccessControlledType, NodeMultiLinkRequest, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
+import { NodeMultiLinkRequest, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
 import {
     EntityImporter,
     findTableAction,
-    findTableRow,
+    findTableRowById,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_NODE,
@@ -104,12 +104,12 @@ test.describe('Constructs Module', () => {
         await loginWithForm(page, AUTH_ADMIN);
 
         // Navigate to constructs module
-        await navigateToModule(page, 'constructs', AccessControlledType.CONSTRUCT_ADMIN);
+        await navigateToModule(page, 'constructs');
     });
 
     test.describe('Constructs', () => {
         test('should properly remove and assign the constructs to the node', async ({ page }) => {
-            const row = findTableRow(page, TEST_CONSTRUCT_ID)
+            const row = findTableRowById(page, TEST_CONSTRUCT_ID)
             await findTableAction(row, 'assignConstructToNodes').click();
 
             // Wait for modal and find the node table

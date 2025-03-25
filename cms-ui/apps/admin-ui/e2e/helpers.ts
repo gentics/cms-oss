@@ -3,22 +3,22 @@ import { ENV_CI, ENV_PLAYWRIGHT_TEST_CONNECT, matchesPath } from '@gentics/e2e-u
 import { Locator, Page } from '@playwright/test';
 import { AUTH, LoginData } from './common';
 
-export async function navigateToApp(page: Page, path: string = '/', withSSO?: boolean): Promise<void> {
+export async function navigateToApp(page: Page, path: string = '/', omitSkipSSO?: boolean): Promise<void> {
     const needsBasePath = process.env[ENV_CI] || process.env[ENV_PLAYWRIGHT_TEST_CONNECT];
-    const fullPath = `${needsBasePath ? '/admin' : ''}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
+    const fullPath = `${needsBasePath ? '/admin' : ''}/${!omitSkipSSO ? '?skip-sso' : ''}#/${path}`;
     await page.goto(fullPath);
 }
 
 export async function loginWithForm(source: Page | Locator, login: (keyof typeof AUTH) | LoginData): Promise<void> {
     // Get auth data and login
     const loginData: LoginData = typeof login === 'string' ? AUTH[login] : login;
-    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled])')
+    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
         .first()
         .fill(loginData.username);
-    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled])')
+    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
         .first()
         .fill(loginData.password);
-    await source.locator('button[type="submit"]:not([disabled])')
+    await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
         .first()
         .click();
 }

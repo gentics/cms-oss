@@ -71,6 +71,9 @@ export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_CI = 'CI';
 export const ENV_PLAYWRIGHT_TEST_CONNECT = 'PW_TEST_CONNECT_WS_ENDPOINT';
+export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
+
+export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -79,6 +82,7 @@ declare global {
             [ENV_CMS_VARIANT]: Variant;
             [ENV_CI]: boolean;
             [ENV_PLAYWRIGHT_TEST_CONNECT]?: string;
+            [ENV_KEYCLOAK_URL]?: string;
         }
     }
 }

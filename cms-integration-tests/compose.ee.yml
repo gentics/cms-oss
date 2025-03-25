@@ -21,6 +21,7 @@ services:
       ELASTICSEARCH_ENABLED: "true"
       ELASTICSEARCH_URL: "http://elasticsearch:9200"
       LICENSEKEY: "${CI_LICENSEKEY:-}"
+      KEYCLOAK_ACTIVE: true
 
     volumes:
       - ./cms/ui-conf:/cms/ui-conf
@@ -116,3 +117,6 @@ services:
     extends:
       file: compose.yml
       service: playwright
+
+    extra_hosts:
+      - "keycloak.localhost.gentics.com:host-gateway"

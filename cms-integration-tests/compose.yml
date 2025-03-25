@@ -55,6 +55,7 @@ services:
       ELASTICSEARCH_ENABLED: false
       ELASTICSEARCH_URL:
       CONF_FILES: cms
+      KEYCLOAK_ACTIVE: false
 
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example

@@ -4,10 +4,10 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 
 import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletContext;
 import org.apache.commons.collections4.iterators.IteratorEnumeration;
 
 public class TestFilterConfig implements FilterConfig {

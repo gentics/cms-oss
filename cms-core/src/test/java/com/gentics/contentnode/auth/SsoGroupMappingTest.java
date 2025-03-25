@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.rest.util.PropertySubstitutionUtil;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
-import jakarta.servlet.ServletException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -85,10 +85,6 @@ public class SsoGroupMappingTest {
 		var mapper = new YAMLMapper();
 		var config = mapper.readValue(SsoGroupMappingTest.class.getResourceAsStream("/auth/sso-config-init-groups.yml"), Map.class);
 
-		System.setProperty("GROUP1_ID", groupIds.get("Group1").toString());
-
-		PropertySubstitutionUtil.substituteAll(config);
-
 		Trx.operate(() -> NodeConfigRuntimeConfiguration.getPreferences().setPropertyMap(TestFilterConfig.INIT_GROUPS_PARAM, config));
 
 		filter = new TestSsoFilter();
@@ -122,6 +118,6 @@ public class SsoGroupMappingTest {
 
 		assertThat(groupAssignments)
 			.as("Group assignments")
-			.containsExactlyInAnyOrderEntriesOf(expectedGroupAssignments);
+			.containsOnly(expectedGroupAssignments.entrySet().toArray(new Map.Entry[0]));
 	}
 }

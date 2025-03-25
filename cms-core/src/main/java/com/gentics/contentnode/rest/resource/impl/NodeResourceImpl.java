@@ -154,6 +154,7 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.contentnode.staging.StagingUtil;
+import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.ClassHelper;
@@ -871,7 +872,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				throw new RestMappedException(response).setStatus(Status.BAD_REQUEST);
 			}
 
-			Node newNode = t.createObject(Node.class);
+			final Node newNode = t.createObject(Node.class);
 			Folder rootFolder = t.createObject(Folder.class);
 			Integer masterId = ObjectTransformer.getInteger(reqNode.getMasterId(), 0);
 
@@ -899,15 +900,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				rootFolder.setDescription(request.getDescription());
 			}
 
+			MiscUtils.setHostAndProtocol(reqNode.getHost(), https -> newNode.setHttps(https), host -> newNode.setHostname(host));
 			newNode.setFolder(rootFolder);			
 			newNode.setHostnameProperty(reqNode.getHostProperty());
 
-			if (reqNode.hostnameContainsProtocol()) {
-				newNode.setHttps(reqNode.getHost().startsWith("https://"));
-				newNode.setHostname(reqNode.getHost().substring(reqNode.getHost().indexOf("://") + 3));
-			} else {
-				newNode.setHostname(reqNode.getHost());
-			}
 			if (reqNode.isUtf8() != null) {
 				newNode.setUtf8(reqNode.isUtf8());
 			}
@@ -1026,16 +1022,16 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 
 			newNode.save();
-			newNode = t.getObject(newNode, true);
+			Node node = t.getObject(newNode, true);
 
-			try (ChannelTrx cTrx = new ChannelTrx(newNode)) {
-				disinheritObjects(newNode);
+			try (ChannelTrx cTrx = new ChannelTrx(node)) {
+				disinheritObjects(node);
 			}
 
 			boolean defaultFoldersOk = setDefaultFolders(
 				reqNode.getDefaultFileFolderId(),
 				reqNode.getDefaultImageFolderId(),
-				newNode,
+				node,
 				response, true);
 
 			if (!defaultFoldersOk) {
@@ -1052,8 +1048,8 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 			return new NodeLoadResponse(
 				new Message(Type.SUCCESS, message.toString()),
-				new ResponseInfo(ResponseCode.OK, "created node with id: " + newNode.getId()),
-				ModelBuilder.getNode(t.getObject(newNode)));
+				new ResponseInfo(ResponseCode.OK, "created node with id: " + node.getId()),
+				ModelBuilder.getNode(t.getObject(node)));
 		}
 	}
 
@@ -1073,7 +1069,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse update(@PathParam("id") String nodeId, NodeSaveRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
-			Node node = t.getObject(getNode(nodeId, ObjectPermission.edit), true);
+			final Node node = t.getObject(getNode(nodeId, ObjectPermission.edit), true);
 
 			Folder rootFolder = node.getFolder();
 
@@ -1096,14 +1092,11 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
 				node.setHostname(reqNode.getHost());
 			}
+
+			MiscUtils.setHostAndProtocol(reqNode.getHost(), https -> node.setHttps(https), host -> node.setHostname(host));
+
 			if (reqNode.getHostProperty() != null) {
 				node.setHostnameProperty(reqNode.getHostProperty());
-			}
-			if (reqNode.hostnameContainsProtocol()) {
-				node.setHttps(reqNode.getHost().startsWith("https://"));
-				node.setHostname(reqNode.getHost().substring(reqNode.getHost().indexOf("://") + 3));
-			} else if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
-				node.setHostname(reqNode.getHost());
 			}
 			if (reqNode.isUtf8() != null) {
 				node.setUtf8(reqNode.isUtf8());

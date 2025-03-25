@@ -1,10 +1,7 @@
 package com.gentics.contentnode.rest.model;
 
-import java.beans.Transient;
 import java.io.Serializable;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
@@ -646,17 +643,5 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setContentRepositoryName(String contentRepositoryName) {
 		this.contentRepositoryName = contentRepositoryName;
-	}
-
-	/**
-	 * Check, whether the hostname contains a protocol prefix.
-	 * At the moment only HTTP and HTTPS are supported.
-	 * @return true, if `http(s)://` prefix is present in the hostname value.
-	 */
-	@Transient
-	@JsonIgnore
-	public boolean hostnameContainsProtocol() {
-		String host = getHost();
-		return host != null && host.matches("^(http|https)://(.+)");
 	}
 }

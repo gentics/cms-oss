@@ -2478,6 +2478,36 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Check, whether the string is URL and contains a protocol prefix.
+	 * At the moment only HTTP and HTTPS are supported.
+	 * @param host string to test
+	 * @return true, if `http(s)://` prefix is present in the hostname value.
+	 */
+	public static boolean isUrlWithProtocol(String host) {
+		return host != null && host.matches("^(http|https)://(.+)");
+	}
+
+	/**
+	 * Set the hostname and secure connection flag, based on an input string, that can possibly contain and URL, prefixed with a protocol.
+	 *
+	 * @param input
+	 * @param secureSetter
+	 * @param hostSetter
+	 * @throws NodeException
+	 */
+	public static void setHostAndProtocol(String input, Consumer<Boolean> secureSetter, Consumer<String> hostSetter) throws NodeException {
+		if (input != null) {
+			input = input.trim();
+			if (isUrlWithProtocol(input)) {
+				secureSetter.accept(input.startsWith("https://"));
+				hostSetter.accept(input.substring(input.indexOf("://") + 3));
+			} else {
+				hostSetter.accept(input);
+			}
+		}
+	}
+
+	/**
 	 * When the instant publishing result is not null and contains a reason message, add the message to the response
 	 * @param instantPublishingResult optional instant publishing result
 	 * @param response response

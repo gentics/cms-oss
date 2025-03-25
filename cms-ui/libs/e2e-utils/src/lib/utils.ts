@@ -432,7 +432,7 @@ export function globMatch(globPattern: string, str: string): boolean {
     return true;
 }
 
-export function matchesPath(url: string, path: string | RegExp): boolean {
+export function matchesPath(url: string | URL, path: string | RegExp): boolean {
     try {
         const urlObj = new URL(url);
 

@@ -1,5 +1,5 @@
 import { Feature, Variant } from '@gentics/cms-models';
-import { EntityImporter, isVariant } from '@gentics/e2e-utils';
+import { blockKeycloakConfig, EntityImporter, isVariant, matchesPath, waitForKeycloakAuthPage } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH, AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
 import { loginWithForm, navigateToApp } from './helpers';
@@ -16,7 +16,7 @@ test.describe('Login', () => {
     });
 
     test.describe('Without keycloak feature enabled', () => {
-        test.beforeAll(async ({ request }) => {
+        test.beforeEach(async ({ request }) => {
             IMPORTER.setApiContext(request);
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: false,
@@ -24,18 +24,19 @@ test.describe('Login', () => {
         });
 
         test('should be able to login', async ({ page }) => {
-            await navigateToApp(page);
+            await blockKeycloakConfig(page);
+            await navigateToApp(page, '', true);
             await loginWithForm(page, AUTH_ADMIN);
 
             // Verify successful login
-            await expect(page.locator('gtx-dashboard')).toBeVisible();
+            await page.locator('gtx-dashboard').waitFor({ state: 'visible' });
         });
     });
 
     test.describe('With keycloak feature enabled', () => {
         test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
-        test.beforeAll(async ({ request }) => {
+        test.beforeEach(async ({ request }) => {
             IMPORTER.setApiContext(request);
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: true,
@@ -44,28 +45,28 @@ test.describe('Login', () => {
 
         test('should be able to login (skip-sso)', async ({ page }) => {
             await navigateToApp(page);
-
-            // Get auth data and login
-            const auth = AUTH[AUTH_ADMIN];
-            await page.fill('input[name="username"]', auth.username);
-            await page.fill('input[name="password"]', auth.password);
-            await page.click('button[type="submit"]');
+            await loginWithForm(page, AUTH_ADMIN);
 
             // Verify successful login
-            await expect(page.locator('gtx-dashboard')).toBeVisible();
+            await page.locator('gtx-dashboard').waitFor({ state: 'visible' });
         });
 
         test('should be able to login (default without skip-sso)', async ({ page }) => {
-            await navigateToApp(page, '/', true);
+            await navigateToApp(page, '', true);
+            await waitForKeycloakAuthPage(page);
 
-            // Get auth data and login via Keycloak
-            const auth = AUTH[AUTH_KEYCLOAK];
-            await page.fill('input[name="username"]', auth.username);
-            await page.fill('input[name="password"]', auth.password);
-            await page.click('button[type="submit"]');
+            const ssoReq = page.waitForRequest(req => matchesPath(req.url(), '/rest/auth/ssologin'));
+
+            await loginWithForm(page, AUTH_KEYCLOAK);
+
+            // Verify SSO response
+            const sso = await ssoReq;
+            const ssoRes = await sso.response();
+            expect(ssoRes.ok()).toBe(true);
+            expect(await ssoRes.text()).not.toBe('NOTFOUND');
 
             // Verify successful login
-            await expect(page.locator('gtx-dashboard')).toBeVisible();
+            await page.locator('gtx-dashboard').waitFor({ state: 'visible' });
         });
     });
 });

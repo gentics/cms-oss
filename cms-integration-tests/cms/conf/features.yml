@@ -5,6 +5,8 @@ feature:
   mesh_contentrepository: true
   forms: true
 
-  # Explicitly turn it off
-  keycloak: false
-  keycloak_signout: false
+  # Keycloak is a bit of a special feature - It needs to be active when the server
+  # starts to properly work. Since it's only available in EE, we control the initial
+  # value with a ENV value. In the tests we dynamically turn keycloak off.
+  keycloak: ${env:KEYCLOAK_ACTIVE}
+  keycloak_signout: ${env:KEYCLOAK_ACTIVE}

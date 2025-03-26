@@ -1394,6 +1394,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			Path currentPath = parentFolderPath.resolve(currentNodeObject.getGlobalId() + "." + version.getVersionNumber() + currentNodeObject.getSuffix() + METADATA_EXTENSION);
 			result += inflateNodeObject(published.get(), currentNodeObject, nodeObjectInflater, maybeHaveOrphans, currentPath);
 			currentNodeObject.save();
+
+			// optionally do postsave operations
+			if (maybeDoPostSave.isPresent()) {
+				maybeDoPostSave.get().accept(published.get(), currentNodeObject);
+			}
+
 			versionedNodeObject.publish(0, false);
 
 			int publishAt = version.getPublishAt();

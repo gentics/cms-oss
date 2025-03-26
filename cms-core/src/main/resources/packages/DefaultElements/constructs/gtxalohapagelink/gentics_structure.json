@@ -159,7 +159,7 @@
       "en" : "Language"
     },
     "keyword" : "language",
-    "editable" : false,
+    "editable" : true,
     "typeId" : 1,
     "order" : 10,
     "mlId" : 0,

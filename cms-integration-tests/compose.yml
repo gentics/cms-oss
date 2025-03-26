@@ -87,8 +87,8 @@ services:
         condition: service_healthy
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.50.1-noble
-    entrypoint: "npx -y playwright@1.50.1 run-server --port 3000 --host 0.0.0.0"
+    image: mcr.microsoft.com/playwright:v1.51.1-noble
+    entrypoint: "npx -y playwright@1.51.1 run-server --port 3000 --host 0.0.0.0"
     ports:
       - 3000:3000
 

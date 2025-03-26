@@ -147,6 +147,11 @@ export abstract class BaseEntityEditorComponent<K extends EditableEntity>
     /* UTIL
      *************************************************************************/
 
+    protected resetTabs(): Promise<void> {
+        return Promise.all(Object.values(this.tabHandles).map(handle => handle.reset?.() ?? Promise.resolve()))
+            .then(() => {});
+    }
+
     protected loadEntity(): Promise<void> {
         if (this.entityId == null) {
             return;

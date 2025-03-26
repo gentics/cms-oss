@@ -185,7 +185,7 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 
 	@Test
 	public void testRender() throws NodeException {
-		try (Trx trx = new Trx(); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = RenderTypeTrx.publish(true)) {
 			assertThat(testPage.render()).as("Rendered page").isEqualTo(expectedResult);
 			trx.success();
 		}

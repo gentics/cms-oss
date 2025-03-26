@@ -2,7 +2,7 @@ import { BO_DISPLAY_NAME, BO_ID, BO_NODE_ID, BO_PERMISSIONS, ContentItem, Conten
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { Injectable } from '@angular/core';
 import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { flatMap } from 'lodash-es';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -28,15 +28,43 @@ export interface ContentItemTrableLoaderOptions {
 export class ContentItemTrableLoaderService extends BaseTrableLoaderService<ContentItem, ContentItemBO, ContentItemTrableLoaderOptions> {
 
     constructor(
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
     ) {
         super();
     }
 
     protected loadEntityRow(entity: ContentItemBO, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO> {
-        return this.api.folders.getItem(entity.id, entity.type).pipe(
-            map(res => res[entity.type]),
-        )
+        switch (entity.type) {
+            case 'channel':
+            case 'node':
+                return this.client.node.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.node, null)),
+                );
+            case 'file':
+                return this.client.file.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.file, null)),
+                );
+            case 'folder':
+                return this.client.folder.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.folder, null)),
+                );
+            case 'form':
+                return this.client.form.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.item, null)),
+                );
+            case 'image':
+                return this.client.image.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.image, null)),
+                );
+            case 'page':
+                return this.client.page.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.page, null)),
+                );
+            case 'template':
+                return this.client.template.get(entity.id).pipe(
+                    map(res => this.mapToBusinessObject(res.template, null)),
+                );
+        }
     }
 
     protected loadEntityChildren(parent: ContentItemBO | null, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO[]> {
@@ -44,12 +72,12 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         let loader: Observable<ContentItem[]>;
 
         if (!parent && options?.includeRoot) {
-            loader = this.api.folders.getItem(parentId, 'folder').pipe(
+            loader = this.client.folder.folders(parentId).pipe(
                 map(res => [res.folder]),
             );
         } else {
             parentId = parent?.id ?? parentId;
-            loader = this.api.folders.getFolders(parentId).pipe(
+            loader = this.client.folder.folders(parentId).pipe(
                 map(res => res.folders),
             );
             if (parentId) {
@@ -70,27 +98,27 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
     protected getTypedChildrenLoader(type: ContentItemTypes, parentId?: number): Observable<ContentItem[]> {
         switch (type) {
             case 'folder':
-                return this.api.folders.getFolders(parentId).pipe(
+                return this.client.folder.folders(parentId).pipe(
                     map(res => res.folders),
                 );
             case 'file':
-                return this.api.folders.getFiles(parentId).pipe(
+                return this.client.folder.files(parentId).pipe(
                     map(res => res.files),
                 );
             case 'form':
-                return this.api.folders.getForms(parentId).pipe(
+                return this.client.form.list({ folderId: parentId }).pipe(
                     map(res => res.items),
                 );
             case 'image':
-                return this.api.folders.getImages(parentId).pipe(
+                return this.client.folder.images(parentId).pipe(
                     map(res => res.files),
                 );
             case 'page':
-                return this.api.folders.getPages(parentId).pipe(
+                return this.client.folder.pages(parentId).pipe(
                     map(res => res.pages),
                 );
             case 'template':
-                return this.api.folders.getTemplates(parentId).pipe(
+                return this.client.folder.templates(parentId).pipe(
                     map(res => res.templates),
                 );
         }
@@ -104,15 +132,17 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         return options.selectable.includes(entity.type);
     }
 
-    public mapToBusinessObject(item: ContentItem, parent: ContentItemBO | null): ContentItemBO {
+    public mapToBusinessObject(item: ContentItem, parent?: ContentItemBO | null): ContentItemBO {
         let nodeId: number;
 
         if (item.type === 'node' || item.type === 'channel' || item.type === 'folder') {
             nodeId = (item as any as Folder).nodeId;
-        } else if (parent.type === 'node' || parent.type === 'channel' || parent.type === 'folder') {
-            nodeId = (parent as any as Folder).nodeId;
-        } else {
-            nodeId = parent[BO_NODE_ID];
+        } else if (parent != null) {
+            if (parent.type === 'node' || parent.type === 'channel' || parent.type === 'folder') {
+                nodeId = (parent as any as Folder).nodeId;
+            } else {
+                nodeId = parent[BO_NODE_ID];
+            }
         }
 
         return {

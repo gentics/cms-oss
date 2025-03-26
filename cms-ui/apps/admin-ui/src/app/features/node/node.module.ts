@@ -1,19 +1,18 @@
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { provideRouter, RouterModule, withComponentInputBinding } from '@angular/router';
 import {
     AssignLanguagesToNodeModal,
     CopyNodesModalComponent,
     CreateNodeWizardComponent,
     DeleteNodesModalComponent,
-    NodeDetailComponent,
+    NodeEditorComponent,
     NodeFeaturesComponent,
     NodeMasterComponent,
     NodePropertiesComponent,
     NodePublishingPropertiesComponent,
 } from './components';
 import { NODE_ROUTES } from './node.routes';
-import { CanActivateNodeGuard } from './providers';
 
 @NgModule({
     declarations: [
@@ -21,14 +20,14 @@ import { CanActivateNodeGuard } from './providers';
         CopyNodesModalComponent,
         CreateNodeWizardComponent,
         DeleteNodesModalComponent,
-        NodeDetailComponent,
+        NodeEditorComponent,
         NodeFeaturesComponent,
         NodeMasterComponent,
         NodePropertiesComponent,
         NodePublishingPropertiesComponent,
     ],
     providers: [
-        CanActivateNodeGuard,
+        provideRouter(NODE_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

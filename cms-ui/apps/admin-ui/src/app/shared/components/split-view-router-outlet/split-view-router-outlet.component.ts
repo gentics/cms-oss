@@ -15,13 +15,18 @@ import { delay, map } from 'rxjs/operators';
  * the children should completely replace the parent component with Master-Detail view.
  */
 @Component({
-  selector: 'gtx-split-view-router-outlet',
-  templateUrl: './split-view-router-outlet.component.html',
-  styleUrls: ['./split-view-router-outlet.component.scss'],
+    selector: 'gtx-split-view-router-outlet',
+    templateUrl: './split-view-router-outlet.component.html',
+    styleUrls: ['./split-view-router-outlet.component.scss'],
 })
 export class SplitViewRouterOutletComponent implements OnInit {
-    @SelectState(state => state.ui) stateUI$: Observable<UIStateModel>;
-    @SelectState(state => state.loading) stateLoading$: Observable<LoadingStateModel>;
+
+    @SelectState(state => state.ui)
+    stateUI$: Observable<UIStateModel>;
+
+    @SelectState(state => state.loading)
+    stateLoading$: Observable<LoadingStateModel>;
+
     editorIsFocused$: Observable<boolean>;
     focusMode$: Observable<boolean>;
     editorIsOpen$: Observable<boolean>;
@@ -34,6 +39,8 @@ export class SplitViewRouterOutletComponent implements OnInit {
     loadingDetailDelayed$: Observable<boolean>;
     loadingDetailMessage$: Observable<string>;
 
+    public detailsVisible = false;
+
     constructor(
         private appState: AppStateService,
     ) { }
@@ -41,12 +48,15 @@ export class SplitViewRouterOutletComponent implements OnInit {
     ngOnInit(): void {
         this.editorIsFocused$ = this.stateUI$.pipe(
             map(uiState => uiState.editorIsFocused),
+            delay(0),
         );
         this.focusMode$ = this.stateUI$.pipe(
             map(uiState => uiState.focusMode),
+            delay(0),
         );
         this.editorIsOpen$ = this.stateUI$.pipe(
             map(uiState => uiState.editorIsOpen),
+            delay(0),
         );
 
         this.loadingMaster$ = this.stateLoading$.pipe(
@@ -72,6 +82,12 @@ export class SplitViewRouterOutletComponent implements OnInit {
         this.loadingDetailMessage$ = this.stateLoading$.pipe(
             map(loadingState => loadingState.detailLoadingMessage),
         );
+    }
+
+    public updateDetailsActivation(value: boolean): void {
+        setTimeout(() => {
+            this.detailsVisible = value;
+        });
     }
 
     setSplitFocus(focus: 'left' | 'right'): void {

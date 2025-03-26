@@ -65,7 +65,7 @@ const CLASS_ACTIVE = /active/;
 const CLASS_GRANTED = /granted/;
 
 test.describe.configure({ mode: 'serial' });
-test.describe.only('Content Repositories Module', () => {
+test.describe('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
         logRequests: false,

@@ -1,0 +1,44 @@
+@import '../../../../shared/components/base-entity-table/base-entity-table.component.scss';
+
+gtx-accordion {
+    width: 100%;
+}
+
+.node-name {
+    flex: 1 1;
+}
+
+.queue-content {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    width: 100%;
+    justify-content: space-between;
+
+    .type-queue-wrapper {
+        min-width: 140px;
+    }
+}
+
+.node-queue-table {
+    font-size: 0.9rem;
+    width: 100%;
+
+    tr {
+        border: none;
+    }
+
+    th, td {
+        transition: all ease .1s;
+        padding: 0.3rem 0;
+        border: none;
+    }
+
+    th {
+        border-bottom: 1px solid $gtx-color-light-gray;
+    }
+
+    .value-column {
+        text-align: right;
+    }
+}

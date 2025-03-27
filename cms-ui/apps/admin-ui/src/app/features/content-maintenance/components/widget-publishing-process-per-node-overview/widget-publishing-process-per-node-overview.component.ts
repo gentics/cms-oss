@@ -56,19 +56,9 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
     @Input()
     public selectedIds: number[] = [];
 
-    /** If TRUE component polls and refreshs the data display in an intervall defined in `lifeSyncIntervall` */
-    @Input()
-    public lifeSyncEnabled = true;
-
-    /** Determines the amount of seconds between polling information. */
-    @Input()
-    public lifeSyncIntervall: number;
-
     /** emits selected node IDs on checkbox clicked */
     @Output()
     public selectedIdsChange = new EventEmitter<number[]>();
-
-    private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
 
     /** information of the current publish process per node */
     infoStatsPerNodeData$ = new BehaviorSubject<PublishQueue>(null);
@@ -124,108 +114,79 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
     ) { }
 
     ngOnInit(): void {
-        const intervall$ = this.syncIntervall$.asObservable().pipe(
-            distinctUntilChanged(isEqual),
-            switchMap(milliseconds => timer(0, milliseconds)),
-            filter(() => this.lifeSyncEnabled),
-        );
+        // this.adminOps.getPublishInfo(),
+        // this.adminOps.getPublishQueue(),
+        // this.nodeOps.getAll(),
 
-        // initialize data stream of node publish status info
-        this.subscriptions.push(intervall$.pipe(
-            startWith(null),
-            // start loading indicator
-            tap(() => {
-                this.tableIsLoading = true;
-            }),
-            // request data
-            switchMap(() => forkJoin([
-                this.adminOps.getPublishInfo(),
-                this.adminOps.getPublishQueue(),
-                this.nodeOps.getAll(),
-            ])),
-            catchError(error => this.errorHandler.catch(error)),
-        ).subscribe(([info, queue, allNodeEntities]: [PublishInfo, PublishQueue, Node<Raw>[]]) => {
-            // emit latest data
-            this.infoStatsPerNodeData$.next(queue);
+        // // null check
+        // const infoNodesKeys = info && Object.keys(queue.nodes);
+        // if (!infoNodesKeys.length || !allNodeEntities.length) {
+        //     return;
+        // }
 
-            // set loading indicator
-            this.tableIsLoading = false;
+        // // assemble component state
+        // this.publishState.forEach((publishableEntityState: WidgetPublishingProcessPerNodeComponentState) => {
+        //     const publishTypeKey = `${publishableEntityState.publishType}s`;
 
-            // null check
-            const infoNodesKeys = info && Object.keys(queue.nodes);
-            if (!infoNodesKeys.length || !allNodeEntities.length) {
-                return;
-            }
+        //     // sum totals
+        //     let toPublishTotal = 0;
+        //     let delayedTotal = 0;
+        //     let publishedTotal = 0;
+        //     let remainingTotal = 0;
 
-            // assemble component state
-            this.publishState.forEach((publishableEntityState: WidgetPublishingProcessPerNodeComponentState) => {
-                const publishTypeKey = `${publishableEntityState.publishType}s`;
+        //     Object.keys(queue.nodes).forEach(nodeId => {
+        //         const queueInfoPerType: PublishObjectsCount = queue.nodes[nodeId][publishTypeKey];
+        //         toPublishTotal += queueInfoPerType.toPublish;
+        //         delayedTotal += queueInfoPerType.delayed;
+        //         publishedTotal += queueInfoPerType.published;
+        //         remainingTotal += queueInfoPerType.remaining;
+        //     });
 
-                // sum totals
-                let toPublishTotal = 0;
-                let delayedTotal = 0;
-                let publishedTotal = 0;
-                let remainingTotal = 0;
+        //     publishableEntityState.toPublishTotal = toPublishTotal;
+        //     publishableEntityState.delayedTotal = delayedTotal;
+        //     publishableEntityState.publishedTotal = publishedTotal;
+        //     publishableEntityState.remainingTotal = remainingTotal;
 
-                Object.keys(queue.nodes).forEach(nodeId => {
-                    const queueInfoPerType: PublishObjectsCount = queue.nodes[nodeId][publishTypeKey];
-                    toPublishTotal += queueInfoPerType.toPublish;
-                    delayedTotal += queueInfoPerType.delayed;
-                    publishedTotal += queueInfoPerType.published;
-                    remainingTotal += queueInfoPerType.remaining;
-                });
+        //     // assemble state per node
+        //     publishableEntityState.nodes = allNodeEntities.map(node => {
+        //         const queueInfoPerType: PublishObjectsCount = queue.nodes[node.id][publishTypeKey];
 
-                publishableEntityState.toPublishTotal = toPublishTotal;
-                publishableEntityState.delayedTotal = delayedTotal;
-                publishableEntityState.publishedTotal = publishedTotal;
-                publishableEntityState.remainingTotal = remainingTotal;
+        //         const retVal: WidgetPublishingProcessPerNodeComponentStateNode = {
+        //             nodeId: node.id,
+        //             name: node.name,
+        //             disablePublish: node.disablePublish,
+        //             toPublish: {
+        //                 amount: 0,
+        //                 percentage: 0,
+        //             },
+        //             delayed: {
+        //                 amount: 0,
+        //                 percentage: 0,
+        //             },
+        //             published: {
+        //                 amount: 0,
+        //                 percentage: 0,
+        //             },
+        //             remaining: {
+        //                 amount: 0,
+        //                 percentage: 0,
+        //             },
+        //         };
 
-                // assemble state per node
-                publishableEntityState.nodes = allNodeEntities.map(node => {
-                    const queueInfoPerType: PublishObjectsCount = queue.nodes[node.id][publishTypeKey];
-
-                    const retVal: WidgetPublishingProcessPerNodeComponentStateNode = {
-                        nodeId: node.id,
-                        name: node.name,
-                        disablePublish: node.disablePublish,
-                        toPublish: {
-                            amount: 0,
-                            percentage: 0,
-                        },
-                        delayed: {
-                            amount: 0,
-                            percentage: 0,
-                        },
-                        published: {
-                            amount: 0,
-                            percentage: 0,
-                        },
-                        remaining: {
-                            amount: 0,
-                            percentage: 0,
-                        },
-                    };
-
-                    this.widgetPublishingProcessStatusKeys.forEach(statusKey => {
-                        retVal[statusKey] = this.assembleNodeStateObject(
-                            publishableEntityState,
-                            queueInfoPerType,
-                            statusKey,
-                        );
-                    });
-                    return retVal;
-                });
-            });
-
-            // notify change detection
-            this.changeDetectorRef.markForCheck();
-        }));
+        //         this.widgetPublishingProcessStatusKeys.forEach(statusKey => {
+        //             retVal[statusKey] = this.assembleNodeStateObject(
+        //                 publishableEntityState,
+        //                 queueInfoPerType,
+        //                 statusKey,
+        //             );
+        //         });
+        //         return retVal;
+        //     });
+        // });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.lifeSyncIntervall) {
-            this.syncIntervall$.next(this.lifeSyncIntervall);
-        }
+
     }
 
     ngOnDestroy(): void {

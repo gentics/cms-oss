@@ -68,28 +68,28 @@
         "de": "Veröffentlichungsprozess"
     },
     "publishing_process_publish_status": {
-      "en": "Publish status:",
-      "de": "Status der Publizierung:"
+      "en": "Publish status",
+      "de": "Status der Publizierung"
     },
     "publishing_process_to_be_published": {
-        "en": "to be published:",
-        "de": "veröffentlicht werden:"
+        "en": "{{ count }} to be published",
+        "de": "{{ count }} werden veröffentlicht"
     },
     "publishing_process_published": {
         "en": "published {{ count }} of {{ total }}",
-        "de": "veröffentlicht {{ count }} von {{ total }}"
+        "de": "{{ count }} von {{ total }} veröffentlicht"
     },
     "publishing_process_estimated_publish_duration": {
-        "en": "Estimated publish duration:",
-        "de": "Geschätzte Publizierungsdauer:"
+        "en": "Estimated publish duration",
+        "de": "Geschätzte Publizierungsdauer"
     },
     "publishing_process_current_status": {
-        "en": "Current status of scheduler tasks:",
-        "de": "Aktueller Status der Scheduler Tasks:"
+        "en": "Current status of scheduler tasks",
+        "de": "Aktueller Status der Scheduler Tasks"
     },
     "publishing_process_last_status": {
-        "en": "Last status of scheduler tasks:",
-        "de": "Letzter Status der Scheduler Tasks:"
+        "en": "Last status of scheduler tasks",
+        "de": "Letzter Status der Scheduler Tasks"
     },
     "publishing_process_status_failed": {
         "en": "Failed",

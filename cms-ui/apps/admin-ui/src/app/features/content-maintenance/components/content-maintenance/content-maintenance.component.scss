@@ -1,34 +1,20 @@
-.gtx-entity-master {
-    margin-bottom: 8rem;
-}
-
-.gtx-sync-setter {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.75rem;
-
-    & > .input-container {
-        display: flex;
-        align-items: center;
-
-        & > * {
-            zoom: 85%;
-        }
-
-        &:first-child {
-            margin-right: 1rem;
-        }
-    }
-}
-
-gtx-tabs {
-    height: 100%;
-}
-
 .maintenance-tab-content {
     height: 100%;
     width: 100%;
     overflow: auto;
     margin: 0;
     display: flex;
+    gap: 2rem;
+    padding: 0 2rem;
+
+    .main-content {
+        flex: 0 0 1080px;
+    }
+
+    .sidebar {
+        flex: 1 1 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
 }

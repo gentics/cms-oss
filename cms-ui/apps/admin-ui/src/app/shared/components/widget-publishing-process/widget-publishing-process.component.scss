@@ -5,20 +5,37 @@
     padding-bottom: 0.5rem;
 }
 
-p {
-    width: 100%;
-    margin: 5px 0;
+.content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
 
-    icon {
-        font-size: 1.6em;
-        vertical-align: middle;
-        color: $gtx-color-very-dark-gray;
+.entry {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0.3rem;
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+
+    .entry-title {
+        font-weight: bold;
+    }
+
+    &.typed-entry {
+        .entry-title {
+            display: flex;
+            align-content: center;
+            align-items: center;
+            line-height: 1;
+            gap: 0.5rem;
+        }
     }
 }
 
 .warning {
     font-weight: 400;
-    color: red;
+    color: $gtx-color-alert;
 }
 
 .success {

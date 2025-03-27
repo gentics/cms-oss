@@ -1,0 +1,55 @@
+@import 'variables';
+
+.summary-table {
+    tr {
+        border: none;
+        font-size: 0.9rem;
+
+        th, td {
+            padding: 0.25rem 0.3rem;
+            border: none;
+            font-size: inherit;
+        }
+    }
+
+    .type-header-row {
+        font-size: 1rem;
+        font-weight: bold;
+
+        &:not(:first-child) {
+            border-top: 1px solid $gtx-color-very-light-gray;
+
+            th {
+                padding-top: 1rem;
+            }
+        }
+
+        th {
+            padding-bottom: 0;
+        }
+    }
+
+    .value-column,
+    .progress-column {
+        text-align: right;
+    }
+
+    .property-row {
+        .value-column {
+            font-weight: bold;
+        }
+    }
+
+    .node-row {
+        background: linear-gradient(to right, rgba($gtx-color-primary, 0.1) var(--gtx-progress), transparent var(--gtx-progress));
+
+        &.publish-disabled {
+            font-style: italic;
+
+            .label-column::after {
+                content: '*';
+                display: inline-block;
+            }
+        }
+    }
+}

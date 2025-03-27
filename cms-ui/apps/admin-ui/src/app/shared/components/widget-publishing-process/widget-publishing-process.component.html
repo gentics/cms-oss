@@ -1,87 +1,44 @@
-<div *ngIf="showTitle" class="row">
-    <h2 class="gtx-widget-title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
+<h2 *ngIf="showTitle" class="gtx-widget-title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
+
+<div *ngIf="info" class="content">
+    <gtx-progress-bar [active]="info.running" [progress]="(info.progress / 100)" />
+
+    <div *ngIf="publisherStatus" class="entry">
+        <div class="entry-title">{{ 'dashboard.scheduler' | i18n }}</div>
+        <div class="entry-value">{{ ('scheduler.status_' + publisherStatus) | i18n }}</div>
+    </div>
+
+    <div *ngIf="info.phase" class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_publish_status' | i18n }}</div>
+        <div class="entry-value">{{ info.phase }}</div>
+    </div>
+
+    <div *ngFor="let typed of typedStatus" class="entry typed-entry">
+        <div class="entry-title">
+            <icon class="type-icon">{{ typed.icon }}</icon>
+            <span class="type-name">{{ ('common.' + typed.type + '_plural') | i18n }}</span>
+        </div>
+        <div class="entry-value">
+            {{ typed.i18n | i18n: typed.data }}
+        </div>
+    </div>
+
+    <div *ngIf="info.estimatedDuration" class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_estimated_publish_duration' | i18n }}</div>
+        <div class="entry-value">{{ info.estimatedDuration | gtxI18nDuration }}</div>
+    </div>
+
+    <div class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_last_status' | i18n }}</div>
+        <div class="entry-value">
+            <div *ngIf="hasFailedJobs; else processStatusHealthyContent" class="failed-jobs-details">
+                <span class="warning">{{ 'widget.publishing_process_status_failed' | i18n }}</span> -
+                <a [routerLink]="['/' + AdminUIModuleRoutes.SCHEDULER]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
+            </div>
+
+            <ng-template #processStatusHealthyContent>
+                <span class="success">{{ 'widget.publishing_process_status_healthy' | i18n }}</span>
+            </ng-template>
+        </div>
+    </div>
 </div>
-
-<ng-container *ngIf="info">
-    <gtx-progress-bar [active]="info.running" [progress]="(info.progress / 100)"></gtx-progress-bar>
-
-    <div *ngIf="publisherStatus" class="row">
-        <div class="title">
-            {{ 'dashboard.scheduler' | i18n }}:
-            <div><b>{{ ('scheduler.status_' + publisherStatus) | i18n }}</b></div>
-        </div>
-    </div>
-
-    <div *ngIf="info.phase" class="row">
-        <div class="title">
-            {{ 'widget.publishing_process_publish_status' | i18n }}:
-            <div><b>{{ info.phase }}</b></div>
-        </div>
-    </div>
-
-    <br>
-
-    <div class="row" *ngIf="!info.running">
-        <p>
-            <icon>folder</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_to_be_published' | i18n }} {{ info.folders.toPublish }}</b>
-        </p>
-        <br>
-        <p>
-            <icon>subject</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_to_be_published' | i18n }} {{ info.pages.toPublish }}</b>
-        </p>
-        <br>
-        <p>
-            <icon>image</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_to_be_published' | i18n }} {{ info.files.toPublish }}</b>
-        </p>
-        <br>
-    </div>
-
-    <div class="row" *ngIf="info.running">
-        <p>
-            <icon>folder</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_published' | i18n: { count: info.folders.published, total: (info.folders.published + info.folders.remaining) } }}</b>
-        </p>
-        <br>
-        <p>
-            <icon>subject</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_published' | i18n: { count: info.pages.published, total: (info.pages.published + info.pages.remaining) } }}</b>
-        </p>
-        <br>
-        <p>
-            <icon>image</icon>
-            <br>
-            <b>{{ 'widget.publishing_process_published' | i18n: { count: info.files.published, total: (info.files.published + info.files.remaining) } }}</b>
-        </p>
-        <br>
-    </div>
-
-    <br>
-
-    <div class="row" >
-        <div class="title">{{ 'widget.publishing_process_estimated_publish_duration' | i18n }}</div>
-        <b>{{ info.estimatedDuration * 1000 | date:'HH:mm:ss':'UTC' }}</b>
-    </div>
-
-    <br>
-
-    <div class="row">
-        <div class="title">{{ 'widget.publishing_process_last_status' | i18n }}</div>
-
-        <div *ngIf="hasFailedJobs; else processStatusHealthyContent">
-            <span class="warning">{{ 'widget.publishing_process_status_failed' | i18n }}</span> -
-            <a [routerLink]="['/' + AdminUIModuleRoutes.SCHEDULER]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
-        </div>
-
-        <ng-template #processStatusHealthyContent>
-            <span class="success">{{ 'widget.publishing_process_status_healthy' | i18n }}</span>
-        </ng-template>
-    </div>
-</ng-container>

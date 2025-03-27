@@ -1,0 +1,87 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+    [paginated]="false"
+
+    [renderers]="{
+        name: nameRenderer
+    }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #nameRenderer let-value="value" let-row="row">
+    <ng-template #name>
+        <div class="node-name">{{ value }}</div>
+    </ng-template>
+
+    <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id">
+        <div class="queue-content">
+            <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
+                <div *ngIf="publishQueue?.nodes?.[row.id]?.[entry.key] as data" class="type-queue-wrapper">
+                    <ng-container
+                        [ngTemplateOutlet]="typeStatus"
+                        [ngTemplateOutletContext]="{ data: data, type: entry.value }"
+                    ></ng-container>
+                </div>
+            </ng-container>
+        </div>
+    </gtx-accordion>
+</ng-template>
+
+<ng-template #typeStatus let-data="data" let-type="type">
+    <table *ngIf="data" class="node-queue-table">
+        <tr>
+            <th colspan="2">{{ ('common.' + type + '_plural') | i18n }}</th>
+        </tr>
+        <tr>
+            <td class="label-column">{{ 'shared.toPublish' | i18n }}</td>
+            <td class="value-column">{{ data.toPublish }}</td>
+        </tr>
+        <tr>
+            <td class="label-column">{{ 'shared.delayed' | i18n }}</td>
+            <td class="value-column">{{ data.delayed }}</td>
+        </tr>
+        <tr>
+            <td class="label-column">{{ 'shared.published' | i18n }}</td>
+            <td class="value-column">{{ data.published }}</td>
+        </tr>
+        <tr>
+            <td class="label-column">{{ 'shared.remaining' | i18n }}</td>
+            <td class="value-column">{{ data.remaining }}</td>
+        </tr>
+    </table>
+</ng-template>

@@ -1,4 +1,3 @@
-import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
 import { AdminOperations, ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { animate, state, style, transition, trigger } from '@angular/animations';
@@ -6,21 +5,18 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
     Output,
-    SimpleChanges,
-    ViewChild,
+    SimpleChanges
 } from '@angular/core';
 import { Node, PublishQueue, Raw } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
-import { BehaviorSubject, Observable, Subscription, timer } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, map, mergeMap, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
 
 /**
@@ -77,21 +73,12 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
     @Input()
     selectedIds: number[] = [];
 
-    /** If TRUE component polls and refreshs the data display in an intervall defined in `lifeSyncIntervall` */
     @Input()
-    lifeSyncEnabled = true;
-
-    /** Determines the amount of seconds between polling information. */
-    @Input()
-    public lifeSyncIntervall: number;
+    public queueStatus: PublishQueue;
 
     /** emits selected node IDs on checkbox clicked */
     @Output()
     selectedIdsChange = new EventEmitter<number[]>();
-
-    /** DOM element of table */
-    @ViewChild('table')
-    tableElementView: ElementRef<HTMLDivElement>;
 
     /** All nodes currently existing in global app state */
     allNodes$: Observable<Node<Raw>[]>;
@@ -118,10 +105,6 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
 
     searchTerm = '';
 
-    tableElementViewHeight: number;
-
-    private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
-
     private subscriptions: Subscription[] = [];
 
     constructor(
@@ -139,74 +122,37 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
             map(allNodes => allNodes.sort((a, b) => a.name.localeCompare(b.name))),
         );
 
-        const intervall$ = this.syncIntervall$.pipe(
-            distinctUntilChanged(isEqual),
-            switchMap(milliseconds => timer(0, milliseconds)),
-            filter(() => this.lifeSyncEnabled),
-        );
+        // this.adminOps.getPublishQueue()
+        // set loading indicator
+        // this.tableIsLoading = false;
 
-        // initialize data stream of node publish status info
-        this.subscriptions.push(intervall$.pipe(
-            startWith(null),
-            // start loading indicator
-            tap(() => {
-                this.tableIsLoading = true;
-                this.changeDetectorRef.markForCheck();
-            }),
-            // request data
-            switchMap(() => this.adminOps.getPublishQueue()),
-            // validate response
-            filter(data => data instanceof Object),
-            // get all nodes from state
-            mergeMap(data => this.allNodes$.pipe(map(allNodes => [data, allNodes]))),
+        // const infoNodesKeys = info && Object.keys(info.nodes);
 
-            catchError(error => this.errorHandler.catch(error)),
-        ).subscribe(([info, allNodes]: [PublishQueue, Node<Raw>[]]) => {
-            // emit latest data
-            this.infoStatsPerNodeData$.next(info);
+        // if (!infoNodesKeys.length || !allNodes.length) {
+        //     return;
+        // }
+        // // assemble component state
+        // infoNodesKeys.forEach((nodeId: string) => {
+        //     const node: Node<Raw> = allNodes.find(node => node.id.toString() === nodeId);
 
-            // set loading indicator
-            this.tableIsLoading = false;
-
-            const infoNodesKeys = info && Object.keys(info.nodes);
-
-            if (!infoNodesKeys.length || !allNodes.length) {
-                return;
-            }
-            // assemble component state
-            infoNodesKeys.forEach((nodeId: string) => {
-                const node: Node<Raw> = allNodes.find(node => node.id.toString() === nodeId);
-
-                const isSelected: boolean = this.selectedIds.includes(parseInt(nodeId, 10));
-                if (this.infoStatsPerNodeState[nodeId]) {
-                    this.infoStatsPerNodeState[nodeId].selected = isSelected;
-                } else {
-                    this.infoStatsPerNodeState[nodeId] = {
-                        nodeId,
-                        name: node.name,
-                        selected: isSelected,
-                        collapsed: false,
-                        hidden: this.infoStatsPerNodeState[nodeId]?.hidden ?? false,
-                        disablePublish: node.disablePublish,
-                    };
-                }
-            });
-
-            // notify change detection
-            this.changeDetectorRef.markForCheck();
-            // set min height for container element to prevent page from scrolling during filter
-            this.tableElementViewHeight = this.tableElementView.nativeElement.offsetHeight;
-        }, err => {
-            console.error(err);
-            this.tableIsLoading = false;
-            this.changeDetectorRef.markForCheck();
-        }));
+        //     const isSelected: boolean = this.selectedIds.includes(parseInt(nodeId, 10));
+        //     if (this.infoStatsPerNodeState[nodeId]) {
+        //         this.infoStatsPerNodeState[nodeId].selected = isSelected;
+        //     } else {
+        //         this.infoStatsPerNodeState[nodeId] = {
+        //             nodeId,
+        //             name: node.name,
+        //             selected: isSelected,
+        //             collapsed: false,
+        //             hidden: this.infoStatsPerNodeState[nodeId]?.hidden ?? false,
+        //             disablePublish: node.disablePublish,
+        //         };
+        //     }
+        // });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.lifeSyncIntervall) {
-            this.syncIntervall$.next(this.lifeSyncIntervall);
-        }
+
     }
 
     ngOnDestroy(): void {

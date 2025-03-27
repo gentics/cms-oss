@@ -78,7 +78,7 @@
     (clear)="filterNodes('')"
 ></gtx-search-bar>
 
-<div #table [style.minHeight.px]="tableElementViewHeight">
+<div #table>
     <table
         *ngIf="allNodes$ | async as nodes"
         class="gtx-table-publishqueue"

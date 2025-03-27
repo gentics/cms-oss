@@ -7,7 +7,7 @@ JobContext.set(this)
 
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
-final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
+final def testDbManagerHost    = "gcn-testdb-manager-playground.gtx-dev.svc"
 final def testDbManagerPort    = "8080"
 
 def branchName                 = null

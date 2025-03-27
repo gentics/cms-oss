@@ -277,6 +277,7 @@ spec:
                     // Login to docker.gentics.com so that the tests can pull all Mesh images
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+                    sh "echo DEADBEEF"
                     withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
                         sh "echo Using testdbmanager: $TESTMANAGER_HOSTNAME:$TESTMANAGER_PORT"
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +

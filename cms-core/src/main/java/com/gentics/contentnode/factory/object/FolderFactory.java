@@ -6273,18 +6273,7 @@ public class FolderFactory extends AbstractFactory {
 			// if hostProperty is not empty, resolve and set host also
 			if (!org.apache.commons.lang3.StringUtils.isBlank(this.hostProperty)) {
 				String resolvedHost = substituteSingleProperty(this.hostProperty, Node.NODE_HOST_FILTER);
-				if (!StringUtils.isEqual(this.host, resolvedHost)) {
-					try {
-						MiscUtils.setHostAndProtocol(resolvedHost, https -> this.https = https, host -> this.host = host);
-					} catch (NodeException e) {
-						if (e instanceof ReadOnlyException) {
-							throw ReadOnlyException.class.cast(e);
-						} else {
-							throw new IllegalStateException(e);
-						}
-					}				
-					this.modified = true;
-				}
+				MiscUtils.setHostAndProtocol(resolvedHost, this::setHttps, this::setHostname);
 			}
 		}
 

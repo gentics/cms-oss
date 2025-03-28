@@ -1,8 +1,6 @@
 package com.gentics.contentnode.tests.rest.node;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -59,9 +57,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
-			assertEquals(node.getName(), "Node name insecure");
-			assertEquals(node.getHostname(), "nodeinsecure.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name insecure").hasHostname("nodeinsecure.com").isHttp();
 		});
 	}
 
@@ -84,9 +80,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
-			assertEquals(node.getName(), "Node name secure");
-			assertEquals(node.getHostname(), "nodesecure.com");
-			assertTrue(node.isHttps());
+			assertThat(node).hasName("Node name secure").hasHostname("nodesecure.com").isHttps();
 		});
 	}
 
@@ -111,9 +105,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
-			assertEquals(node.getName(), "Node name insecure");
-			assertEquals(node.getHostname(), "nodeinsecure.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name insecure").hasHostname("nodeinsecure.com").isHttp();
 		});
 	}
 
@@ -138,9 +130,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
-			assertEquals(node.getName(), "Node name secure");
-			assertEquals(node.getHostname(), "nodesecure.com");
-			assertTrue(node.isHttps());
+			assertThat(node).hasName("Node name secure").hasHostname("nodesecure.com").isHttps();
 		});
 	}
 
@@ -154,9 +144,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, id);
-			assertEquals(node.getName(), "Node name");
-			assertEquals(node.getHostname(), "node.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name").hasHostname("node.com").isHttp();
 		});
 
 		NodeLoadResponse response = Trx.supply(t -> {
@@ -196,9 +184,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, id);
-			assertEquals(node.getName(), "Node name insecure");
-			assertEquals(node.getHostname(), "nodeinsecure.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name insecure").hasHostname("nodeinsecure.com").isHttp();
 		});
 	}
 
@@ -223,9 +209,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, id);
-			assertEquals(node.getName(), "Node name secure");
-			assertEquals(node.getHostname(), "nodesecure.com");
-			assertTrue(node.isHttps());
+			assertThat(node).hasName("Node name secure").hasHostname("nodesecure.com").isHttps();
 		});
 	}
 
@@ -252,9 +236,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, id);
-			assertEquals(node.getName(), "Node name insecure");
-			assertEquals(node.getHostname(), "nodeinsecure.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name insecure").hasHostname("nodeinsecure.com").isHttp();
 		});
 	}
 
@@ -281,9 +263,7 @@ public class NodeHostnameTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, id);
-			assertEquals(node.getName(), "Node name secure");
-			assertEquals(node.getHostname(), "nodesecure.com");
-			assertTrue(node.isHttps());
+			assertThat(node).hasName("Node name secure").hasHostname("nodesecure.com").isHttps();
 		});
 	}
 

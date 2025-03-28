@@ -129,4 +129,50 @@ public class NodeAssert extends AbstractNodeObjectAssert<NodeAssert, Node> {
 
 		return myself;
 	}
+
+	/**
+	 * Assert the node having the specified name.
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public NodeAssert hasName(String name) {
+		assertThat(actual.getName()).as("Name of " + descriptionText()).isEqualTo(name);
+
+		return myself;
+	}
+
+	/**
+	 * Assert the node having the specified name.
+	 * 
+	 * @param hostname
+	 * @return
+	 */
+	public NodeAssert hasHostname(String hostname) {
+		assertThat(actual.getHostname()).as("Hostname of " + descriptionText()).isEqualTo(hostname);
+
+		return myself;
+	}
+
+	/**
+	 * Assert the node having the HTTPS flag set.
+	 * 
+	 * @return
+	 */
+	public NodeAssert isHttps() {
+		assertThat(actual.isHttps()).as(descriptionText() + " uses HTTPS").isTrue();
+
+		return myself;
+	}
+
+	/**
+	 * Assert the node having the HTTPS flag unset.
+	 * 
+	 * @return
+	 */
+	public NodeAssert isHttp() {
+		assertThat(actual.isHttps()).as(descriptionText() + " uses HTTP").isFalse();
+
+		return myself;
+	}
 }

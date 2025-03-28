@@ -1,7 +1,6 @@
 package com.gentics.contentnode.tests.rest.node;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -51,9 +50,7 @@ public class NodeCreationWithPubDirTest {
 
 		Trx.operate(t -> {
 			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
-			assertEquals(node.getName(), "Node name");
-			assertEquals(node.getHostname(), "node.com");
-			assertFalse(node.isHttps());
+			assertThat(node).hasName("Node name").hasHostname("node.com").isHttp();
 		});
 	}
 }

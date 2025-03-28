@@ -2,6 +2,8 @@ package com.gentics.contentnode.rest.util;
 
 import java.util.concurrent.Callable;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -269,7 +271,7 @@ public class RestCallable implements Callable<GenericResponse> {
 					Transaction t = TransactionManager.getCurrentTransaction();
 					MessageSender messageSender = new MessageSender();
 					t.addTransactional(messageSender);
-					if (response.getResponseInfo().getResponseCode() == ResponseCode.OK && response.getMessages().isEmpty()) {
+					if (response.getResponseInfo().getResponseCode() == ResponseCode.OK && CollectionUtils.isEmpty(response.getMessages())) {
 						CNI18nString messageText = new CNI18nString("backgroundjob_finished_successfully");
 
 						messageText.addParameter(description);
@@ -277,10 +279,12 @@ public class RestCallable implements Callable<GenericResponse> {
 						messageSender.sendMessage(message);
 					}
 
-					for (com.gentics.contentnode.rest.model.response.Message restMessage : response.getMessages()) {
-						User sender = restMessage.getSender();
-						int senderId = sender != null ? sender.getId() : 1;
-						messageSender.sendMessage(new Message(senderId, userId, restMessage.getMessage(), INSTANT_TIME));
+					if (!CollectionUtils.isEmpty(response.getMessages())) {
+						for (com.gentics.contentnode.rest.model.response.Message restMessage : response.getMessages()) {
+							User sender = restMessage.getSender();
+							int senderId = sender != null ? sender.getId() : 1;
+							messageSender.sendMessage(new Message(senderId, userId, restMessage.getMessage(), INSTANT_TIME));
+						}
 					}
 				}
 			});

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -124,6 +126,9 @@ class WriteTask extends AbstractWriteTask {
 					break;
 				}
 			}
+		}
+		if (publisher.controller.successHandler != null) {
+			publisher.controller.successHandler.accept(Pair.of(objType, objId));
 		}
 	}
 

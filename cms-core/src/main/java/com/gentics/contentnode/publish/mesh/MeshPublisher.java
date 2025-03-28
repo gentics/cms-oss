@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
@@ -128,6 +129,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.version.CmpProductVersion;
 import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
@@ -613,9 +615,10 @@ public class MeshPublisher implements AutoCloseable {
 	protected List<Throwable> throwables = new ArrayList<>();
 
 	/**
-	 * Set of postponed write tasks
+	 * Set of postponed write tasks, optionally accompanied by a translated message which can be shown to the user if the
+	 * postponed task could not be executed during instant publishgin
 	 */
-	protected Set<WriteTask> postponedTasks = new HashSet<>();
+	protected Set<Pair<WriteTask, I18nString>> postponedTasks = new HashSet<>();
 
 	/**
 	 * Optional publish info instance
@@ -2140,7 +2143,8 @@ public class MeshPublisher implements AutoCloseable {
 		}
 		info(String.format("Handle postponed updates into '%s'", cr.getName()));
 
-		for (WriteTask task : postponedTasks) {
+		for (Pair<WriteTask, I18nString> postponed : postponedTasks) {
+			WriteTask task = postponed.getLeft();
 			// we can postpone a single task at most once
 			task.postponable = false;
 			if (PublishController.getState() != PublishController.State.running) {
@@ -2596,7 +2600,7 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Process the entries in a queue. Entries that cannot be handled right now (because their parent folder does not exist in Mesh) will be repaced
+	 * Process the entries in a queue. Entries that cannot be handled right now (because their parent folder does not exist in Mesh) will be replaced
 	 * by their dependency and be postponed (put back into the end of the queue)
 	 * @param entries entries to handle
 	 * @param node node for which the entries shall be handled
@@ -3881,7 +3885,9 @@ public class MeshPublisher implements AutoCloseable {
 						if (logger.isDebugEnabled()) {
 							logger.debug(String.format("Postponing update of %d.%d due to recoverable error '%s'", task.objType, task.objId, t.getMessage()));
 						}
-						postponedTasks.add(task);
+						CNI18nString i18n = new CNI18nString("object.publish.conflict");
+						i18n.addParameter(Trx.supply(() -> I18NHelper.getName(task.getNodeObject())));
+						postponedTasks.add(Pair.of(task, i18n));
 					}
 				}
 			} else {
@@ -3988,7 +3994,7 @@ public class MeshPublisher implements AutoCloseable {
 							logger.debug(String.format("Postponing update of %d.%d", task.objType, task.objId));
 							task.exists = true;
 							task.clearPostSave();
-							postponedTasks.add(task);
+							postponedTasks.add(Pair.of(task, null));
 						} else {
 							task.reportDone();
 						}

@@ -92,6 +92,7 @@ import {
     Raw,
     Response,
     ResponseCode,
+    ResponseMessage,
     RotateParameters,
     SearchPagesOptions,
     SortField,
@@ -185,6 +186,7 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { responseMessageToNotification } from '@gentics/cms-components';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -3005,7 +3007,7 @@ export class FolderActionsService {
             ),
         );
 
-        let publishReq: Observable<void>;
+        let publishReq: Observable<ResponseMessage[]>;
 
         /*
          * The feature "instant publishing" only works/is enabled when a single page is published
@@ -3018,14 +3020,16 @@ export class FolderActionsService {
             }, {
                 nodeId,
             }))).pipe(
-                map(() => undefined),
+                map(
+                    responses => responses.flatMap(a => a.messages)
+                ),
             );
         } else {
             publishReq = this.client.page.publishMultiple({
                 ids: pageIds,
                 alllang: false,
             }, { nodeId }).pipe(
-                map(() => undefined),
+                map(response => response.messages),
             );
         }
 
@@ -3036,7 +3040,7 @@ export class FolderActionsService {
         ]).pipe(
             // After publish reqeuest(s) display notifications depending on permissions:
             // those pages a user is not permitted to publish will have been queued as publish requests.
-            map(([_, publishedOrQueuedPages]) => {
+            map(([messages, publishedOrQueuedPages]) => {
                 // notify state
                 this.appState.dispatch(new ListSavingSuccessAction('page'));
 
@@ -3055,23 +3059,11 @@ export class FolderActionsService {
                     }
                 }
 
-                // if permitted, display 'published' notifications
-                if (published.length) {
-                    message = published.length > 1 ? 'message.pages_published_plural' : 'message.pages_published_singular';
-                    this.notification.show({
-                        type: 'success',
-                        message,
-                        translationParams: { count: published.length, _type: type },
-                    });
-                }
-                // if NOT permitted, display 'queued' notifications
-                if (queued.length) {
-                    message = queued.length > 1 ? 'message.pages_published_queued_plural' : 'message.pages_published_queued_singular';
-                    this.notification.show({
-                        type: 'success',
-                        message,
-                        translationParams: { count: queued.length, _type: type },
-                    });
+                // show messages from the backend
+                if (messages) {
+                    for (const msg of messages) {
+                        this.notification.show(responseMessageToNotification(msg, {delay: 5000, message: ''}));
+                    }
                 }
 
                 // check if page is inherited

@@ -1089,9 +1089,6 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (request.getDescription() != null) {
 				rootFolder.setDescription(request.getDescription());
 			}
-			if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
-				node.setHostname(reqNode.getHost());
-			}
 
 			MiscUtils.setHostAndProtocol(reqNode.getHost(), https -> node.setHttps(https), host -> node.setHostname(host));
 

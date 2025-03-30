@@ -367,6 +367,7 @@ import {
     LicenseContentRepositoryInfoOptions,
     LicenseContentRepositoryInfoResponse,
     PushLicenseRequest,
+    FileUploadRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -578,6 +579,7 @@ export interface AbstractFileAPI extends BasicAPI {
     list: (options?: FileListOptions) => FileListResponse;
     create: (body: FileCreateRequest) => FileUploadResponse;
     upload: (file: File | Blob, options: FileUploadOptions, fileName?: string) => FileUploadResponse;
+    uploadFromURL: (body: FileUploadRequest) => FileUploadResponse;
     get: (id: number | string, options?: ItemRequestOptions) => FileResponse;
     getMultiple: (body: MultiObjectLoadRequest) => FileListResponse;
     update: (id: number | string, body: FileSaveRequest) => Response;

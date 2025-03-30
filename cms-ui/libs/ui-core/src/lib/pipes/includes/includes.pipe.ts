@@ -12,7 +12,7 @@ interface BasicObject {
     [key: string | number | symbol]: any;
 }
 
-type SourceValue = BasicObject | Array<any> | Set<any>;
+type SourceValue<T> = BasicObject | Iterable<T>;
 
 export const DEFAULT_COMPARE_FN: EqualityFn = (a, b, strict) => {
     // Null-Checks are always not strict
@@ -36,12 +36,17 @@ export const DEFAULT_COMPARE_FN: EqualityFn = (a, b, strict) => {
  * ```
  * {{ [123, 'cool'] | includes:{ strict: false, values:['foobar'] } }}
  * ```
+ *
+ * For a custom compare function, you can pass a function as the `compareFn` option:
+ * ```
+ * {{ [123, 'cool'] | includes:{ compareFn: myCompareFn, values:['123'] } }}
+ * ```
  */
 @Pipe({ name: 'gtxIncludes' })
 export class IncludesPipe implements PipeTransform {
 
-    transform(sourceValue: SourceValue, optionsOrValues: IncludesOptions | Array<any> | Set<any>): boolean;
-    transform(sourceValue: SourceValue, ...args: Array<any>): boolean {
+    transform<T>(sourceValue: SourceValue<T>, optionsOrValues: IncludesOptions | T | Iterable<T>): boolean;
+    transform<T>(sourceValue: SourceValue<T>, ...args: Array<T>): boolean {
         if (sourceValue == null || typeof sourceValue !== 'object') {
             return false;
         }
@@ -90,10 +95,18 @@ export class IncludesPipe implements PipeTransform {
             sourceValue = Object.keys(sourceValue);
         }
 
-        // Compare the values
-        for (const singleSourceValue of (sourceValue as Array<any>)) {
+        if (sourceValue[Symbol.iterator]) {
+            // Compare the values by iterating over the source value
+            for (const singleSourceValue of sourceValue as Iterable<T>) {
+                for (const singleCheckValue of valuesToCheck) {
+                    if (compareFn(singleSourceValue, singleCheckValue, strict)) {
+                        return true;
+                    }
+                }
+            }
+        } else {
             for (const singleCheckValue of valuesToCheck) {
-                if (compareFn(singleSourceValue, singleCheckValue, strict)) {
+                if (sourceValue.hasOwnProperty(singleCheckValue)) {
                     return true;
                 }
             }

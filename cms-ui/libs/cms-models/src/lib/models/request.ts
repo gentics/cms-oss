@@ -90,7 +90,7 @@ export interface LoginOptions {
 export interface ItemRequestOptions {
 
     /** ID of the node (channel) for which the item shall be loaded (when multichannelling is used). */
-    nodeId?: number;
+    nodeId?: number | string;
 
     /** true when the item should be fetched for updating  */
     update?: boolean;
@@ -1051,14 +1051,35 @@ export interface FileCreateRequest {
     properties?: { [key: string]: any };
 }
 
+export interface FileUploadRequest {
+    /** `true` to overwrite existing files with the same name in the folder */
+    overwriteExisting: boolean;
+    /** Target folder ID */
+    folderId: number;
+    /** Target node ID for uploading files in channels */
+    nodeId: number;
+    /** Source URL of the file */
+    sourceURL: string;
+    /** Name of the file */
+    name?: string;
+    /** Description of the file */
+    description?: string;
+    /** Nice URL of the file */
+    niceURL?: string;
+    /** Alternate URLs of the file */
+    alternateURL?: string;
+    /** The additional properties of the file */
+    properties?: Record<string, any>;
+}
+
 export interface FileUploadOptions {
     folderId: number;
-    nodeId: number;
+    nodeId: number | string;
 }
 
 export interface FileReplaceOptions {
     folderId?: number;
-    nodeId: number;
+    nodeId: number | string;
 }
 
 /**

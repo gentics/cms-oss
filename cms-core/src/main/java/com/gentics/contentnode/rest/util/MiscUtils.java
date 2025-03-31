@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+import jakarta.ws.rs.core.Response.Status;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
@@ -34,7 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.db.DBUtils;
@@ -44,7 +45,6 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
-import com.gentics.contentnode.etc.ThrowingConsumer;
 import com.gentics.contentnode.exception.FeatureRequiredException;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -119,7 +119,6 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.ClassHelper;
 
 import io.reactivex.Flowable;
-import jakarta.ws.rs.core.Response.Status;
 
 public class MiscUtils {
 	/**
@@ -2474,36 +2473,6 @@ public class MiscUtils {
 			return function.apply(input);
 		} catch (NodeException e) {
 			return null;
-		}
-	}
-
-	/**
-	 * Check, whether the string is URL and contains a protocol prefix.
-	 * At the moment only HTTP and HTTPS are supported.
-	 * @param host string to test
-	 * @return true, if `http(s)://` prefix is present in the hostname value.
-	 */
-	public static boolean isUrlWithProtocol(String host) {
-		return host != null && host.matches("^(http|https)://(.+)");
-	}
-
-	/**
-	 * Set the hostname and secure connection flag, based on an input string, that can possibly contain and URL, prefixed with a protocol.
-	 * 
-	 * @param input
-	 * @param secureSetter
-	 * @param hostSetter
-	 * @throws NodeException 
-	 */
-	public static void setHostAndProtocol(String input, ThrowingConsumer<Boolean, ReadOnlyException> secureSetter, ThrowingConsumer<String, ReadOnlyException> hostSetter) throws ReadOnlyException {
-		if (StringUtils.isNotBlank(input)) {
-			input = input.trim();
-			if (isUrlWithProtocol(input)) {
-				secureSetter.accept(input.startsWith("https://"));
-				hostSetter.accept(input.substring(input.indexOf("://") + 3));
-			} else {
-				hostSetter.accept(input);
-			}
 		}
 	}
 }

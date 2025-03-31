@@ -104,6 +104,11 @@
         <div class="input-container small-12 medium-6 columns">
             <div class="gtx-form-section-title">{{ 'node.title_networking' | i18n }}</div>
 
+            <gtx-checkbox
+                [label]="'node.https_only' | i18n"
+                formControlName="https"
+            ></gtx-checkbox>
+
             <gtx-select
                 [label]="('node.hostnameType' | i18n) + ' *'"
                 [value]="hostType"

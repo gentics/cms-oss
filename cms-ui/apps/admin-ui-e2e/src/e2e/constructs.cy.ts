@@ -23,6 +23,7 @@ const EXAMPLE_NODE_ONE: NodeImportData = {
         publishDir : '',
         binaryPublishDir : '',
         pubDirSegment : true,
+        https : false,
         publishImageVariants : false,
         publishFs : false,
         publishFsPages : false,

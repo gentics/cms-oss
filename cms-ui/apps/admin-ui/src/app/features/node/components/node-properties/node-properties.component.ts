@@ -21,7 +21,7 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty' |
+export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
@@ -167,6 +167,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 createPropertyPatternValidator(NODE_PREVIEW_URL_PROPERTY_PREFIX),
             ]),
 
+            https: new FormControl(this.safeValue('https')),
             insecurePreviewUrl: new FormControl(this.safeValue('insecurePreviewUrl')),
             publishImageVariants: new FormControl(this.safeValue('publishImageVariants')),
 

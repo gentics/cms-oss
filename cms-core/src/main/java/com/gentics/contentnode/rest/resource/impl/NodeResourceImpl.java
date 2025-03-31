@@ -53,6 +53,21 @@ import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,21 +157,6 @@ import com.gentics.contentnode.staging.StagingUtil;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.ClassHelper;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 /**
  * NodeResource Implementation
@@ -871,7 +871,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				throw new RestMappedException(response).setStatus(Status.BAD_REQUEST);
 			}
 
-			final Node newNode = t.createObject(Node.class);
+			Node newNode = t.createObject(Node.class);
 			Folder rootFolder = t.createObject(Folder.class);
 			Integer masterId = ObjectTransformer.getInteger(reqNode.getMasterId(), 0);
 
@@ -899,10 +899,13 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				rootFolder.setDescription(request.getDescription());
 			}
 
-			MiscUtils.setHostAndProtocol(reqNode.getHost(), newNode::setHttps, newNode::setHostname);
-			newNode.setFolder(rootFolder);			
+			newNode.setFolder(rootFolder);
+			newNode.setHostname(reqNode.getHost());
 			newNode.setHostnameProperty(reqNode.getHostProperty());
 
+			if (reqNode.isHttps() != null) {
+				newNode.setHttps(reqNode.isHttps());
+			}
 			if (reqNode.isUtf8() != null) {
 				newNode.setUtf8(reqNode.isUtf8());
 			}
@@ -1021,16 +1024,16 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 
 			newNode.save();
-			Node node = t.getObject(newNode, true);
+			newNode = t.getObject(newNode, true);
 
-			try (ChannelTrx cTrx = new ChannelTrx(node)) {
-				disinheritObjects(node);
+			try (ChannelTrx cTrx = new ChannelTrx(newNode)) {
+				disinheritObjects(newNode);
 			}
 
 			boolean defaultFoldersOk = setDefaultFolders(
 				reqNode.getDefaultFileFolderId(),
 				reqNode.getDefaultImageFolderId(),
-				node,
+				newNode,
 				response, true);
 
 			if (!defaultFoldersOk) {
@@ -1047,8 +1050,8 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 			return new NodeLoadResponse(
 				new Message(Type.SUCCESS, message.toString()),
-				new ResponseInfo(ResponseCode.OK, "created node with id: " + node.getId()),
-				ModelBuilder.getNode(t.getObject(node)));
+				new ResponseInfo(ResponseCode.OK, "created node with id: " + newNode.getId()),
+				ModelBuilder.getNode(t.getObject(newNode)));
 		}
 	}
 
@@ -1068,7 +1071,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	public GenericResponse update(@PathParam("id") String nodeId, NodeSaveRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
-			final Node node = t.getObject(getNode(nodeId, ObjectPermission.edit), true);
+			Node node = t.getObject(getNode(nodeId, ObjectPermission.edit), true);
 
 			Folder rootFolder = node.getFolder();
 
@@ -1088,11 +1091,14 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (request.getDescription() != null) {
 				rootFolder.setDescription(request.getDescription());
 			}
-
-			MiscUtils.setHostAndProtocol(reqNode.getHost(), node::setHttps, node::setHostname);
-
+			if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
+				node.setHostname(reqNode.getHost());
+			}
 			if (reqNode.getHostProperty() != null) {
 				node.setHostnameProperty(reqNode.getHostProperty());
+			}
+			if (reqNode.isHttps() != null) {
+				node.setHttps(reqNode.isHttps());
 			}
 			if (reqNode.isUtf8() != null) {
 				node.setUtf8(reqNode.isUtf8());

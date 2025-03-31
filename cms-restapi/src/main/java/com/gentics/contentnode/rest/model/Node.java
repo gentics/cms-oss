@@ -36,6 +36,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	private String publishDir;
 	private String binaryPublishDir;
 	private Boolean pubDirSegment;
+	private Boolean https;
 	private Boolean publishImageVariants;
 	private String host;
 	private String hostProperty;
@@ -139,6 +140,14 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
+	 * True if secure https is enabled for this node
+	 * @return true for secure https
+	 */
+	public Boolean isHttps() {
+		return https;
+	}
+
+	/**
 	 * Set image variants should be created on page/object property publish
 	 * @param publishImageVariants
 	 */
@@ -152,6 +161,14 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public Boolean isPublishImageVariants() {
 		return publishImageVariants;
+	}
+
+	/**
+	 * Set whether secure https is enabled for the node
+	 * @param https
+	 */
+	public void setHttps(Boolean https) {
+		this.https = https;
 	}
 
 	/**

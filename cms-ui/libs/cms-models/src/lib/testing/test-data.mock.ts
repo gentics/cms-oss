@@ -925,6 +925,7 @@ export function getExampleNodeData(config: MockNodeConfig = { id: 1, userId: 3 }
         inheritedFromId: config.inheritedFromId,
         publishDir: '/Content.Node',
         binaryPublishDir: '/Content.Node',
+        https: false,
         host: 'gcn5demo.gentics.com',
         hostProperty: null,
         utf8: true,

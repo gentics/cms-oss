@@ -8,4 +8,11 @@ import com.gentics.api.lib.exception.NodeException;
  * @param <T> parameter type
  */
 @FunctionalInterface
-public interface Consumer <T> extends ThrowingConsumer<T, NodeException> {}
+public interface Consumer <T> {
+	/**
+	 * Consume the given parameter
+	 * @param t parameter
+	 * @throws NodeException
+	 */
+	void accept(T t) throws NodeException;
+}

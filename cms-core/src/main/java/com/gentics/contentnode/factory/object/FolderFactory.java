@@ -108,7 +108,6 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.request.Permission;
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
@@ -6273,7 +6272,10 @@ public class FolderFactory extends AbstractFactory {
 			// if hostProperty is not empty, resolve and set host also
 			if (!org.apache.commons.lang3.StringUtils.isBlank(this.hostProperty)) {
 				String resolvedHost = substituteSingleProperty(this.hostProperty, Node.NODE_HOST_FILTER);
-				MiscUtils.setHostAndProtocol(resolvedHost, this::setHttps, this::setHostname);
+				if (!StringUtils.isEqual(this.host, resolvedHost)) {
+					this.host = resolvedHost;
+					this.modified = true;
+				}
 			}
 		}
 

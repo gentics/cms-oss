@@ -21,6 +21,7 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
@@ -532,7 +533,7 @@ public class InstantPublisher {
 				try (MeshPublishController meshPublishController = MeshPublishController.get(cr)) {
 					for (MeshPublisher mp : meshPublishController.get()) {
 						if (mp.checkStatus() && mp.checkSchemasAndProjects(false, false)) {
-							for (Consumer<MeshPublisher> consumer : meshOperations) {
+							for (Consumer consumer : meshOperations) {
 								consumer.accept(mp);
 							}
 						} else {

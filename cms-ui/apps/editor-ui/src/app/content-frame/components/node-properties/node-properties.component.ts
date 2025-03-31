@@ -127,6 +127,7 @@ export class NodePropertiesComponent
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.safeValue('name') || '', Validators.required),
+            https: new FormControl(this.safeValue('https') ?? false),
             host: new FormControl(this.safeValue('host') || '', Validators.required),
             hostProperty: new FormControl(this.safeValue('hostProperty') || '', [
                 Validators.required,

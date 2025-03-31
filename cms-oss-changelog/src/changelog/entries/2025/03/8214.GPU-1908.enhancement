@@ -1,1 +1,0 @@
-User Interface: There is no dedicated `https` flag anymore, when setting up a Node. The secure connection information is now taken from the protocol prefix (http/https) of a `hostname`.

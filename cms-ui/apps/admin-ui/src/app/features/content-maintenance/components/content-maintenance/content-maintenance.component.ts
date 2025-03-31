@@ -82,7 +82,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
             this.schedule.list(null, { pageSize: 0, sort: '-edate', failed: true }),
 
             this.nodeOps.getAll(),
-        ]).subscribe(([dirtQueue, summary, publishInfo, publishQueue, schedulerStatus, failedSchedules , nodes]) => {
+        ]).subscribe(([dirtQueue, summary, publishInfo, publishQueue, schedulerStatus, failedSchedules, nodes]) => {
             this.dirtQueue = dirtQueue;
             this.failedTasks = dirtQueue.items.filter(item => item.failed);
             this.dirtQueueSummary = summary;

@@ -53,21 +53,6 @@ import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -154,10 +139,24 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.contentnode.staging.StagingUtil;
-import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.ClassHelper;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * NodeResource Implementation
@@ -900,7 +899,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				rootFolder.setDescription(request.getDescription());
 			}
 
-			MiscUtils.setHostAndProtocol(reqNode.getHost(), https -> newNode.setHttps(https), host -> newNode.setHostname(host));
+			MiscUtils.setHostAndProtocol(reqNode.getHost(), newNode::setHttps, newNode::setHostname);
 			newNode.setFolder(rootFolder);			
 			newNode.setHostnameProperty(reqNode.getHostProperty());
 
@@ -1090,7 +1089,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				rootFolder.setDescription(request.getDescription());
 			}
 
-			MiscUtils.setHostAndProtocol(reqNode.getHost(), https -> node.setHttps(https), host -> node.setHostname(host));
+			MiscUtils.setHostAndProtocol(reqNode.getHost(), node::setHttps, node::setHostname);
 
 			if (reqNode.getHostProperty() != null) {
 				node.setHostnameProperty(reqNode.getHostProperty());

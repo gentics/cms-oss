@@ -3,7 +3,7 @@ package com.gentics.contentnode.etc;
 import com.gentics.api.lib.exception.NodeException;
 
 /**
- * Functional interface for a consumer that may throw a subclass of NodeException
+ * Functional interface for a consumer that may throw a subclass of {@link Throwable}.
  *
  * @param <T> parameter type
  */

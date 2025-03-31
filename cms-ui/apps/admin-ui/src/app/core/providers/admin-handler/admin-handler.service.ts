@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
-import { DirtQueueListOptions, DirtQueueResponse, DirtQueueSummaryResponse, PublishInfo, PublishQueue } from '@gentics/cms-models';
+import { DirtQueueListOptions, DirtQueueResponse, DirtQueueSummaryResponse, PublishInfo, PublishQueue, Response } from '@gentics/cms-models';
+import { RequestMethod } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { catchError, MonoTypeOperatorFunction, Observable } from 'rxjs';
+import { catchError, MonoTypeOperatorFunction, Observable, tap, throwError } from 'rxjs';
 import { ErrorHandler } from '../error-handler';
+import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class AdminHandlerService {
 
     constructor(
         private errorHandler: ErrorHandler,
+        private notification: I18nNotificationService,
         private client: GCMSRestClientService,
     ) {}
 
@@ -17,6 +20,51 @@ export class AdminHandlerService {
      */
     protected catchAndRethrowError<T>(): MonoTypeOperatorFunction<T> {
         return catchError(error => this.errorHandler.notifyAndRethrow(error));
+    }
+
+    async stopPublishing(): Promise<PublishInfo> {
+        try {
+            const res = await this.client.getClient().executeMappedJsonRequest(RequestMethod.DELETE, 'publisher', {
+                block: 'true',
+                wait: 10_000,
+            }).send();
+
+            if (res.running) {
+                this.notification.show({
+                    type: 'warning',
+                    message: 'shared.stop_publishing_delayed',
+                });
+            } else {
+                this.notification.show({
+                    type: 'success',
+                    message: 'shared.stop_publishing_success',
+                });
+            }
+
+            return res;
+        } catch (err) {
+            this.notification.show({
+                type: 'alert',
+                message: 'shared.stop_publishing_failed',
+            });
+            throw err;
+        }
+    }
+
+    reloadConfiguration(): Observable<Response> {
+        return this.client.admin.reloadConfiguration().pipe(
+            tap(() => this.notification.show({
+                type: 'success',
+                message: 'shared.reload_configuration_success',
+            })),
+            catchError(error => {
+                this.notification.show({
+                    type: 'alert',
+                    message: 'shared.reload_configuration_failed',
+                });
+                return throwError(() => error);
+            }),
+        );
     }
 
     getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueResponse> {

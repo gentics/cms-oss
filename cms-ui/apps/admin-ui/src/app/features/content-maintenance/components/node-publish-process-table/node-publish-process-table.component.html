@@ -48,7 +48,7 @@
         <div class="node-name">{{ value }}</div>
     </ng-template>
 
-    <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id">
+    <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id" (openChange)="updateExpandedNodes(row.id, $event)">
         <div class="queue-content">
             <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
                 <div *ngIf="publishQueue?.nodes?.[row.id]?.[entry.key] as data" class="type-queue-wrapper">

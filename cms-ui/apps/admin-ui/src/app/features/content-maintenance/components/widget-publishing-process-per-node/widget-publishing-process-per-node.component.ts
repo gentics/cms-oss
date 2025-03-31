@@ -211,16 +211,6 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
     }
 
     public async btnMaintenanceActionClicked(modalAction: MaintenanceActionModalAction): Promise<void> {
-        // ReloadConfiguration doesn't require a modal
-        if (modalAction === MaintenanceActionModalAction.RELOAD_CONFIGURATION) {
-            return this.adminOperations.reloadConfiguration().toPromise().then(() => {});
-        }
-
-        // StopPublishing doesn't require a modal
-        if (modalAction === MaintenanceActionModalAction.STOP_PUBLISHING) {
-            return this.adminOperations.stopPublishing().toPromise().then(() => {});
-        }
-
         if (this.selectedIds.length === 0) {
             this.notification.show({
                 message: 'contentmaintenance.error_no_nodes_selected',

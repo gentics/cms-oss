@@ -6,9 +6,24 @@
     display: flex;
     gap: 2rem;
     padding: 0 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
 
     .main-content {
-        flex: 0 0 1080px;
+        flex: 1 1 100%;
+        order: 2;
+
+        @media (min-width: 1420px) {
+            flex: 0 0 780px;
+        }
+
+        @media (min-width: 1800px) {
+            flex: 0 0 1080px;
+        }
+
+        @media (min-width: 1960px) {
+            flex: 0 0 1280px;
+        }
     }
 
     .sidebar {
@@ -17,4 +32,48 @@
         flex-direction: column;
         gap: 2rem;
     }
+
+    .sidebar-right {
+        order: 0;
+    }
+
+    .sidebar-left {
+        order: 1;
+    }
+
+    @media (min-width: 860px) {
+        .sidebar {
+            flex-basis: unset;
+            max-width: 50%;
+        }
+    }
+
+    @media (min-width: 1420px) {
+        flex-wrap: nowrap;
+
+        .sidebar-left,
+        .main-content,
+        .sidebar-right {
+            order: unset;
+        }
+
+        .sidebar {
+            flex-basis: 100%;
+        }
+    }
+
+    @media (max-width: 1420px) {
+        &.hide-sidebar {
+            .sidebar {
+                display: none;
+            }
+        }
+    }
+}
+
+.maintanance-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
 }

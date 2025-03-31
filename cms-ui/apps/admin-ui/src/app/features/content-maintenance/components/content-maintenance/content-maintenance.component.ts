@@ -1,7 +1,10 @@
-import { AdminHandlerService, NodeOperations, NodeTableLoaderService, ScheduleHandlerService } from '@admin-ui/core';
+import { AdminHandlerService, I18nNotificationService, NodeOperations, NodeTableLoaderService, ScheduleHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
+import { ContentMaintenanceAction, DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
 import { forkJoin, Subscription } from 'rxjs';
+import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
+import { ModalService } from '@gentics/ui-core';
+import { EntityTableActionClickEvent } from '@admin-ui/common';
 
 export enum ContentMaintenanceTabs {
     GENERAL = 'general',
@@ -21,6 +24,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
     public activeTabId: ContentMaintenanceTabs = ContentMaintenanceTabs.GENERAL;
 
     public loading = false;
+    public working = false;
 
     public dirtQueue: DirtQueueResponse;
     public dirtQueueSummary: DirtQueueSummaryResponse;
@@ -45,6 +49,8 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
         private schedule: ScheduleHandlerService,
         private nodeOps: NodeOperations,
         private nodeTable: NodeTableLoaderService,
+        private modals: ModalService,
+        private notification: I18nNotificationService,
     ) {}
 
     ngOnInit(): void {
@@ -97,5 +103,67 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
     changeTab(activeTabId: ContentMaintenanceTabs): void {
         this.activeTabId = activeTabId;
         this.changeDetector.markForCheck();
+    }
+
+    public async reloadConfiguration(): Promise<void> {
+        if (this.working) {
+            return;
+        }
+
+        this.working = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            await this.handler.reloadConfiguration().toPromise();
+        } catch (err) {
+            // Nothing to do
+        }
+
+        this.working = false;
+        this.changeDetector.markForCheck();
+    }
+
+    public async stopPublishing(): Promise<void> {
+        if (this.working) {
+            return;
+        }
+
+        this.working = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            await this.handler.stopPublishing();
+        } catch (err) {
+            // Nothing to do
+        }
+
+        this.working = false;
+        this.changeDetector.markForCheck();
+    }
+
+    public async handleTableAction(event: EntityTableActionClickEvent<Node>): Promise<void> {
+        const ids = Object.values(MaintenanceActionModalAction);
+        if (!ids.includes(event.actionId as any)) {
+            return;
+        }
+
+        const items = event.selection ? event.selectedItems : [event.item];
+        if (items.length === 0) {
+            this.notification.show({
+                message: 'contentmaintenance.error_no_nodes_selected',
+                type: 'warning',
+            });
+            return;
+        }
+
+        const modal = await this.modals.fromComponent(MaintenanceActionModalComponent, {
+            closeOnOverlayClick: false,
+            width: '50%',
+        }, {
+            modalAction: event.actionId as any,
+            selectedNodeIds: items.map(node => node.id),
+        });
+
+        await modal.open();
     }
 }

@@ -4,8 +4,10 @@ import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { AnyModelType, Node, NormalizableEntityTypesMap, PublishQueue } from '@gentics/cms-models';
-import { ModalService, TableColumn } from '@gentics/ui-core';
+import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { map, Observable } from 'rxjs';
 import { PUBLISH_PLURAL_MAPPING } from '../../models';
+import { MaintenanceActionModalAction } from '../maintenance-action-modal/maintenance-action-modal.component';
 
 @Component({
     selector: 'gtx-node-publish-process-table',
@@ -47,5 +49,60 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
             loader,
             modalService,
         )
+    }
+
+    protected createTableActionLoading(): Observable<TableAction<NodeBO>[]> {
+        // Override me when needed
+        return this.actionRebuildTrigger$.pipe(
+            map(() => {
+                const actions: TableAction<NodeBO>[] = [
+                    {
+                        id: MaintenanceActionModalAction.REPUBLISH_OBJECTS,
+                        enabled: true,
+                        icon: 'refresh',
+                        label: 'contentmaintenance.republish_objects',
+                        type: 'primary',
+                        single: true,
+                        multiple: true,
+                    },
+                    {
+                        id: MaintenanceActionModalAction.DELAY_OBJECTS,
+                        enabled: true,
+                        icon: 'schedule',
+                        label: 'contentmaintenance.delay_objects',
+                        single: true,
+                        multiple: true,
+                    },
+                    {
+                        id: MaintenanceActionModalAction.REPUBLISH_DELAYED_OBJECTS,
+                        enabled: true,
+                        icon: 'history',
+                        label: 'contentmaintenance.republish_delayed_objects',
+                        type: 'warning',
+                        single: true,
+                        multiple: true,
+                    },
+                    {
+                        id: MaintenanceActionModalAction.MARK_OBJECTS_AS_PUBLISHED,
+                        enabled: true,
+                        icon: 'approval',
+                        label: 'contentmaintenance.mark_objects_as_published',
+                        type: 'warning',
+                        single: true,
+                        multiple: true,
+                    },
+                ];
+
+                return actions;
+            }),
+        );
+    }
+
+    public updateExpandedNodes(id: string, open: boolean): void {
+        if (open) {
+            this.expandedNodes.add(id);
+        } else {
+            this.expandedNodes.delete(id);
+        }
     }
 }

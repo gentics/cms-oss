@@ -45,28 +45,6 @@
         >
             <icon left>approval</icon> {{ 'contentmaintenance.mark_objects_as_published' | i18n }}
         </gtx-button>
-
-        <gtx-button
-            flat
-            class="action-button"
-            type="primary"
-            size="small"
-            [gtxActionAllowed]="'admin.readAdmin'"
-            (click)="btnMaintenanceActionClicked(MaintenanceActionModalAction.STOP_PUBLISHING)"
-        >
-            <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | i18n }}
-        </gtx-button>
-
-        <gtx-button
-            flat
-            class="action-button"
-            type="primary"
-            size="small"
-            [gtxActionAllowed]="'admin.readAdmin'"
-            (click)="btnMaintenanceActionClicked(MaintenanceActionModalAction.RELOAD_CONFIGURATION)"
-        >
-            <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | i18n }}
-        </gtx-button>
     </div>
 </div>
 

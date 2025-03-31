@@ -8,7 +8,7 @@ import com.gentics.api.lib.exception.NodeException;
  * @param <T> parameter type
  */
 @FunctionalInterface
-public interface ThrowingConsumer<T, E extends NodeException> {
+public interface ThrowingConsumer<T, E extends Throwable> {
 	/**
 	 * Consume the given parameter
 	 * @param t parameter

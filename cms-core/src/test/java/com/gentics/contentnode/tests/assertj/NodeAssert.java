@@ -171,7 +171,7 @@ public class NodeAssert extends AbstractNodeObjectAssert<NodeAssert, Node> {
 	 * @return
 	 */
 	public NodeAssert isHttp() {
-		assertThat(actual.isHttps()).as(descriptionText() + " uses HTTP").isFalse();
+		assertThat(actual.isHttps()).as(descriptionText() + " uses HTTPS").isFalse();
 
 		return myself;
 	}

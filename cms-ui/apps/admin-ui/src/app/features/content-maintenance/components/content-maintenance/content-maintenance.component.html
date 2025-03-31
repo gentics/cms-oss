@@ -3,17 +3,17 @@
 
     <div class="sidebar sidebar-left">
         <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
-            <gtx-widget-task-queue
+            <gtx-dirt-queue-summary
                 [summary]="dirtQueueSummary"
                 [failedTasks]="failedTasks"
-            ></gtx-widget-task-queue>
+            ></gtx-dirt-queue-summary>
 
-            <gtx-widget-publishing-process
+            <gtx-publish-process-summary
                 [showTitle]="true"
                 [info]="publishInfo"
                 [hasFailedJobs]="hasFailedSchedules"
                 [publisherStatus]="schedulerStatus"
-            ></gtx-widget-publishing-process>
+            ></gtx-publish-process-summary>
         </ng-container>
     </div>
 

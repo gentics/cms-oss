@@ -204,7 +204,12 @@
             <gtx-widget-cms-status gtxWidget></gtx-widget-cms-status>
             <div gtxWidget>
                 <gtx-sidebar-item [title]="'widget.publishing_process_title' | i18n">
-                    <gtx-widget-publishing-process></gtx-widget-publishing-process>
+                    <gtx-publish-process-summary
+                        [showTitle]="false"
+                        />
+                        <!-- [info]="publishInfo"
+                        [hasFailedJobs]="hasFailedSchedules"
+                        [publisherStatus]="schedulerStatus" -->
                 </gtx-sidebar-item>
             </div>
         </gtx-sidebar-item-group>

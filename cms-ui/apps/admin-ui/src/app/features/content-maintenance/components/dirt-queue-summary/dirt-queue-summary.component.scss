@@ -1,7 +1,7 @@
 @import 'variables';
 
-.gtx-widget-title {
-    border-bottom: 1px solid #eee;
+.title {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
     padding-bottom: 0.5rem;
 }
 
@@ -31,14 +31,4 @@
             gap: 0.5rem;
         }
     }
-}
-
-.warning {
-    font-weight: 400;
-    color: $gtx-color-alert;
-}
-
-.success {
-    font-weight: 400;
-    color: $gtx-color-success;
 }

@@ -61,8 +61,7 @@ import {
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,
-    WidgetPublishingProcessComponent,
-    WidgetPublishingProcessTotalComponent,
+    PublishProcessSummaryComponent,
     WizardComponent,
     WizardModalComponent,
 } from './components';
@@ -162,8 +161,7 @@ const COMPONENTS: any[] = [
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,
-    WidgetPublishingProcessComponent,
-    WidgetPublishingProcessTotalComponent,
+    PublishProcessSummaryComponent,
     WizardComponent,
     WizardModalComponent,
 ];

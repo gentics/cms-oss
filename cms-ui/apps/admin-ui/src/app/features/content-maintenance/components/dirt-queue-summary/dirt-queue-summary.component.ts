@@ -2,11 +2,11 @@ import { Component, Input } from '@angular/core';
 import { DirtQueueEntry, DirtQueueSummaryResponse } from '@gentics/cms-models';
 
 @Component({
-    selector: 'gtx-widget-task-queue',
-    templateUrl: './widget-task-queue.component.html',
-    styleUrls: ['./widget-task-queue.component.scss'],
+    selector: 'gtx-dirt-queue-summary',
+    templateUrl: './dirt-queue-summary.component.html',
+    styleUrls: ['./dirt-queue-summary.component.scss'],
 })
-export class WidgetTaskQueueComponent {
+export class DirtQueueSummaryComponent {
 
     @Input()
     public summary: DirtQueueSummaryResponse;

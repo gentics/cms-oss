@@ -7,9 +7,7 @@ import {
     MaintenanceActionModalComponent,
     NodePublishProcessTableComponent,
     PublishQueueSummaryComponent,
-    WidgetPublishingProcessPerNodeComponent,
-    WidgetPublishingProcessPerNodeOverviewComponent,
-    WidgetTaskQueueComponent,
+    DirtQueueSummaryComponent,
 } from './components';
 import { CONTENT_MAINTENANCE_ROUTES } from './content-maintenance.routes';
 import { DirtQueueItemTableLoaderService } from './providers';
@@ -21,9 +19,7 @@ import { DirtQueueItemTableLoaderService } from './providers';
         MaintenanceActionModalComponent,
         NodePublishProcessTableComponent,
         PublishQueueSummaryComponent,
-        WidgetPublishingProcessPerNodeComponent,
-        WidgetPublishingProcessPerNodeOverviewComponent,
-        WidgetTaskQueueComponent,
+        DirtQueueSummaryComponent,
     ],
     providers: [
         DirtQueueItemTableLoaderService,

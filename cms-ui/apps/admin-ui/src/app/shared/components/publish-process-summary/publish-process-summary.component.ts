@@ -30,12 +30,12 @@ const ICON_MAPPING: Record<ObjectType, string> = {
 };
 
 @Component({
-    selector: 'gtx-widget-publishing-process',
-    templateUrl: './widget-publishing-process.component.html',
-    styleUrls: ['./widget-publishing-process.component.scss'],
+    selector: 'gtx-publish-process-summary',
+    templateUrl: './publish-process-summary.component.html',
+    styleUrls: ['./publish-process-summary.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WidgetPublishingProcessComponent implements OnChanges {
+export class PublishProcessSummaryComponent implements OnChanges {
 
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
 

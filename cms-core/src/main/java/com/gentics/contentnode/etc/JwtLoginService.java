@@ -30,6 +30,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Login service that accepts a JWT as password. The username <em>must</em> be {@code support}, the actual user
+ * information is taken from the JWT.
+ *
+ * <p>
+ *     If the user defined in the JWT does not yet exist it will be created and put in th node admin group.
+ * </p>
+ */
 public class JwtLoginService extends AbstractLoginService {
 
 	private static final String CLAIM_EMAIL = "email";
@@ -122,6 +130,11 @@ public class JwtLoginService extends AbstractLoginService {
 		return response;
 	}
 
+	/**
+	 * Create a {@link LoginResponse} with a message that the credentials are invalid.
+	 *
+	 * @return A {@code LoginResponse} with a message that the credentials are invalid.
+	 */
 	private LoginResponse getInvalidCredentialsResponse() {
 		var response = new LoginResponse();
 
@@ -132,6 +145,10 @@ public class JwtLoginService extends AbstractLoginService {
 	}
 
 
+	/**
+	 * Make sure the public key is loaded and return it.
+	 * @return The public key for verifying JWTs.
+	 */
 	private static PublicKey getPublicKey() {
 		if (publicKey == null) {
 			try (InputStream publicKeyInputStream = JwtLoginService.class.getResourceAsStream(PATH_PUBLIC_KEY)) {

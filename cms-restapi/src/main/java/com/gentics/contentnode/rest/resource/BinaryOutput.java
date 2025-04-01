@@ -10,7 +10,7 @@ import java.io.OutputStream;
  *
  * <p>
  *     <em>Note:</em> Accessing the {@link #inputStream()} is only intended for testing when
- *     the {@link javax.ws.rs.core.Response} object from the binary download endpoint is
+ *     the {@link jakarta.ws.rs.core.Response} object from the binary download endpoint is
  *     used directly instead of being sent via HTTP to a client.
  * </p>
  * @param inputStream The input stream to read data from for the response.

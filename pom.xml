@@ -97,7 +97,7 @@
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<mavenRootBuildTimestamp>${maven.build.timestamp}</mavenRootBuildTimestamp>
 		<test.jvm.home>${env.JAVA_HOME}</test.jvm.home>
-		<assertj.version>3.4.1</assertj.version>
+		<assertj.version>3.26.3</assertj.version>
 		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
 		<logback.version>1.2.13</logback.version>

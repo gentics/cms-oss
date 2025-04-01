@@ -11,7 +11,6 @@ let showSSOButton: boolean;
 const NO_CONFIG_FOUND = 'Keycloak config file not found';
 export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
-const CUSTOMER_CONFIG_PATH = './../ui-conf/';
 const REST_PATH = './../rest/';
 export const KEYCLOAK_ERROR_KEY = 'keycloakError'
 
@@ -33,9 +32,6 @@ export class KeycloakService {
     /** Keycloak support will be triggered if there is a keycloak.json file in the /config folder of the UI root. */
     static readonly keycloakConfigFile = REST_PATH + 'keycloak';
 
-    /** The app will not trigger redirect to Keycloak if ui-overrides.json has showSSOButton: true */
-    static readonly uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
-
     constructor(
         private client: GCMSRestClientService,
         private router: Router,
@@ -52,25 +48,8 @@ export class KeycloakService {
             // same value provided as via .catch when config was not found
             return Promise.resolve(undefined);
         }
-        return loadJSON(KeycloakService.uiOverridesConfigFile)
-            .then(uiOverrides => {
-                console.info('UI-Overrides config found');
-                if (uiOverrides.showSSOButton && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME)) {
-                    showSSOButton = true;
-                    return this.checkKeycloakAuthOnLoad('check-sso');
-                } else {
-                    showSSOButton = false;
-                    return this.checkKeycloakAuthOnLoad('login-required');
-                }
-            })
-            .catch(error => {
-                // log error only if the config was found (but could not be parsed)
-                if (error !== NO_CONFIG_FOUND) {
-                    console.error('Parsing UI-Overrides failed: ', error);
-                }
-                showSSOButton = false;
-                return this.checkKeycloakAuthOnLoad('login-required');
-            });
+
+        return this.checkKeycloakAuthOnLoad();
     }
 
     ssoSkipped(): boolean {
@@ -150,17 +129,22 @@ export class KeycloakService {
     /**
      * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
      */
-    async checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): Promise<any> {
+    async checkKeycloakAuthOnLoad(): Promise<any> {
         try {
             const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
+
             console.info('Keycloak config found');
+
+            showSSOButton = keycloakConfig?.showSSOButton || false;
+
+            delete keycloakConfig['showSSOButton'];
 
             // we try to load the well-known configuration endpoint for the realm just to see whether keycloak is available
             const keycloakUrl = keycloakConfig['auth-server-url'].replace(/\/$/, '') + '/realms/' + keycloakConfig['realm'] + '/.well-known/openid-configuration';
             await fetch(keycloakUrl);
 
             keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
-            return initKeycloak(keycloak, onLoad);
+            return initKeycloak(keycloak, showSSOButton ? 'check-sso' : 'login-required');
         } catch (error) {
             showSSOButton = false;
 

@@ -141,8 +141,7 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 					}
 
 					if (keycloakPreferences.containsKey("init_groups")) {
-						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_GROUPS_PARAM,
-								ObjectTransformer.getString(keycloakPreferences.get("init_groups"), null));
+						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_GROUPS_PARAM, "keycloak.init_groups");
 					}
 
 					if (keycloakPreferences.containsKey("sync_groups")) {

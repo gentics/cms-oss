@@ -2,9 +2,9 @@ import {
     BaseListOptionsWithPaging,
     CmsFeatureInfo,
     ContentMaintenanceActionRequest,
-    DirtQueueListResponse,
-    DirtQueueItem,
-    DirtQueueSummary,
+    DirtQueueResponse,
+    DirtQueueEntry,
+    DirtQueueSummaryResponse,
     JobListRequestOptions,
     Jobs,
     MaintenanceModeRequestOptions,
@@ -49,7 +49,7 @@ export class AdminInfoApi {
     /**
      * Get information of the current publish process
      */
-    getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueListResponse> {
+    getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueResponse> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);
@@ -62,7 +62,7 @@ export class AdminInfoApi {
     /**
      * Get information of the current publish process
      */
-    getPublishQueueSummary(): Observable<DirtQueueSummary> {
+    getPublishQueueSummary(): Observable<DirtQueueSummaryResponse> {
         return this.apiBase.get('admin/content/dirtqueue/summary');
     }
 

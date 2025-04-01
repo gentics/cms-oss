@@ -38,7 +38,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("cms-integration-tests/Dockerfile", "cms-cms-integration-tests") + """
+      image: docker.gentics.com/cms-oss/build-container:latest
       resources:
         requests:
           cpu: '0'
@@ -73,7 +73,9 @@ spec:
     }
 
     options {
-        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        gitLabConnection('git.gentics.com')
+        gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
         timeout(time: 4, unit: 'HOURS')
         ansiColor('xterm')
@@ -88,48 +90,52 @@ spec:
             }
 
             environment {
+                // Settings to determine what services we're testing against
                 CMS_VARIANT = "${params.variant}"
                 CI_CMS_VERSION = "${params.cmsVersion}"
                 CI_MESH_VERSION = "${params.meshVersion}"
-                CI_LICENSEKEY = "${mesh_enterprise_licensekey_2}"
+
+                // Always mark this as a CI run
+                CI = "1"
             }
 
             steps {
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
-                    //  withCredentials([ string(credentialsId: 'mesh_enterprise_licensekey_2', variable: 'CI_LICENSEKEY') ]) {
+                    withCredentials([ string(credentialsId: 'gtx-integration-tests-license', variable: 'CI_LICENSEKEY') ]) {
                         authDockerRegistry("docker.gentics.com", "docker.gentics.com")
+                        def composeCmd = 'docker compose'
+                        if (params.variant == 'EE') {
+                            composeCmd = 'docker compose -f ./compose.ee.yml'
+                        }
 
                         try {
                             dir(path: 'cms-integration-tests') {
-                                if (params.variant == 'EE') {
-                                    sh "docker compose -f compose.ee.yml up -d --wait --quiet-pull"
-                                    sh "docker compose -f compose.ee.yml ps"
-                                } else {
-                                    sh "docker compose up -d --wait --quiet-pull"
-                                    sh "docker compose ps"
-                                }
+                                // Start services
+                                sh "${composeCmd} up -d --wait --quiet-pull"
                             }
 
                             dir(path: 'cms-ui') {
-                                sh "npm ci --no-fund --no-audit"
-                                sh "npm run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=ci --parallel=false --output-style=static --verbose"
+                                // Install depdendencies
+                                sh "npm ci"
+                                // Run the tests
+                                sh "npm run many -- --targets=e2e --configuration=ci --output-style=static"
                             }
                         } finally {
                             dir(path: 'cms-integration-tests') {
-                                // finally stop the docker containers
-                                sh "docker compose down"
+                                // Stop and cleanup the services
+                                sh "${composeCmd} down"
                             }
                         }
-                    // }
+                    }
                 }
             }
 
             post {
                 always {
                     script {
-                        junit testResults: "cms-ui/.reports/**/CYPRESS-e2e-report.xml", allowEmptyResults: true
+                        junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }
             }

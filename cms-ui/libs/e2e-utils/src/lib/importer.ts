@@ -12,19 +12,18 @@ import {
     Page,
     PageCreateRequest,
     PagingSortOrder,
+    ResponseCode,
     Schedule,
     ScheduleTask,
     Template,
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
     CORE_CONSTRUCTS,
     EntityMap,
-    ENV_CMS_PASSWORD,
-    ENV_CMS_REST_PATH,
-    ENV_CMS_USERNAME,
     FileImportData,
     FolderImportData,
     GroupImportData,
@@ -46,15 +45,15 @@ import {
     ScheduleImportData,
     ScheduleTaskImportData,
     TestSize,
-    UserImportData,
+    UserImportData
 } from './common';
-import { CypressDriver } from './cypress-driver';
 import {
     emptyNode,
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
     schedulePublisher,
 } from './entities';
+import { GCMSPlaywrightDriver } from './playwright-driver';
 import { getItem } from './utils';
 
 /**
@@ -81,6 +80,7 @@ export interface ClientOptions {
      * @see https://docs.cypress.io/api/commands/request#Arguments
      */
     log?: boolean;
+    context?: APIRequestContext;
 }
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
@@ -123,8 +123,12 @@ export class EntityImporter {
     public languages: Record<string, number> = {};
     /** Mapping of template global-id to template instance. */
     public templates: Record<string, Template> = {};
+    /** Mapping of schedule-task command to task instance. Only contains internal commands. */
+    public tasks: Record<string, ScheduleTask> = {};
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
+
+    public apiContext: APIRequestContext;
 
     constructor(
         public options?: ImporterOptions,
@@ -146,7 +150,7 @@ export class EntityImporter {
         size: TestSize | null = null,
     ): Promise<EntityMap> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         for (const importData of importList) {
@@ -170,7 +174,7 @@ export class EntityImporter {
      */
     public async bootstrapSuite(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         await this.syncTestPackages(size);
@@ -179,11 +183,11 @@ export class EntityImporter {
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
 
-        const tasks = await this.client.schedulerTask.list().send();
-
-        for (const singleTask of tasks.items) {
+        // Store all Tasks in the entity map
+        const tasks = (await this.client.schedulerTask.list().send()).items || [];
+        for (const singleTask of tasks) {
             if (singleTask.internal) {
-                this.entityMap[singleTask.command] = singleTask;
+                this.tasks[singleTask.command] = singleTask;
             }
         }
 
@@ -200,10 +204,16 @@ export class EntityImporter {
      */
     public async setupTest(size: TestSize): Promise<EntityMap> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         const map = await this.setupContent(size);
+
+        // Store all CRs in the entity map
+        const crs = (await this.client.contentRepository.list().send()).items || [];
+        for (const singleCr of crs) {
+            this.entityMap[singleCr.globalId] = singleCr;
+        }
 
         return map;
     }
@@ -223,8 +233,10 @@ export class EntityImporter {
                 break;
             }
 
-            cy.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
-            cy.wait(1000, { log: false });
+            if (this.options?.logImports) {
+                console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1_000));
         }
     }
 
@@ -233,7 +245,7 @@ export class EntityImporter {
      */
     public async deleteMeshProjects(): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         const crListResponse = await this.client.contentRepository.list().send();
@@ -253,7 +265,7 @@ export class EntityImporter {
      */
     public async cleanupTest(completeClean: boolean = false): Promise<void> {
         // For cleanups, we always create a new client
-        this.client = await createClient({ log: this.options?.logRequests });
+        this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
 
         // cleanup entities, which were created in tests before
         await this.cleanupEntities();
@@ -296,7 +308,7 @@ export class EntityImporter {
         }
 
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         let size: TestSize;
@@ -323,11 +335,11 @@ export class EntityImporter {
 
             // If it's a global feature
             if (GLOBAL_FEATURES.includes(feature as any)) {
-                Cypress.log({
-                    type: 'parent',
-                    name: `${enabled ? 'enable' : 'disable'} global feature`,
-                    message: feature,
-                });
+                // Cypress.log({
+                //     type: 'parent',
+                //     name: `${enabled ? 'enable' : 'disable'} global feature`,
+                //     message: feature,
+                // });
 
                 try {
                     // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
@@ -340,6 +352,11 @@ export class EntityImporter {
                         && (
                             err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
                             || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
+                            // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
+                            || (
+                                err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
+                                && !enabled
+                            )
                         )
                     ) {
                         return;
@@ -351,11 +368,11 @@ export class EntityImporter {
             // If it's a node specific feature
             if (NODE_FEATURES.includes(feature as any)) {
                 for (const id of nodeIds) {
-                    Cypress.log({
-                        type: 'parent',
-                        name: `${enabled ? 'enable' : 'disable'} feature`,
-                        message: `${feature} on ${id}`,
-                    });
+                    // Cypress.log({
+                    //     type: 'parent',
+                    //     name: `${enabled ? 'enable' : 'disable'} feature`,
+                    //     message: `${feature} on ${id}`,
+                    // });
 
                     if (enabled) {
                         await this.client.node.activateFeature(id, feature as NodeFeature).send();
@@ -367,20 +384,24 @@ export class EntityImporter {
         }
     }
 
+    public setApiContext(apiContext: APIRequestContext): void {
+        this.apiContext = apiContext;
+    }
+
     public clearClient(): Promise<void> {
         this.client = null;
-        return Cypress.Promise.resolve();
+        return Promise.resolve();
     }
 
     public async setupClient(): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
     }
 
     public async syncPackages(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         await this.syncTestPackages(size);
@@ -388,7 +409,7 @@ export class EntityImporter {
 
     private async syncTestPackages(size: TestSize): Promise<void> {
         if (!this.client) {
-            this.client = await createClient({ log: this.options?.logRequests });
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
         }
 
         // First import all dev-tool packages from the FS
@@ -426,11 +447,11 @@ export class EntityImporter {
         } = data;
 
         if (this.options?.logImports) {
-            cy.log(`Importing node ${data[IMPORT_ID]}`, req);
+            console.log(`Importing node ${data[IMPORT_ID]}`, req);
         }
         const created = (await this.client.node.create(req).send()).node;
         if (this.options?.logImports) {
-            cy.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
+            console.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
         }
 
         // Assign all the languages it has defined in the import data
@@ -467,7 +488,7 @@ export class EntityImporter {
 
             if (tpl) {
                 if (this.options?.logImports) {
-                    cy.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+                    console.log(`Loaded node template ${tplId} -> ${tpl.id}`);
                 }
                 this.entityMap[tplId] = tpl;
             }
@@ -498,11 +519,11 @@ export class EntityImporter {
         };
 
         if (this.options?.logImports) {
-            cy.log(`Importing folder ${data[IMPORT_ID]}`, body);
+            console.log(`Importing folder ${data[IMPORT_ID]}`, body);
         }
         const created = (await this.client.folder.create(body).send()).folder;
         if (this.options?.logImports) {
-            cy.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
+            console.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
         }
 
         return created;
@@ -535,7 +556,7 @@ export class EntityImporter {
         };
 
         if (this.options?.logImports) {
-            cy.log(`Importing page ${data[IMPORT_ID]}`, body);
+            console.log(`Importing page ${data[IMPORT_ID]}`, body);
         }
         const created = (await this.client.page.create(body).send()).page;
         if (tags) {
@@ -546,7 +567,7 @@ export class EntityImporter {
             }).send();
         }
         if (this.options?.logImports) {
-            cy.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
+            console.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
         }
 
         return created;
@@ -561,7 +582,7 @@ export class EntityImporter {
 
         if (!bin) {
             if (this.options?.logImports) {
-                cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+                console.log(`No binary for ${data[IMPORT_ID]} defined!`);
             }
             return;
         }
@@ -574,11 +595,11 @@ export class EntityImporter {
         };
 
         if (this.options?.logImports) {
-            cy.log(`Importing file ${data[IMPORT_ID]}`, body);
+            console.log(`Importing file ${data[IMPORT_ID]}`, body);
         }
         const created = (await this.client.file.upload(new Blob([bin]), body).send())?.file;
         if (this.options?.logImports) {
-            cy.log(`Imported file ${data[IMPORT_ID]} ->`, created);
+            console.log(`Imported file ${data[IMPORT_ID]} ->`, created);
         }
 
         await this.client.file.update(created.id, { file: updateData }).send();
@@ -595,7 +616,7 @@ export class EntityImporter {
 
         if (!bin) {
             if (this.options?.logImports) {
-                cy.log(`No binary for ${data[IMPORT_ID]} defined!`);
+                console.log(`No binary for ${data[IMPORT_ID]} defined!`);
             }
             return;
         }
@@ -608,11 +629,11 @@ export class EntityImporter {
         };
 
         if (this.options?.logImports) {
-            cy.log(`Importing image ${data[IMPORT_ID]}`, data);
+            console.log(`Importing image ${data[IMPORT_ID]}`, data);
         }
         const created = (await this.client.file.upload(new Blob([bin]), body).send()).file;
         if (this.options?.logImports) {
-            cy.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
+            console.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
         }
 
         await this.client.image.update(created.id, { image: updateData }).send();
@@ -642,11 +663,11 @@ export class EntityImporter {
 
         try {
             if (this.options?.logImports) {
-                cy.log(`Importing group ${data[IMPORT_ID]}`, data);
+                console.log(`Importing group ${data[IMPORT_ID]}`, data);
             }
             importedGroup = (await this.client.group.create(parentId, reqData).send()).group;
             if (this.options?.logImports) {
-                cy.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
+                console.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
             }
         } catch (err) {
             // If the group already exists, ignore it
@@ -655,7 +676,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                cy.log(`Group ${data[IMPORT_ID]} already exists`);
+                console.log(`Group ${data[IMPORT_ID]} already exists`);
             }
             const foundGroups = (await this.client.group.list({ q: reqData.name }).send()).items || [];
             importedGroup = foundGroups.find(group => group.name === reqData.name);
@@ -692,11 +713,11 @@ export class EntityImporter {
 
         try {
             if (this.options?.logImports) {
-                cy.log(`Importing user ${data[IMPORT_ID]}`, data);
+                console.log(`Importing user ${data[IMPORT_ID]}`, data);
             }
             const created = (await this.client.group.createUser((this.entityMap[group] as Group).id, reqData).send()).user;
             if (this.options?.logImports) {
-                cy.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
+                console.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
             }
 
             return created;
@@ -707,7 +728,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                cy.log(`User ${data[IMPORT_ID]} already exists`);
+                console.log(`User ${data[IMPORT_ID]} already exists`);
             }
             const foundUsers = (await this.client.user.list({ q: data.login }).send()).items || [];
             const found = foundUsers.find(user => user.login === data.login);
@@ -722,11 +743,11 @@ export class EntityImporter {
         const { ...reqData } = data;
 
         if (this.options?.logImports) {
-            cy.log(`Importing scheduler task ${data[IMPORT_ID]}`, data);
+            console.log(`Importing scheduler task ${data[IMPORT_ID]}`, data);
         }
         const created = (await this.client.schedulerTask.create(reqData).send()).item;
         if (this.options?.logImports) {
-            cy.log(`Imported scheduler task ${data[IMPORT_ID]} -> ${created.id}`);
+            console.log(`Imported scheduler task ${data[IMPORT_ID]} -> ${created.id}`);
         }
 
         return created;
@@ -739,17 +760,17 @@ export class EntityImporter {
 
         try {
             if (this.options?.logImports) {
-                cy.log(`Importing schedule ${data[IMPORT_ID]}`, data);
+                console.log(`Importing schedule ${data[IMPORT_ID]}`, data);
             }
 
-            const taskId = this.entityMap[task]?.id;
+            const taskId = this.tasks[task]?.id;
             const created = (await this.client.scheduler.create({
                 ...reqData,
                 taskId,
             }).send())?.item;
 
             if (this.options?.logImports) {
-                cy.log(`Imported schedule ${data[IMPORT_ID]} -> ${created.id}`);
+                console.log(`Imported schedule ${data[IMPORT_ID]} -> ${created.id}`);
             }
 
             return created;
@@ -760,7 +781,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                cy.log(`Schedule ${data[IMPORT_ID]} already exists`);
+                console.log(`Schedule ${data[IMPORT_ID]} already exists`);
             }
 
             const foundSchedules = (await this.client.scheduler.list().send()).items || [];
@@ -832,6 +853,7 @@ export class EntityImporter {
 
     private async cleanupEntities(): Promise<void> {
         await this.cleanupScheduleTasks();
+        await this.cleanupSchedules();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -842,6 +864,13 @@ export class EntityImporter {
                 continue;
             }
             await this.client.schedulerTask.delete(task.id).send();
+        }
+    }
+
+    private async cleanupSchedules(): Promise<void> {
+        const schedules = (await this.client.scheduler.list().send()).items;
+        for (const schedule of schedules) {
+            await this.client.scheduler.delete(schedule.id).send();
         }
     }
 
@@ -908,20 +937,21 @@ export class EntityImporter {
 
 export async function createClient(options?: ClientOptions): Promise<GCMSRestClient> {
     const client = new GCMSRestClient(
-        new CypressDriver(options?.log ?? false),
+        new GCMSPlaywrightDriver(options.context),
+        // new CypressDriver(options?.log ?? false),
         {
             // The baseUrl (aka. protocol/host/port) has to be already setup when started
             connection: {
                 absolute: false,
-                basePath: Cypress.env(ENV_CMS_REST_PATH),
+                basePath: process.env['CMS_REST_PATH'] || 'http://localhost:8080/rest', // Cypress.env(ENV_CMS_REST_PATH),
             },
         },
     );
 
     try {
         const res = await client.auth.login({
-            login: Cypress.env(ENV_CMS_USERNAME),
-            password: Cypress.env(ENV_CMS_PASSWORD),
+            login: process.env['CMS_USERNAME'] || 'node', // Cypress.env(ENV_CMS_USERNAME),
+            password: process.env['CMS_PASSWORD'] || 'node', // Cypress.env(ENV_CMS_PASSWORD),
         }).send();
         // Set the SID for future requests
         client.sid = res.sid;

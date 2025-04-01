@@ -1,6 +1,7 @@
 import { File as CMSFile, Folder, Group, Image, Node, Page, ScheduleTask, User, Variant } from '@gentics/cms-models';
 import type { Suite } from 'mocha';
 import {
+    ENV_CI,
     ENV_CMS_VARIANT,
     FileImportData,
     FolderImportData,
@@ -31,21 +32,21 @@ export function getItem(data: ImportData | string, entities: Record<string, any>
 
 export function envAll(env: string | string[]): boolean;
 export function envAll(...vars: string[]): boolean {
-    return vars.every(f => Cypress.env(f));
+    return vars.every(envName => process.env[envName]);
 }
 
 export function envAny(env: string | string[]): boolean;
 export function envAny(...vars: string[]): boolean {
-    return vars.some(f => Cypress.env(f));
+    return vars.some(envName => process.env[envName]);
 }
 
 export function envNone(env: string | string[]): boolean;
 export function envNone(...vars: string[]): boolean {
-    return vars.every(f => !Cypress.env(f));
+    return vars.every(envName => !process.env[envName]);
 }
 
 export function isVariant(variant: Variant): boolean {
-    return Cypress.env(ENV_CMS_VARIANT) === variant;
+    return process.env[ENV_CMS_VARIANT] === variant;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -363,4 +364,111 @@ export function combinationMatrix<T>(elements: T[]): T[][] {
     }
 
     return out;
+}
+
+/**
+ * Very simple glob implementation, which only allows *full* folder globbing.
+ * @example
+ * ```ts
+ * globMatch('/hello/world', '/hello/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/123/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/123/456/world')
+ * > true
+ * globMatch('/hello/*\/world', '/hello/world')
+ * > false
+ * globMatch('/hello/**\/world', '/hello/123/world')
+ * > true
+ * globMatch('/hello/**\/world', '/hello/world')
+ * > true
+ * globMatch('/hello/**\/world', '/hello/123/456/world')
+ * > true
+ * ```
+ * @param globPattern Pattern which indicates validity
+ * @param str The string to test against
+ * @returns If the `str` value matches against the `globPattern`
+ */
+export function globMatch(globPattern: string, str: string): boolean {
+    const globParts = globPattern.split('/').filter(part => part !== '');
+    const matchParts = str.split('/').filter(part => part !== '');
+
+    let matchIdx = 0;
+    for (let i = 0; i < globParts.length; i++) {
+        // If it isn't a glob part, then we continue
+        if (globParts[i][0] !== '*') {
+            if (globParts[i] !== matchParts[matchIdx]) {
+                return false;
+            }
+            matchIdx++;
+            continue;
+        }
+
+        // Simply allow all paths, so continue
+        if (globParts[i] === '*') {
+            matchIdx++;
+            continue;
+        }
+
+        if (globParts[i] !== '**') {
+            throw new Error(`Unknown glob pattern part "${globParts[i]}"`);
+        }
+
+        // We don't need to check, as this is the last entry
+        if (i + 1 >= globParts.length) {
+            break;
+        }
+
+        for (; matchIdx < matchParts.length; matchIdx++) {
+            // We have a matching path after "**"
+            if (globParts[i + 1] === matchParts[matchIdx]) {
+                break;
+            }
+        }
+
+        // If we couldn't find a match, then that means it's invalid
+        return false;
+    }
+
+    return true;
+}
+
+export function matchesPath(url: string | URL, path: string | RegExp): boolean {
+    try {
+        const urlObj = new URL(url);
+        let matches = false;
+
+        if (typeof path === 'string') {
+            matches = globMatch(path, urlObj.pathname);
+        } else {
+            matches = path.test(urlObj.pathname);
+        }
+
+        // if (matches) {
+        //     console.log('Found matching path', { url, path });
+        // }
+
+        return matches;
+    } catch (err) {
+        return false;
+    }
+}
+
+export function hasMatchingParams(url: string, params: Record<string, string>): boolean {
+    const urlObj = new URL(url);
+    return Object.entries(params).every(([key, value]) => urlObj.searchParams.get(key) === value);
+}
+
+/**
+ * Simple helper function to convert/"parse" a environment value as bool.
+ * Checks for `1`, `"1"`, `true`, and `"true"`.
+ * @param value The value of the environment value
+ * @returns A properly checked/converted boolean from the value.
+ */
+export function isEnvBool(value: string | number | boolean): boolean {
+    return value === 1 || value === '1' || value === true || value === 'true';
+}
+
+export function isCIEnvironment(): boolean {
+    return isEnvBool(process.env[ENV_CI]);
 }

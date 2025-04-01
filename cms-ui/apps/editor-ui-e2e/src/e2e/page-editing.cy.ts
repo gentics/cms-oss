@@ -1049,7 +1049,7 @@ describe('Page Editing', () => {
                 pageId: `${IMPORTER.get(pageOne)!.id}`,
             },
         }, req => {
-            req.alias = ALIAS_VALID_REQ;
+            req.alias = ALIAS_VALID_REQ
         });
 
         cy.findList(ITEM_TYPE_PAGE)

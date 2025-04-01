@@ -1,3 +1,4 @@
+<!--
 <gtx-search-bar
     *ngIf="showSearch"
     class="search-bar"
@@ -6,7 +7,7 @@
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
-
+-->
 
 <div *ngIf="selectable" class="entity-table-selection">
     {{ 'contentRepository.info_selected_contentrepositories' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}

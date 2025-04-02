@@ -1,9 +1,4 @@
-import {
-    BO_DISPLAY_NAME,
-    ContentRepositoryBO,
-    EntityPageResponse,
-    TableLoadOptions,
-} from '@admin-ui/common';
+import { ContentRepositoryBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import {
     BaseTableLoaderService,
     ContentRepositoryHandlerService,
@@ -21,11 +16,9 @@ export interface MeshContentRepositoryTableLoaderOptions {
 }
 
 @Injectable()
-export class MeshBrowserContentRepositoryTableLoaderService extends BaseTableLoaderService<
-ContentRepository,
-ContentRepositoryBO,
-MeshContentRepositoryTableLoaderOptions
-> {
+export class MeshBrowserContentRepositoryTableLoaderService
+    extends BaseTableLoaderService<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions> {
+
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
@@ -48,19 +41,16 @@ MeshContentRepositoryTableLoaderOptions
         additionalOptions: MeshContentRepositoryTableLoaderOptions,
     ): Observable<EntityPageResponse<ContentRepositoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
-        const filter = loadOptions.q;
+        // const filter = (loadOptions.q || '').toLocaleLowerCase();
         loadOptions.q = ContentRepositoryType.MESH;
 
-        return this.handler.listMapped(null as never, loadOptions)
-            .pipe(
-                map(response => response.items.filter(response =>
-                    !filter || response[BO_DISPLAY_NAME].toLowerCase().includes(filter.toLowerCase()))),
-                map(response => {
-                    return {
-                        entities: response,
-                        totalCount: response.length,
-                    };
-                }),
-            )
+        return this.handler.listMapped(null as never, loadOptions).pipe(
+            map(response => {
+                return {
+                    entities: response.items,
+                    totalCount: response.totalItems,
+                };
+            }),
+        );
     }
 }

@@ -1,17 +1,12 @@
-import { FormControlOnChangeFn, ObservableStopper } from '@admin-ui/common';
 import {
     ChangeDetectionStrategy,
     Component,
     Input,
-    OnChanges,
-    OnDestroy,
 } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
-import { IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
-import { ChangesOf, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash-es';
-import { Subject } from 'rxjs';
-import { map, takeUntil, takeWhile } from 'rxjs/operators';
+import { FormControl, FormGroup } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import { NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
 
@@ -24,9 +19,12 @@ export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
     templateUrl: './node-features.component.html',
     styleUrls: ['./node-features.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(NodeFeaturesComponent)],
+    providers: [
+        generateFormProvider(NodeFeaturesComponent),
+        generateValidatorProvider(NodeFeaturesComponent),
+    ],
 })
-export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValueAccessor {
+export class NodeFeaturesComponent extends BasePropertiesComponent<NodeFeaturesFormData> {
 
     public readonly NodeFeature = NodeFeature;
 
@@ -34,82 +32,20 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
     @Input()
     public availableFeatures: NodeFeatureModel[];
 
-    @Input()
-    public disabled = false;
+    protected createForm(): FormGroup<FormProperties<NodeFeaturesFormData>> {
+        const controls: FormProperties<NodeFeaturesFormData> = {};
+        this.availableFeatures.forEach(feat => {
+            controls[feat.id] = new FormControl(this.value?.[feat.id]);
+        });
 
-    fgFeatures: UntypedFormGroup;
-
-    /**
-     * This subject is used to decouple the `registerOnChange()` subscription
-     * from the `valueChanges` observable of the current `fgFeatures` FormGroup.
-     *
-     * This is needed, because we need to recreate `fgFeatures` whenever the
-     * `availableFeatures` change.
-     */
-    private valueChangesSubj$ = new Subject();
-
-    private currentValue: NodeFeaturesFormData = {};
-
-    private stopper = new ObservableStopper();
-
-    ngOnDestroy(): void {
-        this.stopper.stop();
+        return new FormGroup(controls);
     }
 
-    ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.availableFeatures && !isEqual(changes.availableFeatures.previousValue, changes.availableFeatures.currentValue)) {
-            this.recreateForm(changes.availableFeatures.currentValue);
-        }
-        if (changes.disabled) {
-            this.setDisabledState(this.disabled);
-        }
+    protected configureForm(value: NodeFeaturesFormData, loud?: boolean): void {
+        // no-op
     }
 
-    writeValue(value: NodeFeaturesFormData): void {
-        if (value) {
-            this.currentValue = value;
-            this.fgFeatures.patchValue(value);
-        } else {
-            this.currentValue = {};
-            this.fgFeatures.reset();
-        }
-        this.fgFeatures.markAsPristine();
-    }
-
-    registerOnChange(fn: FormControlOnChangeFn<NodeFeaturesFormData>): void {
-        this.valueChangesSubj$.pipe(
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(fn);
-    }
-
-    registerOnTouched(fn: any): void { }
-
-    setDisabledState(isDisabled: boolean): void {
-        if (isDisabled) {
-            this.fgFeatures.disable({ emitEvent: false });
-        } else {
-            this.fgFeatures.enable({ emitEvent: false });
-        }
-    }
-
-    private recreateForm(availableFeatures: NodeFeatureModel[]): void {
-        const controls: IndexByKey<AbstractControl> = {};
-
-        if (Array.isArray(availableFeatures)) {
-            availableFeatures.forEach(feature => {
-                controls[feature.id] = new UntypedFormControl(this.currentValue[feature.id]);
-            });
-        }
-
-        const formGroup = new UntypedFormGroup(controls);
-        this.fgFeatures = formGroup;
-
-        // Publish the changes from the current formGroup using valueChangeSubj$ until the
-        // fgFeatures FormGroup changes again.
-        formGroup.valueChanges.pipe(
-            takeWhile(() => this.fgFeatures === formGroup),
-            map((formData: NodeFeaturesFormData) => formGroup.valid ? formData : null),
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(value => this.valueChangesSubj$.next(value));
+    protected assembleValue(value: NodeFeaturesFormData): NodeFeaturesFormData {
+        return value;
     }
 }

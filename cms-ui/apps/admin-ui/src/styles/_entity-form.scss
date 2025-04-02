@@ -1,17 +1,16 @@
 // This contains common styles used by various forms.
 
+.gtx-form-section-title {
+    margin-top: 10px;
+    border-bottom: 1px solid $gtx-color-mid-gray;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+}
+
 .gtx-form {
-
-    .gtx-form-section-title {
-        margin-top: 10px;
-        border-bottom: 1px solid $gtx-color-mid-gray;
-        margin-bottom: 5px;
-        padding-bottom: 5px;
-        display: flex;
-        align-items: center;
-        text-transform: uppercase;
-    }
-
     .gtx-two-col-options {
         display: flex;
         flex-direction: row;

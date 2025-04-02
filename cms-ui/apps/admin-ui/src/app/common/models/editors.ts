@@ -73,7 +73,6 @@ import {
     NodeListResponse,
     NodeResponse,
     NodeSaveRequest,
-    NodeSaveRequestOptions,
     ObjectProperty,
     ObjectPropertyCategory,
     ObjectPropertyCategoryCreateRequest,
@@ -137,26 +136,6 @@ import {
 } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import {
-    ConstructCategoryDetailTabs,
-    ConstructDetailTabs,
-    ContentPackageDetailTabs,
-    ContentRepositoryDetailTabs,
-    ContentRepositoryFragmentDetailTabs,
-    DataSourceDetailTabs,
-    DevToolPackageDetailTabs,
-    FolderDetailTabs,
-    GroupDetailTabs,
-    LanguageDetailTabs,
-    NodeDetailTabs,
-    ObjectPropertyCategoryDetailTabs,
-    ObjectPropertyDetailTabs,
-    RoleDetailTabs,
-    ScheduleDetailTabs,
-    ScheduleTaskDetailTabs,
-    TemplateDetailTabs,
-    UserDetailTabs,
-} from './detail-tabs';
-import {
     ConstructBO,
     ConstructCategoryBO,
     ContentPackageBO,
@@ -176,6 +155,26 @@ import {
     TemplateBO,
     UserBO,
 } from './business-objects';
+import {
+    ConstructCategoryDetailTabs,
+    ConstructDetailTabs,
+    ContentPackageDetailTabs,
+    ContentRepositoryDetailTabs,
+    ContentRepositoryFragmentDetailTabs,
+    DataSourceDetailTabs,
+    DevToolPackageDetailTabs,
+    FolderDetailTabs,
+    GroupDetailTabs,
+    LanguageDetailTabs,
+    NodeDetailTabs,
+    ObjectPropertyCategoryDetailTabs,
+    ObjectPropertyDetailTabs,
+    RoleDetailTabs,
+    ScheduleDetailTabs,
+    ScheduleTaskDetailTabs,
+    TemplateDetailTabs,
+    UserDetailTabs,
+} from './detail-tabs';
 
 export enum EditableEntity {
     CONSTRUCT = 'construct',
@@ -456,7 +455,7 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LOAD_REQUEST_PARAMS]: void,
         [EntityModelType.LOAD_RESPONSE_MODEL]: NodeResponse,
         [EntityModelType.UPDATE_REQUEST_MODEL]: NodeSaveRequest,
-        [EntityModelType.UPDATE_REQUEST_PARAMS]: NodeSaveRequestOptions,
+        [EntityModelType.UPDATE_REQUEST_PARAMS]: never,
         [EntityModelType.UPDATE_RESPONSE_MODEL]: NodeResponse,
         [EntityModelType.DELETE_REQUEST_MODEL]: void,
         [EntityModelType.DELETE_REQUEST_PARAMS]: NodeDeleteRequestOptions,

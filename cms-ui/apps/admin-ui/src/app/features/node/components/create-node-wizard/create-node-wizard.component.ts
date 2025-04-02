@@ -1,6 +1,6 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { ErrorHandler, FeatureOperations, LanguageTableLoaderService, NodeOperations } from '@admin-ui/core';
-import { Wizard, WizardComponent, LanguageTableComponent } from '@admin-ui/shared';
+import { ErrorHandler, FeatureOperations, NodeOperations } from '@admin-ui/core';
+import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
@@ -96,7 +96,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         ]);
         this.fgPublishingValid$ = createFormValidityTracker(this.fgPublishing);
 
-        this.fgNodeFeatures = new FormControl<NodeFeaturesFormData>(null);
+        this.fgNodeFeatures = new FormControl<NodeFeaturesFormData>({});
         this.fgNodeFeaturesValid$ = createFormValidityTracker(this.fgNodeFeatures);
     }
 

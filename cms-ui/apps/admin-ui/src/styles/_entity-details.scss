@@ -32,6 +32,13 @@
 .gtx-entity-details-tab-content-header {
     padding-top: 1rem;
     padding-bottom: 1rem;
+    padding-left: .625rem;
+
+    @media screen and (min-width: 801px) {
+        & {
+            padding-left:.9375rem
+        }
+    }
 }
 
 // .gtx-entity-details-tab-content-header-title {

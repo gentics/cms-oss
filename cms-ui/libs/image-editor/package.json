@@ -1,6 +1,6 @@
 {
   "name": "@gentics/image-editor",
-  "version": "6.2.7",
+  "version": "6.2.8",
   "license": "Apache-2.0",
   "dependencies": {
     "tslib": "^2.5.0"
@@ -14,7 +14,7 @@
   "devDependencies": {
     "@angular/common": ">=18.0.0",
     "@angular/core": ">=18.0.0",
-    "@gentics/ui-core": "^6.2.7",
+    "@gentics/ui-core": "^6.2.8",
     "cropperjs": "^1.5.13"
   },
   "publishConfig": {

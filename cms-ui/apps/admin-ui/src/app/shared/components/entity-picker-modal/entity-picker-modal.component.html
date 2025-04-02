@@ -21,8 +21,8 @@
     <div class="modal-footer">
         <gtx-button
             type="primary"
+            [disabled]="loading"
             (click)="confirmSelection()"
-            gtxActionAllowed=""
         >
             {{ 'shared.confirm_selection' | i18n }}
         </gtx-button>

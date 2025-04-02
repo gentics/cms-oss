@@ -23,6 +23,7 @@ label {
     .content-name {
         flex: 1 1 auto;
         padding: 5px;
+        align-content: center;
     }
 
     .suffix-button {
@@ -32,6 +33,7 @@ label {
         border-left: 1px solid $gtx-color-light-gray;
         cursor: pointer;
         transition: 0.2s;
+        align-content: center;
 
         &::ng-deep .button-event-wrapper .btn icon {
             font-size: 1.2rem;

@@ -1,18 +1,31 @@
 @import 'variables';
 
-icon.feature-info {
-    transform: rotate(180deg);
-    color: $gtx-color-primary;
-    margin-left: 10px;
-    font-size: 1rem;
-    margin-top: -2px;
-    cursor: help;
+.features-content {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    .feature-container {
+        display: flex;
+        flex-direction: column;
+
+        gtx-tooltip::ng-deep .tooltip-trigger {
+            display: block;
+        }
+    }
+
+    .gtx-form-section-title {
+        display: flex;
+        align-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
 }
 
-.node-feature {
-    gtx-tooltip::ng-deep .tooltip-trigger {
-        display: block;
-    }
+icon.feature-info {
+    color: $gtx-color-primary;
+    font-size: 1rem;
+    cursor: help;
 }
 
 .feature-description {

@@ -80,7 +80,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public masterName: string | null = null;
 
     @Input()
-    public isChannel: boolean = false;
+    public isChannel = false;
 
     public nodes: Node<Raw>[];
     protected nodesLoading = false;

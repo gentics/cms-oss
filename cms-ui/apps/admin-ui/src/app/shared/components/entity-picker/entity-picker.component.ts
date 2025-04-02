@@ -1,6 +1,8 @@
 import { ContentItemTypes, PickableEntity } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { BaseFormElementComponent, ModalService, generateFormProvider } from '@gentics/ui-core';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { ErrorHandler } from '@admin-ui/core';
 import { EntityPickerModalComponent } from '../entity-picker-modal/entity-picker-modal.component';
 
 @Component({
@@ -12,20 +14,40 @@ import { EntityPickerModalComponent } from '../entity-picker-modal/entity-picker
 })
 export class EntityPickerComponent extends BaseFormElementComponent<PickableEntity | PickableEntity[]> {
 
+    /**
+     * Item-types which can be picked/selected.
+     */
     @Input()
     public types: ContentItemTypes[] = [];
 
+    /**
+     * If this is `true`, and the `types` contains `'folder'`, then nodes and channels will
+     * be selectable as well, but will be returned as the root folder.
+     */
+    @Input()
+    public nodesAsFolder = false;
+
+    /**
+     * If multiple items can be picked.
+     */
     @Input()
     public multiple = false;
 
+    /**
+     * If the picked items should be able to be cleared.
+     */
     @Input()
     public clearable = true;
 
+    /**
+     * The resolved items to display in the input, to show the user what it currently selected.
+     */
     public displayValue: PickableEntity[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
         protected modals: ModalService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(changeDetector);
         this.booleanInputs.push('multiple', 'clearable');
@@ -52,15 +74,23 @@ export class EntityPickerComponent extends BaseFormElementComponent<PickableEnti
             types: this.types,
             multiple: this.multiple,
             selected: this.value,
+            nodesAsFolder: this.nodesAsFolder,
         });
 
-        const value = await dialog.open();
+        try {
+            const value = await dialog.open();
 
-        if (value === false) {
-            return;
+            if (value === false) {
+                return;
+            }
+
+            this.triggerChange(value);
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            this.errorHandler.catch(err);
         }
-
-        this.triggerChange(value);
     }
 
     clearValue(): void {

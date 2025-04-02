@@ -1,0 +1,9 @@
+<gtx-entity-picker
+    [label]="label"
+    [types]="allowNodes ? ['folder', 'node', 'channel'] : ['folder']"
+    [multiple]="false"
+    [clearable]="clearable"
+    [nodesAsFolder]="allowNodes"
+    [value]="pickedFolder"
+    (valueChange)="handleItemChange($event)"
+></gtx-entity-picker>

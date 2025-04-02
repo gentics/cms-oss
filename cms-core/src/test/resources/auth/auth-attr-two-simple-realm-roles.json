@@ -1,0 +1,8 @@
+{
+  "roles": {
+    "realm": [
+      "realm-role-1",
+      "realm-role-2"
+    ]
+  }
+}

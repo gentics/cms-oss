@@ -3,6 +3,8 @@
     flex-direction: column;
     flex-wrap: nowrap;
     width: 100%;
+    min-height: 1px;
+    max-height: 100%;
 }
 
 .entity-trable {

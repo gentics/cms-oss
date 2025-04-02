@@ -437,10 +437,10 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 			// i18n: "The page {0} was not published because the following Tags
 			// are not filled correctly: {1}"
 			i18n = new CNI18nString("page.publish.skippedpage");
-			i18n.addParameter('"' + pages.get(0).getName() + '"');
+			i18n.addParameter(I18NHelper.getName(pages.get(0)));
 		} else {
 			for (Page page : pages) {
-				names.append('"').append(page.getName()).append("\"");
+				names.append("'").append(I18NHelper.getName(page)).append("'");
 				if (++count == sentinal) {
 					break;
 				}

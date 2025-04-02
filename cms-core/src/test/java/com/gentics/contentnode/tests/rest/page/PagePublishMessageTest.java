@@ -42,13 +42,20 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
+import com.gentics.contentnode.rest.model.TagmapEntryModel;
+import com.gentics.contentnode.rest.model.request.PageOfflineRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -65,6 +72,11 @@ public class PagePublishMessageTest {
 	 */
 	public final static String MESH_PROJECT_NAME = "testproject";
 
+	/**
+	 * Name of the custom tagmap entry, which is added by some tests
+	 */
+	public final static String TAGMAP_ENTRY_NAME = "tagmapentry";
+
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
@@ -72,34 +84,55 @@ public class PagePublishMessageTest {
 	public static MeshContext mesh = new MeshContext();
 
 	private static Message PAGE_PUBLISHED_MESSAGE = new Message().setType(Type.SUCCESS)
-			.setMessage("Die Seite wurde veröffentlicht.");
+			.setMessage("Die Seite 'Test Page' wurde veröffentlicht.");
 
 	private static Message PAGE_PUBLISHED_STATUS_MESSAGE = new Message().setType(Type.SUCCESS)
-			.setMessage("Die Seite wurde in den Status \"veröffentlicht\" gesetzt.");
+			.setMessage("Die Seite 'Test Page' wurde in den Status 'veröffentlicht' gesetzt.");
 
 	private static Message PAGE_PUBLISH_AT_MESSAGE = new Message().setType(Type.SUCCESS)
-			.setMessage("'Veröffentlichen am' wurde für die Seite gesetzt.");
+			.setMessage("'Veröffentlichen am' wurde für die Seite 'Test Page' gesetzt.");
 
 	private static Message PAGE_PUBLISH_QUEUE_MESSAGE = new Message().setType(Type.SUCCESS)
-			.setMessage("Die Veröffentlichung der Seite wurde beantragt.");
+			.setMessage("Die Veröffentlichung der Seite 'Test Page' wurde beantragt.");
 
 	private static Message PAGE_PUBLISH_AT_QUEUE_MESSAGE = new Message().setType(Type.SUCCESS)
-			.setMessage("'Veröffentlichen am' der Seite wurde beantragt.");
+			.setMessage("'Veröffentlichen am' der Seite 'Test Page' wurde beantragt.");
 
-	private static Message CR_NOT_READY_MESSAGE = new Message().setType(Type.WARNING).setMessage(
-			"Die sofortige Veröffentlichung von Test Page ist derzeit nicht möglich, da das Content.Repository nicht bereit ist.");
+	private static Message PAGE_TAKEN_OFFLINE_MESSAGE = new Message().setType(Type.SUCCESS)
+			.setMessage("Die Seite 'Test Page' wurde vom Server genommen.");
 
-	private static Message CR_UNAVAILABLE_MESSAGE = new Message().setType(Type.WARNING)
-			.setMessage("Beim Schreiben der Seite Test Page in das Content.Repository ist ein Fehler aufgetreten.");
+	private static Message PAGE_OFFLINE_STATUS_MESSAGE = new Message().setType(Type.SUCCESS)
+			.setMessage("Die Seite 'Test Page' wurde in den Status 'vom Server genommen' gesetzt.");
+
+	private static Message PAGE_OFFLINE_AT_MESSAGE = new Message().setType(Type.SUCCESS)
+			.setMessage("'Vom Server nehmen am' wurde für die Seite 'Test Page' gesetzt.");
+
+	private static Message PAGE_OFFLINE_QUEUE_MESSAGE = new Message().setType(Type.SUCCESS)
+			.setMessage("Vom Server nehmen der Seite 'Test Page' wurde beantragt.");
+
+	private static Message PAGE_OFFLINE_AT_QUEUE_MESSAGE = new Message().setType(Type.SUCCESS)
+			.setMessage("'Vom Server nehmen am' für die Seite 'Test Page' wurde beantragt.");
+
+	private static Message PUBLISH_CR_NOT_READY_MESSAGE = new Message().setType(Type.WARNING).setMessage(
+			"Die sofortige Veröffentlichung von 'Test Page' ist derzeit nicht möglich, da das Content.Repository nicht bereit ist.");
+
+	private static Message PUBLISH_CR_UNAVAILABLE_MESSAGE = new Message().setType(Type.WARNING)
+			.setMessage("Beim Schreiben der Seite 'Test Page' in das Content.Repository ist ein Fehler aufgetreten.");
 
 	private static Message CONFLICT_MESSAGE = new Message().setType(Type.WARNING).setMessage(
-			"Die sofortige Veröffentlichung von Test Page ist wegen eines Konfliktes derzeit nicht möglich.");
+			"Die sofortige Veröffentlichung von 'Test Page' ist wegen eines Konfliktes derzeit nicht möglich.");
 
 	private static Message PAGE_LOCKED_MESSAGE = new Message().setType(Type.CRITICAL).setMessage(
-			"Die Seite /Node/Test Page kann nicht bearbeitet werden, weil sie gerade von einem anderen Benutzer gesperrt ist.");
+			"Die Seite 'Test Page' kann nicht bearbeitet werden, weil sie gerade von einem anderen Benutzer gesperrt ist.");
 
 	private static Message PAGE_MANDATORY_TAGS_MESSAGE = new Message().setType(Type.CRITICAL).setMessage(
-			"Die Seite \"Test Page\" wurde nicht veröffentlicht, weil folgende Tags nicht korrekt ausgefüllt sind: html");
+			"Die Seite 'Test Page' wurde nicht veröffentlicht, weil folgende Tags nicht korrekt ausgefüllt sind: 'html'");
+
+	private static Message OFFLINE_CR_NOT_READY_MESSAGE = new Message().setType(Type.WARNING).setMessage(
+			"Sofortiges vom Server nehmen von 'Test Page' ist derzeit nicht möglich, da das Content.Repository nicht bereit ist.");
+
+	private static Message OFFLINE_CR_UNAVAILABLE_MESSAGE = new Message().setType(Type.WARNING)
+			.setMessage("Beim Entfernen der Seite 'Test Page' aus dem Content.Repository ist ein Fehler aufgetreten.");
 
 	private static Node node;
 
@@ -174,13 +207,21 @@ public class PagePublishMessageTest {
 	}
 
 	@Before
-	public void setup() throws NodeException {
+	public void setup() throws Exception {
 		cleanMesh(mesh.client());
 		operate(() -> clear(node));
 		cr = update(cr, upd -> {
 			upd.setUrl(meshCrUrl);
 			upd.setInstantPublishing(false);
 		}).build();
+
+		TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(crId), false, new FilterParameterBean().setQuery(TAGMAP_ENTRY_NAME),
+				new SortParameterBean(), new PagingParameterBean());
+		assertResponseOK(entriesResponse);
+
+		for (TagmapEntryModel entry : entriesResponse.getItems()) {
+			crResource.deleteEntry(Integer.toString(crId), Integer.toString(entry.getId()));
+		}
 	}
 
 	/**
@@ -188,7 +229,7 @@ public class PagePublishMessageTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testWithInstantPublishing() throws Exception {
+	public void testPublishWithInstantPublishing() throws Exception {
 		// enabled instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -215,7 +256,7 @@ public class PagePublishMessageTest {
 	 * @throws NodeException
 	 */
 	@Test
-	public void testWithoutInstantPublishing() throws NodeException {
+	public void testPublishWithoutInstantPublishing() throws NodeException {
 		// disable instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(false);
@@ -240,7 +281,7 @@ public class PagePublishMessageTest {
 	 * @throws NodeException
 	 */
 	@Test
-	public void testWithCRInvalid() throws NodeException {
+	public void testPublishWithCRInvalid() throws NodeException {
 		// enabled instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -257,7 +298,7 @@ public class PagePublishMessageTest {
 
 		// assert response messages
 		assertResponseOK(response);
-		assertMessages(response, PAGE_PUBLISHED_STATUS_MESSAGE, CR_NOT_READY_MESSAGE);
+		assertMessages(response, PAGE_PUBLISHED_STATUS_MESSAGE, PUBLISH_CR_NOT_READY_MESSAGE);
 	}
 
 	/**
@@ -265,7 +306,7 @@ public class PagePublishMessageTest {
 	 * @throws NodeException
 	 */
 	@Test
-	public void testWithCRUnavailable() throws NodeException {
+	public void testPublishWithCRUnavailable() throws NodeException {
 		// enabled instant publishing and change url to something inexistent
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -283,7 +324,7 @@ public class PagePublishMessageTest {
 
 		// assert response messages
 		assertResponseOK(response);
-		assertMessages(response, PAGE_PUBLISHED_STATUS_MESSAGE, CR_UNAVAILABLE_MESSAGE);
+		assertMessages(response, PAGE_PUBLISHED_STATUS_MESSAGE, PUBLISH_CR_UNAVAILABLE_MESSAGE);
 	}
 
 	/**
@@ -291,7 +332,7 @@ public class PagePublishMessageTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testWithConflictInCR() throws Exception {
+	public void testPublishWithConflictInCR() throws Exception {
 		// enabled instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -435,7 +476,7 @@ public class PagePublishMessageTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testLocked() throws Exception {
+	public void testPublishLocked() throws Exception {
 		// enabled instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -469,7 +510,7 @@ public class PagePublishMessageTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testMandatoryTagsNotFilled() throws Exception {
+	public void testPublishMandatoryTagsNotFilled() throws Exception {
 		// enabled instant publishing
 		cr = update(cr, upd -> {
 			upd.setInstantPublishing(true);
@@ -490,7 +531,238 @@ public class PagePublishMessageTest {
 		// assert response messages
 		assertResponse(response, ResponseCode.INVALIDDATA);
 		assertMessages(response, PAGE_MANDATORY_TAGS_MESSAGE);
+	}
 
+	@Test
+	public void testOfflineWithInstantPublishing() throws Exception {
+		// enable instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_TAKEN_OFFLINE_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineWithoutInstantPublishing() throws Exception {
+		// enable instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// disable instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(false);
+		}).build();
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_STATUS_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineWithCRInvalid() throws Exception {
+		// enable instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// add a tagmap entry to make the CR invalid
+		TagmapEntryModel tagmapEntry = new TagmapEntryModel();
+		tagmapEntry.setTagname(TAGMAP_ENTRY_NAME);
+		tagmapEntry.setMapname(TAGMAP_ENTRY_NAME);
+		tagmapEntry.setObject(Page.TYPE_PAGE);
+		tagmapEntry.setAttributeType(AttributeType.text.getType());
+		tagmapEntry.setMultivalue(false);
+
+		assertResponseOK(crResource.addEntry(Integer.toString(crId), tagmapEntry));
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_STATUS_MESSAGE, OFFLINE_CR_NOT_READY_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineWithCRUnavailable() throws Exception {
+		// enable instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// change url to something inexistent
+		cr = update(cr, upd -> {
+			upd.setUrl("this.does.not.exist:8080/bla");
+		}).build();
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_STATUS_MESSAGE, OFFLINE_CR_UNAVAILABLE_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineAt() throws Exception {
+		// enabled instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			int now = (int) (System.currentTimeMillis() / 1000L);
+			request.setAt(now + 86400);
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_AT_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineQueue() throws Exception {
+		// enabled instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		GenericResponse response = execute(testUser, p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_QUEUE_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineAtQueue() throws Exception {
+		// enabled instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		GenericResponse response = execute(testUser, p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			int now = (int) (System.currentTimeMillis() / 1000L);
+			request.setAt(now + 86400);
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_OFFLINE_AT_QUEUE_MESSAGE);
+	}
+
+	@Test
+	public void testOfflineLocked() throws Exception {
+		// enabled instant publishing
+		cr = update(cr, upd -> {
+			upd.setInstantPublishing(true);
+		}).build();
+
+		// repair the CR (so it is ready for instant publishing)
+		assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		// create test page
+		Page page = createTestPage("Test Page", "testpage.html", true);
+		// publish test page
+		page = update(page, upd -> {}).publish().build();
+
+		// lock the page with another user
+		try (Trx trx = new Trx(testUser)) {
+			trx.getTransaction().getObject(page, true);
+			trx.success();
+		}
+
+		// take test page offline
+		GenericResponse response = execute(p -> {
+			PageOfflineRequest request = new PageOfflineRequest();
+			return ContentNodeRESTUtils.getPageResource().takeOffline(Integer.toString(p.getId()), request);
+		}, page);
+
+		// assert response messages
+		assertResponseOK(response);
+		assertMessages(response, PAGE_TAKEN_OFFLINE_MESSAGE);
 	}
 
 	/**

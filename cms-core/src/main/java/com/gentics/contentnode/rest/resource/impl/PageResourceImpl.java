@@ -1320,36 +1320,28 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			switch (state) {
 			case PUBLISHED:
 				if (instantPublishingResult != null && instantPublishingResult.status() == ResultStatus.success) {
-					messages.add(I18NHelper.get("page.instantpublish.success"));
+					messages.add(I18NHelper.get("page.instantpublish.success", I18NHelper.getName(page)));
 				} else {
-					messages.add(I18NHelper.get("page.publish.success"));
+					messages.add(I18NHelper.get("page.publish.success", I18NHelper.getName(page)));
 				}
 
 				info = "Page " + id + " was successfully published";
 				break;
 			case PUBLISHAT:
-				messages.add(
-						(new CNI18nString("page.publishat.success")).toString()
-					);
+				messages.add(I18NHelper.get("page.publishat.success", I18NHelper.getName(page)));
 				info = "Publish at was set for page " + id;
 				break;
 			case WORKFLOW:
 				if (request.getAt() > 0) {
-					messages.add(
-							(new CNI18nString("page.publishat.workflow")).toString()
-							);
+					messages.add(I18NHelper.get("page.publishat.workflow", I18NHelper.getName(page)));
 				} else {
-					messages.add(
-							(new CNI18nString("page.publish.workflow")).toString()
-							);
+					messages.add(I18NHelper.get("page.publish.workflow", I18NHelper.getName(page)));
 				}
 				info = "Page " + id
 					 + " was successfully put into a publish workflow";
 				break;
 			case WORKFLOW_STEP:
-				messages.add(
-						(new CNI18nString("page.publish.workflow")).toString()
-					);
+				messages.add(I18NHelper.get("page.publish.workflow", I18NHelper.getName(page)));
 				info = "Page " + id
 					 + " was successfully pushed a step further in the publish"
 					 + "workflow";
@@ -1379,24 +1371,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				response.addMessage(new Message(messageType, message));
 			}
 
-			if (instantPublishingResult != null && !StringUtils.isEmpty(instantPublishingResult.reason())) {
-				Message message = new Message().setMessage(instantPublishingResult.reason());
-				switch(instantPublishingResult.status()) {
-				case failed:
-					message.setType(Type.WARNING);
-					break;
-				case skipped:
-					message.setType(Type.INFO);
-					break;
-				case success:
-					message.setType(Type.SUCCESS);
-					break;
-				default:
-					message.setType(Type.INFO);
-					break;
-				}
-				response.addMessage(message);
-			}
+			MiscUtils.addMessage(instantPublishingResult, response);
 
 			return response;
 		} catch (EntityNotFoundException e) {
@@ -2891,7 +2866,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			if (page.getContent().isLocked()) {
 				throw new ReadOnlyException(
 						"Could revoke page from workflow, since it is locked for another user",
-						"page.readonly.locked");
+						"page.readonly.locked", I18NHelper.getName(page));
 			}
 
 			// get the workflow
@@ -3465,27 +3440,40 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 			page.unlock();
 
+			// Commit the transaction now to handle instant publishing
+			Transaction t = TransactionManager.getCurrentTransaction();
+			t.commit(false);
+			Result instantPublishingResult = t.getInstantPublishingResult(Page.TYPE_PAGE, page.getId());
+
+			GenericResponse response = new GenericResponse();
 			Message message = null;
 			switch (result) {
 			case OFFLINE:
-				message = new Message(Type.SUCCESS, new CNI18nString("page.offline.success").toString());
+				if (instantPublishingResult != null && instantPublishingResult.status() == ResultStatus.success) {
+					message = new Message(Type.SUCCESS, I18NHelper.get("page.instantoffline.success", I18NHelper.getName(page)));
+				} else {
+					message = new Message(Type.SUCCESS, I18NHelper.get("page.offline.success", I18NHelper.getName(page)));
+				}
 				break;
 			case OFFLINE_AT:
-				message = new Message(Type.SUCCESS, new CNI18nString("page.offlineat.success").toString());
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offlineat.success", I18NHelper.getName(page)));
 				break;
 			case QUEUED:
-				message = new Message(Type.SUCCESS, new CNI18nString("page.offline.workflow").toString());
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offline.workflow", I18NHelper.getName(page)));
 				break;
 			case QUEUED_AT:
-				message = new Message(Type.SUCCESS, new CNI18nString("page.offlineat.workflow").toString());
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offlineat.workflow", I18NHelper.getName(page)));
 				break;
 			}
 
-			// Commit the transaction now to handle instant publishing
+			MiscUtils.addMessage(instantPublishingResult, response);
+
 			ac.success();
 
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "The following page has been taken offline : " + page.getId());
-			return new GenericResponse(message, responseInfo);
+			response.addMessage(message);
+			response.setResponseInfo(responseInfo);
+			return response;
 		} catch (EntityNotFoundException e) {
 			return new GenericResponse(new Message(Type.CRITICAL, e
 					.getLocalizedMessage()), new ResponseInfo(

@@ -3125,6 +3125,7 @@ export class FolderActionsService {
                 const badResponses = results.filter(r => r.failed);
                 const failed = badResponses.map(r => r.id);
                 const errorResponse = badResponses.length && badResponses[0].response.responseInfo;
+                const messages = rawResults.map(r => r.response).flatMap(r => r.messages);
 
                 if (failed.length) {
                     this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage));
@@ -3150,7 +3151,7 @@ export class FolderActionsService {
                     this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
                     const takenOffline: Page[] = [];
                     const queued: Page[] = [];
-                    let message: string;
+                    // let message: string;
 
                     // assign to arrays depending on page permissions
                     for (const page of results) {
@@ -3162,22 +3163,12 @@ export class FolderActionsService {
                         }
                     }
 
-                    // if permitted, display 'takenOffline' notifications
-                    if (takenOffline.length) {
-                        message = 'message.take_pages_offline';
+                    // show messages from the backend
+                    if (messages) {
+                        for (const msg of messages) {
+                            this.notification.show(responseMessageToNotification(msg, {delay: 5000, message: ''}));
+                        }
                     }
-                    // if NOT permitted, display 'queued' notifications
-                    if (queued.length) {
-                        message = 'message.take_pages_offline_queued';
-                    }
-                    this.notification.show({
-                        message,
-                        translationParams: {
-                            count: succeeded.length,
-                            _type: 'page',
-                        },
-                        type: 'success',
-                    });
 
                     return { queued, takenOffline };
                 }

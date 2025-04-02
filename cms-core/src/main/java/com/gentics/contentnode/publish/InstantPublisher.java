@@ -37,6 +37,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.publish.PublishQueue.NodeObjectWithAttributes;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
 import com.gentics.contentnode.publish.mesh.MeshPublishController;
@@ -330,7 +331,7 @@ public class InstantPublisher {
 					if (meshCr) {
 						informPublishProcess = false;
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(), MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
 					} else {
 						operations.add(CnMapPublisher.removeObjectFromCR(object, contentMap, node));
@@ -383,7 +384,9 @@ public class InstantPublisher {
 							if (meshCr) {
 								meshOperations.add(mp -> {
 									Page toRemove = t.getObject(Page.class, hiddenPageId, false, false, true);
-									mp.remove(mp.getProject(finalNode), finalNode, Page.TYPE_PAGE, MeshPublisher.getMeshUuid(toRemove), MeshPublisher.getMeshLanguage(toRemove));
+									mp.remove(mp.getProject(finalNode), finalNode, Page.TYPE_PAGE, toRemove.getId(),
+											MeshPublisher.getMeshUuid(toRemove),
+											MeshPublisher.getMeshLanguage(toRemove));
 								});
 							} else {
 								operations.add(CnMapPublisher.removeObjectFromCR(t.getObject(Page.class, hiddenPageId, false, false, true), contentMap, node));
@@ -440,7 +443,9 @@ public class InstantPublisher {
 							}
 							if (meshCr) {
 								meshOperations.add(mp -> {
-									mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+									mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+											MeshPublisher.getMeshUuid(finalObject),
+											MeshPublisher.getMeshLanguage(finalObject));
 								});
 							} else {
 								operations.add(CnMapPublisher.removeObjectFromCR(t.getObject(object.getObjectInfo().getObjectClass(), id, false, false, true),
@@ -454,7 +459,8 @@ public class InstantPublisher {
 					if (meshCr) {
 						informPublishProcess = false;
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+									MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
 					} else {
 						operations.add(CnMapPublisher.removeObjectFromCR(object, contentMap, node));
@@ -485,7 +491,8 @@ public class InstantPublisher {
 					}
 					if (delete && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), null);
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+									MeshPublisher.getMeshUuid(finalObject), null);
 						});
 					} else if (offline && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
@@ -544,7 +551,11 @@ public class InstantPublisher {
 							}
 						} else {
 							log.error(String.format("Could not instantly publish into %s, which is not valid", cr));
-							result.set(new Result(ResultStatus.failed, I18NHelper.get("object.publish.cr.invalid", I18NHelper.getName(object))));
+							if (isRemoval(object, eventMask)) {
+								result.set(new Result(ResultStatus.failed, I18NHelper.get("object.offline.cr.invalid", I18NHelper.getName(object))));
+							} else {
+								result.set(new Result(ResultStatus.failed, I18NHelper.get("object.publish.cr.invalid", I18NHelper.getName(object))));
+							}
 						}
 					}
 					if (informPublishProcess) {
@@ -593,6 +604,26 @@ public class InstantPublisher {
 		}
 
 		return result.get();
+	}
+
+	/**
+	 * Determine whether the object shall be removed via instant publishing
+	 * @param object object
+	 * @param eventMask event mask
+	 * @return true for removal, false for adding/updating
+	 * @throws NodeException
+	 */
+	public static boolean isRemoval(NodeObject object, int eventMask) throws NodeException {
+		if (object == null) {
+			return false;
+		}
+
+		if (object instanceof PublishableNodeObject) {
+			return Events.isEvent(eventMask, Events.DELETE) || Events.isEvent(eventMask, Events.MOVE)
+					|| !PublishableNodeObject.class.cast(object).isOnline();
+		} else {
+			return Events.isEvent(eventMask, Events.DELETE) || Events.isEvent(eventMask, Events.MOVE);
+		}
 	}
 
 	/**

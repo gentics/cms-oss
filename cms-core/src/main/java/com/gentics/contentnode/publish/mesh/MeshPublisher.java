@@ -2324,7 +2324,7 @@ public class MeshPublisher implements AutoCloseable {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
 							for (String lang : languages) {
-								remove(project, branch, objectType, meshUuid, lang);
+								remove(project, branch, objectType, 0, meshUuid, lang);
 							}
 							return Completable.complete();
 						}).blockingAwait();
@@ -2387,7 +2387,7 @@ public class MeshPublisher implements AutoCloseable {
 				String meshUuid = entry.getKey();
 				Set<String> languages = entry.getValue();
 				for (String language : languages) {
-					remove(project, checkedNode, objectType, meshUuid, language, true);
+					remove(project, checkedNode, objectType, 0, meshUuid, language, true);
 				}
 			}
 		}
@@ -2404,7 +2404,7 @@ public class MeshPublisher implements AutoCloseable {
 	public void remove(Node node, List<NodeObject> objectsToDelete) throws NodeException {
 		MeshProject project = getProject(node);
 		for (NodeObject nodeObject : objectsToDelete) {
-			remove(project, node, nodeObject.getTType(), getMeshUuid(nodeObject), getMeshLanguage(nodeObject));
+			remove(project, node, nodeObject.getTType(), nodeObject.getId(), getMeshUuid(nodeObject), getMeshLanguage(nodeObject));
 		}
 	}
 
@@ -2413,12 +2413,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param node node from which to remove the object
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, node, objectType, meshUuid, meshLanguage, true);
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
+		remove(project, node, objectType, objectId, meshUuid, meshLanguage, true);
 	}
 
 	/**
@@ -2426,16 +2427,17 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param node node from which to remove the object
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage, withSemaphore);
+			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage, withSemaphore);
+			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, withSemaphore);
 		}
 	}
 
@@ -2444,12 +2446,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param branch optional branch parameter
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, branch, objectType, meshUuid, meshLanguage, true);
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
+		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, true);
 	}
 
 	/**
@@ -2457,12 +2460,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param branch optional branch parameter
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
@@ -2496,6 +2500,9 @@ public class MeshPublisher implements AutoCloseable {
 						return ifNotFound(throwable, () -> Completable.complete());
 					}).blockingAwait();
 				}
+			}
+			if (controller.successHandler != null) {
+				controller.successHandler.accept(Pair.of(objectType, objectId));
 			}
 		} catch (Throwable t) {
 			if (meshLanguage != null) {
@@ -3851,7 +3858,7 @@ public class MeshPublisher implements AutoCloseable {
 													conflictingUuid, conflictingLanguage));
 								}
 								// remove language variant
-								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
+								remove(task.project, node, task.objType, task.objId, conflictingUuid, conflictingLanguage, false);
 								// repeat task
 								task.perform(false);
 								postpone = false;
@@ -3872,7 +3879,7 @@ public class MeshPublisher implements AutoCloseable {
 														conflictingUuid, conflictingLanguage));
 									}
 									// remove the object from Mesh
-									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
+									remove(task.project, node, objType, conflictingNodeObject.getId(), conflictingUuid, conflictingLanguage, false);
 									// repeat task
 									task.perform(false);
 									postpone = false;
@@ -3985,7 +3992,7 @@ public class MeshPublisher implements AutoCloseable {
 							if (!languages.isEmpty()) {
 								Node cmsNode = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 								for (String lang : languages) {
-									remove(task.project, cmsNode, task.objType, task.uuid, lang, false);
+									remove(task.project, cmsNode, task.objType, task.objId, task.uuid, lang, false);
 								}
 							}
 						}

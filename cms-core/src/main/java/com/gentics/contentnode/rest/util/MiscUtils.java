@@ -83,6 +83,7 @@ import com.gentics.contentnode.perm.PermissionPair;
 import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.publish.FilePublisher;
+import com.gentics.contentnode.publish.InstantPublisher.Result;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentNodeItem;
@@ -2433,5 +2434,31 @@ public class MiscUtils {
 		}
 
 		return output;
+	}
+
+	/**
+	 * When the instant publishing result is not null and contains a reason message, add the message to the response
+	 * @param instantPublishingResult optional instant publishing result
+	 * @param response response
+	 */
+	public static void addMessage(Result instantPublishingResult, GenericResponse response) {
+		if (instantPublishingResult != null && !StringUtils.isEmpty(instantPublishingResult.reason())) {
+			Message message = new Message().setMessage(instantPublishingResult.reason());
+			switch(instantPublishingResult.status()) {
+			case failed:
+				message.setType(Type.WARNING);
+				break;
+			case skipped:
+				message.setType(Type.INFO);
+				break;
+			case success:
+				message.setType(Type.SUCCESS);
+				break;
+			default:
+				message.setType(Type.INFO);
+				break;
+			}
+			response.addMessage(message);
+		}
 	}
 }

@@ -315,16 +315,17 @@ public final class Events {
 		} catch (Throwable e) {
 			log.error("Error while handling instant publishing for " + object, e);
 			String suffix = (e instanceof UnknownChannelException) ? "error.unknownchannel" : "error";
+			String prefix = InstantPublisher.isRemoval(object, eventMask) ? "instantremoving" : "instantpublishing";
 
 			if (object instanceof Page) {
 				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
-						I18NHelper.get("instantpublishing.page." + suffix, I18NHelper.getName(object))));
+						I18NHelper.get(prefix + ".page." + suffix, I18NHelper.getName(object))));
 			} else if (object instanceof Folder) {
 				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
-						I18NHelper.get("instantpublishing.folder." + suffix, I18NHelper.getName(object))));
+						I18NHelper.get(prefix + ".folder." + suffix, I18NHelper.getName(object))));
 			} else if (object instanceof com.gentics.contentnode.object.File) {
 				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
-						I18NHelper.get("instantpublishing.file." + suffix, I18NHelper.getName(object))));
+						I18NHelper.get(prefix + ".file." + suffix, I18NHelper.getName(object))));
 			}
 		} finally {
 			t.setPublishCacheEnabled(publishCache);

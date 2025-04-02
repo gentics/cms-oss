@@ -36,7 +36,6 @@
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "angular2-hotkeys",
                     "base64-js",
                     "cropperjs",
                     "dompurify",

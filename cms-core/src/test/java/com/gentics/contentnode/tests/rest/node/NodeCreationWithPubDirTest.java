@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.rest.node;
 
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -19,7 +21,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for creation of nodes
  */
 @GCNFeature(set = { Feature.PUB_DIR_SEGMENT })
-public class NodeCreationTest {
+public class NodeCreationWithPubDirTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
@@ -29,7 +31,7 @@ public class NodeCreationTest {
 	 */
 	@Test
 	public void testCreateWithPubDirSegment() throws NodeException {
-		Trx.operate(t -> {
+		NodeLoadResponse response = Trx.supply(t -> {
 			NodeResourceImpl resource = new NodeResourceImpl();
 			Node node = new Node();
 			node.setName("Node name");
@@ -41,8 +43,14 @@ public class NodeCreationTest {
 			NodeSaveRequest request = new NodeSaveRequest();
 			request.setNode(node);
 
-			NodeLoadResponse response = resource.add(request);
-			ContentNodeRESTUtils.assertResponseOK(response);
+			return resource.add(request);
+		});
+
+		ContentNodeRESTUtils.assertResponseOK(response);
+
+		Trx.operate(t -> {
+			com.gentics.contentnode.object.Node node = t.getObject(com.gentics.contentnode.object.Node.class, response.getNode().getId());
+			assertThat(node).hasName("Node name").hasHostname("node.com").isHttp();
 		});
 	}
 }

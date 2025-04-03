@@ -14,6 +14,7 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
+import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
@@ -54,9 +55,8 @@ import { TagEditorService } from '../../../tag-editor';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesFormComponent } from '../node-properties/node-properties.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -520,7 +520,7 @@ describe('ContentFrameComponent', () => {
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),

@@ -54,8 +54,8 @@
                     [class.active]="publishDirsLinked"
                 >
                     <div class="top-link-display"></div>
-                    <button class="link-button" [disabled]="disabled" (click)="togglePublishDirLink()">
-                        <icon>{{ publishDirsLinked ? 'link_off' : 'link' }}</icon>
+                    <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
+                        <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
                     </button>
                     <div class="bottom-link-display"></div>
                 </div>

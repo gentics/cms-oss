@@ -28,17 +28,19 @@
 
         .top-link-display,
         .bottom-link-display {
-            border: 1px solid #000000;
+            border: 1px solid $gtx-color-dark-gray;
             border-left: none;
             flex: 1 1 auto;
         }
 
         .top-link-display {
             border-bottom: none;
+            border-top-right-radius: 2px;
         }
 
         .bottom-link-display {
             border-top: none;
+            border-bottom-right-radius: 2px;
         }
 
         .link-button {
@@ -55,6 +57,12 @@
             padding: 2px;
             box-sizing: content-box;
             margin-left: 8px;
+
+            &[disabled] {
+                background: transparent;
+                color: $gtx-color-mid-gray;
+                cursor: not-allowed;
+            }
         }
 
         icon {
@@ -66,12 +74,6 @@
             .link-button {
                 color: $gtx-color-primary;
             }
-        }
-
-        .link-button[disabled] {
-            background: $gtx-color-very-light-gray;
-            color: $gtx-color-very-dark-gray;
-            cursor: not-allowed;
         }
     }
 }

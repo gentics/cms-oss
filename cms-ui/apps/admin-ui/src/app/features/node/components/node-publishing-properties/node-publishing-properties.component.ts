@@ -50,6 +50,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     public contentRepositories: ContentRepository<Raw>[] = [];
 
     public publishDirsLinked: boolean = null;
+    public linkButtonDisabled = false;
 
     private previousPublishCr = false;
 
@@ -106,10 +107,20 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
         setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
-        const crAllowsDirs = this.checkContentRepository();
 
-        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && crAllowsDirs, options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && crAllowsDirs, options);
+        let cr: ContentRepository | null = null;
+        if (this.form.value.contentRepositoryId > 0) {
+            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+        }
+        const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
+        const isProjectPerNode = cr?.projectPerNode;
+        this.linkButtonDisabled = cr != null && isMeshCr;
+        if (this.linkButtonDisabled) {
+            this.publishDirsLinked = true;
+        }
+
+        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && (cr == null || !isMeshCr || isProjectPerNode), options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && (cr == null || !isMeshCr || isProjectPerNode), options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();
@@ -140,20 +151,11 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     }
 
     protected assembleValue(value: NodePublishingPropertiesFormData): NodePublishingPropertiesFormData {
-        return value;
-    }
-
-    protected checkContentRepository(): boolean {
-        let enabled = true;
-
-        if (this.form.value.contentRepositoryId > 0) {
-            const found = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
-            if (found && found.crType === ContentRepositoryType.MESH && found.projectPerNode) {
-                enabled = false;
-            }
-        }
-
-        return enabled;
+        return {
+            ...value,
+            publishDir: value?.publishDir || '',
+            binaryPublishDir: value?.binaryPublishDir || '',
+        };
     }
 
     protected initLinkedDir(): void {

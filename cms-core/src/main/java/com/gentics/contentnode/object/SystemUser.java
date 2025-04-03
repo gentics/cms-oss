@@ -193,6 +193,9 @@ public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, Named
 	 */
 	void setActive(boolean active) throws ReadOnlyException;
 
+	boolean isSupportUser();
+	void setSupportUser(boolean supportUser) throws ReadOnlyException;
+
 	/**
 	 * get the user's creator id
 	 * @return id of the user's creator

@@ -58,7 +58,7 @@ import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wr
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 import { generateContentTagList } from '../../utils';
 import {
@@ -144,7 +144,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesFormComponent,
+                NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),

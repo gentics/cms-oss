@@ -44,10 +44,10 @@
         ></file-properties-form>
     </div>
     <div class="form-container active" *ngIf="item.type === 'node' || item.type === 'channel'">
-        <node-properties-form
-            [properties]="properties"
-            [node]="item"
-            (changes)="simplePropertiesChanged($event)"
-        ></node-properties-form>
+        <gtx-node-properties
+            [value]="properties"
+            [item]="item"
+            (valueChange)="simplePropertiesChanged($event)"
+        ></gtx-node-properties>
     </div>
 </ng-container>

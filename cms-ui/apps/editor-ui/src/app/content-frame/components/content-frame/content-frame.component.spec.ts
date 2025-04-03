@@ -54,7 +54,7 @@ import { TagEditorService } from '../../../tag-editor';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesFormComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 

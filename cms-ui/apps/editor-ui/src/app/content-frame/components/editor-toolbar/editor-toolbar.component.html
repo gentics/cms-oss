@@ -212,11 +212,17 @@
         </gtx-breadcrumbs>
 
         <div class="item-info">
-            <div class="title-name" [title]="currentItem?.name | replaceEscapedCharacters">
-                <ng-container *ngIf="currentItem?.type !== 'node'">
-                    <inherited-localized-icon [item]="currentItem" [editorNodeId]="editorNodeId"></inherited-localized-icon>
-                    <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
-                </ng-container>
+            <div
+                class="title-name"
+                [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
+                [title]="currentItem?.name | replaceEscapedCharacters"
+            >
+                <inherited-localized-icon
+                    *ngIf="currentItem?.type !== 'node'"
+                    [item]="currentItem"
+                    [editorNodeId]="editorNodeId"
+                ></inherited-localized-icon>
+                <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
             </div>
 
             <div class="item-version" *ngIf="(currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version">

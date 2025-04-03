@@ -138,6 +138,8 @@ WARNING: Do not overwrite the "anchorLinks setting":http://www.alohaeditor.org/g
 
 h3. Aloha Page Link Language set
 
+_Starting from CMS 6.3, the language support in Aloha Page links is already built-in and needs no additional changes. As this change cannot be applied to the older CMS installations, below are the instructions for those to achieve this functionality._
+
 A special part-type may be defined, which will be used by Aloha to add language to link tags.
 
 NOTE: For external links the user can choose the language in the link sidebar menu. For internal links, the language of the page will be used instead.

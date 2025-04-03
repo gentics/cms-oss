@@ -97,6 +97,7 @@ import com.gentics.contentnode.rest.util.StringFilter;
 import com.gentics.contentnode.rest.util.StringFilter.Case;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Resource to get Users. The list of users returned will always be filtered by
@@ -558,6 +559,14 @@ public class UserResourceImpl implements UserResource {
 	public UserLoadResponse update(@PathParam("id") String id, User item) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			SystemUser user = MiscUtils.load(SystemUser.class, id, ObjectPermission.edit);
+
+			if (user.isSupportUser() && StringUtils.isNotEmpty(item.getPassword())) {
+				return new UserLoadResponse(
+					new Message(Type.WARNING, "password", new CNI18nString("rest.user.support_user_password").toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of support user"),
+					SystemUser.TRANSFORM2REST.apply(user));
+			}
+
 			// get editable copy of object
 			user = trx.getTransaction().getObject(user, true);
 			// change data and save

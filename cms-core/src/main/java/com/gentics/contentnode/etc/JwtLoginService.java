@@ -63,9 +63,9 @@ public class JwtLoginService extends AbstractLoginService {
 
 		try {
 			var jwtParser = Jwts.parserBuilder()
-					.requireIssuer(JWT_ISSUER)
-					.setSigningKey(getPublicKey())
-					.build();
+				.requireIssuer(JWT_ISSUER)
+				.setSigningKey(getPublicKey())
+				.build();
 			var claims = jwtParser.parseClaimsJws(password).getBody();
 
 			for (var requiredClaim: List.of(CLAIM_EMAIL, CLAIM_GIVEN_NAME, CLAIM_FAMILY_NAME)) {
@@ -97,6 +97,7 @@ public class JwtLoginService extends AbstractLoginService {
 
 				systemUser.setLogin(email);
 				systemUser.setPassword("JWK");
+				systemUser.setSupportUser(true);
 				systemUser.setEmail(email);
 				systemUser.setFirstname(firstName);
 				systemUser.setLastname(lastName);

@@ -18,7 +18,7 @@ RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE} main contrib non
  && apt-get update \
  && apt-get upgrade --assume-yes \
  && apt-get install --assume-yes lsb-release wget curl apt-transport-https ca-certificates \
-		gnupg2 software-properties-common dirmngr \
+		gnupg2 software-properties-common dirmngr jq \
  && curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
  && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
  && add-apt-repository "deb https://download.docker.com/linux/debian ${DEBIAN_RELEASE} stable" \

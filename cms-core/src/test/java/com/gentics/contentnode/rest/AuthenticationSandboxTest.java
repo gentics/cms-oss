@@ -1,19 +1,13 @@
 package com.gentics.contentnode.rest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.util.List;
-
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
@@ -30,9 +24,21 @@ import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
 import com.gentics.contentnode.security.RsaTokenValidator;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.etc.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests saving of a page into GCN by using the REST API.
@@ -65,6 +71,8 @@ public class AuthenticationSandboxTest {
 	 */
 	final static public String RSALOGIN_KEY_PUBLIC =
 			"/com/gentics/testutils/resources/rsalogin/public_key.der";
+
+	final static public String JWT_PATH = "/support-user-token.jwt";
 
 	/**
 	 * User test Group ID
@@ -227,6 +235,27 @@ public class AuthenticationSandboxTest {
 
 		assertEquals("Login with RSA token password has to be OK",
 				ResponseCode.OK, response.getResponseInfo().getResponseCode());
+	}
+
+	@Test
+	public void testLoginWithJwt() throws TransactionException, IOException {
+		var authenticationResource = getAuthenticationResource();
+		var token = IOUtils.toString(getClass().getResource(JWT_PATH), StandardCharsets.UTF_8);
+		var request = new LoginRequest();
+
+		// First try with an invalid username.
+		request.setLogin("system");
+		request.setPassword(token);
+
+		var response = authenticationResource.login(request, "0");
+
+		assertResponse(response, ResponseCode.NOTFOUND);
+
+		// Now try with valid support user name.
+		request.setLogin("support");
+		response = authenticationResource.login(request, "0");
+
+		assertResponseOK(response);
 	}
 
 	/**

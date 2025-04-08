@@ -26,6 +26,12 @@ import { FocalPointService } from '../../providers/focal-point/focal-point.servi
 export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
+     * How many pixels of "deadzone" around the image are allowed/added, in order to
+     * be able to select the edge of an image more accurately.
+     */
+    public readonly DEADZONE = 5;
+
+    /**
      * The X-Coordinate of the focal point.
      * Floating point positon where `0` indicates the very left, and `1` the very right of the image.
      * Default is `0.5`, aka the center of the image.
@@ -57,11 +63,11 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
     /**
      * The cursor Y-Position in the overlay, where crosshair should be drawn.
      */
-    public cursorX: number;
+    public cursorX: number | null = null;
     /**
      * The cursor Y-Position in the overlay, where crosshair should be drawn.
      */
-    public cursorY: number;
+    public cursorY: number | null = null;
 
     private target: HTMLElement;
     private destroy$ = new Subject<void>();
@@ -89,12 +95,14 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
 
     overlayMouseMove(e: MouseEvent): void {
         this.showCursor = true;
-        this.updatePositions(e.clientX, e.clientY);
+        this.cursorX = e.offsetX - this.DEADZONE;
+        this.cursorY = e.offsetY - this.DEADZONE;
     }
 
     overlayMouseLeave(): void {
         this.showCursor = false;
-        this.updatePositions();
+        this.cursorX = null;
+        this.cursorY = null;
     }
 
     clampFocalPoints(): void {
@@ -118,10 +126,8 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
 
-        const { top, left } = this.target.getBoundingClientRect();
-
-        const xInPixels = e.clientX - left;
-        const yInPixels = e.clientY - top;
+        const xInPixels = e.offsetX - this.DEADZONE;
+        const yInPixels = e.offsetY - this.DEADZONE;
 
         const xPercent = xInPixels / this.imageWidth;
         const yPercent = yInPixels / this.imageHeight;
@@ -163,17 +169,14 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
 
     @HostListener('window:scroll')
     @HostListener('window:resize')
-    updatePositions(mouseX?: number, mouseY?: number): void {
+    updatePositions(): void {
         if (!this.target) {
             return;
         }
 
-        const { width, height, top, left } = this.target.getBoundingClientRect();
+        const { width, height } = this.target.getBoundingClientRect();
 
         this.imageWidth = width;
         this.imageHeight = height;
-
-        this.cursorX = (mouseX || left) - left;
-        this.cursorY = (mouseY || top) - top;
     }
 }

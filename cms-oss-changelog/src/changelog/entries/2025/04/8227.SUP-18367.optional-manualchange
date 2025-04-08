@@ -1,0 +1,4 @@
+The implementation for the REST model @Construct@ was changed:
+
+* The methods @isOpenEditorOnInsert()@ and @isEditorControlsInside()@ have been renamed to @getOpenEditorOnInsert()@ and @getEditorControlsInside()@ respectively.
+* The methods @getOpenEditorOnInsert()@ and @getEditorControlsInside()@ now return @Boolean@ instead of @boolean@ and can therefore return @null@.

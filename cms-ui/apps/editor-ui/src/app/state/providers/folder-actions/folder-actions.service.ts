@@ -3151,7 +3151,6 @@ export class FolderActionsService {
                     this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
                     const takenOffline: Page[] = [];
                     const queued: Page[] = [];
-                    // let message: string;
 
                     // assign to arrays depending on page permissions
                     for (const page of results) {

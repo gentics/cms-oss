@@ -1,26 +1,28 @@
-<div class="target-mask" [style.width.px]="width + 2*lineExtension" [style.height.px]="height + 2*lineExtension">
-    <div class="y-line"
-         [class.hidden]="!enabled"
-         [style.width.px]="width"
-         [style.top.px]="yLineTop + lineExtension"
-    ></div>
-    <div class="x-line"
-         [class.hidden]="!enabled"
-         [style.height.px]="height"
-         [style.left.px]="xLineLeft + lineExtension"
-    ></div>
-    <div class="focal-point-cross-x emphasize"
-         [style.left.px]="focalPointLeft + lineExtension"
-         [style.top.px]="focalPointTop - 10">
+<div
+    class="target-mask"
+    [class.active]="enabled"
+    [style.width.px]="imageWidth"
+    [style.height.px]="imageHeight"
+    [style.--gtx-cursor-x.px]="cursorX"
+    [style.--gtx-cursor-y.px]="cursorY"
+    [style.--gtx-fp-pos-x.%]="focalPointX * 100"
+    [style.--gtx-fp-pos-y.%]="focalPointY * 100"
+>
+    <div class="focal-point">
+        <div class="focal-point-cross-x"></div>
+        <div class="focal-point-cross-y"></div>
     </div>
-    <div class="focal-point-cross-y emphasize"
-         [style.top.px]="focalPointTop + lineExtension"
-         [style.left.px]="focalPointLeft - 10">
-    </div>
-    <div class="focal-point-overlay"
-         [class.hidden]="!enabled"
-         (mousemove)="overlayMouseMove($event)"
-         (mouseleave)="overlayMouseLeave()"
-         (click)="overlayClick($event)">
+
+    <div
+        #overlay
+        class="focal-point-overlay"
+        (mousemove)="overlayMouseMove($event)"
+        (mouseleave)="overlayMouseLeave()"
+        (click)="overlayClick($event)"
+    >
+        <div class="focal-point-cursor">
+            <div class="x-line"></div>
+            <div class="y-line"></div>
+        </div>
     </div>
 </div>

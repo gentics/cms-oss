@@ -2,6 +2,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    ElementRef,
     EventEmitter,
     HostListener,
     Input,
@@ -9,8 +10,9 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    SimpleChanges
+    ViewChild,
 } from '@angular/core';
+import { ChangesOf } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
 import { delay, takeUntil } from 'rxjs/operators';
 import { FocalPointService } from '../../providers/focal-point/focal-point.service';
@@ -19,40 +21,64 @@ import { FocalPointService } from '../../providers/focal-point/focal-point.servi
     selector: 'gentics-focal-point-selector',
     templateUrl: 'focal-point-selector.component.html',
     styleUrls: ['focal-point-selector.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy {
 
-    @Input() focalPointX = 0.5;
-    @Input() focalPointY = 0.5;
-    @Input() enabled = false;
-    @Output() focalPointSelect = new EventEmitter<{ x: number; y: number; }>();
+    /**
+     * The X-Coordinate of the focal point.
+     * Floating point positon where `0` indicates the very left, and `1` the very right of the image.
+     * Default is `0.5`, aka the center of the image.
+     */
+    @Input()
+    public focalPointX = 0.5;
 
-    width: number;
-    height: number;
-    targetLeft: number;
-    targetTop: number;
-    yLineTop: number;
-    xLineLeft: number;
-    focalPointLeft: number;
-    focalPointTop: number;
+    /**
+     * The Y-Coordinate of the focal point.
+     * Floating point positon where `0` indicates the very top, and `1` the very bottom of the image.
+     * Default is `0.5`, aka the center of the image.
+     */
+    @Input()
+    public focalPointY = 0.5;
 
-    readonly lineExtension = 5;
+    @Input()
+    public enabled = false;
+
+    @Output()
+    focalPointSelect = new EventEmitter<{ x: number; y: number; }>();
+
+    @ViewChild('overlay')
+    public overlayRef: ElementRef<HTMLDivElement>;
+
+    public imageWidth: number;
+    public imageHeight: number;
+
+    public showCursor = false;
+    /**
+     * The cursor Y-Position in the overlay, where crosshair should be drawn.
+     */
+    public cursorX: number;
+    /**
+     * The cursor Y-Position in the overlay, where crosshair should be drawn.
+     */
+    public cursorY: number;
 
     private target: HTMLElement;
     private destroy$ = new Subject<void>();
 
-    constructor(private focalPointService: FocalPointService,
-                private changeDetector: ChangeDetectorRef) {}
+    constructor(
+        private focalPointService: FocalPointService,
+        private changeDetector: ChangeDetectorRef,
+    ) {}
 
     ngOnInit(): void {
         this.focalPointService.getTarget()
             .then(target => this.initTarget(target));
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         if ('focalPointX' in changes || 'focalPointY' in changes) {
-            this.updatePositions();
+            this.clampFocalPoints();
         }
     }
 
@@ -62,18 +88,47 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
     }
 
     overlayMouseMove(e: MouseEvent): void {
+        this.showCursor = true;
         this.updatePositions(e.clientX, e.clientY);
     }
 
     overlayMouseLeave(): void {
+        this.showCursor = false;
         this.updatePositions();
     }
 
+    clampFocalPoints(): void {
+        let needsChange = false;
+        if (this.focalPointX < 0 || this.focalPointX > 1) {
+            needsChange = true;
+            this.focalPointX = Math.max(0, Math.min(this.focalPointX, 1));
+        }
+        if (this.focalPointY < 0 || this.focalPointY > 1) {
+            needsChange = true;
+            this.focalPointY = Math.max(0, Math.min(this.focalPointY, 1));
+        }
+
+        if (needsChange) {
+            this.focalPointSelect.emit({ x: this.focalPointX, y: this.focalPointY });
+        }
+    }
+
     overlayClick(e: MouseEvent): void {
-        const xInPixels = e.clientX - this.targetLeft + window.pageXOffset;
-        const yInPixels = e.clientY - this.targetTop + window.pageYOffset;
-        const xNormalized = xInPixels / this.width;
-        const yNormalized = yInPixels / this.height;
+        if (!this.target) {
+            return;
+        }
+
+        const { top, left } = this.target.getBoundingClientRect();
+
+        const xInPixels = e.clientX - left;
+        const yInPixels = e.clientY - top;
+
+        const xPercent = xInPixels / this.imageWidth;
+        const yPercent = yInPixels / this.imageHeight;
+
+        const xNormalized = Math.max(0, Math.min(xPercent, 1));
+        const yNormalized = Math.max(0, Math.min(yPercent, 1));
+
         this.focalPointSelect.emit({ x: xNormalized, y: yNormalized });
     }
 
@@ -109,19 +164,16 @@ export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy
     @HostListener('window:scroll')
     @HostListener('window:resize')
     updatePositions(mouseX?: number, mouseY?: number): void {
-        if (this.target) {
-            const { width, height, top, left } = this.target.getBoundingClientRect();
-            const crosshairX = mouseX - left;
-            const crosshairY = mouseY - top;
-
-            this.width = width;
-            this.height = height;
-            this.focalPointTop = height * this.focalPointY;
-            this.focalPointLeft = width * this.focalPointX;
-            this.targetLeft = left + window.pageXOffset;
-            this.targetTop = top + window.pageYOffset;
-            this.xLineLeft = crosshairX || this.focalPointLeft;
-            this.yLineTop = crosshairY || this.focalPointTop;
+        if (!this.target) {
+            return;
         }
+
+        const { width, height, top, left } = this.target.getBoundingClientRect();
+
+        this.imageWidth = width;
+        this.imageHeight = height;
+
+        this.cursorX = (mouseX || left) - left;
+        this.cursorY = (mouseY || top) - top;
     }
 }

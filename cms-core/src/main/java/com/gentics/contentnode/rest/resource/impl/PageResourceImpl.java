@@ -11,6 +11,45 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLan
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
@@ -79,6 +118,8 @@ import com.gentics.contentnode.parser.ContentRenderer;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.publish.CnMapPublisher;
+import com.gentics.contentnode.publish.InstantPublisher.Result;
+import com.gentics.contentnode.publish.InstantPublisher.ResultStatus;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -1639,10 +1680,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Transaction t = null;
 		String restError = new CNI18nString("rest.general.error").toString();
 
+		GenericResponse response = new GenericResponse();
 		try {
 			t = TransactionManager.getCurrentTransaction();
 			channelIdSet = setChannelToTransaction(nodeId);
 			List<String> feedback = new ArrayList<String>(1);
+
+			Page page = MiscUtils.load(Page.class, id);
 
 			MultiPagePublishJob.PublishSuccessState state =
 					MultiPagePublishJob.publishPage(id,
@@ -1655,62 +1699,60 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			String info = null;
 			Type messageType = Type.SUCCESS;
 			ResponseCode responseCode = ResponseCode.OK;
+
+			// commit the transaction now to handle instant publishing
+			t.commit(false);
+			Result instantPublishingResult = t.getInstantPublishingResult(Page.TYPE_PAGE, page.getId());
+
 			List<String> messages = new ArrayList<String>(1);
 
 			switch (state) {
-				case PUBLISHED:
-					messages.add(
-							(new CNI18nString("page.publish.success")).toString()
-					);
-					info = "Page " + id + " was successfully published";
-					break;
-				case PUBLISHAT:
-					messages.add(
-							(new CNI18nString("page.publishat.success")).toString()
-					);
-					info = "Publish at was set for page " + id;
-					break;
-				case WORKFLOW:
-					if (request.getAt() > 0) {
-						messages.add(
-								(new CNI18nString("page.publishat.workflow")).toString()
-						);
-					} else {
-						messages.add(
-								(new CNI18nString("page.publish.workflow")).toString()
-						);
-					}
-					info = "Page " + id
-							+ " was successfully put into a publish workflow";
-					break;
-				case WORKFLOW_STEP:
-					messages.add(
-							(new CNI18nString("page.publish.workflow")).toString()
-					);
-					info = "Page " + id
-							+ " was successfully pushed a step further in the publish"
-							+ "workflow";
-					break;
-				case SKIPPED:
-					// it is important to return this messages with type CRITICAL, otherwise they would not be shown to the user in the backend
-					messageType = Type.CRITICAL;
-					responseCode = ResponseCode.INVALIDDATA;
-					messages.addAll(feedback);
-					StringBuilder infoStr = new StringBuilder();
-					for (String str : feedback) {
-						infoStr.append(str);
-					}
-					info = infoStr.toString();
-					break;
-				case INHERITED:
-					messageType = Type.CRITICAL;
-					responseCode = ResponseCode.INVALIDDATA;
-					CNI18nString message = new CNI18nString("multipagepublishjob.inheritedpage");
-					messages.add(message.toString());
-					break;
-			}
+			case PUBLISHED:
+				if (instantPublishingResult != null && instantPublishingResult.status() == ResultStatus.success) {
+					messages.add(I18NHelper.get("page.instantpublish.success", I18NHelper.getName(page)));
+				} else {
+					messages.add(I18NHelper.get("page.publish.success", I18NHelper.getName(page)));
+				}
 
-			GenericResponse response = new GenericResponse();
+				info = "Page " + id + " was successfully published";
+				break;
+			case PUBLISHAT:
+				messages.add(I18NHelper.get("page.publishat.success", I18NHelper.getName(page)));
+				info = "Publish at was set for page " + id;
+				break;
+			case WORKFLOW:
+				if (request.getAt() > 0) {
+					messages.add(I18NHelper.get("page.publishat.workflow", I18NHelper.getName(page)));
+				} else {
+					messages.add(I18NHelper.get("page.publish.workflow", I18NHelper.getName(page)));
+				}
+				info = "Page " + id
+					 + " was successfully put into a publish workflow";
+				break;
+			case WORKFLOW_STEP:
+				messages.add(I18NHelper.get("page.publish.workflow", I18NHelper.getName(page)));
+				info = "Page " + id
+					 + " was successfully pushed a step further in the publish"
+					 + "workflow";
+				break;
+			case SKIPPED:
+				// it is important to return this messages with type CRITICAL, otherwise they would not be shown to the user in the frontend
+				messageType = Type.CRITICAL;
+				responseCode = ResponseCode.INVALIDDATA;
+				messages.addAll(feedback);
+				StringBuilder infoStr = new StringBuilder();
+				for (String str : feedback) {
+					infoStr.append(str);
+				}
+				info = infoStr.toString();
+				break;
+			case INHERITED:
+				messageType = Type.CRITICAL;
+				responseCode = ResponseCode.INVALIDDATA;
+				CNI18nString message = new CNI18nString("multipagepublishjob.inheritedpage");
+				messages.add(message.toString());
+				break;
+			}
 
 			response.setResponseInfo(new ResponseInfo(responseCode, info));
 
@@ -1718,18 +1760,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				response.addMessage(new Message(messageType, message));
 			}
 
-			// commit the transaction now to handle instant publishing
-			RenderResult renderResult = t.getRenderResult();
-			t.commit(false);
-
-			for (NodeMessage msg : renderResult.getMessages()) {
-				if (msg.getLevel().isMoreSpecificThan(Level.ERROR)) {
-					response.addMessage(ModelBuilder.getMessage(msg));
-				}
-			}
+			MiscUtils.addMessage(instantPublishingResult, response);
 
 			return response;
-
 		} catch (EntityNotFoundException e) {
 			return new GenericResponse(new Message(Type.CRITICAL, e
 					.getLocalizedMessage()), new ResponseInfo(
@@ -3094,7 +3127,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			if (page.getContent().isLocked()) {
 				throw new ReadOnlyException(
 						"Could revoke page from workflow, since it is locked for another user",
-						"page.readonly.locked");
+						"page.readonly.locked", I18NHelper.getName(page));
 			}
 
 			// get the workflow
@@ -3706,30 +3739,40 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 			page.unlock();
 
+			// Commit the transaction now to handle instant publishing
+			Transaction t = TransactionManager.getCurrentTransaction();
+			t.commit(false);
+			Result instantPublishingResult = t.getInstantPublishingResult(Page.TYPE_PAGE, page.getId());
+
+			GenericResponse response = new GenericResponse();
 			Message message = null;
 			switch (result) {
-				case OFFLINE:
-					message = new Message(Type.SUCCESS, new CNI18nString("page.offline.success").toString());
-					break;
-				case OFFLINE_AT:
-					message = new Message(Type.SUCCESS,
-							new CNI18nString("page.offlineat.success").toString());
-					break;
-				case QUEUED:
-					message = new Message(Type.SUCCESS, new CNI18nString("page.offline.workflow").toString());
-					break;
-				case QUEUED_AT:
-					message = new Message(Type.SUCCESS,
-							new CNI18nString("page.offlineat.workflow").toString());
-					break;
+			case OFFLINE:
+				if (instantPublishingResult != null && instantPublishingResult.status() == ResultStatus.success) {
+					message = new Message(Type.SUCCESS, I18NHelper.get("page.instantoffline.success", I18NHelper.getName(page)));
+				} else {
+					message = new Message(Type.SUCCESS, I18NHelper.get("page.offline.success", I18NHelper.getName(page)));
+				}
+				break;
+			case OFFLINE_AT:
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offlineat.success", I18NHelper.getName(page)));
+				break;
+			case QUEUED:
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offline.workflow", I18NHelper.getName(page)));
+				break;
+			case QUEUED_AT:
+				message = new Message(Type.SUCCESS, I18NHelper.get("page.offlineat.workflow", I18NHelper.getName(page)));
+				break;
 			}
 
-			// Commit the transaction now to handle instant publishing
+			MiscUtils.addMessage(instantPublishingResult, response);
+
 			ac.success();
 
-			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK,
-					"The following page has been taken offline : " + page.getId());
-			return new GenericResponse(message, responseInfo);
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "The following page has been taken offline : " + page.getId());
+			response.addMessage(message);
+			response.setResponseInfo(responseInfo);
+			return response;
 		} catch (EntityNotFoundException e) {
 			return new GenericResponse(new Message(Type.CRITICAL, e
 					.getLocalizedMessage()), new ResponseInfo(

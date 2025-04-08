@@ -11,6 +11,7 @@ import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.OpResult;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -115,7 +116,7 @@ public class MoveJob extends AbstractBackgroundJob {
 				case FAILURE:
 					success = false;
 					for (NodeMessage msg : result.getMessages()) {
-						addMessage(msg);
+						addMessage(MiscUtils.getMessageFromNodeMessage(msg));
 					}
 					t.rollback(false);
 					break;

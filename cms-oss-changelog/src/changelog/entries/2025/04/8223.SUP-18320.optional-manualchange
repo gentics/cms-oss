@@ -1,0 +1,1 @@
+When using a MariaDB version 11.6 or above the @innodb_snapshot_isolation@ setting must be disabled in the configuration.

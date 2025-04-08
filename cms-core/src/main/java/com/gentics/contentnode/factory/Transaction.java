@@ -48,7 +48,7 @@ import com.gentics.lib.i18n.LanguageProvider;
  * sequence, which make them unique and ensures that transactions started later
  * have higher ids.
  */
-public interface Transaction extends LanguageProvider, PreparedStatementHandler {
+public interface Transaction extends LanguageProvider, PreparedStatementHandler, InstantPublishingResultCollector {
 
 	public static final int SELECT_STATEMENT = 0;
 

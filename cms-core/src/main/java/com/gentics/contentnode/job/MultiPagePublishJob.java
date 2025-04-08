@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.apache.logging.log4j.Level;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -23,7 +21,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.messaging.MessageSender;
-import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObjectVersion;
@@ -46,6 +43,8 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.MultiPagePublishRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.lib.i18n.CNI18nString;
@@ -185,19 +184,37 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 		}
 
 		try {
+			int publishCount = 0;
+			int publishAtCount = 0;
+			int workflowCount = 0;
 			int readOnlyCount = 0;
 			int inheritedCount = 0;
 			List<String> feedback = new ArrayList<String>();
 			List<Page> skipped = new ArrayList<Page>();
-			
+
 			for (String id : ids) {
 				try {
 					PublishSuccessState state = publishPage(id, isAlllang, at, message, keepPublishAt, keepVersion, feedback);
-					
-					if (state == PublishSuccessState.SKIPPED) {
-						skipped.add(PageResourceImpl.getPage(id, ObjectPermission.view));
-					} else if (state == PublishSuccessState.INHERITED) {
+
+					switch (state) {
+					case INHERITED:
 						inheritedCount++;
+						break;
+					case PUBLISHAT:
+						publishAtCount++;
+						break;
+					case PUBLISHED:
+						publishCount++;
+						break;
+					case SKIPPED:
+						skipped.add(PageResourceImpl.getPage(id, ObjectPermission.view));
+						break;
+					case WORKFLOW:
+					case WORKFLOW_STEP:
+						workflowCount++;
+						break;
+					default:
+						break;
 					}
 				} catch (ReadOnlyException e) {
 					readOnlyCount++;
@@ -208,31 +225,51 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 					t.commit(false);
 				}
 			}
-			
+
 			String skippedMsg = null;
-			
+
 			if (skipped.size() == 1) {
 				skippedMsg = feedback.get(0);
 			} else if (skipped.size() > 1) {
 				skippedMsg = generateIncorrectMandatoryTagsError(skipped, new ArrayList<Tag>(0));
 			}
-			
+
 			if (null != skippedMsg) {
-				addMessage(new DefaultNodeMessage(Level.WARN, getClass(), skippedMsg));
+				addMessage(new Message().setType(Type.WARNING).setMessage(skippedMsg));
 			}
-			
+
 			if (readOnlyCount > 0) {
-				CNI18nString message = new CNI18nString("multipagepublishjob.lockedpages");
-				
-				message.addParameter(Integer.toString(readOnlyCount));
-				addMessage(new DefaultNodeMessage(Level.INFO, getClass(), message.toString()));
+				addMessage(new Message().setType(Type.INFO).setMessage(
+						I18NHelper.get("multipagepublishjob.lockedpages", Integer.toString(readOnlyCount))));
 			}
 
 			if (inheritedCount > 0) {
-				CNI18nString message = new CNI18nString("multipagepublishjob.inheritedpages");
+				addMessage(new Message().setType(Type.INFO).setMessage(
+						I18NHelper.get("multipagepublishjob.inheritedpages", Integer.toString(inheritedCount))));
+			}
 
-				message.addParameter(Integer.toString(inheritedCount));
-				addMessage(new DefaultNodeMessage(Level.INFO, getClass(), message.toString()));
+			if (publishCount == 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.published.singular")));
+			} else if (publishCount > 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.published.plural", Integer.toString(publishCount))));
+			}
+
+			if (publishAtCount == 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.planned.singular")));
+			} else if (publishAtCount > 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.planned.plural", Integer.toString(publishAtCount))));
+			}
+
+			if (workflowCount == 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.workflow.singular")));
+			} else if (workflowCount > 1) {
+				addMessage(new Message().setType(Type.SUCCESS)
+						.setMessage(I18NHelper.get("multipagepublishjob.workflow.plural", Integer.toString(workflowCount))));
 			}
 		} finally {
 			if (nodeId != null) {
@@ -400,10 +437,10 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 			// i18n: "The page {0} was not published because the following Tags
 			// are not filled correctly: {1}"
 			i18n = new CNI18nString("page.publish.skippedpage");
-			i18n.addParameter('"' + pages.get(0).getName() + '"');
+			i18n.addParameter(I18NHelper.getName(pages.get(0)));
 		} else {
 			for (Page page : pages) {
-				names.append('"').append(page.getName()).append("\"");
+				names.append("'").append(I18NHelper.getName(page)).append("'");
 				if (++count == sentinal) {
 					break;
 				}
@@ -599,12 +636,14 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
 			page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
+		}
 
-			// check whether it is inherited
-			if (page.isInherited()) {
-				return PublishSuccessState.INHERITED;
-			}
+		// check whether it is inherited
+		if (page.isInherited()) {
+			return PublishSuccessState.INHERITED;
+		}
 
+		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
 			// load the page (and lock it)
 			page = PageResourceImpl.getLockedPage(id, ObjectPermission.view);
 

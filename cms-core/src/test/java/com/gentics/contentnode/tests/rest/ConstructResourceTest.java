@@ -716,6 +716,9 @@ public class ConstructResourceTest {
 		construct.setMayContainSubtags(true);
 		construct.setAutoEnable(true);
 		construct.setVisibleInMenu(true);
+		construct.setOpenEditorOnInsert(true);
+		construct.setEditorControlsInside(false);
+
 
 		List<Part> parts = this.createConstructParts();
 		construct.setParts(parts);
@@ -744,6 +747,8 @@ public class ConstructResourceTest {
 		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
 		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
 		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
+		assertThat(updateResponse.getConstruct().getOpenEditorOnInsert()).isTrue();
+		assertThat(updateResponse.getConstruct().getEditorControlsInside()).isFalse();
 	}
 
 	@Test

@@ -227,6 +227,10 @@
         "en": "Content Updating",
         "de": "Inhalt Aktualisierung"
     },
+    "title_directories": {
+        "en": "Directories",
+        "de": "Ordner"
+    },
     "title_filesystem": {
         "en": "Filesystem",
         "de": "Dateisystem"

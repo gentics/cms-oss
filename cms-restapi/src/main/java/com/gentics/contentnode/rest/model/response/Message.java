@@ -140,41 +140,47 @@ public class Message implements Serializable {
 	 * Set the name of the REST model field this message is about.
 	 * @param fieldName Set the name of the REST model field this message is
 	 *		about (can be null).
+	 * @return fluent API
 	 */
-	public void setFieldName(String fieldName) {
+	public Message setFieldName(String fieldName) {
 		this.fieldName = fieldName;
+		return this;
 	}
 
 	public String getMessage() {
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public Message setMessage(String message) {
 		this.message = message;
+		return this;
 	}
 
 	public Type getType() {
 		return type;
 	}
 
-	public void setType(Type type) {
+	public Message setType(Type type) {
 		this.type = type;
+		return this;
 	}
 
 	public long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(long timestamp) {
+	public Message setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
+		return this;
 	}
 
 	public String getImage() {
 		return image;
 	}
 
-	public void setImage(String image) {
+	public Message setImage(String image) {
 		this.image = image;
+		return this;
 	}
 
 	/**
@@ -188,17 +194,21 @@ public class Message implements Serializable {
 	/**
 	 * Set the sender of the message
 	 * @param sender message sender
+	 * @return fluent API
 	 */
-	public void setSender(User sender) {
+	public Message setSender(User sender) {
 		this.sender = sender;
+		return this;
 	}
 
 	/**
 	 * Set the message id
 	 * @param id id of the message
+	 * @return fluent API
 	 */
-	public void setId(Integer id) {
+	public Message setId(Integer id) {
 		this.id = id;
+		return this;
 	}
 
 	/**
@@ -229,9 +239,11 @@ public class Message implements Serializable {
 	/**
 	 * Sets the value of the isInstantMessage variable.
 	 * @param instantMessage a boolean value that represents if the message is instant
+	 * @return fluent API
 	 */
-	public void setInstantMessage(boolean instantMessage) {
+	public Message setInstantMessage(boolean instantMessage) {
 		this.isInstantMessage = instantMessage;
+		return this;
 	}
 
 	/**

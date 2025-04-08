@@ -118,6 +118,13 @@ The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
   default-character-set          = utf8
 </shell>
 
+When using a MariaDB version 11.6 and up the following additional setting is necessary.
+
+<shell>
+[mysqld]
+  innodb_snapshot_isolation      = 0
+</shell>
+
 h3. Reverse proxy configuration
 
 Once started the CMS is reachable under http://localhost:8080. To make it reachable under a certain domain, the web server (e.g. Apache or Nginx) must be configured to use a reverse proxy to forward requests for the CMS to localhost:8080.

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -21,11 +22,11 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.Events;
-import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
@@ -36,6 +37,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.publish.PublishQueue.NodeObjectWithAttributes;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
 import com.gentics.contentnode.publish.mesh.MeshPublishController;
@@ -69,21 +71,22 @@ public class InstantPublisher {
 	 * written into the content repository (or removed from there)
 	 * @param object object to handle
 	 * @param eventMask event mask
-	 * @param node TODO
+	 * @param node node for publishing into a node/channel
 	 * @param property property attached to the event (null if not applicable)
+	 * @return result of the instant publishing operation for the given object
 	 * @throws NodeException
 	 */
-	public static void handleInstantPublishing(NodeObject object, int eventMask, Node node, String[] property) throws NodeException {
-		// TODO handle multichannelling here
+	public static Result handleInstantPublishing(NodeObject object, int eventMask, Node node, String[] property) throws NodeException {
+		AtomicReference<Result> result = new AtomicReference<InstantPublisher.Result>(Result.SKIPPED);
 
 		// no object, no instant publishing
 		if (object == null) {
-			return;
+			return Result.SKIPPED;
 		}
 
 		// no instant publishing on notify events
 		if (Events.isEvent(eventMask, Events.NOTIFY)) {
-			return;
+			return Result.SKIPPED;
 		}
 
 		// get the current transaction
@@ -91,12 +94,12 @@ public class InstantPublisher {
 
 		// check whether the feature instant publishing is activated
 		if (!t.getNodeConfig().getDefaultPreferences().getFeature("instant_cr_publishing")) {
-			return;
+			return Result.SKIPPED;
 		}
 
 		// check whether instant publishing was disabled for the transaction
 		if (!t.isInstantPublishingEnabled()) {
-			return;
+			return Result.SKIPPED;
 		}
 
 		// when an object tag was modified, we switch to the container object
@@ -104,7 +107,7 @@ public class InstantPublisher {
 			object = ((ObjectTag) object).getNodeObject();
 			eventMask = Events.UPDATE;
 			if (object == null) {
-				return;
+				return Result.SKIPPED;
 			}
 		}
 
@@ -134,7 +137,7 @@ public class InstantPublisher {
 
 		if (publishedObjects.contains(object)) {
 			// already published the object, don't do it again
-			return;
+			return Result.SKIPPED;
 		}
 		publishedObjects.add(object);
 
@@ -153,7 +156,7 @@ public class InstantPublisher {
 				// check whether the template's markup language is excluded from publishing
 				if (!Events.isEvent(eventMask, Events.DELETE)
 						&& page.getTemplate().getMarkupLanguage().isExcludeFromPublishing()) {
-					return;
+					return Result.SKIPPED;
 				}
 				if (node == null) {
 					node = page.getChannel();
@@ -162,7 +165,7 @@ public class InstantPublisher {
 					node = page.getFolder().getNode();
 				}
 			} else {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 
@@ -177,7 +180,7 @@ public class InstantPublisher {
 					node = folder.getNode();
 				}
 			} else {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 
@@ -193,7 +196,7 @@ public class InstantPublisher {
 					node = file.getFolder().getNode();
 				}
 			} else {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 		case Form.TYPE_FORM:
@@ -203,47 +206,47 @@ public class InstantPublisher {
 					node = form.getOwningNode();
 				}
 			} else {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 
 		default:
 			// this is not an object, which is published into the contentrepository (as object)
-			return;
+			return Result.SKIPPED;
 		}
 
 		// the node does not publish into the contentmap or has publishing disabled, so do nothing
 		if (!node.doPublishContentmap() || node.isPublishDisabled()) {
-			return;
+			return Result.SKIPPED;
 		}
 		switch (objType) {
 		case Page.TYPE_PAGE:
 			if (!node.doPublishContentMapPages()) {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 		case Folder.TYPE_FOLDER:
 			if (!node.doPublishContentMapFolders()) {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 		case ImageFile.TYPE_FILE:
 		case ImageFile.TYPE_IMAGE:
 			if (!node.doPublishContentMapFiles()) {
-				return;
+				return Result.SKIPPED;
 			}
 			break;
 		case Form.TYPE_FORM:
 			break;
 		default:
-			return;
+			return Result.SKIPPED;
 		}
 
 		ContentRepository cr = node.getContentRepository();
 
 		// no cr found or the cr has instant publishing disabled
 		if (cr == null || !cr.isInstantPublishing() || InstantCRPublishing.isTemporarilyDisabled(cr)) {
-			return;
+			return Result.SKIPPED;
 		}
 
 		ContentMap contentMap = cr.getContentMap();
@@ -270,7 +273,7 @@ public class InstantPublisher {
 						log.debug("Omit instant publishing of " + file + ". File is currently offline");
 					}
 					publishedObjects.remove(file);
-					return;
+					return Result.SKIPPED;
 				}
 			}
 		}
@@ -328,7 +331,7 @@ public class InstantPublisher {
 					if (meshCr) {
 						informPublishProcess = false;
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(), MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
 					} else {
 						operations.add(CnMapPublisher.removeObjectFromCR(object, contentMap, node));
@@ -381,7 +384,9 @@ public class InstantPublisher {
 							if (meshCr) {
 								meshOperations.add(mp -> {
 									Page toRemove = t.getObject(Page.class, hiddenPageId, false, false, true);
-									mp.remove(mp.getProject(finalNode), finalNode, Page.TYPE_PAGE, MeshPublisher.getMeshUuid(toRemove), MeshPublisher.getMeshLanguage(toRemove));
+									mp.remove(mp.getProject(finalNode), finalNode, Page.TYPE_PAGE, toRemove.getId(),
+											MeshPublisher.getMeshUuid(toRemove),
+											MeshPublisher.getMeshLanguage(toRemove));
 								});
 							} else {
 								operations.add(CnMapPublisher.removeObjectFromCR(t.getObject(Page.class, hiddenPageId, false, false, true), contentMap, node));
@@ -438,7 +443,9 @@ public class InstantPublisher {
 							}
 							if (meshCr) {
 								meshOperations.add(mp -> {
-									mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+									mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+											MeshPublisher.getMeshUuid(finalObject),
+											MeshPublisher.getMeshLanguage(finalObject));
 								});
 							} else {
 								operations.add(CnMapPublisher.removeObjectFromCR(t.getObject(object.getObjectInfo().getObjectClass(), id, false, false, true),
@@ -452,7 +459,8 @@ public class InstantPublisher {
 					if (meshCr) {
 						informPublishProcess = false;
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+									MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
 					} else {
 						operations.add(CnMapPublisher.removeObjectFromCR(object, contentMap, node));
@@ -483,7 +491,8 @@ public class InstantPublisher {
 					}
 					if (delete && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
-							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), null);
+							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
+									MeshPublisher.getMeshUuid(finalObject), null);
 						});
 					} else if (offline && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
@@ -530,14 +539,23 @@ public class InstantPublisher {
 				}
 			}
 			if (!meshOperations.isEmpty()) {
-				try (MeshPublishController meshPublishController = MeshPublishController.get(cr)) {
+				try (MeshPublishController meshPublishController = MeshPublishController.get(cr, written -> {
+					result.set(Result.SUCCESS);
+				}, (failed, reason) -> {
+					result.set(new Result(ResultStatus.failed, reason));
+				})) {
 					for (MeshPublisher mp : meshPublishController.get()) {
 						if (mp.checkStatus() && mp.checkSchemasAndProjects(false, false)) {
-							for (Consumer consumer : meshOperations) {
+							for (Consumer<MeshPublisher> consumer : meshOperations) {
 								consumer.accept(mp);
 							}
 						} else {
 							log.error(String.format("Could not instantly publish into %s, which is not valid", cr));
+							if (isRemoval(object, eventMask)) {
+								result.set(new Result(ResultStatus.failed, I18NHelper.get("object.offline.cr.invalid", I18NHelper.getName(object))));
+							} else {
+								result.set(new Result(ResultStatus.failed, I18NHelper.get("object.publish.cr.invalid", I18NHelper.getName(object))));
+							}
 						}
 					}
 					if (informPublishProcess) {
@@ -583,6 +601,28 @@ public class InstantPublisher {
 			}
 		} finally {
 			t.setRenderType(oldRenderType);
+		}
+
+		return result.get();
+	}
+
+	/**
+	 * Determine whether the object shall be removed via instant publishing
+	 * @param object object
+	 * @param eventMask event mask
+	 * @return true for removal, false for adding/updating
+	 * @throws NodeException
+	 */
+	public static boolean isRemoval(NodeObject object, int eventMask) throws NodeException {
+		if (object == null) {
+			return false;
+		}
+
+		if (object instanceof PublishableNodeObject) {
+			return Events.isEvent(eventMask, Events.DELETE) || Events.isEvent(eventMask, Events.MOVE)
+					|| !PublishableNodeObject.class.cast(object).isOnline();
+		} else {
+			return Events.isEvent(eventMask, Events.DELETE) || Events.isEvent(eventMask, Events.MOVE);
 		}
 	}
 
@@ -683,5 +723,48 @@ public class InstantPublisher {
 
 		handleInstantPublishing(nextHigherObject,
 				ObjectTransformer.getInt(object.getObject().getTType(), 0) == Page.TYPE_PAGE ? Events.EVENT_CN_PAGESTATUS : Events.UPDATE, node, null);
+	}
+
+	/**
+	 * Instant Publishing Result
+	 */
+	public static record Result(ResultStatus status, String reason) {
+		/**
+		 * Success result
+		 */
+		public final static Result SUCCESS = new Result(ResultStatus.success);
+
+		/**
+		 * Skipped result
+		 */
+		public final static Result SKIPPED = new Result(ResultStatus.skipped);
+
+		/**
+		 * Create result with status only
+		 * @param status status
+		 */
+		public Result(ResultStatus status) {
+			this(status, null);
+		}
+	}
+
+	/**
+	 * Result status
+	 */
+	public static enum ResultStatus {
+		/**
+		 * Instant publishing has been skipped
+		 */
+		skipped,
+
+		/**
+		 * Instant publishing succeeded
+		 */
+		success,
+
+		/**
+		 * Instant publishing failed
+		 */
+		failed
 	}
 }

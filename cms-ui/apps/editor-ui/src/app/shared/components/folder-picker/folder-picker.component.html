@@ -1,0 +1,30 @@
+<label *ngIf="label" class="label">{{ label }}</label>
+
+<div class="wrapper" [class.disabled]="disabled">
+    <div class="picker-value">
+        <span *ngIf="loadedFolder; else placeholderTemplate" class="name">{{ loadedFolder?.name }}</span>
+        <ng-template #placeholderTemplate>
+            <span class="placeholder">{{ placeholder }}</span>
+        </ng-template>
+    </div>
+
+    <gtx-button
+        class="addon-button picker-button"
+        icon
+        [disabled]="disabled"
+        (click)="pickNewFolder()"
+    >
+        <icon>edit</icon>
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="clearable && !required"
+        class="addon-button clear-button"
+        icon
+        type="alert"
+        [disabled]="disabled"
+        (click)="clearValue()"
+    >
+        <icon>close</icon>
+    </gtx-button>
+</div>

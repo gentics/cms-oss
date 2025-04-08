@@ -147,6 +147,11 @@
         overflow: hidden;
     }
 
+    .iconChannel {
+        font-size: 18px;
+        padding-top: 4px;
+    }
+
     .item-info {
         align-items: baseline;
         display: flex;
@@ -186,7 +191,7 @@
             white-space: nowrap;
             align-items: baseline;
 
-            &::before {
+            &:not(.is-node)::before {
                 box-sizing: border-box;
                 color: $gtx-color-off-black;
                 content: "\e5cc";

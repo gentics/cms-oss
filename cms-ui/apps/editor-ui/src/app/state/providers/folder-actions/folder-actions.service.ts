@@ -95,6 +95,7 @@ import {
     Raw,
     Response,
     ResponseCode,
+    ResponseMessage,
     RotateParameters,
     SearchPagesOptions,
     SortField,
@@ -189,6 +190,7 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { responseMessageToNotification } from '@gentics/cms-components';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -1764,8 +1766,8 @@ export class FolderActionsService {
         return this.updateItem('image', imageId, properties, {}, postUpdateBehavior);
     }
 
-    updateNodeProperties(nodeId: number, properties: EditableNodeProps): Promise<Node<Raw> | void> {
-        return this.updateItem('node', nodeId, properties)
+    updateNodeProperties(nodeId: number, properties: EditableNodeProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Node<Raw> | void> {
+        return this.updateItem('node', nodeId, properties, {}, postUpdateBehavior)
             .then(node => {
                 if (!node || !node.folderId) {
                     throw new Error(`No update response data of Node with ID ${nodeId} returned by REST API.`);
@@ -2990,7 +2992,7 @@ export class FolderActionsService {
             ),
         );
 
-        let publishReq: Observable<void>;
+        let publishReq: Observable<ResponseMessage[]>;
 
         /*
          * The feature "instant publishing" only works/is enabled when a single page is published
@@ -3003,14 +3005,16 @@ export class FolderActionsService {
             }, {
                 nodeId,
             }))).pipe(
-                map(() => undefined),
+                map(
+                    responses => responses.flatMap(a => a.messages)
+                ),
             );
         } else {
             publishReq = this.client.page.publishMultiple({
                 ids: pageIds,
                 alllang: false,
             }, { nodeId }).pipe(
-                map(() => undefined),
+                map(response => response.messages),
             );
         }
 
@@ -3021,7 +3025,7 @@ export class FolderActionsService {
         ]).pipe(
             // After publish reqeuest(s) display notifications depending on permissions:
             // those pages a user is not permitted to publish will have been queued as publish requests.
-            map(([_, publishedOrQueuedPages]) => {
+            map(([messages, publishedOrQueuedPages]) => {
                 // notify state
                 this.appState.dispatch(new ListSavingSuccessAction('page'));
 
@@ -3040,23 +3044,11 @@ export class FolderActionsService {
                     }
                 }
 
-                // if permitted, display 'published' notifications
-                if (published.length) {
-                    message = published.length > 1 ? 'message.pages_published_plural' : 'message.pages_published_singular';
-                    this.notification.show({
-                        type: 'success',
-                        message,
-                        translationParams: { count: published.length, _type: type },
-                    });
-                }
-                // if NOT permitted, display 'queued' notifications
-                if (queued.length) {
-                    message = queued.length > 1 ? 'message.pages_published_queued_plural' : 'message.pages_published_queued_singular';
-                    this.notification.show({
-                        type: 'success',
-                        message,
-                        translationParams: { count: queued.length, _type: type },
-                    });
+                // show messages from the backend
+                if (messages) {
+                    for (const msg of messages) {
+                        this.notification.show(responseMessageToNotification(msg, {delay: 5000, message: ''}));
+                    }
                 }
 
                 // check if page is inherited
@@ -3118,6 +3110,7 @@ export class FolderActionsService {
                 const badResponses = results.filter(r => r.failed);
                 const failed = badResponses.map(r => r.id);
                 const errorResponse = badResponses.length && badResponses[0].response.responseInfo;
+                const messages = rawResults.map(r => r.response).flatMap(r => r.messages);
 
                 if (failed.length) {
                     this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage));
@@ -3143,7 +3136,6 @@ export class FolderActionsService {
                     this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
                     const takenOffline: Page[] = [];
                     const queued: Page[] = [];
-                    let message: string;
 
                     // assign to arrays depending on page permissions
                     for (const page of results) {
@@ -3155,22 +3147,12 @@ export class FolderActionsService {
                         }
                     }
 
-                    // if permitted, display 'takenOffline' notifications
-                    if (takenOffline.length) {
-                        message = 'message.take_pages_offline';
+                    // show messages from the backend
+                    if (messages) {
+                        for (const msg of messages) {
+                            this.notification.show(responseMessageToNotification(msg, {delay: 5000, message: ''}));
+                        }
                     }
-                    // if NOT permitted, display 'queued' notifications
-                    if (queued.length) {
-                        message = 'message.take_pages_offline_queued';
-                    }
-                    this.notification.show({
-                        message,
-                        translationParams: {
-                            count: succeeded.length,
-                            _type: 'page',
-                        },
-                        type: 'success',
-                    });
 
                     return { queued, takenOffline };
                 }

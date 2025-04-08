@@ -1,65 +1,99 @@
 :host {
-  display: flex;
+    --gtx-cross-size: 30px;
+    display: flex;
 }
 
 .target-mask {
-  margin: auto;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 50px;
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 50px;
+
+    &:not(.active) .focal-point-overlay {
+        display: none;
+    }
 }
 
-.focal-point-overlay {
-  position: absolute;
-  cursor: crosshair;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  &.hidden {
-    display: none;
-  }
-}
-
-.x-line, .y-line {
-  box-sizing: content-box;
-  border: 0 solid rgba(0, 0, 0, 0.3);
-  position: absolute;
-  cursor: crosshair;
-  &.hidden {
-    display: none;
-  }
+.x-line,
+.y-line {
+    position: absolute;
+    box-sizing: content-box;
+    border: 0 solid rgba(0, 0, 0, 0.3);
+    position: absolute;
+    z-index: 1;
 }
 
 .y-line {
-  height: 0;
-  left: 0;
-  border-bottom-width: thin;
+    height: 100%;
+    top: 0;
+    left: var(--gtx-fp-pos-x);
+    border-right-width: 1px;
 }
 
 .x-line {
-  width: 0;
-  top: 0;
-  border-left-width: thin;
+    width: 100%;
+    left: 0;
+    top: var(--gtx-fp-pos-y);
+    border-bottom-width: 1px;
 }
 
-.focal-point-cross-y {
-  box-sizing: content-box;
-  position: absolute;
-  width: 30px;
-  height: 0;
-  border-bottom: thin solid rgba(0, 0, 0, 0.2);
+.focal-point-overlay {
+    position: absolute;
+    cursor: crosshair;
+    top: calc(var(--gtx-overlay-deadzone) * -1);
+    left: calc(var(--gtx-overlay-deadzone) * -1);
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    padding: var(--gtx-overlay-deadzone);
+    box-sizing: content-box;
+    z-index: 10;
+
+    &:hover {
+        ~ .x-line {
+            top: var(--gtx-cursor-y);
+        }
+        ~ .y-line {
+            left: var(--gtx-cursor-x);
+        }
+        ~ .x-line,
+        ~ .y-line {
+            border-style: dotted;
+        }
+    }
 }
-.focal-point-cross-x {
-  box-sizing: content-box;
-  position: absolute;
-  width: 0;
-  height: 30px;
-  border-left: thin solid rgba(0, 0, 0, 0.2);
-}
-.emphasize {
-  border-color: #ffffff;
-  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 1);
+
+.focal-point {
+    display: block;
+    position: absolute;
+    left: calc(var(--gtx-fp-pos-x) - (var(--gtx-cross-size) / 2));
+    top: calc(var(--gtx-fp-pos-y) - (var(--gtx-cross-size) / 2));
+    width: var(--gtx-cross-size);
+    height: var(--gtx-cross-size);
+    z-index: 2;
+
+    .focal-point-cross-y,
+    .focal-point-cross-x {
+        box-sizing: content-box;
+        position: absolute;
+        border: 0 solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0px 0px 3px #000;
+    }
+
+    .focal-point-cross-y {
+        width: 100%;
+        height: 0;
+        border-bottom-width: 2px;
+        margin-top: calc(50% - 1px);
+    }
+
+    .focal-point-cross-x {
+        width: 0;
+        height: 100%;
+        border-left-width: 2px;
+        margin-left: calc(50% - 1px);
+    }
 }

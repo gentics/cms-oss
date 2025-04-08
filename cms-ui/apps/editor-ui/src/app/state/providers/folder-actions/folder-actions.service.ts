@@ -1780,8 +1780,8 @@ export class FolderActionsService {
         return this.updateItem('image', imageId, imageProps, {}, postUpdateBehavior);
     }
 
-    updateNodeProperties(nodeId: number, properties: EditableNodeProps): Promise<Node<Raw> | void> {
-        return this.updateItem('node', nodeId, properties)
+    updateNodeProperties(nodeId: number, properties: EditableNodeProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Node<Raw> | void> {
+        return this.updateItem('node', nodeId, properties, {}, postUpdateBehavior)
             .then(node => {
                 if (!node || !node.folderId) {
                     throw new Error(`No update response data of Node with ID ${nodeId} returned by REST API.`);

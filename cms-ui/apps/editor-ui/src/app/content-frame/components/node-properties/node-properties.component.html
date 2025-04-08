@@ -72,52 +72,59 @@
         ></gtx-checkbox>
     </h3>
 
-    <div class="publishing-section">
-        <div class="publish-group">
-            <gtx-checkbox
-                class="publish-checkbox"
-                formControlName="publishFsPages"
-                [label]="'common.type_pages' | i18n"
-            ></gtx-checkbox>
-
-            <gtx-input
-                class="publish-input"
-                formControlName="publishDir"
-                [label]="'editor.node_properties_page_directory' | i18n"
-            ></gtx-input>
-        </div>
-
-        <button
-            class="link-inputs"
-            [title]="'editor.node_properties_share_directories' | i18n"
-            [disabled]="disabled || linkButtonDisabled"
-            [class.active]="publishDirsLinked"
-            (click)="togglePublishDirLink()"
-        >
-            <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
-        </button>
-
-        <div class="publish-group">
-            <gtx-checkbox
-                class="publish-checkbox"
-                formControlName="publishFsFiles"
-                [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
-            ></gtx-checkbox>
-
-            <gtx-input
-                class="publish-input"
-                formControlName="binaryPublishDir"
-                [readonly]="publishDirsLinked"
-                [label]="'editor.node_properties_binary_directory' | i18n"
-            ></gtx-input>
-        </div>
+    <div class="section-header simple-header">
+        <gtx-checkbox
+            formControlName="publishFs"
+            [label]="'editor.node_properties_file_system' | i18n"
+        ></gtx-checkbox>
     </div>
 
-    <gtx-checkbox
-        class="checkbox-input"
-        formControlName="publishFs"
-        [label]="'editor.node_properties_file_system' | i18n"
-    ></gtx-checkbox>
+    <div class="flex-row checkbox-group">
+        <gtx-checkbox
+            formControlName="publishFsPages"
+            [label]="'common.type_pages' | i18n"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            formControlName="publishFsFiles"
+            [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="section-header simple-header">{{ 'editor.node_title_directories' | i18n }}</div>
+
+    <div class="linkable-fields-wrapper">
+        <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="publishDir"
+            [label]="'editor.node_properties_page_directory' | i18n"
+            [placeholder]="'editor.node_properties_page_directory' | i18n"
+        ></gtx-input>
+
+        <div
+            class="link-inputs no-select"
+            [title]="'editor.node_properties_share_directories' | i18n"
+            [class.active]="publishDirsLinked"
+        >
+            <div class="top-link-display"></div>
+            <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
+                <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
+            </button>
+            <div class="bottom-link-display"></div>
+        </div>
+
+        <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="binaryPublishDir"
+            [readonly]="publishDirsLinked"
+            [label]="'editor.node_properties_binary_directory' | i18n"
+            [placeholder]="'editor.node_properties_binary_directory' | i18n"
+        ></gtx-input>
+    </div>
 
     <div class="section-header simple-header">
         <gtx-checkbox

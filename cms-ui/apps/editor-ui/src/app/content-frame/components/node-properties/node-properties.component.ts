@@ -21,6 +21,11 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 
+const FS_CONTROLS: (keyof EditableNodeProps)[] = [
+    'publishFsPages',
+    'publishFsFiles',
+];
+
 const CR_CONTROLS: (keyof EditableNodeProps)[] = [
     'publishContentMap',
     'publishContentMapFiles',
@@ -129,7 +134,6 @@ export class NodePropertiesComponent
                 Validators.required,
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
-            utf8: new FormControl(this.value?.utf8 ?? false),
             defaultFileFolderId: new FormControl(this.value?.defaultFileFolderId),
             defaultImageFolderId: new FormControl(this.value?.defaultImageFolderId),
             disablePublish: new FormControl(this.value?.disablePublish ?? false),
@@ -154,6 +158,7 @@ export class NodePropertiesComponent
 
         setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
+        setControlsEnabled(this.form, FS_CONTROLS, value?.publishFs, options);
 
         let cr: ContentRepository | null = null;
         if (this.form.value.contentRepositoryId > 0) {
@@ -166,12 +171,13 @@ export class NodePropertiesComponent
             this.publishDirsLinked = true;
         }
 
-        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && (cr == null || !isMeshCr || isProjectPerNode), options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && (cr == null || !isMeshCr || isProjectPerNode), options);
+        setControlsEnabled(this.form, ['publishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();
         const tmpValue = this.form.value;
+
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap
@@ -187,8 +193,6 @@ export class NodePropertiesComponent
             }, options);
         }
         this.previousPublishCr = tmpValue?.publishContentMap ?? false;
-
-        this.checkPublishDirectories(loud);
     }
 
     protected assembleValue(value: EditableNodeProps): EditableNodeProps {
@@ -196,7 +200,7 @@ export class NodePropertiesComponent
             ...value,
             hostProperty: value?.hostProperty || '',
             publishDir: value?.publishDir || '',
-            binaryPublishDir: value?.binaryPublishDir || '',
+            binaryPublishDir: (this.publishDirsLinked ? value?.publishDir : value?.binaryPublishDir) || '',
         };
     }
 

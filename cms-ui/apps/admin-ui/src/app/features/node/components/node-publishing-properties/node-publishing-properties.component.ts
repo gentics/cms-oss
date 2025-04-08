@@ -12,6 +12,11 @@ export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'pu
 'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
 'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
 
+const FS_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishFsPages',
+    'publishFsFiles',
+];
+
 const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishContentMap',
     'publishContentMapFiles',
@@ -107,6 +112,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
         setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
+        setControlsEnabled(this.form, FS_CONTROLS, value?.publishFs, options);
 
         let cr: ContentRepository | null = null;
         if (this.form.value.contentRepositoryId > 0) {
@@ -119,12 +125,13 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
             this.publishDirsLinked = true;
         }
 
-        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && (cr == null || !isMeshCr || isProjectPerNode), options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && (cr == null || !isMeshCr || isProjectPerNode), options);
+        setControlsEnabled(this.form, ['publishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();
         const tmpValue = this.form.value;
+
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap

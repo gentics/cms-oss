@@ -6,16 +6,19 @@
 
 .linkable-fields-wrapper {
     position: relative;
-    display: flex;
     width: 100%;
-    min-height: 1px;
-    flex-direction: row;
-    flex-wrap: nowrap;
+    padding-bottom: 20px;
 
-    .linkable-fields-content {
-        display: flex;
-        flex-direction: column;
+    display: grid;
+    grid-template: "a b" auto "c b" auto / 1fr 30px;
+    gap: 0.75rem 0;
+
+    .linkable-field {
         flex: 1 1 auto;
+
+        ::ng-deep .input-element {
+            margin-bottom: 0;
+        }
     }
 
     .link-inputs {
@@ -24,7 +27,12 @@
         flex-direction: column;
         gap: 5px;
         justify-content: center;
-        padding: 72px 0 40px;
+        padding: 36px 0 16px;
+
+        grid-row-start: a-start;
+        grid-row-end: c-end;
+        grid-column-start: b-start;
+        grid-column-end: b-end;
 
         .top-link-display,
         .bottom-link-display {
@@ -73,6 +81,28 @@
         &.active {
             .link-button {
                 color: $gtx-color-primary;
+            }
+        }
+    }
+
+    @media (min-width: 800px) {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: unset;
+        gap: 0.5rem;
+
+        .link-inputs {
+            padding: 20px 0 0 0;
+            width: unset;
+
+            .top-link-display,
+            .bottom-link-display {
+                display: none;
+            }
+
+            .link-button {
+                margin: 0;
             }
         }
     }

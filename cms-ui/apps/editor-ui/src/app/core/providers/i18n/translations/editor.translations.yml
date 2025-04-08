@@ -790,6 +790,9 @@ url_rendering_static_with_domain:
 url_rendering_static_without_domain:
     en: Static URLs without hostname
     de: Statische URLs ohne Hostname
+node_title_directories:
+    en: Directories
+    de: Ordner
 publish_queue_btn_approve:
     en: 'Approve'
     de: 'Freigeben'

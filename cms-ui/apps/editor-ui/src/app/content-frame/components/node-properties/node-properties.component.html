@@ -1,0 +1,180 @@
+<form *ngIf="form" [formGroup]="form">
+
+    <div class="name-row">
+        <gtx-input
+            formControlName="name"
+            [label]="('editor.item_name_label' | i18n) + '*'"
+            [gtxDisabled]="disabled"
+            [autofocus]="mode === NodePropertiesMode.CREATE"
+        ></gtx-input>
+
+        <div *ngIf="item?.id !== item?.inheritedFromId" class="inheritance-info">
+            <icon>input</icon>
+            {{ 'editor.inherited_tooltip' | i18n:{ master: item?.masterName } }}
+        </div>
+    </div>
+
+    <div class="flex-row hostname-group">
+        <gtx-checkbox
+            label="https"
+            formControlName="https"
+            [gtxDisabled]="disabled"
+        ></gtx-checkbox>
+
+        <gtx-select
+            class="hostname-type"
+            [label]="('editor.node_hostname_type_label' | i18n) + ' *'"
+            [value]="hostnameType"
+            [clearable]="false"
+            (valueChange)="updateHostnameType($event)"
+        >
+            <gtx-option
+                *ngFor="let type of HOSTNAME_TYPES"
+                [value]="type.id"
+            >{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+    </div>
+
+    <gtx-input
+        formControlName="host"
+        [label]="('editor.node_hostname_label' | i18n) + '*'"
+    ></gtx-input>
+
+    <gtx-input
+        *ngIf="hostnameType !== NodeHostnameType.VALUE"
+        formControlName="hostProperty"
+        [label]="('editor.node_hostname_property_label' | i18n) + '*'"
+    ></gtx-input>
+
+    <span
+        *ngIf="form?.controls?.hostProperty?.hasError('pattern')"
+        class="container-validator-errors"
+    >{{ 'editor.node_hostname_property_pattern' | i18n }}</span>
+
+    <div class="rendering-section">
+        <gtx-folder-picker
+            [label]="'editor.node_default_file_upload_folder_label' | i18n"
+            formControlName="defaultFileFolderId"
+        ></gtx-folder-picker>
+
+        <gtx-folder-picker
+            [label]="'editor.node_default_image_upload_folder_label' | i18n"
+            formControlName="defaultImageFolderId"
+        ></gtx-folder-picker>
+    </div>
+
+    <h3 class="section-header heading">
+        <div class="title">{{ 'editor.node_properties_publishing_heading' | i18n }}</div>
+        <gtx-checkbox
+            formControlName="disablePublish"
+            [label]="'editor.node_properties_disable_publishing' | i18n"
+            [gtxDisabled]="disabled"
+        ></gtx-checkbox>
+    </h3>
+
+    <div class="section-header simple-header">
+        <gtx-checkbox
+            formControlName="publishFs"
+            [label]="'editor.node_properties_file_system' | i18n"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="flex-row checkbox-group">
+        <gtx-checkbox
+            formControlName="publishFsPages"
+            [label]="'common.type_pages' | i18n"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            formControlName="publishFsFiles"
+            [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="section-header simple-header">{{ 'editor.node_title_directories' | i18n }}</div>
+
+    <div class="linkable-fields-wrapper">
+        <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="publishDir"
+            [label]="'editor.node_properties_page_directory' | i18n"
+            [placeholder]="'editor.node_properties_page_directory' | i18n"
+        ></gtx-input>
+
+        <div
+            class="link-inputs no-select"
+            [title]="'editor.node_properties_share_directories' | i18n"
+            [class.active]="publishDirsLinked"
+        >
+            <div class="top-link-display"></div>
+            <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
+                <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
+            </button>
+            <div class="bottom-link-display"></div>
+        </div>
+
+        <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="binaryPublishDir"
+            [readonly]="publishDirsLinked"
+            [label]="'editor.node_properties_binary_directory' | i18n"
+            [placeholder]="'editor.node_properties_binary_directory' | i18n"
+        ></gtx-input>
+    </div>
+
+    <div class="section-header simple-header">
+        <gtx-checkbox
+            formControlName="publishContentMap"
+            [label]="'editor.node_properties_content_repository' | i18n"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="flex-row checkbox-group">
+        <gtx-checkbox
+            formControlName="publishContentMapPages"
+            [label]="'common.type_pages' | i18n"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            formControlName="publishContentMapFiles"
+            [label]="('common.type_files' | i18n) + ' & ' + ('common.type_images' | i18n)"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            formControlName="publishContentMapFolders"
+            [label]="('common.type_folders' | i18n) + ' & ' + ('common.type_images' | i18n)"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="section-header simple-header">
+        <span class="header-content">{{ 'editor.url_rendering' | i18n }}</span>
+    </div>
+
+    <div class="rendering-section">
+        <gtx-select
+            [label]="'common.type_pages' | i18n"
+            formControlName="urlRenderWayPages"
+        >
+            <gtx-option [value]="NodeUrlMode.AUTOMATIC">{{ 'editor.url_rendering_automatic' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.PORTAL_LINK">{{ 'editor.url_rendering_portal_link' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.DYNAMIC">{{ 'editor.url_rendering_static_dynamic' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.WITH_DOMAIN">{{ 'editor.url_rendering_static_with_domain' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.WITHOUT_DOMAIN">{{ 'editor.url_rendering_static_without_domain' | i18n }}</gtx-option>
+        </gtx-select>
+
+        <gtx-select
+            [label]="('common.type_folders' | i18n) + ' & ' + ('common.type_images' | i18n)"
+            formControlName="urlRenderWayFiles"
+        >
+            <gtx-option [value]="NodeUrlMode.AUTOMATIC">{{ 'editor.url_rendering_automatic' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.PORTAL_LINK">{{ 'editor.url_rendering_portal_link' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.DYNAMIC">{{ 'editor.url_rendering_static_dynamic' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.WITH_DOMAIN">{{ 'editor.url_rendering_static_with_domain' | i18n }}</gtx-option>
+            <gtx-option [value]="NodeUrlMode.WITHOUT_DOMAIN">{{ 'editor.url_rendering_static_without_domain' | i18n }}</gtx-option>
+        </gtx-select>
+    </div>
+</form>

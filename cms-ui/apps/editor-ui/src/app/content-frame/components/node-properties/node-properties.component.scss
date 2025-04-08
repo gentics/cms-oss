@@ -1,12 +1,90 @@
-@import 'variables';
+@import "variables";
 
-.row {
-    max-width: 100%;
+.checkbox-input {
+    display: block;
+    padding-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.heading {
+    border-bottom: 1px solid $gtx-color-light-gray;
+    font-size: 1.4rem;
+    padding-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.simple-header {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+    text-transform: uppercase;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.checkbox-group {
+    padding: 1rem 0;
+    justify-content: space-between;
+}
+
+.publishing-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+
+    .publish-group {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        flex: 1 1 auto;
+    }
+}
+
+.rendering-section {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    padding-top: 1rem;
+
+    > * {
+        flex: 1 1 auto;
+    }
+}
+
+.name-row {
+    display: flex;
+    flex-direction: column;
+    gtx-input {
+        flex: 1;
+
+        ::ng-deep input[type=text] {
+            margin-bottom: 5px;
+        }
+    }
+}
+
+.inheritance-info {
+    color: $gcms-color-icon-inheritance;
+    display: flex;
+    gap: 0.5rem;
+    align-content: center;
 }
 
 .linkable-fields-wrapper {
     position: relative;
     width: 100%;
+    padding-top: 0.5rem;
     padding-bottom: 20px;
 
     display: grid;
@@ -105,5 +183,19 @@
                 margin: 0;
             }
         }
+    }
+}
+
+.container-validator-errors {
+    color: $gtx-color-alert;
+}
+
+.hostname-group {
+    align-items: center;
+    gap: 2rem;
+    padding-top: 0.5rem;
+
+    .hostname-type {
+        flex: 1 1 auto;
     }
 }

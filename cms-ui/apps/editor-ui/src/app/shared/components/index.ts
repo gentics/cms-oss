@@ -7,6 +7,7 @@ export * from './favourite-toggle/favourite-toggle.component';
 export * from './file-properties-form/file-properties-form.component';
 export * from './file-status-label/file-status-label.component';
 export * from './folder-properties-form/folder-properties-form.component';
+export * from './folder-picker/folder-picker.component';
 export * from './form-language-indicator-current/form-language-indicator-current.component';
 export * from './form-language-indicator/form-language-indicator.component';
 export * from './form-language-selector/form-language-selector.component';

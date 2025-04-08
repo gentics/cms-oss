@@ -12,7 +12,6 @@ import { EditableNodeProps } from '@editor-ui/app/common/models';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, NodeUrlMode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-
 import {
     createPropertyPatternValidator,
     FormProperties,
@@ -101,9 +100,9 @@ export class NodePropertiesComponent
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        if (this.value) {
+        if (this.valueIsSet()) {
             this.updateHostnameType(this.value.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
-            this.publishDirsLinked = this.value.publishDir === this.value.binaryPublishDir;
+            this.initLinkedDir();
         }
 
         this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
@@ -121,8 +120,6 @@ export class NodePropertiesComponent
 
     protected createForm(): FormGroup {
         this.previousPublishCr = this.value?.publishContentMap ?? false;
-
-        this.initLinkedDir();
 
         return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.safeValue('name') || '', Validators.required),
@@ -196,6 +193,7 @@ export class NodePropertiesComponent
     protected assembleValue(value: EditableNodeProps): EditableNodeProps {
         return {
             ...value,
+            host: value.host || '',
             hostProperty: value?.hostProperty || '',
             publishDir: value?.publishDir || '',
             binaryPublishDir: (this.publishDirsLinked ? value?.publishDir : value?.binaryPublishDir) || '',
@@ -209,15 +207,14 @@ export class NodePropertiesComponent
         }
 
         if (this.hostnameType === NodeHostnameType.PROPERTY) {
-            // this.form.get('host').setValue('');
             this.form.controls.host.disable();
             this.form.controls.hostProperty.enable();
         } else if (this.hostnameType === NodeHostnameType.VALUE) {
-            // this.form.get('hostnameProperty').setValue('');
             this.form.controls.host.enable();
             this.form.controls.hostProperty.disable();
         }
-        this.form.updateValueAndValidity();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
     protected initLinkedDir(): void {
@@ -228,6 +225,7 @@ export class NodePropertiesComponent
             && this.publishDirsLinked == null
         ) {
             this.publishDirsLinked = this.value.publishDir === this.value.binaryPublishDir;
+            this.checkPublishDirectories(true);
         }
     }
 
@@ -256,6 +254,16 @@ export class NodePropertiesComponent
         super.onValueChange();
 
         if (!this.hostnameType) {
+            this.updateHostnameType(this.value?.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
+        }
+
+        this.initLinkedDir();
+    }
+
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
+
+        if (!this.disabled) {
             this.updateHostnameType(this.value?.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
         }
     }

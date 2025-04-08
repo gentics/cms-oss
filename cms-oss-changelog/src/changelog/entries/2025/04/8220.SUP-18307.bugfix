@@ -1,0 +1,3 @@
+Editor User Interface: When publishing pages or taking pages offline, the messages shown to the user will
+now be more explicit about whether the page has been immediately been written to or removed from the Content.Repository (when instant publishing is used)
+or the page has just been set into the requested state (which will take effect with the next regular publish process).

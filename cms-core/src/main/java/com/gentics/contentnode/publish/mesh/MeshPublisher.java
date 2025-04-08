@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
@@ -128,6 +129,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.version.CmpProductVersion;
 import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
@@ -613,9 +615,10 @@ public class MeshPublisher implements AutoCloseable {
 	protected List<Throwable> throwables = new ArrayList<>();
 
 	/**
-	 * Set of postponed write tasks
+	 * Set of postponed write tasks, optionally accompanied by a translated message which can be shown to the user if the
+	 * postponed task could not be executed during instant publishgin
 	 */
-	protected Set<WriteTask> postponedTasks = new HashSet<>();
+	protected Set<Pair<WriteTask, I18nString>> postponedTasks = new HashSet<>();
 
 	/**
 	 * Optional publish info instance
@@ -2140,7 +2143,8 @@ public class MeshPublisher implements AutoCloseable {
 		}
 		info(String.format("Handle postponed updates into '%s'", cr.getName()));
 
-		for (WriteTask task : postponedTasks) {
+		for (Pair<WriteTask, I18nString> postponed : postponedTasks) {
+			WriteTask task = postponed.getLeft();
 			// we can postpone a single task at most once
 			task.postponable = false;
 			if (PublishController.getState() != PublishController.State.running) {
@@ -2320,7 +2324,7 @@ public class MeshPublisher implements AutoCloseable {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
 							for (String lang : languages) {
-								remove(project, branch, objectType, meshUuid, lang);
+								remove(project, branch, objectType, 0, meshUuid, lang);
 							}
 							return Completable.complete();
 						}).blockingAwait();
@@ -2383,7 +2387,7 @@ public class MeshPublisher implements AutoCloseable {
 				String meshUuid = entry.getKey();
 				Set<String> languages = entry.getValue();
 				for (String language : languages) {
-					remove(project, checkedNode, objectType, meshUuid, language, true);
+					remove(project, checkedNode, objectType, 0, meshUuid, language, true);
 				}
 			}
 		}
@@ -2400,7 +2404,7 @@ public class MeshPublisher implements AutoCloseable {
 	public void remove(Node node, List<NodeObject> objectsToDelete) throws NodeException {
 		MeshProject project = getProject(node);
 		for (NodeObject nodeObject : objectsToDelete) {
-			remove(project, node, nodeObject.getTType(), getMeshUuid(nodeObject), getMeshLanguage(nodeObject));
+			remove(project, node, nodeObject.getTType(), nodeObject.getId(), getMeshUuid(nodeObject), getMeshLanguage(nodeObject));
 		}
 	}
 
@@ -2409,12 +2413,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param node node from which to remove the object
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, node, objectType, meshUuid, meshLanguage, true);
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
+		remove(project, node, objectType, objectId, meshUuid, meshLanguage, true);
 	}
 
 	/**
@@ -2422,16 +2427,17 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param node node from which to remove the object
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage, withSemaphore);
+			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage, withSemaphore);
+			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, withSemaphore);
 		}
 	}
 
@@ -2440,12 +2446,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param branch optional branch parameter
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, branch, objectType, meshUuid, meshLanguage, true);
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
+		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, true);
 	}
 
 	/**
@@ -2453,12 +2460,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param project mesh project
 	 * @param branch optional branch parameter
 	 * @param objectType object type
+	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
@@ -2492,6 +2500,9 @@ public class MeshPublisher implements AutoCloseable {
 						return ifNotFound(throwable, () -> Completable.complete());
 					}).blockingAwait();
 				}
+			}
+			if (controller.successHandler != null) {
+				controller.successHandler.accept(Pair.of(objectType, objectId));
 			}
 		} catch (Throwable t) {
 			if (meshLanguage != null) {
@@ -2596,7 +2607,7 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Process the entries in a queue. Entries that cannot be handled right now (because their parent folder does not exist in Mesh) will be repaced
+	 * Process the entries in a queue. Entries that cannot be handled right now (because their parent folder does not exist in Mesh) will be replaced
 	 * by their dependency and be postponed (put back into the end of the queue)
 	 * @param entries entries to handle
 	 * @param node node for which the entries shall be handled
@@ -3847,7 +3858,7 @@ public class MeshPublisher implements AutoCloseable {
 													conflictingUuid, conflictingLanguage));
 								}
 								// remove language variant
-								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
+								remove(task.project, node, task.objType, task.objId, conflictingUuid, conflictingLanguage, false);
 								// repeat task
 								task.perform(false);
 								postpone = false;
@@ -3868,7 +3879,7 @@ public class MeshPublisher implements AutoCloseable {
 														conflictingUuid, conflictingLanguage));
 									}
 									// remove the object from Mesh
-									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
+									remove(task.project, node, objType, conflictingNodeObject.getId(), conflictingUuid, conflictingLanguage, false);
 									// repeat task
 									task.perform(false);
 									postpone = false;
@@ -3881,7 +3892,9 @@ public class MeshPublisher implements AutoCloseable {
 						if (logger.isDebugEnabled()) {
 							logger.debug(String.format("Postponing update of %d.%d due to recoverable error '%s'", task.objType, task.objId, t.getMessage()));
 						}
-						postponedTasks.add(task);
+						CNI18nString i18n = new CNI18nString("object.publish.conflict");
+						i18n.addParameter(Trx.supply(() -> I18NHelper.getName(task.getNodeObject())));
+						postponedTasks.add(Pair.of(task, i18n));
 					}
 				}
 			} else {
@@ -3979,7 +3992,7 @@ public class MeshPublisher implements AutoCloseable {
 							if (!languages.isEmpty()) {
 								Node cmsNode = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 								for (String lang : languages) {
-									remove(task.project, cmsNode, task.objType, task.uuid, lang, false);
+									remove(task.project, cmsNode, task.objType, task.objId, task.uuid, lang, false);
 								}
 							}
 						}
@@ -3988,7 +4001,7 @@ public class MeshPublisher implements AutoCloseable {
 							logger.debug(String.format("Postponing update of %d.%d", task.objType, task.objId));
 							task.exists = true;
 							task.clearPostSave();
-							postponedTasks.add(task);
+							postponedTasks.add(Pair.of(task, null));
 						} else {
 							task.reportDone();
 						}

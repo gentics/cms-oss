@@ -1,17 +1,16 @@
 package com.gentics.contentnode.job;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
@@ -28,7 +27,7 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 	/**
 	 * Messages
 	 */
-	private List<NodeMessage> messages = new LinkedList<NodeMessage>();
+	private List<Message> messages = new ArrayList<>();
 
 	/**
 	 * Flag to mark, whether the job shall be interrupted
@@ -44,7 +43,7 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 	 * Get the messages
 	 * @return messages
 	 */
-	public List<NodeMessage> getMessages() {
+	public List<Message> getMessages() {
 		return messages;
 	}
 
@@ -52,7 +51,7 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 	 * Add a message
 	 * @param message message to add
 	 */
-	public void addMessage(NodeMessage message) {
+	public void addMessage(Message message) {
 		messages.add(message);
 	}
 
@@ -100,8 +99,8 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 		processAction();
 
 		GenericResponse response = new GenericResponse();
-		for (NodeMessage nodeMessage : getMessages()) {
-			response.addMessage(MiscUtils.getMessageFromNodeMessage(nodeMessage));
+		for (Message message : getMessages()) {
+			response.addMessage(message);
 		}
 
 		if (success) {

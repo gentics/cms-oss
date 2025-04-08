@@ -6,11 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.logging.log4j.Level;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.devtools.ChangeWatchService;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
@@ -21,7 +18,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
-import com.gentics.contentnode.msg.DefaultNodeMessage;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
@@ -29,11 +26,11 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.publish.InstantPublisher;
-import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.publish.InstantPublisher.Result;
+import com.gentics.contentnode.publish.InstantPublisher.ResultStatus;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.datasource.mccr.UnknownChannelException;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -310,30 +307,25 @@ public final class Events {
 			// the publish cache depends on prepared data, which are not available for instant publishing
 			t.setPublishCacheEnabled(false);
 			try (WastebinFilter f = new WastebinFilter(Wastebin.EXCLUDE)) {
-				InstantPublisher.handleInstantPublishing(object, eventMask, null, properties);
+				Result instantPublishingResult = InstantPublisher.handleInstantPublishing(object, eventMask, null, properties);
+				if (instantPublishingResult.status() != ResultStatus.skipped) {
+					t.addInstantPublishingResult(object, instantPublishingResult);
+				}
 			}
 		} catch (Throwable e) {
 			log.error("Error while handling instant publishing for " + object, e);
 			String suffix = (e instanceof UnknownChannelException) ? "error.unknownchannel" : "error";
-			RenderResult renderResult = t.getRenderResult();
+			String prefix = InstantPublisher.isRemoval(object, eventMask) ? "instantremoving" : "instantpublishing";
 
-			if (renderResult != null) {
-				if (object instanceof Page) {
-					I18nString msg = new CNI18nString("instantpublishing.page." + suffix);
-
-					msg.setParameter("0", ((Page) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
-				} else if (object instanceof Folder) {
-					I18nString msg = new CNI18nString("instantpublishing.folder." + suffix);
-
-					msg.setParameter("0", ((Folder) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
-				} else if (object instanceof com.gentics.contentnode.object.File) {
-					I18nString msg = new CNI18nString("instantpublishing.file." + suffix);
-
-					msg.setParameter("0", ((com.gentics.contentnode.object.File) object).getName());
-					renderResult.addMessage(new DefaultNodeMessage(Level.FATAL, Events.class, msg.toString()), false);
-				}
+			if (object instanceof Page) {
+				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
+						I18NHelper.get(prefix + ".page." + suffix, I18NHelper.getName(object))));
+			} else if (object instanceof Folder) {
+				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
+						I18NHelper.get(prefix + ".folder." + suffix, I18NHelper.getName(object))));
+			} else if (object instanceof com.gentics.contentnode.object.File) {
+				t.addInstantPublishingResult(object, new Result(ResultStatus.failed,
+						I18NHelper.get(prefix + ".file." + suffix, I18NHelper.getName(object))));
 			}
 		} finally {
 			t.setPublishCacheEnabled(publishCache);

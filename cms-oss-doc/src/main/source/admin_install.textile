@@ -52,8 +52,6 @@ Create the configuration .yml files under /cms/conf/cms and activate the service
 
 h4. Database server
 
-When using the debian package installer with MariaDB, this step will be done automatically.
-
 Please install a "compatible":gcn_compatibility_list.html MySQL Server on your system.
 We suggest a installation of MariaDB on the same server that will host Gentics CMS.
 
@@ -83,6 +81,13 @@ The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
 
 [client]
   default-character-set          = utf8
+</shell>
+
+When using a MariaDB version 11.6 and up the following additional setting is necessary.
+
+<shell>
+[mysqld]
+  innodb_snapshot_isolation      = 0
 </shell>
 
 h3. Migration

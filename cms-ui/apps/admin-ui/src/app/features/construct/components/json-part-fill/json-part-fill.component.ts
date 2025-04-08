@@ -57,7 +57,7 @@ export class JsonPartFillComponent extends BaseFormElementComponent<TagPartPrope
             map(([value, status]) => status === 'VALID' ? value : null),
             distinctUntilChanged(isEqual),
         ).subscribe(value => {
-            if (value == null) {
+            if (value != null) {
                 const parsed = JSON.parse(value);
                 this.triggerChange(parsed);
             } else {
@@ -76,7 +76,7 @@ export class JsonPartFillComponent extends BaseFormElementComponent<TagPartPrope
 
     protected onValueChange(): void {
         if (this.control) {
-            this.control.setValue(JSON.stringify(this.value || {}));
+            this.control.setValue(JSON.stringify(this.value || {}), { emitEvent: false });
         }
     }
 }

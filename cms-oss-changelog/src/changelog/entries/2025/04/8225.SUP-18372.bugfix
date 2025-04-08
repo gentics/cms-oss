@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue when setting the focal point, where it could be out set out of bounds, causing publishing issues.

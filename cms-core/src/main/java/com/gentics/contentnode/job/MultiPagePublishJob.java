@@ -636,12 +636,14 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
 			page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
+		}
 
-			// check whether it is inherited
-			if (page.isInherited()) {
-				return PublishSuccessState.INHERITED;
-			}
+		// check whether it is inherited
+		if (page.isInherited()) {
+			return PublishSuccessState.INHERITED;
+		}
 
+		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
 			// load the page (and lock it)
 			page = PageResourceImpl.getLockedPage(id, ObjectPermission.view);
 

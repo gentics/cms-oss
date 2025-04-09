@@ -11,6 +11,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -95,8 +96,13 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 			to.setEditorControlStyle(from.getEditorControlStyle());
 		}
 
-		to.setEditorControlInside(from.isEditorControlsInside());
-		to.setEditOnInsert(from.isOpenEditorOnInsert());
+		if (from.getEditorControlsInside() != null) {
+			to.setEditorControlInside(from.getEditorControlsInside());
+		}
+
+		if (from.getOpenEditorOnInsert() != null) {
+			to.setEditOnInsert(from.getOpenEditorOnInsert());
+		}
 
 		if (from.getParts() != null) {
 			List<Part> parts = to.getParts();

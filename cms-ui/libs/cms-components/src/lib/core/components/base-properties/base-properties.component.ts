@@ -145,7 +145,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.form.statusChanges,
         ]).pipe(
             // Do not emit values if the value hasn't been initialized yet
-            filter(() => (this.value as any) !== INITIAL_UNSET_VALUE),
+            filter(() => this.valueIsSet()),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),
@@ -309,5 +309,9 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         if (this.form && this.form.valid) {
             this.submit.emit();
         }
+    }
+
+    public valueIsSet(): boolean {
+        return this.value !== INITIAL_UNSET_VALUE;
     }
 }

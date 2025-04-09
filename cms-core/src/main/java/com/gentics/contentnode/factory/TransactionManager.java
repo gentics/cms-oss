@@ -45,6 +45,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.publish.InstantPublisher.Result;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -651,6 +652,11 @@ public final class TransactionManager {
 		 * Wastebin filter of the transaction
 		 */
 		protected ThreadLocal<Wastebin> wastebinFilter = ThreadLocal.withInitial(() -> Wastebin.getDefault());
+
+		/**
+		 * Collected instant publishing results. Keys are object types, values are maps of object ID -> result
+		 */
+		protected Map<Integer, Map<Integer, Result>> instantPublishingResults = new HashMap<>();
 
 		/**
 		 * Create a new transaction instance and start it.
@@ -2378,6 +2384,18 @@ public final class TransactionManager {
 		@Override
 		public void setCheckAnyChannel(boolean flag) {
 			checkAnyChannel.set(flag ? flag : null);
+		}
+
+		@Override
+		public void addInstantPublishingResult(NodeObject object, Result result) {
+			Integer objType = object.getTType();
+			Integer objId = object.getId();
+			instantPublishingResults.computeIfAbsent(objType, k -> new HashMap<>()).put(objId, result);
+		}
+
+		@Override
+		public Result getInstantPublishingResult(int objType, int objId) {
+			return instantPublishingResults.getOrDefault(objType, Collections.emptyMap()).get(objId);
 		}
 	}
 

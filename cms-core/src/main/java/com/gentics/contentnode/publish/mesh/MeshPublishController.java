@@ -10,12 +10,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.TaskQueueSize;
@@ -146,6 +151,16 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	protected RenderResult renderResult = null;
 
 	/**
+	 * Optional handler for successful publishing. Will get objType/objId of the published object (as {@link Pair})
+	 */
+	protected Consumer<Pair<Integer, Integer>> successHandler;
+
+	/**
+	 * Optional handler for conflicts. Will get objType/objId of the to be published object (as {@link Pair}) and a translated message
+	 */
+	protected BiConsumer<Pair<Integer, Integer>, String> conflictHandler;
+
+	/**
 	 * Get an instance of the Mesh Publish Controller containing MeshPublishers for all Mesh CRs that are assigned to Nodes that do not have publishing disabled
 	 * @param publishInfo publish info
 	 * @param renderResult render result
@@ -195,10 +210,13 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	/**
 	 * Get an instance for instant publishing into the CR
 	 * @param cr CR
+	 * @param successHandler handler that is called with instances of {@link WriteTask} when they were successfully executed
+	 * @param conflictHandler handler that is called with instances of {@link WriteTask} and a translated message when write tasks are were postponed (due to conflicts)
 	 * @return instance
 	 * @throws NodeException
 	 */
-	public static MeshPublishController get(ContentRepository cr) throws NodeException {
+	public static MeshPublishController get(ContentRepository cr, Consumer<Pair<Integer, Integer>> successHandler,
+			BiConsumer<Pair<Integer, Integer>, String> conflictHandler) throws NodeException {
 		MeshPublishController controller;
 		try {
 			controller = new MeshPublishController();
@@ -206,6 +224,8 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 			throw new NodeException(e);
 		}
 
+		controller.successHandler = successHandler;
+		controller.conflictHandler = conflictHandler;
 		MeshPublisher mp = new MeshPublisher(cr);
 		mp.controller = controller;
 		controller.publishers.add(mp);
@@ -591,6 +611,15 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 
 		for (MeshPublisher meshPublisher : publishers) {
 			meshPublisher.checkForErrors();
+			if (conflictHandler != null) {
+				// if postponed tasks still exist, that means that not all objects could be
+				// published due to conflicts. When a conflict handler exists, we let it handle
+				for (Pair<WriteTask, I18nString> pair : meshPublisher.postponedTasks) {
+					WriteTask task = pair.getLeft();
+					String reason = pair.getRight().toString();
+					conflictHandler.accept(Pair.of(task.objType, task.objId), reason);
+				}
+			}
 		}
 	}
 

@@ -756,7 +756,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 break;
             case 'node':
             case 'channel':
-                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue as EditableNodeProps);
+                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue as EditableNodeProps, postUpdateBehavior);
                 break;
             default:
                 throw new Error(`Type not recognized: ${JSON.stringify(this.item, null, 2)}`);

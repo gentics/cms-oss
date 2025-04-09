@@ -4,17 +4,14 @@ import {
     ChangeDetectorRef,
     Component,
     Input,
-    OnChanges,
     OnDestroy,
     OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { EditableNodeProps } from '@editor-ui/app/common/models';
-import { FolderActionsService } from '@editor-ui/app/state';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
-import { Folder, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, Raw } from '@gentics/cms-models';
+import { ContentRepository, ContentRepositoryType, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, NodeUrlMode } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     createPropertyPatternValidator,
     FormProperties,
@@ -22,8 +19,24 @@ import {
     generateValidatorProvider,
     setControlsEnabled,
 } from '@gentics/ui-core';
-import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { RepositoryBrowserClient } from '../../../shared/providers';
+
+const FS_CONTROLS: (keyof EditableNodeProps)[] = [
+    'publishFsPages',
+    'publishFsFiles',
+];
+
+const CR_CONTROLS: (keyof EditableNodeProps)[] = [
+    'publishContentMap',
+    'publishContentMapFiles',
+    'publishContentMapFolders',
+    'publishContentMapPages',
+];
+
+const PUBLISH_MAP_CONTROLS: (keyof EditableNodeProps)[] = [
+    'publishContentMapFiles',
+    'publishContentMapFolders',
+    'publishContentMapPages',
+];
 
 export enum NodePropertiesMode {
     CREATE = 'create',
@@ -45,9 +58,11 @@ export enum NodePropertiesMode {
 })
 export class NodePropertiesComponent
     extends BasePropertiesComponent<EditableNodeProps>
-    implements OnInit, OnChanges, OnDestroy {
+    implements OnInit, OnDestroy {
 
+    public readonly NodePropertiesMode = NodePropertiesMode;
     public readonly NodeHostnameType = NodeHostnameType;
+    public readonly NodeUrlMode = NodeUrlMode;
 
     /** selectable options for node input hostnameType */
     public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
@@ -67,29 +82,17 @@ export class NodePropertiesComponent
     @Input()
     public item: Node | null;
 
-    public defaultFileFolder: Folder | undefined;
-    public defaultImageFolder: Folder | undefined;
+    public publishDirsLinked = true;
+    public linkButtonDisabled = false;
 
-    public linkInputs = true;
     public hostnameType: NodeHostnameType;
 
-    get publishingDisabled(): boolean {
-        return this.form?.controls?.disablePublish?.value;
-    }
-
-    get fileSystemDisabled(): boolean {
-        return this.publishingDisabled || !this.form?.controls?.publishFs?.value;
-    }
-
-    get contentRepositoryDisabled(): boolean {
-        return this.publishingDisabled || !this.form?.controls?.publishContentMap?.value;
-    }
+    protected previousPublishCr = false;
+    protected contentRepositories: ContentRepository[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private errorHandler: ErrorHandler,
-        private folderActions: FolderActionsService,
-        private repositoryBrowserClient: RepositoryBrowserClient,
+        private client: GCMSRestClientService,
     ) {
         super(changeDetector);
     }
@@ -97,27 +100,18 @@ export class NodePropertiesComponent
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        if (this.value) {
+        if (this.valueIsSet()) {
             this.updateHostnameType(this.value.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
-            this.linkInputs = this.value.publishDir === this.value.binaryPublishDir;
+            this.initLinkedDir();
         }
 
-        const fileFolderPromise = this.value?.defaultFileFolderId == null ?
-            null : this.folderActions.getFolder(this.value.defaultFileFolderId);
-
-        const imageFolderPromise = this.value?.defaultImageFolderId == null ?
-            null : this.folderActions.getFolder(this.value.defaultImageFolderId);
-
-        Promise.all([fileFolderPromise, imageFolderPromise])
-            .then(([fileFolder, imageFolder]) => {
-                this.defaultFileFolder = fileFolder;
-                this.defaultImageFolder = imageFolder;
-                this.changeDetector.markForCheck();
-            });
-    }
-
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
+        this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
+            this.contentRepositories = res.items;
+            if (this.form) {
+                this.configureForm(this.form.value as any, false);
+            }
+            this.changeDetector.markForCheck();
+        }));
     }
 
     public ngOnDestroy(): void {
@@ -125,15 +119,16 @@ export class NodePropertiesComponent
     }
 
     protected createForm(): FormGroup {
+        this.previousPublishCr = this.value?.publishContentMap ?? false;
+
         return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.safeValue('name') || '', Validators.required),
             https: new FormControl(this.safeValue('https') ?? false),
             host: new FormControl(this.safeValue('host') || '', Validators.required),
-            hostProperty: new FormControl(this.safeValue('hostProperty') || '', [
+            hostProperty: new FormControl(this.value?.hostProperty || '', [
                 Validators.required,
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
-            utf8: new FormControl(this.safeValue('utf8') ?? false),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
             defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
             disablePublish: new FormControl(this.safeValue('disablePublish') ?? false),
@@ -148,32 +143,61 @@ export class NodePropertiesComponent
             publishContentMapFolders: new FormControl(this.safeValue('publishContentMapFolders') ?? false),
             urlRenderWayPages: new FormControl(this.safeValue('urlRenderWayPages') || 0),
             urlRenderWayFiles: new FormControl(this.safeValue('urlRenderWayFiles') || 0),
+            contentRepositoryId: new FormControl(this.safeValue('contentRepositoryId')),
         });
     }
 
     protected configureForm(value: EditableNodeProps, loud?: boolean): void {
-        const options = { onlySelf: loud, emitEvent: loud };
-        setControlsEnabled(this.form, [
-            'publishFs',
-            'publishContentMap',
-            'urlRenderWayFiles',
-            'urlRenderWayPages',
-        ], !this.publishingDisabled, options);
-        setControlsEnabled(this.form, [
-            'publishFsPages',
-            'publishDir',
-            'binaryPublishDir',
-            'publishFsFiles',
-        ], !this.fileSystemDisabled, options);
-        setControlsEnabled(this.form, [
-            'publishContentMapPages',
-            'publishContentMapFiles',
-            'publishContentMapFolders',
-        ], !this.contentRepositoryDisabled, options);
+        loud = !!loud;
+        const options = { emitEvent: loud, onlySelf: true };
+
+        setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
+        setControlsEnabled(this.form, FS_CONTROLS, value?.publishFs, options);
+
+        let cr: ContentRepository | null = null;
+        if (this.form.value.contentRepositoryId > 0) {
+            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+        }
+        const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
+        const isProjectPerNode = cr?.projectPerNode;
+        this.linkButtonDisabled = cr != null && isMeshCr;
+        if (this.linkButtonDisabled) {
+            this.publishDirsLinked = true;
+        }
+
+        setControlsEnabled(this.form, ['publishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+
+        // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
+        this.form.updateValueAndValidity();
+        const tmpValue = this.form.value;
+
+        // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
+        // If so, then set these to `true`, to enable them by default.
+        if (tmpValue?.publishContentMap
+            && !this.previousPublishCr
+            && !tmpValue?.publishContentMapFiles
+            && !tmpValue?.publishContentMapFolders
+            && !tmpValue?.publishContentMapPages
+        ) {
+            this.form.patchValue({
+                publishContentMapFiles: true,
+                publishContentMapFolders: true,
+                publishContentMapPages: true,
+            }, options);
+        }
+        this.previousPublishCr = tmpValue?.publishContentMap ?? false;
     }
 
     protected assembleValue(value: EditableNodeProps): EditableNodeProps {
-        return value;
+        return {
+            ...value,
+            host: value.host || '',
+            hostProperty: value?.hostProperty || '',
+            publishDir: value?.publishDir || '',
+            binaryPublishDir: (this.publishDirsLinked ? value?.publishDir : value?.binaryPublishDir) || '',
+        };
     }
 
     public updateHostnameType(value: NodeHostnameType): void {
@@ -183,73 +207,63 @@ export class NodePropertiesComponent
         }
 
         if (this.hostnameType === NodeHostnameType.PROPERTY) {
-            // this.form.get('host').setValue('');
             this.form.controls.host.disable();
             this.form.controls.hostProperty.enable();
         } else if (this.hostnameType === NodeHostnameType.VALUE) {
-            // this.form.get('hostnameProperty').setValue('');
             this.form.controls.host.enable();
             this.form.controls.hostProperty.disable();
         }
-        this.form.updateValueAndValidity();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
-    selectDefaultFolder(type: 'file' | 'image'): void {
-        const options: RepositoryBrowserOptions = {
-            allowedSelection: 'folder',
-            selectMultiple: false,
-        };
-
-        this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((selected: Folder<Raw>) => {
-                if (type === 'file') {
-                    this.defaultFileFolder = selected;
-                    this.form.controls.defaultFileFolderId.setValue(selected.id);
-                } else {
-                    this.defaultImageFolder = selected;
-                    this.form.controls.defaultImageFolderId.setValue(selected.id);
-                }
-            })
-            .catch(error => this.errorHandler.catch(error));
-    }
-
-    clearDefaultFolder(type: 'file' | 'image'): void {
-        if (type === 'file') {
-            this.defaultFileFolder = undefined;
-            this.form.controls.defaultFileFolderId.setValue(undefined);
-        } else {
-            this.defaultImageFolder = undefined;
-            this.form.controls.defaultImageFolderId.setValue(undefined);
+    protected initLinkedDir(): void {
+        if (
+            this.value != null
+            && this.value.publishDir
+            && this.value.binaryPublishDir
+            && this.publishDirsLinked == null
+        ) {
+            this.publishDirsLinked = this.value.publishDir === this.value.binaryPublishDir;
+            this.checkPublishDirectories(true);
         }
     }
 
-    fileSystemDirChange(value: string): void {
-        if (this.linkInputs) {
-            this.form.controls.publishDir.setValue(value, { emitEvent: false });
-            this.form.controls.binaryPublishDir.setValue(value, { emitEvent: false });
-        }
-    }
-
-    toggleLinkInputs(): void {
-        if (this.fileSystemDisabled) {
+    protected checkPublishDirectories(loud: boolean = false): void {
+        // Nothing to do if they are not linked
+        if (!this.publishDirsLinked) {
             return;
         }
 
-        if (!this.linkInputs) {
-            this.linkInputs = true;
-            const pageDir = this.form.controls.publishDir.value;
-            if (pageDir !== this.form.controls.binaryPublishDir.value) {
-                this.form.controls.binaryPublishDir.setValue(pageDir);
-            }
-        } else {
-            this.linkInputs = false;
+        const value = this.form.value;
+
+        if (value.publishDir !== value.binaryPublishDir) {
+            this.form.controls.binaryPublishDir.setValue(value.publishDir, {
+                emitEvent: loud,
+            });
+            this.triggerChange(this.form.value as any);
         }
+    }
+
+    togglePublishDirLink(): void {
+        this.publishDirsLinked = !this.publishDirsLinked;
+        this.checkPublishDirectories(true);
     }
 
     protected override onValueChange(): void {
         super.onValueChange();
 
         if (!this.hostnameType) {
+            this.updateHostnameType(this.value?.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
+        }
+
+        this.initLinkedDir();
+    }
+
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
+
+        if (!this.disabled) {
             this.updateHostnameType(this.value?.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
         }
     }

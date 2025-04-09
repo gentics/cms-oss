@@ -122,7 +122,7 @@ public class Construct implements Serializable {
 	/**
 	 * Whether to open the tag editor immediately after inserting the construct.
 	 */
-	private boolean openEditorOnInsert;
+	private Boolean openEditorOnInsert;
 
 	/**
 	 * The placement mode for the constructs edit icons.
@@ -133,7 +133,7 @@ public class Construct implements Serializable {
 	/**
 	 * Whether edit icons should be placed inside the rendered construct.
 	 */
-	private boolean editorControlsInside;
+	private Boolean editorControlsInside;
 
 	/**
 	 * Keyword for this construct
@@ -577,7 +577,7 @@ public class Construct implements Serializable {
 	 * @return Whether the tag editor should be opened immediately when the construct
 	 * is inserted.
 	 */
-	public boolean isOpenEditorOnInsert() {
+	public Boolean getOpenEditorOnInsert() {
 		return openEditorOnInsert;
 	}
 
@@ -590,7 +590,7 @@ public class Construct implements Serializable {
 	 *
 	 * @return fluent API
 	 */
-	public Construct setOpenEditorOnInsert(boolean openEditorOnInsert) {
+	public Construct setOpenEditorOnInsert(Boolean openEditorOnInsert) {
 		this.openEditorOnInsert = openEditorOnInsert;
 		return this;
 	}
@@ -617,7 +617,7 @@ public class Construct implements Serializable {
 	 * Whether the edit icons should be displayed inside the rendered construct.
 	 * @return Whether the edit icons should be displayed inside the rendered construct.
 	 */
-	public boolean isEditorControlsInside() {
+	public Boolean getEditorControlsInside() {
 		return editorControlsInside;
 	}
 
@@ -630,7 +630,7 @@ public class Construct implements Serializable {
 	 * 		inside the rendered construct.
 	 * @return fluent API
 	 */
-	public Construct setEditorControlsInside(boolean editorControlsInside) {
+	public Construct setEditorControlsInside(Boolean editorControlsInside) {
 		this.editorControlsInside = editorControlsInside;
 		return this;
 	}

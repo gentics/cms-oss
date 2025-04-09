@@ -6,13 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 
-import org.apache.logging.log4j.Level;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
@@ -21,6 +18,8 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectCounter;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.lib.i18n.CNI18nString;
 
 /**
@@ -233,7 +232,7 @@ public class UnlocalizeJob extends AbstractBackgroundJob {
 			StringBuffer msgBuf = new StringBuffer(message.toString());
 
 			msgBuf.append(" ").append(readOnlyCounter.getI18nString());
-			addMessage(new DefaultNodeMessage(Level.INFO, getClass(), msgBuf.toString()));
+			addMessage(new Message().setType(Type.INFO).setMessage(msgBuf.toString()));
 		}
 	}
 

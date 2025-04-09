@@ -3879,7 +3879,7 @@ public class MeshPublisher implements AutoCloseable {
 														conflictingUuid, conflictingLanguage));
 									}
 									// remove the object from Mesh
-									remove(task.project, node, objType, conflictingNodeObject.getId(), conflictingUuid, conflictingLanguage, false);
+									remove(task.project, node, objType, conflictingNodeObject == null ? 0 : conflictingNodeObject.getId(), conflictingUuid, conflictingLanguage, false);
 									// repeat task
 									task.perform(false);
 									postpone = false;

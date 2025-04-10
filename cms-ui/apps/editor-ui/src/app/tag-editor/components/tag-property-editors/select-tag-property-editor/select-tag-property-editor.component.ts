@@ -59,10 +59,14 @@ export class SelectTagPropertyEditor implements TagPropertyEditor {
     }
 
     onSingleSelectChange(newValue: number): void {
-        this.onMultipleSelectChange([newValue]);
+        this.updateSelection([newValue]);
     }
 
     onMultipleSelectChange(newValue: number[]): void {
+        this.updateSelection(newValue);
+    }
+
+    updateSelection(newValue: number[]): void {
         this.tagProperty.selectedOptions = (newValue || [])
             .sort()
             .map(id => this.tagProperty.options.find(option => option.id === id))

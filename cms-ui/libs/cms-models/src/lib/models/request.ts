@@ -1,5 +1,5 @@
 import { BoolQuery } from 'elastic-types/queries';
-import { DirtQueueItem, Jobs } from './admin-info';
+import { DirtQueueEntry, Jobs } from './admin-info';
 import { EditableFormProps, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
@@ -742,7 +742,7 @@ export interface LinkCheckerReplaceRequest {
     scope?: ReplaceScope;
 }
 
-export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueueItem> {
+export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueueEntry> {
     /** If the response should only include failed tasks. */
     failed?: boolean;
     /** Timestamp from which time on the tasks should be listed. */

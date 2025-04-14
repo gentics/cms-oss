@@ -1,0 +1,15 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
+<gtxpikt-login-gate>
+    <gtxpikt-anonymization-editor
+        *ngIf="imageUrl"
+        class="image-editor"
+        [imageUrl]="imageUrl"
+        [imageId]="imageId"
+        [faceIds]="faceIds"
+        [facePositions]="facePositions"
+        [uploading]="imageUploadStatus === 'pending'"
+        (uploadImage)="uploadImage()"
+        (confirmChange)="handleConfirmationChange($event)"
+    ></gtxpikt-anonymization-editor>
+</gtxpikt-login-gate>

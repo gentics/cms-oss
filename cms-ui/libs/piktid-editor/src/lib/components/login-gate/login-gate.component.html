@@ -1,0 +1,24 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
+<ng-container *ngIf="!loggedIn; else gatedContent">
+    <form *ngIf="loginForm" [formGroup]="loginForm">
+        <gtx-input [label]="'username'" type="text" formControlName="username"></gtx-input>
+        <gtx-input [label]="'password'" type="password" formControlName="password"></gtx-input>
+        <gtx-button type="primary" [disabled]="!loginForm.valid" (click)="onLogin()">Login</gtx-button>
+    </form>
+</ng-container>
+
+<ng-template #gatedContent>
+    <div class="gated-content">
+        <div *ngIf="userInfo" class="user-info">
+            <div class="user-info-item">
+                <span class="user-info-item-label">Username:</span>
+                <span class="user-info-item-value">{{ userInfo.username }}</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <ng-content></ng-content>
+        </div>
+    </div>
+</ng-template>

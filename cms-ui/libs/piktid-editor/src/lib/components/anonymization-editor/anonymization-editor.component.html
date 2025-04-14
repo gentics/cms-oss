@@ -1,0 +1,41 @@
+<gtxpikt-image-preview
+    *ngIf="imageUrl"
+    class="image-preview"
+    [originalImageUrl]="imageUrl"
+    [editedImageUrl]="editedImageUrl"
+    [activeImage]="activeImage"
+    [faceIds]="faceIds"
+    [facePositions]="facePositions"
+    (activeImageChange)="onTabChange($event)"
+></gtxpikt-image-preview>
+
+<div class="controls">
+    <ng-container *ngIf="imageId; else notUploaded">
+        <div *ngIf="faceIds.length > 0" class="face-manipulation-list">
+            <gtxpikt-face-manipulation
+                *ngFor="let faceId of faceIds"
+                [faceId]="faceId"
+                [progress]="faceProgress[faceId]"
+                [generations]="faceGenerations[faceId]"
+                [selectedGeneration]="selectedGeneration[faceId]"
+                [waiting]="waitingForFaces | gtxIncludes:faceId"
+                [confirmed]="confirmedFaces | gtxIncludes:faceId"
+                [disabled]="disabled"
+                (generationSelected)="selectGeneration(faceId, $event)"
+                (generationConfirmed)="confirmFaceGeneration(faceId)"
+                (generateNewFace)="generateFace(faceId)"
+                (undoGeneration)="undoFaceGeneration(faceId)"
+            ></gtxpikt-face-manipulation>
+        </div>
+    </ng-container>
+
+    <ng-template #notUploaded>
+        <div class="not-uploaded">
+            <gtx-button
+                type="primary"
+                [disabled]="disabled || !imageUrl || loading || uploading"
+                (click)="triggerUpload()"
+            >{{ 'upload_image' }}</gtx-button>
+        </div>
+    </ng-template>
+</div>

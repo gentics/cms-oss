@@ -37,7 +37,7 @@ export class ButtonComponent {
      * "success", "warning" or "alert".
      */
     @Input()
-    type: 'default' | 'secondary' | 'success' | 'warning' | 'alert' = 'default';
+    type: 'default' | 'secondary' | 'success' | 'warning' | 'alert' | 'primary' = 'default';
 
     /**
      * Setting the "flat" attribute gives the button a transparent background

@@ -48,8 +48,13 @@
     .grid-row {
         display: contents;
 
-        .row-expansion-wrapper {
+        .row-expansion {
             height: 24px;
+            background: transparent;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            cursor: pointer;
 
             icon {
                 transition: 300ms transform;
@@ -76,7 +81,7 @@
                 }
             }
 
-            &.has-children.expanded .row-expansion-wrapper icon {
+            &.has-children.expanded .row-expansion icon {
                 transform: rotateZ(90deg);
             }
 
@@ -86,8 +91,6 @@
                 flex-wrap: nowrap;
                 padding-left: calc(1rem + (var(--trable-row-level) * 1.75rem));
                 align-items: center;
-
-
 
                 .inline-selection {
                     padding: 0 0.5rem;
@@ -105,7 +108,7 @@
 .grid-table .grid-cell.expand-column {
     border-right: 1px solid $gtx-color-light-gray;
 
-    .row-expansion-wrapper {
+    .row-expansion {
         margin: auto 0;
     }
 }

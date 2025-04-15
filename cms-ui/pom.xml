@@ -235,8 +235,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <!-- Parallel has to be disabled, otherwise it'll break, as the port is already used -->
-                                    <arg line="run nx -- run-many --targets=e2e --projects=tag:e2e --configuration=${ui.nx.configuration} --parallel=false --output-style=static" />
+                                    <arg line="run nx -- run-many --targets=e2e --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
                         </configuration>

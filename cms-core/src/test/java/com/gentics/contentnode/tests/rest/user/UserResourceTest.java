@@ -1,21 +1,6 @@
 package com.gentics.contentnode.tests.rest.user;
 
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createUserGroup;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import java.util.Arrays;
-
-import org.apache.commons.lang3.tuple.Triple;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.SystemUser;
@@ -25,13 +10,29 @@ import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.request.UserSortAttribute;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.UserList;
 import com.gentics.contentnode.rest.model.response.UserListResponse;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
 import com.gentics.contentnode.rest.resource.UserResource;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
+import org.apache.commons.lang3.tuple.Triple;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createUserGroup;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for the {@link UserResource}
@@ -140,5 +141,36 @@ public class UserResourceTest {
 		for (User user : response.getUsers()) {
 			assertThat(user.getGroups()).as("Groups of user " + user.getLogin()).usingElementComparatorOnFields("id").containsOnly(restGroup);
 		}
+	}
+
+	@Test
+	public void testSupportUserPasswordChange() throws NodeException {
+		SystemUser supportUser = supply(t -> {
+			var nodeGroup = t.getObject(UserGroup.class, 2);
+			var newUser = t.createObject(SystemUser.class);
+
+			newUser.setActive(true);
+			newUser.setFirstname("Support");
+			newUser.setLastname("User");
+			newUser.setLogin("support");
+			newUser.setPassword("JWT");
+			newUser.setSupportUser(true);
+			newUser.getUserGroups().add(nodeGroup);
+
+			newUser.save();
+
+			return t.getObject(SystemUser.class, newUser.getId());
+		});
+		var password = supportUser.getPassword();
+		var updateRequest = new User().setPassword("newpassword");
+		var updateResponse = supply(supportUser, () -> new UserResourceImpl().update(supportUser.getId().toString(), updateRequest));
+
+		assertResponse(updateResponse, ResponseCode.FAILURE, "Cannot change password of support user");
+
+		var loadedUser = supply(t -> t.getObject(SystemUser.class, supportUser.getId()));
+
+		assertThat(loadedUser.getPassword())
+			.as("Support user password")
+			.isEqualTo(password);
 	}
 }

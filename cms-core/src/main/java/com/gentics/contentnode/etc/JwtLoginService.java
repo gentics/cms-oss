@@ -1,17 +1,17 @@
 package com.gentics.contentnode.etc;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.security.PublicKey;
-import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
@@ -19,23 +19,26 @@ import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.util.ModelBuilder;
-import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.RSAKey;
-import io.jsonwebtoken.Jwts;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.JWTClaimNames;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import com.nimbusds.jwt.proc.JWTProcessor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Login service that accepts a JWT as password. The username <em>must</em> be {@code support}, the actual user
  * information is taken from the JWT.
  *
  * <p>
- *     If the user defined in the JWT does not yet exist it will be created and put in th node admin group.
+ *     If the user defined in the JWT does not yet exist it will be created and put into the node admin group.
  * </p>
  */
 public class JwtLoginService extends AbstractLoginService {
@@ -44,12 +47,12 @@ public class JwtLoginService extends AbstractLoginService {
 	private static final String CLAIM_GIVEN_NAME = "given_name";
 	private static final String CLAIM_FAMILY_NAME = "family_name";
 	private static final String JWT_ISSUER = "Gentics";
-	private static final String PATH_PUBLIC_KEY = "/jwt/public-key.jwk";
+	private static final String PATH_PUBLIC_KEY = "keys/support-login-public-key.jwk";
 	private static final int GROUP_ID = 2;
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(JwtLoginService.class);
 
-	private static PublicKey publicKey = null;
+	private static ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
 	@Override
 	public LoginResponse login(String username, String password, ContentNodeFactory factory, HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
@@ -62,23 +65,11 @@ public class JwtLoginService extends AbstractLoginService {
 		String lastName;
 
 		try {
-			var jwtParser = Jwts.parserBuilder()
-				.requireIssuer(JWT_ISSUER)
-				.setSigningKey(getPublicKey())
-				.build();
-			var claims = jwtParser.parseClaimsJws(password).getBody();
+			var claims = getJwtProcessor().process(password, null);
 
-			for (var requiredClaim: List.of(CLAIM_EMAIL, CLAIM_GIVEN_NAME, CLAIM_FAMILY_NAME)) {
-				if (!claims.containsKey(requiredClaim) || StringUtils.isBlank(claims.get(requiredClaim).toString())) {
-					logger.error("Missing claim in support JWT: %s".formatted(requiredClaim));
-
-					return getInvalidCredentialsResponse();
-				}
-			}
-
-			email = claims.get(CLAIM_EMAIL).toString();
-			firstName = claims.get(CLAIM_GIVEN_NAME).toString();
-			lastName = claims.get(CLAIM_FAMILY_NAME).toString();
+			email = claims.getStringClaim(CLAIM_EMAIL);
+			firstName = claims.getStringClaim(CLAIM_GIVEN_NAME);
+			lastName = claims.getStringClaim(CLAIM_FAMILY_NAME);
 		} catch (Exception e) {
 			logger.error("Could not parse JWT: %s".formatted(e.getMessage()), e);
 
@@ -140,29 +131,31 @@ public class JwtLoginService extends AbstractLoginService {
 		var response = new LoginResponse();
 
 		response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE,  "Invalid credentials"));
-		response.setMessages(Collections.singletonList(new Message(Message.Type.CRITICAL, new CNI18nString("login.failed").toString())));
+		response.setMessages(Collections.singletonList(new Message(Message.Type.CRITICAL, I18NHelper.get("login.failed"))));
 
 		return response;
 	}
 
 
-	/**
-	 * Make sure the public key is loaded and return it.
-	 * @return The public key for verifying JWTs.
-	 */
-	private static PublicKey getPublicKey() {
-		if (publicKey == null) {
-			try (InputStream publicKeyInputStream = JwtLoginService.class.getResourceAsStream(PATH_PUBLIC_KEY)) {
-				var jwk = (RSAKey) JWK.parse(IOUtils.toString(publicKeyInputStream, StandardCharsets.UTF_8));
+	private synchronized static JWTProcessor<SecurityContext> getJwtProcessor() throws MalformedURLException {
+		if (jwtProcessor == null) {
+			jwtProcessor = new DefaultJWTProcessor<>();
 
-				publicKey = jwk.toPublicKey();
-			} catch (NullPointerException e) {
-				logger.error("Could not find public key \"%s\" in resources".formatted(PATH_PUBLIC_KEY));
-			} catch (IOException | ParseException | JOSEException e) {
-				logger.error("Could not load public key \"%s\" from resources: %s".formatted(PATH_PUBLIC_KEY, e.getMessage()), e);
-			}
+			var keySource = JWKSourceBuilder.create(new File(PATH_PUBLIC_KEY).toURI().toURL()).build();
+			var keySelector = new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, keySource);
+			var claimsVerifier = new DefaultJWTClaimsVerifier<>(
+				new JWTClaimsSet.Builder().issuer(JWT_ISSUER).build(),
+				new HashSet<>(Arrays.asList(
+					JWTClaimNames.ISSUED_AT,
+					JWTClaimNames.EXPIRATION_TIME,
+					CLAIM_GIVEN_NAME,
+					CLAIM_FAMILY_NAME,
+					CLAIM_EMAIL)));
+
+			jwtProcessor.setJWSKeySelector(keySelector);
+			jwtProcessor.setJWTClaimsSetVerifier(claimsVerifier);
 		}
 
-		return publicKey;
+		return jwtProcessor;
 	}
 }

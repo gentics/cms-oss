@@ -562,7 +562,7 @@ public class UserResourceImpl implements UserResource {
 
 			if (user.isSupportUser() && StringUtils.isNotEmpty(item.getPassword())) {
 				return new UserLoadResponse(
-					new Message(Type.WARNING, "password", new CNI18nString("rest.user.support_user_password").toString()),
+					new Message(Type.WARNING, "password", I18NHelper.get("rest.user.support_user_password")),
 					new ResponseInfo(ResponseCode.FAILURE, "Cannot change password of support user"),
 					SystemUser.TRANSFORM2REST.apply(user));
 			}

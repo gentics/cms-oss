@@ -194,20 +194,6 @@ public interface SystemUser extends GCNRenderable, NodeObject, Resolvable, Named
 	void setActive(boolean active) throws ReadOnlyException;
 
 	/**
-	 * Get whether this user is a support user (support users cannot change the password).
-	 *
-	 * @return Whether this user is a support user.
-	 */
-	boolean isSupportUser();
-
-	/**
-	 * Set whether this user is a support user.
-	 *
-	 * @param supportUser Whether this user is a support user.
-	 */
-	void setSupportUser(boolean supportUser) throws ReadOnlyException;
-
-	/**
 	 * get the user's creator id
 	 * @return id of the user's creator
 	 */

@@ -1,0 +1,44 @@
+<h2 *ngIf="showTitle" class="title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
+
+<div *ngIf="info" class="content">
+    <gtx-progress-bar [active]="info.running" [progress]="(info.progress / 100)" />
+
+    <div *ngIf="publisherStatus" class="entry">
+        <div class="entry-title">{{ 'dashboard.scheduler' | i18n }}</div>
+        <div class="entry-value">{{ ('scheduler.status_' + publisherStatus) | i18n }}</div>
+    </div>
+
+    <div *ngIf="info.phase" class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_publish_status' | i18n }}</div>
+        <div class="entry-value">{{ info.phase }}</div>
+    </div>
+
+    <div *ngFor="let typed of typedStatus" class="entry typed-entry">
+        <div class="entry-title">
+            <icon class="type-icon">{{ typed.icon }}</icon>
+            <span class="type-name">{{ ('common.' + typed.type + '_plural') | i18n }}</span>
+        </div>
+        <div class="entry-value">
+            {{ typed.i18n | i18n: typed.data }}
+        </div>
+    </div>
+
+    <div *ngIf="info.estimatedDuration" class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_estimated_publish_duration' | i18n }}</div>
+        <div class="entry-value">{{ info.estimatedDuration | gtxI18nDuration }}</div>
+    </div>
+
+    <div class="entry">
+        <div class="entry-title">{{ 'widget.publishing_process_last_status' | i18n }}</div>
+        <div class="entry-value">
+            <div *ngIf="hasFailedJobs; else processStatusHealthyContent" class="failed-jobs-details">
+                <span class="warning">{{ 'widget.publishing_process_status_failed' | i18n }}</span> -
+                <a [routerLink]="['/' + AdminUIModuleRoutes.SCHEDULER]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
+            </div>
+
+            <ng-template #processStatusHealthyContent>
+                <span class="success">{{ 'widget.publishing_process_status_healthy' | i18n }}</span>
+            </ng-template>
+        </div>
+    </div>
+</div>

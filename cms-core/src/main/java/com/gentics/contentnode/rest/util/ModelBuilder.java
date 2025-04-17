@@ -1991,8 +1991,7 @@ public class ModelBuilder {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(nodeNode.isPubDirSegment());
 		}
-		node.setHttps(nodeNode.isHttps());
-		node.setHost(nodeNode.getHostname());
+		node.setHost((nodeNode.isHttps() ? "https://" : "http://") + nodeNode.getHostname());
 		node.setHostProperty(nodeNode.getHostnameProperty());
 		node.setUtf8(nodeNode.isUtf8());
 		node.setPublishFs(nodeNode.doPublishFilesystem());

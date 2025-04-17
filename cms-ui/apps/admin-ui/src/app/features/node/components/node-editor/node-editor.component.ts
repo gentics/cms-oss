@@ -229,7 +229,6 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             hostType: this.entity?.hostProperty
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
-            https: this.entity?.https,
             inheritedFromId: this.entity?.inheritedFromId,
             insecurePreviewUrl: this.entity?.insecurePreviewUrl,
             meshPreviewUrl: this.entity?.meshPreviewUrl,

@@ -63,8 +63,8 @@ import {
     DataSourceUpdateRequest,
     DataSourceUpdateResponse,
     DirtQueueListOptions,
-    DirtQueueListResponse,
-    DirtQueueSummary,
+    DirtQueueResponse,
+    DirtQueueSummaryResponse,
     ElasticSearchIndexListOptions,
     ElasticSearchIndexListResponse,
     ElasticSearchIndexRebuildOptions,
@@ -367,6 +367,7 @@ import {
     LicenseContentRepositoryInfoOptions,
     LicenseContentRepositoryInfoResponse,
     PushLicenseRequest,
+    FileUploadRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -389,8 +390,8 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     reloadConfiguration: () => Response;
 
-    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueListResponse;
-    getDirtQueueSummary: () => DirtQueueSummary;
+    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueResponse;
+    getDirtQueueSummary: () => DirtQueueSummaryResponse;
     redoFailedDirtQueueEntry: (actionId: string | number) => void;
     deleteFailedDirtQueueEntry: (actionId: string | number) => void;
 
@@ -578,6 +579,7 @@ export interface AbstractFileAPI extends BasicAPI {
     list: (options?: FileListOptions) => FileListResponse;
     create: (body: FileCreateRequest) => FileUploadResponse;
     upload: (file: File | Blob, options: FileUploadOptions, fileName?: string) => FileUploadResponse;
+    uploadFromURL: (body: FileUploadRequest) => FileUploadResponse;
     get: (id: number | string, options?: ItemRequestOptions) => FileResponse;
     getMultiple: (body: MultiObjectLoadRequest) => FileListResponse;
     update: (id: number | string, body: FileSaveRequest) => Response;

@@ -33,6 +33,9 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.gentics.contentnode.rest.model.scheduler.IntervalUnit;
+import com.gentics.contentnode.rest.model.scheduler.ScheduleType;
+import com.gentics.contentnode.scheduler.CoreInternalSchedulerTask;
 import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -238,7 +241,8 @@ public class SchedulerFactory extends AbstractFactory {
 
 	/**
 	 * Initialize the scheduler factory.
-	 * This will make sure, that all internal tasks are present in the database
+	 * This will make sure, that all internal tasks are present in the database and that there is at least
+	 * one schedule for the {@link CoreInternalSchedulerTask#publish} task.
 	 * @throws NodeException
 	 */
 	public void initialize() throws NodeException {
@@ -260,6 +264,37 @@ public class SchedulerFactory extends AbstractFactory {
 				}
 			});
 		}
+
+		Trx.operate(t -> {
+			var publishTask = t.getObject(
+				SchedulerTask.class,
+				DBUtils.select(
+					"SELECT id FROM scheduler_task WHERE internal = ? AND command = ?",
+					ps1 -> {
+						ps1.setBoolean(1, true);
+						ps1.setString(2, CoreInternalSchedulerTask.publish.getCommand());
+					},
+					DBUtils.firstInt("id")));
+			var scheduleId = DBUtils.select(
+				"SELECT id FROM scheduler_schedule WHERE scheduler_task_id = ?",
+				ps -> ps.setInt(1, publishTask.getId()),
+				DBUtils.firstInt("id"));
+
+			if (scheduleId == 0) {
+				var schedule = t.createObject(SchedulerSchedule.class);
+
+				schedule.setName(publishTask.getName());
+				schedule.setSchedulerTask(publishTask);
+				schedule.setActive(true);
+
+				var scheduleData = schedule.getScheduleData();
+
+				scheduleData.setType(ScheduleType.interval);
+				scheduleData.setInterval(new ScheduleInterval().setValue(1).setUnit(IntervalUnit.minute));
+
+				schedule.save();
+			}
+		});
 
 		startScheduler();
 	}

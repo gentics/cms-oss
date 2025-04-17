@@ -2,13 +2,13 @@ import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, DirtQueueItemBO, discard, Entit
 import { AdminOperations, BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { DirtQueueItem, DirtQueueListOptions } from '@gentics/cms-models';
+import { DirtQueueEntry, DirtQueueListOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
-export class DirtQueueItemTableLoaderService extends BaseTableLoaderService<DirtQueueItem, DirtQueueItemBO> {
+export class DirtQueueItemTableLoaderService extends BaseTableLoaderService<DirtQueueEntry, DirtQueueItemBO> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -45,7 +45,7 @@ export class DirtQueueItemTableLoaderService extends BaseTableLoaderService<Dirt
         );
     }
 
-    public mapToBusinessObject(item: DirtQueueItem): DirtQueueItemBO {
+    public mapToBusinessObject(item: DirtQueueEntry): DirtQueueItemBO {
         return {
             ...item,
             [BO_ID]: String(item.id),

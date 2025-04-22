@@ -5,7 +5,7 @@ import com.gentics.contentnode.rest.model.Node;
 /**
  * Model of a node list
  */
-public class NodeList extends AbstractListResponse<Node> {
+public class NodeList extends AbstractStagingStatusListResponse<Node> {
 	/**
 	 * Serial Version UID
 	 */

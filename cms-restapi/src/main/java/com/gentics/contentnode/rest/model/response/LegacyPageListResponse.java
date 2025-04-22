@@ -16,7 +16,7 @@ import com.gentics.contentnode.rest.model.Page;
  * @author Clemens
  */
 @XmlRootElement
-public class LegacyPageListResponse extends StagingResponse<String> {
+public class LegacyPageListResponse extends AbstractStagingResponse<String> {
 	private static final long serialVersionUID = 5798697357733469204L;
 
 	private List<Page> pages;

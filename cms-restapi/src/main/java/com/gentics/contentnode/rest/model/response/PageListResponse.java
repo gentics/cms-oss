@@ -5,7 +5,7 @@ import com.gentics.contentnode.rest.model.Page;
 /**
  * Response for page list requests.
  */
-public class PageListResponse extends AbstractListResponse<Page> {
+public class PageListResponse extends AbstractStagingStatusListResponse<Page> {
 	/**
 	 * Serial Version UID
 	 */

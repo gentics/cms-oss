@@ -207,7 +207,7 @@ export class SelectComponent
 
     protected onValueChange(): void {
         if (!Array.isArray(this.value)) {
-            this.valueArray = this.value ? [this.value] : [];
+            this.valueArray = this.value != null ? [this.value] : [];
         } else {
             this.valueArray = this.value;
         }

@@ -2,6 +2,8 @@ package com.gentics.contentnode.rest.model;
 
 import java.io.Serializable;
 
+import com.webcohesion.enunciate.metadata.DocumentationExample;
+
 /**
  * Model for breadcrumbs items
  */
@@ -30,6 +32,7 @@ public class BreadcrumbItem implements Serializable {
 	 * ID of the folder
 	 * @return ID
 	 */
+	@DocumentationExample(value = "28", value2 = "799")
 	public Integer getId() {
 		return id;
 	}
@@ -48,6 +51,7 @@ public class BreadcrumbItem implements Serializable {
 	 * Global ID
 	 * @return global ID
 	 */
+	@DocumentationExample(value = "0737.1de1eecb-059c-11f0-ae44-482ae36fb1c5", value2 = "0737.c2b67126-0303-11f0-ae44-482ae36fb1c5")
 	public String getGlobalId() {
 		return globalId;
 	}
@@ -66,6 +70,7 @@ public class BreadcrumbItem implements Serializable {
 	 * Name of the folder
 	 * @return name
 	 */
+	@DocumentationExample(value = "Home", value2 = "News")
 	public String getName() {
 		return name;
 	}

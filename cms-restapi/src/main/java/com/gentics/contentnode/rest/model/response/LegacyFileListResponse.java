@@ -18,7 +18,7 @@ import com.gentics.contentnode.rest.model.File;
  * @author Clemens
  */
 @XmlRootElement
-public class LegacyFileListResponse extends StagingResponse<String> {
+public class LegacyFileListResponse extends AbstractStagingResponse<String> {
 
 	private static final long serialVersionUID = -7014356589262104642L;
 

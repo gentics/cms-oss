@@ -3,7 +3,14 @@
   "date": "14.03.2025",
   "changeLogEntryFileNames": [
     "8180.SUP-18179.bugfix",
-    "8178.SUP-18179.bugfix"
+    "8178.SUP-18179.bugfix",
+    "8187.SUP-18198.bugfix",
+    "8184.SUP-18194.bugfix",
+    "8190.SUP-18150.bugfix",
+    "8177.SUP-17776.enhancement",
+    "8194.SUP-18213.bugfix",
+    "8193.SUP-18222.bugfix",
+    "8179.SUP-18180.documentation"
   ],
   "genericProperties": {
     "alohaeditor-date": "12.03.2025",

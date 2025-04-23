@@ -36,6 +36,7 @@ import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.UpdatePagesResult;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Folder;
@@ -382,10 +383,9 @@ public class TemplateSyncTest {
 		try (Trx trx = new Trx(testUser)) {
 			assertTagStatus(compatibleTemplate, new TagStatus().setName(TAG_NAME).setConstructId(compatibleConstructId).setOutOfSync(1));
 
-			CNI18nString message = new CNI18nString("page.readonly.locked");
-			message.setParameter("0", ModelBuilder.getFolderPath(page.getFolder()) + page.getName());
+			String message = I18NHelper.get("page.readonly.locked", I18NHelper.getName(page));
 
-			assertMigration(compatibleTemplate, false, 0, 1, 1, new DefaultNodeMessage(Level.ERROR, Template.class, message.toString()));
+			assertMigration(compatibleTemplate, false, 0, 1, 1, new DefaultNodeMessage(Level.ERROR, Template.class, message));
 			assertTagStatus(compatibleTemplate, new TagStatus().setName(TAG_NAME).setConstructId(compatibleConstructId).setOutOfSync(1));
 		}
 	}

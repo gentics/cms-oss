@@ -181,7 +181,7 @@ public class MCPermissionPagePublishTest {
 		try (Trx trx = new Trx(null, ObjectTransformer.getInt(testUser.getId(), 0))) {
 			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
 
-			GenericResponse response = pageResource.publish(ObjectTransformer.getString(page.getId(), ""), null, new PagePublishRequest());
+			GenericResponse response = pageResource.publish(ObjectTransformer.getString(page.getId(), ""), channel.getId(), new PagePublishRequest());
 
 			if (viewPermission) {
 				ContentNodeRESTUtils.assertResponseOK(response);

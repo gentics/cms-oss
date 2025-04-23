@@ -199,7 +199,7 @@ Building the CMS Guides locally requires three steps:
 First, the artifacts containing the assets of the guides need to be installed locally:
 
 ```
-docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave:master -c "cd /guides ; guides build"
 cd [workspace]/cms-oss
 mvn -pl cms-oss-doc -am clean install -Dguides.exec.skip -Dskip.unit.tests
 ```
@@ -214,7 +214,7 @@ mvn -pl cms-doc -am clean package -Dguides.exec.skip
 Now the guides can be built with
 
 ```
-docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave:master -c "cd /guides ; guides build"
 ```
 
 After that, build the package again

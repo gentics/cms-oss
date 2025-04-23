@@ -74,6 +74,11 @@
 			<artifactId>cms-search-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-translation-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.webcohesion.enunciate</groupId>
@@ -123,6 +128,14 @@
 		<dependency>
 			<groupId>com.gentics.cms</groupId>
 			<artifactId>cms-search-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-translation-api</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
 			<classifier>javadoc</classifier>

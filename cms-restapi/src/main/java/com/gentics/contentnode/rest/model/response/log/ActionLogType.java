@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.webcohesion.enunciate.metadata.DocumentationExample;
+
 /**
  * Model of the type of logged objects
  */
@@ -28,6 +30,7 @@ public class ActionLogType implements Serializable {
 	 * Type name
 	 * @return name
 	 */
+	@DocumentationExample(value = "page", value2 = "folder")
 	public String getName() {
 		return name;
 	}
@@ -46,6 +49,7 @@ public class ActionLogType implements Serializable {
 	 * Translated label
 	 * @return label
 	 */
+	@DocumentationExample(value = "Page", value2= "Folder")
 	public String getLabel() {
 		return label;
 	}

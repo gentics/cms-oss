@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Response for a folder list request.
  */
-public class FolderListResponse extends AbstractListResponse<Folder> {
+public class FolderListResponse extends AbstractStagingStatusListResponse<Folder> {
 	/**
 	 * Serial Version UID
 	 */

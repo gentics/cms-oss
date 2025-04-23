@@ -1,7 +1,9 @@
 package com.gentics.contentnode.rest.model;
 
+import com.webcohesion.enunciate.metadata.DocumentationExample;
+
 /**
- * Model class for CMP version information.
+ * CMP version information.
  */
 public class CmpVersionInfo {
 
@@ -10,6 +12,11 @@ public class CmpVersionInfo {
 	private String portalVersion;
 	private CmpCompatibility compatibility;
 
+	/**
+	 * Version of Mesh
+	 * @return
+	 */
+	@DocumentationExample(value = "2.1.16", value2 = "3.0.5")
 	public String getMeshVersion() {
 		return meshVersion;
 	}
@@ -19,6 +26,10 @@ public class CmpVersionInfo {
 		return this;
 	}
 
+	/**
+	 * Portal Type
+	 * @return
+	 */
 	public String getPortalType() {
 		return portalType;
 	}

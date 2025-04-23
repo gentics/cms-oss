@@ -11,7 +11,7 @@ import com.gentics.contentnode.rest.model.Folder;
  * Response containing information about multiple folders.
  */
 @XmlRootElement
-public class MultiFolderLoadResponse extends StagingResponse<String> {
+public class MultiFolderLoadResponse extends AbstractStagingResponse<String> {
 
 	private static final long serialVersionUID = -7521219058301429875L;
 

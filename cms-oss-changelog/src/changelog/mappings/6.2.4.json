@@ -2,6 +2,12 @@
   "version": "6.2.4",
   "date": "30.01.2025",
   "changeLogEntryFileNames": [
+    "8116.SUP-17941.bugfix",
+    "8111.SUP-17183.bugfix",
+    "8109.SUP-17980.optional-manualchange",
+    "8090.SUP-17899.bugfix",
+    "8112.SUP-17964.bugfix",
+    "8114.SUP-17941.bugfix",
     "8110.SUP-17986.bugfix"
   ],
   "genericProperties": {

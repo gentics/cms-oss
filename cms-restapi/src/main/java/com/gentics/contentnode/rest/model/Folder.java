@@ -12,6 +12,8 @@ import java.util.Set;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.webcohesion.enunciate.metadata.ReadOnly;
+
 /**
  * Folder object, representing a Folder in GCN
  * @author norbert
@@ -644,6 +646,7 @@ public class Folder extends ContentNodeItem implements Serializable {
 	 * Breadcrums of the folder. The first item is the root folder and the last item the folder itself
 	 * @return list of breadcrumb items
 	 */
+	@ReadOnly
 	public List<BreadcrumbItem> getBreadcrumbs() {
 		return breadcrumbs;
 	}

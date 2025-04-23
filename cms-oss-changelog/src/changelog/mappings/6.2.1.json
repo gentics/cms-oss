@@ -2,6 +2,7 @@
   "version": "6.2.1",
   "date": "17.12.2024",
   "changeLogEntryFileNames": [
+    "8081.SUP-17887.bugfix",
     "8084.SUP-17885.bugfix",
     "8089.SUP-17877.bugfix",
     "8086.SUP-17891.bugfix"

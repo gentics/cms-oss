@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.webcohesion.enunciate.metadata.DocumentationExample;
+
 /**
  * Model of a logged action
  */
@@ -28,6 +30,7 @@ public class ActionModel implements Serializable {
 	 * Action name
 	 * @return name
 	 */
+	@DocumentationExample(value = "publish", value2 = "delete")
 	public String getName() {
 		return name;
 	}
@@ -44,6 +47,7 @@ public class ActionModel implements Serializable {
 	 * Translated label
 	 * @return label
 	 */
+	@DocumentationExample(value = "Publish page", value2 = "Delete")
 	public String getLabel() {
 		return label;
 	}

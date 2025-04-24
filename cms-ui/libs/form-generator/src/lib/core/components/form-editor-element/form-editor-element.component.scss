@@ -67,7 +67,8 @@
         z-index: 0;
     }
 
-    &.is-interactive:hover, &.properties-editor-open {
+    &.is-interactive:hover,
+    &.properties-editor-open {
         @include gcmsEditorBoxShadowFormElement;
         border: 1px solid transparent;
 
@@ -83,6 +84,20 @@
     &.is-dragged {
         opacity: 0.5;
     }
+
+    &.in-menu {
+        .form-element-container-header {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        &:hover .form-element-container-inner {
+            box-shadow: 0px 3px 15px 3px rgba(0, 0, 0, 0.3);
+            background-color: $gcms-color-page-background-hover;
+        }
+    }
+
 }
 
 .form-element-container-inner {
@@ -90,7 +105,7 @@
     flex-flow: column nowrap;
     justify-content: space-between;
     background-color: $gcms-color-editor-element-background-default;
-    width: calc(100% - 2rem);
+    width: 100%;
     transition: box-shadow $gcms-form-editor-transition-duration ease-in-out;
     box-shadow: transparent 5px 5px 10px;
 
@@ -109,15 +124,19 @@
 .form-element-container-header {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
-    height: 24px; /* keep height consistent even if properties editor toggle is hidden */
+    cursor: move;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+
+    .form-element-type-icon {
+        font-size: 1.3em;
+    }
 }
 
 .form-element-type {
     font-size: 0.9rem;
     color: #666;
-    padding: 0 0.5rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -138,8 +157,10 @@
     transform: rotate(90deg);
     transition: all $gcms-form-editor-transition-duration ease-in-out;
     cursor: pointer;
+    margin-left: auto;
 
-    &:hover, &.active {
+    &:hover,
+    &.active {
         color: $gtx-color-primary;
     }
 
@@ -174,15 +195,7 @@
 }
 
 .form-element-buttons-container {
-    // display: flex;
-    // z-index: 1;
-    // flex-direction: column;
-    // align-items: center;
-    // position: absolute;
-    // right: 0;
-    // top: 0;
     width: 2rem;
-    // height: 100%;
 }
 
 .form-element-button {
@@ -257,13 +270,14 @@
 
 .form-element-properties-editor-container--opened {
     max-height: 50rem;
-    overflow-y: auto;    min-height: 2rem;
+    overflow-y: auto;
+    min-height: 2rem;
     border-top: 1px solid #ddd;
     opacity: 1;
 }
 
 .form-element-container-outer {
-    &:hover > .form-element-buttons-adder {
+    &:hover>.form-element-buttons-adder {
         display: flex;
         cursor: pointer;
     }
@@ -282,10 +296,11 @@
 
     background-color: $gcms-color-editor-element-buttons-background-default;
     color: $gtx-color-primary;
-    box-shadow: rgba( 0, 0, 0, 0.3 ) 5px 5px 10px;
+    box-shadow: rgba(0, 0, 0, 0.3) 5px 5px 10px;
     transition: background-color $gcms-form-editor-transition-duration ease-in-out;
 
-    &:hover, &.menu-visible {
+    &:hover,
+    &.menu-visible {
         cursor: pointer;
         display: flex;
         background-color: $gcms-color-editor-element-buttons-background-hover;

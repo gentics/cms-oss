@@ -1,8 +1,10 @@
-import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
-import { AppStateService, SelectState, SetUserSettingAction } from '@admin-ui/state';
+import { AdminHandlerService, I18nNotificationService, NodeOperations, NodeTableLoaderService, ScheduleHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subscription, combineLatest } from 'rxjs';
-import { filter, mergeMap } from 'rxjs/operators';
+import { ContentMaintenanceAction, DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
+import { forkJoin, Subscription } from 'rxjs';
+import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
+import { ModalService } from '@gentics/ui-core';
+import { EntityTableActionClickEvent } from '@admin-ui/common';
 
 export enum ContentMaintenanceTabs {
     GENERAL = 'general',
@@ -19,47 +21,83 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 
     public readonly ContentMaintenanceTabs = ContentMaintenanceTabs;
 
-    @SelectState(state => state.loading.masterLoading)
-    public isLoading$: Observable<boolean>;
-
     public activeTabId: ContentMaintenanceTabs = ContentMaintenanceTabs.GENERAL;
 
+    public loading = false;
+    public working = false;
+
+    public dirtQueue: DirtQueueResponse;
+    public dirtQueueSummary: DirtQueueSummaryResponse;
+    public failedTasks: DirtQueueEntry[] = [];
+
+    public publishInfo: PublishInfo;
+    public publishQueue: PublishQueue;
+
+    public schedulerStatus: SchedulerStatus;
+    public hasFailedSchedules = false;
+
+    public nodes: Node[] = [];
+
     /** Node IDs selected for ction request. */
-    public selectedNodeIds: number[] = [];
-
-    /** If TRUE components in this view poll and refresh the data they display in an intervall defined in `lifeSyncIntervall` */
-    public lifeSyncEnabled = false;
-
-    /** Determines the amount of seconds of components in this view between polling information. */
-    public lifeSyncIntervall = PUBLISH_PROCESS_REFRESH_INTERVAL;
+    public selectedNodeIds: string[] = [];
 
     private subscriptions: Subscription[] = [];
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private appState: AppStateService,
+        private handler: AdminHandlerService,
+        private schedule: ScheduleHandlerService,
+        private nodeOps: NodeOperations,
+        private nodeTable: NodeTableLoaderService,
+        private modals: ModalService,
+        private notification: I18nNotificationService,
     ) {}
 
     ngOnInit(): void {
-        this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.auth.isLoggedIn),
-            this.appState.select(state => state.auth.currentUserId),
-        ]).pipe(
-            filter(([loggedIn]) => loggedIn),
-            mergeMap(([, userId]) => this.appState.select(state => state.ui.settings[userId])),
-        ).subscribe(userSettings => {
-            this.lifeSyncEnabled = userSettings.pollContentMaintenance ?? false;
-            this.changeDetector.markForCheck();
-        }));
+        this.loadData();
     }
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    changeLifeSyncPoll(doPoll: boolean): void {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.appState.dispatch(new SetUserSettingAction('pollContentMaintenance', doPoll));
+    public loadData(): void {
+        if (this.loading) {
+            return;
+        }
+
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
+        this.nodeTable.reload();
+
+        this.subscriptions.push(forkJoin([
+            this.handler.getDirtQueue(),
+            this.handler.getDirtQueueSummary(),
+
+            this.handler.getPublishInfo(),
+            this.handler.getPublishQueue(),
+
+            this.schedule.status(),
+            this.schedule.list(null, { pageSize: 0, sort: '-edate', failed: true }),
+
+            this.nodeOps.getAll(),
+        ]).subscribe(([dirtQueue, summary, publishInfo, publishQueue, schedulerStatus, failedSchedules, nodes]) => {
+            this.dirtQueue = dirtQueue;
+            this.failedTasks = dirtQueue.items.filter(item => item.failed);
+            this.dirtQueueSummary = summary;
+
+            this.publishInfo = publishInfo;
+            this.publishQueue = publishQueue;
+
+            this.schedulerStatus = schedulerStatus.status;
+            this.hasFailedSchedules = failedSchedules.numItems > 0;
+
+            this.nodes = nodes;
+
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     changeTab(activeTabId: ContentMaintenanceTabs): void {
@@ -67,11 +105,65 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
     }
 
-    updateSelectedIds(newIds: number[]): void {
-        this.selectedNodeIds = newIds;
+    public async reloadConfiguration(): Promise<void> {
+        if (this.working) {
+            return;
+        }
+
+        this.working = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            await this.handler.reloadConfiguration().toPromise();
+        } catch (err) {
+            // Nothing to do
+        }
+
+        this.working = false;
+        this.changeDetector.markForCheck();
     }
 
-    updateInterval(valInSeconds: number): void {
-        this.lifeSyncIntervall = valInSeconds * 1000;
+    public async stopPublishing(): Promise<void> {
+        if (this.working) {
+            return;
+        }
+
+        this.working = true;
+        this.changeDetector.markForCheck();
+
+        try {
+            await this.handler.stopPublishing();
+        } catch (err) {
+            // Nothing to do
+        }
+
+        this.working = false;
+        this.changeDetector.markForCheck();
+    }
+
+    public async handleTableAction(event: EntityTableActionClickEvent<Node>): Promise<void> {
+        const ids = Object.values(MaintenanceActionModalAction);
+        if (!ids.includes(event.actionId as any)) {
+            return;
+        }
+
+        const items = event.selection ? event.selectedItems : [event.item];
+        if (items.length === 0) {
+            this.notification.show({
+                message: 'contentmaintenance.error_no_nodes_selected',
+                type: 'warning',
+            });
+            return;
+        }
+
+        const modal = await this.modals.fromComponent(MaintenanceActionModalComponent, {
+            closeOnOverlayClick: false,
+            width: '50%',
+        }, {
+            modalAction: event.actionId as any,
+            selectedNodeIds: items.map(node => node.id),
+        });
+
+        await modal.open();
     }
 }

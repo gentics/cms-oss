@@ -97,17 +97,22 @@ public class LightWeightPageList extends AbstractList<Page> {
 			try (ChannelTrx cTrx = new ChannelTrx(tuple.nodeId)) {
 				Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, tuple.pageId);
 				if (page == null) {
+					logger.warn(String.format("Page not found: node: %d, id: %d", tuple.nodeId, tuple.pageId));
 					return null;
 				} else {
 					return (Page) ChannelTrxInvocationHandler.wrap(tuple.nodeId, page);
 				}
 			} catch (NodeException e) {
-				logger.error("Error while getting page " + tuple.pageId, e);
+				logger.error(String.format("Error while getting page : node: %d, id: %d", tuple.nodeId, tuple.pageId), e);
 				return null;
 			}
 		} else {
 			try {
-				return TransactionManager.getCurrentTransaction().getObject(Page.class, tuple.pageId);
+				Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, tuple.pageId);
+				if (page == null) {
+					logger.warn(String.format("Page not found: id: %d", tuple.pageId));
+				}
+				return page;
 			} catch (NodeException e) {
 				logger.error("Error while getting page " + tuple.pageId, e);
 				return null;

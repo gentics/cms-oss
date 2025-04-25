@@ -5,7 +5,6 @@ import java.util.Comparator;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.etc.StringUtils;
 
@@ -33,11 +32,11 @@ public class FolderComparator extends AbstractComparator implements Comparator<F
 
 		switch (attribute) {
 		case EDIT_DATE:
-			cmp = f1.getEDate().compareTo(f2.getEDate()) * way;
+			cmp = compareDate(f1, f2, Folder::getEDate);
 			break;
 
 		case CREATE_DATE:
-			cmp = f1.getCDate().compareTo(f2.getCDate()) * way;
+			cmp = compareDate(f1, f2, Folder::getCDate);
 			break;
 
 		case NAME:

@@ -52,15 +52,15 @@ public class PageComparator extends AbstractComparator implements Comparator<Pag
 			break;
 
 		case EDIT_DATE:
-			cmp = p1.getEDate().compareTo(p2.getEDate()) * way;
+			cmp = compareDate(p1, p2, Page::getEDate);
 			break;
 
 		case CREATE_DATE:
-			cmp = p1.getCDate().compareTo(p2.getCDate()) * way;
+			cmp = compareDate(p1, p2, Page::getCDate);
 			break;
 
 		case PUBLISH_DATE:
-			cmp = p1.getPDate().compareTo(p2.getPDate()) * way;
+			cmp = compareDate(p1, p2, Page::getPDate);
 			break;
 
 		case FILENAME:
@@ -130,16 +130,16 @@ public class PageComparator extends AbstractComparator implements Comparator<Pag
 			cmp = compareNode(p1, p2);
 			break;
 		case CUSTOM_EDIT_DATE:
-			cmp = p1.getCustomEDate().compareTo(p2.getCustomEDate()) * way;
+			cmp = compareDate(p1, p2, Page::getCustomEDate);
 			break;
 		case CUSTOM_CREATE_DATE:
-			cmp = p1.getCustomCDate().compareTo(p2.getCustomCDate()) * way;
+			cmp = compareDate(p1, p2, Page::getCustomCDate);
 			break;
 		case CUSTOM_OR_DEFAULT_EDIT_DATE:
-			cmp = p1.getCustomOrDefaultEDate().compareTo(p2.getCustomOrDefaultEDate()) * way;
+			cmp = compareDate(p1, p2, Page::getCustomOrDefaultEDate);
 			break;
 		case CUSTOM_OR_DEFAULT_CREATE_DATE:
-			cmp = p1.getCustomOrDefaultCDate().compareTo(p2.getCustomOrDefaultCDate()) * way;
+			cmp = compareDate(p1, p2, Page::getCustomOrDefaultCDate);
 			break;
 		default:
 			cmp = 0;

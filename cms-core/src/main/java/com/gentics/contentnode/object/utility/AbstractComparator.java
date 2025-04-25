@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.object.Disinheritable;
@@ -24,6 +26,11 @@ import com.gentics.lib.log.NodeLogger;
  * Abstract base class for all kinds of comparators
  */
 public abstract class AbstractComparator {
+
+	/**
+	 * An empty {@link ContentNodeDate}.
+	 */
+	protected static final ContentNodeDate NO_DATE = new ContentNodeDate(0);
 
 	/**
 	 * Attributes for use with the {@link FileComparator} and the  {@link TemplateComparator}
@@ -190,7 +197,27 @@ public abstract class AbstractComparator {
 				n2 = o2.getOwningNode();
 			}
 
-			return StringUtils.mysqlLikeCompare(n1.getFolder().getName(), n2.getFolder().getName()) * way;
+			return StringUtils.mysqlLikeCompare(
+					(n1 == null || n1.getFolder() == null) ? "" : n1.getFolder().getName(), 
+					(n2 == null || n2.getFolder() == null) ? "" : n2.getFolder().getName()) * way;
+		} catch (NodeException e) {
+			return 0;
+		}
+	}
+
+	/**
+	 * Compare objects by a {@link ContentNodeDate}
+	 * @param o1 first object
+	 * @param o2 second object
+	 * @param extractor function that extracts the date object from the objects
+	 * @return -1, 0 or 1
+	 */
+	protected <T> int compareDate(T o1, T o2, Function<T, ContentNodeDate> extractor) {
+		try {
+			ContentNodeDate date1 = Optional.ofNullable(extractor.apply(o1)).orElse(NO_DATE);
+			ContentNodeDate date2 = Optional.ofNullable(extractor.apply(o2)).orElse(NO_DATE);
+
+			return date1.compareTo(date2) * way;
 		} catch (NodeException e) {
 			return 0;
 		}

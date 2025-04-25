@@ -37,11 +37,11 @@ public class FileComparator extends AbstractComparator implements Comparator<Fil
 			break;
 
 		case EDIT_DATE:
-			cmp = f1.getEDate().compareTo(f2.getEDate()) * way;
+			cmp = compareDate(f1, f2, File::getEDate);
 			break;
 
 		case CREATE_DATE:
-			cmp = f1.getCDate().compareTo(f2.getCDate()) * way;
+			cmp = compareDate(f1, f2, File::getCDate);
 			break;
 
 		case TYPE:

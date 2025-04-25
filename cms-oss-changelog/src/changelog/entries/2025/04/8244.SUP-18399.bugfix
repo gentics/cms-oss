@@ -1,0 +1,1 @@
+Mesh: The `HTTPOnly` cookie setting, set by Mesh on login, is now stripped off.

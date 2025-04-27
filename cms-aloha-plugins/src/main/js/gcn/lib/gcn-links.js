@@ -17,6 +17,7 @@
  * @prop {string=} internalTargetLabel The label/name to where the internal link is referring to
  * @prop {number=} internalTargetId The ID of the target element
  * @prop {string=} internalTargetType The type of the target element
+ * @prop {string=} internalTargetLang The language of the target element, if available
  * @prop {number=} internalTargetNodeId In which Node the target element resides in
  */
 /**
@@ -291,7 +292,7 @@ define('gcn/gcn-links', [
 		element.setAttribute(ATTR_URL, data.url.href);
 		element.setAttribute(ATTR_HREF, link);
 		element.setAttribute(ATTR_ANCHOR, data.url.anchor);
-		element.setAttribute(ATTR_HREF_LANG, data.lang);
+		element.setAttribute(ATTR_HREF_LANG, data.lang || data.url.internalTargetLang);
 	};
 
 	/**

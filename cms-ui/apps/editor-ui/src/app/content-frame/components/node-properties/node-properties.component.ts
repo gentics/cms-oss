@@ -11,10 +11,11 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { EditableNodeProps } from '@editor-ui/app/common/models';
 import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { ContentRepository, ContentRepositoryType, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, NodeUrlMode } from '@gentics/cms-models';
+import { ContentRepository, ContentRepositoryType, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NODE_HOSTNAME_REGEXP, NODE_PATH_REGEXP, NodeHostnameType, NodeUrlMode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     createPropertyPatternValidator,
+    createRegexValidator,
     FormProperties,
     generateFormProvider,
     generateValidatorProvider,
@@ -129,9 +130,14 @@ export class NodePropertiesComponent
         return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.value?.name || '', Validators.required),
             https: new FormControl(this.value?.https ?? false),
-            host: new FormControl(this.value?.host || '', Validators.required),
+            host: new FormControl(this.value?.host || '', [
+                Validators.required,
+                Validators.maxLength(255),
+                createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.value?.hostProperty || '', [
                 Validators.required,
+                Validators.maxLength(255),
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
             defaultFileFolderId: new FormControl(this.value?.defaultFileFolderId),
@@ -140,8 +146,14 @@ export class NodePropertiesComponent
             publishFs: new FormControl(this.value?.publishFs ?? false),
             publishFsPages: new FormControl(this.value?.publishFsPages ?? false),
             publishFsFiles: new FormControl(this.value?.publishFsFiles ?? false),
-            publishDir: new FormControl(this.value?.publishDir || ''),
-            binaryPublishDir: new FormControl(this.value?.binaryPublishDir || ''),
+            publishDir: new FormControl(this.value?.publishDir || '', [
+                Validators.maxLength(255),
+                createRegexValidator(NODE_PATH_REGEXP),
+            ]),
+            binaryPublishDir: new FormControl(this.value?.binaryPublishDir || '', [
+                Validators.maxLength(255),
+                createRegexValidator(NODE_PATH_REGEXP),
+            ]),
             publishContentMap: new FormControl(this.value?.publishContentMap ?? false),
             publishContentMapPages: new FormControl(this.value?.publishContentMapPages ?? false),
             publishContentMapFiles: new FormControl(this.value?.publishContentMapFiles ?? false),

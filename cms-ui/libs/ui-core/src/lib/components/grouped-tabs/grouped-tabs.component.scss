@@ -41,6 +41,7 @@
     .grouped-tabs {
         float: left;
         margin-right: 15px;
+        max-width: 25%;
 
         &::ng-deep gtx-tab-pane > .tab-content:not(.is-active) {
             display: none;

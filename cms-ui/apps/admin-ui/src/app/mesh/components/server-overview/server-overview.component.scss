@@ -12,10 +12,6 @@
     overflow: auto;
 }
 
-.overview-table-wrapper {
-    padding-left: 3rem;
-}
-
 .overview-table {
     thead tr {
         border-bottom: 1px solid rgba(0, 0, 0, 0.24);
@@ -45,6 +41,7 @@
     tr > td:first-child {
         font-weight: bold;
         padding-left: 0;
+		min-width: 16%;
     }
 
     tr > td:last-child {

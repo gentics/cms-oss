@@ -19,6 +19,7 @@
             float: unset;
             flex: 1 1 auto;
             max-width: unset !important;
+            min-width: calc(75% - 15px);
         }
     }
 }

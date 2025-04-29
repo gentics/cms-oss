@@ -5,6 +5,7 @@ import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     Feature,
     NODE_HOSTNAME_PROPERTY_PREFIX,
+    NODE_HOSTNAME_REGEXP,
     NODE_PREVIEW_URL_PROPERTY_PREFIX,
     Node,
     NodeHostnameType,
@@ -16,6 +17,7 @@ import {
     FormProperties,
     VALIDATOR_REGEX_ERROR_PROPERTY,
     createPropertyPatternValidator,
+    createRegexValidator,
     generateFormProvider,
     generateValidatorProvider,
     setControlsEnabled,
@@ -174,7 +176,10 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
             ),
-            host: new FormControl(this.value?.host, Validators.maxLength(255)),
+            host: new FormControl(this.value?.host, [
+                Validators.maxLength(255),
+                createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.value?.hostProperty, [
                 Validators.required,
                 Validators.maxLength(255),

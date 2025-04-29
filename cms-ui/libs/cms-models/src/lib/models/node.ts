@@ -60,6 +60,10 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
      * - `C` (channel derived from channel B => `C.masterNodeId = A.id` and `C.inheritedFromId = B.id`)
      */
     inheritedFromId: number;
+    /**
+     * The name of the Node/Channel this channel is inheriting from.
+     */
+    inheritedFromName?: string;
 
     /** IDs of the languages enabled on this node */
     languagesId: number[];

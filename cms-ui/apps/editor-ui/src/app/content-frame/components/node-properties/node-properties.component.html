@@ -10,7 +10,7 @@
 
         <div *ngIf="item?.id !== item?.inheritedFromId" class="inheritance-info">
             <icon>input</icon>
-            {{ 'editor.inherited_tooltip' | i18n:{ master: item?.masterName } }}
+            {{ 'editor.inherited_tooltip' | i18n:{ master: item?.inheritedFromName || '' } }}
         </div>
     </div>
 

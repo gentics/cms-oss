@@ -23,6 +23,8 @@ export interface ContentPackage<T extends ModelType = DefaultModelType> extends 
     pages?: number;
 }
 
+export type EditableContentPackage = Pick<ContentPackage, 'name' | 'description'>;
+
 /**
  * @deprecated Create your own application specific type/business object instead.
  */

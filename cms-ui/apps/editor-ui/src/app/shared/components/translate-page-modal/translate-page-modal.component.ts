@@ -106,7 +106,6 @@ export class TranslatePageModal implements IModalDialog, AfterViewInit {
                     this.folderActions.refreshList(page.type);
                 }
                 return page;
-            })
-            .catch(err => this.cancelFn(err));
+            });
     }
 }

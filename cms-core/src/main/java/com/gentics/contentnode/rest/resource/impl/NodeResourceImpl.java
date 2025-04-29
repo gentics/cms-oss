@@ -50,6 +50,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.Vector;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -168,8 +169,8 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 	private final static String CONFIG_NODE_SETTINGS = "node_settings";
 	private final static String CONFIG_NODE_SETTINGS_GLOBAL = "node_settings_global";
-	private final static String REGEX_KEY_PATH = "regex.24";
-	private final static String REGEX_KEY_HOSTNAME = "regex.25";
+	private final static Pattern REGEX_PATH = Pattern.compile("^/{0,1}([a-zA-Z0-9._-]{1,64}/{0,1}){0,127}$");
+	private final static Pattern REGEX_HOSTNAME = Pattern.compile("^[0-9a-z]([-.]?[0-9a-z:])*$");
 	private final static String PUB_DIR_TABLE = "pub_dir";
 	private final static String PUB_DIR_BIN_TABLE = "pub_dir_bin";
 	private final static int NO_CONFLICT = 0;
@@ -274,7 +275,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		String hostname = reqNode.getHost();
 
 		if (!ObjectTransformer.isEmpty(hostname)
-				&& !hostname.matches(prefs.getProperty(REGEX_KEY_HOSTNAME))) {
+				&& !REGEX_HOSTNAME.matcher(hostname).matches()) {
 			errors.add("no hostname");
 			msg = new CNI18nString("domne_oder_ip_adresse.zb_www.gentics.com");
 			response.addMessage(
@@ -283,12 +284,11 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		}
 
 		String dir;
-		String pathRegex = prefs.getProperty(REGEX_KEY_PATH);
 
 		if (reqNode.getPublishDir() != null) {
 			dir = fixPath(reqNode.getPublishDir());
 
-			if (!dir.matches(pathRegex)) {
+			if (!REGEX_PATH.matcher(dir).matches()) {
 				errors.add("invalid pathname (pubDir)");
 				msg = new CNI18nString("verzeichnispfad_unix");
 				response.addMessage(
@@ -302,7 +302,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		if (reqNode.getBinaryPublishDir() != null) {
 			dir = fixPath(reqNode.getBinaryPublishDir());
 
-			if (!dir.matches(pathRegex)) {
+			if (!REGEX_PATH.matcher(dir).matches()) {
 				errors.add("invalid pathname (binPubDir)");
 				msg = new CNI18nString("verzeichnispfad_unix");
 				response.addMessage(

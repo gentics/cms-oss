@@ -5,21 +5,5 @@
 }
 
 .tabs {
-    margin: 0;
     height: 100%;
-    display: flex;
-
-    &::ng-deep {
-        .grouped-tabs {
-            float: unset;
-            flex: 0 0;
-        }
-
-        .grouped-tab-content {
-            float: unset;
-            flex: 1 1 auto;
-            max-width: unset !important;
-            min-width: calc(75% - 15px);
-        }
-    }
 }

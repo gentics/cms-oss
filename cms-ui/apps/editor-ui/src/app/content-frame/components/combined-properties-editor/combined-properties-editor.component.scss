@@ -107,9 +107,7 @@ hr {
 
     &::ng-deep {
         .grouped-tabs {
-            width: 100%;
-            min-height: 100%;
-            overflow: visible;
+            flex: 1 1 !important;
 
             .collapsible {
                 border-right: none;

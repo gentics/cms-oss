@@ -5,6 +5,7 @@ import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.webcohesion.enunciate.metadata.ReadOnly;
 
 /**
  * ContentNodeItem which can be a Page, File, Image or Folder
@@ -122,14 +123,16 @@ public abstract class ContentNodeItem implements Serializable {
 	 * Creator of the item
 	 * @return the creator
 	 */
+	@ReadOnly
 	public User getCreator() {
 		return creator;
 	}
 
 	/**
-	 * Creation date of the item
+	 * Creation date of the item as unix timestamp
 	 * @return the cdate
 	 */
+	@ReadOnly
 	public int getCdate() {
 		return cdate;
 	}
@@ -138,14 +141,16 @@ public abstract class ContentNodeItem implements Serializable {
 	 * Last editor of the item
 	 * @return the editor
 	 */
+	@ReadOnly
 	public User getEditor() {
 		return editor;
 	}
 
 	/**
-	 * Last Edit Date of the item
+	 * Last Edit Date of the item as unix timestamp
 	 * @return the edate
 	 */
+	@ReadOnly
 	public int getEdate() {
 		return edate;
 	}
@@ -154,6 +159,7 @@ public abstract class ContentNodeItem implements Serializable {
 	 * Item type
 	 * @return item type
 	 */
+	@ReadOnly
 	public ItemType getType() {
 		return type;
 	}
@@ -220,6 +226,7 @@ public abstract class ContentNodeItem implements Serializable {
 	 * Deletion information, if object was deleted
 	 * @return deletion info
 	 */
+	@ReadOnly
 	public DeleteInfo getDeleted() {
 		return deleted;
 	}
@@ -237,6 +244,7 @@ public abstract class ContentNodeItem implements Serializable {
 	 *
 	 * @return deletion info.
 	 */
+	@ReadOnly
 	public DeleteInfo getMasterDeleted() {
 		return masterDeleted;
 	}
@@ -254,6 +262,7 @@ public abstract class ContentNodeItem implements Serializable {
 	 *
 	 * @return deletion info.
 	 */
+	@ReadOnly
 	public DeleteInfo getFolderDeleted() {
 		return folderDeleted;
 	}

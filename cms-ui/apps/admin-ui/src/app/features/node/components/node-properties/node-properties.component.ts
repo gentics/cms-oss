@@ -77,7 +77,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
 
     @Input()
-    public masterName: string | null = null;
+    public inheritedFromName: string | null = null;
 
     @Input()
     public isChannel = false;

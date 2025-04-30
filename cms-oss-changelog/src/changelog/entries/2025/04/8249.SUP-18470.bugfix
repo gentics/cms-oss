@@ -1,0 +1,1 @@
+User Interface: Fixed an issue where channels would always display the root node as the parent, which is not the case for more deeply nested inheritances.

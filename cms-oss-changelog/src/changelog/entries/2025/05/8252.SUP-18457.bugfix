@@ -1,0 +1,1 @@
+Possible NullPointerExceptions during sorting of elements (e.g. when rendering overviews) have been fixed.

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,6 +77,8 @@ public class ChannelTrxInvocationHandler implements InvocationHandler {
 				wrapper[i] = wrap(oArray[i]);
 			}
 			return wrapper;
+		} else if (o instanceof Iterator<?>) {
+			return wrap(channelId, (Iterator<?>) o);
 		} else {
 			return o;
 		}
@@ -109,6 +112,18 @@ public class ChannelTrxInvocationHandler implements InvocationHandler {
 		Class<?>[] interfaceArray = getInterfaces(collection.getClass());
 		return (Collection<?>) Proxy.newProxyInstance(ChannelTrxInvocationHandler.class.getClassLoader(), interfaceArray,
 				new ChannelTrxInvocationHandler(channelId, collection));
+	}
+
+	/**
+	 * Wrap the given iterator with an invocation handler that changes the channel scope
+	 * @param channelId channel ID
+	 * @param iterator iterator to wrap
+	 * @return proxy
+	 */
+	public static Iterator<?> wrap(int channelId, Iterator<?> iterator) {
+		Class<?>[] interfaceArray = getInterfaces(iterator.getClass());
+		return (Iterator<?>) Proxy.newProxyInstance(ChannelTrxInvocationHandler.class.getClassLoader(), interfaceArray,
+				new ChannelTrxInvocationHandler(channelId, iterator));
 	}
 
 	/**

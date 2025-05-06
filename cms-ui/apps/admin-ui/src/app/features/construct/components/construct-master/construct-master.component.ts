@@ -9,6 +9,7 @@ import { GcmsPermission, TagType } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { combineLatest, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AssignConstructsToCategoryModalComponent } from '../assign-constructs-to-category-modal/assign-constructs-to-category-modal.component';
 import { AssignConstructsToNodesModalComponent } from '../assign-constructs-to-nodes-modal/assign-constructs-to-nodes-modal.component';
 import { CopyConstructModalComponent } from '../copy-construct-modal/copy-construct-modal.component';
@@ -46,18 +47,25 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
     }
 
     async handleCreate(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(CreateConstructModalComponent, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-            width: '80%',
-        });
-        const created = await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(CreateConstructModalComponent, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+                width: '80%',
+            });
+            const created = await dialog.open();
 
-        if (!created) {
-            return;
+            if (!created) {
+                return;
+            }
+
+            this.loader.reload();
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            throw err;
         }
-
-        this.loader.reload();
     }
 
     public handleAction(event: EntityTableActionClickEvent<ConstructBO>): void {

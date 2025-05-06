@@ -13,10 +13,10 @@ import {
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
 import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { DataSource, Language, MarkupLanguage, Raw, TagPart } from '@gentics/cms-models';
 import { ModalService, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { ConstructPartPropertiesMode } from '../construct-part-properties/construct-part-properties.component';
@@ -302,7 +302,16 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             width: '80%',
         }, modalInput);
 
-        const created: TagPart<Raw> = await dialog.open();
+        let created: TagPart<Raw>;
+
+        try {
+            created = await dialog.open();
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            throw err;
+        }
 
         if (!created) {
             return;

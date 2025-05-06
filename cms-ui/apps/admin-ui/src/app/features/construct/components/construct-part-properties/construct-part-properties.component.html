@@ -126,6 +126,7 @@
 
             <gtx-i18n-panel-group
                 *ngIf="supportedLanguages"
+                [label]="'shared.i18n_properties_label' | i18n"
                 [languages]="supportedLanguages"
                 [invalidLanguages]="invalidLanguages"
                 [(activeLanguage)]="activeTabI18nLanguage"

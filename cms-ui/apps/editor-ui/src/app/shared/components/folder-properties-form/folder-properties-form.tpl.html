@@ -42,63 +42,36 @@
     <div *ngIf="isMultiLang() && !isModeCreate()">
         <hr>
 
-        <h2 class="item-properties-heading">{{ 'editor.i18n_properties_label' | i18n }}</h2>
-
-        <div
-            class="properties-editor-i18n"
+        <gtx-i18n-panel-group
+            *ngIf="languages"
+            [label]="'editor.i18n_properties_label' | i18n"
+            [languages]="languages"
+            [(activeLanguage)]="activeTabI18nLanguage"
         >
+            <gtx-i18n-input
+                [label]="('editor.item_name_label' | i18n)"
+                formControlName="nameI18n"
+                [gtxDisabled]="disabled"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="languages"
+            ></gtx-i18n-input>
 
-            <gtx-grouped-tabs
-                class="properties-tabs"
-                pure
-                wrap
-                statusIcons
-                [activeId]="activeTabI18nLanguage?.id"
-            >
-                <gtx-tab-pane
-                    *ngFor="let language of languages"
-                    [id]="language?.id"
-                    (select)="setActiveI18nTab($event)"
-                    [readonly]="disabled"
-                    [inactive]="!activeI18nTabValueExists(language?.code)"
-                >
-                    <ng-template gtx-tab-label>
-                        <div left>{{ language?.name }}</div>
-                    </ng-template>
-            </gtx-tab-pane>
-            </gtx-grouped-tabs>
+            <gtx-i18n-input
+                [label]="('editor.item_directory_label' | i18n)"
+                formControlName="publishDirI18n"
+                [gtxDisabled]="disabled"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="languages"
+            ></gtx-i18n-input>
 
-            <div
-                *ngIf="activeTabI18nLanguage?.code as activeLanguage"
-                class="tab-content"
-            >
-                <h3>{{ activeTabI18nLanguage?.name }}</h3>
-
-                <gtx-i18n-input
-                    [label]="('editor.item_name_label' | i18n)"
-                    formControlName="nameI18n"
-                    [gtxDisabled]="disabled"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
-
-                <gtx-i18n-input
-                    [label]="('editor.item_directory_label' | i18n)"
-                    formControlName="publishDirI18n"
-                    [gtxDisabled]="disabled"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
-
-                <gtx-i18n-input
-                    [label]="'editor.item_description_label' | i18n"
-                    formControlName="descriptionI18n"
-                    [gtxDisabled]="disabled"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
-            </div>
-        </div>
+            <gtx-i18n-input
+                [label]="'editor.item_description_label' | i18n"
+                formControlName="descriptionI18n"
+                [gtxDisabled]="disabled"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="languages"
+            ></gtx-i18n-input>
+        </gtx-i18n-panel-group>
     </div>
 
     <button

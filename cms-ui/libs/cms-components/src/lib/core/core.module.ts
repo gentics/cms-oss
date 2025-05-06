@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import {
     FormBrowseBoxComponent,
     I18nCheckboxComponent,
@@ -17,6 +16,7 @@ import {
     GtxLinkToManualComponent,
     GtxUserMenuComponent,
     GtxUserMenuToggleComponent,
+    I18nPanelGroupComponent,
     PasswordConfirmInputComponent,
     StringListComponent,
     VersionModalComponent,
@@ -51,6 +51,7 @@ const COMPONENTS: any[] = [
     GtxUserMenuToggleComponent,
     I18nCheckboxComponent,
     I18nInputComponent,
+    I18nPanelGroupComponent,
     FormBrowseBoxComponent,
     I18nSelectComponent,
     KeyI18nValueListInputComponent,

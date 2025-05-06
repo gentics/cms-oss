@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -88,9 +88,15 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
             publishFs: new FormControl(this.value?.publishFs),
             publishFsPages: new FormControl(this.value?.publishFsPages),
-            publishDir: new FormControl(this.value?.publishDir),
+            publishDir: new FormControl(this.value?.publishDir, [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
             publishFsFiles: new FormControl(this.value?.publishFsFiles),
-            binaryPublishDir: new FormControl(this.value?.binaryPublishDir),
+            binaryPublishDir: new FormControl(this.value?.binaryPublishDir, [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
 
             publishContentMap: new FormControl(this.value?.publishContentMap),
             publishContentMapPages: new FormControl(this.value?.publishContentMapPages),

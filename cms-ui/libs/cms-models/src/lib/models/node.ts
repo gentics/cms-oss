@@ -196,3 +196,5 @@ export enum NodePreviewurlType {
 }
 
 export const NODE_PREVIEW_URL_PROPERTY_PREFIX = 'NODE_PREVIEWURL';
+// export const NODE_HOSTNAME_REGEXP = /^[0-9a-z]([-.]?[0-9a-z:])*$/;
+// export const NODE_PATH_REGEXP = /^\/?([a-zA-Z0-9._-]{1,64}\/?){0,127}$/;

@@ -174,7 +174,11 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
             ),
-            host: new FormControl(this.value?.host, Validators.maxLength(255)),
+            host: new FormControl(this.value?.host, [
+                Validators.required,
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.value?.hostProperty, [
                 Validators.required,
                 Validators.maxLength(255),

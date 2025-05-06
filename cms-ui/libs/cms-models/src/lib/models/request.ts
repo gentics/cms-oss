@@ -2,7 +2,7 @@ import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueItem, Jobs } from './admin-info';
 import { CmsFormData, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage } from './content-package';
+import { ContentPackage, EditableContentPackage } from './content-package';
 import { CRElasticsearchModel, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -2322,9 +2322,9 @@ export interface ContentPackageSyncOptions {
     wait?: number;
 }
 
-export type ContentPackageCreateRequest = Required<Pick<ContentPackage, 'name'>> & Pick<ContentPackage, 'description'>;
+export type ContentPackageCreateRequest = EditableContentPackage;
 
-export type ContentPackageSaveRequest = Partial<Pick<ContentPackage, 'name'> & Pick<ContentPackage, 'description'>>;
+export type ContentPackageSaveRequest = Partial<EditableContentPackage>;
 
 export interface AssignEntityToContentPackageOptions {
     recursive?: boolean;

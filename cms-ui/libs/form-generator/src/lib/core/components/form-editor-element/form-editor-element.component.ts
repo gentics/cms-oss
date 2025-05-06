@@ -47,7 +47,7 @@ export class FormEditorElementComponent implements OnChanges {
 
     /** Element exists within form editor and will try to render content properties, e. g. label. */
     @Input()
-    isInEditor: boolean;
+    isInEditor = false;
 
     @Output()
     remove = new EventEmitter<CmsFormElementBO>();
@@ -106,7 +106,7 @@ export class FormEditorElementComponent implements OnChanges {
     }
 
     containerClicked(event: MouseEvent): void {
-        if (this.readonly || !this.element.properties || this.element.properties.length === 0) {
+        if (!this.isInEditor || this.readonly || !this.element.properties || this.element.properties.length === 0) {
             return;
         }
 

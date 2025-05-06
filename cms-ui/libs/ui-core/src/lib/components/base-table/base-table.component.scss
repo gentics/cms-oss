@@ -137,7 +137,8 @@
     .cell-content-wrapper {
         margin: auto 0;
         word-wrap: break-word;
-        white-space: break-spaces;
+        text-wrap-mode: wrap;
+        white-space-collapse: collapse;
     }
 }
 

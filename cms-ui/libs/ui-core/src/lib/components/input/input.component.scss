@@ -33,12 +33,6 @@
         }
     }
 
-    &.ng-touched.ng-invalid {
-        > input {
-            border-color: $gtx-color-alert;
-        }
-    }
-
     .addon-button {
         align-self: flex-start;
         background: $gtx-color-very-light-gray;
@@ -61,5 +55,15 @@
 
     .clear-button:hover::ng-deep .btn {
         color: $gtx-color-alert !important;
+    }
+
+    &.ng-invalid {
+        label {
+            color: $gtx-color-alert;
+        }
+
+        .input-element {
+            border-color: $gtx-color-alert;
+        }
     }
 }

@@ -57,8 +57,8 @@ public class SystemUserFactory extends AbstractFactory {
 	 */
 	protected static final String INSERT_SYSTEMUSER_SQL
 	= "INSERT INTO systemuser (firstname, lastname, login, password, email, bonus, active, creator,"
-			+ " cdate, editor, edate, description, isldapuser, inboxtoemail)"
-			+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			+ " cdate, editor, edate, description, isldapuser, inboxtoemail, support_user)"
+			+ " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 	/**
 	 * SQL Statement for updating a systemuser
@@ -110,6 +110,7 @@ public class SystemUserFactory extends AbstractFactory {
 		protected ContentNodeDate edate;
 		protected int isLdapUser;
 		protected boolean inboxToEmail;
+		protected boolean supportUser;
 
 		/**
 		 * List of usergroup ids of the user
@@ -144,7 +145,7 @@ public class SystemUserFactory extends AbstractFactory {
 		 */
 		public FactorySystemUser(Integer id, NodeObjectInfo info, String firstname, String lastname, String login, String password,
 				String email, String description, int bonus, int active, int creatorId,
-				ContentNodeDate cdate, int editorId, ContentNodeDate edate, int isLdapUser, boolean inboxToEmail) {
+				ContentNodeDate cdate, int editorId, ContentNodeDate edate, int isLdapUser, boolean inboxToEmail, boolean supportUser) {
 			super(id, info);
 
 			this.firstname = firstname;
@@ -161,6 +162,7 @@ public class SystemUserFactory extends AbstractFactory {
 			this.edate = edate;
 			this.isLdapUser = isLdapUser;
 			this.inboxToEmail = inboxToEmail;
+			this.supportUser = supportUser;
 		}
 
 		/**
@@ -236,6 +238,11 @@ public class SystemUserFactory extends AbstractFactory {
 		@Override
 		public boolean isInboxToEmail() {
 			return inboxToEmail;
+		}
+
+		@Override
+		public boolean isSupportUser() {
+			return supportUser;
 		}
 
 		/* (non-Javadoc)
@@ -402,7 +409,7 @@ public class SystemUserFactory extends AbstractFactory {
 		protected EditableFactorySystemUser(FactorySystemUser systemUser, NodeObjectInfo info) throws ReadOnlyException, NodeException {
 			super(systemUser.getId(), info, systemUser.firstname, systemUser.lastname, systemUser.login, systemUser.password, systemUser.email,
 					systemUser.description, systemUser.bonus, systemUser.active, systemUser.creatorId, systemUser.cdate, systemUser.editorId, systemUser.edate,
-					systemUser.isLdapUser, systemUser.inboxToEmail);
+					systemUser.isLdapUser, systemUser.inboxToEmail, systemUser.supportUser);
 		}
 
 		@Override
@@ -465,6 +472,14 @@ public class SystemUserFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setSupportUser(boolean supportUser) throws ReadOnlyException {
+			if (this.supportUser != supportUser) {
+				this.supportUser = supportUser;
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public void setIsLDAPUser(boolean ldapUser) throws ReadOnlyException {
 			if (ldapUser && this.isLdapUser != 1) {
 				this.isLdapUser = 1;
@@ -493,7 +508,7 @@ public class SystemUserFactory extends AbstractFactory {
 
 		@Override
 		public void setPassword(String password) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.password, password)) {
+			if (!StringUtils.isEqual(this.password, password) && !supportUser) {
 				this.password = password;
 				this.modified = true;
 			}
@@ -737,9 +752,10 @@ public class SystemUserFactory extends AbstractFactory {
 		ContentNodeDate edate = new ContentNodeDate(rs.getInt("edate"));
 		int isLdapUser = rs.getInt("isldapuser");
 		boolean inboxToEmail = rs.getBoolean("inboxtoemail");
+		boolean supportUser = rs.getBoolean("support_user");
 
 		return (T) new FactorySystemUser(id, info, firstname, lastname, login, password, email, description, bonus, active, creatorId, cdate, editorId, edate,
-				isLdapUser, inboxToEmail);
+				isLdapUser, inboxToEmail, supportUser);
 	}
 
 	@Override
@@ -901,7 +917,7 @@ public class SystemUserFactory extends AbstractFactory {
 					new Object[] {
 					systemUser.firstname, systemUser.lastname, systemUser.login, systemUser.password, systemUser.email, systemUser.bonus, systemUser.active,
 					t.getUserId(), t.getUnixTimestamp(), t.getUserId(), t.getUnixTimestamp(), ObjectTransformer.getString(systemUser.description, ""),
-					systemUser.isLdapUser, systemUser.inboxToEmail});
+					systemUser.isLdapUser, systemUser.inboxToEmail, systemUser.supportUser});
 
 			if (keys.size() != 1) {
 				throw new NodeException("Error while inserting new systemuser, could not get the insertion id");

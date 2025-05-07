@@ -13,18 +13,11 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    padding: 1rem 0;
+    gap: 0.5rem;
 
-    .table-action-button {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .table-action-button + .table-action-button {
-        margin-left: 0.5rem;
-
-        &.reload-button {
-            margin-left: auto;
-        }
+    .table-action-button.reload-button {
+        margin-left: auto;
     }
 }
 
@@ -38,7 +31,7 @@
     flex: 0 0 auto;
     color: $gtx-color-dark-gray;
     font-size: 0.9rem;
-    margin: 0 1rem 1rem;
+    padding-bottom: 1rem;
 }
 
 .load-bar {

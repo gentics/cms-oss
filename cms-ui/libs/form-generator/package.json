@@ -2,7 +2,6 @@
   "name": "@gentics/form-generator",
   "version": "6.2.10",
   "license": "Apache-2.0",
-  "dependencies": {},
   "peerDependencies": {
     "@angular/animations": ">=18.0.0",
     "@angular/common": ">=18.0.0",

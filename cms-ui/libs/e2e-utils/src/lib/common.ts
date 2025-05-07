@@ -11,6 +11,7 @@ import {
     PermissionInfo,
     ScheduleCreateReqeust,
     ScheduleTaskCreateRequest,
+    Variant,
 } from '@gentics/cms-models';
 
 export interface LoginInformation {
@@ -68,6 +69,33 @@ export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
+export const ENV_CI = 'CI';
+export const ENV_BASE_URL = 'BASE_URL';
+export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
+export const ENV_FORCE_REPEATS = 'FORCE_REPEATS';
+export const ENV_REUSE_LOCAL_SERVE = 'REUSE_LOCAL_SERVE';
+
+export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace NodeJS {
+        interface ProcessEnv {
+            /** The CMS Variant that is being tested. */
+            [ENV_CMS_VARIANT]: Variant;
+            /** Flag which determines if we're running in a CI context. */
+            [ENV_CI]: boolean | string | number;
+            /** Override for the URL where the app to test is reachable. */
+            [ENV_BASE_URL]?: string;
+            /** Override for the URL where keycloak is reachable. */
+            [ENV_KEYCLOAK_URL]?: string;
+            /** If it should force repeats of intergration tests. */
+            [ENV_FORCE_REPEATS]?: boolean | string | number;
+            /** If it should reuse an already running local serve. */
+            [ENV_REUSE_LOCAL_SERVE]?: boolean | string | number;
+        }
+    }
+}
 
 export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
 
@@ -85,6 +113,9 @@ export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
 export const IMPORT_ID = Symbol('gtx-e2e-import-id');
 
 export const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
+
+export const CONTENT_REPOSITORY_MESH = '7f25.8f630a60-355e-11ef-8e0a-0242ac110002';
+export const CR_PREFIX_MESH = 'example';
 
 export const CONSTRUCT_ALOHA_LINK = 'A547.70950';
 export const CONSTRUCT_ALOHA_TEXT = 'A547.75403';

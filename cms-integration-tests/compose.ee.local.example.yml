@@ -32,3 +32,8 @@ services:
     extends:
       file: compose.ee.yml
       service: web
+
+  playwright:
+    extends:
+      file: compose.ee.yml
+      service: playwright

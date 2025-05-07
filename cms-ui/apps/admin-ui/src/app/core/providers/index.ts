@@ -1,4 +1,5 @@
 export * from './activity-manager/activity-manager.service';
+export * from './admin-handler/admin-handler.service';
 export * from './base-table-loader/base-table-loader.service';
 export * from './breadcrumbs';
 export * from './construct-category-handler/construct-category-handler.service';
@@ -37,6 +38,7 @@ export * from './operations';
 export * from './permissions-trable-loader/permissions-trable-loader.service';
 export * from './permissions/permissions.service';
 export * from './route-entity-resolver/route-entity-resolver.service';
+export * from './schedule-handler/schedule-handler.service';
 export * from './server-storage/server-storage.service';
 export * from './tag-map-entry-table-loader/tag-map-entry-table-loader.service';
 export * from './template-table-loader/template-table-loader.service';

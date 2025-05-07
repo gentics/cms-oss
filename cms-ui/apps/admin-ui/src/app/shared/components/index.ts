@@ -58,8 +58,7 @@ export * from './tag-map-entry-table/tag-map-entry-table.component';
 export * from './template-folder-link-trable/template-folder-link-trable.component';
 export * from './template-table/template-table.component';
 export * from './user-table/user-table.component';
-export * from './widget-publishing-process';
-export * from './widget-publishing-process-total';
+export * from './publish-process-summary/publish-process-summary.component';
 export * from './wizard-modal/wizard-modal.component';
 export * from './wizard/wizard.component';
 

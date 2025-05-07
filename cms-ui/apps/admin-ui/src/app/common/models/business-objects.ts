@@ -6,7 +6,7 @@ import {
     ContentRepositoryFragment,
     DataSource,
     DataSourceEntry,
-    DirtQueueItem,
+    DirtQueueEntry,
     ElasticSearchIndex,
     File,
     Folder,
@@ -103,7 +103,7 @@ export type PermissionsSetBO = PermissionsSet & BusinessObject & {
 };
 export type ContentPackageBO = ContentPackage & BusinessObject;
 export type ImportErrorBO = ContentPackageImportError & BusinessObject;
-export type DirtQueueItemBO = DirtQueueItem & BusinessObject;
+export type DirtQueueItemBO = DirtQueueEntry & BusinessObject;
 export type ElasticSearchIndexBO = ElasticSearchIndex<Raw> & BusinessObject;
 export type ActionLogEntryBO = ActionLogEntry & BusinessObject;
 export type ObjectPropertyBO = ObjectProperty & BusinessObject;

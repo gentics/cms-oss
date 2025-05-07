@@ -57,7 +57,7 @@ export interface JsonValidationErrorModel {
  * ```
  */
 export type FormProperties<T> = {
-    [P in keyof T]: AbstractControl<T[P]>;
+    [P in keyof T]: AbstractControl<T[P] | null>;
 };
 
 /**

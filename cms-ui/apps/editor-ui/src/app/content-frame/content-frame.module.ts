@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ColorAlphaModule } from 'ngx-color/alpha';
 import { ColorSliderModule } from 'ngx-color/slider';
+import { PiktidModule } from '../../../../../libs/piktid-editor/src/lib/piktid.module';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
@@ -38,6 +39,7 @@ import {
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
+    ImageAnonymizeModal,
     ImagePropertiesModalComponent,
     LinkCheckerControlsComponent,
     NodePropertiesComponent,
@@ -89,6 +91,7 @@ const COMPONENTS = [
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
+    ImageAnonymizeModal,
     LinkCheckerControlsComponent,
     NodePropertiesComponent,
     PageEditorControlsComponent,
@@ -129,6 +132,7 @@ const MODULE_INITIALIZER: Provider = {
         ColorAlphaModule,
         RouterModule.forChild(contentFrameRoutes),
         GenticsUICoreModule,
+        PiktidModule,
     ],
     exports: [],
     declarations: [...COMPONENTS],

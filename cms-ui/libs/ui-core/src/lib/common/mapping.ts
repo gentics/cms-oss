@@ -1,4 +1,4 @@
-import { SimpleChange } from '@angular/core';
+import { SimpleChange, SimpleChanges } from '@angular/core';
 
 // Used for ...?
 export type MappingFn = (value: any, ...params: any[]) => any;
@@ -13,4 +13,4 @@ export type MappingFn = (value: any, ...params: any[]) => any;
  * }
  * ```
  */
-export type ChangesOf<T> = { [K in keyof T]?: SimpleChange };
+export type ChangesOf<T> = { [K in keyof T]?: SimpleChange } | SimpleChanges;

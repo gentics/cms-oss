@@ -1,0 +1,40 @@
+<gtx-tabs [pure]="true" [activeId]="activeImage">
+    <gtx-tab
+        [id]="'original'"
+        [title]="'original_image'"
+        [icon]="'image'"
+        (select)="onTabChange('original')"
+    ></gtx-tab>
+
+    <gtx-tab
+        *ngIf="editedImageUrl"
+        [id]="'edited'"
+        [title]="'edited_image'"
+        [icon]="'edit'"
+        (select)="onTabChange('edited')"
+    ></gtx-tab>
+</gtx-tabs>
+
+<div class="image-wrapper">
+    <img
+        class="preview-image"
+        [src]="activeImage === 'original' ? originalImageUrl : editedImageUrl"
+        alt="Your image"
+    />
+
+    <div class="face-detection-wrapper">
+        <div
+            *ngFor="let faceId of faceIds"
+            class="face-detection-item"
+            [attr.data-id]="faceId"
+            [style.left.%]="facePositions[faceId].cornerX * 100"
+            [style.top.%]="facePositions[faceId].cornerY * 100"
+            [style.width.%]="facePositions[faceId].boxWidth * 100"
+            [style.height.%]="facePositions[faceId].boxHeight * 100"
+        >
+            <div class="face-detection-item-label">
+                {{ faceId }}
+            </div>
+        </div>
+    </div>
+</div>

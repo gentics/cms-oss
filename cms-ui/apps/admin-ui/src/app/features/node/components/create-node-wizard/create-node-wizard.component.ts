@@ -1,5 +1,5 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { ErrorHandler, FeatureOperations, NodeOperations } from '@admin-ui/core';
+import { FeatureOperations, NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { Component, OnInit, ViewChild } from '@angular/core';
@@ -67,7 +67,6 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         private appState: AppStateService,
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
-        private errorHandler: ErrorHandler,
     ) { }
 
     ngOnInit(): void {
@@ -101,16 +100,20 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     }
 
     private async onFinishClick(): Promise<Node<Raw>> {
+        const created = await this.createNode().toPromise();
+
         try {
-            const created = await this.createNode().toPromise();
             await this.setNodeFeatures(created).toPromise();
-            await this.setNodeLanguages(created).toPromise();
-            return created;
         } catch (error) {
-            this.errorHandler.catch(error);
-            // We need to catch any errors and emit something to make sure that the wizard closes.
-            return null;
+            // Ignored, worst case the user has to update the node again later
         }
+        try {
+            await this.setNodeLanguages(created).toPromise();
+        } catch (error) {
+            // Same here
+        }
+
+        return created;
     }
 
     private createNode(): Observable<Node<Raw>> {
@@ -134,7 +137,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
     private setNodeFeatures(node: Node<Raw>): Observable<Node<Raw>> {
         const featureData: NodeFeaturesFormData = this.fgNodeFeatures.value;
-        return this.nodeOps.updateNodeFeatures(node.id, featureData || {}).pipe(
+        return this.nodeOps.updateNodeFeatures(node.id, featureData || {}, true).pipe(
             tap(() => this.featureOps.getNodeFeatures(node.id)),
             map(() => node),
         );
@@ -147,7 +150,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
         const nodeLanguages: Language[] = this.langTable.getSelectedEntities();
 
-        return this.nodeOps.updateNodeLanguages(node.id, nodeLanguages).pipe(
+        return this.nodeOps.updateNodeLanguages(node.id, nodeLanguages, true).pipe(
             map(() => node),
         );
     }

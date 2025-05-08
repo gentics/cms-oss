@@ -11,13 +11,13 @@ import {
     ContentPackageSyncOptions,
     Response,
 } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NotificationService, OpenedNotification } from '@gentics/ui-core';
 import { last } from 'lodash-es';
 import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';

@@ -68,7 +68,7 @@ export class PublishQueueActionsService {
     /**
      * Assign the pages to the given users for revision.
      */
-    assignToUsers(pageIds: number[], userIds: number[], message: string): Promise<any> {
+    assignToUsers(pageIds: number[], userIds: number[], message: string): Promise<boolean> {
         this.appState.dispatch(new StartAssigningUsersToPagesAction());
 
         return this.api.publishQueue.assignToUsers(pageIds, userIds, message).toPromise()
@@ -78,6 +78,8 @@ export class PublishQueueActionsService {
                     type: 'success',
                     message: 'message.assigned_pages_for_revision',
                 });
+
+                return true;
             })
             .catch(err => {
                 this.notification.show({
@@ -87,6 +89,8 @@ export class PublishQueueActionsService {
                 });
                 this.appState.dispatch(new AssigningUsersToPagesErrorAction());
                 this.errorHandler.catch(err, { notification: false });
+
+                return false;
             });
     }
 

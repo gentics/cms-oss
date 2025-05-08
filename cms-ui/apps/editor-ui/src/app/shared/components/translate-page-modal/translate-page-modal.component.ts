@@ -134,6 +134,7 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
 
                     return page;
                 }
-            }).catch(err => this.cancelFn(err));
+                return page;
+            });
     }
 }

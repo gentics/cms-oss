@@ -1,4 +1,4 @@
-<h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
+<h2 *ngIf="label" class="item-properties-heading">{{ label }}</h2>
 
 <div class="properties-editor-i18n">
     <gtx-grouped-tabs

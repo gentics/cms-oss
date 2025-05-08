@@ -344,7 +344,7 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 				}
 				String value = header.getValue();
 				if (StringUtils.equalsIgnoreCase(name, HttpHeaders.SET_COOKIE)) {
-					value = value.replaceFirst("Path=[^\\s]+", String.format("Path=%s/contentrepositories/%s/proxy/",
+					value = value.replaceFirst("Path=[^\\s;]+", String.format("Path=%s/contentrepositories/%s/proxy/",
 							StringUtils.removeEnd(uriInfo.getBaseUri().getPath().toString(), "/"), id));
 				}
 				responseBuilder.header(name, value);

@@ -44,6 +44,14 @@ public class PageComparator extends AbstractComparator implements Comparator<Pag
 	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 	 */
 	public int compare(Page p1, Page p2) {
+		if (p1 == null && p2 == null) {
+			return 0;
+		} else if (p1 == null) {
+			return -way;
+		} else if (p2 == null) {
+			return way;
+		}
+
 		int cmp = 0;
 
 		switch (attribute) {

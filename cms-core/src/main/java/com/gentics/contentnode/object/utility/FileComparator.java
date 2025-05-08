@@ -28,6 +28,14 @@ public class FileComparator extends AbstractComparator implements Comparator<Fil
 	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 	 */
 	public int compare(File f1, File f2) {
+		if (f1 == null && f2 == null) {
+			return 0;
+		} else if (f1 == null) {
+			return -way;
+		} else if (f2 == null) {
+			return way;
+		}
+
 		int cmp = 0;
 
 		switch (this.attribute) {

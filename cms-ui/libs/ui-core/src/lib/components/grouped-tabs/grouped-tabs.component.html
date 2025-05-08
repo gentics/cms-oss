@@ -34,8 +34,6 @@
     <ng-container *ngTemplateOutlet="currentTab?.content"></ng-container>
 </div>
 
-<div class="clearfix"></div>
-
 <ng-template #labelTemplate let-tabItem="tabItem">
     <icon *ngIf="tabItem?.expand != null" class="header-icon">keyboard_arrow_right</icon>
 

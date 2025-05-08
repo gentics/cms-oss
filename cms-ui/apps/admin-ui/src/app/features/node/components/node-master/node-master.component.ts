@@ -9,6 +9,7 @@ import { AnyModelType, GcmsPermission, Node, NodeCopyRequest, NormalizableEntity
 import { ModalService, TableAction } from '@gentics/ui-core';
 import { CopyNodesModalComponent } from '../copy-nodes-modal/copy-nodes-modal.component';
 import { CreateNodeWizardComponent } from '../create-node-wizard/create-node-wizard.component';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 
 const COPY_ACTION = 'copy';
 
@@ -72,9 +73,16 @@ export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> 
     }
 
     async handleCreateClick(): Promise<void> {
-        const created = await this.wizardService.showWizard(CreateNodeWizardComponent);
-        if (created) {
-            this.tableLoader.reload();
+        try {
+            const created = await this.wizardService.showWizard(CreateNodeWizardComponent);
+            if (created) {
+                this.tableLoader.reload();
+            }
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            throw err;
         }
     }
 

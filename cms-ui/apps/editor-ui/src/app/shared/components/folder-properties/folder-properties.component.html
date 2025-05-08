@@ -44,6 +44,8 @@
         <hr>
 
         <gtx-i18n-panel-group
+            *ngIf="languages"
+            [label]="'editor.i18n_properties_label' | i18n"
             [languages]="languages"
             [invalidLanguages]="invalidLanguages"
             [(activeLanguage)]="activeTabI18nLanguage"

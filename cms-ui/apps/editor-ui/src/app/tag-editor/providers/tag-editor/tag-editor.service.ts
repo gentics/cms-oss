@@ -21,15 +21,14 @@ import {
     TagType,
     Template,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction, SetTagEditorOpenAction } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
@@ -78,7 +77,6 @@ export class TagEditorService {
         private entityResolver: EntityResolver,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: TranslateService,
-        private userAgentRef: UserAgentRef,
         private modals: ModalService,
         private apiBase: ApiBase,
         private client: GCMSRestClientService,
@@ -167,7 +165,7 @@ export class TagEditorService {
      * @param editTagInfo The information needed to create the TagEditorContext.
      */
     createTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
-        let editableTag: EditableTag = {
+        const editableTag: EditableTag = {
             ...editTagInfo.tag,
             tagType: editTagInfo.tagType,
         };
@@ -200,11 +198,6 @@ export class TagEditorService {
         let tagOwner = editTagInfo.tagOwner;
         if (tagOwner.type === 'page') {
             tagOwner = this.createSafePageCopy(tagOwner);
-
-            if (editTagInfo.tagOwnerFromIFrame && this.userAgentRef.isIE11) {
-                editableTag = this.applyIE11Polyfills(editableTag);
-                tagOwner = this.applyIE11Polyfills(tagOwner);
-            }
         }
         const rawTagOwner = this.entityResolver.denormalizeEntity(tagOwner.type, tagOwner);
         const rawNode = this.entityResolver.denormalizeEntity('node', editTagInfo.node);
@@ -241,17 +234,4 @@ export class TagEditorService {
         delete safePage.languageVariants;
         return safePage;
     }
-
-    /**
-     * Applies necessary IE11 polyfills to the specified object.
-     *
-     * The reason we need this method is that the tag object was created in the
-     * Aloha IFrame, which does not contain the polyfills available in the GCMS UI app.
-     * Thus we need to apply them now.
-     */
-    private applyIE11Polyfills(obj: any): any {
-        const json = JSON.stringify(obj);
-        return JSON.parse(json);
-    }
-
 }

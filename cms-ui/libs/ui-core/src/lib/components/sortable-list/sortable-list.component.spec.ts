@@ -134,6 +134,7 @@ describe('SortableListComponent', () => {
 
 @Component({
     template: '<gtx-sortable-list [disabled]="disabled"></gtx-sortable-list>',
+    standalone: false,
 })
 class TestComponent {
     disabled = false;

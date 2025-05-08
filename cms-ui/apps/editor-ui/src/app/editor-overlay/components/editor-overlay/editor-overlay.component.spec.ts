@@ -16,9 +16,10 @@ import { EditorOverlay } from './editor-overlay.component';
 
 @Component({
     template: `
-    <editor-overlay #editor></editor-overlay>
-    <gtx-overlay-host></gtx-overlay-host>
-  `,
+        <editor-overlay #editor></editor-overlay>
+        <gtx-overlay-host></gtx-overlay-host>
+    `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('editor', { static: true })
@@ -188,7 +189,10 @@ class MockEntityResolver {
     }
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: any): string {
         return key + (params ? ':' + JSON.stringify(params) : '');

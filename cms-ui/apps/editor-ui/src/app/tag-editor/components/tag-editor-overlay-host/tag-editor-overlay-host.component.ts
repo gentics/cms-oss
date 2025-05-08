@@ -11,7 +11,6 @@ import {
 import { TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { EditableTag } from '@gentics/cms-models';
 import { delay, filter, take } from 'rxjs/operators';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
 import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.component';
 
@@ -26,7 +25,7 @@ import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.compo
     templateUrl: './tag-editor-overlay-host.component.html',
     styleUrls: ['./tag-editor-overlay-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -39,18 +38,15 @@ export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnD
 
     currentTag: EditableTag = null;
     isVisible = false;
-    isIE11 = false;
     editResolve: (result: TagEditorResult) => void;
     editReject: (err?: any) => void;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
         private tagEditorService: TagEditorService,
-        private userAgentRef: UserAgentRef,
     ) {}
 
     ngOnInit(): void {
-        this.isIE11 = this.userAgentRef.isIE11;
         this.tagEditorService.registerTagEditorOverlayHost(this);
     }
 

@@ -77,6 +77,7 @@ describe('MessageInboxComponent', () => {
     template: `
         <message-inbox (navigate)="navigate($event)">
         </message-inbox>`,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(MessageInboxComponent, { static: true }) messageInbox: MessageInboxComponent;
@@ -85,7 +86,10 @@ class TestComponent {
 }
 
 
-@Directive({ selector: '[overrideSlot],[overrideParams]' })
+@Directive({
+    selector: '[overrideSlot],[overrideParams]',
+    standalone: false,
+})
 class MockOverrideSlotDirective {}
 
 class MockNavigationService {}

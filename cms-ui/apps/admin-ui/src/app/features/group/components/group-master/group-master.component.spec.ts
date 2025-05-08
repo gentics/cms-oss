@@ -261,7 +261,10 @@ class MockNodeOperations {}
 
 class MockFolderOperations {}
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');
@@ -276,8 +279,9 @@ function refresh<T>(fixture: ComponentFixture<T>, amount: number = 1): void {
 }
 
 @Component({
-    template: `<gtx-group-master></gtx-group-master>`,
-    })
+    template: '<gtx-group-master></gtx-group-master>',
+    standalone: false,
+})
 class TestComponent {
 
     @ViewChild(GroupMasterComponent, { static: false })

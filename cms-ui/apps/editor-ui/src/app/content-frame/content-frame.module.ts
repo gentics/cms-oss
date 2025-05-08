@@ -1,4 +1,4 @@
-import { NgModule, Provider, inject, provideAppInitializer } from '@angular/core';
+import { NgModule, inject, provideAppInitializer } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ColorAlphaModule } from 'ngx-color/alpha';
@@ -111,12 +111,10 @@ const GUARDS = [
     ContentFrameGuard,
 ];
 
-const MODULE_INITIALIZER: Provider = provideAppInitializer(() => {
-        const initializerFn = ((customScriptService: CustomerScriptService) => {
-        return customScriptService.loadCustomerScript();
-    })(inject(CustomerScriptService));
-        return initializerFn();
-      });
+const MODULE_INITIALIZER = provideAppInitializer(() => {
+    const customScriptService = inject(CustomerScriptService)
+    return customScriptService.loadCustomerScript();
+});
 
 @NgModule({
     imports: [

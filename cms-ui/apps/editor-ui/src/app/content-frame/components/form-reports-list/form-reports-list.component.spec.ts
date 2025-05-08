@@ -1,4 +1,4 @@
-import { Component, ErrorHandler, Pipe, ViewChild } from '@angular/core';
+import { Component, ErrorHandler, Pipe, ViewChild, PipeTransform } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -83,7 +83,8 @@ describe('FormReportListComponent', () => {
     selector: 'test-component',
     template: `
         <form-reports-list [form]="form"></form-reports-list>`,
-    })
+    standalone: false,
+})
 class TestComponent {
     @ViewChild(FormReportsListComponent, {static: true})
     formReportsList: FormReportsListComponent;
@@ -99,8 +100,11 @@ class MockApi {
     };
 }
 
-@Pipe({ name: 'i18nDate' })
-class MockI18nDatePipe {
+@Pipe({
+    name: 'i18nDate',
+    standalone: false,
+})
+class MockI18nDatePipe implements PipeTransform {
     transform(val: any): any {
         return val;
     }

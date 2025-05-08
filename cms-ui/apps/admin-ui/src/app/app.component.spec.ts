@@ -142,7 +142,10 @@ class MockTranslateService {
     instant = (str: string) => `translated(${str})`;
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');
@@ -151,6 +154,7 @@ class MockI18nPipe implements PipeTransform {
 
 @Component({
     template: '<gtx-app-root></gtx-app-root>',
+    standalone: false,
 })
 class TestComponent { }
 

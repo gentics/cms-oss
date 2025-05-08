@@ -66,7 +66,10 @@ describe('ValidationErrorInfoComponent', () => {
 
 });
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(value: string): string {
         return value;
@@ -77,6 +80,7 @@ class MockI18nPipe implements PipeTransform {
     template: `
         <validation-error-info [validationResult]="validationResult"></validation-error-info>
     `,
+    standalone: false,
 })
 class TestComponent {
     validationResult: ValidationResult;

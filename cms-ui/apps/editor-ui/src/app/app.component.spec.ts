@@ -48,12 +48,14 @@ class App extends OriginalApp {
 @Component({
     selector: 'basic-search-bar',
     template: '',
+    standalone: false,
 })
 class MockBasicSearchBarComponent {}
 
 @Component({
     selector: 'advanced-search-bar',
     template: '',
+    standalone: false,
 })
 class MockAdvancedSearchBarComponent {}
 
@@ -62,30 +64,35 @@ class MockAdvancedSearchBarComponent {}
     template: '',
     // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
     inputs: ['activeNode'],
+    standalone: false,
 })
 class MockFilterSearchBarComponent {}
 
 @Component({
     selector: 'embedded-tools-host',
     template: '',
+    standalone: false,
 })
 class MockEmbeddedToolHostComponent { }
 
 @Component({
     selector: 'tool-breadcrumb',
     template: '',
+    standalone: false,
 })
 class MockToolBreadcrumbComponent {}
 
 @Component({
     selector: 'tool-selector',
     template: '',
+    standalone: false,
 })
 class MockToolSelectorComponent {}
 
 @Component({
     selector: 'chip-search-bar',
     template: '',
+    standalone: false,
 })
 class MockChipSearchBarComponent {
     @Input()
@@ -97,18 +104,21 @@ class MockChipSearchBarComponent {
 @Component({
     selector: 'favourites-list',
     template: '',
+    standalone: false,
 })
 class MockFavouritesListComponent {}
 
 @Component({
     selector: 'message-inbox',
     template: '',
+    standalone: false,
 })
 class MockMessageInboxComponent {}
 
 @Component({
     selector: 'alert-center',
     template: '',
+    standalone: false,
 })
 class MockAlertCenterComponent {}
 

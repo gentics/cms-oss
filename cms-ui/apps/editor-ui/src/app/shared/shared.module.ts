@@ -119,7 +119,6 @@ import {
     RepositoryBrowserClient,
     SuggestionSearchService,
     UIOverridesService,
-    UserAgentRef,
     TranslationActionsService,
 } from './providers';
 
@@ -252,7 +251,6 @@ const PROVIDERS = [
     RepositoryBrowserClient,
     SuggestionSearchService,
     UIOverridesService,
-    UserAgentRef,
     WindowRef,
     TranslationActionsService,
 ];

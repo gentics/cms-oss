@@ -10,9 +10,9 @@ import { DynamicDisableDirective } from '@editor-ui/app/shared/directives';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
 
@@ -161,6 +161,7 @@ xdescribe('CreateFormModalComponent', () => {
         <create-page-modal *ngIf="showModal"></create-page-modal>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     showModal = false;

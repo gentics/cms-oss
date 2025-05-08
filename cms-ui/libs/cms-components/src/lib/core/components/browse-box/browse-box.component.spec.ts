@@ -233,6 +233,7 @@ describe('BrowseBoxComponent', () => {
             (upload) = "uploadCallback()"
         ></browse-box>
     `,
+    standalone: false,
 })
 class TestComponent {
     label = 'Label';
@@ -248,7 +249,10 @@ class TestComponent {
     uploadCallback: () => void;
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(query: string, ...args: any[]): string {
         return query;

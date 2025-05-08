@@ -4,13 +4,13 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {
-    "@angular/common": ">=18.0.0",
-    "@angular/core": ">=18.0.0",
+    "@angular/common": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
     "@gentics/cms-models": "^6.2.3"
   },
   "devDependencies": {
-    "@angular/common": ">=18.0.0",
-    "@angular/core": ">=18.0.0",
+    "@angular/common": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
     "@gentics/cms-models": "^6.2.10"
   },
   "publishConfig": {

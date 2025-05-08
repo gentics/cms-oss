@@ -6,9 +6,6 @@ export default defineConfig({
     component: {
         ...nxComponentTestingPreset(__filename),
         indexHtmlFile: './cypress/support/component-index.html',
-        // Please ensure you use `cy.origin()` when navigating between domains and remove this option.
-        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-        injectDocumentDomain: true,
     },
     ...createComponentReporterOptions('apps', 'editor-ui', false),
     video: false,

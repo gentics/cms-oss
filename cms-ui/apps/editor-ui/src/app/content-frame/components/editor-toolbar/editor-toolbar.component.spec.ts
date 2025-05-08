@@ -20,12 +20,12 @@ import { BreadcrumbsService } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService, EditorActionsService, FolderActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable, of } from 'rxjs';
 import { EditorToolbarComponent } from './editor-toolbar.component';
 
@@ -441,7 +441,10 @@ class MockModalService {}
 class MockErrorHandler {}
 class MockDecisionModalsService {}
 
-@Directive({ selector: '[overrideSlot],[overrideParams]' })
+@Directive({
+    selector: '[overrideSlot],[overrideParams]',
+    standalone: false,
+})
 class MockOverrideSlotDirective {}
 
 class MockPermissionService {

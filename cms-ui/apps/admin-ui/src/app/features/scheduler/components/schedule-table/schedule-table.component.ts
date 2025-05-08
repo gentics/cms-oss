@@ -29,6 +29,7 @@ const DEACTIVATE_SCHEDULE_ACTION = 'deactivateSchedule';
     templateUrl: './schedule-table.component.html',
     styleUrls: ['./schedule-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, ScheduleBO> implements OnInit {
 

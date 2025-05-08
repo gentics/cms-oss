@@ -14,6 +14,7 @@ export enum ContentMaintenanceTabs {
     templateUrl: './content-maintenance.component.html',
     styleUrls: ['./content-maintenance.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 

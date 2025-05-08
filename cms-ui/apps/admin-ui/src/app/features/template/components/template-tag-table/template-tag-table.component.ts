@@ -14,6 +14,7 @@ import { TemplateTagTableLoaderOptions, TemplateTagTableLoaderService } from '..
     templateUrl: './template-tag-table.component.html',
     styleUrls: ['./template-tag-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTagTableComponent
     extends BaseEntityTableComponent<TemplateTag, TemplateTagBO, TemplateTagTableLoaderOptions>

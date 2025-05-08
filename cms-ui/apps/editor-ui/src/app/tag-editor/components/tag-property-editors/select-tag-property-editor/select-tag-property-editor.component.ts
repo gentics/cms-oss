@@ -18,6 +18,7 @@ import {
     templateUrl: './select-tag-property-editor.component.html',
     styleUrls: ['./select-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectTagPropertyEditor implements TagPropertyEditor {
 

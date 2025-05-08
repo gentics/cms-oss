@@ -12,6 +12,7 @@ import { CreateLanguageModalComponent } from '../create-language-modal/create-la
     selector: 'gtx-language-master',
     templateUrl: './language-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LanguageMasterComponent extends BaseTableMasterComponent<Language, LanguageBO> {
     protected entityIdentifier = EditableEntity.LANGUAGE;

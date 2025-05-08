@@ -8,6 +8,7 @@ import { MeshUserTableComponent } from '../mesh-user-table/mesh-user-table.compo
     templateUrl: './select-user-modal.component.html',
     styleUrls: ['./select-user-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectUserModal extends BaseModal<MeshUserBO | MeshUserBO[]> {
 

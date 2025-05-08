@@ -6,7 +6,10 @@ import { coerceInstance, CoerceOption } from '../../utils';
  * Base Component implementation which has common basics implemented which are used
  * in various components.
  */
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export class BaseComponent implements OnChanges, OnDestroy {
 
     /**

@@ -11,6 +11,7 @@ import { EntityPickerModalComponent } from '../entity-picker-modal/entity-picker
     styleUrls: ['./entity-picker.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(EntityPickerComponent)],
+    standalone: false
 })
 export class EntityPickerComponent extends BaseFormElementComponent<PickableEntity | PickableEntity[]> {
 

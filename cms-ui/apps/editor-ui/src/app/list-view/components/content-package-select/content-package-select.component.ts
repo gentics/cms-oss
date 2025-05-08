@@ -9,6 +9,7 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
     styleUrls: ['./content-package-select.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(ContentPackageSelectComponent)],
+    standalone: false
 })
 export class ContentPackageSelectComponent extends BaseFormElementComponent<ContentPackage> implements OnInit {
 

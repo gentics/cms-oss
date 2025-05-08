@@ -22,6 +22,7 @@ let uniqueComponentId = 0;
     templateUrl: './table.component.html',
     styleUrls: ['./table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implements OnChanges {
 

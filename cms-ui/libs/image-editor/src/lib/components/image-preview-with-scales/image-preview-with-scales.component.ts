@@ -25,7 +25,8 @@ import {ImagePreviewService} from '../../providers/preview/preview.service';
     templateUrl: 'image-preview-with-scales.component.html',
     styleUrls: ['image-preview-with-scales.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [ImagePreviewService]
+    providers: [ImagePreviewService],
+    standalone: false
 })
 export class ImagePreviewWithScalesComponent implements OnInit, OnChanges {
     @Input() src: string;

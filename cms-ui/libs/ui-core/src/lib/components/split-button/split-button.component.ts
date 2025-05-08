@@ -42,6 +42,7 @@ import { SplitButtonPrimaryActionComponent } from '../split-button-primary-actio
     templateUrl: './split-button.component.html',
     styleUrls: ['./split-button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SplitButtonComponent implements AfterViewInit, OnDestroy {
 

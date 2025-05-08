@@ -40,6 +40,7 @@ const validateTagPartProperty: (type: TagPropertyType) => any = (type) => {
     styleUrls: ['./json-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(JsonPartFillComponent)],
+    standalone: false
 })
 export class JsonPartFillComponent extends BaseFormElementComponent<TagPartProperty> implements OnInit, OnChanges {
 

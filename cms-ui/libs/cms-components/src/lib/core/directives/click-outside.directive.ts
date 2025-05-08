@@ -20,6 +20,7 @@ import { Directive, ElementRef, EventEmitter, HostListener, Output } from '@angu
  */
 @Directive({
     selector: '[gtxClickOutside]',
+    standalone: false
 })
 export class ClickOutsideDirective {
     constructor(private _elementRef: ElementRef) {

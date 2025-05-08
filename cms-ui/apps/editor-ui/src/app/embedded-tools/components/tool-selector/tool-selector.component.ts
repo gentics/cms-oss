@@ -10,8 +10,9 @@ import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-comp
     selector: 'tool-selector',
     templateUrl: './tool-selector.component.html',
     styleUrls: ['./tool-selector.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
+})
 export class ToolSelectorComponent implements OnDestroy {
 
     tools$: Observable<Array<EmbeddedTool>>;

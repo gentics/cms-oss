@@ -40,7 +40,8 @@ import {applyShortcuts, translateParams} from '../../../core/providers/i18n/i18n
 @Injectable()
 @Pipe({
     name: 'i18n',
-    pure: false
+    pure: false,
+    standalone: false
 })
 export class I18nPipe implements PipeTransform, OnDestroy {
 

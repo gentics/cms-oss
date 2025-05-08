@@ -9,6 +9,7 @@ import { extractRichContent, getDisplayTextFromContent } from '../../../common/u
  */
 @Pipe({
     name: 'gtxStripRichContent',
+    standalone: false
 })
 export class StripRichContentPipe implements PipeTransform {
 

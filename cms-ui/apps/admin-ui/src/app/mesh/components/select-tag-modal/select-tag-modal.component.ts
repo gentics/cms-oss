@@ -8,6 +8,7 @@ import { TagTableComponent } from '../tag-table/tag-table.component';
     templateUrl: './select-tag-modal.component.html',
     styleUrls: ['./select-tag-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectTagModal extends BaseModal<MeshTagBO | MeshTagBO[]> {
 

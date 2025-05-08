@@ -22,6 +22,7 @@ interface CmsUpdates {
     selector: 'gtx-widget-cms-status',
     templateUrl: './widget-cms-status.component.html',
     styleUrls: ['./widget-cms-status.component.scss'],
+    standalone: false
 })
 export class WidgetCmsStatusComponent extends SidebarItemComponent {
     // CMS Status widget title

@@ -5,8 +5,9 @@ import { DemoDateFormatService } from '../../providers/demo-date-format/demo-dat
 @Directive({
     selector: '[demo-format]',
     providers: [{
-        provide: DateTimePickerFormatProvider,
-        useExisting: forwardRef(() => DemoDateFormatService),
-    }]
+            provide: DateTimePickerFormatProvider,
+            useExisting: forwardRef(() => DemoDateFormatService),
+        }],
+    standalone: false
 })
 export class DemoFormatDirective { }

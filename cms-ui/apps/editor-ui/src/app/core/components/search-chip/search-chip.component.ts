@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Ou
     templateUrl: './search-chip.component.html',
     styleUrls: ['./search-chip.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SearchChipComponent {
 

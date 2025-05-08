@@ -11,6 +11,7 @@ import { distinctUntilChanged, filter, startWith, switchMap } from 'rxjs/operato
     selector: 'gtx-widget-task-queue',
     templateUrl: './widget-task-queue.component.html',
     styleUrls: ['./widget-task-queue.component.scss'],
+    standalone: false
 })
 export class WidgetTaskQueueComponent implements OnInit, OnChanges, OnDestroy {
 

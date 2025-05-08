@@ -23,6 +23,7 @@ import { debounceTime } from 'rxjs/operators';
     templateUrl: './list-tag-property-editor.component.html',
     styleUrls: ['./list-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ListTagPropertyEditor implements OnInit, OnDestroy, TagPropertyEditor {
 

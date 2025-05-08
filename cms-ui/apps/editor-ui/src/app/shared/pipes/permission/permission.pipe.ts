@@ -12,7 +12,10 @@ import { ApplicationStateService } from '../../../state';
  * @example
  *   <item-actions [permissions]="item | permissions"></item-actions>
  */
-@Pipe({ name: 'permissions', pure: false })
+@Pipe({
+    name: 'permissions', pure: false,
+    standalone: false
+})
 export class PermissionsPipe implements OnDestroy, PipeTransform {
 
     private lastItem: Item;

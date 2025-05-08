@@ -22,6 +22,7 @@ let componentId = 0;
     styleUrls: ['./aloha-link-target-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaLinkTargetRendererComponent)],
+    standalone: false
 })
 export class AlohaLinkTargetRendererComponent
     extends BaseAlohaRendererComponent<AlohaLinkTargetComponent, ExtendedLinkTarget>

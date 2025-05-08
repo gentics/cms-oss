@@ -6,6 +6,7 @@ import { DropdownListComponent } from '@gentics/ui-core';
     templateUrl: './search-label.component.html',
     styleUrls: ['./search-label.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SearchLabel {
 

@@ -23,6 +23,7 @@ import { publish, refCount } from 'rxjs/operators';
     templateUrl: './custom-tag-property-editor-host.component.html',
     styleUrls: ['./custom-tag-property-editor-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CustomTagPropertyEditorHostComponent implements TagPropertyEditor, OnDestroy {
 

@@ -15,6 +15,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     templateUrl: './publish-queue-modal.component.html',
     styleUrls: ['./publish-queue-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PublishQueueModal extends BaseModal<void | Page[]> implements OnInit, OnDestroy {
 

@@ -5,7 +5,10 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
  * Adds highlighting markup to a string based on matching against a provided term, and
  * outputs SafeHtml which can then be bound directly into a template element's [innerHTML] property.
  */
-@Pipe({ name: 'highlight' })
+@Pipe({
+    name: 'highlight',
+    standalone: false
+})
 export class HighlightPipe implements PipeTransform {
 
     constructor(private sanitizer: DomSanitizer) {}

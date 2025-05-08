@@ -9,6 +9,7 @@ import { GtxI18nRelativeDateService } from './i18n-relative-date.service';
 @Pipe({
     name: 'gtxI18nRelativeDate',
     pure: false,
+    standalone: false
 })
 export class GtxI18nRelativeDatePipe implements PipeTransform, OnDestroy {
 

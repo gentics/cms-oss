@@ -43,6 +43,7 @@ export enum NodePropertiesMode {
         generateFormProvider(NodePropertiesComponent),
         generateValidatorProvider(NodePropertiesComponent),
     ],
+    standalone: false
 })
 export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
 

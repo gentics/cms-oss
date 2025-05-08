@@ -14,6 +14,7 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
         generateFormProvider(RolePropertiesComponent),
         generateValidatorProvider(RolePropertiesComponent),
     ],
+    standalone: false
 })
 export class RolePropertiesComponent extends BasePropertiesComponent<Role> implements OnChanges {
 

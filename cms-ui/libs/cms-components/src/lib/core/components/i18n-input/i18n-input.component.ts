@@ -26,6 +26,7 @@ import { cloneDeep } from 'lodash-es';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class I18nInputComponent
     extends BaseFormElementComponent<CmsFormElementI18nValue<string | number | null>>

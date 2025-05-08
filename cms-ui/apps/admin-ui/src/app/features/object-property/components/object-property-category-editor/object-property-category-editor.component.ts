@@ -14,6 +14,7 @@ import { ObjectpropertyPropertiesMode } from '../object-property-properties/obje
     templateUrl: './object-property-category-editor.component.html',
     styleUrls: ['./object-property-category-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyCategoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.OBJECT_PROPERTY_CATEGORY> {
 

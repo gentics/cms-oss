@@ -11,6 +11,7 @@ export enum LicenseManagementModuleTabs {
     templateUrl: './license-management-module-master.component.html',
     styleUrls: ['./license-management-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LicenseManagementModuleMasterComponent {
 

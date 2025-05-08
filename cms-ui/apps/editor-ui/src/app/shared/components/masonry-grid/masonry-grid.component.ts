@@ -39,6 +39,7 @@ const splitViewContainerAnimationDuration = 300;
     template: '<ng-content></ng-content>',
     styleUrls: ['./masonry-grid.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterContentChecked {
 

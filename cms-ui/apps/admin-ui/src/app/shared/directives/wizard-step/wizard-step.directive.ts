@@ -37,6 +37,7 @@ import { coerceToBoolean } from '@gentics/ui-core';
 @Directive({
     // tslint:disable-next-line: directive-selector
     selector: 'gtx-wizard-step',
+    standalone: false
 })
 export class WizardStepDirective<I, O> {
 

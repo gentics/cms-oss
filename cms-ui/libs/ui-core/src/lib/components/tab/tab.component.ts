@@ -8,6 +8,7 @@ import { ChangesOf } from '../../common';
     selector: 'gtx-tab',
     templateUrl: './tab.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TabComponent implements OnChanges {
 

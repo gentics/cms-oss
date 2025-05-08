@@ -12,6 +12,7 @@ const TWO_WEEKS_HENCE = Date.now() + TWO_WEEKS;
 @Component({
     templateUrl: './date-time-picker-controls-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DateTimePickerControlsDemoPage {
 

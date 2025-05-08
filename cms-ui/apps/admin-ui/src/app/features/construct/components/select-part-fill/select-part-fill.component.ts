@@ -9,6 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./select-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SelectPartFillComponent)],
+    standalone: false
 })
 export class SelectPartFillComponent extends BaseFormElementComponent<SelectTagPartProperty> {
 

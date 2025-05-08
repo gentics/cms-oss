@@ -45,6 +45,7 @@ const WIDGET_PUBLISHING_PROCESS_STATUS_KEYS = [
     templateUrl: './widget-publishing-process-per-node-overview.component.html',
     styleUrls: ['./widget-publishing-process-per-node-overview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, OnChanges, OnDestroy {
 

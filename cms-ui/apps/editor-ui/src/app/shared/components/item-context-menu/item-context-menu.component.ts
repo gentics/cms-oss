@@ -51,6 +51,7 @@ export interface ContextMenuButtonsMap {
     templateUrl: './item-context-menu.component.html',
     styleUrls: ['./item-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 

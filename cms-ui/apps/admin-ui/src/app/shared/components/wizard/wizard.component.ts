@@ -53,6 +53,7 @@ import { WizardStepDirective } from '../../directives/wizard-step/wizard-step.di
     templateUrl: './wizard.component.html',
     styleUrls: ['./wizard.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WizardComponent implements AfterContentInit, OnDestroy {
 

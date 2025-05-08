@@ -7,6 +7,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './manage-tag-families-modal.component.html',
     styleUrls: ['./manage-tag-families-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ManageTagFamiliesModal extends BaseModal<void> {
 

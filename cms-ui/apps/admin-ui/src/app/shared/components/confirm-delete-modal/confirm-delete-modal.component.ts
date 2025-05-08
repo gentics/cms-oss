@@ -6,6 +6,7 @@ import { IModalDialog } from '@gentics/ui-core';
 @Component({
     selector: 'gtx-confirm-delete-modal',
     templateUrl: './confirm-delete-modal.component.html',
+    standalone: false
 })
 export class ConfirmDeleteModalComponent<T extends NormalizableEntityType> implements IModalDialog, OnInit {
 

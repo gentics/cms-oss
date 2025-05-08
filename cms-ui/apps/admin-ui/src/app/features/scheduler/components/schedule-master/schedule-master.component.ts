@@ -16,6 +16,7 @@ import { ScheduleTableComponent } from '../schedule-table/schedule-table.compone
     templateUrl: './schedule-master.component.html',
     styleUrls: ['./schedule-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleMasterComponent extends BaseTableMasterComponent<Schedule, ScheduleBO> {
 

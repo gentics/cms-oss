@@ -33,6 +33,7 @@ const DOCS_URL = 'https://gentics.com/Content.Node/cmp8/guides/feature_asset_man
     templateUrl: './upload-button.component.html',
     styleUrls: ['./upload-button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UploadButtonComponent implements OnDestroy, OnInit {
 

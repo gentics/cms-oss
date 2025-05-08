@@ -21,6 +21,7 @@ const SELECT_TYPES = [TagPropertyType.SELECT, TagPropertyType.MULTISELECT];
     styleUrls: ['./construct-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(ConstructPartFillComponent)],
+    standalone: false
 })
 export class ConstructPartFillComponent extends BaseFormElementComponent<TagPartProperty> implements OnChanges {
 

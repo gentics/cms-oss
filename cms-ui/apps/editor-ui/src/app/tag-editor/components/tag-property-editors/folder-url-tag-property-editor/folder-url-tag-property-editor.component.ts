@@ -31,6 +31,7 @@ import { ExpansionButtonComponent } from '../../shared/expansion-button/expansio
     templateUrl: './folder-url-tag-property-editor.component.html',
     styleUrls: ['./folder-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy {
 

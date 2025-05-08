@@ -33,6 +33,7 @@ export interface AffectedObject {
     templateUrl: './synchonize-channel-modal.component.html',
     styleUrls: ['./synchronize-channel-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SynchronizeChannelModal extends BaseModal<ChannelSyncRequest> implements OnInit {
 

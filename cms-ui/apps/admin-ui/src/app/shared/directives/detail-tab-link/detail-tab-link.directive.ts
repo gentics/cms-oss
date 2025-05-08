@@ -14,6 +14,7 @@ import { takeUntil } from 'rxjs/operators';
  */
 @Directive({
     selector: 'gtx-tab[gtxDetailTabLink]',
+    standalone: false
 })
 export class DetailTabLinkDirective implements OnInit, OnDestroy {
 

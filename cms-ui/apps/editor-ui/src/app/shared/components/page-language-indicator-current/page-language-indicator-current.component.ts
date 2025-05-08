@@ -15,6 +15,7 @@ import { PageLanguageIndicatorComponent } from '../page-language-indicator/page-
     templateUrl: './page-language-indicator-current.component.html',
     styleUrls: ['./page-language-indicator-current.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageLanguageIndicatorCurrentComponent extends PageLanguageIndicatorComponent implements OnInit {
 

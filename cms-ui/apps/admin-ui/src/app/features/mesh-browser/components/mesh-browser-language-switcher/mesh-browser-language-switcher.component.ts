@@ -7,6 +7,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     templateUrl: './mesh-browser-language-switcher.component.html',
     styleUrls: ['./mesh-browser-language-switcher.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserLanguageSwitcherComponent {
 

@@ -21,6 +21,7 @@ import { cloneDeep } from 'lodash-es';
     templateUrl: './custom-tag-editor-host.component.html',
     styleUrls: ['./custom-tag-editor-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CustomTagEditorHostComponent implements CompleteTagEditor {
 

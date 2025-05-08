@@ -20,6 +20,7 @@ type ContentPackagePropertiesValue = ContentPackageSaveRequest | ContentPackageC
         generateFormProvider(ContentPackagePropertiesComponent),
         generateValidatorProvider(ContentPackagePropertiesComponent),
     ],
+    standalone: false
 })
 export class ContentPackagePropertiesComponent extends BasePropertiesComponent<ContentPackagePropertiesValue> {
 

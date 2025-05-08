@@ -8,6 +8,7 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
     styleUrls: ['./symbol-grid.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SymbolGridComponent)],
+    standalone: false
 })
 export class SymbolGridComponent extends BaseFormElementComponent<SymbolGridItem> {
 

@@ -17,7 +17,8 @@ import { MessageLink, parseMessage } from './message-parsing';
     selector: 'gtx-message-body',
     templateUrl: './message-body.tpl.html',
     styleUrls: ['./message-body.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageBodyComponent implements OnChanges {
 

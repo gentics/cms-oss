@@ -17,6 +17,7 @@ import hljs from 'highlight.js/lib/core';
 @Component({
     selector: 'gtx-highlighted-code',
     template: '<pre><code [ngClass]="language">{{ formattedCode }}</code></pre>',
+    standalone: false
 })
 export class HighlightedCodeComponent implements OnInit, AfterViewInit {
 

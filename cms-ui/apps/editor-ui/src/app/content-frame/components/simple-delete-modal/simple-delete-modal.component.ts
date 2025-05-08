@@ -6,6 +6,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './simple-delete-modal.component.html',
     styleUrls: ['./simple-delete-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SimpleDeleteModalComponent extends BaseModal<boolean> {
 

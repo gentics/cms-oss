@@ -18,6 +18,7 @@ export enum TagPropertiesMode {
         generateFormProvider(TagPropertiesComponent),
         generateValidatorProvider(TagPropertiesComponent),
     ],
+    standalone: false
 })
 export class TagPropertiesComponent extends BasePropertiesComponent<EditableTagProperties> {
 

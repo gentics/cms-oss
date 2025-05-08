@@ -9,6 +9,7 @@ import { LinkCheckerService } from '../../services/link-checker/link-checker.ser
     selector: 'gtxct-head-options',
     templateUrl: './head-options.component.html',
     styleUrls: ['./head-options.component.scss'],
+    standalone: false
 })
 export class HeadOptionsComponent implements OnInit {
 

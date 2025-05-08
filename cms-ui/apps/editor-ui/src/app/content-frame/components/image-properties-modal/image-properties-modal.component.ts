@@ -30,6 +30,7 @@ function isObjectProperty(tag: Tag): tag is ObjectTag {
     templateUrl: './image-properties-modal.component.html',
     styleUrls: ['./image-properties-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ImagePropertiesModalComponent extends BaseModal<void> implements OnInit {
 

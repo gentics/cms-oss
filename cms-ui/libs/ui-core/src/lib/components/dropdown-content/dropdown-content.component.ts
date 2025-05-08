@@ -9,6 +9,7 @@ import { DropdownItemComponent } from '../dropdown-item/dropdown-item.component'
     selector: 'gtx-dropdown-content',
     templateUrl: './dropdown-content.component.html',
     styleUrls: ['./dropdown-content.component.scss'],
+    standalone: false
 })
 export class DropdownContentComponent implements AfterContentInit {
 

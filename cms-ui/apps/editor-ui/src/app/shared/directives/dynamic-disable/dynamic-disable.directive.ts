@@ -40,6 +40,7 @@ import {
  */
 @Directive({
     selector: '[formControlName][gtxDisabled]',
+    standalone: false
 })
 export class DynamicDisableDirective implements OnChanges {
 

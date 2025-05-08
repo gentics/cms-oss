@@ -5,7 +5,8 @@ import { FilterService } from '../../services/filter/filter.service';
 @Component({
     selector: 'gtxct-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss'],
+    standalone: false
 })
 export class AppComponent implements OnInit {
     constructor(

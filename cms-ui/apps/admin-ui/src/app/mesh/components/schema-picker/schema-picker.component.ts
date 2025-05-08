@@ -16,6 +16,7 @@ function createDisplayValue(schemas: Schema[]): string {
     styleUrls: ['./schema-picker.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SchemaPickerComponent)],
+    standalone: false
 })
 export class SchemaPickerComponent extends BaseFormElementComponent<Schema | Schema[]> {
 

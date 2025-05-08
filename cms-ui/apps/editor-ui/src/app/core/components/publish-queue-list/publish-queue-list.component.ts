@@ -19,8 +19,9 @@ import { EntityResolver } from '../../providers/entity-resolver/entity-resolver'
     selector: 'publish-queue-list',
     templateUrl: './publish-queue-list.tpl.html',
     styleUrls: ['./publish-queue-list.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
+})
 export class PublishQueueList implements OnInit, OnChanges {
 
     @Input()

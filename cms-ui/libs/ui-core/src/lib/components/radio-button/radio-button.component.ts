@@ -52,6 +52,7 @@ const NO_SET = Symbol();
     templateUrl: './radio-button.component.html',
     styleUrls: ['./radio-button.component.scss'],
     providers: [generateFormProvider(RadioButtonComponent)],
+    standalone: false
 })
 export class RadioButtonComponent
     extends BaseFormElementComponent<any>

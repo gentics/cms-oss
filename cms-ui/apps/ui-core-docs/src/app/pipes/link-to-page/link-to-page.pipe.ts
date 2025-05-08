@@ -3,6 +3,7 @@ import { PAGES } from '../../common/page-list';
 
 @Pipe({
     name: 'gtxLinkToPage',
+    standalone: false
 })
 export class LinkToPagePipe implements PipeTransform {
 

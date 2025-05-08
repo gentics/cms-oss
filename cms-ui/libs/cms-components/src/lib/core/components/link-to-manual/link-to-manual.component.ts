@@ -7,6 +7,7 @@ import { Component } from '@angular/core';
     selector: 'gtx-link-to-manual',
     templateUrl: './link-to-manual.component.html',
     styleUrls: ['./link-to-manual.component.scss'],
+    standalone: false
 })
 export class GtxLinkToManualComponent {
     /** Actual URL string pointing at manual web resource. */

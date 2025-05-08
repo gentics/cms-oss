@@ -8,6 +8,7 @@ import { TagFamilyTableComponent } from '../tag-family-table/tag-family-table.co
     templateUrl: './select-tag-family-modal.component.html',
     styleUrls: ['./select-tag-family-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectTagFamilyModal extends BaseModal<MeshTagFamilyBO | MeshTagFamilyBO[]> {
 

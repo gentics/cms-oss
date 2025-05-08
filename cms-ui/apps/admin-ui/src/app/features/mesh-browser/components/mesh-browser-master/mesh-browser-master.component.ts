@@ -31,6 +31,7 @@ import { ListRouteParameters, MeshBrowserLoaderService, MeshBrowserNavigatorServ
     templateUrl: './mesh-browser-master.component.html',
     styleUrls: ['./mesh-browser-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserMasterComponent
     extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges {

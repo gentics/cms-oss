@@ -32,6 +32,7 @@ export interface GtxInputSelectOption {
     templateUrl: './input-select.component.html',
     styleUrls: ['./input-select.component.scss'],
     providers: [generateFormProvider(InputSelectComponent)],
+    standalone: false
 })
 export class InputSelectComponent extends SelectControlValueAccessor implements AfterViewInit, OnDestroy, OnInit {
 

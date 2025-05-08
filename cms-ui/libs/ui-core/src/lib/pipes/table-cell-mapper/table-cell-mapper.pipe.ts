@@ -3,6 +3,7 @@ import { TableColumn, TableColumnMappingFn } from '../../common';
 
 @Pipe({
     name: 'gtxTableCellMapper',
+    standalone: false
 })
 export class TableCellMapperPipe implements PipeTransform {
 

@@ -10,7 +10,8 @@ import { Page, PagingSortOption, PagingSortOrder, SortField } from '@gentics/cms
     selector: 'sorting-modal',
     templateUrl: './sorting-modal.tpl.html',
     styleUrls: ['./sorting-modal.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SortingModalComponent implements IModalDialog, OnInit {
 

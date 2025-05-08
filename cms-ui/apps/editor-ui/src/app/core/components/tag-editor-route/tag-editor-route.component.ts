@@ -51,6 +51,7 @@ type EditableEntity = ItemWithObjectTags | Template<Raw>;
     templateUrl: './tag-editor-route.component.html',
     styleUrls: ['./tag-editor-route.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy {
 

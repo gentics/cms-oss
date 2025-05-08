@@ -5,7 +5,8 @@ import { Page } from '@gentics/cms-models';
  * Pipe that returns true if any of the passed pages (>= 1) is not "published".
  */
 @Pipe({
-    name: 'anyPageUnpublished'
+    name: 'anyPageUnpublished',
+    standalone: false
 })
 export class AnyPageUnpublishedPipe implements PipeTransform {
     transform(pages: Page[]): boolean {

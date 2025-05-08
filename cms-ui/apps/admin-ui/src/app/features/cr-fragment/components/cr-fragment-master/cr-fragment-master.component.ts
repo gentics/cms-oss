@@ -7,6 +7,7 @@ import { ContentRepositoryFragment, NormalizableEntityType } from '@gentics/cms-
     selector: 'gtx-content-repository-fragment-master',
     templateUrl: './cr-fragment-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryFragmentMasterComponent extends BaseTableMasterComponent<ContentRepositoryFragment, ContentRepositoryFragmentBO> {
 

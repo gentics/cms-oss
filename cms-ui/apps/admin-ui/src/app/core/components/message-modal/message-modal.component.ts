@@ -13,6 +13,7 @@ import { MessageLink } from '../message-body';
     templateUrl: './message-modal.tpl.html',
     styleUrls: ['./message-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageModalComponent implements IModalDialog {
     @Input() message: Message<Normalized>;

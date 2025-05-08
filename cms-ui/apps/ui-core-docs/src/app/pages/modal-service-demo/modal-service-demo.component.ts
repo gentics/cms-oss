@@ -16,6 +16,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
             <a (click)="closeFn('link was clicked')">Close me</a>
         </div>`,
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MyModalComponent extends BaseModal<string> {
     greeting: string;
@@ -29,6 +30,7 @@ export class MyModalComponent extends BaseModal<string> {
 @Component({
     templateUrl: './modal-service-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ModalServiceDemoPage {
 

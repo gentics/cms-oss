@@ -13,6 +13,7 @@ let uniqueTabGroupId = 0;
     selector: 'gtx-tab-group',
     exportAs: 'gtxTabGroup',
     template: '',
+    standalone: false
 })
 export class TabGroupComponent {
 

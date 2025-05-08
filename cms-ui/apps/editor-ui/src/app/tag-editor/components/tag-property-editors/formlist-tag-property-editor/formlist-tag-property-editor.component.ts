@@ -23,6 +23,7 @@ import { FormgeneratorApiService } from '../../../providers/formgenerator-api/fo
     templateUrl: './formlist-tag-property-editor.component.html',
     styleUrls: ['./formlist-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormlistTagPropertyEditor implements TagPropertyEditor, OnDestroy, OnInit {
 

@@ -12,6 +12,7 @@ import { CreateConstructCategoryModalComponent } from '../create-construct-categ
     selector: 'gtx-construct-category-master',
     templateUrl: './construct-category-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructCategoryMasterComponent extends BaseTableMasterComponent<ConstructCategory, ConstructCategoryBO> implements OnInit {
 

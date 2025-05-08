@@ -14,6 +14,7 @@ const REDO_TASK_ACTION = 'redoAction';
     templateUrl: './dirt-queue-item-table.component.html',
     styleUrls: ['./dirt-queue-item-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQueueItem, DirtQueueItemBO> {
 

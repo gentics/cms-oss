@@ -16,6 +16,7 @@ interface TagEditorURL {
     templateUrl: './tag-editor-wrapper.component.html',
     styleUrls: ['./tag-editor-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 

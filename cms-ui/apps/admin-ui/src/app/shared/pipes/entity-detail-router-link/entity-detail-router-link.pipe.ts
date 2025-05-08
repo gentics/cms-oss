@@ -2,7 +2,10 @@ import { buildEntityDetailPath } from '@admin-ui/common';
 import { Pipe, PipeTransform } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 
-@Pipe({ name: 'gtxEntityDetailRouterLink' })
+@Pipe({
+    name: 'gtxEntityDetailRouterLink',
+    standalone: false
+})
 export class EntityDetailRouterLinkPipe implements PipeTransform {
 
     transform(

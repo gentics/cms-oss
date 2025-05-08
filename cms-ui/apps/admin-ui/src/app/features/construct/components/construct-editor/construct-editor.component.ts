@@ -88,6 +88,7 @@ function tagPartValidator(parts: typeof CONTROL_INVALID_VALUE | ((TagPart | type
     templateUrl: './construct-editor.component.html',
     styleUrls: ['./construct-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONSTRUCT> implements OnInit {
 

@@ -12,6 +12,7 @@ import { first, map, switchMap } from 'rxjs/operators';
     templateUrl: './assign-templates-to-nodes-modal.component.html',
     styleUrls: ['./assign-templates-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
 

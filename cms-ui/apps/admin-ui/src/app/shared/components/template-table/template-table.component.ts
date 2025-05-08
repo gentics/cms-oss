@@ -21,6 +21,7 @@ import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '.
     templateUrl: './template-table.component.html',
     styleUrls: ['./template-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTableComponent
     extends BasePackageEntityTableComponent<Template, TemplateBO, TemplateTableLoaderOptions>

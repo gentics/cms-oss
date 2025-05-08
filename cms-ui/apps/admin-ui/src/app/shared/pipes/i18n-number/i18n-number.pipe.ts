@@ -8,7 +8,10 @@ const DEFAULT_FORMAT_OPTIONS: Intl.NumberFormatOptions = {
     minimumFractionDigits: 0,
 };
 
-@Pipe({ name: 'i18nNumber' })
+@Pipe({
+    name: 'i18nNumber',
+    standalone: false
+})
 export class I18nNumberPipe implements PipeTransform {
 
     constructor(

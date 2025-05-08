@@ -11,6 +11,7 @@ import { MicroschemaPropertiesMode } from '../microschema-properties/microschema
     templateUrl: './microschema-modal.component.html',
     styleUrls: ['./microschema-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MicroschemaModal extends BaseModal<Schema> implements OnInit {
 

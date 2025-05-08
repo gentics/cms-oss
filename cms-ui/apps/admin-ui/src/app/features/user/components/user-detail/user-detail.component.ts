@@ -42,8 +42,9 @@ import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/d
 @Component({
     selector: 'gtx-user-detail',
     templateUrl: './user-detail.component.html',
-    styleUrls: [ 'user-detail.component.scss' ],
+    styleUrls: ['user-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UserDetailComponent extends BaseDetailComponent<'user', UserOperations> implements OnInit {
 

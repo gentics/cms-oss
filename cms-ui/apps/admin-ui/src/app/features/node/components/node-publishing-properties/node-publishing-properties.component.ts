@@ -39,6 +39,7 @@ const PUBLISH_MAP_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
         generateFormProvider(NodePublishingPropertiesComponent),
         generateValidatorProvider(NodePublishingPropertiesComponent),
     ],
+    standalone: false
 })
 export class NodePublishingPropertiesComponent extends BasePropertiesComponent<NodePublishingPropertiesFormData> implements OnInit {
 

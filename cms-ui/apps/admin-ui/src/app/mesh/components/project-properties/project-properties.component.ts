@@ -18,6 +18,7 @@ export enum ProjectPropertiesMode {
         generateFormProvider(ProjectPropertiesComponent),
         generateValidatorProvider(ProjectPropertiesComponent),
     ],
+    standalone: false
 })
 export class ProjectPropertiesComponent extends BasePropertiesComponent<EditableProjectProperties | ProjectCreateRequest>
     implements OnChanges {

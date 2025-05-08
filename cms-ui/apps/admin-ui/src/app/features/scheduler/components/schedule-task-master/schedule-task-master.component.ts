@@ -8,6 +8,7 @@ import { NormalizableEntityType, ScheduleTask } from '@gentics/cms-models';
     templateUrl: './schedule-task-master.component.html',
     styleUrls: ['./schedule-task-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleTaskMasterComponent extends BaseTableMasterComponent<ScheduleTask, ScheduleTaskBO> {
 

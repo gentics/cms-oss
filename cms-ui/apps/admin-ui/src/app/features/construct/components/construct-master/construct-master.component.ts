@@ -19,6 +19,7 @@ import { CreateConstructModalComponent } from '../create-construct-modal/create-
     templateUrl: './construct-master.component.html',
     styleUrls: ['./construct-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, ConstructBO> {
 

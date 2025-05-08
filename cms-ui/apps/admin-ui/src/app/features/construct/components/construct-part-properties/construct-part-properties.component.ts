@@ -136,6 +136,7 @@ const TRANSLATED_NAME_PROP = Symbol('translated-name');
         generateFormProvider(ConstructPartPropertiesComponent),
         generateValidatorProvider(ConstructPartPropertiesComponent),
     ],
+    standalone: false
 })
 export class ConstructPartPropertiesComponent
     extends BasePropertiesComponent<TagPartPropertiesFormData>

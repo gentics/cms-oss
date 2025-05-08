@@ -10,6 +10,7 @@ import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
     selector: 'update-link-modal',
     templateUrl: './update-link-modal.tpl.html',
     styleUrls: ['./update-link-modal.scss'],
+    standalone: false
 })
 export class UpdateLinkModalComponent implements IModalDialog, OnInit, OnDestroy {
 

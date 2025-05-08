@@ -26,6 +26,7 @@ import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.compo
     templateUrl: './tag-editor-overlay-host.component.html',
     styleUrls: ['./tag-editor-overlay-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagEditorOverlayHostComponent implements OnInit, AfterViewInit, OnDestroy {
 

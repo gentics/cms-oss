@@ -10,6 +10,7 @@ export enum SchedulerModuleTabs {
     templateUrl: './scheduler-module-master.component.html',
     styleUrls: ['./scheduler-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SchedulerModuleMasterComponent {
 

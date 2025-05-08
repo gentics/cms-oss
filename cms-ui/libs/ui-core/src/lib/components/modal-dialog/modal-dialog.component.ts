@@ -10,6 +10,7 @@ import { IDialogConfig, IModalDialog } from '../../common';
     selector: 'gtx-modal-dialog',
     templateUrl: './modal-dialog.component.html',
     styleUrls: ['./modal-dialog.component.scss'],
+    standalone: false
 })
 export class ModalDialogComponent implements IModalDialog {
 

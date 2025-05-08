@@ -11,6 +11,7 @@ import { map, switchMap } from 'rxjs/operators';
     selector: 'gtx-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
+    standalone: false
 })
 export class DashboardComponent implements OnInit {
 

@@ -15,7 +15,8 @@ export interface MultiPagesOfflineResult {
 @Component({
     selector: 'take-pages-offline-modal',
     templateUrl: './take-pages-offline-modal.tpl.html',
-    styleUrls: ['./take-pages-offline-modal.scss']
+    styleUrls: ['./take-pages-offline-modal.scss'],
+    standalone: false
 })
 export class TakePagesOfflineModal implements IModalDialog {
 

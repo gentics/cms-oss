@@ -12,6 +12,7 @@ import { Observable, Subscription } from 'rxjs';
     templateUrl: './create-construct-category-modal.component.html',
     styleUrls: ['./create-construct-category-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateConstructCategoryModalComponent
     extends BaseModal<boolean>

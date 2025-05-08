@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
     selector: 'gtx-assign-packages-to-node-modal',
     templateUrl: './assign-packages-to-node-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignPackagesToNodeModalComponent extends BaseModal<boolean> implements IModalDialog, OnInit {
 

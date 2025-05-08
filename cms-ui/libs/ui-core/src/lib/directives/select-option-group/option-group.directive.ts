@@ -4,6 +4,7 @@ import { SelectOptionDirective } from '../select-option/option.directive';
 
 @Directive({
     selector: 'gtx-optgroup',
+    standalone: false
 })
 export class SelectOptionGroupDirective {
 

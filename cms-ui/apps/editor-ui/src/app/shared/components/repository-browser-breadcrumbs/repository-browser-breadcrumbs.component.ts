@@ -15,6 +15,7 @@ import { BreadcrumbsService } from '../../providers/breadcrumbs.service';
     templateUrl: './repository-browser-breadcrumbs.component.html',
     styleUrls: ['./repository-browser-breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RepositoryBrowserBreadcrumbs implements OnInit, OnChanges {
 

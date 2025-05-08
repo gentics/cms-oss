@@ -37,6 +37,7 @@ import { UIOverridesService } from '../../providers/ui-overrides/ui-overrides.se
  */
 @Directive({
     selector: '[overrideSlot]',
+    standalone: false
 })
 export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestroy {
 

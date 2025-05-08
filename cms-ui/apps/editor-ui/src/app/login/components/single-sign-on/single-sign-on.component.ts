@@ -14,6 +14,7 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SingleSignOn implements OnDestroy, OnInit {
 

@@ -4,7 +4,10 @@ import { InheritableItem } from '@gentics/cms-models';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '../../../state';
 
-@Pipe({ name: 'routerCommandsForItem' })
+@Pipe({
+    name: 'routerCommandsForItem',
+    standalone: false
+})
 export class RouterCommandsForItemPipe implements PipeTransform {
 
     constructor(

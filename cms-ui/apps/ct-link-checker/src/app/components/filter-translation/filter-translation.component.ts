@@ -5,7 +5,8 @@ import { Language } from '@gentics/cms-models';
     selector: 'gtxct-filter-translation',
     templateUrl: './filter-translation.component.html',
     styleUrls: ['./filter-translation.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilterTranslationComponent implements OnInit {
     @Input() activeLanguages: any;

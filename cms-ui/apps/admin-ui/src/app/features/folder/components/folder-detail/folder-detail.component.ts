@@ -26,6 +26,7 @@ import { map, takeUntil, tap } from 'rxjs/operators';
     selector: 'gtx-folder-detail',
     templateUrl: './folder-detail.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderOperations> implements OnInit {
 

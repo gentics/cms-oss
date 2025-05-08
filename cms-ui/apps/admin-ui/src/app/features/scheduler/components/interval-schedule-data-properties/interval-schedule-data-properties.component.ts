@@ -13,6 +13,7 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
         generateFormProvider(IntervalScheduleDataPropertiesComponent),
         generateValidatorProvider(IntervalScheduleDataPropertiesComponent),
     ],
+    standalone: false
 })
 export class IntervalScheduleDataPropertiesComponent extends BasePropertiesComponent<IntervalScheduleData> {
 

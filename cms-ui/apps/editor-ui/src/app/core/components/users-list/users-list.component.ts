@@ -9,7 +9,8 @@ import { User } from '@gentics/cms-models';
     selector: 'users-list',
     templateUrl: './users-list.tpl.html',
     styleUrls: ['./users-list.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UsersList {
     @Input() users: User[] = [];

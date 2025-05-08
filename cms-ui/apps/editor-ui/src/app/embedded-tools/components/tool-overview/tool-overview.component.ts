@@ -9,7 +9,8 @@ import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-comp
 @Component({
     selector: 'tool-overview',
     templateUrl: './tool-overview.component.html',
-    styleUrls: ['./tool-overview.component.scss']
+    styleUrls: ['./tool-overview.component.scss'],
+    standalone: false
 })
 export class ToolOverviewComponent implements OnInit {
 

@@ -7,6 +7,7 @@ import { delay } from 'rxjs/operators';
     selector: 'gtx-assign-cr-fragments-to-content-repository-modal',
     templateUrl: './assign-cr-fragments-to-content-repository-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignCRFragmentsToContentRepositoryModal extends BaseModal<string[]> implements OnInit {
 

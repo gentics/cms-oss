@@ -15,6 +15,7 @@ const DEFAULT_INSTANT_TIME_MINUTES = 2;
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss'],
+    standalone: false
 })
 export class SendMessageModal extends BaseModal<any> implements OnInit {
 

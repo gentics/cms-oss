@@ -27,6 +27,7 @@ const WIDGET_PUBLISHING_PROCESS_STATUS_KEYS = [
     templateUrl: './widget-publishing-process-total.component.html',
     styleUrls: ['./widget-publishing-process-total.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WidgetPublishingProcessTotalComponent {
 

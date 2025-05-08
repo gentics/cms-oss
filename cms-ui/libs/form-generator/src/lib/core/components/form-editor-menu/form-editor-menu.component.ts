@@ -23,6 +23,7 @@ import { FormEditorService } from '../../providers';
     styleUrls: ['./form-editor-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
+    standalone: false
 })
 export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit {
 

@@ -14,6 +14,7 @@ import { FormEditorService } from '../../providers';
     templateUrl: './form-element-properties-editor.component.html',
     styleUrls: ['./form-element-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, OnDestroy {
 

@@ -13,6 +13,7 @@ import { applyControl, patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-select-menu-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSelectMenuRendererComponent)],
+    standalone: false
 })
 export class AlohaSelectMenuRendererComponent
     extends BaseAlohaRendererComponent<AlohaSelectMenuComponent, SelectMenuSelectEvent<any>>

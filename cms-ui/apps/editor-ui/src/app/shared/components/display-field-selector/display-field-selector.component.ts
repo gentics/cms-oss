@@ -64,6 +64,7 @@ interface DisplayFieldSelection {
     templateUrl: './display-field-selector.component.html',
     styleUrls: ['./display-field-selector.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DisplayFieldSelectorModal extends BaseModal<DisplayFieldSelection> implements OnInit {
 

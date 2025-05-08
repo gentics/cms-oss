@@ -11,6 +11,7 @@ import { applyControl, focusFirst } from '../../utils';
     templateUrl: './dynamic-form-modal.component.html',
     styleUrls: ['./dynamic-form-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestroy {
 

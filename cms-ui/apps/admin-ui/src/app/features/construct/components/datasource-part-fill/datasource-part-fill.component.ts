@@ -16,6 +16,7 @@ const validateSelectOption: ValidatorFn = (control: AbstractControl) => {
     styleUrls: ['./datasource-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(DataSourcePartFillComponent)],
+    standalone: false
 })
 export class DataSourcePartFillComponent extends BaseFormElementComponent<DataSourceTagPartProperty> implements OnInit {
 

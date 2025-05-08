@@ -14,6 +14,7 @@ import { SidebarItemComponent } from '../sidebar-item/sidebar-item.component';
     templateUrl: './widget-publishing-process.component.html',
     styleUrls: ['./widget-publishing-process.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WidgetPublishingProcessComponent extends SidebarItemComponent implements OnInit, OnChanges, OnDestroy {
 

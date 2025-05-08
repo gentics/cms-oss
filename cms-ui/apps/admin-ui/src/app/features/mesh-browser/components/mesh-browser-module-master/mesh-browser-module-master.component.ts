@@ -20,6 +20,7 @@ import { TableRow, toValidNumber } from '@gentics/ui-core';
     templateUrl: './mesh-browser-module-master.component.html',
     styleUrls: ['./mesh-browser-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserModuleMasterComponent {
 

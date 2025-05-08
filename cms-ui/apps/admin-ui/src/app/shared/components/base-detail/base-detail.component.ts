@@ -26,6 +26,7 @@ import { ExtendedEntityDataServiceBase } from '../../providers';
  */
  @Component({
     template: '',
+    standalone: false
 })
 export abstract class BaseDetailComponent<
     T extends NormalizableEntityType,

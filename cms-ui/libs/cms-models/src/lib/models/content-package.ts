@@ -38,6 +38,8 @@ export interface ContentPackage<T extends ModelType = DefaultModelType> extends 
     import?: ContentPackageImport;
 }
 
+export type EditableContentPackage = Pick<ContentPackage, 'name' | 'description'>;
+
 /**
  * @deprecated Create your own application specific type/business object instead.
  */

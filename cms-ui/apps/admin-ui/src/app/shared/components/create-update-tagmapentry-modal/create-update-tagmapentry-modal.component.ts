@@ -146,7 +146,7 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
 
         try {
             return await this.crOperations.create(this.parentId, payload as any).toPromise();
-        } finally {
+        } catch (err) {
             this.loading = false;
             this.form.enable();
             this.changeDetector.markForCheck();
@@ -175,7 +175,7 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
 
         try {
             return await this.crOperations.update(this.parentId, this.tagmapId, payload).toPromise();
-        } finally {
+        } catch (err) {
             this.loading = false;
             this.form.enable();
             this.changeDetector.markForCheck();

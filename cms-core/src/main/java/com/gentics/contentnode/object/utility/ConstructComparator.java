@@ -20,6 +20,13 @@ public class ConstructComparator implements Comparator<Construct> {
 
 	public int compare(com.gentics.contentnode.object.Construct construct1,
 			com.gentics.contentnode.object.Construct construct2) {
+		if (construct1 == null && construct2 == null) {
+			return 0;
+		} else if (construct1 == null) {
+			return (sortOrder == SortOrder.asc || sortOrder == SortOrder.ASC) ? -1 : 1;
+		} else if (construct2 == null) {
+			return (sortOrder == SortOrder.asc || sortOrder == SortOrder.ASC) ? 1 : -1;
+		}
 		int compare = 0;
 
 		switch (sortBy) {

@@ -86,7 +86,7 @@ export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> im
             const updatedUsers = await this.changeGroupsOfUsers();
 
             this.closeFn(updatedUsers);
-        } finally {
+        } catch (err) {
             this.loading = false;
             this.changeDetector.markForCheck();
         }

@@ -11,7 +11,6 @@
                 [required]="true"
                 formControlName="partOrder"
                 [min]="1"
-                [max]="999"
                 type="number"
             ></gtx-input>
 
@@ -39,7 +38,7 @@
 
             <!-- markupLanguageId -->
             <gtx-select
-                *ngIf="form.get('markupLanguageId').enabled"
+                *ngIf="form.controls.markupLanguageId.enabled"
                 [label]="('construct.markupLanguage' | i18n)"
                 [clearable]="true"
                 formControlName="markupLanguageId"
@@ -49,7 +48,7 @@
 
             <!-- regex -->
             <gtx-select
-                *ngIf="form.get('regex').enabled"
+                *ngIf="form.controls.regex.enabled"
                 [label]="'construct.regex' | i18n"
                 [clearable]="true"
                 [idPath]="'id'"
@@ -63,7 +62,7 @@
 
             <!-- overviewSettings -->
             <gtx-overview-part-settings
-                *ngIf="form.get('overviewSettings').enabled"
+                *ngIf="form.controls.overviewSettings.enabled"
                 class="settings-group"
                 [label]="'construct.overviewSettings' | i18n"
                 [initialValue]="initialValue"
@@ -74,7 +73,7 @@
 
             <!-- selectSettings -->
             <gtx-select-part-settings
-                *ngIf="form.get('selectSettings').enabled"
+                *ngIf="form.controls.selectSettings.enabled"
                 [label]="'construct.selectSettings' | i18n"
                 [dataSources]="dataSources"
                 [initialValue]="initialValue"
@@ -127,6 +126,7 @@
 
             <gtx-i18n-panel-group
                 *ngIf="supportedLanguages"
+                [label]="'shared.i18n_properties_label' | i18n"
                 [languages]="supportedLanguages"
                 [invalidLanguages]="invalidLanguages"
                 [(activeLanguage)]="activeTabI18nLanguage"
@@ -142,7 +142,7 @@
 
             <!-- defaultProperty -->
             <gtx-construct-part-fill
-                *ngIf="form.get('defaultProperty').enabled"
+                *ngIf="form.controls.defaultProperty.enabled"
                 [label]="'construct.defaultProperty' | i18n"
                 [type]="TagPartTypePropertyType[form?.value?.typeId]"
                 [selectOptions]="form?.value?.selectSettings?.options"

@@ -25,6 +25,14 @@ public class TemplateComparator extends AbstractComparator implements Comparator
 	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 	 */
 	public int compare(com.gentics.contentnode.rest.model.Template t1, com.gentics.contentnode.rest.model.Template t2) {
+		if (t1 == null && t2 == null) {
+			return 0;
+		} else if (t1 == null) {
+			return -way;
+		} else if (t2 == null) {
+			return way;
+		}
+
 		int cmp = 0;
 
 		switch (attribute) {

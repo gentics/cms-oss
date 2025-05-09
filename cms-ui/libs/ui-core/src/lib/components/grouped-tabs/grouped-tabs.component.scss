@@ -36,11 +36,11 @@
 
 :host {
     width: 100%;
-    display: block;
+    display: flex;
 
     .grouped-tabs {
-        float: left;
-        margin-right: 15px;
+        padding-right: 1rem;
+        flex: 0 0;
 
         &::ng-deep gtx-tab-pane > .tab-content:not(.is-active) {
             display: none;
@@ -279,7 +279,7 @@
     }
 
     .grouped-tab-content {
-        float: left;
-        max-width: calc(75% - 15px);
+        flex: 1 1 auto;
+        min-width: 0px;
     }
 }

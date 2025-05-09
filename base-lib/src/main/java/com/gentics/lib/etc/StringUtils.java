@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -1350,7 +1351,8 @@ public class StringUtils {
 	public static int mysqlLikeCompare(String first, String second) {
 
 		// Compare and forward return value
-		return correctedCollator.compare(first.toUpperCase(), second.toUpperCase());
+		return correctedCollator.compare(Optional.ofNullable(first).map(String::toUpperCase).orElse(""),
+				Optional.ofNullable(second).map(String::toUpperCase).orElse(""));
 	}
 
 	/**

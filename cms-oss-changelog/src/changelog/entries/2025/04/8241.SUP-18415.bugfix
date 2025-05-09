@@ -1,0 +1,1 @@
+Administrator User Interface: Fixed an issue when creating a new Checkbox TagPart, where during crating the default value could not be set.

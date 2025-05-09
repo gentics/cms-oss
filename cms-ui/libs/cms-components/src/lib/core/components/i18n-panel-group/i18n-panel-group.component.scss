@@ -1,7 +1,5 @@
 @import "../../../../styles/variables";
 
-// i18n-TABS ////////////////////////////////////////////////////////////
-
 :host {
     display: block;
     width: 100%;
@@ -11,8 +9,8 @@
     display: flex;
 
     .tab-content {
-        width: calc(100% - 2rem);
-        padding-left: 2rem;
+        padding-left: 1rem;
+        flex: 1 1 100%;
     }
 
     gtx-tabs {
@@ -34,30 +32,18 @@
 }
 
 .properties-tabs {
-    width: 45%;
+    width: unset;
     padding-top: 10px;
     padding-bottom: 10px;
     box-sizing: border-box;
     overflow: hidden;
     overflow-y: auto;
     padding-left: 8px;
+    border-right: 1px solid #d6d6d6;
 
     ::ng-deep {
         .grouped-tabs {
-            position: relative;
-            width: 100%;
-            min-height: 100%;
-            overflow: visible;
-
-            ul:after {
-                content: '';
-                position: absolute;
-                right: 0;
-                width: 1px;
-                top: 0;
-                bottom: 0;
-                border-right: 1px solid #d6d6d6;
-            }
+            flex: 1 1 !important;
 
             .collapsible {
                 border-right: none;

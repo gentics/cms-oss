@@ -60,6 +60,10 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
      * - `C` (channel derived from channel B => `C.masterNodeId = A.id` and `C.inheritedFromId = B.id`)
      */
     inheritedFromId: number;
+    /**
+     * The name of the Node/Channel this channel is inheriting from.
+     */
+    inheritedFromName?: string;
 
     /** IDs of the languages enabled on this node */
     languagesId: number[];
@@ -195,3 +199,5 @@ export enum NodePreviewurlType {
 }
 
 export const NODE_PREVIEW_URL_PROPERTY_PREFIX = 'NODE_PREVIEWURL';
+// export const NODE_HOSTNAME_REGEXP = /^[0-9a-z]([-.]?[0-9a-z:])*$/;
+// export const NODE_PATH_REGEXP = /^\/?([a-zA-Z0-9._-]{1,64}\/?){0,127}$/;

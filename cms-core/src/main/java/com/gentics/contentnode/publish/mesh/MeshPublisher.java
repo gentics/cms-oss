@@ -2284,7 +2284,7 @@ public class MeshPublisher implements AutoCloseable {
 		for (int objectType : types) {
 			Class<? extends NodeObject> clazz = t.getClass(objectType);
 
-			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE);
+			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE, Action.HIDE);
 			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
 			Map<String, Set<String>> toDelete = new HashMap<>();
 

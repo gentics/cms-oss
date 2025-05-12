@@ -49,7 +49,7 @@ import com.gentics.contentnode.testutils.mesh.MeshTestRule;
  * Test cases for disinheriting/excluding objects in Channels when publishing into a Mesh CR
  */
 @RunWith(value = Parameterized.class)
-@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING, Feature.INSTANT_CR_PUBLISHING })
+@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING, Feature.INSTANT_CR_PUBLISHING, Feature.PUB_DIR_SEGMENT })
 @Category(MeshTest.class)
 public class MeshPublishDisinheritTest {
 	@ClassRule

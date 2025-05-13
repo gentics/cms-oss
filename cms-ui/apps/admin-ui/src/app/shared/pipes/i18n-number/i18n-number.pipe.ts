@@ -9,8 +9,8 @@ const DEFAULT_FORMAT_OPTIONS: Intl.NumberFormatOptions = {
 };
 
 @Pipe({
-    name: 'i18nNumber',
-    standalone: false
+    name: 'gtxI18nNumber',
+    standalone: false,
 })
 export class I18nNumberPipe implements PipeTransform {
 
@@ -20,7 +20,7 @@ export class I18nNumberPipe implements PipeTransform {
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     transform(value: any, options?: Intl.NumberFormatOptions): string {
-        if (!Number.isInteger(value)) {
+        if (typeof value !== 'number' || !Number.isFinite(value) || Number.isNaN(value)) {
             return '';
         }
 

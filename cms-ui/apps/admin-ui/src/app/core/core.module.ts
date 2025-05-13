@@ -34,6 +34,7 @@ import {
 import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
+    AdminHandlerService,
     BreadcrumbResolver,
     ConstructCategoryHandlerService,
     ConstructHandlerService,
@@ -77,6 +78,7 @@ import {
     PermissionsTrableLoaderService,
     RoleOperations,
     RouteEntityResolverService,
+    ScheduleHandlerService,
     ScheduleExecutionOperations,
     ScheduleOperations,
     ScheduleTaskOperations,
@@ -161,6 +163,7 @@ const OPERATIONS: any[] = [
 
 const PROVIDERS: any[] = [
     ActivityManagerService,
+    AdminHandlerService,
     AuthGuard,
     BreadcrumbResolver,
     BreadcrumbsService,
@@ -201,6 +204,7 @@ const PROVIDERS: any[] = [
     PermissionsService,
     PermissionsTrableLoaderService,
     RouteEntityResolverService,
+    ScheduleHandlerService,
     ServerStorageService,
     TagMapEntryTableLoaderService,
     TemplateTableLoaderService,

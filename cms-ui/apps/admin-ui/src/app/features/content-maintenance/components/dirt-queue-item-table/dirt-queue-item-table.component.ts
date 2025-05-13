@@ -3,7 +3,7 @@ import { AdminOperations, I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { AnyModelType, DirtQueueItem, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { AnyModelType, DirtQueueEntry, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { DirtQueueItemTableLoaderService } from '../../providers';
 
@@ -16,7 +16,7 @@ const REDO_TASK_ACTION = 'redoAction';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQueueItem, DirtQueueItemBO> {
+export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQueueEntry, DirtQueueItemBO> {
 
     protected rawColumns: TableColumn<DirtQueueItemBO>[] = [
         {

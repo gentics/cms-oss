@@ -1,0 +1,44 @@
+@import 'variables';
+
+.title {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+    padding-bottom: 0.5rem;
+}
+
+.content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.entry {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0.3rem;
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+
+    .entry-title {
+        font-weight: bold;
+    }
+
+    &.typed-entry {
+        .entry-title {
+            display: flex;
+            align-content: center;
+            align-items: center;
+            line-height: 1;
+            gap: 0.5rem;
+        }
+    }
+}
+
+.warning {
+    font-weight: 400;
+    color: $gtx-color-alert;
+}
+
+.success {
+    font-weight: 400;
+    color: $gtx-color-success;
+}

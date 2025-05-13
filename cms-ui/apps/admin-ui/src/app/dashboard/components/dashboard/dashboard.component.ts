@@ -1,10 +1,10 @@
 import { AdminUIModuleRoutes } from '@admin-ui/common';
-import { AuthOperations, PermissionsService } from '@admin-ui/core';
+import { AdminHandlerService, AuthOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
 import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission, Variant } from '@gentics/cms-models';
-import { Observable, combineLatest, of } from 'rxjs';
+import { AccessControlledType, Feature, GcmsPermission, PublishInfo, SchedulerStatus, Variant } from '@gentics/cms-models';
+import { Observable, combineLatest, of, forkJoin, Subscription, interval } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -13,7 +13,7 @@ import { map, switchMap } from 'rxjs/operators';
     styleUrls: ['./dashboard.component.scss'],
     standalone: false
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 
     readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
 
@@ -40,11 +40,19 @@ export class DashboardComponent implements OnInit {
     public meshBrowserModuleEnabled$: Observable<boolean>;
     public licenseModuleEnabled$: Observable<boolean>;
 
+    public publishInfo: PublishInfo;
+    public schedulerStatus: SchedulerStatus;
+    public hasFailedSchedules = false;
+
+    private subscriptions: Subscription[] = [];
+
     constructor(
         private appState: AppStateService,
         private authOps: AuthOperations,
         private permissions: PermissionsService,
         private router: Router,
+        private admin: AdminHandlerService,
+        private schedule: ScheduleHandlerService,
     ) {}
 
     ngOnInit(): void {
@@ -138,6 +146,19 @@ export class DashboardComponent implements OnInit {
            in another module - this bug is still relevant with direct navigation
            by URL to modules with no detail view */
         this.appState.dispatch(new CloseEditor());
+
+        // Schedule automatic refresh of the publish data all 10s
+        this.subscriptions.push(
+            interval(10_000).pipe(
+                switchMap(() => this.loadPublishProcessData()),
+            ).subscribe());
+
+        // Load the data right from the beginning as well
+        this.subscriptions.push(this.loadPublishProcessData().subscribe());
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     onLogoutClick(): void {
@@ -147,4 +168,17 @@ export class DashboardComponent implements OnInit {
             });
     }
 
+    private loadPublishProcessData(): Observable<void> {
+        return forkJoin([
+            this.admin.getPublishInfo(),
+            this.schedule.status(),
+            this.schedule.list(null, { pageSize: 0, sort: '-edate', failed: true }),
+        ]).pipe(
+            map(([publishInfo, schedulerStatus, failedTasks]) => {
+                this.publishInfo = publishInfo;
+                this.schedulerStatus = schedulerStatus.status;
+                this.hasFailedSchedules = failedTasks.numItems > 0;
+            }),
+        );
+    }
 }

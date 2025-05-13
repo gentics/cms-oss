@@ -10,7 +10,6 @@ import {
     ROUTE_CHILD_BREADCRUMB_OUTLET_KEY,
     ROUTE_MESH_REPOSITORY_ID,
     ROUTE_PERMISSIONS_KEY,
-    ROUTE_SKIP_BREADCRUMB,
 } from './common/models/routing';
 import { ViewUnauthorizedComponent } from './core/components/view-unauthorized/view-unauthorized.component';
 import { AuthGuard } from './core/guards/auth/auth.guard';
@@ -287,7 +286,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
             // Contentmaintenance Management Module
             {
                 path: AdminUIModuleRoutes.CONTENT_MAINTENANCE,
-                component: SplitViewRouterOutletComponent,
+                component: GenericRouterOutletComponent,
                 loadChildren: () => import('./features/content-maintenance/content-maintenance.module').then(m => m.ContentmaintenanceModule),
                 data: {
                     [ROUTE_BREADCRUMB_KEY]: {

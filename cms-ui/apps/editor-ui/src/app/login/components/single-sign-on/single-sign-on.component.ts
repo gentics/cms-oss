@@ -60,7 +60,7 @@ export class SingleSignOnComponent implements OnDestroy, OnInit {
     attemptSsoWithKeycloak(): void {
         this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/no-nodes';
             const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
                 filter(isLoggedIn => !!isLoggedIn),
                 takeUntil(this.stopper.stopper$),

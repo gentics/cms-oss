@@ -1,0 +1,5 @@
+Some dependencies have been updated:
+* Jetty: 12.0.20
+* Logback: 1.5.18
+* MariaDB Connector/J: 3.5.3
+* AntiSamy: 1.7.8

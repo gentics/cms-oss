@@ -53,7 +53,7 @@
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>
-		<jetty.version>12.0.16</jetty.version>
+		<jetty.version>12.0.20</jetty.version>
 		<jackson.version>2.18.2</jackson.version>
 
 		<enunciate.version>2.15.1</enunciate.version>
@@ -100,7 +100,7 @@
 		<assertj.version>3.26.3</assertj.version>
 		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
-		<logback.version>1.2.13</logback.version>
+		<logback.version>1.5.18</logback.version>
 
 		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>

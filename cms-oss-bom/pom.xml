@@ -44,6 +44,11 @@
 				<version>${jetty.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.eclipse.jetty.ee10</groupId>
+				<artifactId>jetty-ee10-webapp</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-server</artifactId>
 				<version>${jetty.version}</version>
@@ -51,6 +56,11 @@
 			<dependency>
 				<groupId>org.eclipse.jetty.http2</groupId>
 				<artifactId>jetty-http2-server</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-security</artifactId>
 				<version>${jetty.version}</version>
 			</dependency>
 
@@ -172,7 +182,7 @@
 				<groupId>org.mariadb.jdbc</groupId>
 				<artifactId>mariadb-java-client</artifactId>
 				<!--  When updating this version, update gcn_compatbility_list.textile also! -->
-				<version>2.7.12</version>
+				<version>3.5.3</version>
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>

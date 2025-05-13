@@ -51,11 +51,15 @@ public class StickyChannelOverviewRenderAttributesTest {
 	private static ContentLanguage klingon;
 	private static Node node;
 
-	@Parameters(name = "{index}: template: {0}")
+	@Parameters(name = "{index}: template: {0}, sticky channel: {1}, publish cache: {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (String template : Arrays.asList("page_props.vm", "tags.vm")) {
-			data.add(new Object[] { template });
+			for (Boolean stickyChannel : Arrays.asList(false, true)) {
+				for (Boolean publishCache : Arrays.asList(false, true)) {
+					data.add(new Object[] { template, stickyChannel, publishCache });
+				}
+			}
 		}
 		return data;
 	}
@@ -70,6 +74,12 @@ public class StickyChannelOverviewRenderAttributesTest {
 
 	@Parameter(0)
 	public String template;
+
+	@Parameter(1)
+	public boolean stickyChannel;
+
+	@Parameter(2)
+	public boolean publishCache;
 
 	@Test
 	public void testRender() throws Exception {
@@ -159,20 +169,16 @@ public class StickyChannelOverviewRenderAttributesTest {
 			}
 		});
 
-		for (boolean publishCache : Arrays.asList(false, true)) {
-			for (boolean stickyChannel : Arrays.asList(false, true)) {
-				setStickyChannel(constructId, stickyChannel);
-				Trx.operate(() -> {
-					try (FeatureClosure f = new FeatureClosure(Feature.PUBLISH_CACHE, publishCache); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
-						TransactionManager.getCurrentTransaction().preparePublishData();
-						try (ChannelTrx cTrx = new ChannelTrx(node)) {
-							assertEquals("Check rendered output. publish cache: " + publishCache + ", stickyChannel: " + stickyChannel, referenceOutput,
-									testPage.render());
-						}
+			setStickyChannel(constructId, stickyChannel);
+			Trx.operate(() -> {
+				try (FeatureClosure f = new FeatureClosure(Feature.PUBLISH_CACHE, publishCache); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
+					TransactionManager.getCurrentTransaction().preparePublishData();
+					try (ChannelTrx cTrx = new ChannelTrx(node)) {
+						assertEquals("Check rendered output. publish cache: " + publishCache + ", stickyChannel: " + stickyChannel, referenceOutput,
+								testPage.render());
 					}
-				});
-			}
-		}
+				}
+			});
 	}
 
 	/**

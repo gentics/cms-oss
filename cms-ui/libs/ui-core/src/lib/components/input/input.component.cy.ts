@@ -207,6 +207,7 @@ describe('InputComponent', () => {
     it('should work with regular two way bindings', () => {
         @Component({
             template: '<gtx-input [(ngModel)]="value" />',
+            standalone: false,
         })
         class Test2WayBindingComponent {
             public value = INITIAL_VALUE;
@@ -248,6 +249,7 @@ describe('InputComponent', () => {
     describe('Form Bindings', () => {
         @Component({
             template: '<gtx-input [formControl]="control" />',
+            standalone: false,
         })
         class TestFormComponent {
             public control = new FormControl(INITIAL_VALUE);

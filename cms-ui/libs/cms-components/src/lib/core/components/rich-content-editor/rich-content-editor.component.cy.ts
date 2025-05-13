@@ -21,6 +21,7 @@ import { RichContentEditorComponent } from './rich-content-editor.component';
         />
         <gtx-overlay-host />
     `,
+    standalone: false,
 })
 class TestComponent {
 

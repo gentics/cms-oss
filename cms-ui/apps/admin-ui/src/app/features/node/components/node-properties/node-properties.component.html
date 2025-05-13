@@ -30,7 +30,7 @@
                 <ng-template #inheritedFromNotChangeable>
                     <div *ngIf="isChannel" class="gtx-inheritance-info">
                         <icon>input</icon>
-                        {{ 'node.derives_from' | i18n:{ master: masterName } }}
+                        {{ 'node.derives_from' | i18n:{ master: inheritedFromName || '' } }}
                     </div>
                 </ng-template>
             </ng-container>

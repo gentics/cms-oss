@@ -14,9 +14,7 @@
     *ngIf="(menuElements$ | async) as elements; else errorNoMenuElements"
     class="form-editor-elements-container"
 >
-    <ng-container
-        *ngFor="let element of elements; trackBy:identify"
-    >
+    <ng-container *ngFor="let element of elements; trackBy:identify">
         <div
             class="form-editor-menu-element"
             [@slideAnim]
@@ -28,12 +26,11 @@
                 [readonly]="true"
                 [element]="element"
                 [isPreview]="true"
-                (click)="onElementClick($event, element)"
-            >
-            </gtx-form-editor-element>
+            ></gtx-form-editor-element>
         </div>
     </ng-container>
 </div>
+
 <ng-template #errorNoMenuElements>
     <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_formelements_available' | i18n }}</p>
 </ng-template>

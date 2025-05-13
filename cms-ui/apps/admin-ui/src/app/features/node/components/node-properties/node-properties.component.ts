@@ -77,7 +77,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
 
     @Input()
-    public masterName: string | null = null;
+    public inheritedFromName: string | null = null;
 
     @Input()
     public isChannel = false;
@@ -174,7 +174,11 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
             ),
-            host: new FormControl(this.safeValue('host'), Validators.maxLength(255)),
+            host: new FormControl(this.safeValue('host'), [
+                Validators.required,
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.safeValue('hostProperty'), [
                 Validators.required,
                 Validators.maxLength(255),

@@ -123,9 +123,14 @@ export class NodePropertiesComponent
 
         return new FormGroup<FormProperties<EditableNodeProps>>({
             name: new FormControl(this.safeValue('name') || '', Validators.required),
-            host: new FormControl(this.safeValue('host') || '', Validators.required),
+            host: new FormControl(this.safeValue('host') || '', [
+                Validators.required,
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.value?.hostProperty || '', [
                 Validators.required,
+                Validators.maxLength(255),
                 createPropertyPatternValidator(NODE_HOSTNAME_PROPERTY_PREFIX),
             ]),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
@@ -134,8 +139,14 @@ export class NodePropertiesComponent
             publishFs: new FormControl(this.safeValue('publishFs') ?? false),
             publishFsPages: new FormControl(this.safeValue('publishFsPages') ?? false),
             publishFsFiles: new FormControl(this.safeValue('publishFsFiles') ?? false),
-            publishDir: new FormControl(this.safeValue('publishDir') || ''),
-            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || ''),
+            publishDir: new FormControl(this.safeValue('publishDir') || '',  [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || '',  [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
             publishContentMap: new FormControl(this.safeValue('publishContentMap') ?? false),
             publishContentMapPages: new FormControl(this.safeValue('publishContentMapPages') ?? false),
             publishContentMapFiles: new FormControl(this.safeValue('publishContentMapFiles') ?? false),

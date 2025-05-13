@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.rules.ExternalResource;
 
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.log.NodeLogger;
 
@@ -41,6 +42,10 @@ public class OSSRunnerContext extends ExternalResource {
 
 	@Override
 	protected void before() throws Throwable {
+		// set the http port to 0, so that the server is started with a random free port.
+		// This allows parallel execution of tests using the OSSRunnerContext
+		System.setProperty(ConfigurationValue.HTTP_PORT.getSystemPropertyName(), "0");
+
 		ossRunnerThread = new Thread(() -> {
 			OSSRunner.main(null);
 		});

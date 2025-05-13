@@ -3437,7 +3437,7 @@ export class FolderActionsService {
     /**
      * Approve page actions queued which had been requested by users with insufficient permissions before.
      */
-    async pageQueuedApprove(pages: Page[]): Promise<void> {
+    async pageQueuedApprove(pages: Page[]): Promise<boolean> {
         const pageLanguages = pages.map(page => page.language);
 
         const ids = pages.map((page) => {
@@ -3450,7 +3450,7 @@ export class FolderActionsService {
         }).filter(id => id != null);
 
         if (ids.length === 0) {
-            return;
+            return false;
         }
 
         try {
@@ -3467,11 +3467,14 @@ export class FolderActionsService {
                     message: 'message.requests_approved',
                 });
             }
-
-            return this.refreshList('page', pageLanguages);
         } catch (error) {
             this.errorHandler.catch(error, { notification: true });
+            return false;
         }
+
+        await this.refreshList('page', pageLanguages);
+
+        return true;
     }
 
     /**

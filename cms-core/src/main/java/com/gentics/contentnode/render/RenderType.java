@@ -11,6 +11,7 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -467,8 +468,7 @@ public class RenderType implements RenderInfo {
 		}
 		final StackResolvable levelResolvable = getInfo().getLevelResolvable();
 
-		// TODO use stackhashkey to compare?
-		if (levelResolvable != resolvable) {
+		if (!Objects.equals(resolvable, levelResolvable)) {
 			return false;
 		}
 		infoStack.pop();
@@ -476,6 +476,16 @@ public class RenderType implements RenderInfo {
 			stack.remove(levelResolvable);
 		}
 		return true;
+	}
+
+	/**
+	 * Return an {@link AutoCloseable} which will remove the given resolvable from the stack, if it matches the top resolvable
+	 * and pushes the removed object back to the stack when {@link AutoCloseable#close()} is called
+	 * @param resolvable the resolvable to be removed from the top of the stack
+	 * @return AutoCloseable
+	 */
+	public RemoveTopResolvable withPopped(StackResolvable resolvable) {
+		return new RemoveTopResolvable(resolvable);
 	}
 
 	/**
@@ -1516,6 +1526,45 @@ public class RenderType implements RenderInfo {
 		@Override
 		public void close() {
 			setParameter(name, oldValue);
+		}
+	}
+
+	/**
+	 * {@link AutoCloseable} implementation, which will pop the given {@link StackResolvable} from the stack,
+	 * if it is the top stack entry and will push the popped object back when {@link RemoveTopResolvable#close()} is called.
+	 */
+	public class RemoveTopResolvable implements AutoCloseable {
+		/**
+		 * Popped object (which is equal but possibly not identical to the given object)
+		 */
+		protected StackResolvable popped;
+
+		/**
+		 * Create an instance
+		 * @param toPop object to pop from the stack
+		 */
+		protected RemoveTopResolvable(StackResolvable toPop) {
+			if (infoStack.size() <= 1) {
+				return;
+			}
+			final StackResolvable levelResolvable = getInfo().getLevelResolvable();
+
+			if (!Objects.equals(toPop, levelResolvable)) {
+				return;
+			}
+			infoStack.pop();
+			if (levelResolvable != null) {
+				stack.remove(levelResolvable);
+			}
+
+			popped = levelResolvable;
+		}
+
+		@Override
+		public void close() {
+			if (popped != null) {
+				push(popped);
+			}
 		}
 	}
 }

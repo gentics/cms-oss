@@ -169,16 +169,16 @@ public class StickyChannelOverviewRenderAttributesTest {
 			}
 		});
 
-			setStickyChannel(constructId, stickyChannel);
-			Trx.operate(() -> {
-				try (FeatureClosure f = new FeatureClosure(Feature.PUBLISH_CACHE, publishCache); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
-					TransactionManager.getCurrentTransaction().preparePublishData();
-					try (ChannelTrx cTrx = new ChannelTrx(node)) {
-						assertEquals("Check rendered output. publish cache: " + publishCache + ", stickyChannel: " + stickyChannel, referenceOutput,
-								testPage.render());
-					}
+		setStickyChannel(constructId, stickyChannel);
+		Trx.operate(() -> {
+			try (FeatureClosure f = new FeatureClosure(Feature.PUBLISH_CACHE, publishCache); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
+				TransactionManager.getCurrentTransaction().preparePublishData();
+				try (ChannelTrx cTrx = new ChannelTrx(node)) {
+					assertEquals("Check rendered output. publish cache: " + publishCache + ", stickyChannel: " + stickyChannel, referenceOutput,
+							testPage.render());
 				}
-			});
+			}
+		});
 	}
 
 	/**

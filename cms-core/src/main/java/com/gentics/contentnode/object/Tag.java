@@ -5,7 +5,6 @@
  */
 package com.gentics.contentnode.object;
 
-import com.gentics.contentnode.etc.Consumer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.devtools.model.TagModel;
 import com.gentics.contentnode.etc.BiFunction;
-import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.LiveEditorHelper;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.factory.FieldGetter;
@@ -28,6 +27,7 @@ import com.gentics.contentnode.factory.object.ValueFactory;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.render.RenderType.RemoveTopResolvable;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
@@ -320,29 +320,21 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
     
 	public Object get(String key) {
 		if ("empty".equals(key)) {
-			RenderType renderType = null;
-			boolean poppedTag = false;
-
 			try {
-				renderType = TransactionManager.getCurrentTransaction().getRenderType();
-				int oldMode = renderType.getEditMode();
+				RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 
-				renderType.setEditMode(RenderType.EM_PREVIEW);
+				try (RemoveTopResolvable ac = renderType.withPopped(this)) {
+					int oldMode = renderType.getEditMode();
 
-				// pop the tag from the stack if it is the top element
-				poppedTag = renderType.pop(this);
+					renderType.setEditMode(RenderType.EM_PREVIEW);
+					String renderedContent = this.render(new RenderResult());
 
-				String renderedContent = this.render(new RenderResult());
-
-				renderType.setEditMode(oldMode);
-				return "".equals(renderedContent) ? new Integer(1) : new Integer(0);
+					renderType.setEditMode(oldMode);
+					return StringUtils.isEmpty(renderedContent) ? 1 : 0;
+				}
 			} catch (NodeException e) {
 				logger.error("Error while resolving {" + key + "}", e);
 				return null;
-			} finally {
-				if (poppedTag) {
-					renderType.push(this);
-				}
 			}
 		} else if ("unique_tag_id".equals(key)) {
 			return getId() + "-" + getTType();

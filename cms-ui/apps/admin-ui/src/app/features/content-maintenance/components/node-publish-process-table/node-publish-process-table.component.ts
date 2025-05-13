@@ -14,6 +14,7 @@ import { MaintenanceActionModalAction } from '../maintenance-action-modal/mainte
     templateUrl: './node-publish-process-table.component.html',
     styleUrls: ['./node-publish-process-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
 export class NodePublishProcessTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
 

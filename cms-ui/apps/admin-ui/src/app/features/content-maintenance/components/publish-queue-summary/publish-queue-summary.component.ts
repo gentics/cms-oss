@@ -15,6 +15,7 @@ const PROPERTIES: (keyof DirtTotal)[] = ['toPublish', 'delayed'];
     templateUrl: './publish-queue-summary.component.html',
     styleUrls: ['./publish-queue-summary.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
 export class PublishQueueSummaryComponent implements OnChanges {
 

@@ -97,5 +97,5 @@
         class="gtx-table-cell-link"
         [routerLink]="AdminUIEntityDetailRoutes.NODE | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
-    >{{ row.item?.masterName || value }}</a>
+    >{{ row.item?.inheritedFromName || value }}</a>
 </ng-template>

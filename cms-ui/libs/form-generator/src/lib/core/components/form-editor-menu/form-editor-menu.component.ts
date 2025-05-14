@@ -3,15 +3,12 @@ import {
     ChangeDetectionStrategy,
     Component,
     ElementRef,
-    EventEmitter,
     Input,
     OnDestroy,
     OnInit,
-    Output,
     ViewChild,
 } from '@angular/core';
-import { CmsFormElementBO, FORM_ELEMENT_MIME_TYPE_TYPE } from '@gentics/cms-models';
-import { CmsFormType } from '@gentics/cms-models';
+import { CmsFormElementBO, CmsFormType, FORM_ELEMENT_MIME_TYPE_TYPE } from '@gentics/cms-models';
 import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
@@ -30,7 +27,7 @@ export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit
     menuElements$: Observable<CmsFormElementBO[]>;
 
     @ViewChild('inputSearch', { read: ElementRef })
-    inputSearch: ElementRef;
+    inputSearch: ElementRef<HTMLInputElement>;
 
     searchTerm: string;
     private searchTerm$ = new BehaviorSubject<string>(null);
@@ -43,9 +40,6 @@ export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit
     set formType(v: CmsFormType) {
         this.formType$.next(v);
     }
-
-    @Output()
-    selected = new EventEmitter<CmsFormElementBO>();
 
     constructor(private formEditorService: FormEditorService) { }
 
@@ -70,7 +64,7 @@ export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit
     }
 
     ngAfterViewInit(): void {
-        if (this.inputSearch) {
+        if (this.inputSearch?.nativeElement) {
             setTimeout(() => this.inputSearch.nativeElement.focus(), 1000);
         }
     }
@@ -82,10 +76,6 @@ export class FormEditorMenuComponent implements AfterViewInit, OnDestroy, OnInit
 
     identify(index: number, element: CmsFormElementBO): string {
         return element.type;
-    }
-
-    onElementClick(event: MouseEvent, element: CmsFormElementBO): void {
-        this.selected.emit(element);
     }
 
     onMenuFilterChange(searchTerm: string): void {

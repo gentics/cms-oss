@@ -71,7 +71,7 @@
         user-select: none;
     }
 
-    &.ng-touched.ng-invalid #{$selector} {
+    &.ng-invalid #{$selector} {
         color: $gtx-color-alert;
     }
 }

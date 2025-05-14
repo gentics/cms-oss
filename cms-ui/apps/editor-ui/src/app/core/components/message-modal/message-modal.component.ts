@@ -51,6 +51,7 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
                 message: 'message.message_sent',
                 type: 'success',
             });
+            this.closeFn();
         }, error => {
             this.notification.show({
                 message: 'message.message_sent_error',
@@ -58,8 +59,6 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
                 delay: 5000,
             });
             console.error('Error while sending message response', error);
-        }, () => {
-            this.closeFn();
         });
     }
 

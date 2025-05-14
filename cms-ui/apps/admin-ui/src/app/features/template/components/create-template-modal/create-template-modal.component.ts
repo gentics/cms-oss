@@ -59,11 +59,10 @@ export class CreateTemplateModalComponent extends BaseModal<TemplateBO<Raw>> imp
                 },
                 type: 'alert',
             });
-            this.errorFn(err);
-        }, () => {
             this.loading = false;
             this.form.enable({ emitEvent: false });
             this.changeDetector.markForCheck();
+            this.errorFn(err);
         });
     }
 }

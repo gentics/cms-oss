@@ -13,7 +13,7 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsI18nValue,
@@ -31,7 +31,7 @@ import {
     TagPartValidatorId,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -200,36 +200,36 @@ export class ConstructPartPropertiesComponent
                 this.activeTabI18nLanguage = defaultLanguage;
             }
             if (this.form) {
-                this.form.get('nameI18n').updateValueAndValidity();
+                this.form.controls.nameI18n.updateValueAndValidity();
             }
         }
 
         if (changes.keywordBlacklist) {
             if (this.form) {
-                this.form.get('keyword').updateValueAndValidity();
+                this.form.controls.keyword.updateValueAndValidity();
             }
         }
 
         if (changes.orderBlacklist) {
             if (this.form) {
-                this.form.get('partOrder').updateValueAndValidity();
+                this.form.controls.partOrder.updateValueAndValidity();
             }
         }
     }
 
-    protected createForm(): UntypedFormGroup {
-        return new UntypedFormGroup({
+    protected createForm(): FormGroup<FormProperties<TagPartPropertiesFormData>> {
+        return new FormGroup<FormProperties<TagPartPropertiesFormData>>({
             // Noop controls
-            globalId: new UntypedFormControl(this.value?.globalId),
-            id: new UntypedFormControl(this.value?.id),
+            globalId: new FormControl(this.value?.globalId),
+            id: new FormControl(this.value?.id),
 
             // text
-            keyword: new UntypedFormControl(this.value?.keyword ?? null, [
+            keyword: new FormControl(this.value?.keyword ?? null, [
                 Validators.required,
                 createBlacklistValidator(() => this.keywordBlacklist),
             ]),
             // i18n Object
-            nameI18n: new UntypedFormControl({}, createI18nRequiredValidator(
+            nameI18n: new FormControl({}, createI18nRequiredValidator(
                 () => {
                     return (this.supportedLanguages || []).map(l => l.code);
                 },
@@ -240,46 +240,45 @@ export class ConstructPartPropertiesComponent
             ),
 
             // number
-            partOrder: new UntypedFormControl(null, [
+            partOrder: new FormControl(null, [
                 Validators.required,
                 Validators.min(1),
-                Validators.max(999),
                 createBlacklistValidator(() => this.orderBlacklist),
             ]),
             // select
-            typeId: new UntypedFormControl(null, [Validators.required, createBlacklistValidator(() => REMOVED_CONSTRUCT_PART_TYPES)]),
+            typeId: new FormControl(null, [Validators.required, createBlacklistValidator(() => REMOVED_CONSTRUCT_PART_TYPES)]),
 
             // checkbox
-            editable: new UntypedFormControl(false),
+            editable: new FormControl(false),
             // checkbox
-            mandatory: new UntypedFormControl(false),
+            mandatory: new FormControl(false),
             // checkbox
-            hidden: new UntypedFormControl(false),
+            hidden: new FormControl(false),
             // checkbox
-            liveEditable: new UntypedFormControl(false),
+            liveEditable: new FormControl(false),
             // checkbox
-            hideInEditor: new UntypedFormControl(false),
+            hideInEditor: new FormControl(false),
 
             // text
-            externalEditorUrl: new UntypedFormControl(null),
+            externalEditorUrl: new FormControl(null),
             // Tag-Editor
-            defaultProperty: new UntypedFormControl(null),
+            defaultProperty: new FormControl(null),
 
             // ///// TYPE-DEPENDANT:
 
             // ///// ONLY for HTML/Text inputs
             // select
-            markupLanguageId: new UntypedFormControl(null),
+            markupLanguageId: new FormControl(null),
             // select
-            regex: new UntypedFormControl(null),
+            regex: new FormControl(null),
 
             // ///// ONLY for Select inputs
             // // select-part-settings
-            selectSettings: new UntypedFormControl(null),
+            selectSettings: new FormControl(null),
 
             // ///// ONLY for Overview inputs
             // // overview-part-settings
-            overviewSettings: new UntypedFormControl(null),
+            overviewSettings: new FormControl(null),
         });
     }
 

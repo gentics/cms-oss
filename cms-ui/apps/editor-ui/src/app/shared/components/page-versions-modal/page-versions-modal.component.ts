@@ -150,6 +150,9 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
 
                     resolve(this.selectedPageVariant.currentVersion);
                 }, error => {
+                    this.loading = false;
+                    this.changeDetector.markForCheck();
+
                     reject(error);
                 });
         });

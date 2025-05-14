@@ -40,7 +40,7 @@ export class AssignGroupToUsersModal extends BaseModal<void> implements OnInit {
         try {
             const updatedUsers = await this.changeUsersOfGroup();
             this.closeFn(updatedUsers);
-        } finally {
+        } catch (err) {
             this.loading = false;
             this.changeDetector.markForCheck();
         }

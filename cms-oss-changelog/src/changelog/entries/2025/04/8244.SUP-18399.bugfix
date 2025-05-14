@@ -1,0 +1,1 @@
+Mesh: The proxy now correctly processes Mesh calls, if they contain a `HTTPOnly` cookie setting.

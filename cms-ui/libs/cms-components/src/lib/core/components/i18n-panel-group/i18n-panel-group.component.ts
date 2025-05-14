@@ -11,6 +11,9 @@ import { Language } from '@gentics/cms-models';
 export class I18nPanelGroupComponent {
 
     @Input()
+    public label: string;
+
+    @Input()
     public languages: Language[] = [];
 
     @Input()

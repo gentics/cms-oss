@@ -1,0 +1,1 @@
+Administrator User Interface: Added hostname validation to node properties, and the node creation modal will not close the modal on errors, to prevent losing entered form data.

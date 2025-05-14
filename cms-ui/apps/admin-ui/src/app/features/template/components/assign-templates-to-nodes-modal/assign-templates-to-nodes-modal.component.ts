@@ -4,8 +4,8 @@ import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, IndexById, Node, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { combineLatest, Subscription, forkJoin } from 'rxjs';
-import { first, map, switchMap } from 'rxjs/operators';
+import { combineLatest, forkJoin, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-assign-templates-to-nodes-modal',
@@ -42,13 +42,13 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.changeDetector.markForCheck();
 
         this.subscriptions.push(combineLatest([this.nodeData.watchAllEntities(), forkJoin(this.templates.map(template => {
-                // for every template, get the list of nodes to which the template is assigned
-                return this.templateOperations.getLinkedNodes(template.id).pipe(
-                    map(linkedNodes => [template, linkedNodes]),
-                );
-            }))],
+            // for every template, get the list of nodes to which the template is assigned
+            return this.templateOperations.getLinkedNodes(template.id).pipe(
+                map(linkedNodes => [template, linkedNodes]),
+            );
+        }))],
         ).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
-            let nodeIds: number[] = [];
+            const nodeIds: number[] = [];
             this.nodes = {};
             nodes.forEach(node => {
                 this.nodes[node.id] = node;
@@ -62,8 +62,8 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             this.selectedPerTemplate = {};
             templateData.forEach(([template, linkedNodes]) => {
                 linkedNodes.forEach(node => {
-                    let templateId = Number(template.id);
-                    let nodeId = Number(node.id);
+                    const templateId = Number(template.id);
+                    const nodeId = Number(node.id);
                     this.selectedPerTemplate[templateId] = this.selectedPerTemplate[templateId] ?? [];
                     this.selectedPerTemplate[templateId].push(nodeId);
                 });

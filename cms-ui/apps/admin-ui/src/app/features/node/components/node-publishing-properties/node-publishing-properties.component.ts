@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -80,7 +80,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     }
 
     protected createForm(): FormGroup<FormProperties<NodePublishingPropertiesFormData>> {
-        this.previousPublishCr = this.value?.publishContentMap ?? false;
+        this.previousPublishCr = this.safeValue('publishContentMap') ?? false;
 
         this.initLinkedDir();
 
@@ -89,9 +89,15 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
             publishFs: new FormControl(this.safeValue('publishFs')),
             publishFsPages: new FormControl(this.safeValue('publishFsPages')),
-            publishDir: new FormControl(this.safeValue('publishDir')),
+            publishDir: new FormControl(this.safeValue('publishDir'), [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
             publishFsFiles: new FormControl(this.safeValue('publishFsFiles')),
-            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir')),
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir'), [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
 
             publishContentMap: new FormControl(this.safeValue('publishContentMap')),
             publishContentMapPages: new FormControl(this.safeValue('publishContentMapPages')),

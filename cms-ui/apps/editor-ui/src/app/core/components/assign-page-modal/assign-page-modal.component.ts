@@ -69,9 +69,11 @@ export class AssignPageModal extends BaseModal<void> implements OnInit {
         const userIds = this.selected;
         const message = this.message;
         this.publishQueueActions.assignToUsers(pageIds, userIds, message)
-            .then(() => {
-                this.folderActions.refreshList('page');
-            })
-            .then(() => this.closeFn(null));
+            .then(assigned => {
+                if (assigned) {
+                    this.folderActions.refreshList('page');
+                    this.closeFn(null);
+                }
+            });
     }
 }

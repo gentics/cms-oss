@@ -317,6 +317,11 @@
 				<version>${jsonpath.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>net.minidev</groupId>
+				<artifactId>json-smart</artifactId>
+				<version>${jsonsmart.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
 				<version>${commons.fileupload.version}</version>

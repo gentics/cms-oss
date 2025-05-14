@@ -48,7 +48,8 @@ function getTypeForNotification(type: string): ColorThemes | 'default' {
     templateUrl: './item-list.tpl.html',
     styleUrls: ['./item-list.scss'],
     providers: [PaginationService],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     @Input() filterTerm: string;

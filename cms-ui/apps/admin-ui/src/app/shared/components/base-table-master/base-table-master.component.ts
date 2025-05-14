@@ -8,7 +8,10 @@ import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { delay, distinctUntilChanged, map } from 'rxjs/operators';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implements OnInit, OnDestroy {
 
     public activeEntity: string;

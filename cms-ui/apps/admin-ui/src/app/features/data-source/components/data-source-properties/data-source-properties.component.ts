@@ -13,6 +13,7 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
         generateFormProvider(DataSourcePropertiesComponent),
         generateValidatorProvider(DataSourcePropertiesComponent),
     ],
+    standalone: false
 })
 export class DataSourcePropertiesComponent extends BasePropertiesComponent<DataSource> {
 

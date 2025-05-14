@@ -6,7 +6,8 @@ import { EntityResolver } from '../../providers/entity-resolver/entity-resolver'
     selector: 'message-list',
     templateUrl: './message-list.component.html',
     styleUrls: ['./message-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageList {
 

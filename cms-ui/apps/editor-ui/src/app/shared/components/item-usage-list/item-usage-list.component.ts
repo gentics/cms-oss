@@ -28,6 +28,7 @@ let instanceCounter = 0;
     templateUrl: './item-usage-list.component.html',
     styleUrls: ['./item-usage-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemUsageListComponent implements OnChanges, OnDestroy {
 

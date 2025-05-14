@@ -26,6 +26,7 @@ import { Component, HostBinding, Input } from '@angular/core';
         </div>
     `,
     styleUrls: ['./menu-toggle-button.component.scss'],
+    standalone: false
 })
 export class MenuToggleButtonComponent {
 

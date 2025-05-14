@@ -42,6 +42,7 @@ export interface OpenCRDetailEvent {
     templateUrl: './content-repository-table.component.html',
     styleUrls: ['./content-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryTableComponent
     extends BasePackageEntityTableComponent<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>

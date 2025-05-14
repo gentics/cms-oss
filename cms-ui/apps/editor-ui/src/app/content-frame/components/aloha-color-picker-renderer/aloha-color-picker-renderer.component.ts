@@ -41,6 +41,7 @@ const DEFAULT_COLOR: RGBAColor = [0, 0, 0, 255];
     styleUrls: ['./aloha-color-picker-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaColorPickerRendererComponent)],
+    standalone: false
 })
 export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponent<AlohaColorPickerComponent, NormalizedColor> implements OnInit {
 

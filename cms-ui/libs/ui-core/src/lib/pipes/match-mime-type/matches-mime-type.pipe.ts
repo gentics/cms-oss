@@ -4,6 +4,7 @@ import { matchesMimeType } from '../../utils/matches-mime-type';
 @Pipe({
     name: 'gtxMatchesMimeType',
     pure: true,
+    standalone: false
 })
 export class MatchesMimeTypePipe implements PipeTransform {
 

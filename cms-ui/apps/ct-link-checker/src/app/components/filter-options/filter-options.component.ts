@@ -14,7 +14,8 @@ import { LinkCheckerService, NodeStats } from '../../services/link-checker/link-
     selector: 'gtxct-filter-options',
     templateUrl: './filter-options.component.html',
     styleUrls: ['./filter-options.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilterOptionsComponent implements OnInit, OnDestroy {
     @ViewChild('searchBar', { static: true }) searchBar: ElementRef;

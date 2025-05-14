@@ -15,6 +15,7 @@ import { ConstructCategorySortModal } from '../construct-category-sort-modal/con
     templateUrl: './construct-category-table.component.html',
     styleUrls: ['./construct-category-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructCategoryTableComponent extends BaseSortableEntityTableComponent<ConstructCategory, ConstructCategoryBO> {
 

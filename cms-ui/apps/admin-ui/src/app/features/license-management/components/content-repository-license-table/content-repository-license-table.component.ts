@@ -17,6 +17,7 @@ const ACTION_PUSH = 'push';
     templateUrl: './content-repository-license-table.component.html',
     styleUrls: ['./content-repository-license-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryLicenseTableComponent
     extends BaseEntityTableComponent<ContentRepositoryLicenseBO>

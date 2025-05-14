@@ -18,6 +18,7 @@ function assembleTestTemplate(additionalAttributes: string): string {
 
 @Component({
     template: assembleTestTemplate(''),
+    standalone: false,
 })
 class TestComponent {
     userAction = 'typeTests.testAction';
@@ -37,6 +38,7 @@ class TestComponent {
 
 @Component({
     template: '<gtx-input #inputField [gtxActionAllowed]="userAction"></gtx-input>',
+    standalone: false,
 })
 class InputTestComponent implements AfterViewInit {
 

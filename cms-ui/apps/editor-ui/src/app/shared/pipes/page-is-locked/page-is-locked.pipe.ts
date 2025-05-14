@@ -6,7 +6,10 @@ import { ApplicationStateService } from '../../../state';
  * Returns true if the page is locked by a different user than the current logged in user.
  * If this is the case, the page should not be editable.
  */
-@Pipe({ name: 'pageIsLocked' })
+@Pipe({
+    name: 'pageIsLocked',
+    standalone: false
+})
 export class PageIsLockedPipe implements PipeTransform {
 
     constructor(private state: ApplicationStateService) { }

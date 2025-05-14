@@ -4,7 +4,8 @@ import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@
     selector: 'gentics-control-panel',
     templateUrl: 'control-panel.component.html',
     styleUrls: ['control-panel.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ControlPanelComponent {
     @Input() applyLabel = 'Apply';

@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
     name: 'gtxRange',
+    standalone: false
 })
 export class RangePipe implements PipeTransform {
 

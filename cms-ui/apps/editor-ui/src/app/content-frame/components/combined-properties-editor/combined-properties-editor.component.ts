@@ -176,6 +176,7 @@ const ACTION_DEACTIVATE = 'deactivate';
     templateUrl: './combined-properties-editor.component.html',
     styleUrls: ['./combined-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 

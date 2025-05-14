@@ -33,6 +33,7 @@ function normalizeValue(value: any): string {
     styleUrls: ['./textarea.component.scss'],
     providers: [generateFormProvider(TextareaComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TextareaComponent extends BaseFormElementComponent<string> implements AfterViewInit, OnChanges, OnDestroy {
 

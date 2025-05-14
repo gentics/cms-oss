@@ -14,6 +14,7 @@ import { debounceTime } from 'rxjs/operators';
     selector: 'gtxct-list-filter',
     templateUrl: './list-filter.tpl.html',
     styleUrls: ['./list-filter.scss'],
+    standalone: false
 })
 export class ListFilterComponent implements OnDestroy {
     /** The css selector matching the items in the list to be filtered */

@@ -7,7 +7,8 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
     selector: 'gtx-page-size-selector',
     templateUrl: './page-size-selector.tpl.html',
     styleUrls: ['./page-size-selector.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageSizeSelectorComponent {
     /** Page size */

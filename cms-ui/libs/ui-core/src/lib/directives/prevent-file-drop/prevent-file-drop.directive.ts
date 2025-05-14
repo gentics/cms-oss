@@ -9,6 +9,7 @@ import { getDataTransfer, transferHasFiles } from '../../utils/drag-and-drop';
 @Directive({
     selector: '[gtxPreventFileDrop]',
     providers: [PageFileDragHandlerService, DragStateTrackerFactoryService],
+    standalone: false
 })
 export class PreventFileDropDirective implements OnDestroy {
 

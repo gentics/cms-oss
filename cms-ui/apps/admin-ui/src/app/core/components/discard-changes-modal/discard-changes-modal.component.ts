@@ -5,6 +5,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-discard-changes-modal',
     templateUrl: './discard-changes-modal.component.html',
     styleUrls: ['./discard-changes-modal.component.scss'],
+    standalone: false
 })
 export class DiscardChangesModalComponent implements IModalDialog {
 

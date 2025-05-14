@@ -13,6 +13,7 @@ import { CreateRoleModalComponent } from '../create-role-modal/create-role-modal
     templateUrl: './role-master.component.html',
     styleUrls: ['role-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RoleMasterComponent extends BaseTableMasterComponent<Role, RoleBO> {
     entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'role';

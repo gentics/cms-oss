@@ -8,6 +8,7 @@ import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animati
     styleUrls: ['./form-element-drop-zone.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
+    standalone: false
 })
 export class FormElementDropZoneComponent {
 

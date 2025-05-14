@@ -20,6 +20,7 @@ import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animati
     styleUrls: ['../form-editor-element-list/form-editor-element-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
+    standalone: false
 })
 export class FormEditorElementListComponent extends BaseFormEditorElementListComponent {}
 
@@ -29,5 +30,6 @@ export class FormEditorElementListComponent extends BaseFormEditorElementListCom
     styleUrls: ['./form-editor-element.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
+    standalone: false
 })
 export class FormEditorElementComponent extends BaseFormEditorElementComponent {}

@@ -10,7 +10,10 @@ export const MOVE_UP_ACTION = 'moveUp';
 export const MOVE_DOWN_ACTION = 'moveDown';
 export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>
     implements OnChanges {

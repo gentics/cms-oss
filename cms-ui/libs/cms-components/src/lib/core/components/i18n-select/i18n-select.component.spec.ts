@@ -133,6 +133,7 @@ describe('I18nSelectComponent', () => {
         </gtx-i18n-select>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent implements OnInit, OnDestroy {
 
@@ -163,7 +164,10 @@ class TestComponent implements OnInit, OnDestroy {
     }
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(value: string): string {
         return value;

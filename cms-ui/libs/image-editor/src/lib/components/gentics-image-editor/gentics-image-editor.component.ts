@@ -35,6 +35,7 @@ import { getDefaultCropRect } from '../../utils';
         FocalPointService,
         ResizeService,
     ],
+    standalone: false
 })
 export class GenticsImageEditorComponent extends BaseComponent implements OnInit, OnChanges {
 

@@ -19,7 +19,10 @@ import { ApplicationStateService } from '../../../state';
  *   <div *ngIf="items | isFavourite:'all'"></div>
  *   <div *ngIf="items | isFavourite:'any'"></div>
  */
-@Pipe({ name: 'isFavourite', pure: false })
+@Pipe({
+    name: 'isFavourite', pure: false,
+    standalone: false
+})
 export class IsFavouritePipe implements PipeTransform, OnDestroy {
 
     private starred: Starrable[];

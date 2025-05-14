@@ -12,6 +12,7 @@ import { Language } from '@gentics/cms-models';
     templateUrl: './language-editor.component.html',
     styleUrls: ['./language-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LanguageEditorComponent extends BaseEntityEditorComponent<EditableEntity.LANGUAGE> {
 

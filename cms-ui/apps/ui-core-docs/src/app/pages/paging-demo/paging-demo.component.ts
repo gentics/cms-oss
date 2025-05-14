@@ -13,6 +13,7 @@ interface User {
 @Component({
     templateUrl: './paging-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PagingDemoPage {
 

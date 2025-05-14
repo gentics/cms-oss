@@ -21,6 +21,7 @@ const EDIT_ACTION = 'edit';
     templateUrl: './tag-family-table.component.html',
     styleUrls: ['./tag-family-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily, MeshTagFamilyBO, TagFamilyTableLoaderOptions> {
 

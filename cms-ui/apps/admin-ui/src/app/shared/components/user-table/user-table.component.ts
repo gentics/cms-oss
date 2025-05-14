@@ -27,6 +27,7 @@ const REMOVE_FROM_GROUP_ACTION = 'removeFromGroup';
     templateUrl: './user-table.component.html',
     styleUrls: ['./user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, UserBO, UserTableLoaderOptions> implements OnChanges {
 

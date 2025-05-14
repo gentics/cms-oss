@@ -13,6 +13,7 @@ class MockModalService {
 
 @Component({
     template: '',
+    standalone: false,
 })
 class TestComponent implements OnDiscardChanges {
     userHasEdited: boolean;

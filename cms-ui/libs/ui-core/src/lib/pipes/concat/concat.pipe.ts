@@ -3,6 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 @Pipe({
     name: 'gtxConcat',
     pure: true,
+    standalone: false
 })
 export class ConcatPipe implements PipeTransform {
 

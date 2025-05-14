@@ -9,6 +9,7 @@ import { EditorOverlayModal } from '../editor-overlay-modal/editor-overlay-modal
     selector: 'confirm-close-modal',
     templateUrl: './confirm-close-modal.tpl.html',
     styleUrls: ['./confirm-close-modal.scss'],
+    standalone: false
 })
 export class ConfirmCloseModal implements IModalDialog {
     closeFn: (result: ConfirmCloseResult) => void;

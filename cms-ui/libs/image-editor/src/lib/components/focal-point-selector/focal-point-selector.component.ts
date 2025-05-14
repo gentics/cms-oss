@@ -22,6 +22,7 @@ import { FocalPointService } from '../../providers/focal-point/focal-point.servi
     templateUrl: 'focal-point-selector.component.html',
     styleUrls: ['focal-point-selector.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FocalPointSelectorComponent implements OnInit, OnChanges, OnDestroy {
 

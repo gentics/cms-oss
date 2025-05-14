@@ -32,8 +32,9 @@ import { map, takeUntil, tap } from 'rxjs/operators';
 @Component({
     selector: 'gtx-group-detail',
     templateUrl: './group-detail.component.html',
-    styleUrls: [ 'group-detail.component.scss' ],
+    styleUrls: ['group-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOperations> implements OnInit {
 

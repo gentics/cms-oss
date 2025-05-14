@@ -41,6 +41,7 @@ import { MasonryGridComponent } from '../masonry-grid/masonry-grid.component';
     templateUrl: './repository-browser-list.tpl.html',
     styleUrls: ['./repository-browser-list.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 

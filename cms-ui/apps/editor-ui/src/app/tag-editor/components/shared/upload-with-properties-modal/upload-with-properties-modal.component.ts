@@ -10,6 +10,7 @@ import { UploadWithPropertiesComponent } from '../upload-with-properties/upload-
     selector: 'upload-with-properties-modal',
     templateUrl: './upload-with-properties-modal.component.html',
     styleUrls: ['./upload-with-properties-modal.component.scss'],
+    standalone: false
 })
 export class UploadWithPropertiesModalComponent extends BaseModal<FileUpload> implements IModalDialog {
 

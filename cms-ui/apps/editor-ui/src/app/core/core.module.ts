@@ -1,5 +1,5 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
+import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, KeycloakService } from '@gentics/cms-components';
@@ -169,12 +169,10 @@ const PROVIDERS = [
         useFactory: createLanguageObservable,
         deps: [ ApplicationStateService ],
     },
-    {
-        provide: APP_INITIALIZER,
-        useFactory: initializeApp,
-        deps: [ ApplicationStateService, GCMSRestClientService, KeycloakService ],
-        multi: true,
-    },
+    provideAppInitializer(() => {
+        const initializerFn = (initializeApp)(inject(ApplicationStateService), inject(GCMSRestClientService), inject(KeycloakService));
+        return initializerFn();
+      }),
 ];
 
 @NgModule({

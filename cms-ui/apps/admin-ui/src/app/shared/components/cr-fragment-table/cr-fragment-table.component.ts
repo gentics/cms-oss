@@ -22,6 +22,7 @@ import { CreateContentRepositoryFragmentModalComponent } from '../create-cr-frag
     templateUrl: './cr-fragment-table.component.html',
     styleUrls: ['./cr-fragment-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CRFragmentTableComponent
     extends BasePackageEntityTableComponent<ContentRepositoryFragment, ContentRepositoryFragmentBO, CRFragmentTableLoaderOptions> {

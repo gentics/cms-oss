@@ -42,7 +42,10 @@ export const DEFAULT_COMPARE_FN: EqualityFn = (a, b, strict) => {
  * {{ [123, 'cool'] | includes:{ compareFn: myCompareFn, values:['123'] } }}
  * ```
  */
-@Pipe({ name: 'gtxIncludes' })
+@Pipe({
+    name: 'gtxIncludes',
+    standalone: false
+})
 export class IncludesPipe implements PipeTransform {
 
     transform<T>(sourceValue: SourceValue<T>, optionsOrValues: IncludesOptions | T | Iterable<T>): boolean;

@@ -1,7 +1,7 @@
-import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
-import { TypeIconPipe } from '@editor-ui/app/shared/pipes';
 import { STATE_MODULES } from '@editor-ui/app/state';
+import { mockPipe } from '@gentics/ui-core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
@@ -13,14 +13,6 @@ function mergeUnique(a: any[], b: any[]): any[] {
     const arr1 = a instanceof Array ? a : [];
     const arr2 = b instanceof Array ? b : [];
     return arr1.concat(arr2.filter(item => arr1.indexOf(item) < 0));
-}
-
-@Pipe({
-    name: 'i18n',
-})
-class MockI18nPipe implements PipeTransform {
-    transform(): void {
-    }
 }
 
 export class MockTranslateService {
@@ -40,7 +32,7 @@ export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [NgxsModule.forRoot(STATE_MODULES)],
-        declarations: [MockI18nPipe],
+        declarations: [mockPipe('i18n')],
         providers: [{ provide: TranslateService, useClass: MockTranslateService }],
         schemas: [NO_ERRORS_SCHEMA],
     };

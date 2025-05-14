@@ -1,7 +1,10 @@
 import { Directive, TemplateRef } from '@angular/core';
 
 /** Decorates the `ng-template` tags and reads out the template from it. */
-@Directive({selector: '[gtx-tab-content]'})
+@Directive({
+    selector: '[gtx-tab-content]',
+    standalone: false
+})
 export class TabContentDirective {
     constructor(public template: TemplateRef<any>) { }
 }

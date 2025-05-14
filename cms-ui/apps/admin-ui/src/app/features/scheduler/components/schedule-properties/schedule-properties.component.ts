@@ -21,6 +21,7 @@ export enum SchedulePropertiesMode {
         generateFormProvider(SchedulePropertiesComponent),
         generateValidatorProvider(SchedulePropertiesComponent),
     ],
+    standalone: false
 })
 export class SchedulePropertiesComponent extends BasePropertiesComponent<Schedule> implements OnInit {
 

@@ -9,6 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./boolean-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(BooleanPartFillComponent)],
+    standalone: false
 })
 export class BooleanPartFillComponent extends BaseFormElementComponent<BooleanTagPartProperty> {
 

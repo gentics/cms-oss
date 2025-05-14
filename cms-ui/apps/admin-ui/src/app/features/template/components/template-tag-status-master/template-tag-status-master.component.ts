@@ -8,6 +8,7 @@ import { AnyModelType, NormalizableEntityTypesMap, TagStatus } from '@gentics/cm
     templateUrl: './template-tag-status-master.component.html',
     styleUrls: ['./template-tag-status-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTagStatusMasterComponent extends BaseTableMasterComponent<TagStatus, TagStatusBO> {
 

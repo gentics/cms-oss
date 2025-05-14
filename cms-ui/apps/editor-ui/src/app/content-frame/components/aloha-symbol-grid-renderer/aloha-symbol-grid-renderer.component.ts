@@ -11,6 +11,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-symbol-grid-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSymbolGridRendererComponent)],
+    standalone: false
 })
 export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent<AlohaSymbolGridComponent, SymbolGridItem> implements OnInit {
 

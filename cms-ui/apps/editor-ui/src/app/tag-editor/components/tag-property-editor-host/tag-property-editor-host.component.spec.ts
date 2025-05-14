@@ -87,6 +87,7 @@ describe('TagPropertyEditorHostComponent', () => {
     template: `
         <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     tagPart: TagPart;

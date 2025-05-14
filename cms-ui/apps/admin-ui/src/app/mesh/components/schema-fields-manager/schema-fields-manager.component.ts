@@ -14,6 +14,7 @@ import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-fie
         generateFormProvider(SchemaFieldsManagerComponent),
         generateValidatorProvider(SchemaFieldsManagerComponent),
     ],
+    standalone: false
 })
 export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<SchemaField> {
 

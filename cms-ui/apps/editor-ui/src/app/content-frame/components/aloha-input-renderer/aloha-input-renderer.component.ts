@@ -12,6 +12,7 @@ let componentId = 0;
     styleUrls: ['./aloha-input-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaInputRendererComponent)],
+    standalone: false
 })
 export class AlohaInputRendererComponent extends BaseAlohaRendererComponent<AlohaInputComponent, string> {
 

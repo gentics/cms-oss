@@ -1,6 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({ name: 'replaceEscapedCharacters' })
+@Pipe({
+    name: 'replaceEscapedCharacters',
+    standalone: false
+})
 export class ReplaceEscapedCharactersPipe implements PipeTransform {
     transform(newString: string): string {
         if (newString) {

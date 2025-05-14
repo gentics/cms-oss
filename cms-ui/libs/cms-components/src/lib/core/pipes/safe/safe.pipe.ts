@@ -9,7 +9,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
  * ```
  * @see https://angular.io/guide/security#xss
  */
-@Pipe({ name: 'safe' })
+@Pipe({
+    name: 'safe',
+    standalone: false
+})
 export class SafePipe implements PipeTransform {
 
     constructor(

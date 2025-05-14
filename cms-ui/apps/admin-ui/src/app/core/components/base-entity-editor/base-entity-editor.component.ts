@@ -24,7 +24,9 @@ import { toValidNumber } from '@gentics/ui-core';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
-@Directive({  })
+@Directive({
+    standalone: false
+})
 export abstract class BaseEntityEditorComponent<K extends EditableEntity>
     implements OnInit, OnChanges, OnDestroy, OnDiscardChanges {
 

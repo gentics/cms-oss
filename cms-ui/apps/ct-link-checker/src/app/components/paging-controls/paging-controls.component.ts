@@ -6,7 +6,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 @Component({
     selector: 'gtxct-paging-controls',
     templateUrl: './paging-controls.tpl.html',
-    styleUrls: ['./paging-controls.scss']
+    styleUrls: ['./paging-controls.scss'],
+    standalone: false
 })
 export class PagingControlsComponent {
     @Input() id: string;

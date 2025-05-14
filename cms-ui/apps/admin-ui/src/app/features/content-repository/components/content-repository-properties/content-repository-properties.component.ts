@@ -83,6 +83,7 @@ const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
         generateFormProvider(ContentRepositoryPropertiesComponent),
         generateValidatorProvider(ContentRepositoryPropertiesComponent),
     ],
+    standalone: false
 })
 export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepositoryPropertiesFormData> implements OnInit, OnChanges {
 

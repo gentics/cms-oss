@@ -29,6 +29,7 @@ import { Image } from '@gentics/cms-models';
     templateUrl: './icon-checkbox.tpl.html',
     styleUrls: ['./icon-checkbox.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class IconCheckbox {
 

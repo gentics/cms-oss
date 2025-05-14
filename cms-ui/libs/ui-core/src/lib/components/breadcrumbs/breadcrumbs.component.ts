@@ -49,6 +49,7 @@ const ELLIPSIS_WIDTH = 13;
     templateUrl: './breadcrumbs.component.html',
     styleUrls: ['./breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit {
 

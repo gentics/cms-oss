@@ -8,6 +8,7 @@ import { VersionModalComponent } from '../versions-modal/versions-modal.componen
     templateUrl: './app-version-label.component.html',
     styleUrls: ['./app-version-label.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GtxAppVersionLabelComponent implements OnChanges {
 

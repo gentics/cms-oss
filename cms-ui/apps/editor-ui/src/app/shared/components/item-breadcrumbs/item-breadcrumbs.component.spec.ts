@@ -4,14 +4,14 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { File, Folder, FolderBreadcrumb, Image, Page, Raw } from '@gentics/cms-models';
-import { GenticsUICoreModule } from '@gentics/ui-core';
-import { componentTest, configureComponentTest } from '../../../../testing';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ItemBreadcrumbsComponent } from './item-breadcrumbs.component';
 
@@ -138,7 +138,8 @@ describe('ItemBreadcrumbsComponent', () => {
     template: `
         <item-breadcrumbs [item]="item" [linkPaths]="linkPaths"></item-breadcrumbs>
     `,
-    })
+    standalone: false,
+})
 class TestComponent {
     item: File | Folder | Image | Page;
     linkPaths: boolean;

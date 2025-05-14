@@ -7,7 +7,10 @@ import { BaseComponent } from '../base-component/base.component';
  * Provides a basic and consistent way to use them and prevents basic boilerplate
  * code in every component.
  */
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseFormElementComponent<T>
     extends BaseComponent
     implements ControlValueAccessor, OnChanges {

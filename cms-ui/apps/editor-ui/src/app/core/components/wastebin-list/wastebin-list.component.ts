@@ -18,6 +18,7 @@ function filterBy(filter: string, item: InheritableItem, prop: string): boolean 
     styleUrls: ['./wastebin-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [PaginationService],
+    standalone: false
 })
 export class WastebinList implements OnChanges, OnInit {
 

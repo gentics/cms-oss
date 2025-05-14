@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
     selector: 'gtx-sidebar-item',
     templateUrl: './sidebar-item.component.html',
     styleUrls: ['./sidebar-item.component.scss'],
+    standalone: false
 })
 export class SidebarItemComponent implements OnDestroy {
 

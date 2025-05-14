@@ -7,6 +7,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './content-repository-license-info-modal.component.html',
     styleUrls: ['./content-repository-license-info-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryLicenseInfoModal extends BaseModal<void> {
 

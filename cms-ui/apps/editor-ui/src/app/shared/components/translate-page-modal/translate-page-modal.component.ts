@@ -22,6 +22,7 @@ export interface TranslateResult {
     selector: 'translate-page-modal',
     templateUrl: './translate-page-modal.tpl.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TranslatePageModal extends BaseModal<TranslateResult> implements OnInit, OnDestroy {
 

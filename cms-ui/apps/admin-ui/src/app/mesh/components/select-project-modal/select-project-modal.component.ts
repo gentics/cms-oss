@@ -8,6 +8,7 @@ import { ProjectTableComponent } from '../project-table/project-table.component'
     templateUrl: './select-project-modal.component.html',
     styleUrls: ['./select-project-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectProjectModal extends BaseModal<MeshProjectBO | MeshProjectBO[]> {
 

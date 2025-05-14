@@ -13,6 +13,7 @@ import { ManageContentRepositoryRolesModal } from '../manage-content-repository-
     selector: 'gtx-content-repository-master',
     templateUrl: './content-repository-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> {
 

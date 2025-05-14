@@ -11,7 +11,8 @@ import { Image } from '@gentics/cms-models';
     selector: 'repository-browser-list-thumbnail,[repositoryBrowserListThumbnail]',
     templateUrl: './repository-browser-list-thumbnail.tpl.html',
     styleUrls: ['./repository-browser-list-thumbnail.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RepositoryBrowserListThumbnail {
 

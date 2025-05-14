@@ -5,6 +5,7 @@ import { IDocumentation } from '../../common/docs';
 @Component({
     templateUrl: './base-form-element-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class BaseFormElementDemoPage {
 

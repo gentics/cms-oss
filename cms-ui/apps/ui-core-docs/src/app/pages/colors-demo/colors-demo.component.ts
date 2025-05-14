@@ -4,5 +4,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     templateUrl: './colors-demo.component.html',
     styleUrls: ['./colors-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ColorsDemoPage {}

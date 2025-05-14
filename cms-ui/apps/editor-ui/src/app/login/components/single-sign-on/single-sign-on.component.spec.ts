@@ -28,6 +28,7 @@ class MockRouter {}
 
 @Component({
     template: '<single-sign-on></single-sign-on>',
+    standalone: false,
 })
 class TestComponent implements OnInit {
     ngOnInitSpy = jasmine.createSpy('ngOnInit');

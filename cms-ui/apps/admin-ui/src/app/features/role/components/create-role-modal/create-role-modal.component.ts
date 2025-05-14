@@ -8,8 +8,9 @@ import { Observable } from 'rxjs';
 @Component({
     selector: 'gtx-create-role-modal',
     templateUrl: './create-role-modal.component.html',
-    styleUrls: [ './create-role-modal.component.scss' ],
+    styleUrls: ['./create-role-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnInit {
 

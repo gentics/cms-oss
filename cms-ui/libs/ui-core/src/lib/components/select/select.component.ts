@@ -54,6 +54,7 @@ type SingleOrArray<T> = T | T[];
     styleUrls: ['./select.component.scss'],
     providers: [generateFormProvider(SelectComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>

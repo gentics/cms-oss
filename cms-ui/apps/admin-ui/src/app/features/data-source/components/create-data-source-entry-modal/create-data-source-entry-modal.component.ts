@@ -8,6 +8,7 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-create-data-source-entry-modal',
     templateUrl: './create-data-source-entry-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateDataSourceEntryModalComponent extends BaseModal<DataSourceEntry<Raw>> implements OnInit {
 

@@ -25,6 +25,7 @@ const UNCATEGORIZED_LABEL = 'editor.construct_no_category';
     templateUrl: './construct-controls.component.html',
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructControlsComponent implements OnChanges {
 

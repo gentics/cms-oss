@@ -10,6 +10,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-table-size-select-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaTableSizeSelectRendererComponent)],
+    standalone: false
 })
 export class AlohaTableSizeSelectRendererComponent
     extends BaseAlohaRendererComponent<AlohaTableSizeSelectComponent, TableSize>

@@ -10,6 +10,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
     selector: 'create-folder-modal',
     templateUrl: './create-folder-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateFolderModalComponent extends BaseModal<Folder> implements OnInit, OnDestroy {
 

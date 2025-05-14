@@ -30,6 +30,7 @@ export interface FormLanguageVariantMap {
     templateUrl: './multi-delete-modal.component.html',
     styleUrls: ['./multi-delete-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements OnInit, OnDestroy {
 

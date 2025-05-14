@@ -23,7 +23,8 @@ import { CropperService } from '../../providers/cropper/cropper.service';
     selector: 'gentics-image-cropper',
     templateUrl: 'image-cropper.component.html',
     styleUrls: ['image-cropper.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ImageCropperComponent implements OnChanges, OnDestroy {
 

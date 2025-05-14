@@ -12,7 +12,8 @@ import {ChangeDetectionStrategy, Component, Input, EventEmitter, Output} from '@
     selector: 'browse-box',
     templateUrl: './browse-box.component.html',
     styleUrls: ['./browse-box.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class BrowseBoxComponent {
 

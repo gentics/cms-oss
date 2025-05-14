@@ -117,11 +117,13 @@ describe('UploadWithPropertiesModalComponent', () => {
 
 
 @Component({
-    template: `<upload-with-properties-modal
-        [allowFolderSelection]="allowFolderSelection"
-        [destinationFolder]="destinationFolder"
-        [itemType]="itemType"
-    ></upload-with-properties-modal>`,
+    template: `
+        <upload-with-properties-modal
+            [allowFolderSelection]="allowFolderSelection"
+            [destinationFolder]="destinationFolder"
+            [itemType]="itemType"
+        ></upload-with-properties-modal>`,
+    standalone: false,
 })
 class TestComponent {
 
@@ -135,6 +137,7 @@ class TestComponent {
 @Component({
     selector: 'upload-with-properties',
     template: '',
+    standalone: false,
 })
 class MockUploadWithPropertiesComponent implements OnInit {
 

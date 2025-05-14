@@ -14,6 +14,7 @@ import { ApplicationStateService } from '../../../state';
     templateUrl: './publish-pages-modal.component.html',
     styleUrls: ['./publish-pages-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnInit {
 

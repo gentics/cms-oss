@@ -28,7 +28,10 @@ describe('FormElementPreviewComponent', () => {
     });
 });
 
-@Pipe({ name: 'i18nfg$' })
+@Pipe({
+    name: 'i18nfg$',
+    standalone: false,
+})
 class MockI18nFgPipe implements PipeTransform {
     transform(value: string): string {
         return value;

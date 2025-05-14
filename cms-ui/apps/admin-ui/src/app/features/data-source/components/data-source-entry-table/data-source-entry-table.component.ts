@@ -15,6 +15,7 @@ import { CreateDataSourceEntryModalComponent } from '../create-data-source-entry
     templateUrl: './data-source-entry-table.component.html',
     styleUrls: ['./data-source-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DataSourceEntryTableComponent
     extends BaseSortableEntityTableComponent<DataSourceEntry<Raw>, DataSourceEntryBO, DataSourceEntryTableLoaderOptions>

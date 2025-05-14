@@ -11,6 +11,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-date-time-picker-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaDateTimePickerRendererComponent)],
+    standalone: false
 })
 export class AlohaDateTimePickerRendererComponent
     extends BaseAlohaRendererComponent<AlohaDateTimePickerComponent, Date>

@@ -205,12 +205,14 @@ describe('UploadWithPropertiesComponent', () => {
 });
 
 @Component({
-    template: `<upload-with-properties
-                    [allowFolderSelection]="true"
-                    [destinationFolder]="uploadDestination"
-                    [itemType]="itemType"
-                    (upload)="onUpload($event)">
-                </upload-with-properties>`,
+    template: `
+        <upload-with-properties
+            [allowFolderSelection]="true"
+            [destinationFolder]="uploadDestination"
+            [itemType]="itemType"
+            (upload)="onUpload($event)">
+        </upload-with-properties>`,
+    standalone: false,
 })
 class TestComponent {
 

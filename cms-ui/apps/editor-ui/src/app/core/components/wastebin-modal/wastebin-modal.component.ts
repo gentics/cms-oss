@@ -14,6 +14,7 @@ import { SortingModal } from './../../../shared/components/sorting-modal/sorting
     selector: 'wastebin-modal',
     templateUrl: './wastebin-modal.tpl.html',
     styleUrls: ['./wastebin-modal.scss'],
+    standalone: false
 })
 export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
 

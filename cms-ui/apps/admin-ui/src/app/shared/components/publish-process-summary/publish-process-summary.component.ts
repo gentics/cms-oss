@@ -34,6 +34,7 @@ const ICON_MAPPING: Record<ObjectType, string> = {
     templateUrl: './publish-process-summary.component.html',
     styleUrls: ['./publish-process-summary.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
 export class PublishProcessSummaryComponent implements OnChanges {
 

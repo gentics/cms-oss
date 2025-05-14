@@ -13,6 +13,7 @@ import { CreateObjectPropertyCategoryModalComponent } from '../create-object-pro
     templateUrl: './object-property-category-master.component.html',
     styleUrls: ['./object-property-category-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyCategoryMasterComponent extends BaseTableMasterComponent<ObjectPropertyCategory, ObjectPropertyCategoryBO> {
 

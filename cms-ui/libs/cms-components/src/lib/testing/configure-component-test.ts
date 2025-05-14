@@ -3,6 +3,7 @@ import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
 
 @Pipe({
     name: 'i18n',
+    standalone: false
 })
 class MockI18nPipe implements PipeTransform {
     transform(): void {}

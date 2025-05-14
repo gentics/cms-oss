@@ -42,6 +42,7 @@ import { applyShortcuts, translateParamsInstant } from '../../providers/i18n';
 @Pipe({
     name: 'i18n',
     pure: false,
+    standalone: false
 })
 export class GtxI18nPipe implements PipeTransform, OnDestroy {
 

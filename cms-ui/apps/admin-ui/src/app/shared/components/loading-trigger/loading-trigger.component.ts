@@ -8,6 +8,7 @@ import { AfterViewInit, Component, OnInit } from '@angular/core';
 @Component({
     selector: 'gtx-loading-trigger',
     template: '',
+    standalone: false
 })
 export class LoadingTriggerComponent implements OnInit, AfterViewInit {
 

@@ -127,6 +127,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
             (valueChange)="simplePropertiesChanged($event)"
         ></gtx-folder-properties>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('form', { static: true })

@@ -34,6 +34,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUnt
     templateUrl: './page-url-tag-property-editor.component.html',
     styleUrls: ['./page-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 

@@ -11,6 +11,7 @@ import { BaseFormElementComponent, generateFormProvider, generateValidatorProvid
         generateFormProvider(PasswordConfirmInputComponent),
         generateValidatorProvider(PasswordConfirmInputComponent),
     ],
+    standalone: false
 })
 export class PasswordConfirmInputComponent
     extends BaseFormElementComponent<string>

@@ -19,6 +19,7 @@ const APPLY_RECURSIVELY_ACTION = 'applyRecursive';
     templateUrl: './mesh-role-permissions-trable.component.html',
     styleUrls: ['./mesh-role-permissions-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshRolePermissionsTrableComponent
     extends BaseEntityTrableComponent<MeshBusinessObject, MeshBusinessObject, MeshRolePermissionsTrableLoaderOptions> {

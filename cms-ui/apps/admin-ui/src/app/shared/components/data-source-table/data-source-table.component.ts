@@ -21,6 +21,7 @@ import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '.
     templateUrl: './data-source-table.component.html',
     styleUrls: ['./data-source-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DataSourceTableComponent
     extends BasePackageEntityTableComponent<DataSource, DataSourceBO, DataSourceTableLoaderOptions> {

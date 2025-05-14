@@ -47,6 +47,7 @@ import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils'
     templateUrl: './search-bar.component.html',
     styleUrls: ['./search-bar.component.scss'],
     providers: [generateFormProvider(SearchBarComponent)],
+    standalone: false
 })
 export class SearchBarComponent implements ControlValueAccessor, OnChanges {
 

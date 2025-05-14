@@ -11,6 +11,7 @@ import { EditorOverlayModal } from './editor-overlay-modal.component';
 @Component({
     selector: 'test-component',
     template: '<gtx-overlay-host></gtx-overlay-host>',
+    standalone: false,
 })
 class TestComponent extends EditorOverlayModal {
     currentItem: Page | FileModel | Folder | Image | Node;

@@ -21,6 +21,7 @@ import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 

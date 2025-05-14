@@ -17,6 +17,7 @@ import { SchedulePropertiesMode } from '../schedule-properties/schedule-properti
     templateUrl: './schedule-detail.component.html',
     styleUrls: ['./schedule-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', ScheduleOperations> implements OnInit {
 

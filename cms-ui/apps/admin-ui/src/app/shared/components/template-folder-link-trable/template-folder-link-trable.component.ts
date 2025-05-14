@@ -16,6 +16,7 @@ const APPLY_RECURSIVE = 'applyRecusrive';
     templateUrl: './template-folder-link-trable.component.html',
     styleUrls: ['./template-folder-link-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateFolderLinkTrableComponent implements OnInit {
 

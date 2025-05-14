@@ -20,6 +20,7 @@ export enum SchemaPropertiesMode {
         generateFormProvider(SchemaPropertiesComponent),
         generateValidatorProvider(SchemaPropertiesComponent),
     ],
+    standalone: false
 })
 export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> {
 

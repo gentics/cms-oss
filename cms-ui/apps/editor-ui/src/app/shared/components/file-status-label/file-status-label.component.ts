@@ -6,7 +6,8 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
     selector: 'file-status-label',
     templateUrl: './file-status-label.tpl.html',
     styleUrls: ['./file-status-label.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FileStatusLabel {
     // tslint:disable-next-line:no-input-rename

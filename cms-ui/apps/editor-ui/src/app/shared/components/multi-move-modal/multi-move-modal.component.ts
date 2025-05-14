@@ -9,7 +9,8 @@ import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 @Component({
     selector: 'multi-move-modal-modal',
     templateUrl: './multi-move-modal.tpl.html',
-    styleUrls: ['./multi-move-modal.scss']
+    styleUrls: ['./multi-move-modal.scss'],
+    standalone: false
 })
 export class MultiMoveModal implements IModalDialog {
     closeFn: (result: InheritableItem[]) => void;

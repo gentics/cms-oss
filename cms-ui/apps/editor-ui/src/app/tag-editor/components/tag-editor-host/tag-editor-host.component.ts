@@ -25,6 +25,7 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
     templateUrl: './tag-editor-host.component.html',
     styleUrls: ['./tag-editor-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
 

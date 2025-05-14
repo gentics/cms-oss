@@ -14,6 +14,7 @@ export interface LanguageVariantMap {
     selector: 'multi-restore-modal',
     templateUrl: './multi-restore-modal.tpl.html',
     styleUrls: ['./multi-restore-modal.scss'],
+    standalone: false
 })
 export class MultiRestoreModalComponent implements IModalDialog, OnDestroy {
     files: File[] = [];

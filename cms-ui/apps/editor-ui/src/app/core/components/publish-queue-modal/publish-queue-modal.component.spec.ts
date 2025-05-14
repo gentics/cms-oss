@@ -26,6 +26,7 @@ describe('PublishQueueModal is created ok', () => {
         template: `
           <publish-queue>
           </publish-queue>`,
+        standalone: false,
     })
     class TestComponent {
         @ViewChild(PublishQueueModal, {static: true}) publishQueueModal: PublishQueueModal;

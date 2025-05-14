@@ -19,6 +19,7 @@ const EDIT_ACTION = 'edit';
     templateUrl: './tag-table.component.html',
     styleUrls: ['./tag-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagTableComponent extends BaseEntityTableComponent<Tag, MeshTagBO, TagTableLoaderOptions> {
 

@@ -9,7 +9,8 @@ import {AuthOperations} from '../../providers';
 
 @Component({
     selector: 'gtx-change-password-modal',
-    templateUrl: './change-password-modal.tpl.html'
+    templateUrl: './change-password-modal.tpl.html',
+    standalone: false
 })
 export class ChangePasswordModalComponent implements IModalDialog {
 

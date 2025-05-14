@@ -26,6 +26,7 @@ const MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION = 'manageMicroschemaAssignment';
     templateUrl: './project-table.component.html',
     styleUrls: ['./project-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProjectTableComponent extends BaseEntityTableComponent<Project, MeshProjectBO> {
 

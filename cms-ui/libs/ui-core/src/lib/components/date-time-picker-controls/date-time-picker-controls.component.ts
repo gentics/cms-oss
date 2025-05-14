@@ -73,6 +73,7 @@ function toDate(value: null | Date | number | string): Date | null {
     styleUrls: ['./date-time-picker-controls.component.scss'],
     providers: [generateFormProvider(DateTimePickerControlsComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DateTimePickerControlsComponent
     extends BaseFormElementComponent<number>

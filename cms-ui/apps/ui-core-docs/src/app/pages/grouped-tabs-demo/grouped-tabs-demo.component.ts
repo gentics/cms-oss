@@ -6,6 +6,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './grouped-tabs-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupedTabsDemoPage {
 

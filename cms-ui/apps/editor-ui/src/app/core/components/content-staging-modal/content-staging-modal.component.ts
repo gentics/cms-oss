@@ -8,7 +8,8 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './content-staging-modal.component.html',
     styleUrls: ['./content-staging-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+    standalone: false
+})
 export class ContentStagingModal extends BaseModal<void> implements OnInit {
 
     public hadPackage = false;

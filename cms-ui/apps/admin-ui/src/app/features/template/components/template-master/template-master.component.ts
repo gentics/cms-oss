@@ -60,6 +60,7 @@ enum Action {
     templateUrl: './template-master.component.html',
     styleUrls: ['./template-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateMasterComponent extends BaseTableMasterComponent<Template, TemplateBO> implements OnInit {
 

@@ -1,7 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { componentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { DescriptionTooltipComponent } from './description-tooltip.component';
 
@@ -63,6 +63,7 @@ describe('DescriptionTooltipComponent', () => {
 
 @Component({
     template: '<description-tooltip [target]="target" [(visible)]="visible"></description-tooltip>',
+    standalone: false,
 })
 class TestComponent {
     objectProperty: any;

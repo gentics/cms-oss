@@ -27,6 +27,7 @@ export enum TemplatePropertiesTabs {
     templateUrl: './template-detail.component.html',
     styleUrls: ['./template-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateDetailComponent
     extends BaseDetailComponent<'template', TemplateOperations>

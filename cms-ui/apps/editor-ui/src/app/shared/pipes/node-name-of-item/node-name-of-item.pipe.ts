@@ -2,7 +2,10 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { File, Folder, Image, Page } from '@gentics/cms-models';
 import { ApplicationStateService } from '../../../state';
 
-@Pipe({ name: 'nodeNameOfItem' })
+@Pipe({
+    name: 'nodeNameOfItem',
+    standalone: false
+})
 export class NodeNameOfItemPipe implements PipeTransform {
 
     constructor(private state: ApplicationStateService) { }

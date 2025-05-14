@@ -3,6 +3,8 @@ import { defineConfig } from 'cypress';
 import { createE2EReporterOptions } from '../../cypress.preset';
 
 export default defineConfig({
-    e2e: nxE2EPreset(__dirname),
+    e2e: {
+        ...nxE2EPreset(__dirname),
+    },
     ...createE2EReporterOptions('apps', 'ct-link-checker', true),
 });

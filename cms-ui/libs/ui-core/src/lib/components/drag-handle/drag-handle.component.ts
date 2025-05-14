@@ -7,5 +7,6 @@ import { Component } from '@angular/core';
             <icon>drag_handle</icon>
         </div>
     `,
+    standalone: false
 })
 export class SortableListDragHandleComponent {}

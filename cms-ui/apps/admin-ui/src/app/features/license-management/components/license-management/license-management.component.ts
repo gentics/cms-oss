@@ -12,6 +12,7 @@ import { LicenseUploadModal } from '../license-upload-modal/license-upload-modal
     templateUrl: './license-management.component.html',
     styleUrls: ['./license-management.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LicenseManagementComponent implements OnInit, OnDestroy {
 

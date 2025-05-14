@@ -111,6 +111,7 @@ import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navi
     templateUrl: './content-frame.component.html',
     styleUrls: ['./content-frame.component.scss'],
     providers: [CustomScriptHostService],
+    standalone: false
 })
 export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 

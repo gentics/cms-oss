@@ -12,6 +12,7 @@ import { take } from 'rxjs/operators';
     templateUrl: './maintenance-mode.component.html',
     styleUrls: ['maintenance-mode.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MaintenanceModeViewComponent implements OnInit {
 

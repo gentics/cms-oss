@@ -16,6 +16,7 @@ import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule
     templateUrl: './schedule-task-detail.component.html',
     styleUrls: ['./schedule-task-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleTaskDetailComponent extends BaseDetailComponent<'scheduleTask', ScheduleTaskOperations> implements OnInit {
 

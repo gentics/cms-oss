@@ -138,6 +138,7 @@ interface AugmentedTagSelection extends TagSelection {
     templateUrl: './tagref-tag-property-editor.component.html',
     styleUrls: ['./tagref-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 

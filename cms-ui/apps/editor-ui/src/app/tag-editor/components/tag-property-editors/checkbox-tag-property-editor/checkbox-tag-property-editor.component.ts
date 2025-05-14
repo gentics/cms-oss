@@ -17,6 +17,7 @@ import {
     templateUrl: './checkbox-tag-property-editor.component.html',
     styleUrls: ['./checkbox-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CheckboxTagPropertyEditor implements TagPropertyEditor {
 

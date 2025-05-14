@@ -38,6 +38,7 @@ import { ImageAnonymizeModal } from '../image-anonymize-modal/image-anonymize-mo
     templateUrl: './file-preview.tpl.html',
     styleUrls: ['./file-preview.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilePreviewComponent implements OnInit, OnChanges, OnDestroy {
 

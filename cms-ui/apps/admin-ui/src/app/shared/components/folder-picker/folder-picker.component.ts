@@ -12,6 +12,7 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
     providers: [
         generateFormProvider(FolderPickerComponent),
     ],
+    standalone: false
 })
 export class FolderPickerComponent extends BaseFormElementComponent<number> {
 

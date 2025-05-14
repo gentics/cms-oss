@@ -99,6 +99,7 @@ describe('SideMenuComponent', () => {
             <gtx-side-menu-toggle>toggle</gtx-side-menu-toggle>
             <div class="user-content">User Content</div>
         </gtx-side-menu>`,
+    standalone: false,
 })
 class TestComponent {
     menuVisible = false;

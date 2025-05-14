@@ -14,6 +14,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
     templateUrl: './create-page-modal.component.html',
     styleUrls: ['./create-page-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements OnInit, OnDestroy {
 

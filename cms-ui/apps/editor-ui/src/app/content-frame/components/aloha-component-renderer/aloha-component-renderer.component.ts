@@ -69,6 +69,7 @@ const RENDER_COMPONENTS: Record<string, Type<BaseAlohaRendererComponent<any, any
     styleUrls: ['./aloha-component-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaComponentRendererComponent)],
+    standalone: false
 })
 export class AlohaComponentRendererComponent implements ControlValueAccessor, AfterViewInit, OnChanges, OnDestroy {
 

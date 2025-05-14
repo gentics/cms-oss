@@ -15,6 +15,7 @@ import {
     templateUrl: './image-preview.component.html',
     styleUrls: ['./image-preview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ImagePreviewComponent implements OnChanges {
 

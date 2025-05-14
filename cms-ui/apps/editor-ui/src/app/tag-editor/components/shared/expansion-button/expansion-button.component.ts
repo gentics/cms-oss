@@ -8,6 +8,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@a
     templateUrl: './expansion-button.component.html',
     styleUrls: ['./expansion-button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ExpansionButtonComponent {
 

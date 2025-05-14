@@ -11,6 +11,7 @@ import {
     templateUrl: './entity-detail-header.component.html',
     styleUrls: ['./entity-detail-header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EntityDetailHeaderComponent {
 

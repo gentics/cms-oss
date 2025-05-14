@@ -18,6 +18,7 @@ import { Wizard } from '../../providers/wizard/wizard.service';
     templateUrl: './wizard-modal.component.html',
     styleUrls: ['./wizard-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WizardModalComponent<T extends Wizard<R>, R> implements OnInit, OnDestroy, IModalDialog {
 

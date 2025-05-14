@@ -9,10 +9,18 @@
 
 	<fileSets>
 		<fileSet>
-			<directory>${basedir}/dist/apps/ct-link-checker</directory>
+			<directory>${basedir}/dist/apps/ct-link-checker/browser</directory>
 			<outputDirectory>/link-checker</outputDirectory>
 			<includes>
 				<include>**</include>
+			</includes>
+		</fileSet>
+
+        <fileSet>
+			<directory>${basedir}/dist/apps/ct-link-checker</directory>
+			<outputDirectory>/link-checker</outputDirectory>
+			<includes>
+				<include>3rdpartylicenses.txt</include>
 			</includes>
 		</fileSet>
 	</fileSets>

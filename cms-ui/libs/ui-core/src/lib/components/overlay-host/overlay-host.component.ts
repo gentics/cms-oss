@@ -19,6 +19,7 @@ import { OverlayHostService } from '../../providers/overlay-host/overlay-host.se
 @Component({
     selector: 'gtx-overlay-host',
     template: '',
+    standalone: false
 })
 export class OverlayHostComponent {
 

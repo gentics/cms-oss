@@ -9,6 +9,7 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-create-dev-tool-package-modal',
     templateUrl: './create-dev-tool-package-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateDevToolPackageModalComponent extends BaseModal<string> implements OnInit {
 

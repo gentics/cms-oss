@@ -13,7 +13,8 @@ import { LinkCheckerService } from '../../services/link-checker/link-checker.ser
     selector: 'gtxct-list-view',
     templateUrl: './list-view.component.html',
     styleUrls: ['./list-view.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ListViewComponent implements OnInit {
     loading$: Observable<boolean>;

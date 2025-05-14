@@ -7,6 +7,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './schedule-execution-detail-modal.component.html',
     styleUrls: ['./schedule-execution-detail-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleExecutionDetailModalComponent extends BaseModal<void> {
 

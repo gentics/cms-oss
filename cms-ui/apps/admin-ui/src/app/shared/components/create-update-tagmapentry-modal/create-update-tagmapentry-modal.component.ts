@@ -26,6 +26,7 @@ export enum TagmapEntryDisplayFields {
     selector: 'gtx-create-update-tagmap-entry-modal',
     templateUrl: './create-update-tagmapentry-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntryBO<Normalized>> implements OnInit {
 

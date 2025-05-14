@@ -25,6 +25,7 @@ import { ListItemDetails } from './list-item-details.component';
             [item]="item"
             (usageClick)="showUsage($event)"
         ></list-item-details>`,
+    standalone: false,
 })
 class TestComponent {
     displayFields: string[] = [];

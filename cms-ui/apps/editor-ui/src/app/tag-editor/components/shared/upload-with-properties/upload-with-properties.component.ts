@@ -29,6 +29,7 @@ import { FolderActionsService } from '../../../../state';
     templateUrl: './upload-with-properties.component.html',
     styleUrls: ['./upload-with-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestroy {
 

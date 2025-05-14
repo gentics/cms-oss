@@ -8,7 +8,8 @@ import {I18nRelativeDateService} from '../../providers/i18n-relative-date/i18n-r
  */
 @Pipe({
     name: 'i18nRelativeDate',
-    pure: false
+    pure: false,
+    standalone: false
 })
 export class I18nRelativeDatePipe implements PipeTransform, OnDestroy {
 

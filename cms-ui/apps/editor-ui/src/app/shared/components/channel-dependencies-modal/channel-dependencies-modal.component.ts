@@ -31,6 +31,7 @@ export interface ItemsSelectedIds {
     templateUrl: './channel-dependencies-modal.component.html',
     styleUrls: ['./channel-dependencies-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ChannelDependenciesModal implements OnInit, IModalDialog {
     item: Folder | Page | FileModel | Image;

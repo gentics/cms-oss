@@ -9,6 +9,7 @@ import { ObjectpropertyPropertiesMode } from '../object-property-properties/obje
     selector: 'gtx-create-object-property-modal',
     templateUrl: './create-object-property-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit {
 

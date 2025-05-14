@@ -14,6 +14,7 @@ import { MessageLink } from '../message-body';
     templateUrl: './message-modal.component.html',
     styleUrls: ['./message-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageModal extends BaseModal<MessageLink | void> implements OnInit {
 

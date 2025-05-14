@@ -18,6 +18,7 @@ export enum MeshUserPropertiesMode {
         generateFormProvider(MeshUserPropertiesComponent),
         generateValidatorProvider(MeshUserPropertiesComponent),
     ],
+    standalone: false
 })
 export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpdateRequest> implements OnChanges {
 

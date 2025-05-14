@@ -21,6 +21,7 @@ import { ModalService, TableColumn } from '@gentics/ui-core';
     templateUrl: './mesh-browser-repository-table.component.html',
     styleUrls: ['./mesh-browser-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryTableComponent
     extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions>

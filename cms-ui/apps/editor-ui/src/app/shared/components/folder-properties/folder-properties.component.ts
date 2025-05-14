@@ -49,6 +49,7 @@ const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI1
         generateFormProvider(FolderPropertiesComponent),
         generateValidatorProvider(FolderPropertiesComponent),
     ],
+    standalone: false
 })
 export class FolderPropertiesComponent
     extends BasePropertiesComponent<EditableFolderProps>

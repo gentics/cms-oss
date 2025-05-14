@@ -8,6 +8,7 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-create-construct-part-modal',
     templateUrl: './create-construct-part-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateConstructPartModalComponent extends BaseModal<TagPart> implements OnInit {
 

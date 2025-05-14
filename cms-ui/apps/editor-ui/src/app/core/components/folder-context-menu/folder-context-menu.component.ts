@@ -14,6 +14,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     templateUrl: './folder-context-menu.component.html',
     styleUrls: ['./folder-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 

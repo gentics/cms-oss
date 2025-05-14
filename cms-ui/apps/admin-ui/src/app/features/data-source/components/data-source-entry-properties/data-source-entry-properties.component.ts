@@ -16,6 +16,7 @@ const MAX_VALUE_LENGTH = 16383;
         generateFormProvider(DataSourceEntryPropertiesComponent),
         generateValidatorProvider(DataSourceEntryPropertiesComponent),
     ],
+    standalone: false
 })
 export class DataSourceEntryPropertiesComponent extends BasePropertiesComponent<DataSourceEntry<Raw>> {
 

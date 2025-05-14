@@ -28,6 +28,7 @@ import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles
     templateUrl: './iframe-wrapper.component.html',
     styleUrls: ['./iframe-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestroy {
 

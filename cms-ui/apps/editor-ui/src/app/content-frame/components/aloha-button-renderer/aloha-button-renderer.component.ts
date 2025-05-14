@@ -10,6 +10,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<AlohaButtonComponent, void> {
 

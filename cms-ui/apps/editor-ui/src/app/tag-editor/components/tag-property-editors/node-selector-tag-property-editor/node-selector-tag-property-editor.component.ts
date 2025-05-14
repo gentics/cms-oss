@@ -23,6 +23,7 @@ import { ApplicationStateService } from '../../../../state';
     templateUrl: './node-selector-tag-property-editor.component.html',
     styleUrls: ['./node-selector-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
 

@@ -9,6 +9,7 @@ import { takeUntil } from 'rxjs/operators';
     selector: 'gtx-copy-nodes-modal',
     templateUrl: './copy-nodes-modal.component.html',
     styleUrls: ['./copy-nodes-modal.component.scss'],
+    standalone: false
 })
 export class CopyNodesModalComponent implements IModalDialog, OnDestroy, OnInit {
 

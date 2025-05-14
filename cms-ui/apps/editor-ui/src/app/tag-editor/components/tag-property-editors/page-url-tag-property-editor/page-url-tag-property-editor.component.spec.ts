@@ -42,6 +42,7 @@ const PAGE_B_REMOVED = getExamplePageData({ id: -10 });
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
@@ -62,7 +63,10 @@ class MockI18nService {
     }
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(query: string, ...args: any[]): string {
         return query;

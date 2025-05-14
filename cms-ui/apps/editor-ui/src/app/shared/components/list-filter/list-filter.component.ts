@@ -14,6 +14,7 @@ import { debounceTime } from 'rxjs/operators';
     selector: 'list-filter',
     templateUrl: './list-filter.tpl.html',
     styleUrls: ['./list-filter.scss'],
+    standalone: false
 })
 export class ListFilterComponent implements OnInit, OnChanges, OnDestroy {
 

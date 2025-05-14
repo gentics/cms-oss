@@ -66,7 +66,6 @@ import {
 } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
 import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
 import {
@@ -77,6 +76,7 @@ import {
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable, Subject, of, throwError } from 'rxjs';
@@ -169,9 +169,10 @@ const PERMISSIONS = {
 
 @Component({
     template: `
-    <folder-contents #componentToBeTested>
-    </folder-contents>
+        <folder-contents #componentToBeTested>
+        </folder-contents>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('componentToBeTested', { static: true })
@@ -210,7 +211,10 @@ class MockI18nService {}
 
 class MockI18nNotification {}
 
-@Pipe({ name: 'permissions' })
+@Pipe({
+    name: 'permissions',
+    standalone: false,
+})
 class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         return {
@@ -248,6 +252,7 @@ class MockPermissionService {
 @Component({
     selector: 'item-context-menu',
     template: '',
+    standalone: false,
 })
 class MockItemContextMenu {
     @Input() isFolderStartPage = false;

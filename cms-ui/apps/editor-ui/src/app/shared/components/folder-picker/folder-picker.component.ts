@@ -11,6 +11,7 @@ import { RepositoryBrowserClient } from '../../providers';
     styleUrls: ['./folder-picker.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(FolderPickerComponent)],
+    standalone: false
 })
 export class FolderPickerComponent extends BaseFormElementComponent<number> {
 

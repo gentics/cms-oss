@@ -212,5 +212,6 @@ describe('Notification Service', () => {
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
+    standalone: false,
 })
 class TestComponent { }

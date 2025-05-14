@@ -11,6 +11,7 @@ export interface SendMessageFormValue {
     selector: 'gtx-send-message-form',
     templateUrl: './send-message-form.tpl.html',
     styleUrls: ['./send-message-form.scss'],
+    standalone: false
 })
 export class SendMessageFormComponent {
     @Input() users: User[] = [];

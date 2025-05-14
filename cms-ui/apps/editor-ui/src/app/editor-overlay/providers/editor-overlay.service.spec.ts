@@ -289,7 +289,10 @@ class MockEntityResolver {
 }
 
 
-@Pipe({name: 'i18n'})
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: Record<string, any>): string {
         return key + (params ? ':' + JSON.stringify(params) : '');

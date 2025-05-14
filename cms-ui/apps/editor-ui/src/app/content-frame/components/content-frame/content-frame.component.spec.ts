@@ -233,12 +233,6 @@ class MockPageStateContextMenu {
     @Input() activeNodeId: number;
 }
 
-@Component({
-    selector: 'tag-editor-overlay-host',
-    template: '',
-})
-class MockTagEditorOverlayHost {}
-
 class MockTagEditorService {
     forceCloseTagEditor(): void {}
 }
@@ -519,7 +513,6 @@ describe('ContentFrameComponent', () => {
                 MockFilePreview,
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
-                MockTagEditorOverlayHost,
                 NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,

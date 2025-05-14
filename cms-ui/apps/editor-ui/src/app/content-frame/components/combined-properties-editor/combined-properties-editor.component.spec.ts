@@ -143,7 +143,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockIFrameWrapper,
                 MockPropertiesEditor,
                 MockTagEditorHost,
-                MockTagEditorOverlayHost,
                 NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
@@ -1737,12 +1736,6 @@ class MockPropertiesEditor {
 class MockTagEditorHost {
     editTagLive = jasmine.createSpy('editTagLive');
 }
-
-@Component({
-    selector: 'tag-editor-overlay-host',
-    template: '',
-})
-class MockTagEditorOverlayHost {}
 
 
 class MockI18nService {

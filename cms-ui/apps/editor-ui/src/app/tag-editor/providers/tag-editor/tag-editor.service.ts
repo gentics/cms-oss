@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
     GcmsUiServices,
+    ModalClosingReason,
     RepositoryBrowserOptions,
     TagEditorContext,
     TagEditorOptions,
@@ -21,11 +22,11 @@ import {
     TagType,
     Template,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
-import { ModalService } from '@gentics/ui-core';
+import { IModalInstance, ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
@@ -34,7 +35,7 @@ import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCou
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { UploadWithPropertiesModalComponent } from '../../components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
-import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
+import { TagEditorModal } from '../../components/tag-editor-modal/tag-editor-modal.component';
 
 /**
  * Captures information for creating a new `TagEditorContext`.
@@ -70,7 +71,7 @@ export interface EditTagInfo {
 @Injectable()
 export class TagEditorService {
 
-    private tagEditorOverlayHost: TagEditorOverlayHostComponent = null;
+    private tagEditorModal: IModalInstance<TagEditorModal>;
 
     constructor(
         private appState: ApplicationStateService,
@@ -115,45 +116,47 @@ export class TagEditorService {
             this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise(),
             this.appState.dispatch(new SetTagEditorOpenAction(true)).toPromise(),
         ]);
+
+        let result: TagEditorResult;
+        let error = null;
+
+        this.tagEditorModal = await this.modals.fromComponent(TagEditorModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+            width: '80%',
+        }, {
+            context: tagEditorContext,
+        });
+
         try {
-            const result = await this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
+            result = await this.tagEditorModal.open();
+
             if (result.tag) {
                 delete result.tag.tagType;
             }
-            return result;
-        } finally {
-            await Promise.all([
-                this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
-                this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
-            ]);
+        } catch (err) {
+            error = err;
         }
+
+        this.tagEditorModal = null;
+        await Promise.all([
+            this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
+            this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
+        ]);
+
+        if (error) {
+            throw error;
+        }
+
+        return result;
     }
 
     /**
      * Force Closes the opened tag editor
      */
     forceCloseTagEditor(): void {
-        if (this.tagEditorOverlayHost != null) {
-            this.tagEditorOverlayHost.forceCloseTagEditor();
-        }
-    }
-
-    /**
-     * Registers the specified TagEditorOverlayHostComponent with the TagPropertyEditorService.
-     * This is needed, such that this service knows, which component it can tell to open the TagEditor.
-     * This method should only be used by TagEditorOverlayHostComponent.
-     */
-    registerTagEditorOverlayHost(tagEditorOverlayHost: TagEditorOverlayHostComponent): void {
-        this.tagEditorOverlayHost = tagEditorOverlayHost;
-    }
-
-    /**
-     * Unregisters the specified TagEditorOverlayHostComponent.
-     * This method should only be used by TagEditorOverlayHostComponent.
-     */
-    unregisterTagEditorOverlayHost(tagEditorOverlayHost: TagEditorOverlayHostComponent): void {
-        if (this.tagEditorOverlayHost === tagEditorOverlayHost) {
-            this.tagEditorOverlayHost = null;
+        if (this.tagEditorModal) {
+            this.tagEditorModal.instance.cancelFn(null, ModalClosingReason.API);
         }
     }
 

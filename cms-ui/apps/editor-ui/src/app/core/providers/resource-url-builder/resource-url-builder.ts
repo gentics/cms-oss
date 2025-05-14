@@ -67,7 +67,7 @@ export class ResourceUrlBuilder {
     /**
      * Returns the full-size URL of an image.
      */
-    imageFullsize(imageId: number, nodeId: number, changeDate?: number): string {
+    imageFullsize(imageId: number | string, nodeId: number | string, changeDate?: number): string {
         const cacheBust = changeDate ? String(changeDate) : Math.random().toString(36).substr(5);
 
         const data = {

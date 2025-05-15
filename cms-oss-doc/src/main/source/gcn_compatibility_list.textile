@@ -33,7 +33,7 @@ h3. JDBC Driver
 h4. MariaDB Connector/J
 
 |_.Minor Version |_.Tested version |_.Supported |_.Notes                               |
-| 3.5            | 3.5.3           | Yes[1]     | Default CMS JDBC connector (shipped) |
+| 2.7            | 2.7.12           | Yes[1]    | Default CMS JDBC connector (shipped) |
 
 NOTE: This is the default JDBC connector used for MariaDB and MySQL databases for the CMS and ContentRepositories
 

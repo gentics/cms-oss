@@ -4,6 +4,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     selector: 'description-tooltip',
     templateUrl: './description-tooltip.component.html',
     styleUrls: ['./description-tooltip.component.scss'],
+    standalone: false
 })
 export class DescriptionTooltipComponent {
 

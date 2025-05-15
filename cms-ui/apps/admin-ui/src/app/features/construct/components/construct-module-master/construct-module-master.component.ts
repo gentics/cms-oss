@@ -10,6 +10,7 @@ export enum ConstructModuleTabs {
     templateUrl: './construct-module-master.component.html',
     styleUrls: ['./construct-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructModuleMasterComponent {
 

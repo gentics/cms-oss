@@ -2,9 +2,9 @@ import { Component, EventEmitter, Injectable, Input, NO_ERRORS_SCHEMA, Output } 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ChannelSyncRequest, Feature, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { componentTest } from '../../../../testing/component-test';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { ApiBase } from '../../../core/providers/api';
 import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { Api } from '../../../core/providers/api/api.service';
@@ -426,7 +426,11 @@ describe('SynchronizeChannelModal', () => {
 
 });
 
-@Component({ selector: 'gtx-button', template: '' })
+@Component({
+    selector: 'gtx-button',
+    template: '',
+    standalone: false,
+})
 class MockButton {
     @Input() disabled: boolean;
     @Input() label: string;
@@ -434,19 +438,31 @@ class MockButton {
     @Output() click = new EventEmitter();
 }
 
-@Component({ selector: 'gtx-progress-bar', template: '' })
+@Component({
+    selector: 'gtx-progress-bar',
+    template: '',
+    standalone: false,
+})
 class MockProgressBar {
     @Input() active: boolean;
 }
 
-@Component({ selector: 'gtx-checkbox', template: '' })
+@Component({
+    selector: 'gtx-checkbox',
+    template: '',
+    standalone: false,
+})
 class MockCheckbox {
     @Input() checked: boolean;
     @Input() label: string;
     @Output() change = new EventEmitter();
 }
 
-@Component({ selector: 'node-selector', template: '' })
+@Component({
+    selector: 'node-selector',
+    template: '',
+    standalone: false,
+})
 class MockNodeSelector {
     @Input() activeNodeId: number;
     @Input() nodes: Node[];

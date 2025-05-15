@@ -5,6 +5,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './textarea-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TextareaDemoPage {
 

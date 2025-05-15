@@ -1,10 +1,10 @@
 import { ContentPackageOperations, I18nNotificationService, I18nService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { mockPipe } from '@admin-ui/testing';
 import { ChangeDetectorRef } from '@angular/core';
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ModalService } from '@gentics/ui-core';
+import { mockPipe } from '@gentics/ui-core/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { ContentPackageImportErrorTableLoaderService, ContentPackageTableLoaderService } from '../../providers';
 import { ContentPackageImportErrorTableComponent } from './content-package-import-error-table.component';

@@ -11,6 +11,7 @@ import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule
     templateUrl: './create-schedule-task-modal.component.html',
     styleUrls: ['./create-schedule-task-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateScheduleTaskModalComponent extends BaseModal<ScheduleTaskBO | false> implements OnInit, OnDestroy {
 

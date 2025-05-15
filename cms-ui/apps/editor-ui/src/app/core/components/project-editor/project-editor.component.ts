@@ -11,6 +11,7 @@ import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../
     templateUrl: './project-editor.component.html',
     styleUrls: ['./project-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProjectEditorComponent implements OnInit, OnDestroy {
 

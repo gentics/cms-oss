@@ -56,6 +56,7 @@ const URL_REGEXP = '(^|\\s)((https?:\\/\\/)?[\\w-]+(\\.[\\w-]+)+\\.?(:\\d+)?(\\/
     styleUrls: ['./input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(InputComponent)],
+    standalone: false
 })
 export class InputComponent extends BaseFormElementComponent<string | number> implements OnInit {
 

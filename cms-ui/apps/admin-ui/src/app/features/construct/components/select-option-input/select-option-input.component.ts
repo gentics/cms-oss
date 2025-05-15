@@ -11,6 +11,7 @@ import { FormProperties, generateFormProvider } from '@gentics/ui-core';
     styleUrls: ['./select-option-input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SelectOptionInputComponent)],
+    standalone: false
 })
 export class SelectOptionInputComponent extends BasePropertiesComponent<SelectOption> implements OnChanges {
 

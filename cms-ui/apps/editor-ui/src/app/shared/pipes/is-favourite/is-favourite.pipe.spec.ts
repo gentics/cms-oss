@@ -312,6 +312,7 @@ class SpyChangeDetector {
     template: `
         <div *ngIf="item | isFavourite">yes</div>
         <div *ngIf="!(item | isFavourite)">no</div>`,
+    standalone: false,
 })
 class TestComponent {
     item = { type: 'folder', id: 44, globalId: 'folder-44' };

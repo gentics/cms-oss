@@ -29,6 +29,7 @@ import { DataSourceEntryTableLoaderService } from '../../providers';
     templateUrl: './data-source-editor.component.html',
     styleUrls: ['./data-source-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DataSourceEditorComponent extends BaseEntityEditorComponent<EditableEntity.DATA_SOURCE> implements OnInit {
 

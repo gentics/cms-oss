@@ -5,7 +5,8 @@ import {Pipe} from '@angular/core';
  * Based on https://github.com/AngularClass/angular2-examples/blob/master/large-app/pipes/CapitalizePipe.ts
  */
 @Pipe({
-    name: 'capitalize'
+    name: 'capitalize',
+    standalone: false
 })
 export class CapitalizePipe {
     regexp: RegExp = /([^\W_]+[^\s-]*) */g;

@@ -19,6 +19,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
         }
     `],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DropdownListDemoPage {
 

@@ -247,8 +247,10 @@ describe('FolderStartPage', () => {
 });
 
 @Component({
-    template: `<folder-start-page [folder]="folder"></folder-start-page>
-    <gtx-overlay-host></gtx-overlay-host>`,
+    template: `
+        <folder-start-page [folder]="folder"></folder-start-page>
+        <gtx-overlay-host></gtx-overlay-host>`,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(FolderStartPageComponent, { static: true })

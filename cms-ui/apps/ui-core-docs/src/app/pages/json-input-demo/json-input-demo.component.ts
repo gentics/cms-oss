@@ -6,6 +6,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './json-input-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class JsonInputDemoPage {
 

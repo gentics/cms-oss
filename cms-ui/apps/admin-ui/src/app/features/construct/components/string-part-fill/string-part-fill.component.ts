@@ -9,6 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./string-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(StringPartFillComponent)],
+    standalone: false
 })
 export class StringPartFillComponent extends BaseFormElementComponent<StringTagPartProperty> {
 

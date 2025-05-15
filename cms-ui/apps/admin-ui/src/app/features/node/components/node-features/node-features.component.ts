@@ -23,6 +23,7 @@ export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
         generateFormProvider(NodeFeaturesComponent),
         generateValidatorProvider(NodeFeaturesComponent),
     ],
+    standalone: false
 })
 export class NodeFeaturesComponent extends BasePropertiesComponent<NodeFeaturesFormData> {
 

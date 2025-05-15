@@ -32,6 +32,7 @@ import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../pr
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
 

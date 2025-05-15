@@ -7,6 +7,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
     templateUrl: './sortable-list-demo.component.html',
     styleUrls: ['./sortable-list-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SortableListDemoPage {
 

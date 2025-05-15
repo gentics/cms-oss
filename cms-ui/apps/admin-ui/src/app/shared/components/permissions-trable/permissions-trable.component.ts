@@ -12,6 +12,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './permissions-trable.component.html',
     styleUrls: ['./permissions-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PermissionsTrableComponent
     extends BaseEntityTrableComponent<PermissionsSet, PermissionsSetBO, PermissionsTrableLoaderOptions>

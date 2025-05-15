@@ -54,6 +54,7 @@ import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
     templateUrl: './user-menu.tpl.html',
     styleUrls: ['./user-menu.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GtxUserMenuComponent {
     /** If TRUE, this user menu is rendered as open. */

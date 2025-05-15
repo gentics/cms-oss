@@ -10,6 +10,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './content-item-trable.component.html',
     styleUrls: ['./content-item-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentItemTrableComponent extends BaseEntityTrableComponent<ContentItem, ContentItemBO, ContentItemTrableLoaderOptions> {
 

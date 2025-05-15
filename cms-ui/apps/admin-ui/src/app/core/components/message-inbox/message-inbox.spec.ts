@@ -21,6 +21,7 @@ class MockI18nService {
     template: `
         <gtx-message-inbox (navigate)="navigate($event)">
         </gtx-message-inbox>`,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(MessageInboxComponent) messageInbox: MessageInboxComponent;
@@ -30,7 +31,10 @@ class TestComponent {
 
 
 // tslint:disable-next-line: directive-selector
-@Directive({ selector: '[overrideSlot],[overrideParams]' })
+@Directive({
+    selector: '[overrideSlot],[overrideParams]',
+    standalone: false,
+})
 class MockOverrideSlotDirective {}
 class MockChangeDetectorRef {}
 

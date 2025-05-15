@@ -48,6 +48,7 @@ export enum ObjectpropertyPropertiesMode {
         generateFormProvider(ObjectpropertyPropertiesComponent),
         generateValidatorProvider(ObjectpropertyPropertiesComponent),
     ],
+    standalone: false
 })
 export class ObjectpropertyPropertiesComponent
     extends BasePropertiesComponent<ObjectPropertyBO<Normalized>> implements OnInit {

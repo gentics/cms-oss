@@ -21,6 +21,7 @@ const TRANSLATIONS: Record<PublishedState, string> = {
     selector: 'gtx-mesh-browser-content-version',
     templateUrl: './mesh-browser-content-version.component.html',
     styleUrls: ['./mesh-browser-content-version.component.scss'],
+    standalone: false
 })
 export class MeshBrowserContentVersionComponent implements OnInit {
 

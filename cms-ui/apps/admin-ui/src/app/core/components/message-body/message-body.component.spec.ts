@@ -118,6 +118,7 @@ function getChildren(fixture: any): { spans: HTMLSpanElement[], links: HTMLAncho
             [body]="message"
             (linkClick)="clickedLink = $event">
         </gtx-message-body>`,
+    standalone: false,
 })
 class TestComponent {
     message = 'Message text';

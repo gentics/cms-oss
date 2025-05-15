@@ -14,6 +14,7 @@ import { ObjectPropertyCategoryTableLoaderService } from '../../providers';
     templateUrl: './object-property-category-table.component.html',
     styleUrls: ['./object-property-category-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyCategortTableComponent extends BaseEntityTableComponent<ObjectPropertyCategory, ObjectPropertyCategoryBO> {
 

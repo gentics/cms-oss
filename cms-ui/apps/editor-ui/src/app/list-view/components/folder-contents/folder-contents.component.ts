@@ -92,6 +92,7 @@ export interface ShowPathStatus {
     templateUrl: './folder-contents.component.html',
     styleUrls: ['./folder-contents.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderContentsComponent implements OnInit, OnDestroy {
 

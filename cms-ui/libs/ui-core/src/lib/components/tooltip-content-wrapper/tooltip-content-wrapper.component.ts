@@ -19,6 +19,7 @@ import { StyleObj } from '../../internal';
     templateUrl: './tooltip-content-wrapper.component.html',
     styleUrls: ['./tooltip-content-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TooltipContentWrapperComponent implements OnChanges, AfterViewInit {
 

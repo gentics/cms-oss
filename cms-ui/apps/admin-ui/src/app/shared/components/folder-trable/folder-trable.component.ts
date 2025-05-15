@@ -10,6 +10,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './folder-trable.component.html',
     styleUrls: ['./folder-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderTrableComponent extends BaseEntityTrableComponent<Folder, FolderBO, FolderTrableLoaderOptions> {
 

@@ -9,6 +9,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-checkbox-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaCheckboxRendererComponent)],
+    standalone: false
 })
 export class AlohaCheckboxRendererComponent extends BaseAlohaRendererComponent<AlohaCheckboxComponent, boolean> {
 

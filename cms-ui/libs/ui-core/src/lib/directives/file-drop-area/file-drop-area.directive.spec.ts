@@ -507,15 +507,16 @@ describe('FileDropAreaDirective', () => {
 
 @Component({
     template: `
-        <div gtxFileDropArea
+        <div
+            gtxFileDropArea
             (fileDragEnter)="onFileDragEnter($event)"
             (fileDragLeave)="onFileDragLeave($event)"
             (fileDrop)="onFileDrop($event)"
             (fileDropRejected)="onFileDropRejected($event)"
             (pageDragEnter)="onPageDragEnter($event)"
             (pageDragLeave)="onPageDragLeave($event)"
-        >
-        </div>`,
+        ></div>`,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(FileDropAreaDirective, { static: true })

@@ -10,6 +10,7 @@ import { generateFormProvider } from '@gentics/ui-core';
     templateUrl: './message-properties.component.html',
     styleUrls: ['./message-properties.component.scss'],
     providers: [generateFormProvider(MessagePropertiesComponent)],
+    standalone: false
 })
 export class MessagePropertiesComponent extends BasePropertiesComponent<SendMessageForm> {
 

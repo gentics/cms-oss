@@ -37,6 +37,7 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
     styleUrls: ['./date-time-picker.component.scss'],
     providers: [generateFormProvider(DateTimePickerComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DateTimePickerComponent
     extends BaseFormElementComponent<number>

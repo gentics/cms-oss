@@ -25,6 +25,7 @@ import { BaseComponent } from '../base-component/base.component';
             transition('* <=> *', animate('200ms')),
         ]),
     ],
+    standalone: false
 })
 export class AccordionComponent extends BaseComponent implements OnChanges {
 

@@ -62,6 +62,7 @@ interface AvailableButtons {
     templateUrl: './editor-toolbar.component.html',
     styleUrls: ['./editor-toolbar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 

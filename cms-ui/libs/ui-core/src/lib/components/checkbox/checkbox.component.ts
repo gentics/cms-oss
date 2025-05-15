@@ -46,6 +46,7 @@ const randomID = (): string => 'checkbox-' + Math.random().toString(36).substr(2
     templateUrl: './checkbox.component.html',
     styleUrls: ['./checkbox.component.scss'],
     providers: [generateFormProvider(CheckboxComponent)],
+    standalone: false
 })
 export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterViewInit {
     /**

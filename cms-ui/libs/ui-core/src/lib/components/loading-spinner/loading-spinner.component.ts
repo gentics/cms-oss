@@ -11,6 +11,7 @@ import { coerceToBoolean } from '../../utils';
     templateUrl: './loading-spinner.component.html',
     styleUrls: ['./loading-spinner.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoadingSpinnerComponent implements OnChanges, OnDestroy {
 

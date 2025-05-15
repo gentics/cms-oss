@@ -12,6 +12,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     templateUrl: './action-log-entry-table.component.html',
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> implements OnInit {
 

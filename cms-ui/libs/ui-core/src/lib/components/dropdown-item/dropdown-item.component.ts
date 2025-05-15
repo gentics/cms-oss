@@ -5,6 +5,7 @@ import { coerceToBoolean } from '../../utils';
     selector: 'gtx-dropdown-item',
     template: '<ng-content></ng-content>',
     styleUrls: ['./dropdown-item.component.scss'],
+    standalone: false
 })
 export class DropdownItemComponent implements OnChanges {
 

@@ -58,6 +58,7 @@ export enum EventKey {
     templateUrl: './search-suggestion-bar.component.html',
     styleUrls: ['./search-suggestion-bar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SearchSuggestionBarComponent implements OnInit, OnChanges, OnDestroy, AfterContentInit, AfterViewChecked {
 

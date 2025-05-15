@@ -9,6 +9,7 @@ import { ContentFrameComponent } from '../content-frame/content-frame.component'
     selector: 'confirm-navigation-modal',
     templateUrl: './confirm-navigation-modal.component.html',
     styleUrls: ['./confirm-navigation-modal.component.scss'],
+    standalone: false
 })
 export class ConfirmNavigationModal extends BaseModal<boolean> {
 

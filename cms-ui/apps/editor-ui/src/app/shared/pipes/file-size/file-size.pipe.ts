@@ -3,7 +3,10 @@ import {Pipe, PipeTransform} from '@angular/core';
 /**
  * Formats a number into a human-readable file size string.
  */
-@Pipe({ name: 'filesize' })
+@Pipe({
+    name: 'filesize',
+    standalone: false
+})
 export class FileSizePipe implements PipeTransform {
     transform(value: number, useSiUnits: boolean = true): any {
         if (typeof value !== 'number' && typeof value !== 'string') {

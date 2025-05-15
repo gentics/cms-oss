@@ -21,6 +21,7 @@ const BUILTIN_ASPECT_RATIOS = new Set(Object.keys(AspectRatios).map(key => (<any
     selector: 'image-editor-modal',
     templateUrl: './image-editor-modal.component.html',
     styleUrls: ['./image-editor-modal.component.scss'],
+    standalone: false
 })
 export class ImageEditorModalComponent extends EditorOverlayModal implements OnInit, OnDestroy, AfterViewInit {
     nodeId: number;

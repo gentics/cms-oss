@@ -14,6 +14,7 @@ import { EditTemplateTagModalComponent } from '../edit-template-tag-modal/edit-t
     templateUrl: './template-tag-master.component.html',
     styleUrls: ['./template-tag-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTagMasterComponent extends BaseTableMasterComponent<TemplateTag, TemplateTagBO> {
 

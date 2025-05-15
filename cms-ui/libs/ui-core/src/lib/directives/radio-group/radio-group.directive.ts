@@ -10,6 +10,7 @@ import { generateFormProvider } from '../../utils';
 @Directive({
     selector: 'gtx-radio-group, [gtx-radio-group]',
     providers: [generateFormProvider(RadioGroupDirective)],
+    standalone: false
 })
 export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 

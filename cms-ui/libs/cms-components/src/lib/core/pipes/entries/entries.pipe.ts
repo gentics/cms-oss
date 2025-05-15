@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
     name: 'gtxEntries',
+    standalone: false
 })
 export class EntriesPipe implements PipeTransform {
 

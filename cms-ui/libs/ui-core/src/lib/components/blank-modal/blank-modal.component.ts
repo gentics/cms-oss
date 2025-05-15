@@ -6,7 +6,8 @@ import { IModalDialog } from '../../common';
  */
 @Component({
     selector: 'gtx-blank-modal',
-    template: ``
+    template: ``,
+    standalone: false
 })
 export class BlankModal implements IModalDialog {
     closeFn: (val: any) => void;

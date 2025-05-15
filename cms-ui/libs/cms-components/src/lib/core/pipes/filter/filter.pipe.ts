@@ -6,6 +6,7 @@ const DEFAULT_FILTER: FilterFn = (v) => v != null && (typeof v !== 'number' || (
 
 @Pipe({
     name: 'gtxFilter',
+    standalone: false
 })
 export class FilterPipe implements PipeTransform {
     transform(value: any, fn: FilterFn = DEFAULT_FILTER): any {

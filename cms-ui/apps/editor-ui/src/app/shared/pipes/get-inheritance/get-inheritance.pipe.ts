@@ -22,6 +22,7 @@ export enum InheritanceType {
 
 @Pipe({
     name: 'getInheritance',
+    standalone: false
 })
 export class GetInheritancePipe implements PipeTransform {
 

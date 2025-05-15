@@ -6,6 +6,7 @@ import { Component } from '@angular/core';
  */
 @Component({
     selector: 'tool-proxy',
-    template: `<router-outlet></router-outlet>`
+    template: `<router-outlet></router-outlet>`,
+    standalone: false
 })
 export class ToolProxyComponent { }

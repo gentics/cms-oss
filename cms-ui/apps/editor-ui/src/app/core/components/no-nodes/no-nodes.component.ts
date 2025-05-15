@@ -14,6 +14,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     templateUrl: './no-nodes.component.html',
     styleUrls: ['./no-nodes.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NoNodesComponent implements OnInit, OnDestroy {
 

@@ -8,7 +8,6 @@ import { StringTagPartProperty } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -24,7 +23,6 @@ describe('TagEditorOverlayHostComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 IFrameStylesService,
-                UserAgentRef,
             ],
             declarations: [
                 MockTagEditorHostComponent,
@@ -190,6 +188,7 @@ describe('TagEditorOverlayHostComponent', () => {
 @Component({
     selector: 'tag-editor-host',
     template: '',
+    standalone: false,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class MockTagEditorHostComponent {
@@ -208,6 +207,7 @@ class MockTagEditorHostComponent {
     template: `
         <tag-editor-overlay-host #tagEditorOverlayHost></tag-editor-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagEditorOverlayHost', { static: true })

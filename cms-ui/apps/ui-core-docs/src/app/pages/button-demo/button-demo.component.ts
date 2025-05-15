@@ -7,6 +7,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
     templateUrl: './button-demo.component.html',
     styleUrls: ['./button-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ButtonDemoPage {
 

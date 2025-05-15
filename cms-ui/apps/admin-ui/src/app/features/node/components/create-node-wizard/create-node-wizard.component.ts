@@ -21,6 +21,7 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     selector: 'gtx-create-node-wizard',
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
+    standalone: false
 })
 export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 

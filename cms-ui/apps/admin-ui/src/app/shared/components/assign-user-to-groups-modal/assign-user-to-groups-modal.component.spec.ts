@@ -113,7 +113,10 @@ class MockRouter {}
 
 class MockUserOperations {}
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');
@@ -124,6 +127,7 @@ class MockI18nPipe implements PipeTransform {
     template: `
         <gtx-assign-user-to-groups-modal></gtx-assign-user-to-groups-modal>
     `,
+    standalone: false,
 })
 class TestComponent {
     userIds: number[] = [];

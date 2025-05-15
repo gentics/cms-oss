@@ -54,6 +54,7 @@ export enum FormPropertiesMode {
         generateFormProvider(FormPropertiesComponent),
         generateValidatorProvider(FormPropertiesComponent),
     ],
+    standalone: false
 })
 export class FormPropertiesComponent
     extends BasePropertiesComponent<EditableFormProps>

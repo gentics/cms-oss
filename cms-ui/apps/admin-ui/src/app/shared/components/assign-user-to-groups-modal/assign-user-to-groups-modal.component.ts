@@ -16,6 +16,7 @@ const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
     templateUrl: './assign-user-to-groups-modal.component.html',
     styleUrls: ['./assign-user-to-groups-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> implements OnInit, OnDestroy {
 

@@ -353,6 +353,7 @@ function pickerTest(testFn: (picker: DateTimePickerControlsComponent) => void): 
 @Component({
     selector: 'test-component',
     template: '<gtx-date-time-picker-controls></gtx-date-time-picker-controls>',
+    standalone: false,
 })
 class TestComponent {
     min: any;
@@ -408,6 +409,7 @@ class TestFormatProvider extends DateTimePickerFormatProvider {
 @Component({
     selector: 'gtx-select',
     template: '',
+    standalone: false,
     providers: [{
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => MockSelect),
@@ -424,6 +426,7 @@ class MockSelect {
 @Component({
     selector: 'gtx-option',
     template: '',
+    standalone: false,
 })
 class MockSelectOption {
     @Input() value: any;

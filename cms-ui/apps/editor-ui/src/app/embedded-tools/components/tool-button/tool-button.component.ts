@@ -10,6 +10,7 @@ import { EmbeddedToolsService } from '../../providers/embedded-tools/embedded-to
     templateUrl: './tool-button.component.html',
     styleUrls: ['./tool-button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ToolButtonComponent implements OnChanges {
 

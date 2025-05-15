@@ -42,13 +42,12 @@ const STATUS_POLL_INTERVAL_MS = 2_000;
                 }),
                 animate(100),
             ]),
-            transition(':leave',
-                animate(100, style({
-                    opacity: 0,
-                })),
-            ),
+            transition(':leave', animate(100, style({
+                opacity: 0,
+            }))),
         ]),
     ],
+    standalone: false
 })
 export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 

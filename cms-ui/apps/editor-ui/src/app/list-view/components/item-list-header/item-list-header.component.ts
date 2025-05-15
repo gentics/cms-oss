@@ -41,6 +41,7 @@ import { CreatePageModalComponent } from '../create-page-modal/create-page-modal
     templateUrl: './item-list-header.component.html',
     styleUrls: ['./item-list-header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
 

@@ -25,6 +25,7 @@ const VALIDATOR_FN = createJsonValidator();
         generateFormProvider(JsonInputComponent),
         generateValidatorProvider(JsonInputComponent),
     ],
+    standalone: false
 })
 export class JsonInputComponent
     extends BaseFormElementComponent<typeof JSON_VALUE_INVALID | string | Record<string, any> | any[]>

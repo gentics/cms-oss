@@ -6,6 +6,7 @@ import { Tab, TabGroup } from '../../../common';
     templateUrl: './properties-tabs.component.html',
     styleUrls: ['./properties-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PropertiesTabsComponent implements OnChanges {
 

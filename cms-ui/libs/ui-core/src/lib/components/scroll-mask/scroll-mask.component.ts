@@ -7,6 +7,7 @@ import { Component, EventEmitter, HostListener } from '@angular/core';
     selector: 'gtx-scroll-mask',
     template: '',
     styleUrls: ['./scroll-mask.component.scss'],
+    standalone: false
 })
 export class ScrollMaskComponent {
     clicked = new EventEmitter<any>();

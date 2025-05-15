@@ -22,6 +22,7 @@ const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
     styleUrls: ['./item-state-contextmenu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [I18nDatePipe],
+    standalone: false
 })
 export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponent implements OnInit {
 

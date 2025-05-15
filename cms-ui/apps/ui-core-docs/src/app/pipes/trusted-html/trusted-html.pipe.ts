@@ -4,7 +4,10 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 /**
  * Accepts a string and returns it as trusted html that can be bound to [innerHTML].
  */
-@Pipe({ name: 'trustedHTML', pure: true })
+@Pipe({
+    name: 'trustedHTML', pure: true,
+    standalone: false
+})
 export class TrustedHTMLPipe implements PipeTransform {
     constructor(private sanitizer: DomSanitizer) {}
 

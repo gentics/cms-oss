@@ -18,6 +18,7 @@ import { Config, ConfigService } from '../../module.config';
     templateUrl: './dropdown-content-wrapper.component.html',
     styleUrls: ['./dropdown-content-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy {
 

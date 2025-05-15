@@ -35,6 +35,7 @@ import { FormEditorElementListComponent } from '../form-editor-element/form-edit
     styleUrls: ['./form-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: GTX_FORM_EDITOR_ANIMATIONS,
+    standalone: false
 })
 export class FormEditorComponent implements OnInit, OnChanges, OnDestroy {
 

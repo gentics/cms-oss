@@ -10,6 +10,7 @@ import { MeshGroupPropertiesMode } from '../mesh-group-properties/mesh-group-pro
     templateUrl: './mesh-group-modal.component.html',
     styleUrls: ['./mesh-group-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshGroupModal extends BaseModal<Group> implements OnInit {
 

@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
     selector: 'gtx-assign-node-restriction-to-users-modal',
     templateUrl: './assign-node-restriction-to-users-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignNodeRestrictionsToUsersModalComponent
     extends BaseModal<UserGroupNodeRestrictionsResponse>

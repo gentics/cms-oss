@@ -7,6 +7,7 @@ import { NormalizableEntityType, User } from '@gentics/cms-models';
     selector: 'gtx-user-master',
     templateUrl: './user-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UserMasterComponent extends BaseTableMasterComponent<User, UserBO> {
     protected entityIdentifier: NormalizableEntityType = 'user';

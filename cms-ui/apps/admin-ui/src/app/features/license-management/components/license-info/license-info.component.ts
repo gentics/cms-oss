@@ -6,6 +6,7 @@ import { License, LicenseStatus } from '@gentics/cms-models';
     templateUrl: './license-info.component.html',
     styleUrls: ['./license-info.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LicenseInfoComponent {
 

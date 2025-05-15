@@ -11,6 +11,7 @@ import { SchemaPropertiesMode } from '../schema-properties/schema-properties.com
     templateUrl: './schema-modal.component.html',
     styleUrls: ['./schema-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SchemaModal extends BaseModal<Schema> implements OnInit {
 

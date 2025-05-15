@@ -18,6 +18,7 @@ enum LinkMode {
     templateUrl: './link-template-modal.component.html',
     styleUrls: ['./link-template-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LinkTemplateModal implements IModalDialog, OnDestroy, OnInit {
 

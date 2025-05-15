@@ -24,9 +24,6 @@ import { TabbedTool } from './tabbed-tool';
 /** Matches "/tools/:toolname[/:tool-sub-path]" */
 const toolsPathRegex = /^\/tools(?:\/([^/]+)(?:\/(.+))?)?$/;
 
-/** Needed for Internet Explorer to allow cross-domain postMessage API */
-const BLANK_PAGE = 'assets/tool-blank.html';
-
 @Injectable()
 export class EmbeddedToolsService implements OnDestroy {
 
@@ -144,13 +141,7 @@ export class EmbeddedToolsService implements OnDestroy {
         const window: Window = this.windowRef.nativeWindow;
 
         if (!this.adminUITabWindow) {
-            if (this.isIE11()) {
-                this.adminUITabWindow = window.open(BLANK_PAGE, '_blank');
-                this.adminUITabWindow.location.href = 'about:blank';
-                this.adminUITabWindow.location.href = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
-            } else {
-                this.adminUITabWindow = window.open(ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''), '_blank');
-            }
+            this.adminUITabWindow = window.open(ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''), '_blank');
             this.adminUITabWindow.addEventListener('beforeunload', () => {
                 this.adminUITabWindow = null;
             });
@@ -231,15 +222,7 @@ export class EmbeddedToolsService implements OnDestroy {
     private openToolInNewTab(tool: EmbeddedTool): TabbedTool {
         const window: Window = this.windowRef.nativeWindow;
 
-        let tabWindow: Window;
-        if (this.isIE11()) {
-            tabWindow = window.open(BLANK_PAGE, '_blank');
-            tabWindow.location.href = 'about:blank';
-            tabWindow.location.href = tool.toolUrl;
-        } else {
-            tabWindow = window.open(tool.toolUrl, '_blank');
-        }
-
+        const tabWindow = window.open(tool.toolUrl, '_blank');
         const subscription = new Subscription();
         subscription.add(this.channelService.connect(tool.key, tabWindow));
 
@@ -306,10 +289,4 @@ export class EmbeddedToolsService implements OnDestroy {
             })
             .then(modal => modal.open());
     }
-
-    private isIE11(): boolean {
-        return !!((this.windowRef.nativeWindow as any).MSInputMethodContext &&
-            (this.windowRef.nativeWindow.document as any).documentMode);
-    }
-
 }

@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './upload-content-package-modal.component.html',
     styleUrls: ['./upload-content-package-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UploadContentPackageModalComponent extends BaseModal<void> implements OnDestroy {
 

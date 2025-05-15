@@ -746,6 +746,7 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
     templateUrl: './icon.component.html',
     styleUrls: ['./icon.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class IconComponent implements OnChanges {
 

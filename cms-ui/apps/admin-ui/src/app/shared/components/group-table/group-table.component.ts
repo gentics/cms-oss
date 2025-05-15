@@ -20,6 +20,7 @@ const DELETE_ACTION = 'delete';
     templateUrl: './group-table.component.html',
     styleUrls: ['./group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, GroupBO, GroupTableLoaderOptions> implements OnChanges {
 

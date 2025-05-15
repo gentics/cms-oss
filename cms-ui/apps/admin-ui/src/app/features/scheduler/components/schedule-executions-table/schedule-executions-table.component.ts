@@ -13,6 +13,7 @@ import { ScheduleExecutionDetailModalComponent } from '../schedule-execution-det
     templateUrl: './schedule-executions-table.component.html',
     styleUrls: ['./schedule-executions-table.components.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleExecutionsTableComponent
     extends BaseEntityTableComponent<ScheduleExecution, ScheduleExecutionBO, ScheduleExecutionsTableLoaderOptions>

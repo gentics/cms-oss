@@ -28,6 +28,7 @@ import { delay, repeat, takeUntil } from 'rxjs/operators';
     templateUrl: './cr-fragment-detail.component.html',
     styleUrls: ['./cr-fragment-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryFragmentDetailComponent
     extends BaseDetailComponent<'contentRepositoryFragment', ContentRepositoryFragmentOperations>

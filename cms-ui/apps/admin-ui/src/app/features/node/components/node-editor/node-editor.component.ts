@@ -30,6 +30,7 @@ import { NodePublishingPropertiesFormData } from '../node-publishing-properties/
     templateUrl: './node-editor.component.html',
     styleUrls: ['./node-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntity.NODE> implements OnInit {
 

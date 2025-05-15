@@ -7,6 +7,7 @@ import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder
     templateUrl: './image-thumbnail.tpl.html',
     styleUrls: ['./image-thumbnail.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ImageThumbnailComponent implements OnChanges {
     @Input() image: ImageModel;

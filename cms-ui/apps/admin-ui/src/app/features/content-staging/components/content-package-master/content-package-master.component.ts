@@ -8,6 +8,7 @@ import { ContentPackage, NormalizableEntityType } from '@gentics/cms-models';
     templateUrl: './content-package-master.component.html',
     styleUrls: ['./content-package-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentPackageMasterComponent extends BaseTableMasterComponent<ContentPackage, ContentPackageBO> {
 

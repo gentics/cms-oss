@@ -14,8 +14,9 @@ import { EmbeddedToolsService } from '../../providers/embedded-tools/embedded-to
 @Component({
     selector: 'tool-breadcrumb',
     templateUrl: './tool-breadcrumb.component.html',
-    styleUrls: ['./tool-breadcrumb.component.scss']
-    })
+    styleUrls: ['./tool-breadcrumb.component.scss'],
+    standalone: false
+})
 export class ToolBreadcrumbComponent implements OnInit {
 
     nodes$: Observable<Array<Node>>;

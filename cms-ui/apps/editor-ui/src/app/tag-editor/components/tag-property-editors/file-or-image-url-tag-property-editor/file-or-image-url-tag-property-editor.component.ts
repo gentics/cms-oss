@@ -38,6 +38,7 @@ import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-pro
     templateUrl: './file-or-image-url-tag-property-editor.component.html',
     styleUrls: ['./file-or-image-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 

@@ -16,6 +16,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     templateUrl: './favourites-list.component.html',
     styleUrls: ['./favourites-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FavouritesListComponent {
 

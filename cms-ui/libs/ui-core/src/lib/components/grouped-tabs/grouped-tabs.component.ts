@@ -84,6 +84,7 @@ let uniqueGroupedTabsId = 0;
     templateUrl: './grouped-tabs.component.html',
     styleUrls: ['./grouped-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupedTabsComponent
     extends BaseComponent

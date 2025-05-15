@@ -26,6 +26,7 @@ import { map, tap } from 'rxjs/operators';
     templateUrl: './form-tag-property-editor.component.html',
     styleUrls: ['./form-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormTagPropertyEditorComponent implements TagPropertyEditor {
 

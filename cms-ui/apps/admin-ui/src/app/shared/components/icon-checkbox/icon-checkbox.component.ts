@@ -21,6 +21,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
     templateUrl: './icon-checkbox.tpl.html',
     styleUrls: ['./icon-checkbox.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class IconCheckboxComponent {
     /**

@@ -5,6 +5,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './radio-button-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RadioButtonDemoPage {
 

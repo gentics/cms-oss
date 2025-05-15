@@ -15,6 +15,7 @@ import { Subscription } from 'rxjs';
         generateFormProvider(SelectPartSettingsComponent),
         generateValidatorProvider(SelectPartSettingsComponent),
     ],
+    standalone: false
 })
 export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
 

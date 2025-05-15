@@ -18,6 +18,7 @@ export enum MeshGroupPropertiesMode {
         generateFormProvider(MeshGroupPropertiesComponent),
         generateValidatorProvider(MeshGroupPropertiesComponent),
     ],
+    standalone: false
 })
 export class MeshGroupPropertiesComponent extends BasePropertiesComponent<EditableGroupProperties> {
 

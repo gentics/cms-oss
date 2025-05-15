@@ -7,14 +7,13 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
@@ -31,7 +30,6 @@ describe('TagEditorHostComponent', () => {
             providers: [
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 IFrameStylesService,
-                UserAgentRef,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: I18nService, useClass: MockI18nService },
             ],
@@ -358,6 +356,7 @@ describe('TagEditorHostComponent', () => {
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })

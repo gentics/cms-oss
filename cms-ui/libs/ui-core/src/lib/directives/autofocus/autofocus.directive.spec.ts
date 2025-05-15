@@ -315,6 +315,7 @@ function isInView(element: Element): boolean {
 
 @Component({
     template: '<gtx-input></gtx-input>',
+    standalone: false,
 })
 class TestComponent {
     boolProp = false;
@@ -327,6 +328,7 @@ class TestComponent {
             <gtx-input label="first"></gtx-input>
             <gtx-input label="second" autofocus></gtx-input>
         </div>`,
+    standalone: false,
 })
 class TestModal implements IModalDialog {
     closeFn: any;

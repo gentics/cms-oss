@@ -14,6 +14,7 @@ import { FormLanguageIndicatorComponent } from '../form-language-indicator/form-
     templateUrl: './form-language-indicator-current.component.html',
     styleUrls: ['./form-language-indicator-current.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormLanguageIndicatorCurrentComponent extends FormLanguageIndicatorComponent implements OnInit {
 

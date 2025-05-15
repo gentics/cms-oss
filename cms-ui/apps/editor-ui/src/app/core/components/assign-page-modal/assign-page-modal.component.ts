@@ -12,6 +12,7 @@ import { EntityResolver } from '../../providers/entity-resolver/entity-resolver'
     templateUrl: './assign-page-modal.component.html',
     styleUrls: ['./assign-page-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignPageModal extends BaseModal<void> implements OnInit {
 

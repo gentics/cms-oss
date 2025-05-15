@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
     templateUrl: './search-suggestion.component.html',
     styleUrls: ['./search-suggestion.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SearchSuggestionComponent {
 

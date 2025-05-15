@@ -10,6 +10,7 @@ import { NodeBranch } from '../../../core/providers/node-hierarchy-builder/node-
     selector: 'node-selector-tree',
     templateUrl: './node-selector-tree.tpl.html',
     styleUrls: ['./node-selector-tree.scss'],
+    standalone: false
 })
 export class NodeSelectorTree {
 

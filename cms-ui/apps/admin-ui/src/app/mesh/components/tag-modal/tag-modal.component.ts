@@ -10,6 +10,7 @@ import { TagPropertiesMode } from '../tag-properties/tag-properties.component';
     templateUrl: './tag-modal.component.html',
     styleUrls: ['./tag-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagModal extends BaseModal<Tag> implements OnInit {
 

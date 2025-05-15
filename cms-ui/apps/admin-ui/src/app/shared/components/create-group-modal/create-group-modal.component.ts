@@ -11,6 +11,7 @@ import { Observable } from 'rxjs';
     templateUrl: './create-group-modal.component.html',
     styleUrls: ['./create-group-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateGroupModalComponent implements IModalDialog, OnInit {
 

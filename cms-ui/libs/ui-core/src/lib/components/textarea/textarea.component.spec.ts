@@ -524,6 +524,7 @@ describe('TextareaComponent', () => {
 
 @Component({
     template: '<gtx-textarea></gtx-textarea>',
+    standalone: false,
 })
 class TestComponent {
 

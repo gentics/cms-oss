@@ -8,6 +8,7 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
     styleUrls: ['./table-size-select.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(TableSizeSelectComponent)],
+    standalone: false
 })
 export class TableSizeSelectComponent extends BaseFormElementComponent<TableSize> {
 

@@ -32,6 +32,7 @@ import { NodePropertiesMode } from '../node-properties/node-properties.component
     styleUrls: ['./properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(PropertiesEditorComponent)],
+    standalone: false
 })
 export class PropertiesEditorComponent
     extends BaseFormElementComponent<EditableProperties>

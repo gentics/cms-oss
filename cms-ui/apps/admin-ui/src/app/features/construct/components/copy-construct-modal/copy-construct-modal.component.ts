@@ -13,6 +13,7 @@ import { switchMap } from 'rxjs/operators';
     templateUrl: './copy-construct-modal.component.html',
     styleUrls: ['./copy-construct-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CopyConstructModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 

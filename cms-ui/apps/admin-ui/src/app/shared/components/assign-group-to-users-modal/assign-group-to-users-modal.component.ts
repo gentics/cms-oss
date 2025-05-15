@@ -7,6 +7,7 @@ import { GroupUserDataService } from '../../providers/group-user-data/group-user
     selector: 'gtx-assign-group-to-users-modal',
     templateUrl: './assign-group-to-users-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignGroupToUsersModal extends BaseModal<void> implements OnInit {
 

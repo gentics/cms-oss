@@ -10,6 +10,7 @@ import { BaseModal, TrableRow } from '@gentics/ui-core';
     templateUrl: './entity-picker-modal.component.html',
     styleUrls: ['./entity-picker-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EntityPickerModalComponent
     extends BaseModal<false | PickableEntity | PickableEntity[]>

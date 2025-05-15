@@ -295,6 +295,7 @@ function getMockedTag(): EditableTag {
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })

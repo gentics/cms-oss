@@ -8,7 +8,8 @@ import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../..
 import { LoadingTriggerComponent } from './loading-trigger.component';
 
 @Component({
-    template: `<gtx-loading-trigger></gtx-loading-trigger>`,
+    template: '<gtx-loading-trigger></gtx-loading-trigger>',
+    standalone: false,
 })
 class TestComponent implements OnInit, AfterViewInit {
     ngOnInitSpy = jasmine.createSpy('ngOnInit');
@@ -56,7 +57,7 @@ describe('LoadingTriggerComponent', () => {
                 .pipe(takeUntil(stopper.stopper$))
                 .subscribe(loadingState => {
                     masterLoadings.push(loadingState.masterLoading);
-            });
+                });
 
             fixture.detectChanges();
 

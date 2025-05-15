@@ -10,6 +10,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-toggle-split-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaToggleSplitButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleSplitButtonComponent, boolean> {
 

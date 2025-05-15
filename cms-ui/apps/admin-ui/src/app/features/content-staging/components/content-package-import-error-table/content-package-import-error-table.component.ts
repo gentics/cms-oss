@@ -29,6 +29,7 @@ import {
     templateUrl: './content-package-import-error-table.component.html',
     styleUrls: ['./content-package-import-error-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentPackageImportErrorTableComponent
     extends BaseEntityTableComponent<ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>

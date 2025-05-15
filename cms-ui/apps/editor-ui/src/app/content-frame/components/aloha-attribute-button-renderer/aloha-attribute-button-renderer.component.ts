@@ -12,6 +12,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-attribute-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaAttributeButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaAttributeButtonRendererComponent
     extends BaseAlohaRendererComponent<AlohaAttributeButtonComponent, string>

@@ -20,6 +20,7 @@ export enum MicroschemaPropertiesMode {
         generateFormProvider(MicroschemaPropertiesComponent),
         generateValidatorProvider(MicroschemaPropertiesComponent),
     ],
+    standalone: false
 })
 export class MicroschemaPropertiesComponent extends BasePropertiesComponent<EditableMicroschemaProperties> {
 

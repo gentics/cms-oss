@@ -10,6 +10,7 @@ import { Observable } from 'rxjs';
     selector: 'gtx-login',
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.scss'],
+    standalone: false
 })
 export class LoginComponent implements OnInit {
 

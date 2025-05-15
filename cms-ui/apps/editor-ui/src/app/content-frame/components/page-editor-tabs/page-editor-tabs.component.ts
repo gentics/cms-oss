@@ -14,6 +14,7 @@ import { OverflowManager } from '../../utils';
     templateUrl: './page-editor-tabs.component.html',
     styleUrls: ['./page-editor-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy {
 

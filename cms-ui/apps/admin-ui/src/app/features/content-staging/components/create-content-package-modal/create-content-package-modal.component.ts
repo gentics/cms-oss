@@ -11,6 +11,7 @@ import { ContentPackagePropertiesMode } from '../content-package-properties/cont
     templateUrl: './create-content-package-modal.component.html',
     styleUrls: ['./create-content-package-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateContentPackageModalComponent extends BaseModal<ContentPackageBO> implements OnInit, OnDestroy {
 

@@ -28,5 +28,6 @@ import {Component, ViewEncapsulation} from '@angular/core';
     styleUrls: ['./contents-list-item.component.scss'],
     // Disable view-encapsulation, as this is only a simple wrapper component
     encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ContentsListItem {}

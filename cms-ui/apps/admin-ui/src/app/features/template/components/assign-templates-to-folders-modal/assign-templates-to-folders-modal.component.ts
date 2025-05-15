@@ -13,6 +13,7 @@ import { catchError, map } from 'rxjs/operators';
     templateUrl: './assign-templates-to-folders-modal.component.html',
     styleUrls: ['./assign-templates-to-folders-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
 

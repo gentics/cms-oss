@@ -7,8 +7,9 @@ import { BaseModal } from '@gentics/ui-core';
 @Component({
     selector: 'gtx-create-language-modal',
     templateUrl: './create-language-modal.component.html',
-    styleUrls: [ './create-language-modal.component.scss' ],
+    styleUrls: ['./create-language-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateLanguageModalComponent extends BaseModal<Language> implements OnInit {
 

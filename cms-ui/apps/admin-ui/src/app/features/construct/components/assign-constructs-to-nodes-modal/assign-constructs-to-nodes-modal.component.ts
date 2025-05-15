@@ -12,6 +12,7 @@ import { map } from 'rxjs/operators';
     templateUrl: './assign-constructs-to-nodes-modal.component.html',
     styleUrls: ['./assign-constructs-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignConstructsToNodesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
 

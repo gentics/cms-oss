@@ -14,6 +14,7 @@ import { coerceToBoolean, generateFormProvider } from '../../utils';
     templateUrl: './range.component.html',
     styleUrls: ['./range.component.scss'],
     providers: [generateFormProvider(RangeComponent)],
+    standalone: false
 })
 export class RangeComponent implements ControlValueAccessor, OnInit {
 

@@ -7,7 +7,8 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
     selector: 'item-breadcrumbs',
     templateUrl: './item-breadcrumbs.component.html',
     styleUrls: ['./item-breadcrumbs.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemBreadcrumbsComponent implements OnChanges {
 

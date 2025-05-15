@@ -21,6 +21,7 @@ export enum TemplateTagPropertiesMode {
         generateFormProvider(TemplateTagPropertiesComponent),
         generateValidatorProvider(TemplateTagPropertiesComponent),
     ],
+    standalone: false
 })
 export class TemplateTagPropertiesComponent extends BasePropertiesComponent<TemplateTag> implements OnInit {
 

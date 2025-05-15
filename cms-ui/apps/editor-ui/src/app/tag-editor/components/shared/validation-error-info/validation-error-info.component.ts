@@ -17,6 +17,7 @@ import { ValidationResult } from '@gentics/cms-integration-api-models';
     templateUrl: './validation-error-info.component.html',
     styleUrls: ['./validation-error-info.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ValidationErrorInfoComponent {
 

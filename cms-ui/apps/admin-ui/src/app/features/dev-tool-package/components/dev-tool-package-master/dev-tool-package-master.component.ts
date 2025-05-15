@@ -12,6 +12,7 @@ import { CreateDevToolPackageModalComponent } from '../create-dev-tool-package-m
     selector: 'gtx-dev-tool-package-master',
     templateUrl: './dev-tool-package-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DevToolPackageMasterComponent extends BaseTableMasterComponent<Package, PackageBO> {
 

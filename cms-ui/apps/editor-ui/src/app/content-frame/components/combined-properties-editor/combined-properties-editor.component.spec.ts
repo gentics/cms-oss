@@ -1,5 +1,5 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { EditMode, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
@@ -36,10 +36,10 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { BehaviorSubject, of as observableOf, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { getExampleEditableTag, mockEditableObjectTag } from '../../../../testing/test-tag-editor-data.mock';
 import { ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -1707,6 +1707,7 @@ class MockI18nNotification {
         <combined-properties-editor [item]="item"></combined-properties-editor>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(CombinedPropertiesEditorComponent, { static: true })
@@ -1719,6 +1720,7 @@ class TestComponent {
     selector: 'gtx-properties-editor',
     providers: [ { provide: PropertiesEditorComponent, useClass: MockPropertiesEditor } ],
     template: '',
+    standalone: false,
 })
 class MockPropertiesEditor {
     @Input() item: any;
@@ -1733,6 +1735,7 @@ class MockPropertiesEditor {
     selector: 'tag-editor-host',
     providers: [ { provide: TagEditorHostComponent, useClass: MockTagEditorHost } ],
     template: '',
+    standalone: false,
 })
 class MockTagEditorHost {
     editTagLive = jasmine.createSpy('editTagLive');
@@ -1741,6 +1744,7 @@ class MockTagEditorHost {
 @Component({
     selector: 'tag-editor-overlay-host',
     template: '',
+    standalone: false,
 })
 class MockTagEditorOverlayHost {}
 
@@ -1755,6 +1759,7 @@ class MockI18nService {
     selector: 'iframe-wrapper',
     providers: [ { provide: IFrameWrapperComponent, useClass: MockIFrameWrapper } ],
     template: '',
+    standalone: false,
 })
 class MockIFrameWrapper {
     @Input() height: string;

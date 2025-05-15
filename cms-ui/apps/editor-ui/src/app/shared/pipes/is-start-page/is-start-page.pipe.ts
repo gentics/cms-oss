@@ -1,7 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Folder, Page, File, Image, AnyModelType, ModelType } from '@gentics/cms-models';
 
-@Pipe({name: 'isStartPage'})
+@Pipe({
+    name: 'isStartPage',
+    standalone: false
+})
 export class IsStartPagePipe implements PipeTransform {
 
     transform(

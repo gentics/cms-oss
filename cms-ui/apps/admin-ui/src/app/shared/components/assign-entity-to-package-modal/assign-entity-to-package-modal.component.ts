@@ -50,6 +50,7 @@ function entityIdentifierToEditableEntity(identifier: NormalizableEntityType): E
     selector: 'gtx-assign-entity-to-package-modal',
     templateUrl: './assign-entity-to-package-modal.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
+    standalone: false
 })
 export class AssignEntityToPackageModalComponent extends BaseModal<void> implements OnDestroy, OnInit {
 

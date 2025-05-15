@@ -10,7 +10,10 @@ const ELLIPSES = '+';
  * ->
  * 99+
  */
-@Pipe({ name: 'truncateNumber' })
+@Pipe({
+    name: 'truncateNumber',
+    standalone: false
+})
 export class TruncateNumberPipe implements PipeTransform {
     transform(value: string | number, maxLength: number = 2): any {
         if (!(typeof value === 'string' || typeof value === 'number') || String(value).length <= maxLength) {

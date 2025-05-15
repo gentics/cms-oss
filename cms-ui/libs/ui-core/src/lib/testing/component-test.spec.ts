@@ -164,12 +164,14 @@ xdescribe('componentTest', () => {
 
 @Component({
     template: 'This should pass',
+    standalone: false,
 })
 class SimpleComponent { }
 
 
 @Component({
     template: 'This should fail',
+    standalone: false,
 })
 class ComponentThatThrowsInConstructor {
     constructor() {
@@ -179,6 +181,7 @@ class ComponentThatThrowsInConstructor {
 
 @Component({
     template: 'This will be destroyed',
+    standalone: false,
 })
 class ComponentWithOnDestroy {
     public wasDestroyed = false;
@@ -193,6 +196,7 @@ class ServiceThatIsNotAddedAsProvider {}
 
 @Component({
     template: 'This component is missing its provider',
+    standalone: false,
 })
 class ComponentThatNeedsAServiceThatIsNotAddedAsProvider {
     constructor(svc: ServiceThatIsNotAddedAsProvider) { }
@@ -211,6 +215,7 @@ class OverwrittenPieService {
 
 @Component({
     template: 'I spy with my little pie',
+    standalone: false,
 })
 class ComponentThatNeedsAnExistingService {
     constructor(public service: PieService) {}

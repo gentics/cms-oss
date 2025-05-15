@@ -1,11 +1,35 @@
 {
-  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-  "dest": "../../dist/libs/cms-components",
-  "lib": {
-    "entryFile": "src/public-api.ts",
-    "styleIncludePaths": [
-        "../"
-    ]
-  },
-  "allowedNonPeerDependencies": []
+    "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+    "dest": "../../dist/libs/cms-components",
+    "lib": {
+        "entryFile": "src/public-api.ts",
+        "styleIncludePaths": [
+            "../"
+        ],
+        "sass": {
+            "silenceDeprecations": [
+                "call-string",
+                "elseif",
+                "moz-document",
+                "relative-canonical",
+                "new-global",
+                "color-module-compat",
+                "slash-div",
+                "bogus-combinators",
+                "function-units",
+                "duplicate-var-flags",
+                "null-alpha",
+                "abs-percent",
+                "fs-importer-cwd",
+                "css-function-mixin",
+                "mixed-decls",
+                "color-4-api",
+                "color-functions",
+                "legacy-js-api",
+                "import",
+                "global-builtin"
+            ]
+        }
+    },
+    "allowedNonPeerDependencies": []
 }

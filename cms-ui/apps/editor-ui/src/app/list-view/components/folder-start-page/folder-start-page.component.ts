@@ -27,6 +27,7 @@ enum StartPageType {
     templateUrl: './folder-start-page.component.html',
     styleUrls: ['./folder-start-page.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 

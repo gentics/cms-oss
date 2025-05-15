@@ -6,8 +6,9 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
 @Component({
     selector: 'change-password-modal',
     templateUrl: './change-password-modal.component.html',
-    styleUrls: ['./change-password-modal.component.scss']
-    })
+    styleUrls: ['./change-password-modal.component.scss'],
+    standalone: false
+})
 export class ChangePasswordModal extends BaseModal<void> {
 
     form: UntypedFormGroup;

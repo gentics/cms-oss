@@ -5,10 +5,10 @@ import { Router } from '@angular/router';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { Page, PageResponse, ResponseCode } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -452,8 +452,8 @@ describe('PageVersionsModal', () => {
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
+    standalone: false,
 })
-
 class TestComponent {
     nodeId = 1;
     page: Partial<Page> = {

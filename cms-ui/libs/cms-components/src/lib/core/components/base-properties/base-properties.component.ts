@@ -7,7 +7,10 @@ import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
 const INITIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
     /**

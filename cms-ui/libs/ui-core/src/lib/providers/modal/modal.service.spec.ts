@@ -365,6 +365,7 @@ describe('ModalService', () => {
             template: `<div>TestModalCmp</div>
                 <div>{{ localValue }}</div>
                 <button class="modal-button" (click)="localFn('bar')"></button>`,
+            standalone: false,
         })
         class TestModalCmp implements IModalDialog {
             closeFn: (val: any) => void;
@@ -390,6 +391,7 @@ describe('ModalService', () => {
         @Component({
             selector: 'bad-modal-cmp',
             template: '<div>BadModalCmp</div>',
+            standalone: false,
         })
         class BadModalCmp { }
 
@@ -628,6 +630,7 @@ function getElements(fixture: ComponentFixture<any>, selector: string): HTMLElem
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
+    standalone: false,
 })
 class TestComponent { }
 

@@ -7,6 +7,7 @@ import { SchemaTableComponent } from '../schema-table/schema-table.component';
     templateUrl: './select-schema-modal.component.html',
     styleUrls: ['./select-schema-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectSchemaModal extends BaseModal<MeshSchemaBO | MeshSchemaBO[]> {
 

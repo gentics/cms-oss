@@ -33,6 +33,7 @@ function toPropertiesFormData(cr: ContentRepository): ContentRepositoryPropertie
     templateUrl: './content-repository-editor.component.html',
     styleUrls: ['./content-repository-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONTENT_REPOSITORY> implements OnInit {
 

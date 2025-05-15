@@ -8,6 +8,7 @@ import { delay } from 'rxjs/operators';
     selector: 'gtx-assign-content-repositories-to-nodes-modal',
     templateUrl: './assign-content-repositories-to-nodes-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignContentrepositoriesToNodesModalComponent extends BaseModal<number[]> implements OnInit {
 

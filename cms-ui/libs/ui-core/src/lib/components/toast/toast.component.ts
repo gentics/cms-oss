@@ -9,6 +9,7 @@ import { ColorThemes } from '../../common';
     selector: 'gtx-toast',
     templateUrl: './toast.component.html',
     styleUrls: ['./toast.component.scss'],
+    standalone: false
 })
 export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
 

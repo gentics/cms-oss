@@ -15,6 +15,7 @@ import { ConstructCategoryPropertiesMode } from '../construct-category-propertie
     templateUrl: './construct-category-editor.component.html',
     styleUrls: ['./construct-category-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONSTRUCT_CATEGORY> implements OnInit {
 

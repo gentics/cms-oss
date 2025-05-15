@@ -14,6 +14,7 @@ import { pick } from 'lodash-es';
         generateFormProvider(ScheduleDataPropertiesComponent),
         generateValidatorProvider(ScheduleDataPropertiesComponent),
     ],
+    standalone: false
 })
 export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<ScheduleData> implements OnInit {
 

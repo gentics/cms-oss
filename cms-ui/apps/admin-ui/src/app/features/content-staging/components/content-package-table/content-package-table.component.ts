@@ -21,6 +21,7 @@ const IMPORT_PACKAGE_ACTION = 'importPackage';
     templateUrl: './content-package-table.component.html',
     styleUrls: ['./content-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentPackageTableComponent extends BaseEntityTableComponent<ContentPackage, ContentPackageBO> {
 

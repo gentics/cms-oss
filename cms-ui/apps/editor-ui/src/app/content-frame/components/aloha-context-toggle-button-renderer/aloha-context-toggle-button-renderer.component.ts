@@ -10,6 +10,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-context-toggle-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaContextToggleButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaContextToggleButtonRendererComponent<T> extends AlohaContextButtonRendererComponent<T> {
 

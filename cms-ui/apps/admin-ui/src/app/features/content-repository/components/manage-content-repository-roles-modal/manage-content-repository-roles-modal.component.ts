@@ -9,6 +9,7 @@ import { Subscription, combineLatest } from 'rxjs';
     templateUrl: './manage-content-repository-roles-modal.component.html',
     styleUrls: ['./manage-content-repository-roles-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ManageContentRepositoryRolesModal extends BaseModal<string[]> implements OnInit, OnDestroy {
 

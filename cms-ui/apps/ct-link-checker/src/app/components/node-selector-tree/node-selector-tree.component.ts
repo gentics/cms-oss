@@ -12,7 +12,8 @@ import { NodeBranch } from '../../services/node-hierarchy-builder/node-hierarchy
     selector: 'gtxct-node-selector-tree',
     templateUrl: './node-selector-tree.tpl.html',
     styleUrls: ['./node-selector-tree.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeSelectorTreeComponent {
     @Input() branches: NodeBranch[] = [];

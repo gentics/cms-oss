@@ -9,6 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./list-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(ListPartFillComponent)],
+    standalone: false
 })
 export class ListPartFillComponent extends BaseFormElementComponent<ListTagPartProperty | OrderedUnorderedListTagPartProperty> {
 

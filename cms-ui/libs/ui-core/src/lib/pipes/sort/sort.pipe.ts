@@ -34,6 +34,7 @@ function defaultSort<T>(a: T, b: T, order: SortOrder): number {
 
 @Pipe({
     name: 'gtxSort',
+    standalone: false
 })
 export class SortPipe implements PipeTransform {
     transform<T>(value: T[] | Set<T>, orderOrFunction: SortOrder | SortFunction<T> = defaultSort<T>, order: SortOrder = SortOrder.ASC): T[] {

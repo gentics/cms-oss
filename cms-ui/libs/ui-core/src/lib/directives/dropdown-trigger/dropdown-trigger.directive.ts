@@ -2,7 +2,8 @@ import { Directive, ElementRef } from '@angular/core';
 import { DROPDOWN_FOCUSABLE_ITEMS_SELECTOR } from '../../common';
 
 @Directive({
-    selector: 'gtx-dropdown-trigger'
+    selector: 'gtx-dropdown-trigger',
+    standalone: false
 })
 export class DropdownTriggerDirective {
     constructor(public elementRef: ElementRef) { }

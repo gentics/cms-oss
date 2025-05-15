@@ -13,6 +13,7 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
     templateUrl: './copy-value.component.html',
     styleUrls: ['./copy-value.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CopyValueComponent extends BaseComponent implements OnDestroy {
 

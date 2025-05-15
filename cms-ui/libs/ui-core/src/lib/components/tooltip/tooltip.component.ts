@@ -42,6 +42,7 @@ import { TooltipContentWrapperComponent } from '../tooltip-content-wrapper/toolt
     templateUrl: './tooltip.component.html',
     styleUrls: ['./tooltip.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 

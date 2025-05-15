@@ -16,6 +16,7 @@ import { ContentPackagePropertiesMode } from '../content-package-properties/cont
     templateUrl: './content-package-detail.component.html',
     styleUrls: ['./content-package-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentPackageDetailComponent extends BaseDetailComponent<'contentPackage', ContentPackageOperations> implements OnInit {
 

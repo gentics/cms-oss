@@ -212,9 +212,9 @@ const createElmentRef = (element: HTMLElement): ElementRef => ({
             [width]="iFrameWidth"
             [height]="iFrameHeight"
             (iFrameLoad)="onIFrameLoad($event)">
-        </iframe-wrapper>
-    `
-    })
+        </iframe-wrapper>`,
+    standalone: false,
+})
 class TestComponent {
     @ViewChild('iFrameWrapper', { static: true })
     iFrameWrapper: IFrameWrapperComponent;

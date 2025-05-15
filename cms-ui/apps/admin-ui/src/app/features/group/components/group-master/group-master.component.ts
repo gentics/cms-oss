@@ -7,6 +7,7 @@ import { Group, NormalizableEntityType } from '@gentics/cms-models';
     selector: 'gtx-group-master',
     templateUrl: './group-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupMasterComponent extends BaseTableMasterComponent<Group, GroupBO> {
     protected entityIdentifier: NormalizableEntityType = 'group';

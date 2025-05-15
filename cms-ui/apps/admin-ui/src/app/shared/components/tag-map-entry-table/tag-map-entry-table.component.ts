@@ -28,6 +28,7 @@ function mapObjectType(row: TagMapEntryBO): number {
     templateUrl: './tag-map-entry-table.component.html',
     styleUrls: ['./tag-map-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagMapEntryTableComponent
     extends BaseEntityTableComponent<TagmapEntry, TagMapEntryBO, TagMapEntryTableLoaderOptions>

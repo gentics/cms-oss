@@ -6,6 +6,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
     templateUrl: './split-button-demo.component.html',
     styleUrls: ['./split-button-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SplitButtonDemoPage {
 

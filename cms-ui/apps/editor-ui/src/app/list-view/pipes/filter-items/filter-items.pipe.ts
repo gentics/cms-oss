@@ -9,7 +9,10 @@ const emptyFallbackArray: any[] = [];
  * Filters a list of items by a filter term.
  * Tries to return the same reference when the result is unchanged.
  */
-@Pipe({ name: 'filterItems' })
+@Pipe({
+    name: 'filterItems',
+    standalone: false
+})
 export class FilterItemsPipe implements PipeTransform {
     private lastItems: Item[];
     private lastFilter: string;

@@ -33,6 +33,7 @@ const MANAGE_ROLES_ACTION = 'manageRoles';
     templateUrl: './mesh-group-table.component.html',
     styleUrls: ['./mesh-group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshGroupTableComponent
     extends BaseEntityTableComponent<Group, MeshGroupBO, MeshGroupTableLoaderOptions>

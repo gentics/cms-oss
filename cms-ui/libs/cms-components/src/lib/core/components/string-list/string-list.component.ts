@@ -23,6 +23,7 @@ import { MultiValueValidityState } from '../../../common';
     styleUrls: ['./string-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(StringListComponent)],
+    standalone: false
 })
 export class StringListComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor {
 

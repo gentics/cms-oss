@@ -31,7 +31,10 @@ import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-del
 
 export const DELETE_ACTION = 'delete';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = never> extends BaseComponent implements  OnInit, OnChanges {
 
     public readonly TableSelectAllType = TableSelectAllType;

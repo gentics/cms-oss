@@ -14,6 +14,7 @@ import { SortingModal } from '../sorting-modal/sorting-modal.component';
     templateUrl: './repository-browser-list-header.tpl.html',
     styleUrls: ['./repository-browser-list-header.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RepositoryBrowserListHeader implements OnInit {
 

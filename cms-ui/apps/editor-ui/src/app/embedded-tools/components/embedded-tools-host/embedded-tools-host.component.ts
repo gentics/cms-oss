@@ -11,7 +11,8 @@ import { ApplicationStateService } from '../../../state';
     selector: 'embedded-tools-host',
     templateUrl: './embedded-tools-host.html',
     styleUrls: ['./embedded-tools-host.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EmbeddedToolsHostComponent implements OnInit {
 

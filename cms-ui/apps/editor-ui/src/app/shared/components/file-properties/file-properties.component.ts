@@ -15,6 +15,7 @@ import { filter, map, switchMap } from 'rxjs/operators';
         generateFormProvider(FilePropertiesComponent),
         generateValidatorProvider(FilePropertiesComponent),
     ],
+    standalone: false
 })
 export class FilePropertiesComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
 

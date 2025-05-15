@@ -32,6 +32,7 @@ const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NO
         generateFormProvider(SchemaFieldPropertiesComponent),
         generateValidatorProvider(SchemaFieldPropertiesComponent),
     ],
+    standalone: false
 })
 export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<SchemaField> implements OnChanges {
 

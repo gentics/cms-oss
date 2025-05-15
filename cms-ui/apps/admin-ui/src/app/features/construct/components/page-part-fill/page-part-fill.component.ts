@@ -15,6 +15,7 @@ enum PageLinkType {
     styleUrls: ['./page-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(PagePartFillComponent)],
+    standalone: false
 })
 export class PagePartFillComponent extends BaseFormElementComponent<PageTagPartProperty> {
 

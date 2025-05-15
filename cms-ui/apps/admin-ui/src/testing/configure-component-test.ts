@@ -1,17 +1,8 @@
-import {Pipe, PipeTransform} from '@angular/core';
-import {getTestBed, TestModuleMetadata} from '@angular/core/testing';
-
-import {I18nService} from '../app/core/providers/i18n/i18n.service';
-import {MockI18nService} from '../app/core/providers/i18n/i18n.service.mock';
+import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-
-
-@Pipe({
-    name: 'i18n'
-})
-class MockI18nPipe implements PipeTransform {
-    transform(): void {}
-}
+import { mockPipe } from '@gentics/ui-core/testing';
+import { I18nService } from '../app/core/providers/i18n/i18n.service';
+import { MockI18nService } from '../app/core/providers/i18n/i18n.service.mock';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -33,7 +24,7 @@ export function configureComponentTest(config: TestModuleMetadata): void {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [GenticsUICoreModule.forRoot()],
-        declarations: [ MockI18nPipe ],
+        declarations: [ mockPipe('i18n') ],
         providers: [{ provide: I18nService, useClass: MockI18nService }]
     };
 

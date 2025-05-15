@@ -11,6 +11,7 @@ import { ApplicationStateService } from '../../../state';
     templateUrl: './favourite-toggle.component.html',
     styleUrls: ['./favourite-toggle.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FavouriteToggleComponent {
 

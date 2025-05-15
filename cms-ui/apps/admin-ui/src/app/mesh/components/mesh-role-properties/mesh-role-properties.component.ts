@@ -18,6 +18,7 @@ export enum MeshRolePropertiesMode {
         generateFormProvider(MeshRolePropertiesComponent),
         generateValidatorProvider(MeshRolePropertiesComponent),
     ],
+    standalone: false
 })
 export class MeshRolePropertiesComponent extends BasePropertiesComponent<EditableRoleProperties> {
 

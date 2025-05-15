@@ -3,6 +3,7 @@ import { coerceToBoolean } from '../../utils';
 
 @Directive({
     selector: 'gtx-option',
+    standalone: false
 })
 export class SelectOptionDirective implements OnChanges {
 

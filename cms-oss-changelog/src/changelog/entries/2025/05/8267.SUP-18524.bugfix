@@ -1,0 +1,2 @@
+Editor User Interface: When creating a new folder, the "description" field showed the
+dummy content "initial-unset-value". This has been fixed now.

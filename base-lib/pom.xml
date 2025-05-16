@@ -434,6 +434,13 @@
 		<dependency>
 			<groupId>com.sksamuel.scrimage</groupId>
 			<artifactId>scrimage-webp</artifactId>
+			<!-- Exclude transitive logback dependency, because we are using log4j2 -->
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>

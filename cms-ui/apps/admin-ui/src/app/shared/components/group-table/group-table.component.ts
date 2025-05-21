@@ -3,7 +3,7 @@ import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoade
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, toSelectionArray } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
@@ -140,7 +140,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
                 return;
 
             case MOVE_MULTIPLE_GROUPS_ACTION:
-                this.moveGroups(this.selected.map(id => Number(id)));
+                this.moveGroups(this.getAffectedEntityIds(event));
                 return;
 
             case MOVE_SINGLE_GROUP_ACTION:
@@ -177,7 +177,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         }
     }
 
-    protected async moveGroups(entityIds: number[]): Promise<any> {
+    protected async moveGroups(entityIds: (string | number)[]): Promise<any> {
         // if no row is selected, display modal
         if (!entityIds || entityIds.length < 1) {
             // this.notificationNoneSelected();

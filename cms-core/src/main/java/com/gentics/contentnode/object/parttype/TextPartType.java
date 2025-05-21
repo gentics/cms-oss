@@ -468,7 +468,7 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 
 	@Override
 	public void fromProperty(Property property) throws NodeException {
-		getValueObject().setValueText(property.getStringValue());
+		setText(property.getStringValue());
 	}
 
 	@Override

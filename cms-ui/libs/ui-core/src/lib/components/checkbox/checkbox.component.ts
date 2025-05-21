@@ -1,44 +1,38 @@
 import {
-    AfterViewInit,
+    ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
     HostListener,
     Input,
-    OnInit,
     Output,
+    Renderer2,
     ViewChild,
 } from '@angular/core';
-import { ControlValueAccessor } from '@angular/forms';
-import { KeyCode } from '../../common';
-import { generateFormProvider } from '../../utils';
-
-export type CheckState = boolean | 'indeterminate';
-const randomID = (): string => 'checkbox-' + Math.random().toString(36).substr(2);
+import { CHECKBOX_STATE_INDETERMINATE, CheckboxState, KeyCode } from '../../common';
+import { generateFormProvider, randomId } from '../../utils';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 /**
  * Checkbox wraps the native `<input type="checkbox">` form element.
  *
  * ```html
- * <gtx-checkbox [(ngModel)]="isOkay" label="Is it okay?"></gtx-checkbox>
- * <gtx-checkbox [(ngModel)]="checkStates.B" value="B" label="B"></gtx-checkbox>
- * ```
+ * <gtx-checkbox
+ *     label="Model binding"
+ *     [(ngModel)]="isOkay"
+ * ></gtx-checkbox>
  *
- * ## Stateless Mode
- * By default, the Checkbox keeps track of its own internal checked state. This makes sense
- * for most use cases, such as when used in a form bound to NgControl.
+ * <gtx-checkbox
+ *     label="Direct binding"
+ *     [value]="checkStates.B"
+ *     (valueChange)="updateCheckStates('B')"
+ * ></gtx-checkbox>
  *
- * However, in some cases we want to explicitly set the state from outside. This is done by binding
- * to the <code>checked</code> attribute. When this attribute is bound, the checked state of the
- * Checkbox will *only* change when the value of the binding changes. Clicking on the Checkbox
- * will have no effect other than to emit an event which the parent can use to update the binding.
- *
- * Here is a basic example of a stateless checkbox where the parent component manages the state:
- *
- * ```html
- * <gtx-checkbox [checked]="isChecked"
- *               (change)="isChecked = $event"></gtx-checkbox>
+ * <gtx-checkbox
+ *     label="Form binding"
+ *     formControlName="myCheckbox"
+ * ></gtx-checkbox>
  * ```
  */
 @Component({
@@ -46,103 +40,136 @@ const randomID = (): string => 'checkbox-' + Math.random().toString(36).substr(2
     templateUrl: './checkbox.component.html',
     styleUrls: ['./checkbox.component.scss'],
     providers: [generateFormProvider(CheckboxComponent)],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterViewInit {
+export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
+
+    public readonly CHECKBOX_STATE_INDETERMINATE = CHECKBOX_STATE_INDETERMINATE;
+
     /**
      * Sets the checkbox to be auto-focused. Handled by `AutofocusDirective`.
      */
-    @Input() autofocus = false;
+    @Input()
+    public autofocus = false;
 
     /**
      * Checked state of the checkbox. When set, the Checkbox will be
      * in stateless mode.
+     *
+     * @deprecated Use the `value` Input instead and use the `pure` Input to control stateless mode.
      */
-    @Input() get checked(): boolean {
-        return this.checkState === true;
+    @Input()
+    public get checked(): boolean {
+        return this.value === true;
     }
-    set checked(value: boolean) {
+    public set checked(value: boolean) {
         this.statelessMode = true;
-        let val: boolean | 'true' | '' | 'indeterminate' = <any> value;
-        let nowChecked = val === true || <any> val === 'true' || <any> val === '';
-        if (nowChecked != this.checkState) {
-            this.onChange(this.checkState = nowChecked);
-            this.changeDetector.markForCheck();
+        this.compatibilityMode = true;
+
+        const val: CheckboxState | 'true' | '' = <any> value;
+        const nowChecked = val === true || <any> val === 'true' || <any> val === '';
+        if (nowChecked !== this.value) {
+            this.triggerChange(nowChecked);
+            this.change.emit(this.value);
         }
     }
 
     /**
-     * Set to "indeterminate" for an indeterminate state (-)
+     * Set to "indeterminate" for an indeterminate state (-).
+     *
+     * @deprecated Use the `value` Input instead and provide the indeterminate value.
      */
-    @Input() get indeterminate(): boolean {
-        return this.checkState === 'indeterminate';
+    @Input()
+    public get indeterminate(): boolean {
+        return this.value === CHECKBOX_STATE_INDETERMINATE;
     }
-    set indeterminate(val: boolean) {
-        if (val != (this.checkState === 'indeterminate')) {
-            this.checkState = val ? 'indeterminate' : false;
-            this.change.emit(this.checkState);
-            this.onChange(this.checkState);
+    public set indeterminate(val: boolean) {
+        this.compatibilityMode = true;
+
+        if (val !== (this.value === CHECKBOX_STATE_INDETERMINATE)) {
+            const newVal = val ? CHECKBOX_STATE_INDETERMINATE : false;
+            this.triggerChange(newVal);
+            this.change.emit(this.value);
         }
     }
 
-    /**
-     * Set the checkbox to its disabled state.
-     */
-    @Input() disabled = false;
     /**
      * Checkbox ID
      */
-    @Input() id: string = randomID();
-    /**
-     * Label for the checkbox
-     */
-    @Input() label = '';
+    @Input()
+    public id = `checkbox-${randomId()}`;
+
     /**
      * Form name for the checkbox
      */
-    @Input() name: string;
-    /**
-     * Sets the required property
-     */
-    @Input() required = false;
-    /**
-     * The value of the checkbox
-     */
-    @Input() value: any = '';
+    @Input()
+    public name: string;
 
     /**
      * Blur event
+     *
+     * @deprecated Use the `valueChange` Output to detect changes.
      */
-    @Output() blur = new EventEmitter<CheckState>();
+    @Output()
+    public blur = new EventEmitter<CheckboxState>();
+
     /**
      * Focus event
+     *
+     * @deprecated Use the `valueChange` Output to detect changes.
      */
-    @Output() focus = new EventEmitter<CheckState>();
+    @Output()
+    public focus = new EventEmitter<CheckboxState>();
+
     /**
      * Change event
+     *
+     * @deprecated Use the `valueChange` Output to detect changes.
      */
-    @Output() change = new EventEmitter<CheckState>();
+    @Output()
+    public change = new EventEmitter<CheckboxState>();
 
-    checkState: CheckState = false;
-    tabbedFocus = false;
-
-    @ViewChild('labelElement', { static: true })
-    labelElement: ElementRef<HTMLLabelElement>;
+    /**
+     * @deprecated Focus is focus, a differentiation between mouse and keyboard focus
+     * is not what we want to support/encourage.
+     */
+    public tabbedFocus = false;
 
     /**
      * See note above on stateless mode.
      */
     private statelessMode = false;
 
-    constructor(private changeDetector: ChangeDetectorRef) { }
+    /**
+     * @deprecated Flag for compatibility of the old (deprecated) functionality.
+     */
+    protected compatibilityMode = false;
+
+    @ViewChild('input', { static: true })
+    public inputElement: ElementRef<HTMLInputElement>;
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        private renderer: Renderer2,
+    ) {
+        super(changeDetector);
+    }
 
     onBlur(): void {
-        this.blur.emit(this.checkState);
-        this.onTouched();
+        this.blur.emit(this.value);
+        this.triggerTouch();
         this.tabbedFocus = false;
     }
 
     onFocus(): void {
-        this.focus.emit(this.checkState);
+        this.focus.emit(this.value);
+    }
+
+    protected onValueChange(): void {
+        // The binding via `value` doesn't properly work, therefore we have to do it manually
+        // with the renderer.
+        this.renderer.setProperty(this.inputElement.nativeElement, 'checked', this.value === CHECKBOX_STATE_INDETERMINATE ? null : this.value);
+        this.renderer.setProperty(this.inputElement.nativeElement, 'indeterminate', this.value === CHECKBOX_STATE_INDETERMINATE);
     }
 
     @HostListener('keyup', ['$event'])
@@ -154,62 +181,24 @@ export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterVie
         }
     }
 
-    writeValue(value: any): void {
-        if (value !== this.checkState) {
-            this.checkState = value;
-            this.changeDetector.markForCheck();
+    toggleState(input: HTMLInputElement): void {
+        const newState: CheckboxState = this.value === CHECKBOX_STATE_INDETERMINATE ? true : !this.value;
+
+        if (!this.compatibilityMode) {
+            this.triggerChange(newState);
+            this.change.emit(this.value);
+            return;
         }
-    }
 
-    ngOnInit(): void {
-        this.onChange(this.checkState);
-    }
-
-    ngAfterViewInit(): void {
-        this.fixInitialAnimation();
-    }
-
-    onInputChanged(e: Event, input: HTMLInputElement): boolean {
-        if (e) {
-            e.stopPropagation();
-        }
-        let newState: CheckState = input.indeterminate ? 'indeterminate' : input.checked;
         if (this.statelessMode) {
-            if (input.checked !== this.checkState) {
-                input.checked = !!this.checkState;
+            if (input.checked !== this.value) {
+                input.checked = !!this.value;
             }
-            this.change.emit(newState);
-            return false;
+            return;
         }
-        if (newState != this.checkState) {
-            this.checkState = newState;
-            this.onChange(newState);
-            this.change.emit(newState);
-            return true;
-        }
-    }
-
-    registerOnChange(fn: Function): void { this.onChange = fn; }
-    registerOnTouched(fn: Function): void { this.onTouched = fn; }
-    setDisabledState(disabled: boolean): void {
-        this.disabled = disabled;
-        this.changeDetector.markForCheck();
-    }
-
-    private onChange: Function = () => {};
-    private onTouched: Function = () => {};
-
-    /**
-     * This is a hacky fix to prevent Materialize from animating ticked checkboxes which
-     * kicks in when a checkbox is added to the dom with checked=false and immediately
-     * set to checked=true.
-     */
-    private fixInitialAnimation(): void {
-        if (this.labelElement && this.labelElement.nativeElement) {
-            let label = this.labelElement.nativeElement;
-            label.style.display = 'none';
-            let ignored = label.offsetWidth;
-            label.style.display = '';
+        if (newState !== this.value) {
+            this.triggerChange(newState);
+            this.change.emit(this.value);
         }
     }
 }

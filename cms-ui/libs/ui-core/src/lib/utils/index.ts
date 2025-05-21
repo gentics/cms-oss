@@ -5,6 +5,7 @@ export * from './drag-and-drop';
 export * from './forms';
 export * from './generate-form-provider';
 export * from './matches-mime-type';
+export * from './random-id';
 export * from './routing';
 export * from './to-number';
 export * from './value-by-path';

@@ -1561,7 +1561,7 @@ public class TemplateFactory extends AbstractFactory {
 		List<Integer> tagIds = idLists != null ? idLists[0] : null;
 
 		return (T) new FactoryTemplate(id, info, name, description, source, mlId, locked, lockedBy, tagIds, folderId, templategroupId, creatorId, editorId, cDate, eDate,
-				channelSetId, channelId, master, getUdate(rs), getGlobalId(rs));
+				channelSetId, channelId, master, getUdate(rs), getGlobalId(rs, "template"));
 	}
 
 	/**

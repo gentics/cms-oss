@@ -11,9 +11,10 @@
             <gtx-checkbox
                 *ngIf="selectAllType != null && selectAllType !== TableSelectAllType.NONE"
                 class="selection-checkbox"
-                [checked]="!(rows?.length < 1 && totalCount < 1) && allSelected"
+                [value]="!(rows?.length < 1 && totalCount < 1) && allSelected"
+                [pure]="true"
                 [disabled]="disabled || rows?.length < 1 && totalCount < 1"
-                (click)="toggleAllSelections($event)"
+                (valueChange)="toggleAllSelections($event)"
             ></gtx-checkbox>
         </div>
 
@@ -108,9 +109,10 @@
         >
             <gtx-checkbox
                 class="selection-checkbox"
-                [checked]="selected | gtxIncludes:row.id"
+                [value]="selected[row.id]"
+                [pure]="true"
                 [disabled]="disabled"
-                (click)="updateRowSelection(row, $event)"
+                (valueChange)="updateRowSelection(row)"
             ></gtx-checkbox>
         </div>
 

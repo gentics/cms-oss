@@ -1,7 +1,31 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef } from '@angular/core';
-import { FALLBACK_TABLE_COLUMN_RENDERER, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '../../common';
-import { cancelEvent } from '../../utils';
+import {
+    CHECKBOX_STATE_INDETERMINATE,
+    FALLBACK_TABLE_COLUMN_RENDERER,
+    TableAction,
+    TableActionClickEvent,
+    TableColumn,
+    TableRow,
+    TableSelection,
+    TableSortOrder,
+} from '../../common';
+import { cancelEvent, toSelectionArray } from '../../utils';
 import { BaseComponent } from '../base-component/base.component';
+
+function selectionToMap(selection: string[] | TableSelection): TableSelection {
+    const value = {};
+    if (selection == null) {
+        return value;
+    }
+    if (Array.isArray(selection)) {
+        for (const id of selection) {
+            value[id] = true;
+        }
+    } else if (typeof value === 'object') {
+        return selection;
+    }
+    return value;
+}
 
 /**
  * INTERNAL BASE CLASS - Usage of this class outside of this project is heavily discouraged.
@@ -15,6 +39,7 @@ import { BaseComponent } from '../base-component/base.component';
 @Component({ template: '' })
 export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>> extends BaseComponent implements OnChanges {
 
+    public readonly CHECKBOX_STATE_INDETERMINATE = CHECKBOX_STATE_INDETERMINATE;
     public readonly FALLBACK_TABLE_COLUMN_RENDERER = FALLBACK_TABLE_COLUMN_RENDERER;
 
     /** If this table's rows can be selected. */
@@ -50,8 +75,12 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     public active: string;
 
     /** The ids of the selected items/rows. */
+    @Input({ transform: selectionToMap })
+    public selected: string[] | TableSelection = {};
+
+    /** Flag to change the `selectedChange` event type from `string[]` to `TableSelection`. */
     @Input()
-    public selected: string[] = [];
+    public selectionMap = false;
 
     /** The id of the column which this table is being sorted by. */
     @Input()
@@ -79,7 +108,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
 
     /** Event which emits when the selection is changed. */
     @Output()
-    public selectedChange = new EventEmitter<string[]>();
+    public selectedChange = new EventEmitter<string[] | TableSelection>();
 
     /** Event which emits when a row has been selected. */
     @Output()
@@ -113,7 +142,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true], ['sortable', true]);
+        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true], ['sortable', true], ['selectionMap', true]);
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
@@ -157,36 +186,38 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         }
     }
 
-    public updateRowSelection(row: R, event: MouseEvent): void {
+    public updateRowSelection(row: R, event?: MouseEvent): void {
         cancelEvent(event);
 
         if (!this.multiple) {
-            if (this.selected?.length > 0 && this.selected[0] === row.id) {
+            if (this.selected[row.id] === true) {
                 this.deselect.emit(row);
-                this.selectedChange.emit([]);
+                if (this.selectionMap) {
+                    this.selectedChange.emit({ [row.id]: false });
+                } else {
+                    this.selectedChange.emit([]);
+                }
                 return;
             }
 
             this.select.emit(row);
-            this.selectedChange.emit([row.id]);
+            if (this.selectionMap) {
+                this.selectedChange.emit({ [row.id]: true });
+            } else {
+                this.selectedChange.emit([row.id]);
+            }
             return;
         }
 
-        const copy = [...(this.selected || [])];
-        const idx = copy.indexOf(row.id);
+        const copy = structuredClone(this.selected) as TableSelection;
+        copy[row.id] = copy[row.id] === CHECKBOX_STATE_INDETERMINATE ? true : !copy[row.id];
 
-        if (idx > -1) {
-            copy.splice(idx, 1);
-        } else {
-            copy.push(row.id);
+        if (this.selectionMap) {
+            this.selectedChange.emit(copy);
+            return;
         }
 
-        if (idx > -1) {
-            this.deselect.emit(row);
-        } else {
-            this.select.emit(row);
-        }
-        this.selectedChange.emit(copy);
+        this.selectedChange.emit(toSelectionArray(copy));
     }
 
     public handleRowClick(row: R, event: MouseEvent): void {

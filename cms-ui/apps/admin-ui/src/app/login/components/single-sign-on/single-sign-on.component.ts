@@ -11,7 +11,7 @@ import { filter, take, takeUntil } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-single-sign-on',
-    templateUrl: './single-sign-on.compoent.html',
+    templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -58,17 +58,14 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
     attemptSsoWithKeycloak(): void {
         this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-
-            if (!returnUrl) {
-                return;
-            }
-
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
             const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
                 filter(isLoggedIn => !!isLoggedIn),
                 takeUntil(this.stopper.stopper$),
             );
-            onLogin$.subscribe(() => this.router.navigateByUrl(returnUrl));
+            onLogin$.subscribe(() => {
+                this.router.navigateByUrl(returnUrl);
+            });
         });
     }
 
@@ -96,9 +93,11 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
 
     private handleSsoResponse(result: string): void {
         if (/^\d+$/.test(result)) {
-            console.debug('Logging in via Single-Sign-On');
+            console.log('Logging in via Single-Sign-On');
             const sid = Number(result);
             this.authOps.validateSessionId(sid);
+        } else {
+            console.error('Unsupported SSO result: ' + result);
         }
     }
 }

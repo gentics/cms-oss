@@ -80,7 +80,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
 
     /** Flag to change the `selectedChange` event type from `string[]` to `TableSelection`. */
     @Input()
-    public selectionMap = false;
+    public useSelectionMap = false;
 
     /** The id of the column which this table is being sorted by. */
     @Input()
@@ -142,7 +142,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true], ['sortable', true], ['selectionMap', true]);
+        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true], ['sortable', true], ['useSelectionMap', false]);
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
@@ -192,7 +192,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         if (!this.multiple) {
             if (this.selected[row.id] === true) {
                 this.deselect.emit(row);
-                if (this.selectionMap) {
+                if (this.useSelectionMap) {
                     this.selectedChange.emit({ [row.id]: false });
                 } else {
                     this.selectedChange.emit([]);
@@ -201,7 +201,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
             }
 
             this.select.emit(row);
-            if (this.selectionMap) {
+            if (this.useSelectionMap) {
                 this.selectedChange.emit({ [row.id]: true });
             } else {
                 this.selectedChange.emit([row.id]);
@@ -212,7 +212,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         const copy = structuredClone(this.selected) as TableSelection;
         copy[row.id] = copy[row.id] === CHECKBOX_STATE_INDETERMINATE ? true : !copy[row.id];
 
-        if (this.selectionMap) {
+        if (this.useSelectionMap) {
             this.selectedChange.emit(copy);
             return;
         }

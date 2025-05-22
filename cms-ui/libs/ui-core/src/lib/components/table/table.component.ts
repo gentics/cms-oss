@@ -99,7 +99,7 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
             copy[row.id] = !this.allSelected;
         }
 
-        if (this.selectionMap) {
+        if (this.useSelectionMap) {
             this.selectedChange.emit(copy);
             return;
         }

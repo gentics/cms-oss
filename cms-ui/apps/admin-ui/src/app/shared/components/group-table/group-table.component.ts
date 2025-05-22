@@ -3,7 +3,7 @@ import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoade
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn, toSelectionArray } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';

@@ -30,7 +30,6 @@ import {
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
-import * as _ from 'cypress/types/lodash';
 
 export const DELETE_ACTION = 'delete';
 
@@ -54,7 +53,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selected: string[] | TableSelection = [];
 
     @Input()
-    public selectionMap = false;
+    public useSelectionMap = false;
 
     @Input()
     public multiple = true;

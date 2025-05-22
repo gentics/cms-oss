@@ -7,15 +7,25 @@ import {
     HostListener,
     Input,
     Output,
-    Renderer2,
     ViewChild,
 } from '@angular/core';
 import { CHECKBOX_STATE_INDETERMINATE, CheckboxState, KeyCode } from '../../common';
-import { generateFormProvider, randomId } from '../../utils';
+import { cancelEvent, coerceToBoolean, generateFormProvider, randomId } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
+
+function normalizeValue(value: any): CheckboxState {
+    return (typeof value === 'boolean' || value === CHECKBOX_STATE_INDETERMINATE)
+        ? value
+        : coerceToBoolean(value);
+}
 
 /**
  * Checkbox wraps the native `<input type="checkbox">` form element.
+ *
+ * ```ts
+ * const CHECKBOX_STATE_INDETERMINATE = 'indeterminate';
+ * type CheckState = boolean | typeof CHECKBOX_STATE_INDETERMINATE;
+ * ```
  *
  * ```html
  * <gtx-checkbox
@@ -53,47 +63,6 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
     public autofocus = false;
 
     /**
-     * Checked state of the checkbox. When set, the Checkbox will be
-     * in stateless mode.
-     *
-     * @deprecated Use the `value` Input instead and use the `pure` Input to control stateless mode.
-     */
-    @Input()
-    public get checked(): boolean {
-        return this.value === true;
-    }
-    public set checked(value: boolean) {
-        this.statelessMode = true;
-        this.compatibilityMode = true;
-
-        const val: CheckboxState | 'true' | '' = <any> value;
-        const nowChecked = val === true || <any> val === 'true' || <any> val === '';
-        if (nowChecked !== this.value) {
-            this.triggerChange(nowChecked);
-            this.change.emit(this.value);
-        }
-    }
-
-    /**
-     * Set to "indeterminate" for an indeterminate state (-).
-     *
-     * @deprecated Use the `value` Input instead and provide the indeterminate value.
-     */
-    @Input()
-    public get indeterminate(): boolean {
-        return this.value === CHECKBOX_STATE_INDETERMINATE;
-    }
-    public set indeterminate(val: boolean) {
-        this.compatibilityMode = true;
-
-        if (val !== (this.value === CHECKBOX_STATE_INDETERMINATE)) {
-            const newVal = val ? CHECKBOX_STATE_INDETERMINATE : false;
-            this.triggerChange(newVal);
-            this.change.emit(this.value);
-        }
-    }
-
-    /**
      * Checkbox ID
      */
     @Input()
@@ -104,6 +73,21 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
      */
     @Input()
     public name: string;
+
+    /**
+     * The state/value of this checkbox
+     */
+    @Input({ transform: normalizeValue })
+    public value: CheckboxState = false;
+
+    /**
+     * The value to be bound to the `value` property of the native checkbox.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#value
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#checked
+     */
+    @Input()
+    public formValue: string | null = null;
 
     /**
      * Blur event
@@ -135,43 +119,28 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
      */
     public tabbedFocus = false;
 
-    /**
-     * See note above on stateless mode.
-     */
-    private statelessMode = false;
-
-    /**
-     * @deprecated Flag for compatibility of the old (deprecated) functionality.
-     */
-    protected compatibilityMode = false;
-
     @ViewChild('input', { static: true })
     public inputElement: ElementRef<HTMLInputElement>;
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private renderer: Renderer2,
     ) {
         super(changeDetector);
     }
 
+    /** @deprecated See {@link blur} and {@link tabbedFocus} */
     onBlur(): void {
         this.blur.emit(this.value);
         this.triggerTouch();
         this.tabbedFocus = false;
     }
 
+    /** @deprecated See {@link focus} */
     onFocus(): void {
         this.focus.emit(this.value);
     }
 
-    protected onValueChange(): void {
-        // The binding via `value` doesn't properly work, therefore we have to do it manually
-        // with the renderer.
-        this.renderer.setProperty(this.inputElement.nativeElement, 'checked', this.value === CHECKBOX_STATE_INDETERMINATE ? null : this.value);
-        this.renderer.setProperty(this.inputElement.nativeElement, 'indeterminate', this.value === CHECKBOX_STATE_INDETERMINATE);
-    }
-
+    /** @deprecated See {@link tabbedFocus} */
     @HostListener('keyup', ['$event'])
     focusHandler(e: KeyboardEvent): void {
         if (e.keyCode === KeyCode.Tab) {
@@ -181,24 +150,25 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
         }
     }
 
-    toggleState(input: HTMLInputElement): void {
+    protected onValueChange(): void {
+        // no-op
+    }
+
+    public override writeValue(value: CheckboxState): void {
+        super.writeValue(normalizeValue(value));
+    }
+
+    public toggleState(event: Event): void {
+        // Always cancel the event, so the input doesn't change itself
+        cancelEvent(event);
+
+        // Ignore if disabled, then ignore
+        if (this.disabled) {
+            return;
+        }
+
         const newState: CheckboxState = this.value === CHECKBOX_STATE_INDETERMINATE ? true : !this.value;
-
-        if (!this.compatibilityMode) {
-            this.triggerChange(newState);
-            this.change.emit(this.value);
-            return;
-        }
-
-        if (this.statelessMode) {
-            if (input.checked !== this.value) {
-                input.checked = !!this.value;
-            }
-            return;
-        }
-        if (newState !== this.value) {
-            this.triggerChange(newState);
-            this.change.emit(this.value);
-        }
+        this.triggerChange(newState);
+        this.change.emit(this.value);
     }
 }

@@ -1,20 +1,20 @@
 <div>
     <input
+        #input
+
         type="checkbox"
         [attr.id]="id"
         [attr.name]="name"
         [attr.state]="value"
         [disabled]="disabled"
         [required]="required"
+        [checked]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+        [indeterminate]="value === CHECKBOX_STATE_INDETERMINATE"
+        [value]="formValue"
         [class.tabbed]="tabbedFocus"
 
         (blur)="onBlur()"
         (focus)="onFocus()"
-
-        #input
-    >
-    <label
-        [attr.for]="id"
-        (click)="toggleState(input)"
-    >{{ label }}</label>
+    />
+    <label [attr.for]="id" (click)="toggleState($event)">{{ label }}</label>
 </div>

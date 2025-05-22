@@ -2,8 +2,8 @@
 <div class="thumbnail-overlay" [class.selected]="isSelected">
     <div class="top-bar">
         <gtx-checkbox
-            [checked]="isSelected"
-            (change)="toggleSelect.emit(!isSelected)"
+            [value]="isSelected"
+            (valueChange)="toggleSelect.emit(!isSelected)"
         ></gtx-checkbox>
         <div class="image-info">
             <span>{{ item.fileSize | filesize }}</span>

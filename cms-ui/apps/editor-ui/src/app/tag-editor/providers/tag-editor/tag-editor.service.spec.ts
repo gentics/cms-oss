@@ -26,22 +26,25 @@ import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
-import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
+import { TagEditorModal } from '../../components/tag-editor-modal/tag-editor-modal.component';
 import { EditTagInfo, TagEditorService } from './tag-editor.service';
 
 describe('TagEditorService', () => {
 
     let state: TestApplicationState;
     let tagEditorService: TagEditorService;
-    let tagEditorOverlayHost: TagEditorOverlayHostComponent;
     let userAgentRef: MockUserAgentRef;
     let entityResolver: MockEntityResolver;
     let editorOverlayService: MockEditorOverlayService;
     let repositoryBrowserClient: MockRepositoryBrowserClient;
+    let modalService: ModalService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [NgxsModule.forRoot(STATE_MODULES)],
+            declarations: [
+                TagEditorModal,
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
@@ -62,9 +65,8 @@ describe('TagEditorService', () => {
         entityResolver = TestBed.inject(EntityResolver) as any;
         repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient) as any;
         tagEditorService = TestBed.inject(TagEditorService);
+        modalService = TestBed.inject(ModalService);
 
-        tagEditorOverlayHost = <any> new MockTagEditorOverlayHost();
-        tagEditorService.registerTagEditorOverlayHost(tagEditorOverlayHost);
         state.mockState({
             editor: {
                 nodeId: 4711,
@@ -113,46 +115,39 @@ describe('TagEditorService', () => {
         expect(actualContext).toEqual(expectedVarContext);
     }
 
-    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and resolves the result promise correctly', fakeAsync(async () => {
+    it('openTagEditor() opens the modal correctly', fakeAsync(async () => {
         const data = getTagEditorContextInitData();
-        const expectedData = cloneDeep(data);
-        expectedData.tagOwnerFromIFrame = true;
-        expect((<any> data.tag)['tagType']).toBeUndefined();
-        const createTagEditorContextSpy = spyOn(tagEditorService, 'createTagEditorContext').and.callThrough();
-        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor')
-            .and.callFake((editableTag: EditableTag, _context: TagEditorContext) => {
-                return Promise.resolve({
-                    doDelete: false,
-                    tag: createEditedTag(editableTag),
-                });
-            });
+        const copy = structuredClone(data);
 
-        const expectedEditableTag: EditableTag = {
-            ...expectedData.tag,
-            tagType: expectedData.tagType,
-        };
+        const modalSpy = spyOn(modalService, 'fromComponent').and.callFake(() => {
+            return Promise.resolve({
+                element: null,
+                instance: null,
+                open: () => Promise.resolve({
+                    doDelete: false,
+                    tag: createEditedTag({
+                        ...copy.tag,
+                        tagType: copy.tagType,
+                    }),
+                }),
+            });
+        });
 
         const editorResult = await tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner, { withDelete: false });
 
-        expect(createTagEditorContextSpy).toHaveBeenCalledWith(expectedData);
-        expect(openTagEditorSpy).toHaveBeenCalled();
-        expect(openTagEditorSpy.calls.argsFor(0)[0]).toEqual(expectedEditableTag);
-        const tagEditorContext: TagEditorContext = openTagEditorSpy.calls.argsFor(0)[1];
-        checkTagEditorContext(tagEditorContext, expectedData);
+        expect(modalSpy).toHaveBeenCalled();
 
         // Make sure that the returned promise resolves to a tag without the tagType property set
-        const expectedFinalTag: Tag = {
-            ...expectedData.tag,
-        };
+        const expectedFinalTag = structuredClone(data.tag);
         (expectedFinalTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified value';
 
         expect(editorResult.doDelete).toEqual(false);
         expect(editorResult.tag).toEqual(expectedFinalTag as any);
     }));
 
-    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and relays a promise rejection correctly', fakeAsync(async () => {
+    it('openTagEditor() uses the tagEditorHost to open the tag editor and relays a promise rejection correctly', fakeAsync(async () => {
         const data = getTagEditorInitData();
-        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor').and.returnValue(Promise.reject(undefined));
+        const openTagEditorSpy = spyOn(tagEditorService, 'openTagEditor').and.returnValue(Promise.reject(undefined));
 
         try {
             await tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
@@ -236,23 +231,6 @@ describe('TagEditorService', () => {
         expect(data.tagOwner.languageVariants).toEqual(languageVariants);
     }));
 
-    it('unregisterTagEditorOverlayHost() works', fakeAsync(async () => {
-        const data = getTagEditorInitData();
-        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor')
-            .and.callFake((editableTag: EditableTag, _context: TagEditorContext) => {
-                return Promise.resolve({
-                    doDelete: false,
-                    tag: createEditedTag(editableTag),
-                });
-            });
-
-        const editorResult = await tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
-        expect(openTagEditorSpy).toHaveBeenCalled();
-        expect(editorResult).toBeTruthy();
-
-        expect(() => tagEditorService.unregisterTagEditorOverlayHost(tagEditorOverlayHost)).not.toThrow();
-    }));
-
     it('createTagEditorContext() sets up variableContext correctly such that it emits updates', fakeAsync(() => {
         const data = getTagEditorContextInitData();
         state.dispatch(new SetUILanguageAction('en'));
@@ -321,10 +299,6 @@ function createEditedTag(editableTag: EditableTag): EditableTag {
     const editedTag = cloneDeep(editableTag);
     (editedTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified value';
     return editedTag;
-}
-
-class MockTagEditorOverlayHost {
-    openTagEditor(): void { }
 }
 
 class MockEntityResolver {

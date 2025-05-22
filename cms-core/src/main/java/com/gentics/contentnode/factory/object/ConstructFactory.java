@@ -1603,7 +1603,7 @@ public class ConstructFactory extends AbstractFactory {
 		List<Integer> partIds = idLists != null ? idLists[0] : null;
 		List<Integer> valueIds = idLists != null ? idLists[1] : null;
 
-		return new FactoryConstruct(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs), partIds, valueIds);
+		return new FactoryConstruct(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "construct"), partIds, valueIds);
 	}
 
 	/**
@@ -1616,7 +1616,7 @@ public class ConstructFactory extends AbstractFactory {
 	 */
 	private ConstructCategory loadConstructCategoryObject(Integer id,
 			NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws NodeException {
-		return new FactoryConstructCategory(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+		return new FactoryConstructCategory(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "construct_category"));
 	}
 
 	/**

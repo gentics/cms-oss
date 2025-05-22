@@ -76,6 +76,7 @@ import {
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
+    I18nDurationPipe,
     I18nNumberPipe,
     I18nRelativeDatePipe,
 } from './pipes';
@@ -177,6 +178,7 @@ const PIPES: any[] = [
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
+    I18nDurationPipe,
     I18nNumberPipe,
     I18nRelativeDatePipe,
 ];

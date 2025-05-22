@@ -7354,7 +7354,7 @@ public class FolderFactory extends AbstractFactory {
 	}
 
 	private Node loadNodeObject(Integer id, NodeObjectInfo info, FactoryDataRow rs) throws NodeException {
-		return new FactoryNode(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+		return new FactoryNode(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "node"));
 	}
 
 	private Folder loadFolderObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws NodeException {
@@ -7377,7 +7377,7 @@ public class FolderFactory extends AbstractFactory {
 		boolean disinheritDefault = rs.getBoolean("disinherit_default");
 
 		return new FactoryFolder(id, info, name, description, motherId, nodeId, pubDir, objTypeIds, cDate, eDate, creatorId, editorId, masterId, channelSetId,
-				channelId, master, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
+				channelId, master, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs, "folder"));
 	}
 
 	@SuppressWarnings("unchecked")

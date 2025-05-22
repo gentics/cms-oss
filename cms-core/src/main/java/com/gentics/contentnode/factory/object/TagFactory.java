@@ -1722,7 +1722,7 @@ public class TagFactory extends AbstractFactory {
 
 			Integer contentId = new Integer(rs.getInt("content_id"));
 
-			tag = (T) new FactoryContentTag(id, info, name, constructId, enabled, contentId, rs.getBoolean("template"), valueIds, getUdate(rs), getGlobalId(rs));
+			tag = (T) new FactoryContentTag(id, info, name, constructId, enabled, contentId, rs.getBoolean("template"), valueIds, getUdate(rs), getGlobalId(rs, "contenttag"));
 
 		} else if (TemplateTag.class.equals(clazz)) {
 
@@ -1730,7 +1730,7 @@ public class TagFactory extends AbstractFactory {
 			boolean isPublic = rs.getInt("pub") > 0;
 
 			tag = (T) new FactoryTemplateTag(id, info, name, constructId, enabled, templateId, rs.getInt("templategroup_id"), isPublic, valueIds, getUdate(rs),
-					getGlobalId(rs), Boolean.valueOf(rs.getBoolean("mandatory")));
+					getGlobalId(rs, "templatetag"), Boolean.valueOf(rs.getBoolean("mandatory")));
 
 		} else if (ObjectTag.class.equals(clazz)) {
 
@@ -1740,7 +1740,7 @@ public class TagFactory extends AbstractFactory {
 			Class<? extends NodeObject> containerClass = TransactionManager.getCurrentTransaction().getClass(rs.getInt("obj_type"));
 
 			tag = (T) new FactoryObjectTag(id, info, name, constructId, enabled, inTagId, inheritable, rs.getBoolean("required"),
-					valueIds, containerId, containerClass, getUdate(rs), getGlobalId(rs));
+					valueIds, containerId, containerClass, getUdate(rs), getGlobalId(rs, "objtag"));
 
 		}
 

@@ -2747,7 +2747,7 @@ public class FileFactory extends AbstractFactory {
 		}
 
 		return (T) new FactoryFile(id, info, name, niceUrl, filetype, folderId, filesize, description, sizeX, sizeY, dpiX, dpiY, fpX, fpY, md5, creatorId, editorId, cDate,
-				eDate, channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
+				eDate, channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs, "contentfile"));
 	}
 
 	/*

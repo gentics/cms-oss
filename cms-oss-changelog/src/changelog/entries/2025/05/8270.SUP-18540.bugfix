@@ -1,0 +1,2 @@
+Database records with empty uuid could lead to NullPointerExceptions during various actions.
+This has been modified so that the action involving the empty uuid will succeed and a warning will be logged.

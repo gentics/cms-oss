@@ -5301,7 +5301,7 @@ public class PageFactory extends AbstractFactory {
 				cDate, new ContentNodeDate(rs.getInt("custom_cdate")), eDate, new ContentNodeDate(rs.getInt("custom_edate")), pDate, creatorId, editorId,
 				publisherId, timePub, timePubVersion, pubQueueUserId, timePubQueue, timePubVersionQueue, timeOff, offQueueUserId, timeOffQueue, channelSetId,
 				channelId, syncPageId, syncTimestamp, master, exclude, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"),
-				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs));
+				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs, "page"));
 	}
 
 	private Content loadContentObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {
@@ -5309,7 +5309,7 @@ public class PageFactory extends AbstractFactory {
 		int locked = rs.getInt("locked");
 		int lockedBy = rs.getInt("locked_by");
 
-		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs));
+		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs, "content"));
 	}
 
 	/* (non-Javadoc)

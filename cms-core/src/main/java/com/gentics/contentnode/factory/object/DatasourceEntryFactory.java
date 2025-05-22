@@ -218,13 +218,13 @@ public class DatasourceEntryFactory extends AbstractFactory {
 
 			}
 
-			return (T) new FactoryDatasourceEntry(id, info, datasourceId, sortOrder, key, value, dsid, getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryDatasourceEntry(id, info, datasourceId, sortOrder, key, value, dsid, getUdate(rs), getGlobalId(rs, "datasource_value"));
 		} else if (Datasource.class.equals(clazz)) {
 			String name = rs.getString("name");
 			Integer paramId = rs.getInt("param_id");
 			int sourceType = rs.getInt("source_type");
 
-			return (T) new FactoryDatasource(id, info, name, paramId, sourceType, getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryDatasource(id, info, name, paramId, sourceType, getUdate(rs), getGlobalId(rs, "datasource"));
 		} else {
 			return null;
 		}

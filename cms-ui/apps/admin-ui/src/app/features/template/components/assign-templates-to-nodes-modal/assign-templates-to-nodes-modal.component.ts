@@ -2,8 +2,8 @@ import { TemplateBO } from '@admin-ui/common';
 import { I18nNotificationService, NodeOperations, NodeTableLoaderService, TemplateOperations } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { EntityIdType, IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal } from '@gentics/ui-core';
+import { IndexById, Node, Raw } from '@gentics/cms-models';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -19,10 +19,13 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
     public templates: TemplateBO[] = [];
 
     public loading = false;
-    public selectedIds: string[] = [];
+    public selected: TableSelection = {};
 
     protected nodes: IndexById<Node<Raw>> = {};
-    protected selectedPerTemplate: { [templateId: EntityIdType]: number[] } = {};
+    /**
+     * Record of template-id which node-ids have it assigned.
+     */
+    protected selectedPerTemplate: Record<number, Set<number>> = {};
     protected subscriptions: Subscription[] = [];
 
     constructor(
@@ -40,51 +43,58 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(combineLatest([this.nodeData.watchAllEntities(), forkJoin(this.templates.map(template => {
-            // for every template, get the list of nodes to which the template is assigned
-            return this.templateOperations.getLinkedNodes(template.id).pipe(
-                map(linkedNodes => [template, linkedNodes]),
-            );
-        }))],
-        ).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
+        this.subscriptions.push(combineLatest([
+            this.nodeData.watchAllEntities(),
+            forkJoin(this.templates.map(template => {
+                // for every template, get the list of nodes to which the template is assigned
+                return this.templateOperations.getLinkedNodes(template.id).pipe(
+                    map(linkedNodes => [template, linkedNodes]),
+                );
+            })),
+        ]).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
             const nodeIds: number[] = [];
             this.nodes = {};
+            this.selected = {};
+
             nodes.forEach(node => {
                 this.nodes[node.id] = node;
+                this.selected[node.id] = CHECKBOX_STATE_INDETERMINATE;
                 nodeIds.push(node.id);
             });
 
-            const newSelection = new Set<string>();
             const templateIds = this.templates.map(t => Number(t.id));
 
             // for every template, collect the node IDs to which the template is assigned
             this.selectedPerTemplate = {};
+
             templateData.forEach(([template, linkedNodes]) => {
                 linkedNodes.forEach(node => {
                     const templateId = Number(template.id);
                     const nodeId = Number(node.id);
-                    this.selectedPerTemplate[templateId] = this.selectedPerTemplate[templateId] ?? [];
-                    this.selectedPerTemplate[templateId].push(nodeId);
+                    if (!this.selectedPerTemplate[templateId]) {
+                        this.selectedPerTemplate[templateId] = new Set();
+                    }
+                    this.selectedPerTemplate[templateId].add(nodeId);
                 });
             });
 
-            // for every node, check whether all given templates are assigned
+            // for every node, check whether all given templates are assigned or unassigned
             nodeIds.forEach(nodeId => {
-                let nodeHasAllTemplates = true;
+                let templateCount = 0;
+
                 for (const id of templateIds) {
-                    if (!this.selectedPerTemplate[id] || !this.selectedPerTemplate[id].includes(nodeId)) {
-                        nodeHasAllTemplates = false;
-                        break;
+                    if (this.selectedPerTemplate[id] && this.selectedPerTemplate[id].has(nodeId)) {
+                        templateCount++;
                     }
                 }
 
-                // If a node contains all templates, then it should be marked as selected in the list
-                if (nodeHasAllTemplates) {
-                    newSelection.add(nodeId.toString());
+                if (templateCount === 0) {
+                    this.selected[nodeId] = false;
+                } else if (templateCount === this.templates.length) {
+                    this.selected[nodeId] = true;
                 }
             });
 
-            this.selectedIds = Array.from(newSelection);
             this.loading = false;
             this.changeDetector.markForCheck();
         }));
@@ -94,29 +104,33 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    selectionChange(newSelection: string[]): void {
-        this.selectedIds = newSelection;
+    selectionChange(newSelection: TableSelection): void {
+        this.selected = newSelection;
     }
 
     async okButtonClicked(): Promise<void> {
+        await this.applySelection();
+
+        this.nodeTableLoader.reload();
+        this.closeFn();
+    }
+
+    async applySelection(): Promise<void> {
         this.loading = true;
         this.changeDetector.markForCheck();
-        const addSuccess = new Set<string>();
-        const removeSucess = new Set<string>();
+        const addSuccess = new Set<number>();
+        const removeSucess = new Set<number>();
 
         for (const template of this.templates) {
-            const toAdd = new Set<string>(this.selectedIds);
-            const nodeIds = this.selectedPerTemplate[template.id].map(id => id.toString())
-            const toRemove = new Set<string>(nodeIds);
-
-            for (const alreadAssigned of nodeIds) {
-                toAdd.delete(alreadAssigned);
-            }
-            for (const stillAssigned of this.selectedIds) {
-                toRemove.delete(stillAssigned);
-            }
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+            const previouslyAssignedIds = new Set(this.selectedPerTemplate[template.id]);
 
             for (const nodeToAdd of toAdd) {
+                if (previouslyAssignedIds.has(nodeToAdd)) {
+                    continue;
+                }
+
                 try {
                     await this.nodeOperations.linkTemplate(nodeToAdd, template.id).toPromise();
                     addSuccess.add(nodeToAdd);
@@ -135,6 +149,10 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
 
             for (const nodeToRemove of toRemove) {
+                if (!previouslyAssignedIds.has(nodeToRemove)) {
+                    continue;
+                }
+
                 try {
                     await this.nodeOperations.unlinkTemplate(nodeToRemove, template.id).toPromise();
                     removeSucess.add(nodeToRemove);
@@ -195,9 +213,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
         }
 
-        this.nodeTableLoader.reload();
         this.loading = false;
         this.changeDetector.markForCheck();
-        this.closeFn();
     }
 }

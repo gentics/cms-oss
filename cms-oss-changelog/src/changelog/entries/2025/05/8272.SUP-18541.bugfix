@@ -1,0 +1,3 @@
+The preview for a modified tag was not rendered correctly (did not show the modified, but the original content),
+when the tag rendered the modified part by referencing the @text@ attribute of that part.
+This has been fixed.

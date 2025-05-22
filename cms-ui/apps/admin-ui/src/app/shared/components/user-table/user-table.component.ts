@@ -165,10 +165,13 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         switch (event.actionId) {
             case ASSIGN_TO_GROUP_ACTION:
                 this.changeUserGroups(this.getAffectedEntityIds(event).map(id => Number(id)))
-                    .then(() => {
+                    .then(didChange => {
+                        if (!didChange) {
+                            return;
+                        }
+
                         if (event.selection) {
-                            this.selected = [];
-                            this.selectedChange.emit([]);
+                            this.updateSelection([]);
                         }
                         this.loader.reload();
                     });

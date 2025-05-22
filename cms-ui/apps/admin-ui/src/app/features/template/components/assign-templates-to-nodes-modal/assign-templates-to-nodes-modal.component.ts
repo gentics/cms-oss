@@ -1,5 +1,5 @@
 import { TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, NodeOperations, NodeTableLoaderService, TemplateOperations } from '@admin-ui/core';
+import { I18nNotificationService, NodeOperations, TemplateOperations } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
@@ -13,7 +13,7 @@ import { map } from 'rxjs/operators';
     styleUrls: ['./assign-templates-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
+export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
     @Input()
     public templates: TemplateBO[] = [];
@@ -32,7 +32,6 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         protected changeDetector: ChangeDetectorRef,
         protected nodeData: NodeDataService,
         protected nodeOperations: NodeOperations,
-        protected nodeTableLoader: NodeTableLoaderService,
         protected notification: I18nNotificationService,
         protected templateOperations: TemplateOperations,
     ) {
@@ -51,49 +50,43 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
                     map(linkedNodes => [template, linkedNodes]),
                 );
             })),
-        ]).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
-            const nodeIds: number[] = [];
+        ]).subscribe(([allNodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
+            const assignment: Record<number, Set<number>> = {};
+            const newSelection: TableSelection = {};
             this.nodes = {};
-            this.selected = {};
 
-            nodes.forEach(node => {
+            // Create a reverse mapping
+            for (const [template, linkedNodes] of templateData) {
+                for (const node of linkedNodes) {
+                    if (!assignment[node.id]) {
+                        assignment[node.id] = new Set();
+                    }
+                    assignment[node.id].add(template.id);
+                }
+            }
+
+            // Check each nodes selection state
+            for (const node of allNodes) {
                 this.nodes[node.id] = node;
-                this.selected[node.id] = CHECKBOX_STATE_INDETERMINATE;
-                nodeIds.push(node.id);
-            });
+                const templateCount = assignment[node.id]?.size ?? 0;
 
-            const templateIds = this.templates.map(t => Number(t.id));
+                switch (templateCount) {
+                    case 0:
+                        newSelection[node.id] = false;
+                        break;
 
-            // for every template, collect the node IDs to which the template is assigned
-            this.selectedPerTemplate = {};
+                    case this.templates.length:
+                        newSelection[node.id] = true;
+                        break;
 
-            templateData.forEach(([template, linkedNodes]) => {
-                linkedNodes.forEach(node => {
-                    const templateId = Number(template.id);
-                    const nodeId = Number(node.id);
-                    if (!this.selectedPerTemplate[templateId]) {
-                        this.selectedPerTemplate[templateId] = new Set();
-                    }
-                    this.selectedPerTemplate[templateId].add(nodeId);
-                });
-            });
-
-            // for every node, check whether all given templates are assigned or unassigned
-            nodeIds.forEach(nodeId => {
-                let templateCount = 0;
-
-                for (const id of templateIds) {
-                    if (this.selectedPerTemplate[id] && this.selectedPerTemplate[id].has(nodeId)) {
-                        templateCount++;
-                    }
+                    default:
+                        newSelection[node.id] = CHECKBOX_STATE_INDETERMINATE;
+                        break;
                 }
+            }
 
-                if (templateCount === 0) {
-                    this.selected[nodeId] = false;
-                } else if (templateCount === this.templates.length) {
-                    this.selected[nodeId] = true;
-                }
-            });
+            this.selected = newSelection;
+            this.selectedPerTemplate = assignment;
 
             this.loading = false;
             this.changeDetector.markForCheck();
@@ -109,31 +102,30 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
     }
 
     async okButtonClicked(): Promise<void> {
-        await this.applySelection();
-
-        this.nodeTableLoader.reload();
-        this.closeFn();
+        this.closeFn(await this.applySelection());
     }
 
-    async applySelection(): Promise<void> {
+    async applySelection(): Promise<boolean> {
         this.loading = true;
         this.changeDetector.markForCheck();
+
         const addSuccess = new Set<number>();
         const removeSucess = new Set<number>();
+        let didChange = false;
 
         for (const template of this.templates) {
             const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
             const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
-            const previouslyAssignedIds = new Set(this.selectedPerTemplate[template.id]);
 
             for (const nodeToAdd of toAdd) {
-                if (previouslyAssignedIds.has(nodeToAdd)) {
+                if (this.selectedPerTemplate[nodeToAdd].has(template.id)) {
                     continue;
                 }
 
                 try {
                     await this.nodeOperations.linkTemplate(nodeToAdd, template.id).toPromise();
                     addSuccess.add(nodeToAdd);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -149,13 +141,14 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
 
             for (const nodeToRemove of toRemove) {
-                if (!previouslyAssignedIds.has(nodeToRemove)) {
+                if (!this.selectedPerTemplate[nodeToRemove].has(template.id)) {
                     continue;
                 }
 
                 try {
                     await this.nodeOperations.unlinkTemplate(nodeToRemove, template.id).toPromise();
                     removeSucess.add(nodeToRemove);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -215,5 +208,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
 
         this.loading = false;
         this.changeDetector.markForCheck();
+
+        return didChange;
     }
 }

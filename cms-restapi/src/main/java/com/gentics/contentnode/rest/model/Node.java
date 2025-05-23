@@ -715,4 +715,9 @@ public class Node extends ContentNodeItem implements Serializable {
 	public void setContentRepositoryName(String contentRepositoryName) {
 		this.contentRepositoryName = contentRepositoryName;
 	}
+
+	@Override
+	public String toString() {
+		return "Node %s".formatted(getName());
+	}
 }

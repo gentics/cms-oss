@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-rest-client-angular",
-  "version": "6.2.11",
+  "version": "6.2.12",
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {
@@ -13,8 +13,8 @@
   "devDependencies": {
     "@angular/common": ">=18.0.0",
     "@angular/core": ">=18.0.0",
-    "@gentics/cms-models": "^6.2.11",
-    "@gentics/cms-rest-client": "^6.2.11",
+    "@gentics/cms-models": "^6.2.12",
+    "@gentics/cms-rest-client": "^6.2.12",
     "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {

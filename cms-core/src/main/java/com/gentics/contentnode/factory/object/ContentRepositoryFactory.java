@@ -192,13 +192,13 @@ public class ContentRepositoryFactory extends AbstractFactory {
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id,
 			NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException, NodeException {
 		if (ContentRepository.class.equals(clazz)) {
-			return (T) new FactoryContentRepository(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryContentRepository(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "contentrepository"));
 		} else if (TagmapEntry.class.equals(clazz)) {
-			return (T) new FactoryTagmapEntry(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryTagmapEntry(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "tagmap"));
 		} else if (CrFragment.class.equals(clazz)) {
-			return (T) new FactoryCrFragment(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryCrFragment(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "cr_fragment"));
 		} else if (CrFragmentEntry.class.equals(clazz)) {
-			return (T) new FactoryCrFragmentEntry(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryCrFragmentEntry(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "cr_fragement_entry"));
 		}
 		return null;
 	}

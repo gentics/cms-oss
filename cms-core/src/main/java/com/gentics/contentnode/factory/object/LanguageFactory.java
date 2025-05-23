@@ -418,7 +418,7 @@ public class LanguageFactory extends AbstractFactory {
 	@SuppressWarnings("unchecked")
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id,
 			NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws NodeException {
-		return (T) new FactoryContentLanguage(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+		return (T) new FactoryContentLanguage(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "contentgroup"));
 	}
 
 	/*

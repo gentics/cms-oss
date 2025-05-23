@@ -197,9 +197,9 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 			boolean restricted = rs.getBoolean("restricted");
 
 			return (T) new FactoryObjectTagDefinition(id, info, nameId, descriptionId, objpropId, targetType,
-					categoryId, syncContentset, syncChannelset, syncVariants, restricted, getUdate(rs), getGlobalId(rs));
+					categoryId, syncContentset, syncChannelset, syncVariants, restricted, getUdate(rs), getGlobalId(rs, "objtag"));
 		} else if (ObjectTagDefinitionCategory.class.equals(clazz)) {
-			return (T) new FactoryObjectTagDefinitionCategory(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+			return (T) new FactoryObjectTagDefinitionCategory(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "objprop_category"));
 		} else {
 			return null;
 		}

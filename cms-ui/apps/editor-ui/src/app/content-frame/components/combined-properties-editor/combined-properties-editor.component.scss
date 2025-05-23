@@ -224,20 +224,6 @@ hr {
     }
 }
 
-tag-editor-overlay-host.active {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    @media screen and (max-width: $small-screen) {
-        left: auto;
-        width: 90%;
-    }
-}
-
 .property-tab-mobile {
     display: none;
     height: 16px;

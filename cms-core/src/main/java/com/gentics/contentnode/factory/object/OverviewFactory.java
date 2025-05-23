@@ -970,7 +970,7 @@ public class OverviewFactory extends AbstractFactory {
 		}
 
 		return new FactoryOverview(id, info, selectionType, objClass, orderKind, orderWay, maxObjects, recursion, containerClass, new Integer(containerId),
-				getUdate(rs), getGlobalId(rs));
+				getUdate(rs), getGlobalId(rs, "ds"));
 	}
 
 	private OverviewEntry loadOverviewEntry(Class<? extends NodeObject> clazz, Integer id, NodeObjectInfo info, FactoryDataRow rs) throws SQLException {
@@ -993,7 +993,7 @@ public class OverviewFactory extends AbstractFactory {
 		}
 
 		return new FactoryOverviewEntry(id, info, objectId, objectOrder, containerClass, containerId, dsId, aUserId, aDate, rs.getInt("node_id"), getUdate(rs),
-				getGlobalId(rs));
+				getGlobalId(rs, "ds_obj"));
 	}
 
 	/* (non-Javadoc)

@@ -611,7 +611,7 @@ public class ValueFactory extends AbstractFactory {
 	@SuppressWarnings("unchecked")
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id,
 			NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException, NodeException {
-		return (T) new FactoryValue(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+		return (T) new FactoryValue(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "value"));
 	}
 
 	/* (non-Javadoc)

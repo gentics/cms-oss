@@ -68,18 +68,18 @@ describe('CheckboxComponent', () => {
         });
     }
 
-    function resetSpy(name: string) {
-        cy.get(`@${spyName}`)
+    function resetSpy(spyName: string) {
+        cy.get<Cypress.Agent<sinon.SinonSpy>>(`@${spyName}`)
             .then(spy => {
-                (spy as unknown as Cypress.Agent<sinon.SinonSpy>).resetHistory();
+                spy.resetHistory();
             });
     }
 
-    function calledOnceWithReset(spyName: string, value: CheckboxState) {
-        cy.get(`@${spyName}`)
+    function calledOnceWithReset(spyName: string, value: any) {
+        cy.get<Cypress.Agent<sinon.SinonSpy>>(`@${spyName}`)
             .then(spy => {
                 expect(spy).to.have.been.calledOnceWith(value);
-                (spy as unknown as Cypress.Agent<sinon.SinonSpy>).resetHistory();
+                spy.resetHistory();
             });
     }
 

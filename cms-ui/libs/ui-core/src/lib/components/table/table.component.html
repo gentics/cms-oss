@@ -97,7 +97,7 @@
             totalItems: totalCount,
         }; trackBy: trackRow"
         class="grid-row data-row"
-        [class.selected]="selected | gtxIncludes:row.id"
+        [class.selected]="selected[row.id] === true"
         [class.active]="!!active && active === row.id"
         [attr.data-id]="row.id"
         (click)="handleRowClick(row, $event)"

@@ -10,9 +10,8 @@
             class="modal-table"
             [showSearch]="true"
             [hideActions]="true"
-            [selected]="selected"
             [useSelectionMap]="true"
-            (selectedChange)="selectionChange($event)"
+            [(selected)]="selected"
         ></gtx-node-table>
     </div>
 

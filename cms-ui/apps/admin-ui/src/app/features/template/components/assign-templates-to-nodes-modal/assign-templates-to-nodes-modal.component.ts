@@ -23,9 +23,9 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
 
     protected nodes: IndexById<Node<Raw>> = {};
     /**
-     * Record of template-id which node-ids have it assigned.
+     * @key nodeId
      */
-    protected selectedPerTemplate: Record<number, Set<number>> = {};
+    protected currentAssignment: Record<number, Set<number>> = {};
     protected subscriptions: Subscription[] = [];
 
     constructor(
@@ -86,7 +86,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
             }
 
             this.selected = newSelection;
-            this.selectedPerTemplate = assignment;
+            this.currentAssignment = assignment;
 
             this.loading = false;
             this.changeDetector.markForCheck();
@@ -95,10 +95,6 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
-    }
-
-    selectionChange(newSelection: TableSelection): void {
-        this.selected = newSelection;
     }
 
     async okButtonClicked(): Promise<void> {
@@ -118,7 +114,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
             const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
 
             for (const nodeToAdd of toAdd) {
-                if (this.selectedPerTemplate[nodeToAdd].has(template.id)) {
+                if (this.currentAssignment[nodeToAdd]?.has?.(template.id)) {
                     continue;
                 }
 
@@ -141,7 +137,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
             }
 
             for (const nodeToRemove of toRemove) {
-                if (!this.selectedPerTemplate[nodeToRemove].has(template.id)) {
+                if (!this.currentAssignment[nodeToRemove]?.has?.(template.id)) {
                     continue;
                 }
 

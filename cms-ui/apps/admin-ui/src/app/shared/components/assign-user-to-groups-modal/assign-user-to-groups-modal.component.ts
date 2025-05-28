@@ -29,6 +29,9 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
     public loading = false;
 
     protected users: Record<number, User<Raw>> = {};
+    /**
+     * @key groupId
+     */
     protected currentAssignment: Record<number, Set<number>> = null;
 
     private subscriptions: Subscription[] = [];
@@ -173,7 +176,7 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
             const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
 
             for (const groupToAdd of toAdd) {
-                if (this.currentAssignment[groupToAdd].has(userId)) {
+                if (this.currentAssignment[groupToAdd]?.has?.(userId)) {
                     continue;
                 }
 
@@ -187,7 +190,7 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
             }
 
             for (const groupToRemove of toRemove) {
-                if (!this.currentAssignment[groupToRemove].has(userId)) {
+                if (!this.currentAssignment[groupToRemove]?.has?.(userId)) {
                     continue;
                 }
 

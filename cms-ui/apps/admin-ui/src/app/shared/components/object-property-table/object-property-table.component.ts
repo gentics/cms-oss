@@ -1,6 +1,7 @@
 import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
+    ErrorHandler,
     I18nService,
     ObjectPropertyTableLoaderOptions,
     ObjectPropertyTableLoaderService,
@@ -79,6 +80,7 @@ export class ObjectPropertyTableComponent
         contextMenu: ContextMenuService,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -125,6 +127,7 @@ export class ObjectPropertyTableComponent
                         type: 'primary',
                         enabled: canDeleteAndEdit,
                         single: true,
+                        multiple: true,
                     },
                     {
                         id: DELETE_ACTION,
@@ -175,19 +178,27 @@ export class ObjectPropertyTableComponent
     public override handleAction(event: TableActionClickEvent<ObjectPropertyBO>): void {
         switch (event.actionId) {
             case ASSIGN_TO_NODES_ACTION:
-                this.setObjectpropertyNodeRestrictions(event.item);
+                this.setObjectpropertyNodeRestrictions(this.getAffectedEntityIds(event).map(Number));
                 return;
         }
 
         super.handleAction(event);
     }
 
-    protected async setObjectpropertyNodeRestrictions(objectProperty: ObjectPropertyBO): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
-            AssignNodeRestrictionsToObjectPropertiesModalComponent,
-            { closeOnOverlayClick: false, width: '75%' },
-            { objectProperty },
-        );
-        await dialog.open();
+    protected async setObjectpropertyNodeRestrictions(ids: number[]): Promise<void> {
+        try {
+            const dialog = await this.modalService.fromComponent(
+                AssignNodeRestrictionsToObjectPropertiesModalComponent,
+                { closeOnOverlayClick: false, width: '75%' },
+                { objectProperties: ids },
+            );
+            const didChange = await dialog.open();
+
+            if (didChange) {
+                this.reload();
+            }
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 }

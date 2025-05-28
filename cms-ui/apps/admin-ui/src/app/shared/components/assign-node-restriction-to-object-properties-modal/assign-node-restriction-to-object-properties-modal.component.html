@@ -1,27 +1,26 @@
-<div class="gtx-modal-datagrid">
-    <div class="modal-title">
-        <h5>{{ 'shared.assign_objectProperty_to_nodes_title' | i18n:{ entityName: objectProperty.keyword } }}</h5>
-    </div>
+<div class="modal-title">
+    <h5>{{ 'shared.assign_objectProperty_to_nodes_title' | i18n }}</h5>
+</div>
 
-    <div class="modal-content">
-        <gtx-node-table
-            class="modal-table"
-            [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="nodeIdsSelected"
-        ></gtx-node-table>
-    </div>
+<div class="modal-content">
+    <gtx-node-table
+        class="modal-table"
+        [showSearch]="true"
+        [hideActions]="true"
+        [useSelectionMap]="true"
+        [(selected)]="selected"
+    ></gtx-node-table>
+</div>
 
-    <div class="modal-footer">
-        <gtx-button
-            type="primary"
-            (click)="buttonAssignNodeRestrictonsClicked()"
-        >{{ 'common.ok_button' | i18n }}</gtx-button>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        (click)="buttonAssignNodeRestrictonsClicked()"
+    >{{ 'common.ok_button' | i18n }}</gtx-button>
 
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="cancelFn()"
-        >{{ 'common.cancel_button' | i18n }}</gtx-button>
-    </div>
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
 </div>

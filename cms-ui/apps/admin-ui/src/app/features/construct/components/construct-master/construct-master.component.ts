@@ -1,5 +1,5 @@
 import { BO_PERMISSIONS, ConstructBO, EditableEntity, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ConstructHandlerService, ConstructTableLoaderService, ErrorHandler, I18nNotificationService, I18nService } from '@admin-ui/core';
 import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
@@ -37,6 +37,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         protected handler: ConstructHandlerService,
         protected modalService: ModalService,
         protected notification: I18nNotificationService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -147,13 +148,21 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         }
         constructs = filtered;
 
-        const dialog = await this.modalService.fromComponent(AssignConstructsToNodesModalComponent, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        }, {
-            constructs,
-        });
-        await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(AssignConstructsToNodesModalComponent, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+            }, {
+                constructs,
+            });
+            const didChange = await dialog.open();
+
+            if (didChange) {
+                this.loader.reload();
+            }
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 
     protected async assignConstructsToCategories(constructs: ConstructBO[]): Promise<void> {

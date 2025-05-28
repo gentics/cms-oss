@@ -41,8 +41,8 @@
                 class="page-language-toggle"
                 *ngIf="itemType === 'page' && 1 < (nodeLanguages$ | async)?.length">
                 <gtx-checkbox
-                    [checked]="showAllLanguages$ | async"
-                    (change)="toggleDisplayAllLanguages()"
+                    [value]="showAllLanguages$ | async"
+                    (valueChange)="toggleDisplayAllLanguages()"
                 ></gtx-checkbox>
                 {{ 'editor.display_all_languages_label' | i18n }}
             </gtx-dropdown-item>
@@ -52,8 +52,8 @@
                 *ngIf="itemType === 'page'"
             >
                 <gtx-checkbox
-                    [checked]="showStatusIcons$ | async"
-                    (change)="toggleDisplayStatusIcons()"
+                    [value]="showStatusIcons$ | async"
+                    (valueChange)="toggleDisplayStatusIcons()"
                 ></gtx-checkbox>
                 {{ 'editor.display_status_icons_label' | i18n }}
             </gtx-dropdown-item>

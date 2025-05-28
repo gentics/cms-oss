@@ -204,7 +204,11 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 return;
 
             case Action.LINK_TO_NODE:
-                this.linkTemplatesToNodes(items);
+                this.linkTemplatesToNodes(items).then(didChange => {
+                    if (didChange) {
+                        this.loader.reload();
+                    }
+                });
                 return;
 
             case Action.LOCALIZE:
@@ -257,10 +261,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
     }
 
-    protected async linkTemplatesToNodes(templates: TemplateBO[]): Promise<void> {
+    protected async linkTemplatesToNodes(templates: TemplateBO[]): Promise<boolean> {
         // Can't open without selection
         if (templates.length === 0) {
-            return;
+            return false;
         }
 
         let doAbort = false;
@@ -278,7 +282,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         });
 
         if (doAbort) {
-            return;
+            return false;
         }
 
         // Close the details, as we have no way of reloading the assignment inside the details right now.
@@ -289,7 +293,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             );
 
             if (!closed) {
-                return;
+                return false;
             }
         }
 
@@ -300,7 +304,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             templates,
         });
 
-        await dialog.open();
+        return dialog.open();
     }
 
     protected async linkTemplatesToFolders(templates: TemplateBO[]): Promise<void> {

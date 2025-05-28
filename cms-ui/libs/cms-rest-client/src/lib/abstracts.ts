@@ -2,6 +2,7 @@ import {
     AccessControlledType,
     AssignEntityToContentPackageOptions,
     BaseListOptionsWithPaging,
+    BulkLinkUpdateRequest,
     CancelPageEditOptions,
     ChannelSyncRequest,
     ClusterInformationResponse,
@@ -115,6 +116,7 @@ import {
     FormSaveRequest,
     FormUnpublishRequest,
     GcmsPermission,
+    GenericItemResponse,
     Group,
     GroupCreateRequest,
     GroupCreateResponse,
@@ -155,6 +157,11 @@ import {
     LanguageListResponse,
     LanguageResponse,
     LanguageUpdateRequest,
+    LicenseContentRepositoryInfoOptions,
+    LicenseContentRepositoryInfoResponse,
+    LicenseInfoResponse,
+    LicenseUpdateRequest,
+    LicenseUpdateResponse,
     LinkCheckerCheckRequest,
     LinkCheckerCheckResponse,
     LinkCheckerExternalLinkList,
@@ -206,7 +213,6 @@ import {
     NodeListOptions,
     NodeListRequestOptions,
     NodeListResponse,
-    NodeMultiLinkRequest,
     NodeResponse,
     NodeSaveRequest,
     NodeSettingsResponse,
@@ -273,6 +279,7 @@ import {
     PublishLogListOption,
     PublishQueue,
     PublishType,
+    PushLicenseRequest,
     PushToMasterRequest,
     Raw,
     Response,
@@ -334,8 +341,9 @@ import {
     TemplateTagStatusResponse,
     TemplateUsageResponse,
     TotalUsageResponse,
-    TranslationTextRequest,
+    TranslationRequestOptions,
     TranslationResponse,
+    TranslationTextRequest,
     UnlocalizeRequest,
     UpdatesInfo,
     UsageInFilesOptions,
@@ -359,14 +367,6 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
-    TranslationRequestOptions,
-    GenericItemResponse,
-    LicenseInfoResponse,
-    LicenseUpdateRequest,
-    LicenseUpdateResponse,
-    LicenseContentRepositoryInfoOptions,
-    LicenseContentRepositoryInfoResponse,
-    PushLicenseRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -861,8 +861,8 @@ export interface AbstractObjectPropertyAPI extends BasicAPI {
 
     constructs: (id: number | string) => ConstructListResponse;
     listNodes: (id: number | string) => NodeListResponse;
-    linkToNode: (body: NodeMultiLinkRequest) => Response;
-    unlinkFromNode: (body: NodeMultiLinkRequest) => Response;
+    linkToNode: (body: BulkLinkUpdateRequest) => Response;
+    unlinkFromNode: (body: BulkLinkUpdateRequest) => Response;
     hash: (id: number | string) => ImplementationHashResponse;
 }
 

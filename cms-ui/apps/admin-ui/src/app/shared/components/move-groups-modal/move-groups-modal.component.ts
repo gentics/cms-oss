@@ -14,7 +14,7 @@ import { mergeMap } from 'rxjs/operators';
 export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> {
 
     /** IDs of groups to be moved */
-    sourceGroupIds: number[] = [];
+    sourceGroupIds: (string | number)[] = [];
 
     /** IDs of groups the source groups shall be moved to */
     targetGroupId: number;

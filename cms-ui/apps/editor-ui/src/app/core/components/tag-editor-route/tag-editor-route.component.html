@@ -7,9 +7,9 @@
         <div *ngIf="!(tagfillLightEnabled$ | async)" class="activate-obj-prop">
             <gtx-checkbox
                 [label]="'editor.obj_prop_active_label' | i18n"
-                [checked]="editedTag?.active"
+                [value]="editedTag?.active"
                 [disabled]="!(itemPermissions.edit) || (editedTag?.readOnly)"
-                (change)="toggleDisplayContent()"
+                (valueChange)="toggleDisplayContent()"
             ></gtx-checkbox>
         </div>
         <tag-editor-host

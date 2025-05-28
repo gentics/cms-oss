@@ -90,7 +90,7 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
         patchMultipleAlohaFunctions(this.settings as AlohaComponent, {
             disable: () => this.setDisabledState(true),
             enable: () => this.setDisabledState(false),
-            getValue: () => this.getFinalValue(),
+            getValue: () => this.getFinalValue(this.value),
             setValue: (val) => this.writeValue(val),
             show: () => {
                 if (!this.settings.visible) {

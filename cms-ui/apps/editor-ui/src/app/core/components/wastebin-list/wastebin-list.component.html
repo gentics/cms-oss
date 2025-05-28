@@ -12,8 +12,8 @@
         <gtx-checkbox
             *ngIf="listSize < filteredItems.length"
             [label]="'modal.show_all' | i18n"
-            [checked]="listSize !== itemsPerPage"
-            (change)="toggleShowAll()"
+            [value]="listSize !== itemsPerPage"
+            (valueChange)="toggleShowAll()"
         ></gtx-checkbox>
     </div>
 
@@ -23,8 +23,8 @@
             <gtx-contents-list-item>
                 <gtx-checkbox
                     class="type-icon"
-                    [checked]="isSelected(item)"
-                    (change)="toggleSelection(item, $event)"
+                    [value]="isSelected(item)"
+                    (valueChange)="toggleSelection(item, $event)"
                 ></gtx-checkbox>
 
                 <div class="item-primary">
@@ -55,9 +55,9 @@
             <div class="language-variants" *ngIf="item.type === 'page'" [class.expanded]="isSelected(item) && 1 < getVariants(item).length">
                 <div class="variant" *ngFor="let variant of getVariants(item)">
                     <gtx-checkbox
-                        [checked]="selected[variant.id]"
+                        [value]="selected[variant.id]"
                         [disabled]="!isDeleted(variant)"
-                        (change)="toggleVariantSelection(variant, $event)"
+                        (valueChange)="toggleVariantSelection(variant, $event)"
                     ></gtx-checkbox>
                     <span class="language">{{ 'lang.' + variant.language | i18n }}</span>
                     {{ variant.name }}

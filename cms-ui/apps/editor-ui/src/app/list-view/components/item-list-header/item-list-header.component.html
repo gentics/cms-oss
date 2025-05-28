@@ -129,8 +129,8 @@
                     (click)="toggleDisplayAllLanguages($event)"
                 >
                     <gtx-checkbox
-                        [checked]="showAllLanguages"
-                        (change)="toggleDisplayAllLanguages()"
+                        [value]="showAllLanguages"
+                        (valueChange)="toggleDisplayAllLanguages()"
                     ></gtx-checkbox>
                     {{ 'editor.display_all_languages_label' | i18n }}
                 </gtx-dropdown-item>
@@ -144,8 +144,8 @@
                         (click)="toggleDisplayStatusIcons()"
                     >
                         <gtx-checkbox
-                            [checked]="showStatusIcons"
-                            (change)="toggleDisplayStatusIcons()"
+                            [value]="showStatusIcons"
+                            (valueChange)="toggleDisplayStatusIcons()"
                         ></gtx-checkbox>
                         {{ 'editor.display_status_icons_label' | i18n }}
                     </gtx-dropdown-item>
@@ -158,8 +158,8 @@
                         (click)="toggleDisplayDeleted()"
                     >
                         <gtx-checkbox
-                            [checked]="showDeleted"
-                            (change)="toggleDisplayDeleted()"
+                            [value]="showDeleted"
+                            (valueChange)="toggleDisplayDeleted()"
                         ></gtx-checkbox>
                         {{ 'editor.display_deleted_label' | i18n }}
                     </gtx-dropdown-item>

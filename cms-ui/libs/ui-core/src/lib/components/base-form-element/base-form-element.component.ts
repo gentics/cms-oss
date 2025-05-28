@@ -96,8 +96,8 @@ export abstract class BaseFormElementComponent<T>
     /**
      * Optional hook to get the final value which is being emitted on value changes/triggers.
      */
-    protected getFinalValue(): T | null {
-        return this.value;
+    protected getFinalValue(newValue: T | null): T | null {
+        return newValue
     }
 
     /**
@@ -118,7 +118,7 @@ export abstract class BaseFormElementComponent<T>
             this.changeDetector.markForCheck();
         }
 
-        const changeValue = this.getFinalValue();
+        const changeValue = this.getFinalValue(value);
         if (typeof this.cvaChange === 'function') {
             this.cvaChange(changeValue);
         }

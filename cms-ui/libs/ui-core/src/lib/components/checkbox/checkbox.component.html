@@ -1,7 +1,5 @@
-<div>
+<div class="checkbox-wrapper">
     <input
-        #input
-
         type="checkbox"
         [attr.id]="id"
         [attr.name]="name"
@@ -11,10 +9,8 @@
         [checked]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
         [indeterminate]="value === CHECKBOX_STATE_INDETERMINATE"
         [value]="formValue"
-        [class.tabbed]="tabbedFocus"
 
-        (blur)="onBlur()"
-        (focus)="onFocus()"
+        (blur)="handleBlur()"
     />
     <label [attr.for]="id" (click)="toggleState($event)">{{ label }}</label>
 </div>

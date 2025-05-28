@@ -1,15 +1,5 @@
-import {
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-    ElementRef,
-    EventEmitter,
-    HostListener,
-    Input,
-    Output,
-    ViewChild,
-} from '@angular/core';
-import { CHECKBOX_STATE_INDETERMINATE, CheckboxState, KeyCode } from '../../common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { CHECKBOX_STATE_INDETERMINATE, CheckboxState } from '../../common';
 import { cancelEvent, coerceToBoolean, generateFormProvider, randomId } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
@@ -89,67 +79,6 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
     @Input()
     public formValue: string | null = null;
 
-    /**
-     * Blur event
-     *
-     * @deprecated Use the `valueChange` Output to detect changes.
-     */
-    @Output()
-    public blur = new EventEmitter<CheckboxState>();
-
-    /**
-     * Focus event
-     *
-     * @deprecated Use the `valueChange` Output to detect changes.
-     */
-    @Output()
-    public focus = new EventEmitter<CheckboxState>();
-
-    /**
-     * Change event
-     *
-     * @deprecated Use the `valueChange` Output to detect changes.
-     */
-    @Output()
-    public change = new EventEmitter<CheckboxState>();
-
-    /**
-     * @deprecated Focus is focus, a differentiation between mouse and keyboard focus
-     * is not what we want to support/encourage.
-     */
-    public tabbedFocus = false;
-
-    @ViewChild('input', { static: true })
-    public inputElement: ElementRef<HTMLInputElement>;
-
-    constructor(
-        changeDetector: ChangeDetectorRef,
-    ) {
-        super(changeDetector);
-    }
-
-    /** @deprecated See {@link blur} and {@link tabbedFocus} */
-    onBlur(): void {
-        this.blur.emit(this.value);
-        this.triggerTouch();
-        this.tabbedFocus = false;
-    }
-
-    /** @deprecated See {@link focus} */
-    onFocus(): void {
-        this.focus.emit(this.value);
-    }
-
-    /** @deprecated See {@link tabbedFocus} */
-    @HostListener('keyup', ['$event'])
-    focusHandler(e: KeyboardEvent): void {
-        if (e.keyCode === KeyCode.Tab) {
-            if (!this.tabbedFocus) {
-                this.tabbedFocus = true;
-            }
-        }
-    }
-
     protected onValueChange(): void {
         // no-op
     }
@@ -167,8 +96,12 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
             return;
         }
 
+        this.triggerTouch();
         const newState: CheckboxState = this.value === CHECKBOX_STATE_INDETERMINATE ? true : !this.value;
         this.triggerChange(newState);
-        this.change.emit(this.value);
+    }
+
+    public handleBlur(): void {
+        this.triggerTouch();
     }
 }

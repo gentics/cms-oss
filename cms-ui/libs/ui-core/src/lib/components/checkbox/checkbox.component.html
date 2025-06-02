@@ -1,6 +1,8 @@
 <div class="checkbox-wrapper">
     <input
         type="checkbox"
+        tabindex="-1"
+        aria-hidden="true"
         [attr.id]="id"
         [attr.name]="name"
         [attr.state]="value"
@@ -11,6 +13,18 @@
         [value]="formValue"
 
         (blur)="handleBlur()"
+        (change)="cancelEvent"
     />
-    <label [attr.for]="id" (click)="toggleState($event)">{{ label }}</label>
+
+    <label
+        tabindex="0"
+        role="checkbox"
+        [attr.for]="id"
+        [attr.aria-checked]="value === CHECKBOX_STATE_INDETERMINATE ? 'mixed' : value"
+        [attr.aria-disabled]="disabled"
+        [attr.aria-current]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+        [attr.aria-required]="required"
+        (click)="toggleState($event)"
+        (keydown)="handleKeyDown($event)"
+    >{{ label }}</label>
 </div>

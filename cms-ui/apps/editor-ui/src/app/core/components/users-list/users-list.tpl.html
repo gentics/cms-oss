@@ -1,15 +1,17 @@
 <div class="list-header">
     <gtx-checkbox
         [label]="'common.select_all_label' | i18n"
-        [value]="areAllSelected()"
-        (valueChange)="toggleSelectall()"
+        [value]="users?.length > 0 && users?.length === selected?.length"
+        [pure]="true"
+        (valueChange)="toggleSelectAll()"
     ></gtx-checkbox>
 </div>
-<div class="list-body" [style.maxHeight]="maxHeight">
+<div class="list-body">
     <gtx-contents-list-item *ngFor="let user of users">
         <gtx-checkbox
             class="row-checkbox"
-            [value]="selectedMap[user.id]"
+            [value]="selected | gtxIncludes:user.id"
+            [pure]="true"
             (valueChange)="toggleSelect(user.id)"
         ></gtx-checkbox>
         <div class="item-primary">

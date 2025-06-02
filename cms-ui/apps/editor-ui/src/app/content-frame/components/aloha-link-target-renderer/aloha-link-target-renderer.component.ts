@@ -112,6 +112,7 @@ export class AlohaLinkTargetRendererComponent
                 internalTargetLabel: pickedItem?.name || '',
                 internalTargetId: pickedItem?.id,
                 internalTargetType: pickedItem?.type,
+                internalTargetLang: (pickedItem as any)?.language || '',
                 internalTargetNodeId: (pickedItem as any)?.nodeId,
             });
         });

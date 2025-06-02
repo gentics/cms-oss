@@ -5,6 +5,7 @@ export interface ExtendedLinkTarget extends LinkTarget {
     internalTargetLabel?: string;
     internalTargetId?: number;
     internalTargetType?: string;
+    internalTargetLang?: string;
     internalTargetNodeId?: number;
 }
 

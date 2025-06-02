@@ -15,6 +15,7 @@ function isPickableEntity(value: any): value is PickableEntity {
 
 @Pipe({
     name: 'entityName',
+    standalone: false
 })
 export class EntityNamePipe implements PipeTransform {
 

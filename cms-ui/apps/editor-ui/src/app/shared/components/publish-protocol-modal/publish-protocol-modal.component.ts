@@ -17,6 +17,7 @@ const PAGE_SIZE = 15;
     templateUrl: './publish-protocol-modal.component.html',
     styleUrls: ['./publish-protocol-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PublishProtocolModalComponent extends BaseModal<void> implements OnInit {
 

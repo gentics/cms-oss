@@ -309,6 +309,7 @@ describe('SplitViewContainerComponent', () => {
 
 @Component({
     template: '<gtx-split-view-container></gtx-split-view-container>',
+    standalone: false,
 })
 class TestComponent {
     hasRight = false;

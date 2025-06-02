@@ -2,7 +2,10 @@ import { Directive, ElementRef, Input, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { FocalPointService } from '../../providers/focal-point/focal-point.service';
 
-@Directive({selector: '[genticsFocalPointTarget]'})
+@Directive({
+    selector: '[genticsFocalPointTarget]',
+    standalone: false
+})
 export class FocalPointTargetDirective implements OnInit {
 
     // tslint:disable-next-line

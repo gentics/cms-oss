@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
     selector: 'gtx-activity-manager',
     templateUrl: './activity-manager.component.html',
     styleUrls: ['./activity-manager.component.scss'],
+    standalone: false
 })
 export class ActivityManagerComponent implements OnInit {
 

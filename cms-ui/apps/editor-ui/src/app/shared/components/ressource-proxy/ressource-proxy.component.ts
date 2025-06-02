@@ -22,6 +22,7 @@ enum HTTP_METHOD {
     templateUrl: './ressource-proxy.component.html',
     styleUrls: ['./ressource-proxy.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RessourceProxyComponent implements OnInit {
 

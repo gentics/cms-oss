@@ -1,7 +1,7 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient, UserAgentRef } from '@editor-ui/app/shared/providers';
+import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@editor-ui/app/state';
 import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
@@ -33,7 +33,6 @@ describe('TagEditorService', () => {
 
     let state: TestApplicationState;
     let tagEditorService: TagEditorService;
-    let userAgentRef: MockUserAgentRef;
     let entityResolver: MockEntityResolver;
     let editorOverlayService: MockEditorOverlayService;
     let repositoryBrowserClient: MockRepositoryBrowserClient;
@@ -51,7 +50,6 @@ describe('TagEditorService', () => {
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: TranslateService, useClass: MockTranslateService },
-                { provide: UserAgentRef, useClass: MockUserAgentRef },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ApiBase, useClass: MockBaseApiService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -61,7 +59,6 @@ describe('TagEditorService', () => {
 
         state = TestBed.inject(ApplicationStateService) as any;
         editorOverlayService = TestBed.inject(EditorOverlayService) as any;
-        userAgentRef = TestBed.inject(UserAgentRef) as any;
         entityResolver = TestBed.inject(EntityResolver) as any;
         repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient) as any;
         tagEditorService = TestBed.inject(TagEditorService);
@@ -252,32 +249,6 @@ describe('TagEditorService', () => {
         expect(subscriberCalled).toBe(2);
         expect(actualVarContext).toEqual(expectedVarContext);
     }));
-
-    it('createTagEditorContext() applies polyfills in IE11 if the tagOwner object comes from an IFrame', fakeAsync(() => {
-        const data = getTagEditorContextInitData();
-        const expectedData = cloneDeep(data);
-        data.tagOwnerFromIFrame = true;
-        userAgentRef.isIE11 = true;
-
-        const tagEditorContext = tagEditorService.createTagEditorContext(data);
-        checkTagEditorContext(tagEditorContext, expectedData);
-        expect(tagEditorContext.editedTag).not.toBe(data.tag as any);
-        expect(tagEditorContext.editedTag.tagType).not.toBe(data.tagType);
-
-        expect(tagEditorContext.page).toEqual(data.tagOwner);
-        expect(tagEditorContext.page).not.toBe(data.tagOwner);
-    }));
-
-    it('createTagEditorContext() does not apply polyfills in IE11 if the tagOwner object does not come from an IFrame', fakeAsync(() => {
-        const data = getTagEditorContextInitData();
-        const expectedData = cloneDeep(data);
-        userAgentRef.isIE11 = true;
-
-        const tagEditorContext = tagEditorService.createTagEditorContext(data);
-        checkTagEditorContext(tagEditorContext, expectedData);
-        expect(tagEditorContext.editedTag.tagType).toBe(data.tagType);
-    }));
-
 });
 
 
@@ -320,10 +291,6 @@ class MockRepositoryBrowserClient {
 }
 
 class MockTranslateService { }
-
-class MockUserAgentRef {
-    isIE11 = false;
-}
 
 class MockModalService {
     fromComponent(): Promise<void> {

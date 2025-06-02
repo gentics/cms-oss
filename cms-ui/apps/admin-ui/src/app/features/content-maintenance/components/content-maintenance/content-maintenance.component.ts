@@ -1,10 +1,10 @@
+import { EntityTableActionClickEvent } from '@admin-ui/common';
 import { AdminHandlerService, I18nNotificationService, NodeOperations, NodeTableLoaderService, ScheduleHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ContentMaintenanceAction, DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
+import { DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
+import { ModalService } from '@gentics/ui-core';
 import { forkJoin, Subscription } from 'rxjs';
 import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
-import { ModalService } from '@gentics/ui-core';
-import { EntityTableActionClickEvent } from '@admin-ui/common';
 
 export enum ContentMaintenanceTabs {
     GENERAL = 'general',
@@ -16,6 +16,7 @@ export enum ContentMaintenanceTabs {
     templateUrl: './content-maintenance.component.html',
     styleUrls: ['./content-maintenance.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
 export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 

@@ -20,16 +20,17 @@ import { Subscription } from 'rxjs';
     templateUrl: './key-i18n-value-list-input.component.html',
     styleUrls: ['./key-i18n-value-list-input.component.scss'],
     providers: [{
-        provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
-        useExisting: forwardRef(() => KeyI18nValueListInputComponent), // tells Angular to use the existing instance
-        multi: true,
-    }, {
-        provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-        useExisting: forwardRef(() => KeyI18nValueListInputComponent), // for now validation will be put into the component, but can be separated
-        multi: true,
-    }],
+            provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
+            useExisting: forwardRef(() => KeyI18nValueListInputComponent), // tells Angular to use the existing instance
+            multi: true,
+        }, {
+            provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
+            useExisting: forwardRef(() => KeyI18nValueListInputComponent), // for now validation will be put into the component, but can be separated
+            multi: true,
+        }],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class KeyI18nValueListInputComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
 

@@ -54,6 +54,7 @@ const DEFAULT_FORMAT_OPTIONS: FormattingOptions = {
 
 @Pipe({
     name: 'gtxI18nDuration',
+    standalone: false,
 })
 export class I18nDurationPipe implements PipeTransform {
 

@@ -54,6 +54,7 @@ const FOLDER_B_REMOVED = getExampleFolderData({ id: -10 });
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })

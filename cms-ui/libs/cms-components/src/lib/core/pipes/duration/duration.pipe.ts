@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 @Pipe({
     name: 'gtxDuration',
+    standalone: false
 })
 export class DurationPipe implements PipeTransform {
 

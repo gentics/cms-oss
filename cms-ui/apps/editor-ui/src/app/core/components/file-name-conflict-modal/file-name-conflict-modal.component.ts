@@ -9,6 +9,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'file-name-conflict-modal',
     templateUrl: './file-name-conflict-modal.tpl.html',
     styleUrls: ['./file-name-conflict-modal.scss'],
+    standalone: false
 })
 export class FileNameConflictModal implements IModalDialog, OnInit {
     closeFn: (files: FileModel[]) => void;

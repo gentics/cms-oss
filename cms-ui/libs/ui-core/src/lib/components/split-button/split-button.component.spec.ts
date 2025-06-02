@@ -235,6 +235,7 @@ function assertFlatState(fixture: ComponentFixture<TestComponent>, expectedState
 
 @Component({
     template: assembleTemplate(),
+    standalone: false,
 })
 class TestComponent {
 

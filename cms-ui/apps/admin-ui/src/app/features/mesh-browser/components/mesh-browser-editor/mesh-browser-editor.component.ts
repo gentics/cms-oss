@@ -21,6 +21,7 @@ export interface DisplayField {
     templateUrl: './mesh-browser-editor.component.html',
     styleUrls: ['./mesh-browser-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserEditorComponent  implements OnChanges {
 

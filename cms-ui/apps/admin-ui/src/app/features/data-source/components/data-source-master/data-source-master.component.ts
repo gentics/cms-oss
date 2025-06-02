@@ -12,6 +12,7 @@ import { CreateDataSourceModalComponent } from '../create-data-source-modal/crea
     selector: 'gtx-data-source-master',
     templateUrl: './data-source-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DataSourceMasterComponent extends BaseTableMasterComponent<DataSource, DataSourceBO> {
     protected entityIdentifier = EditableEntity.DATA_SOURCE;

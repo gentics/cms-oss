@@ -20,6 +20,7 @@ export interface GtxExternalAssetManagementApiRootObject {
     templateUrl: './external-assets-modal.component.html',
     styleUrls: ['./external-assets-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ExternalAssetsModalComponent implements IModalDialog {
 

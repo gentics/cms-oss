@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
     templateUrl: './maintenance-mode-indicator.component.html',
     styleUrls: ['./maintenance-mode-indicator.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MaintenanceModeIndicatorComponent {
     

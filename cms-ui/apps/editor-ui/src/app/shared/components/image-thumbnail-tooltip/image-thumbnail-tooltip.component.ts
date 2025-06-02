@@ -20,7 +20,8 @@ import { Image } from '@gentics/cms-models';
     selector: 'image-thumbnail-tooltip',
     templateUrl: './image-thumbnail-tooltip.tpl.html',
     styleUrls: ['./image-thumbnail-tooltip.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ImageThumbnailTooltip {
 

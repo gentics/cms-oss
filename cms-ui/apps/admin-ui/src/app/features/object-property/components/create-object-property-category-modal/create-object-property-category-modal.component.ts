@@ -9,6 +9,7 @@ import { ObjectPropertyCategoryPropertiesMode } from '../object-property-categor
     selector: 'gtx-create-object-property-category-modal',
     templateUrl: './create-object-property-category-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateObjectPropertyCategoryModalComponent extends BaseModal<ObjectPropertyCategory> implements OnInit {
 

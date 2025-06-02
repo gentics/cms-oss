@@ -5,6 +5,7 @@ import { DocBlock } from '../../common/docs';
     selector: 'gtx-autodoc-table',
     templateUrl: './autodoc-table.component.html',
     styleUrls: ['./autodoc-table.component.scss'],
+    standalone: false
 })
 export class AutodocTableComponent implements OnInit {
 

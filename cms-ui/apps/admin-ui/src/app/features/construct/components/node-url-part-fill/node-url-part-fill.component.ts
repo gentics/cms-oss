@@ -11,6 +11,7 @@ import { Observable } from 'rxjs';
     styleUrls: ['./node-url-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(NodeUrlPartFillComponent)],
+    standalone: false
 })
 export class NodeUrlPartFillComponent extends BaseFormElementComponent<NodeTagPartProperty> implements OnInit {
 

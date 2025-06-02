@@ -37,7 +37,8 @@ const MAX_HEIGHT = '80px';
     templateUrl: './list-item-details.component.tpl.html',
     styleUrls: ['./list-item-details.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [ I18nDatePipe ],
+    providers: [I18nDatePipe],
+    standalone: false
 })
 export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     @Input() fields: string[];

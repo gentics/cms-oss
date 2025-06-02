@@ -8,6 +8,7 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-assign-languages-to-node-modal',
     templateUrl: './assign-languages-to-node-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignLanguagesToNodeModal extends BaseModal<Language[]> {
 

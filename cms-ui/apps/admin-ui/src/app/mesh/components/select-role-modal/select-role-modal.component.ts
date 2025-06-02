@@ -8,6 +8,7 @@ import { MeshRoleTableComponent } from '../mesh-role-table/mesh-role-table.compo
     templateUrl: './select-role-modal.component.html',
     styleUrls: ['./select-role-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectRoleModal extends BaseModal<MeshRoleBO | MeshRoleBO[]> {
 

@@ -7,6 +7,7 @@ import { ApplicationStateService, CloseEditorAction, FolderActionsService } from
     selector: 'publish-time-managed-pages-modal',
     templateUrl: './publish-time-managed-pages-modal.tpl.html',
     styleUrls: ['./publish-time-managed-pages-modal.scss'],
+    standalone: false
 })
 
 export class PublishTimeManagedPagesModal implements IModalDialog {

@@ -20,6 +20,7 @@ export enum MaintenanceActionModalAction {
     templateUrl: './maintenance-action-modal.component.html',
     styleUrls: ['./maintenance-action-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MaintenanceActionModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 

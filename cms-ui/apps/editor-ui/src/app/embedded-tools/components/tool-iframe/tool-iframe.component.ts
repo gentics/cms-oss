@@ -16,6 +16,7 @@ import { ToolApiChannelService } from '../../providers/tool-api-channel/tool-api
     templateUrl: './tool-iframe.component.html',
     styleUrls: ['./tool-iframe.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ToolIframeComponent implements OnInit, OnDestroy {
 

@@ -16,6 +16,7 @@ const SYNC_ACTION = 'syncTag';
     templateUrl: './template-tag-status-table.component.html',
     styleUrls: ['./template-tag-status-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTagStatusTableComponent
     extends BaseEntityTableComponent<TagStatus, TagStatusBO, TemplateTagStatusTableLoaderOptions>

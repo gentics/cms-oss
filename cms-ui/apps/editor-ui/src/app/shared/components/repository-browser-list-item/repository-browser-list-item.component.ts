@@ -10,7 +10,8 @@ import { DisplayFields } from '../../../common/models';
     selector: 'repository-browser-list-item',
     templateUrl: './repository-browser-list-item.tpl.html',
     styleUrls: ['./repository-browser-list-item.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RepositoryBrowserListItem {
 

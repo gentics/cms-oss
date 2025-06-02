@@ -11,7 +11,8 @@ import {Component} from '@angular/core';
             <i class="material-icons" [attr.translate]="'no'">home</i>
         </span>
     `,
-    styleUrls: ['./start-page-icon.scss']
+    styleUrls: ['./start-page-icon.scss'],
+    standalone: false
 })
 export class StartPageIcon {
 }

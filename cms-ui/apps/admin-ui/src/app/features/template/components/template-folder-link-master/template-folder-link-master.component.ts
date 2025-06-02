@@ -13,6 +13,7 @@ import { distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
     templateUrl: './template-folder-link-master.component.html',
     styleUrls: ['./template-folder-link-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
 

@@ -6,7 +6,10 @@ import { NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ConfirmDeleteModalComponent } from './confirm-delete-modal.component';
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');

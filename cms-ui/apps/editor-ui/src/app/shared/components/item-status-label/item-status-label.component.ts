@@ -19,6 +19,7 @@ enum DisplayLabel {
     templateUrl: './item-status-label.component.html',
     styleUrls: ['./item-status-label.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemStatusLabelComponent implements OnChanges {
 

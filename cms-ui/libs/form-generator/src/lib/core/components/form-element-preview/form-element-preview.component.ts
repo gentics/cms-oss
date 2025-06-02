@@ -6,6 +6,7 @@ import { CmsFormElementBO } from '@gentics/cms-models';
     templateUrl: './form-element-preview.component.html',
     styleUrls: ['./form-element-preview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormElementPreviewComponent {
 

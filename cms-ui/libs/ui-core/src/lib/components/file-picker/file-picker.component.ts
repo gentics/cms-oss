@@ -30,6 +30,7 @@ import { BaseFormElementComponent } from '../base-form-element/base-form-element
     templateUrl: './file-picker.component.html',
     styleUrls: ['./file-picker.component.scss'],
     providers: [generateFormProvider(FilePickerComponent)],
+    standalone: false
 })
 export class FilePickerComponent extends BaseFormElementComponent<File[]> implements OnInit, OnChanges {
 

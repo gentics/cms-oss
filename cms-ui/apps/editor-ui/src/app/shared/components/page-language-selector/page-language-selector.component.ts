@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
     selector: 'page-language-selector',
     templateUrl: './page-language-selector.component.html',
     styleUrls: ['./page-language-selector.scss'],
+    standalone: false
 })
 export class PageLanguageSelector implements OnInit, OnChanges {
 

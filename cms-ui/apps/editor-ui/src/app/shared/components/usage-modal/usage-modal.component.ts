@@ -17,6 +17,7 @@ import { PageLoadEndEvent, PageLoadStartEvent } from '../item-usage-list/item-us
     templateUrl: './usage-modal.component.html',
     styleUrls: ['./usage-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UsageModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 

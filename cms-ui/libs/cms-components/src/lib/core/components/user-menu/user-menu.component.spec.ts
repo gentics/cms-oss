@@ -23,6 +23,7 @@ import { componentTest, configureComponentTest } from '../../../testing';
         </gtx-user-menu>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     userMenuOpened = false;
@@ -46,7 +47,10 @@ class TestComponent {
     onLogoutClick = jasmine.createSpy('TestComponent.onLogoutClick');
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');

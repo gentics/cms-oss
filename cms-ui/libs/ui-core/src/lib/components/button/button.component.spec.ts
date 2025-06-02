@@ -173,6 +173,7 @@ describe('ButtonComponent', () => {
 
 @Component({
     template: '<gtx-button></gtx-button>',
+    standalone: false,
 })
 class TestComponent {
     form = new UntypedFormGroup({

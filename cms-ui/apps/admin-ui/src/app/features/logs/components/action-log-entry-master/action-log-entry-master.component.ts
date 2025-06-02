@@ -7,6 +7,7 @@ import { ActionLogEntry, NormalizableEntityType } from '@gentics/cms-models';
     selector: 'gtx-action-log-entry-master',
     templateUrl: './action-log-entry-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ActionLogEntryMasterComponent extends BaseTableMasterComponent<ActionLogEntry, ActionLogEntryBO> {
 

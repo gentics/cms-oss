@@ -20,6 +20,7 @@ export enum TemplatePropertiesMode {
         generateFormProvider(TemplatePropertiesComponent),
         generateValidatorProvider(TemplatePropertiesComponent),
     ],
+    standalone: false
 })
 export class TemplatePropertiesComponent extends BasePropertiesComponent<TemplateBO> implements OnInit {
 

@@ -1,9 +1,10 @@
 import { Component, OnInit, Input } from '@angular/core';
 
 @Component({
-  selector: 'gtx-dashboard-item-group',
-  templateUrl: './dashboard-item-group.component.html',
-  styleUrls: ['./dashboard-item-group.component.scss']
+    selector: 'gtx-dashboard-item-group',
+    templateUrl: './dashboard-item-group.component.html',
+    styleUrls: ['./dashboard-item-group.component.scss'],
+    standalone: false
 })
 export class DashboardItemGroupComponent implements OnInit {
 

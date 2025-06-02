@@ -8,6 +8,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './file-drop-area-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FileDropAreaDemoPage implements OnDestroy {
 

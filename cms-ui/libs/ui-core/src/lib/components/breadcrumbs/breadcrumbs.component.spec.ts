@@ -442,6 +442,7 @@ class MockUsageActions {
             [links]="links"
             (linkClick)="onLinkClick($event)">
         </gtx-breadcrumbs>`,
+    standalone: false,
 })
 class TestComponent {
     links: IBreadcrumbLink[] = [];

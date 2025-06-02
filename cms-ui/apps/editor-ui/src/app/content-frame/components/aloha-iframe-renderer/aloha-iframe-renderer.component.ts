@@ -26,6 +26,7 @@ interface WindowSize {
     styleUrls: ['./aloha-iframe-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaIFrameRendererComponent)],
+    standalone: false
 })
 export class AlohaIFrameRendererComponent<T>
     extends BaseAlohaRendererComponent<AlohaIFrameComponent, T>

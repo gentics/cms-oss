@@ -34,7 +34,8 @@ const PAGE_FIELDS = [
 @Component({
     selector: 'display-field-selector',
     templateUrl: './display-field-selector.component.tpl.html',
-    styleUrls: ['./display-field-selector.scss']
+    styleUrls: ['./display-field-selector.scss'],
+    standalone: false
 })
 export class DisplayFieldSelectorComponent implements IModalDialog, OnInit {
     fields: string[] = [];

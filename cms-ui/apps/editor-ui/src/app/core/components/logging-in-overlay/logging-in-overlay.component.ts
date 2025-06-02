@@ -4,7 +4,8 @@ import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
     selector: 'logging-in-overlay',
     templateUrl: './logging-in-overlay.tpl.html',
     styleUrls: ['./logging-in-overlay.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoggingInOverlay {
     @Input() set loggingIn(val: boolean) {

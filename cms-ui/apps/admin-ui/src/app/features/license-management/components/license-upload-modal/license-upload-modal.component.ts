@@ -38,6 +38,7 @@ function validateLicenseFormat(value: string): boolean {
     templateUrl: './license-upload-modal.component.html',
     styleUrls: ['./license-upload-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LicenseUploadModal extends BaseModal<LicenseCheckResult> implements OnInit, OnDestroy {
 

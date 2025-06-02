@@ -70,6 +70,7 @@ function noop(): void { }
     selector: 'gtx-progress-bar',
     templateUrl: './progress-bar.component.html',
     styleUrls: ['./progress-bar.component.scss'],
+    standalone: false
 })
 export class ProgressBarComponent implements AfterViewInit, OnDestroy {
 

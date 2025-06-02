@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     templateUrl: './management-tabs.component.html',
     styleUrls: ['./management-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ManagementTabsComponent {
 

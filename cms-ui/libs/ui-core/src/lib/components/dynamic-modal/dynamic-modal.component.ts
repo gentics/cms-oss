@@ -20,6 +20,7 @@ import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions } from '../../common
     templateUrl: './dynamic-modal.component.html',
     styleUrls: ['./dynamic-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DynamicModal implements OnDestroy {
 

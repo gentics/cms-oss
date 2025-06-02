@@ -5,6 +5,7 @@ import { InheritanceInfo } from '../../common/docs';
     selector: 'gtx-inheritance-details',
     templateUrl: './inheritance-details.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class InheritanceDetailsComponent {
 

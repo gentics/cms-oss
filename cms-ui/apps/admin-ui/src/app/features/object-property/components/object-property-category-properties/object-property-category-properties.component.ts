@@ -37,6 +37,7 @@ export enum ObjectPropertyCategoryPropertiesMode {
         generateFormProvider(ObjectPropertyCategoryPropertiesComponent),
         generateValidatorProvider(ObjectPropertyCategoryPropertiesComponent),
     ],
+    standalone: false
 })
 export class ObjectPropertyCategoryPropertiesComponent
     extends BasePropertiesComponent<ObjectPropertyCategoryBO<Normalized>>

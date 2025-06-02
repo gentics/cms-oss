@@ -8,6 +8,7 @@ import { MicroschemaTableComponent } from '../microschema-table/microschema-tabl
     templateUrl: './select-microschema-modal.component.html',
     styleUrls: ['./select-microschema-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectMicroschemaModal extends BaseModal<MeshMicroschemaBO | MeshMicroschemaBO[]> {
 

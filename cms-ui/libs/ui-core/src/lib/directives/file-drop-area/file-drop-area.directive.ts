@@ -19,6 +19,7 @@ import { matchesMimeType } from '../../utils/matches-mime-type';
     selector: 'gtx-file-drop-area, [gtxFileDropArea]',
     exportAs: 'gtxFileDropArea',
     providers: [DragStateTrackerFactoryService, PageFileDragHandlerService],
+    standalone: false
 })
 export class FileDropAreaDirective implements OnInit, OnDestroy {
 

@@ -8,7 +8,10 @@ import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table
 
 export const UNASSIGN_FROM_PACKAGE_ACTION = 'unassignFromPackage';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>
     implements OnChanges {

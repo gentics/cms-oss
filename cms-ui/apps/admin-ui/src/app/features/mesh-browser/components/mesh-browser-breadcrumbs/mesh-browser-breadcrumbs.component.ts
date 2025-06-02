@@ -6,6 +6,7 @@ import { BreadcrumbNode } from '../../models/mesh-browser-models';
     templateUrl: './mesh-browser-breadcrumbs.component.html',
     styleUrls: ['./mesh-browser-breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserBreadcrumbComponent {
 

@@ -94,6 +94,7 @@ ALLOWED_ORDER_BY_TYPES.set(ListType.IMAGE, ALLOWED_ORDER_BY_TYPES.get(ListType.F
     templateUrl: './overview-tag-property-editor.component.html',
     styleUrls: ['./overview-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 

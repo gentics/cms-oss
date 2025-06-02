@@ -5,6 +5,7 @@ import { DirtQueueEntry, DirtQueueSummaryResponse } from '@gentics/cms-models';
     selector: 'gtx-dirt-queue-summary',
     templateUrl: './dirt-queue-summary.component.html',
     styleUrls: ['./dirt-queue-summary.component.scss'],
+    standalone: false,
 })
 export class DirtQueueSummaryComponent {
 

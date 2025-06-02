@@ -17,6 +17,7 @@ export interface LoadingState {
     templateUrl: './mesh-browser-schema-items.component.html',
     styleUrls: ['./mesh-browser-schema-items.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserSchemaItemsComponent implements OnChanges {
 

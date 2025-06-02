@@ -7,12 +7,12 @@
     "tags": ["app", "ct", "angular"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:webpack-browser",
+            "executor": "@nx/angular:application",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/apps/ct-link-checker",
                 "index": "apps/ct-link-checker/src/index.html",
-                "main": "apps/ct-link-checker/src/main.ts",
+                "browser": "apps/ct-link-checker/src/main.ts",
                 "polyfills": ["apps/ct-link-checker/src/polyfills.ts"],
                 "tsConfig": "apps/ct-link-checker/tsconfig.app.json",
                 "assets": [
@@ -28,13 +28,38 @@
                         "apps/ct-link-checker/src/styles",
                         "libs",
                         "node_modules"
-                    ]
+                    ],
+                    "sass": {
+                        "silenceDeprecations": [
+                            "call-string",
+                            "elseif",
+                            "moz-document",
+                            "relative-canonical",
+                            "new-global",
+                            "color-module-compat",
+                            "slash-div",
+                            "bogus-combinators",
+                            "function-units",
+                            "duplicate-var-flags",
+                            "null-alpha",
+                            "abs-percent",
+                            "fs-importer-cwd",
+                            "css-function-mixin",
+                            "mixed-decls",
+                            "color-4-api",
+                            "color-functions",
+                            "legacy-js-api",
+                            "import",
+                            "global-builtin"
+                        ]
+                    }
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
                     "moment",
-                    "moment-timezone"
+                    "moment-timezone",
+                    "hammerjs"
                 ],
                 "aot": true,
                 "fileReplacements": [
@@ -47,9 +72,7 @@
                 "optimization": true,
                 "sourceMap": false,
                 "namedChunks": false,
-                "extractLicenses": true,
-                "vendorChunk": false,
-                "buildOptimizer": true
+                "extractLicenses": true
             },
             "configurations": {
                 "production": {},

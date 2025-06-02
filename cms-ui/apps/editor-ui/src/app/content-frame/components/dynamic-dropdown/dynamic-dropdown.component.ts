@@ -16,6 +16,7 @@ type ErrorFn = (error?: any) => void;
     templateUrl: './dynamic-dropdown.component.html',
     styleUrls: ['./dynamic-dropdown.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit {
 

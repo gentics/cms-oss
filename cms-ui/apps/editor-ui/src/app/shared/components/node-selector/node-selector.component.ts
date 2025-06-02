@@ -12,6 +12,7 @@ import { NodeBranch, NodeHierarchyBuilder } from '../../../core/providers/node-h
     styleUrls: ['./node-selector.scss'],
     providers: [NodeHierarchyBuilder],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeSelectorComponent implements OnChanges {
 

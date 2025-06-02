@@ -32,6 +32,7 @@ export type I18nFgSource =
 @Pipe({
     name: 'i18nfg$',
     pure: false,
+    standalone: false
 })
 export class I18nFgPipe implements PipeTransform {
 

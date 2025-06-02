@@ -54,6 +54,7 @@ const RESERVED_LOCKED_PROPERTIES: (keyof EditableTagmapEntry)[] = [
         generateFormProvider(TagMapEntryPropertiesComponent),
         generateValidatorProvider(TagMapEntryPropertiesComponent),
     ],
+    standalone: false
 })
 export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<EditableTagmapEntry> implements OnInit, OnChanges {
 

@@ -15,6 +15,7 @@ import { coerceToBoolean } from '../../utils';
         gtx-search-bar[autofocus],
         gtx-select[autofocus],
         gtx-textarea[autofocus]`,
+    standalone: false
 })
 export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
 

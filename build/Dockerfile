@@ -4,7 +4,7 @@ LABEL maintainer="Peter Nyari <p.nyari@gentics.com>"
 ARG GIT_USER_NAME="Maven Release Manager"
 ARG GIT_USER_EMAIL="entwicklung@gentics.com"
 ARG USER_NAME="jenkins"
-ARG NODE_VERSION=20.12.1
+ARG NODE_VERSION=22.15.0
 
 # Version makes it possible to force rebuild the image and bypass caching by changing this variable (eg.: when ca-certificates needs update)
 ARG VERSION="20220711.0"

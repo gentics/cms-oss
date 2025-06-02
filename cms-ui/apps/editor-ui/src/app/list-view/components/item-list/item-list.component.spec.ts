@@ -112,7 +112,8 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
             [itemInEditor]="itemInEditor"
             [folderPermissions]="permissions"
             [linkPaths]="isSearching"
-            ></item-list>`,
+        ></item-list>`,
+    standalone: false,
 })
 class TestComponent implements OnInit {
     @ViewChild('itemList', { static: true })
@@ -197,7 +198,10 @@ class MockI18nService { }
 
 class MockI18nNotification { }
 
-@Pipe({ name: 'permissions' })
+@Pipe({
+    name: 'permissions',
+    standalone: false,
+})
 class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         const val = {
@@ -223,6 +227,7 @@ class MockContextMenuOperationsService {
 @Component({
     selector: 'item-context-menu',
     template: '',
+    standalone: false,
 })
 class MockItemContextMenu {
     @Input() isFolderStartPage = false;

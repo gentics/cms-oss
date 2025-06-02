@@ -32,6 +32,7 @@ import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-
     templateUrl: './gentics-tag-editor.component.html',
     styleUrls: ['./gentics-tag-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewInit, OnDestroy {
 

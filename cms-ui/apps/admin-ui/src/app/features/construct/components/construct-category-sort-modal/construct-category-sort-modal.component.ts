@@ -8,6 +8,7 @@ import { BaseModal, TableRow } from '@gentics/ui-core';
     templateUrl: './construct-category-sort-modal.component.html',
     styleUrls: ['./construct-category-sort-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructCategorySortModal extends BaseModal<boolean> {
 

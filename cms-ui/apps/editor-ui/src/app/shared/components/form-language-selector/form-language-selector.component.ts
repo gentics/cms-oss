@@ -20,6 +20,7 @@ import { ApplicationStateService } from '../../../state';
     templateUrl: './form-language-selector.component.html',
     styleUrls: ['./form-language-selector.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FormLanguageSelectorComponent implements OnInit, OnChanges, OnDestroy {
 

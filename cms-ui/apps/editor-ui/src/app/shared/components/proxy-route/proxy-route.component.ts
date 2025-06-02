@@ -6,7 +6,8 @@ import {Component} from '@angular/core';
  */
 @Component({
     selector: 'proxy-route',
-    template: '<router-outlet></router-outlet>'
+    template: '<router-outlet></router-outlet>',
+    standalone: false
 })
 export class ProxyRouteComponent {
 }

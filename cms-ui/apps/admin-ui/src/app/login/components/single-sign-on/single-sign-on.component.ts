@@ -14,6 +14,7 @@ import { filter, take, takeUntil } from 'rxjs/operators';
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SingleSignOnComponent implements OnInit, OnDestroy {
 

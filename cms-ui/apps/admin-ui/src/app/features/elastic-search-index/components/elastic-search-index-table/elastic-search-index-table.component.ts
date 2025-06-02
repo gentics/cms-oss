@@ -17,7 +17,8 @@ const DELETE_AND_REBUILD_ACTION = 'deleteAndRebuildIndex';
     templateUrl: './elastic-search-index-table.component.html',
     styleUrls: ['./elastic-search-index-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+    standalone: false
+})
 export class ElasticSearchIndexTableComponent extends BaseEntityTableComponent<ElasticSearchIndex, ElasticSearchIndexBO> {
 
     protected rawColumns: TableColumn<ElasticSearchIndexBO>[] = [

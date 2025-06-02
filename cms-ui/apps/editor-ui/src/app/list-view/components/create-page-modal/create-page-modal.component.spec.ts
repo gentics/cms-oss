@@ -5,9 +5,9 @@ import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -166,6 +166,7 @@ xdescribe('CreatePageModal', () => {
         <create-page-modal *ngIf="showModal"></create-page-modal>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     showModal = false;

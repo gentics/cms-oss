@@ -15,7 +15,10 @@ import {
 import { Observable, Subject, Subscription, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {
 
     public readonly FALLBACK_TABLE_COLUMN_RENDERER = FALLBACK_TABLE_COLUMN_RENDERER;

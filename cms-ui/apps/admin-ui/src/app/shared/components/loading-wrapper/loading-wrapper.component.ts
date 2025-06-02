@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@a
     templateUrl: './loading-wrapper.component.html',
     styleUrls: ['./loading-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoadingWrapperComponent {
 

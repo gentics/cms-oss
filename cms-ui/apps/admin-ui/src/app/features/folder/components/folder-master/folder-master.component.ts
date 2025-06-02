@@ -10,6 +10,7 @@ import { TableRow, getFullPrimaryPath } from '@gentics/ui-core';
     selector: 'gtx-folder-master',
     templateUrl: './folder-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FolderMasterComponent extends BaseTableMasterComponent<Folder, FolderBO> {
 

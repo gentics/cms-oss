@@ -21,6 +21,7 @@ import { TagPropertyEditorResolverService } from '../../providers/tag-property-e
     templateUrl: './tag-property-editor-host.component.html',
     styleUrls: ['./tag-property-editor-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagPropertyEditorHostComponent implements OnDestroy, OnChanges {
 

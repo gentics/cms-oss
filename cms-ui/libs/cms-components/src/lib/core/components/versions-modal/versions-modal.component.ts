@@ -6,6 +6,7 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-versions-modal',
     templateUrl: './versions-modal.component.html',
     styleUrls: ['./versions-modal.component.scss'],
+    standalone: false
 })
 export class VersionModalComponent extends BaseModal<void> {
 

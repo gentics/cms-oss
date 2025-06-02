@@ -15,6 +15,7 @@ import { CreateScheduleTaskModalComponent } from '../create-schedule-task-modal/
     templateUrl: './schedule-task-table.component.html',
     styleUrls: ['./schedule-task-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScheduleTaskTableComponent extends BaseEntityTableComponent<ScheduleTask, ScheduleTaskBO> {
 

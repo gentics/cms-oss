@@ -60,6 +60,7 @@ class MockPermissionsService implements Partial<InterfaceOf<PermissionsService>>
             (cancelClick)="onCancelClick()"
         ></gtx-entity-detail-header>
     `,
+    standalone: false,
 })
 class TestComponent {
     title = 'TEST_TITLE';

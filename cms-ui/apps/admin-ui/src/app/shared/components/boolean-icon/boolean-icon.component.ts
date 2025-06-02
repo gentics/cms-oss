@@ -9,6 +9,7 @@ import { Component, Input } from '@angular/core';
 @Component({
     selector: 'gtx-boolean-icon',
     templateUrl: './boolean-icon.component.html',
+    standalone: false
 })
 export class BooleanIconComponent {
 

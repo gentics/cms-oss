@@ -6,6 +6,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-delete-nodes-modal',
     templateUrl: './delete-nodes-modal.component.html',
     styleUrls: ['./delete-nodes-modal.component.scss'],
+    standalone: false
 })
 export class DeleteNodesModalComponent implements IModalDialog {
 

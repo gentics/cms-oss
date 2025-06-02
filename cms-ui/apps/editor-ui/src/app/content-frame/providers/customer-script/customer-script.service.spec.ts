@@ -5,7 +5,6 @@ import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/en
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { UserAgentRef } from '@editor-ui/app/shared/providers/user-agent-ref';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
@@ -68,7 +67,6 @@ describe('CustomerScriptService', () => {
             providers: [
                 CustomerScriptService,
                 EntityResolver,
-                UserAgentRef,
                 AlohaIntegrationService,
                 { provide: HttpClient, useClass: MockHttpClient },
                 { provide: ApplicationStateService, useClass: TestApplicationState },

@@ -10,6 +10,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     templateUrl: './dev-tool-package-editor.component.html',
     styleUrls: ['./dev-tool-package-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DevToolPackageEditorComponent extends BaseEntityEditorComponent<EditableEntity.DEV_TOOL_PACKAGE> {
 

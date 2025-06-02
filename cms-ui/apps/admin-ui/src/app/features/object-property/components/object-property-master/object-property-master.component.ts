@@ -13,6 +13,7 @@ import { CreateObjectPropertyModalComponent } from '../create-object-property-mo
     templateUrl: './object-property-master.component.html',
     styleUrls: ['./object-property-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyMasterComponent extends BaseTableMasterComponent<ObjectProperty, ObjectPropertyBO> {
 

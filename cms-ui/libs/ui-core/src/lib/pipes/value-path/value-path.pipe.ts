@@ -3,6 +3,7 @@ import { getValueByPath } from '../../utils';
 
 @Pipe({
     name: 'gtxValuePath',
+    standalone: false
 })
 export class ValuePathPipe implements PipeTransform {
 

@@ -20,6 +20,7 @@ export enum ConstructCategoryPropertiesMode {
         generateFormProvider(ConstructCategoryPropertiesComponent),
         generateValidatorProvider(ConstructCategoryPropertiesComponent),
     ],
+    standalone: false
 })
 export class ConstructCategoryPropertiesComponent
     extends BasePropertiesComponent<ConstructCategoryBO>

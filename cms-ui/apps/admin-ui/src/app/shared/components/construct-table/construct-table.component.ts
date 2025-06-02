@@ -25,6 +25,7 @@ export const COPY_CONSTRUCT_ACTION = 'copyConstruct';
     templateUrl: './construct-table.component.html',
     styleUrls: ['./construct-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructTableComponent
     extends BasePackageEntityTableComponent<TagType, ConstructBO, ConstructTableLoaderOptions>

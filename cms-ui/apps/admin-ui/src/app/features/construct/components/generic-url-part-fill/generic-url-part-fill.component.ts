@@ -35,6 +35,7 @@ type GenericUrlPartProperty =
     styleUrls: ['./generic-url-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(GenericUrlPartFillComponent)],
+    standalone: false
 })
 export class GenericUrlPartFillComponent
     extends BaseFormElementComponent<GenericUrlPartProperty>

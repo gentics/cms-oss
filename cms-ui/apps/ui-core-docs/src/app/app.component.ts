@@ -17,6 +17,7 @@ interface ContentItem {
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 /* eslint-disable-next-line @angular-eslint/component-class-suffix */
 export class App implements OnInit, OnDestroy {

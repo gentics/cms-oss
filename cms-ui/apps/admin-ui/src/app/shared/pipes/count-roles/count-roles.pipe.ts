@@ -6,6 +6,7 @@ import { PermissionsAndRoles } from '@gentics/cms-models';
  */
 @Pipe({
     name: 'countRoles',
+    standalone: false
 })
 export class CountRolesPipe implements PipeTransform {
 

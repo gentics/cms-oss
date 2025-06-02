@@ -12,7 +12,10 @@ import { BaseComponent } from '../base-component/base.component';
  * This implementation is mostly "pure" - All changes that occur are not directly performed
  * by this component, but have to be done by the parent component.
  */
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>> extends BaseComponent implements OnChanges {
 
     public readonly FALLBACK_TABLE_COLUMN_RENDERER = FALLBACK_TABLE_COLUMN_RENDERER;

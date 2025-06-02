@@ -10,6 +10,7 @@ import { delay } from 'rxjs/operators';
     selector: 'gtx-assign-node-restriction-to-object-properties-modal',
     templateUrl: './assign-node-restriction-to-object-properties-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends BaseModal<void> implements OnInit {
 

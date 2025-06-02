@@ -25,6 +25,7 @@ const PACKAGE_CHECK = 'packageCheck';
     templateUrl: './dev-tool-package-table.component.html',
     styleUrls: ['./dev-tool-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DevToolPackageTableComponent
     extends BaseEntityTableComponent<Package, DevToolPackageBO, DevToolPackageTableLoaderOptions>

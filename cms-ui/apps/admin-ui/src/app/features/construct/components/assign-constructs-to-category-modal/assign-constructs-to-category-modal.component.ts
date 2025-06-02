@@ -11,6 +11,7 @@ import { map } from 'rxjs/operators';
     templateUrl: './assign-constructs-to-category-modal.component.html',
     styleUrls: ['./assign-constructs-to-category-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignConstructsToCategoryModalComponent extends BaseModal<false | ConstructCategoryBO[]> implements OnInit {
 

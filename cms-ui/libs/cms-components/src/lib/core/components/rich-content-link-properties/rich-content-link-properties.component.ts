@@ -26,6 +26,7 @@ function getLinkType(itemType: string): RichContentLinkType.PAGE | RichContentLi
         generateFormProvider(RichContentLinkPropertiesComponent),
         generateValidatorProvider(RichContentLinkPropertiesComponent),
     ],
+    standalone: false
 })
 export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<RichContentLink> implements OnInit {
 

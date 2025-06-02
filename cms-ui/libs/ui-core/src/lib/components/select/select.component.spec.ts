@@ -883,7 +883,8 @@ describe('SelectComponent', () => {
             <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
         </gtx-select>
         <gtx-overlay-host></gtx-overlay-host>
-`,
+    `,
+    standalone: false,
 })
 class TestComponent {
 

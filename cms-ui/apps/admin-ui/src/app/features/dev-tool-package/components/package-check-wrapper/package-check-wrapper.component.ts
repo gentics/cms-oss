@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './package-check-wrapper.component.html',
     styleUrls: ['./package-check-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PackageCheckWrapperComponent
     implements OnChanges, OnDestroy

@@ -9,10 +9,11 @@ interface EditorFilter {
 }
 
 @Component({
-  selector: 'gtxct-filter-by-editor',
-  templateUrl: './filter-by-editor.component.html',
-  styleUrls: ['./filter-by-editor.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'gtxct-filter-by-editor',
+    templateUrl: './filter-by-editor.component.html',
+    styleUrls: ['./filter-by-editor.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilterByEditorComponent implements OnInit {
     editors: EditorFilter[] = [

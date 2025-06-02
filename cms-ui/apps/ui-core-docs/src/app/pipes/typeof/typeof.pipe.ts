@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
     name: 'gtxTypeof',
+    standalone: false
 })
 export class TypeOfPipe implements PipeTransform {
 

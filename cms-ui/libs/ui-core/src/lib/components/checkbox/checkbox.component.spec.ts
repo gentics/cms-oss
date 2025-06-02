@@ -421,6 +421,7 @@ describe('CheckboxComponent', () => {
 
 @Component({
     template: '<gtx-checkbox></gtx-checkbox>',
+    standalone: false,
 })
 class TestComponent {
 

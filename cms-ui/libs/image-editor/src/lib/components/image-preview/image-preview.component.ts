@@ -26,7 +26,8 @@ import {ImagePreviewService} from '../../providers/preview/preview.service';
     templateUrl: 'image-preview.component.html',
     styleUrls: ['image-preview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [ImagePreviewService]
+    providers: [ImagePreviewService],
+    standalone: false
 })
 export class GenticsImagePreviewComponent implements OnInit, OnChanges {
     @Input() src: string;

@@ -41,6 +41,7 @@ interface ItemsHashMap {
     styleUrls: ['./item-list.component.scss'],
     providers: [PaginationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 

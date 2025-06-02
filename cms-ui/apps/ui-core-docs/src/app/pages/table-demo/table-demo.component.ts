@@ -66,6 +66,7 @@ function sortRows(rows: TableRow<User>[], columns: TableColumn<User>[], key: str
     templateUrl: './table-demo.component.html',
     styleUrls: ['./table-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TableDemoPage implements OnInit {
 

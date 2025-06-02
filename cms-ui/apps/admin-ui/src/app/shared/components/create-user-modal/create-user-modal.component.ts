@@ -12,6 +12,7 @@ import { GroupDataService } from '../../providers/group-data/group-data.service'
     templateUrl: './create-user-modal.component.html',
     styleUrls: ['./create-user-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateUserModalComponent extends BaseModal<User<Normalized>> implements OnInit {
 

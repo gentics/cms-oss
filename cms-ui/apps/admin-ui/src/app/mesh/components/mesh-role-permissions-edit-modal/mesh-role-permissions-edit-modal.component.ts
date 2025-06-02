@@ -10,6 +10,7 @@ import { BaseModal, FormProperties, setControlsEnabled } from '@gentics/ui-core'
     templateUrl: './mesh-role-permissions-edit-modal.component.html',
     styleUrls: ['./mesh-role-permissions-edit-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshRolePermissionsEditModal extends BaseModal<boolean> implements OnInit {
 

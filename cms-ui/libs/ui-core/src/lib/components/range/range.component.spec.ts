@@ -340,6 +340,7 @@ function createFocusEvent(type: 'focus' | 'blur'): FocusEvent {
 
 @Component({
     template: '<gtx-range></gtx-range>',
+    standalone: false,
 })
 class TestComponent {
 

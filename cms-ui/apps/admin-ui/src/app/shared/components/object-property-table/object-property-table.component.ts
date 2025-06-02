@@ -27,6 +27,7 @@ const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
     templateUrl: './object-property-table.component.html',
     styleUrls: ['./object-property-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyTableComponent
     extends BasePackageEntityTableComponent<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>

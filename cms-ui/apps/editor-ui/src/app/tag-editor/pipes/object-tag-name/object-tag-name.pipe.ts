@@ -6,7 +6,10 @@ import { ObjectTag } from '@gentics/cms-models';
  * the labeling its tab in the object properties list.
  * An '*' is added to this string if the ObjectTag is mandatory.
  */
-@Pipe({ name: 'objTagName' })
+@Pipe({
+    name: 'objTagName',
+    standalone: false
+})
 export class ObjectTagNamePipe implements PipeTransform {
 
     transform(value: ObjectTag): string {

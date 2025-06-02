@@ -14,6 +14,7 @@ import { CmsFormElementBO, CmsFormElementI18nValue, CmsFormElementPropertyType }
 @Pipe({
     name: 'property',
     pure: true,
+    standalone: false
 })
 export class ElementPropertyPipe implements PipeTransform {
 

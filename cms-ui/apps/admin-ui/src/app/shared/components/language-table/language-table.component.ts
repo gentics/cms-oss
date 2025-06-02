@@ -18,6 +18,7 @@ export const UNASSIGN_ACTION = 'unassign';
     templateUrl: './language-table.component.html',
     styleUrls: ['./language-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LanguageTableComponent
     extends BaseSortableEntityTableComponent<Language, LanguageBO, LanguageLoaderOptions>

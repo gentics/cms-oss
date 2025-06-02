@@ -10,6 +10,7 @@ import { ProjectPropertiesMode } from '../project-properties/project-properties.
     templateUrl: './project-modal.component.html',
     styleUrls: ['./project-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProjectModal extends BaseModal<Project> implements OnInit {
 

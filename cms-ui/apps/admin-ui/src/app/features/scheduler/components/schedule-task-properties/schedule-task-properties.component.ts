@@ -18,6 +18,7 @@ export enum ScheduleTaskPropertiesMode {
         generateFormProvider(ScheduleTaskPropertiesComponent),
         generateValidatorProvider(ScheduleTaskPropertiesComponent),
     ],
+    standalone: false
 })
 export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<ScheduleTask> {
 

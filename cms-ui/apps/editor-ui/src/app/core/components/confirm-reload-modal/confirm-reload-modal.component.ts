@@ -7,6 +7,7 @@ import { ApplicationStateService, MarkContentAsModifiedAction, MarkObjectPropert
     templateUrl: './confirm-reload-modal.component.html',
     styleUrls: ['./confirm-reload-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConfirmReloadModal extends BaseModal<boolean> implements OnInit {
 

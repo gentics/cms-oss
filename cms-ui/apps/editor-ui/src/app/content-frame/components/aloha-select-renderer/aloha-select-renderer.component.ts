@@ -10,6 +10,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-select-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSelectRendererComponent)],
+    standalone: false
 })
 export class AlohaSelectRendererComponent extends BaseAlohaRendererComponent<AlohaSelectComponent, string | string[]> {
 

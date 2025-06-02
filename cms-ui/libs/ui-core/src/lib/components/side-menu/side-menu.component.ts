@@ -89,6 +89,7 @@ export const animateCubicBezier = (millis: number): any => animate(`${millis}ms 
         ]),
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SideMenuComponent implements AfterViewInit {
 

@@ -289,6 +289,7 @@ describe('GroupedTabsComponent', () => {
 
 @Component({
     template: '<gtx-grouped-tabs></gtx-grouped-tabs>',
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(GroupedTabsComponent, { static: true })

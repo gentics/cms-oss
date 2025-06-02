@@ -58,18 +58,17 @@ interface DisplayItem {
                 }),
                 animate(100),
             ]),
-            transition(':leave',
-                animate(100, style({
-                    opacity: 0,
-                    height: '0rem',
-                    'padding-top': '0',
-                    'padding-bottom': '0',
-                    'margin-top': '0',
-                    'margin-bottom': '0',
-                })),
-            ),
+            transition(':leave', animate(100, style({
+                opacity: 0,
+                height: '0rem',
+                'padding-top': '0',
+                'padding-bottom': '0',
+                'margin-top': '0',
+                'margin-bottom': '0',
+            }))),
         ]),
     ],
+    standalone: false
 })
 export class ConstructPartListComponent implements OnInit, OnDestroy, ControlValueAccessor {
 

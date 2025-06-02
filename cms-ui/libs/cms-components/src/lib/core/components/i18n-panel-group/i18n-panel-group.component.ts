@@ -6,6 +6,7 @@ import { Language } from '@gentics/cms-models';
     templateUrl: './i18n-panel-group.component.html',
     styleUrls: ['./i18n-panel-group.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class I18nPanelGroupComponent {
 

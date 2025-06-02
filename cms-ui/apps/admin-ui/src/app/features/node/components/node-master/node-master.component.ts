@@ -17,6 +17,7 @@ const COPY_ACTION = 'copy';
     selector: 'gtx-node-master',
     templateUrl: './node-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> implements OnInit {
 

@@ -9,6 +9,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-create-cr-fragment-modal',
     templateUrl: './create-cr-fragment-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateContentRepositoryFragmentModalComponent implements IModalDialog, OnInit  {
 

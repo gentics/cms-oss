@@ -18,8 +18,9 @@ import { ISortableEvent, generateFormProvider } from '@gentics/ui-core';
     selector: 'sortable-array-list',
     templateUrl: './sortable-array-list.component.html',
     styleUrls: ['./sortable-array-list.component.scss'],
-    providers: [ generateFormProvider(SortableArrayListComponent) ],
+    providers: [generateFormProvider(SortableArrayListComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SortableArrayListComponent<T> implements ControlValueAccessor {
 

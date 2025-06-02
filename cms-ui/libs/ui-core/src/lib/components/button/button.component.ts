@@ -17,6 +17,7 @@ import { ChangeDetectionStrategy, Component, HostListener, Input } from '@angula
     templateUrl: './button.component.html',
     styleUrls: ['./button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ButtonComponent {
 

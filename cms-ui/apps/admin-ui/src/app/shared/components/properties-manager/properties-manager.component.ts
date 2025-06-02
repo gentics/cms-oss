@@ -26,6 +26,7 @@ type TagNameMap = { [id: string]: string };
     templateUrl: './properties-manager.component.html',
     styleUrls: ['./properties-manager.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PropertiesManagerComponent implements OnChanges, OnInit {
 

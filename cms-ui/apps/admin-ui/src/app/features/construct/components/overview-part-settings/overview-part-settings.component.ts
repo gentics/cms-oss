@@ -13,6 +13,7 @@ import { FormProperties, generateFormProvider, generateValidatorProvider } from 
         generateFormProvider(OverviewPartSettingsComponent),
         generateValidatorProvider(OverviewPartSettingsComponent),
     ],
+    standalone: false
 })
 export class OverviewPartSettingsComponent
     extends BasePropertiesComponent<OverviewSetting>

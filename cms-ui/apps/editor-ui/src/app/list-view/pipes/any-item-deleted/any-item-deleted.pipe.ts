@@ -7,6 +7,7 @@ import { EntityStateUtil } from '../../../shared/util/entity-states';
  */
 @Pipe({
     name: 'anyItemDeleted',
+    standalone: false
 })
 export class AnyItemDeletedPipe implements PipeTransform {
     transform(items: Item[]): boolean {

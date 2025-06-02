@@ -17,7 +17,9 @@ import { TagEditorModal } from './components/tag-editor-modal/tag-editor-modal.c
 import { TagPropertyEditorHostComponent } from './components/tag-property-editor-host/tag-property-editor-host.component';
 import { CheckboxTagPropertyEditor } from './components/tag-property-editors/checkbox-tag-property-editor/checkbox-tag-property-editor.component';
 import { DataSourceTagPropertyEditor } from './components/tag-property-editors/datasource-tag-property-editor/datasource-tag-property-editor.component';
-import { FileOrImageUrlTagPropertyEditor } from './components/tag-property-editors/file-or-image-url-tag-property-editor/file-or-image-url-tag-property-editor.component';
+import {
+    FileOrImageUrlTagPropertyEditor,
+} from './components/tag-property-editors/file-or-image-url-tag-property-editor/file-or-image-url-tag-property-editor.component';
 import { FolderUrlTagPropertyEditor } from './components/tag-property-editors/folder-url-tag-property-editor/folder-url-tag-property-editor.component';
 import { FormTagPropertyEditorComponent } from './components/tag-property-editors/form-tag-property-editor/form-tag-property-editor.component';
 import { FormlistTagPropertyEditor } from './components/tag-property-editors/formlist-tag-property-editor/formlist-tag-property-editor.component';

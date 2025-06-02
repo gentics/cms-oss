@@ -8,6 +8,7 @@ import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.compo
     templateUrl: './tag-editor-modal.component.html',
     styleUrls: ['./tag-editor-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
 export class TagEditorModal extends BaseModal<TagEditorResult> implements AfterViewInit {
 

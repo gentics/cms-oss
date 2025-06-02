@@ -4,7 +4,7 @@
             <icon-checkbox
                 [icon]="type | gtxTypeIcon"
                 [selected]="allSelected()"
-                (change)="toggleSelectAll($event)"
+                (selectedChange)="toggleSelectAll($event)"
             ></icon-checkbox>
             {{ getItemCount() }} {{ type | i18n:{ count: getItemCount() } }}
         </div>

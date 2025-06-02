@@ -45,6 +45,7 @@ function normalizeValue(value: any): CheckboxState {
 export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
 
     public readonly CHECKBOX_STATE_INDETERMINATE = CHECKBOX_STATE_INDETERMINATE;
+    public readonly cancelEvent = cancelEvent;
 
     /**
      * Sets the checkbox to be auto-focused. Handled by `AutofocusDirective`.
@@ -85,6 +86,19 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
 
     public override writeValue(value: CheckboxState): void {
         super.writeValue(normalizeValue(value));
+    }
+
+    /**
+     * Handles the keyboard inputs, to toggle the state correctly.
+     * As the focus is on the `label` element instead of the `input`,
+     * we have to handle this manually.
+     * @param event The onKeyDown event
+     */
+    public handleKeyDown(event: KeyboardEvent): void {
+        if (event.code === 'Space') {
+            this.toggleState(event);
+            return;
+        }
     }
 
     public toggleState(event: Event): void {

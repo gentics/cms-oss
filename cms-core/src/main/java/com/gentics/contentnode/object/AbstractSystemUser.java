@@ -112,6 +112,11 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 				return user.isInboxToEmail();
 			}
 		});
+		resolvableProperties.put("supportuser", new Property(new String[] { "supportuser"}) {
+			public Object get(AbstractSystemUser user, String key) {
+				return user.isSupportUser();
+			}
+		});
 
 		resolvableKeys = SetUtils.union(AbstractContentObject.resolvableKeys, resolvableProperties.keySet());
 	}
@@ -259,6 +264,11 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 
 	@Override
 	public void setPassword(String password) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setSupportUser(boolean supportUser) throws ReadOnlyException {
 		failReadOnly();
 	}
 

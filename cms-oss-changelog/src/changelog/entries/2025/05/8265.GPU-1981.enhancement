@@ -1,0 +1,8 @@
+Some dependencies have been updated:
+* Jetty: 12.0.20
+* Log4j: 2.24.3
+* AntiSamy: 1.7.8
+* Json Smart: 2.5.2
+
+The following dependencies have been removed:
+* Logback

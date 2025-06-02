@@ -5,13 +5,12 @@
  */
 package com.gentics.contentnode.validation.util.sax.xerces;
 
-import org.apache.xerces.util.AugmentationsImpl;
-import org.apache.xerces.util.XMLAttributesImpl;
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLString;
+import org.htmlunit.cyberneko.xerces.util.XMLAttributesImpl;
+import org.htmlunit.cyberneko.xerces.xni.Augmentations;
+import org.htmlunit.cyberneko.xerces.xni.QName;
+import org.htmlunit.cyberneko.xerces.xni.XMLAttributes;
+import org.htmlunit.cyberneko.xerces.xni.XMLDocumentHandler;
+import org.htmlunit.cyberneko.xerces.xni.XMLString;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -40,7 +39,7 @@ public class XercesUtils {
 	 *   false otherwise.
 	 */
 	public static boolean generateSAXEvents(NodeList nodes, XMLDocumentHandler handler) {
-		Augmentations augs = new AugmentationsImpl();
+		Augmentations augs = null;
 
 		return generateSAXEventsForNodes(nodes, handler, augs);
 	}

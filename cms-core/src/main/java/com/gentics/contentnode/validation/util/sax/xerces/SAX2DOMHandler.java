@@ -5,16 +5,15 @@
  */
 package com.gentics.contentnode.validation.util.sax.xerces;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XMLResourceIdentifier;
-import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
-import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.htmlunit.cyberneko.xerces.xni.Augmentations;
+import org.htmlunit.cyberneko.xerces.xni.NamespaceContext;
+import org.htmlunit.cyberneko.xerces.xni.QName;
+import org.htmlunit.cyberneko.xerces.xni.XMLAttributes;
+import org.htmlunit.cyberneko.xerces.xni.XMLDocumentHandler;
+import org.htmlunit.cyberneko.xerces.xni.XMLLocator;
+import org.htmlunit.cyberneko.xerces.xni.XMLString;
+import org.htmlunit.cyberneko.xerces.xni.XNIException;
+import org.htmlunit.cyberneko.xerces.xni.parser.XMLDocumentSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -133,10 +132,10 @@ public class SAX2DOMHandler implements XMLDocumentHandler {
 			Augmentations augmentations) throws XNIException {
 		Element enter;
 
-		if (noNamespaceHandling || null == qname.uri) {
-			enter = doc.createElement(qname.rawname);
+		if (noNamespaceHandling || null == qname.getUri()) {
+			enter = doc.createElement(qname.getRawname());
 		} else {
-			enter = doc.createElementNS(qname.uri, qname.rawname);
+			enter = doc.createElementNS(qname.getUri(), qname.getRawname());
 		}
 		for (int i = 0; i < attr.getLength(); i++) {
 			String attQName = attr.getQName(i);
@@ -193,11 +192,6 @@ public class SAX2DOMHandler implements XMLDocumentHandler {
 	}
     
 	public void doctypeDecl(String s, String s1, String s2, Augmentations augmentations) throws XNIException {
-		skippedContent = true;
-	}
-
-	public void startGeneralEntity(String s, XMLResourceIdentifier xmlresourceidentifier,
-			String s1, Augmentations augmentations) throws XNIException {
 		skippedContent = true;
 	}
 

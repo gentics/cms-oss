@@ -1,20 +1,18 @@
 package com.gentics.contentnode.rest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -22,6 +20,7 @@ import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.init.BcryptPasswords;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.LoginWithRsaRequest;
@@ -30,9 +29,25 @@ import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.security.RsaTokenValidator;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.etc.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests saving of a page into GCN by using the REST API.
@@ -65,6 +80,9 @@ public class AuthenticationSandboxTest {
 	 */
 	final static public String RSALOGIN_KEY_PUBLIC =
 			"/com/gentics/testutils/resources/rsalogin/public_key.der";
+
+	final static public String JWT_PATH = "/support-user-token.jwt";
+	final static public String JWT_PUBLIC_KEY_PATH = "/support-login-public-key.jwk";
 
 	/**
 	 * User test Group ID
@@ -227,6 +245,59 @@ public class AuthenticationSandboxTest {
 
 		assertEquals("Login with RSA token password has to be OK",
 				ResponseCode.OK, response.getResponseInfo().getResponseCode());
+	}
+
+	@Test
+	public void testLoginWithJwt() throws NodeException, IOException {
+		var publicKey = IOUtils.toString(getClass().getResourceAsStream(JWT_PUBLIC_KEY_PATH), StandardCharsets.UTF_8);
+		var keysDir = "keys";
+
+		new File(keysDir).mkdirs();
+
+		var publicKeyFile = new FileOutputStream(keysDir + JWT_PUBLIC_KEY_PATH);
+
+		publicKeyFile.write(publicKey.getBytes());
+		publicKeyFile.close();
+
+		var authenticationResource = getAuthenticationResource();
+		var token = IOUtils.toString(getClass().getResource(JWT_PATH), StandardCharsets.UTF_8);
+		var request = new LoginRequest();
+
+		// First try with an invalid username.
+		request.setLogin("system");
+		request.setPassword(token);
+
+		var response = authenticationResource.login(request, "0");
+
+		assertResponse(response, ResponseCode.NOTFOUND);
+
+		// Now try with valid support user name.
+		request.setLogin("support");
+		response = authenticationResource.login(request, "0");
+
+		assertResponseOK(response);
+
+		assertThat(response.getUser())
+			.as("User")
+			.isNotNull();
+
+		assertThat(response.getUser().getEmail())
+			.as("Username")
+			.isEqualTo("supportuser@apps.gentics.com");
+
+		assertThat(response.getUser().getFirstName())
+			.as("Firstname")
+			.isEqualTo("Support");
+
+		assertThat(response.getUser().getLastName())
+			.as("Lastname")
+			.isEqualTo("User");
+
+		var userLoadResponse = new UserResourceImpl().get(response.getUser().getId().toString(), new EmbedParameterBean().withEmbed("group"));
+
+		assertThat(userLoadResponse.getUser().getGroups().stream().map(Group::getId).collect(Collectors.toList()))
+			.as("Group")
+			.containsExactly(2);
 	}
 
 	/**

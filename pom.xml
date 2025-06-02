@@ -69,7 +69,7 @@
 		<tika.version>3.0.0</tika.version>
 		<apache.poi.version>5.2.5</apache.poi.version>
 		<commons.fileupload.version>2.0.0-M2</commons.fileupload.version>
-		<commons.beanutils.version>1.9.4</commons.beanutils.version>
+		<commons.beanutils.version>1.11.0</commons.beanutils.version>
 		<commons.codec.version>1.16.1</commons.codec.version>
 		<spring.version>6.2.3</spring.version>
 		<org.json.version>20240303</org.json.version>

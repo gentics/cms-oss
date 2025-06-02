@@ -56,6 +56,8 @@ import de.jkeylockmanager.manager.KeyLockManagers;
  */
 public abstract class AbstractSSOFilter implements Filter {
 
+	private static final int NODE_GROUP_ID = 2;
+
 	/**
 	 * logger
 	 */
@@ -609,6 +611,11 @@ public abstract class AbstractSSOFilter implements Filter {
 
 			for (Iterator<UserGroup> i = groups.iterator(); i.hasNext();) {
 				UserGroup currentUserGroup = i.next();
+
+				// We ignore super groups (1 and 2).
+				if (currentUserGroup.getId() <= 2) {
+					continue;
+				}
 
 				if (!tmpInitGroups.contains(currentUserGroup.getId())) {
 					logger.debug("Removing " + systemUser + " from " + currentUserGroup);

@@ -63,8 +63,8 @@ import {
     DataSourceUpdateRequest,
     DataSourceUpdateResponse,
     DirtQueueListOptions,
-    DirtQueueListResponse,
-    DirtQueueSummary,
+    DirtQueueResponse,
+    DirtQueueSummaryResponse,
     ElasticSearchIndexListOptions,
     ElasticSearchIndexListResponse,
     ElasticSearchIndexRebuildOptions,
@@ -389,8 +389,8 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     reloadConfiguration: () => Response;
 
-    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueListResponse;
-    getDirtQueueSummary: () => DirtQueueSummary;
+    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueResponse;
+    getDirtQueueSummary: () => DirtQueueSummaryResponse;
     redoFailedDirtQueueEntry: (actionId: string | number) => void;
     deleteFailedDirtQueueEntry: (actionId: string | number) => void;
 

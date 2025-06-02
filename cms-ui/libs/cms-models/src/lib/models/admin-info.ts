@@ -102,16 +102,16 @@ export interface PublishQueueNode extends Response {
     pages: PublishObjectsCount;
     /* Form counts */
     forms: PublishObjectsCount;
-};
+}
 
 /**
  * Response from endpoint `/admin/content/dirtqueue/summary`.
  */
-export interface DirtQueueSummary extends Response {
-    items: DirtQueueItem[];
+export interface DirtQueueSummaryResponse extends Response {
+    items: DirtQueueSummaryEntry[];
 }
 
-export interface DirtQueueItem {
+export interface DirtQueueSummaryEntry {
     label: string;
     count: number;
 }
@@ -119,10 +119,10 @@ export interface DirtQueueItem {
 /**
  * Response from endpoint `/admin/content/dirtqueue`.
  */
-export interface DirtQueueListResponse extends ListResponse<DirtQueueItem> {
+export interface DirtQueueResponse extends ListResponse<DirtQueueEntry> {
 }
 
-export interface DirtQueueItem {
+export interface DirtQueueEntry {
     id: number;
     objType: number;
     objId: number;

@@ -39,14 +39,11 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** ID of the root folder */
     folderId: number;
 
-    /** Hostname for publishing into the Filesystem */
+    /** Hostname for publishing into the Filesystem. May contain a protocol prefix. */
     host: string;
 
     /** Property of the hostname for publishing into the Filesystem */
     hostProperty: string;
-
-    /** True if secure https is enabled for this node */
-    https: boolean;
 
     /**
      * ID of the node or channel from which this node is inherited.

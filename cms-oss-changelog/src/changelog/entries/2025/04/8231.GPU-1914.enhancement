@@ -1,0 +1,1 @@
+During start-up Gentics CMS will make sure that a schedule for the publish task exists. If not it will create a schedule that is executed every minute.

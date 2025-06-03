@@ -45,7 +45,6 @@
 		<cms-oss.version>6.3.0-SNAPSHOT</cms-oss.version>
 		<generic-testutils.version>1.15.7</generic-testutils.version>
 		<mesh.forms.plugin.version>3.0.3</mesh.forms.plugin.version>
-		<jetty.version>12.0.16</jetty.version>
 		<hazelcast.version>5.5.0</hazelcast.version>
 		<license.checker.version>2.0.2</license.checker.version>
 

@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -159,22 +161,45 @@ public class DiffResourceImpl implements DiffResource {
 				// found here)
 				diffWriter.write(element.toString());
 			} else if (element instanceof StringUtils.DiffPart) {
+				VelocityContext ctx = new VelocityContext();
+				ctx.put("preDel", "");
+				ctx.put("postDel", "");
+				ctx.put("preIns", "");
+				ctx.put("postIns", "");
+
 				// found a difference here
 				StringUtils.DiffPart diffPart = (StringUtils.DiffPart) element;
 				String original = diffPart.getOriginal();
 				String modified = diffPart.getModified();
 
 				String remove = ObjectTransformer.getString(original, "");
-
 				String insert = ObjectTransformer.getString(modified, "");
 
 				// get the surrounding elements
 				String before = getWords(diff, i - wordsBefore, i);
 				String after = getWords(diff, i + 1, i + 1 + wordsAfter);
 
-				// populate the context
-				VelocityContext ctx = new VelocityContext();
+				// fix the broken tags, if those exist in the distinct change
+				Pair<Optional<String>, Optional<String>> removeTags = findBrokenMarkupTags(remove);
+				Pair<Optional<String>, Optional<String>> insertTags = findBrokenMarkupTags(insert);
+				if (removeTags.getLeft().isPresent()) {
+					ctx.put("preDel", "</" + removeTags.getLeft().get() + ">");
+					remove = "<" + removeTags.getLeft().get() + ">" + remove;
+				}
+				if (removeTags.getRight().isPresent()) {
+					ctx.put("postDel", "<" + removeTags.getRight().get() + ">");
+					remove = remove + "</" + removeTags.getLeft().get() + ">";
+				}
+				if (insertTags.getRight().isPresent()) {
+					ctx.put("postIns", "<" + insertTags.getRight().get() + ">");
+					insert = insert + "</" + insertTags.getRight().get() + ">";
+				}
+				if (insertTags.getLeft().isPresent()) {
+					ctx.put("preIns", "</" + insertTags.getLeft().get() + ">");
+					insert = "<" + insertTags.getLeft().get() + ">" + insert;
+				}
 
+				// populate the context
 				ctx.put("insert", insert);
 				ctx.put("remove", remove);
 				ctx.put("before", before);
@@ -202,6 +227,51 @@ public class DiffResourceImpl implements DiffResource {
 		}
 
 		return diffWriter.toString();
+	}
+
+	/**
+	 * Check if a change contains broken tags, and return a pair of first closing and last opening tags, if those exist.
+	 * 
+	 * @param change
+	 * @return
+	 */
+	private Pair<Optional<String>, Optional<String>> findBrokenMarkupTags(String change) {
+		Optional<String> maybeOpening = Optional.empty();
+		Optional<String> maybeClosing = Optional.empty();
+
+		if (StringUtils.isEmpty(change)) {
+			return Pair.of(maybeClosing, maybeOpening);
+		}
+		int firstOpeningTagPos = change.indexOf("<");
+		int firstClosingTagPos = change.indexOf("</");
+		int lastOpeningTagPos = change.lastIndexOf("<");
+		int lastClosingTagPos = change.lastIndexOf("</");
+
+		if (firstOpeningTagPos > -1 && firstClosingTagPos > -1 && (firstOpeningTagPos+2) > firstClosingTagPos) {
+			int endPos = change.indexOf(" ", firstClosingTagPos+2);
+			if (endPos < 0) {
+				endPos = change.indexOf(">", firstClosingTagPos+2);
+			}
+			if (endPos > firstClosingTagPos+2) {
+				String tag = change.substring(firstClosingTagPos+2, endPos);
+				if (!"br".equals(tag) && !"img".equals(tag)) {
+					maybeClosing = Optional.of(tag);
+				}
+			}
+		}
+		if (lastClosingTagPos > -1 && lastOpeningTagPos > -1 && (lastOpeningTagPos+1) > lastClosingTagPos) {
+			int endPos = change.indexOf(" ", lastOpeningTagPos+1);
+			if (endPos < 0) {
+				endPos = change.indexOf(">", lastOpeningTagPos+1);
+			}
+			if (endPos > lastOpeningTagPos+1) {
+				String tag = change.substring(lastOpeningTagPos+1, endPos);
+				if (!"br".equals(tag) && !"img".equals(tag)) {
+					maybeOpening = Optional.of(tag);
+				}
+			}
+		}
+		return Pair.of(maybeClosing, maybeOpening);
 	}
 
 	/**

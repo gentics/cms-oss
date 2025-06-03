@@ -11,17 +11,17 @@ public class DiffRequest {
 	/**
 	 * Default template for changes
 	 */
-	public final static String DEFAULT_CHANGE_TEMPLATE = "<del class='diff modified gtx-diff'>$remove</del><ins class='diff modified gtx-diff'>$insert</ins>";
+	public final static String DEFAULT_CHANGE_TEMPLATE = "$preDel<del class='diff modified gtx-diff'>$remove</del>$postDel$preIns<ins class='diff modified gtx-diff'>$insert</ins>$postIns";
 
 	/**
 	 * Default template for inserts
 	 */
-	public final static String DEFAULT_INSERT_TEMPLATE = "<ins class='diff modified gtx-diff'>$insert</ins>";
+	public final static String DEFAULT_INSERT_TEMPLATE = "$preIns<ins class='diff modified gtx-diff'>$insert</ins>$postIns";
 
 	/**
 	 * Default template for removals
 	 */
-	public final static String DEFAULT_REMOVE_TEMPALTE = "<del class='diff modified gtx-diff'>$remove</del>";
+	public final static String DEFAULT_REMOVE_TEMPALTE = "$preDel<del class='diff modified gtx-diff'>$remove</del>$postDel";
 
 	/**
 	 * Default number of words before the change to be shown

@@ -40,6 +40,81 @@ public class DiffSandboxTest {
 	}
 
 	/**
+	 * Test diff with broken HTML elements within old variant
+	 */
+	@Test
+	public void testDiffHTMLOldParagraphInsideNewNothing() {
+		DiffResourceImpl diffResource = new DiffResourceImpl();
+		DiffRequest request = new DiffRequest();
+
+		request.setContent1("Good old</p><p>text inside");
+		request.setContent2("Good new Text inside");
+		DiffResponse response = diffResource.diffHTML(request);
+
+		assertEquals("Check diff", "Good </p><del class='diff modified gtx-diff'><p>old</p><p>text</p></del><p><ins class='diff modified gtx-diff'>new Text</ins> inside", response.getDiff());
+	}
+
+	/**
+	 * Test diff with broken HTML elements within new variant
+	 */
+	@Test
+	public void testDiffHTMLOldNothingNewParagraphInside() {
+		DiffResourceImpl diffResource = new DiffResourceImpl();
+		DiffRequest request = new DiffRequest();
+
+		request.setContent1("Good old text inside");
+		request.setContent2("Good new</p><p>Text inside");
+		DiffResponse response = diffResource.diffHTML(request);
+
+		assertEquals("Check diff", "Good <del class='diff modified gtx-diff'>old text</del></p><ins class='diff modified gtx-diff'><p>new</p><p>Text</p></ins><p> inside", response.getDiff());
+	}
+
+	/**
+	 * Test diff with broken HTML elements within both variants
+	 */
+	@Test
+	public void testDiffHTMLOldBreakNewParagraphInside() {
+		DiffResourceImpl diffResource = new DiffResourceImpl();
+		DiffRequest request = new DiffRequest();
+
+		request.setContent1("Good old<br>text inside");
+		request.setContent2("Good new</p><p>Text inside");
+		DiffResponse response = diffResource.diffHTML(request);
+
+		assertEquals("Check diff", "Good <del class='diff modified gtx-diff'>old<br>text</del></p><ins class='diff modified gtx-diff'><p>new</p><p>Text</p></ins><p> inside", response.getDiff());
+	}
+
+	/**
+	 * Test diff with broken different HTML elements within variants. Normally this case should not happen, but we still have to test it.
+	 */
+	@Test
+	public void testDiffHTMLOldDivNewParagraphInside() {
+		DiffResourceImpl diffResource = new DiffResourceImpl();
+		DiffRequest request = new DiffRequest();
+
+		request.setContent1("Good old</div><p>text inside");
+		request.setContent2("Good new</p><div class='test'>Text inside");
+		DiffResponse response = diffResource.diffHTML(request);
+
+		assertEquals("Check diff", "Good </div><del class='diff modified gtx-diff'><div>old</div><p>text</div></del><p></p><div><ins class='diff modified gtx-diff'><p><div>new</p><div class='test'>Text</div></ins><div> inside", response.getDiff());
+	}
+
+	/**
+	 * Test diff with broken HTNL elements within old variant
+	 */
+	@Test
+	public void testDiffHTMLOldBreakNewImgInside() {
+		DiffResourceImpl diffResource = new DiffResourceImpl();
+		DiffRequest request = new DiffRequest();
+
+		request.setContent1("Good old<br>text inside");
+		request.setContent2("Good new<img src='test.png'>Text inside");
+		DiffResponse response = diffResource.diffHTML(request);
+
+		assertEquals("Check diff", "Good <del class='diff modified gtx-diff'>old<br>text</del><ins class='diff modified gtx-diff'>new<img src='test.png'>Text</ins> inside", response.getDiff());
+	}
+
+	/**
 	 * Test diff with removed code from HTML content
 	 */
 	@Test

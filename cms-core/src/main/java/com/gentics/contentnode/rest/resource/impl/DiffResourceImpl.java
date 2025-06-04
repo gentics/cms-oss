@@ -2,7 +2,10 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiFunction;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.POST;
@@ -13,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -37,6 +41,9 @@ import com.gentics.lib.etc.StringUtils;
 @Produces({ MediaType.APPLICATION_JSON })
 @Path("/diff")
 public class DiffResourceImpl implements DiffResource {
+
+	private static final String REGEX_BROKEN_END_TAG = "^(?<prefix>([^<\\/>])*)(<\\/(?<closetag>[a-z0-9]+)>)";
+	private static final String REGEX_BROKEN_START_TAG = "(<(?<opentag>[a-z0-9]+)([a-z0-9\\s'\"=]*>))(?<suffix>([^<>]*))$";
 
 	/**
 	 * Shared instance of the VelocityEngine used in calls to
@@ -159,22 +166,45 @@ public class DiffResourceImpl implements DiffResource {
 				// found here)
 				diffWriter.write(element.toString());
 			} else if (element instanceof StringUtils.DiffPart) {
+				VelocityContext ctx = new VelocityContext();
+				ctx.put("preDel", "");
+				ctx.put("postDel", "");
+				ctx.put("preIns", "");
+				ctx.put("postIns", "");
+
 				// found a difference here
 				StringUtils.DiffPart diffPart = (StringUtils.DiffPart) element;
 				String original = diffPart.getOriginal();
 				String modified = diffPart.getModified();
 
 				String remove = ObjectTransformer.getString(original, "");
-
 				String insert = ObjectTransformer.getString(modified, "");
 
 				// get the surrounding elements
 				String before = getWords(diff, i - wordsBefore, i);
 				String after = getWords(diff, i + 1, i + 1 + wordsAfter);
 
-				// populate the context
-				VelocityContext ctx = new VelocityContext();
+				// fix the broken tags, if those exist in the distinct change
+				Pair<Optional<String>, Optional<String>> removeTags = findBrokenMarkupTags(remove);
+				Pair<Optional<String>, Optional<String>> insertTags = findBrokenMarkupTags(insert);
+				if (removeTags.getLeft().isPresent()) {
+					ctx.put("preDel", "</" + removeTags.getLeft().get() + ">");
+					remove = "<" + removeTags.getLeft().get() + ">" + remove;
+				}
+				if (removeTags.getRight().isPresent()) {
+					ctx.put("postDel", "<" + removeTags.getRight().get() + ">");
+					remove = remove + "</" + removeTags.getRight().get() + ">";
+				}
+				if (insertTags.getRight().isPresent()) {
+					ctx.put("postIns", "<" + insertTags.getRight().get() + ">");
+					insert = insert + "</" + insertTags.getRight().get() + ">";
+				}
+				if (insertTags.getLeft().isPresent()) {
+					ctx.put("preIns", "</" + insertTags.getLeft().get() + ">");
+					insert = "<" + insertTags.getLeft().get() + ">" + insert;
+				}
 
+				// populate the context
 				ctx.put("insert", insert);
 				ctx.put("remove", remove);
 				ctx.put("before", before);
@@ -202,6 +232,32 @@ public class DiffResourceImpl implements DiffResource {
 		}
 
 		return diffWriter.toString();
+	}
+
+	/**
+	 * Check if a change contains broken tags, and return a pair of first closing and last opening tags, if those exist.
+	 * 
+	 * @param change
+	 * @return
+	 */
+	private Pair<Optional<String>, Optional<String>> findBrokenMarkupTags(String change) {
+		if (StringUtils.isEmpty(change) ) {
+			return Pair.of(Optional.empty(), Optional.empty());
+		}
+
+		BiFunction<String, String, Optional<String>> tagMatcher = (regex, group) -> {
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(change);
+			if (matcher.find()) {
+				String tag = matcher.group(group);
+				if (!StringUtils.isVoidTag(tag)) {
+					return Optional.of(tag);
+				}
+			}
+			return Optional.empty();
+		};
+
+		return Pair.of(tagMatcher.apply(REGEX_BROKEN_END_TAG, "closetag"), tagMatcher.apply(REGEX_BROKEN_START_TAG, "opentag"));
 	}
 
 	/**

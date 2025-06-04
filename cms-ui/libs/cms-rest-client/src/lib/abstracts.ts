@@ -28,6 +28,7 @@ import {
     ContentMaintenanceActionRequest,
     ContentPackageCreateRequest,
     ContentPackageErrorResponse,
+    ContentPackageFolderResponse,
     ContentPackageListOptions,
     ContentPackageListResponse,
     ContentPackageResponse,
@@ -116,6 +117,7 @@ import {
     FormSaveRequest,
     FormUnpublishRequest,
     GcmsPermission,
+    GenericItemResponse,
     Group,
     GroupCreateRequest,
     GroupCreateResponse,
@@ -156,6 +158,11 @@ import {
     LanguageListResponse,
     LanguageResponse,
     LanguageUpdateRequest,
+    LicenseContentRepositoryInfoOptions,
+    LicenseContentRepositoryInfoResponse,
+    LicenseInfoResponse,
+    LicenseUpdateRequest,
+    LicenseUpdateResponse,
     LinkCheckerCheckRequest,
     LinkCheckerCheckResponse,
     LinkCheckerExternalLinkList,
@@ -274,6 +281,7 @@ import {
     PublishLogListOption,
     PublishQueue,
     PublishType,
+    PushLicenseRequest,
     PushToMasterRequest,
     Raw,
     Response,
@@ -335,8 +343,9 @@ import {
     TemplateTagStatusResponse,
     TemplateUsageResponse,
     TotalUsageResponse,
-    TranslationTextRequest,
+    TranslationRequestOptions,
     TranslationResponse,
+    TranslationTextRequest,
     UnlocalizeRequest,
     UpdatesInfo,
     UsageInFilesOptions,
@@ -360,14 +369,6 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
-    TranslationRequestOptions,
-    GenericItemResponse,
-    LicenseInfoResponse,
-    LicenseUpdateRequest,
-    LicenseUpdateResponse,
-    LicenseContentRepositoryInfoOptions,
-    LicenseContentRepositoryInfoResponse,
-    PushLicenseRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -492,6 +493,7 @@ export interface AbstractContentStagingAPI extends BasicAPI {
     upload: (name: string, file: File | Blob) => ContentPackageResponse;
     download: (name: string) => Blob;
     errors: (name: string) => ContentPackageErrorResponse;
+    listContents: (name: string, path: string) => ContentPackageFolderResponse;
 
     addEntity: (
         name: string,

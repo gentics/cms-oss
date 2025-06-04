@@ -322,6 +322,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         },
         download: (name) => this.executeBlobRequest(GET, `/content/package/${name}`),
         errors: (name) => this.executeMappedJsonRequest(GET, `/content/package/${name}/import/errors`),
+        listContents: (name, path) => this.executeMappedJsonRequest(GET, `/content/package/${name}/list/${path}`),
 
         addEntity: (name, entityType, entityGlobalId, options) => this.executeMappedJsonRequest(PUT, `/content/package/${name}/${entityType}/${entityGlobalId}`, null, options),
         removeEntity: (name, entityType, entityGlobalId) => this.executeMappedJsonRequest(DELETE, `/content/package/${name}/${entityType}/${entityGlobalId}`),

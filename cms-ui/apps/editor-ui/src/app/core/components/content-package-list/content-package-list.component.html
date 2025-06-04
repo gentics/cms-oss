@@ -4,8 +4,8 @@
             <gtx-checkbox
                 *ngIf="selectable"
                 class="selection-checkbox"
-                [checked]="item.selected"
-                (change)="selectPackage(item)"
+                [value]="item.selected"
+                (valueChange)="selectPackage(item)"
             ></gtx-checkbox>
 
             <span class="item-name">{{ item.value.name }}</span>

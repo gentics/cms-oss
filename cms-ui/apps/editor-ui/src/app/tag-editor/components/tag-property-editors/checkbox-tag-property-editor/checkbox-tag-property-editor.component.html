@@ -5,7 +5,7 @@
             [required]="tagPart?.mandatory"
             [disabled]="readOnly"
             [(ngModel)]="isChecked"
-            (change)="onCheckboxChange()">
+            (valueChange)="onCheckboxChange()">
         </gtx-checkbox>
     </div>
 </ng-container>

@@ -151,7 +151,7 @@ describe('CheckboxTagPropertyEditorComponent', () => {
             tick();
 
             // Get the actual input element.
-            const checkboxElement = editorElement.query(By.css('input')).nativeElement;
+            const checkboxElement = editorElement.query(By.css('gtx-checkbox label')).nativeElement;
 
             // Simulate a user click.
             const changedProperty = cloneDeep(tagProperty);

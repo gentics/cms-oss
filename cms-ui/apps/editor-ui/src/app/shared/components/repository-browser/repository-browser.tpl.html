@@ -37,7 +37,7 @@
                 class="root-folder-checkbox"
                 [icon]="items[0].type === 'channel' ? 'input' : 'device_hub'"
                 [selected]="isSelected(items[0]) | async"
-                (change)="toggleItemSelection(items[0], $event)"
+                (selectedChange)="toggleItemSelection(items[0], $event)"
             ></icon-checkbox>
             <span class="root-folder-name">{{ items[0].name }}</span>
         </div>

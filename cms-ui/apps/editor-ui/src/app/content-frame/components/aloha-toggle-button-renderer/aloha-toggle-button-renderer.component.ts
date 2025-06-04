@@ -64,7 +64,7 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
         this.aloha.restoreSelection();
     }
 
-    protected getFinalValue(): boolean {
+    protected override getFinalValue(): boolean {
         return this.settings.active;
     }
 

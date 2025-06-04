@@ -14,9 +14,7 @@
 
             <users-list
                 [users]="users$ | async"
-                maxHeight="300px"
-                [selected]="selected"
-                (selectionChange)="selected = $event"
+                [(selected)]="selected"
             ></users-list>
         </div>
 

@@ -32,7 +32,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'content_staging.info_selected_content_packages' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'content_staging.info_selected_content_packages' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

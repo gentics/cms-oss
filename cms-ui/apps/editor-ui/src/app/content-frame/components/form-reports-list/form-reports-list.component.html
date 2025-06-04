@@ -99,7 +99,7 @@
                             <icon-checkbox
                                 [selected]="allSelected"
                                 [icon]="icon"
-                                (change)="toggleAllSelect()"
+                                (selectedChange)="toggleAllSelect()"
                             ></icon-checkbox>
                         </th>
 
@@ -128,7 +128,7 @@
                             <icon-checkbox
                                 [selected]="selected[i] != null"
                                 [icon]="icon"
-                                (change)="changeSelection(i)"
+                                (selectedChange)="changeSelection(i)"
                             ></icon-checkbox>
                         </td>
 

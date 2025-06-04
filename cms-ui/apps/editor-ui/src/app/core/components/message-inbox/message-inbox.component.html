@@ -13,7 +13,7 @@
             icon="mail"
             [selected]="isSelectedAllUnread()"
             [class.hidecheckbox]="!((unreadMessagesCount$ | async) > 0)"
-            (change)="toggleAllUnread()"
+            (selectedChange)="toggleAllUnread()"
         ></icon-checkbox>
 
         <ng-container *ngIf="(unreadMessagesCount$ | async) > 0 && selectedUnread.length > 0; else unreadTitleNoSelect">
@@ -92,7 +92,7 @@
                 *ngIf="(readMessagesCount$ | async) > 0 && showReadMessages"
                 icon="mail"
                 [selected]="isSelectedAllRead()"
-                (change)="toggleAllRead()"
+                (selectedChange)="toggleAllRead()"
             ></icon-checkbox>
 
             <span *ngIf="(readMessagesCount$ | async) > 0 && selectedRead.length > 0; else unreadTitles">

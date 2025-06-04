@@ -96,7 +96,7 @@ public class DiffSandboxTest {
 		request.setContent2("Good new</p><div class='test'>Text inside");
 		DiffResponse response = diffResource.diffHTML(request);
 
-		assertEquals("Check diff", "Good </div><del class='diff modified gtx-diff'><div>old</div><p>text</div></del><p></p><div><ins class='diff modified gtx-diff'><p><div>new</p><div class='test'>Text</div></ins><div> inside", response.getDiff());
+		assertEquals("Check diff", "Good </div><del class='diff modified gtx-diff'><div>old</div><p>text</p></del><p></p><ins class='diff modified gtx-diff'><p>new</p><div class='test'>Text</div></ins><div> inside", response.getDiff());
 	}
 
 	/**

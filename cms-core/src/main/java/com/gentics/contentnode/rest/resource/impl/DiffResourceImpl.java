@@ -4,6 +4,8 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiFunction;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.POST;
@@ -39,6 +41,9 @@ import com.gentics.lib.etc.StringUtils;
 @Produces({ MediaType.APPLICATION_JSON })
 @Path("/diff")
 public class DiffResourceImpl implements DiffResource {
+
+	private static final String REGEX_BROKEN_END_TAG = "^(?<prefix>([^<\\/>])*)(<\\/(?<closetag>[a-z0-9]+)>)";
+	private static final String REGEX_BROKEN_START_TAG = "(<(?<opentag>[a-z0-9]+)([a-z0-9\\s'\"=]*>))(?<suffix>([^<>]*))$";
 
 	/**
 	 * Shared instance of the VelocityEngine used in calls to
@@ -188,7 +193,7 @@ public class DiffResourceImpl implements DiffResource {
 				}
 				if (removeTags.getRight().isPresent()) {
 					ctx.put("postDel", "<" + removeTags.getRight().get() + ">");
-					remove = remove + "</" + removeTags.getLeft().get() + ">";
+					remove = remove + "</" + removeTags.getRight().get() + ">";
 				}
 				if (insertTags.getRight().isPresent()) {
 					ctx.put("postIns", "<" + insertTags.getRight().get() + ">");
@@ -236,36 +241,23 @@ public class DiffResourceImpl implements DiffResource {
 	 * @return
 	 */
 	private Pair<Optional<String>, Optional<String>> findBrokenMarkupTags(String change) {
-		Optional<String> maybeOpening = Optional.empty();
-		Optional<String> maybeClosing = Optional.empty();
-
-		if (StringUtils.isEmpty(change)) {
-			return Pair.of(maybeClosing, maybeOpening);
+		if (StringUtils.isEmpty(change) ) {
+			return Pair.of(Optional.empty(), Optional.empty());
 		}
-		int firstOpeningTagPos = change.indexOf("<");
-		int firstClosingTagPos = change.indexOf("</");
-		int lastOpeningTagPos = change.lastIndexOf("<");
-		int lastClosingTagPos = change.lastIndexOf("</");
 
-		if (firstOpeningTagPos > -1 && firstClosingTagPos > -1 && (firstOpeningTagPos+2) > firstClosingTagPos) {
-			int endPos = change.indexOf(">", firstClosingTagPos+2);
-			if (endPos > firstClosingTagPos+2) {
-				String tag = change.substring(firstClosingTagPos+2, endPos);
+		BiFunction<String, String, Optional<String>> tagMatcher = (regex, group) -> {
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(change);
+			if (matcher.find()) {
+				String tag = matcher.group(group);
 				if (!StringUtils.isVoidTag(tag)) {
-					maybeClosing = Optional.of(tag);
+					return Optional.of(tag);
 				}
 			}
-		}
-		if (lastClosingTagPos > -1 && lastOpeningTagPos > -1 && (lastOpeningTagPos+1) > lastClosingTagPos) {
-			int endPos = change.indexOf(">", lastOpeningTagPos+1);
-			if (endPos > lastOpeningTagPos+1) {
-				String tag = change.substring(lastOpeningTagPos+1, endPos);
-				if (!StringUtils.isVoidTag(tag)) {
-					maybeOpening = Optional.of(tag);
-				}
-			}
-		}
-		return Pair.of(maybeClosing, maybeOpening);
+			return Optional.empty();
+		};
+
+		return Pair.of(tagMatcher.apply(REGEX_BROKEN_END_TAG, "closetag"), tagMatcher.apply(REGEX_BROKEN_START_TAG, "opentag"));
 	}
 
 	/**

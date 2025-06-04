@@ -10,6 +10,7 @@ import java.text.Collator;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -47,6 +48,11 @@ public class StringUtils {
 
 	private static RuleBasedCollator correctedCollator = null;
 
+	private static final String[] VOID_HTML_TAGS = new String[] {
+			"wbr", "track", "source", "plaintext", "param", "meta", "link", "keygen", 
+			"isindex", "input", "img", "hr", "embed", "!Doctype", "!--", "command", "col", "br", "base", "area"
+	};
+
 	static {
 		try {
 			// Create a customized RuleBasedCollator:
@@ -79,6 +85,13 @@ public class StringUtils {
 		} catch (ParseException e) {
 			logger.error("Could not initalize RuleBasedCollator.", e);
 		}
+	}
+
+	/**
+	 * Is given string a HTML tag, that requires no closing part (aka void/singleton tag).
+	 */
+	public static final boolean isVoidTag(String s) {
+		return Arrays.stream(VOID_HTML_TAGS).anyMatch(t -> t.equals(s));
 	}
 
 	public static int[] splitInt(String str, String expr) {

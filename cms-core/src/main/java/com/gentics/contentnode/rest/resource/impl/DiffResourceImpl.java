@@ -254,7 +254,7 @@ public class DiffResourceImpl implements DiffResource {
 			}
 			if (endPos > firstClosingTagPos+2) {
 				String tag = change.substring(firstClosingTagPos+2, endPos);
-				if (!"br".equals(tag) && !"img".equals(tag)) {
+				if (!StringUtils.isVoidTag(tag)) {
 					maybeClosing = Optional.of(tag);
 				}
 			}
@@ -266,7 +266,7 @@ public class DiffResourceImpl implements DiffResource {
 			}
 			if (endPos > lastOpeningTagPos+1) {
 				String tag = change.substring(lastOpeningTagPos+1, endPos);
-				if (!"br".equals(tag) && !"img".equals(tag)) {
+				if (!StringUtils.isVoidTag(tag)) {
 					maybeOpening = Optional.of(tag);
 				}
 			}

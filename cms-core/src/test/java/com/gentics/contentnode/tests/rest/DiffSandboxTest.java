@@ -210,6 +210,6 @@ public class DiffSandboxTest {
 		request.setIgnoreRegex(DIFF_IGNORE);
 
 		DiffResponse response = diffResource.daisyDiff(request);
-		assertEquals("Check diff", "<div id=\"gtxDiffWrapper\">\n<p>one two three</p>\n</div>\n", response.getDiff());
+		assertEquals("Check diff", "<div id=\"gtxDiffWrapper\"><p>one two three</p></div>", response.getDiff());
 	}
 }

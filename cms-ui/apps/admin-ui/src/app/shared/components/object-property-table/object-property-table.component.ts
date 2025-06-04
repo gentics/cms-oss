@@ -186,6 +186,10 @@ export class ObjectPropertyTableComponent
     }
 
     protected async setObjectpropertyNodeRestrictions(ids: number[]): Promise<void> {
+        if (ids == null || ids.length === 0) {
+            return;
+        }
+
         try {
             const dialog = await this.modalService.fromComponent(
                 AssignNodeRestrictionsToObjectPropertiesModalComponent,

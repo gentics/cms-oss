@@ -136,7 +136,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
             });
         });
 
-        res.valid = res.valid &&= constructs.length > 0;
+        res.valid = res.valid && constructs.length > 0;
 
         return res;
     }

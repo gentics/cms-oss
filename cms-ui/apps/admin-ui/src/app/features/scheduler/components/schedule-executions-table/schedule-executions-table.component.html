@@ -10,7 +10,7 @@
 <div *ngIf="!hideActions" class="entity-table-actions-bar"></div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'scheduler.info_selected_schedules' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'scheduler.info_selected_schedules' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

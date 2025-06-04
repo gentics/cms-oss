@@ -443,18 +443,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<artifactId>httpunit</artifactId>
-			<groupId>httpunit</groupId>
-			<version>1.7</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>jtidy</groupId>
-					<artifactId>jtidy</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<type>jar</type>

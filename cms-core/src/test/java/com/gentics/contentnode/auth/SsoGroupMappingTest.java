@@ -122,6 +122,6 @@ public class SsoGroupMappingTest {
 
 		assertThat(groupAssignments)
 			.as("Group assignments")
-			.containsExactlyInAnyOrderEntriesOf(expectedGroupAssignments);
+			.containsOnly(expectedGroupAssignments.entrySet().toArray(new Map.Entry[0]));
 	}
 }

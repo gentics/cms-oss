@@ -1,10 +1,13 @@
 package com.gentics.contentnode.tests.auth;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,13 +21,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.junit.After;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.filter.HttpAuthFilter;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
@@ -33,16 +39,20 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.db.SQLExecutor;
-import com.meterware.httpunit.GetMethodWebRequest;
-import com.meterware.httpunit.WebRequest;
-import com.meterware.httpunit.WebResponse;
-import com.meterware.servletunit.ServletRunner;
-import com.meterware.servletunit.ServletUnitClient;
+import com.gentics.lib.servlet.filters.ModifyRequestFilter;
 
 public class SSOUserSyncTest {
+	protected static Path getResourcePath() {
+		try {
+			return Paths.get(SSOUserSyncTest.class.getResource("WEB-INF").toURI());
+		} catch (URISyntaxException e) {
+			fail("Failed to get path for resources", e);
+			return null;
+		}
+	}
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext().config(map -> {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext().config(map -> {
 		map.setProperty("http_auth_login.login", "HTTP_LOGIN");
 		map.setProperty("http_auth_login.pw", "HTTP_PW");
 		map.setProperty("http_auth_login.firstname", "HTTP_FIRST");
@@ -51,35 +61,42 @@ public class SSOUserSyncTest {
 		map.setProperty("http_auth_login.group", "HTTP_GROUP");
 	});
 
+	@SuppressWarnings("unchecked")
+	@ClassRule
+	public static ServletAppContext context = new ServletAppContext()
+		.baseResource(getResourcePath())
+		.servlet("/test/*", TestServlet.class)
+		.filter("/test/unrestricted/*", ModifyRequestFilter.class, Pair.of("headers", "/auth_headers_unrestricted.properties"))
+		.filter("/test/restricted/*", ModifyRequestFilter.class, Pair.of("headers", "/auth_headers_restricted.properties"))
+		.filter("/test/unrestricted/nosync", HttpAuthFilter.class)
+		.filter("/test/restricted/nosync", HttpAuthFilter.class)
+		.filter("/test/unrestricted/sync", HttpAuthFilter.class, Pair.of("syncGroups", "true"))
+		.filter("/test/restricted/sync", HttpAuthFilter.class, Pair.of("syncGroups", "true"));
+
 	/**
 	 * Path using the unrestricted filter without group sync for existing users
 	 */
-	public final static String UNRESTRICTED_NOSYNC_PATH = "/GCN/test/unrestricted/nosync";
+	public final static String UNRESTRICTED_NOSYNC_PATH = "test/unrestricted/nosync";
 
 	/**
 	 * Path using the unrestricted filter with group sync for existing users
 	 */
-	public final static String UNRESTRICTED_SYNC_PATH = "/GCN/test/unrestricted/sync";
+	public final static String UNRESTRICTED_SYNC_PATH = "test/unrestricted/sync";
 
 	/**
 	 * Path using the restricted filter without group sync for existing users
 	 */
-	public final static String RESTRICTED_NOSYNC_PATH = "/GCN/test/restricted/nosync";
+	public final static String RESTRICTED_NOSYNC_PATH = "test/restricted/nosync";
 
 	/**
 	 * Path using the restricted filter with group sync for existing users
 	 */
-	public final static String RESTRICTED_SYNC_PATH = "/GCN/test/restricted/sync";
+	public final static String RESTRICTED_SYNC_PATH = "test/restricted/sync";
 
 	/**
 	 * Thread count for the multithreaded test
 	 */
 	private static final int THREAD_COUNT = 20;
-
-	/**
-	 * Servlet runner
-	 */
-	protected ServletRunner runner;
 
 	/**
 	 * Expected restrictions for the unrestricted user
@@ -104,17 +121,6 @@ public class SSOUserSyncTest {
 		// 5|1;9|2~3
 		restricted.put(5, asSet(1));
 		restricted.put(9, asSet(2, 3));
-
-		runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/GCN");
-	}
-
-	/**
-	 * Shut down the application
-	 * @throws Exception
-	 */
-	@After
-	public void tearDown() throws Exception {
-		runner.shutDown();
 	}
 
 	/**
@@ -123,8 +129,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testInitialUnrestrictedGroupSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
-		makeSSORequest(client, UNRESTRICTED_NOSYNC_PATH, -1, unrestricted);
+		makeSSORequest(new HttpClient(), UNRESTRICTED_NOSYNC_PATH, -1, unrestricted);
 	}
 
 	/**
@@ -133,8 +138,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testInitialRestrictedGroupSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
-		makeSSORequest(client, RESTRICTED_NOSYNC_PATH, -1, restricted);
+		makeSSORequest(new HttpClient(), RESTRICTED_NOSYNC_PATH, -1, restricted);
 	}
 
 	/**
@@ -143,7 +147,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testRestrictingGroupSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
+		HttpClient client = new HttpClient();
 		int userId = makeSSORequest(client, UNRESTRICTED_SYNC_PATH, -1, unrestricted);
 		makeSSORequest(client, RESTRICTED_SYNC_PATH, userId, restricted);
 	}
@@ -154,7 +158,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testUnrestrictingGroupSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
+		HttpClient client = new HttpClient();
 		int userId = makeSSORequest(client, RESTRICTED_SYNC_PATH, -1, restricted);
 		makeSSORequest(client, UNRESTRICTED_SYNC_PATH, userId, unrestricted);
 	}
@@ -165,7 +169,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testRestrictingWithoutSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
+		HttpClient client = new HttpClient();
 		int userId = makeSSORequest(client, UNRESTRICTED_NOSYNC_PATH, -1, unrestricted);
 		makeSSORequest(client, RESTRICTED_NOSYNC_PATH, userId, unrestricted);
 	}
@@ -176,7 +180,7 @@ public class SSOUserSyncTest {
 	 */
 	@Test
 	public void testUnrestrictingWithoutSync() throws Exception {
-		ServletUnitClient client = runner.newClient();
+		HttpClient client = new HttpClient();
 		int userId = makeSSORequest(client, RESTRICTED_NOSYNC_PATH, -1, restricted);
 		makeSSORequest(client, UNRESTRICTED_NOSYNC_PATH, userId, restricted);
 	}
@@ -193,7 +197,7 @@ public class SSOUserSyncTest {
 		for (int i = 0; i < THREAD_COUNT; i++) {
 			futures.add(executorService.submit(() -> {
 				try {
-					performRequest(runner.newClient(), UNRESTRICTED_NOSYNC_PATH, null, null);
+					performRequest(new HttpClient(), UNRESTRICTED_NOSYNC_PATH);
 					return true;
 				} catch (Exception e) {
 					throw new RuntimeException(e);
@@ -228,10 +232,10 @@ public class SSOUserSyncTest {
 	 * @return user id
 	 * @throws Exception
 	 */
-	protected int makeSSORequest(ServletUnitClient client, String path, int expectedUserId, Map<Integer, Set<Integer>> expectedRestrictions) throws Exception {
-		WebResponse response = performRequest(client, path, null, null);
-		final int sid = ObjectTransformer.getInt(response.getText(), 0);
-		assertTrue("Response '"+response.getText()+"' was no SID", sid != 0);
+	protected int makeSSORequest(HttpClient client, String path, int expectedUserId, Map<Integer, Set<Integer>> expectedRestrictions) throws Exception {
+		String response = performRequest(client, path);
+		final int sid = ObjectTransformer.getInt(response, 0);
+		assertTrue("Response '"+response+"' was no SID", sid != 0);
 
 		testContext.getContext().startTransaction();
 		final int[] userId = new int[1];
@@ -266,25 +270,14 @@ public class SSOUserSyncTest {
 	 * Perform a GET request to Portal.Node with the given request parameters and asserts the expected output (if any given)
 	 * @param client client
 	 * @param url url
-	 * @param requestParameters map holding the request parameters
-	 * @param expectedOutput expected output or null to not assert the output
 	 * @return the response
 	 * @throws Exception
 	 */
-	protected WebResponse performRequest(ServletUnitClient client, String url, Map<String, String> requestParameters, String expectedOutput) throws Exception {
-	    WebRequest request = new GetMethodWebRequest( "http://test.meterware.com" + url );
-	    request.setHeaderField("host", "testhost");
-	    if (requestParameters != null) {
-	    	for (Map.Entry<String, String> entry : requestParameters.entrySet()) {
-				request.setParameter(entry.getKey(), entry.getValue());
-			}
-	    }
-	    WebResponse response = client.getResponse( request );
-	    assertNotNull( "No response received", response );
-	    if (expectedOutput != null) {
-	    	assertEquals( "requested resource", expectedOutput.replaceAll("\r\n", "\n"), response.getText().replaceAll("\r\n", "\n") );
-	    }
-	    return response;
+	protected String performRequest(HttpClient client, String url) throws Exception {
+		GetMethod getMethod = new GetMethod(context.getBaseUri() + url);
+		getMethod.addRequestHeader("host", "testhost");
+		client.executeMethod(getMethod);
+		return getMethod.getResponseBodyAsString();
 	}
 
 	/**

@@ -248,10 +248,7 @@ public class DiffResourceImpl implements DiffResource {
 		int lastClosingTagPos = change.lastIndexOf("</");
 
 		if (firstOpeningTagPos > -1 && firstClosingTagPos > -1 && (firstOpeningTagPos+2) > firstClosingTagPos) {
-			int endPos = change.indexOf(" ", firstClosingTagPos+2);
-			if (endPos < 0) {
-				endPos = change.indexOf(">", firstClosingTagPos+2);
-			}
+			int endPos = change.indexOf(">", firstClosingTagPos+2);
 			if (endPos > firstClosingTagPos+2) {
 				String tag = change.substring(firstClosingTagPos+2, endPos);
 				if (!StringUtils.isVoidTag(tag)) {
@@ -260,10 +257,7 @@ public class DiffResourceImpl implements DiffResource {
 			}
 		}
 		if (lastClosingTagPos > -1 && lastOpeningTagPos > -1 && (lastOpeningTagPos+1) > lastClosingTagPos) {
-			int endPos = change.indexOf(" ", lastOpeningTagPos+1);
-			if (endPos < 0) {
-				endPos = change.indexOf(">", lastOpeningTagPos+1);
-			}
+			int endPos = change.indexOf(">", lastOpeningTagPos+1);
 			if (endPos > lastOpeningTagPos+1) {
 				String tag = change.substring(lastOpeningTagPos+1, endPos);
 				if (!StringUtils.isVoidTag(tag)) {

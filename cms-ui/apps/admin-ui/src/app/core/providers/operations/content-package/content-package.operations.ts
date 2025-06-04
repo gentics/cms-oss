@@ -31,7 +31,6 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
         private appState: AppStateService,
         private i18nNotification: I18nNotificationService,
         private notification: NotificationService,
-        private client: GCMSRestClientService,
     ) {
         super(injector, 'contentPackage');
     }
@@ -177,7 +176,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     },
                 });
 
-                return throwError(err);
+                return throwError(() => err);
             }),
         )
     }
@@ -221,7 +220,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                 }
 
                 if (!(err instanceof GCMSRestClientRequestError)) {
-                    return throwError(err);
+                    return throwError(() => err);
                 }
 
                 const res: Response = err.data;
@@ -241,7 +240,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     getImportErrors(entityId: string): Observable<ContentPackageErrorResponse> {
-        return this.api.contentStaging.getImportErrors(entityId);
+        return this.client.contentStaging.errors(entityId);
     }
 
     exportToFileSystem(entityId: string, options?: ContentPackageSyncOptions, notify: boolean = true): Observable<void> {
@@ -282,11 +281,11 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     startNotif.dismiss();
                 }
 
-                if (!(err instanceof CMSRestClientRequestError)) {
-                    return throwError(err);
+                if (!(err instanceof GCMSRestClientRequestError)) {
+                    return throwError(() => err);
                 }
 
-                const res: Response = err.response;
+                const res: Response = err.data;
 
                 this.notification.show({
                     type: 'alert',

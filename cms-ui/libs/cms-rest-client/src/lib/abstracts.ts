@@ -27,6 +27,7 @@ import {
     ConstructUpdateResponse,
     ContentMaintenanceActionRequest,
     ContentPackageCreateRequest,
+    ContentPackageErrorResponse,
     ContentPackageListOptions,
     ContentPackageListResponse,
     ContentPackageResponse,
@@ -490,6 +491,7 @@ export interface AbstractContentStagingAPI extends BasicAPI {
     import: (name: string, options?: ContentPackageSyncOptions) => ContentPackageSyncResponse;
     upload: (name: string, file: File | Blob) => ContentPackageResponse;
     download: (name: string) => Blob;
+    errors: (name: string) => ContentPackageErrorResponse;
 
     addEntity: (
         name: string,

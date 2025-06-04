@@ -19,11 +19,11 @@ public class CNStringUtilsTest {
 
 		assertEquals(
 				"<html><head><title>newer</title></head><body id=\"the>Body\"><div id=\"gtxDiffWrapper\">some <span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"added-gtxDiff-1\" previous=\"first-gtxDiff\">other</span>"
-						+ "\n<p>text <span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" id=\"added-gtxDiff-1\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-0\">and some</span>"
-						+ "\n<br>"
-						+ "\n<br>"
-						+ "\n<span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-0\"> elements</span>"
-						+ "\n</p>" + "\n</div>" + "\n</body></html>", diff);
+						+ "<p>text <span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" id=\"added-gtxDiff-1\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-0\">and some</span>"
+						+ "<br>"
+						+ "<br>"
+						+ "<span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-0\"> elements</span>"
+						+ "</p></div></body></html>", diff);
 	}
 
 	@Test
@@ -35,11 +35,11 @@ public class CNStringUtilsTest {
 
 		assertEquals(
 				"<div id=\"gtxDiffWrapper\">"
-						+ "\n<p>"
-						+ "\n<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">a </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"added-gtxDiff-1\" previous=\"removed-gtxDiff-0\">yet another </span>paragraph</p>"
-						+ "\n<p>"
-						+ "\n<span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" id=\"added-gtxDiff-1\" next=\"removed-gtxDiff-1\" previous=\"added-gtxDiff-0\">and yet </span>another<span changeId=\"removed-gtxDiff-1\" class=\"diff-html-removed\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-1\"> </span><span changeId=\"removed-gtxDiff-1\" class=\"diff-html-removed\" id=\"removed-gtxDiff-1\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-1\">paragraph</span>"
-						+ "\n</p>" + "\n</div>\n", diff);
+						+ "<p>"
+						+ "<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">a </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"added-gtxDiff-1\" previous=\"removed-gtxDiff-0\">yet another </span>paragraph</p>"
+						+ "<p>"
+						+ "<span changeId=\"added-gtxDiff-1\" class=\"diff-html-added\" id=\"added-gtxDiff-1\" next=\"removed-gtxDiff-1\" previous=\"added-gtxDiff-0\">and yet </span>another<span changeId=\"removed-gtxDiff-1\" class=\"diff-html-removed\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-1\"> </span><span changeId=\"removed-gtxDiff-1\" class=\"diff-html-removed\" id=\"removed-gtxDiff-1\" next=\"last-gtxDiff\" previous=\"added-gtxDiff-1\">paragraph</span>"
+						+ "</p></div>", diff);
 	}
 
 	@Test
@@ -52,8 +52,8 @@ public class CNStringUtilsTest {
 
 		assertEquals(
 				"<html><head><title>newer title&lt;body&gt;</title></head><body><div id=\"gtxDiffWrapper\">"
-						+ "\n<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">older </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"last-gtxDiff\" previous=\"removed-gtxDiff-0\">newer </span>text</div>"
-						+ "\n</body></html>", diff);
+						+ "<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">older </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"last-gtxDiff\" previous=\"removed-gtxDiff-0\">newer </span>text</div>"
+						+ "</body></html>", diff);
 	}
 
 	@Test
@@ -66,8 +66,8 @@ public class CNStringUtilsTest {
 
 		assertEquals(
 				"<html><head><title>newer title></title></head><body><div id=\"gtxDiffWrapper\">"
-						+ "\n<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">&lt;body&gt;older </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"last-gtxDiff\" previous=\"removed-gtxDiff-0\">&lt;body&gt;newer </span>text</div>"
-						+ "\n</body></html>", diff);
+						+ "<span changeId=\"removed-gtxDiff-0\" class=\"diff-html-removed\" id=\"removed-gtxDiff-0\" next=\"added-gtxDiff-0\" previous=\"first-gtxDiff\">&lt;body&gt;older </span><span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"last-gtxDiff\" previous=\"removed-gtxDiff-0\">&lt;body&gt;newer </span>text</div>"
+						+ "</body></html>", diff);
 	}
 
 	@Test

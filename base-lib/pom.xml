@@ -613,6 +613,16 @@
 			<artifactId>concurrent</artifactId>
 			<version>1.0</version>
 		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.nekohtml</groupId>
+			<artifactId>nekohtml</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<!-- These libraries are only needed for compiling the code -->
 		<dependency>

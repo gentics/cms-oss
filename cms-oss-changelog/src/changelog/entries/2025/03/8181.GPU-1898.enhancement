@@ -20,7 +20,6 @@ The following dependencies have been removed:
 * JavaServer Pages API
 * Tomcat Annotations API
 * Xalan
-* Neko HTML
 * WSDL4J
 * ASM
 * Logback

@@ -73,7 +73,7 @@ public abstract class AbstractSSOFilter implements Filter {
 	 */
 	public final static String INIT_GROUPS_SYNC = "syncGroups";
 
-	protected static Boolean syncGroups = false;
+	protected boolean syncGroups = false;
 
 	public final static String INIT_CALLBACK = "userCreatedCallback";
 

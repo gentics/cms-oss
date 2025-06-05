@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.auth;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -25,6 +26,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -41,6 +43,9 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.servlet.filters.ModifyRequestFilter;
 
+/**
+ * Test cases for user sync when using the {@link HttpAuthFilter}
+ */
 public class SSOUserSyncTest {
 	protected static Path getResourcePath() {
 		try {
@@ -49,6 +54,19 @@ public class SSOUserSyncTest {
 			fail("Failed to get path for resources", e);
 			return null;
 		}
+	}
+
+	/**
+	 * Return a set containing the IDs of the given list of nodes
+	 * @param nodeIds list of node IDs
+	 * @return set containing the IDs of the nodes
+	 */
+	protected static Set<Integer> asSet(Integer... nodeIds) {
+		Set<Integer> set = new HashSet<Integer>();
+		for (Integer nodeId : nodeIds) {
+			set.add(nodeId);
+		}
+		return set;
 	}
 
 	@ClassRule
@@ -101,19 +119,17 @@ public class SSOUserSyncTest {
 	/**
 	 * Expected restrictions for the unrestricted user
 	 */
-	protected Map<Integer, Set<Integer>> unrestricted = new HashMap<Integer, Set<Integer>>();
+	protected static Map<Integer, Set<Integer>> unrestricted = new HashMap<Integer, Set<Integer>>();
 
 	/**
 	 * Expected restrictions for the restricted user
 	 */
-	protected Map<Integer, Set<Integer>> restricted = new HashMap<Integer, Set<Integer>>();
+	protected static Map<Integer, Set<Integer>> restricted = new HashMap<Integer, Set<Integer>>();
 
-	/**
-	 * Setup the application
-	 * @throws Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+
 		NodePreferences prefs = testContext.getContext().getNodeConfig().getDefaultPreferences();
 		prefs.setFeature("http_auth_login", true);
 
@@ -121,6 +137,21 @@ public class SSOUserSyncTest {
 		// 5|1;9|2~3
 		restricted.put(5, asSet(1));
 		restricted.put(9, asSet(2, 3));
+	}
+
+	/**
+	 * Setup the application
+	 * @throws Exception
+	 */
+	@Before
+	public void setUp() throws Exception {
+		operate(t -> {
+			for (SystemUser user : t.getObjects(SystemUser.class, DBUtils.select("SELECT id FROM systemuser WHERE login = ?", pst -> {
+				pst.setString(1, "testuser");
+			}, DBUtils.IDS))) {
+				user.delete(true);
+			}
+		});
 	}
 
 	/**
@@ -315,18 +346,5 @@ public class SSOUserSyncTest {
 		diff = new HashSet<Integer>(actual);
 		diff.removeAll(expected);
 		assertTrue(message + ": Unexpected IDs " + diff + " where found", diff.isEmpty());
-	}
-
-	/**
-	 * Return a set containing the IDs of the given list of nodes
-	 * @param nodeIds list of node IDs
-	 * @return set containing the IDs of the nodes
-	 */
-	protected Set<Integer> asSet(Integer... nodeIds) {
-		Set<Integer> set = new HashSet<Integer>();
-		for (Integer nodeId : nodeIds) {
-			set.add(nodeId);
-		}
-		return set;
 	}
 }

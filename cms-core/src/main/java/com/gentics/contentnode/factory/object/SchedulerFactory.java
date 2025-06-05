@@ -265,36 +265,39 @@ public class SchedulerFactory extends AbstractFactory {
 			});
 		}
 
-		Trx.operate(t -> {
-			var publishTask = t.getObject(
-				SchedulerTask.class,
-				DBUtils.select(
-					"SELECT id FROM scheduler_task WHERE internal = ? AND command = ?",
-					ps1 -> {
-						ps1.setBoolean(1, true);
-						ps1.setString(2, CoreInternalSchedulerTask.publish.getCommand());
-					},
-					DBUtils.firstInt("id")));
-			var scheduleId = DBUtils.select(
-				"SELECT id FROM scheduler_schedule WHERE scheduler_task_id = ?",
-				ps -> ps.setInt(1, publishTask.getId()),
-				DBUtils.firstInt("id"));
+		// do not create the publish task in test mode, because we want to control the publish process
+		if (!StringUtils.isEqual(System.getProperty("com.gentics.contentnode.testmode", "false"), "true")) {
+			Trx.operate(t -> {
+				var publishTask = t.getObject(
+						SchedulerTask.class,
+						DBUtils.select(
+								"SELECT id FROM scheduler_task WHERE internal = ? AND command = ?",
+								ps1 -> {
+									ps1.setBoolean(1, true);
+									ps1.setString(2, CoreInternalSchedulerTask.publish.getCommand());
+								},
+								DBUtils.firstInt("id")));
+				var scheduleId = DBUtils.select(
+						"SELECT id FROM scheduler_schedule WHERE scheduler_task_id = ?",
+						ps -> ps.setInt(1, publishTask.getId()),
+						DBUtils.firstInt("id"));
 
-			if (scheduleId == 0) {
-				var schedule = t.createObject(SchedulerSchedule.class);
+				if (scheduleId == 0) {
+					var schedule = t.createObject(SchedulerSchedule.class);
 
-				schedule.setName(publishTask.getName());
-				schedule.setSchedulerTask(publishTask);
-				schedule.setActive(true);
+					schedule.setName(publishTask.getName());
+					schedule.setSchedulerTask(publishTask);
+					schedule.setActive(true);
 
-				var scheduleData = schedule.getScheduleData();
+					var scheduleData = schedule.getScheduleData();
 
-				scheduleData.setType(ScheduleType.interval);
-				scheduleData.setInterval(new ScheduleInterval().setValue(1).setUnit(IntervalUnit.minute));
+					scheduleData.setType(ScheduleType.interval);
+					scheduleData.setInterval(new ScheduleInterval().setValue(1).setUnit(IntervalUnit.minute));
 
-				schedule.save();
-			}
-		});
+					schedule.save();
+				}
+			});
+		}
 
 		startScheduler();
 	}

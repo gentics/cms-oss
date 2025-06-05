@@ -15,7 +15,7 @@
             <a
                 *ngIf="type !== 'template'; else templateName"
                 class="item-name"
-                (click)="triggerItemClick(item, $event)"
+                (click)="triggerItemClick(di, $event)"
             >{{ di.name }}</a>
 
             <ng-template #templateName>

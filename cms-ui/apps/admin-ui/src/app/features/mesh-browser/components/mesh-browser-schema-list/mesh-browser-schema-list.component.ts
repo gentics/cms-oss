@@ -79,6 +79,7 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
             || changes.availableLanguages
             || changes.branch
             || changes.node
+            || changes.language
         ) {
             this.reloadSchemasToRender();
         }

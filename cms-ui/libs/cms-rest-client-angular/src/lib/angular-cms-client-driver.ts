@@ -177,14 +177,6 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         return this.createClientResponse(req);
     }
 
-    performFormRequest<T>(
-        request: GCMSRestClientRequestData,
-        form: FormData,
-    ): NGGCMSRestClientRequest<T> {
-        const req = this.createStringRequest(request, form, (res) => asSafeJSON(request, res));
-        return this.createClientResponse(req);
-    }
-
     performRawRequest(
         request: GCMSRestClientRequestData,
         body?: string | FormData,

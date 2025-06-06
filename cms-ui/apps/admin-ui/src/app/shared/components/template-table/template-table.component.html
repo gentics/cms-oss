@@ -48,7 +48,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'template.info_selected_templates' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'template.info_selected_templates' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

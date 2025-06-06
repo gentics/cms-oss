@@ -1,0 +1,2 @@
+Administrator User Interface: Fixed an issue of adding or removing links to elements, when managing the assignment of multiple elements. For example, when managing multiple templates and their assignment to nodes.
+ 

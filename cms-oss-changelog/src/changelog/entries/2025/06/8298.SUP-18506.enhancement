@@ -1,0 +1,1 @@
+UI Core: Tables have an additional way to handle selection, in the form of a Map. Has to be enabled per table with the @useSelectionMap@ Input. Allows for the @indeterminate@ state to be set and correctly handled.

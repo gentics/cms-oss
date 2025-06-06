@@ -34,7 +34,7 @@
 </div>
 
 <div class="entity-table-selection">
-    {{ 'dataSourceEntry.info_selected_dataSourceentries' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'dataSourceEntry.info_selected_dataSourceentries' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

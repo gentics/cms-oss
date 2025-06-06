@@ -6,7 +6,7 @@
     <div class="flex-container">
         <gtx-checkbox
             [(ngModel)]="allPermsGranted"
-            (change)="onAllPermsToggle($event)"
+            (valueChange)="onAllPermsToggle($event)"
             [label]="'group.all_perms'| i18n"
             [disabled]="!hasEditPermissionRight()"
         ></gtx-checkbox>
@@ -26,9 +26,10 @@
         <div class="column gtx-perm-category-block" *ngFor="let category of permissionCategories">
             <h6>{{ category.label | i18n }}</h6>
             <div *ngIf="categorizedPerms[category.id] as permissions">
-                <gtx-checkbox *ngFor="let perm of permissions"
+                <gtx-checkbox
+                    *ngFor="let perm of permissions"
                     [(ngModel)]="perm.value"
-                    (change)="onPermToggle()"
+                    (valueChange)="onPermToggle()"
                     [label]="perm.label | i18n"
                     [disabled]="!perm.editable"
                 ></gtx-checkbox>
@@ -39,7 +40,8 @@
         <div class="column gtx-perm-category-block">
             <h6>{{ 'common.role_plural' | i18n }}</h6>
             <div *ngIf="permSet.roles.length > 0; else noRoles">
-                <gtx-checkbox *ngFor="let role of permSet.roles"
+                <gtx-checkbox
+                    *ngFor="let role of permSet.roles"
                     [(ngModel)]="role.value"
                     [label]="role.label"
                     [disabled]="!role.editable"

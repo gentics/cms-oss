@@ -5,7 +5,7 @@
             [label]="'tag_editor.list_type_numbered' | i18n"
             [disabled]="readOnly"
             [(ngModel)]="isNumberedListUserSelection"
-            (change)="onUserChange()"
+            (valueChange)="onUserChange()"
         ></gtx-checkbox>
     </div>
     <div class="row column">

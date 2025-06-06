@@ -68,7 +68,7 @@
 
                 <div *ngSwitchCase="FieldType.NODE" (click)="loadNode(field.value.uuid)" class="field-node">
                     <icon left>share</icon>
-                    <span class="node-name">{{ field.value.displayName || field.value.uuid }}</span>
+                    <span class="node-name">{{ field.value?.displayName || field.value.uuid }}</span>
                 </div>
 
                 <div *ngSwitchCase="FieldType.MICRO_NODE" class="micronode-container value-container">

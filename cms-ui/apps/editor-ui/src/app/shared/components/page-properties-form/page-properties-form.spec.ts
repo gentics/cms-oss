@@ -321,12 +321,12 @@ describe('PagePropertiesForm', () => {
                 const customCdateCell = getCustomCdateCell(fixture);
                 expect(customCdateCell).not.toBeNull();
                 const customCdateCheckbox = getCustomDateCheckbox(customCdateCell);
-                expect((customCdateCheckbox.componentInstance as CheckboxComponent).checked).toBeTruthy();
+                expect((customCdateCheckbox.componentInstance as CheckboxComponent).value).toEqual(true);
 
                 const customEdateCell = getCustomEdateCell(fixture);
                 expect(customEdateCell).not.toBeNull();
                 const customEdateCheckbox = getCustomDateCheckbox(customEdateCell);
-                expect((customEdateCheckbox.componentInstance as CheckboxComponent).checked).toBeTruthy();
+                expect((customEdateCheckbox.componentInstance as CheckboxComponent).value).toEqual(true);
             }),
         );
 
@@ -341,12 +341,12 @@ describe('PagePropertiesForm', () => {
                 const customCdateCell = getCustomCdateCell(fixture);
                 expect(customCdateCell).not.toBeNull();
                 const customCdateCheckbox = getCustomDateCheckbox(customCdateCell);
-                expect((customCdateCheckbox.componentInstance as CheckboxComponent).checked).toBeFalsy();
+                expect((customCdateCheckbox.componentInstance as CheckboxComponent).value).toEqual(false);
 
                 const customEdateCell = getCustomEdateCell(fixture);
                 expect(customEdateCell).not.toBeNull();
                 const customEdateCheckbox = getCustomDateCheckbox(customEdateCell);
-                expect((customEdateCheckbox.componentInstance as CheckboxComponent).checked).toBeFalsy();
+                expect((customEdateCheckbox.componentInstance as CheckboxComponent).value).toEqual(false);
             }),
         );
 
@@ -380,8 +380,8 @@ describe('PagePropertiesForm', () => {
                 fixture.detectChanges();
                 expect(instance.onChange).toHaveBeenCalled();
 
-                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('input'));
-                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('input'));
+                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('label'));
+                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('label'));
 
                 customCdateCheckbox.nativeElement.click();
                 fixture.detectChanges();
@@ -418,8 +418,8 @@ describe('PagePropertiesForm', () => {
                 fixture.detectChanges();
                 expect(instance.onChange).toHaveBeenCalled();
 
-                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('input'));
-                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('input'));
+                const customCdateCheckbox = getCustomDateCheckbox(getCustomCdateCell(fixture)).query(By.css('label'));
+                const customEdateCheckbox = getCustomDateCheckbox(getCustomEdateCell(fixture)).query(By.css('label'));
 
                 customCdateCheckbox.nativeElement.click();
                 fixture.detectChanges();

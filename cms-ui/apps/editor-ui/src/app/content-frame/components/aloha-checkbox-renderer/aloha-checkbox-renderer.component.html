@@ -1,5 +1,5 @@
 <gtx-checkbox
-    [checked]="value"
     [label]="settings?.label"
-    (change)="handleCheckboxChange($event)"
+    [value]="value"
+    (valueChange)="handleCheckboxChange($event)"
 ></gtx-checkbox>

@@ -9,13 +9,13 @@
         [disabled]="!canBeSelected"
         [selected]="selected"
         [icon]="icon"
-        (change)="toggleSelect()"
+        (selectedChange)="toggleSelect()"
     ></icon-checkbox>
 
     <ng-template #imageCheckbox>
         <icon-checkbox
             [selected]="selected"
-            (change)="toggleSelect()"
+            (selectedChange)="toggleSelect()"
             [image]="item"
             [nodeId]="nodeId"
         ></icon-checkbox>

@@ -41,8 +41,8 @@
                             <div class="input-container">
                                 <gtx-checkbox
                                     [label]="'contentmaintenance.life_sync' | i18n"
-                                    [checked]="lifeSyncEnabled"
-                                    (change)="changeLifeSyncPoll($event)"
+                                    [value]="lifeSyncEnabled"
+                                    (valueChange)="changeLifeSyncPoll($event)"
                                 ></gtx-checkbox>
                             </div>
 

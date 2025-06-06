@@ -16,8 +16,9 @@
                         <div class="column">
                                 <gtx-checkbox
                                     class="left"
-                                    [checked]="areAllSelected(itemType)"
-                                    (change)="$event ? selectAllItems(itemType) : deselectAllItems(itemType)"></gtx-checkbox>
+                                    [value]="areAllSelected(itemType)"
+                                    (valueChange)="$event ? selectAllItems(itemType) : deselectAllItems(itemType)"
+                                ></gtx-checkbox>
                                 <div *ngIf="selectedItems[itemType].length">
                                     {{ 'editor.item_count_header_selected' | i18n: { selected: selectedItems[itemType].length, count: syncableItems[itemType].length, _items: itemType.slice(0, -1) } }}
                                 </div>
@@ -32,8 +33,8 @@
                             <div class="column">
                                 <gtx-checkbox
                                     class="left"
-                                    [checked]="isSelected(itemType, item.id)"
-                                    (change)="$event ? selectItem(itemType, item.id) : deselectItem(itemType, item.id)">
+                                    [value]="isSelected(itemType, item.id)"
+                                    (valueChange)="$event ? selectItem(itemType, item.id) : deselectItem(itemType, item.id)">
                                 </gtx-checkbox>
                                 <div class="item-name">{{ item.name }}
                                     <span class="localization-label localized info-text" *ngIf="getChannelName(item.channelId)">

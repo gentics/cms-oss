@@ -1,14 +1,18 @@
 <div class="list-header" *ngIf="!readOnly">
-    <gtx-checkbox [checked]="areAllSelected()"
-                  (change)="toggleSelectall()"
-                  [label]="'common.select_all_label' | i18n"></gtx-checkbox>
+    <gtx-checkbox
+        [label]="'common.select_all_label' | i18n"
+        [value]="areAllSelected()"
+        (valueChange)="toggleSelectall()"
+    ></gtx-checkbox>
 </div>
 
 <gtx-contents-list-item *ngFor="let page of pages">
-    <gtx-checkbox class="row-checkbox"
-                  *ngIf="!readOnly"
-                  [checked]="selected[page.id]"
-                  (change)="toggleSelect(page.id, $event)"></gtx-checkbox>
+    <gtx-checkbox
+        *ngIf="!readOnly"
+        class="row-checkbox"
+        [value]="selected[page.id]"
+        (valueChange)="toggleSelect(page.id, $event)"
+    ></gtx-checkbox>
 
     <i class="material-icons page-icon" [attr.translate]="'no'"
        *ngIf="readOnly">subject</i>

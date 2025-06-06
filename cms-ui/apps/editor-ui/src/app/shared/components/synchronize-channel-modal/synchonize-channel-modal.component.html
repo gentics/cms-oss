@@ -32,8 +32,8 @@
         <gtx-checkbox
             class="recursive-checkbox row column"
             [label]="'common.apply_recursively_label' | i18n"
-            [checked]="recursive"
-            (change)="toggleRecursive()"
+            [value]="recursive"
+            (valueChange)="toggleRecursive()"
         ></gtx-checkbox>
 
         <div
@@ -46,8 +46,8 @@
                 <div class="column">
                     <gtx-checkbox
                         [label]="object.type | i18n: { count: 2 }"
-                        [checked]="selectedTypes[object.type]"
-                        (change)="toggleSelected(object.type)"
+                        [value]="selectedTypes[object.type]"
+                        (valueChange)="toggleSelected(object.type)"
                     ></gtx-checkbox>
                     <gtx-button
                         icon

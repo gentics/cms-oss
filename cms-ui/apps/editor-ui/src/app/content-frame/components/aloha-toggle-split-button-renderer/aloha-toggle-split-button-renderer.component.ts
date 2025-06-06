@@ -76,7 +76,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         this.aloha.restoreSelection();
     }
 
-    protected getFinalValue(): boolean {
+    protected override getFinalValue(): boolean {
         return this.settings.active;
     }
 

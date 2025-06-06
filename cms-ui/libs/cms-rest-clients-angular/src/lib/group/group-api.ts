@@ -100,7 +100,7 @@ export class GroupApi {
      * @param id The ID of the `Group` to be moved.
      * @param parentTargetId The ID of the `Group` that should be the new parent group.
      */
-    moveSubgroup(id: number, parentTargetId: number): Observable<GroupResponse> {
+    moveSubgroup(id: string | number, parentTargetId: number): Observable<GroupResponse> {
         return this.apiBase.put(`group/${parentTargetId}/groups/${id}`, {});
     }
 
@@ -189,7 +189,7 @@ export class GroupApi {
     setGroupInstancePermissions(
         groupId: number,
         type: AccessControlledType,
-        instanceId: number | string,
+        instanceId: number | string,
         payload: GroupSetPermissionsRequest): Observable<Response> {
         return this.apiBase.post(`group/${groupId}/perms/${type}/${instanceId}`, payload);
     }

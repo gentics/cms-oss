@@ -2,7 +2,7 @@
 
 <gtx-checkbox
     [label]="'common.selected' | i18n"
-    [checked]="value?.booleanValue"
+    [value]="value?.booleanValue"
     [disabled]="disabled"
-    (click)="toggleValue($event)"
+    (valueChange)="toggleValue($event)"
 ></gtx-checkbox>

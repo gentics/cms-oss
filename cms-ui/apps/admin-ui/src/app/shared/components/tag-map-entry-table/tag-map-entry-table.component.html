@@ -32,7 +32,7 @@
 </div>
 
 <div class="entity-table-selection">
-    {{ 'tagmapEntry.info_selected_tagmapEntry' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'tagmapEntry.info_selected_tagmapEntry' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

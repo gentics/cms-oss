@@ -21,7 +21,7 @@
                 icon="dashboard"
                 [selected]="nodeTemplates | allItemsSelected:folderTemplates"
                 [disabled]="(isInProgressExternal$ | async) || (isInProgressInternal$ | async)"
-                (change)="toggleSelectAll($event)"
+                (selectedChange)="toggleSelectAll($event)"
             ></icon-checkbox>
 
             <span class="type">
@@ -71,7 +71,7 @@
                 <icon-checkbox
                     #checkbox
                     [selected]="templateIsLinked(nodeTemplate.id)"
-                    (change)="toggleSelect($event, nodeTemplate.id)"
+                    (selectedChange)="toggleSelect($event, nodeTemplate.id)"
                     icon="dashboard"
                 ></icon-checkbox>
 

@@ -1,10 +1,10 @@
-{{ 'JUST SOME OUTPUT FOR DEBUGGING PURPOSES' }}
 <gtx-contents-list-item [class.selected]="isSelected">
 
     <div class="checkbox-wrapper" *ngIf="canBeSelected">
         <gtx-checkbox
-            [checked]="isSelected"
-            (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
+            [value]="isSelected"
+            (valueChange)="toggleSelect.emit(!isSelected)"
+        ></gtx-checkbox>
     </div>
     <div class="item-icon" *ngIf="!canBeSelected">
         <icon>{{ item.type | gtxTypeIcon }}</icon>

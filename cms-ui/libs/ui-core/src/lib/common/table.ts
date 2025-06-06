@@ -1,3 +1,4 @@
+import { CheckboxState } from './checkbox';
 import { ColorThemes } from './colors';
 
 export const FALLBACK_TABLE_COLUMN_RENDERER = '__fallback__';
@@ -17,6 +18,13 @@ export enum TableSelectAllType {
     /** The multi select emits a selectAll event which the parent component has to handle. */
     ALL = 'all',
 }
+
+/**
+ * The selection state of a table.
+ * The key is the row-id, and the state determines how the checkbox should be displayed.
+ * Can either be a simple boolean, or a special indetermine state.
+ */
+export type TableSelection = Record<string, CheckboxState>;
 
 /** A function to map a column value to the final display value. */
 export type TableColumnMappingFn<T> = (value: any, column: TableColumn<T>) => any;

@@ -134,7 +134,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * @param id The ID of the `Group` to be moved.
      * @param parentTargetId The ID of the `Group` that should be the new parent group.
      */
-    moveSubgroup(id: number, parentTargetId: number): Observable<Group<Raw>> {
+    moveSubgroup(id: string | number, parentTargetId: number): Observable<Group<Raw>> {
         return this.api.group.moveSubgroup(id, parentTargetId).pipe(
             map(response => response.group),
             switchMap(movedGroup =>

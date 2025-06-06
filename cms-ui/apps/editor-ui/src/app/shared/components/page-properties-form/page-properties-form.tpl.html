@@ -57,11 +57,12 @@
     </div>
     <div class="row collapse" *ngIf="page">
         <div class="columns small-12 medium-5 custom-creation-date">
-            <gtx-checkbox [label]="'editor.item_custom_creation_date_label' | i18n"
-                          [checked]="customCdateEnabled"
-                          [disabled]="disabled"
-                          (change)="onCustomDateEnabledChange('customCdateEnabled', $event)">
-            </gtx-checkbox>
+            <gtx-checkbox
+                [label]="'editor.item_custom_creation_date_label' | i18n"
+                [value]="customCdateEnabled"
+                [disabled]="disabled"
+                (valueChange)="onCustomDateEnabledChange('customCdateEnabled', $event)"
+            ></gtx-checkbox>
             <gtx-date-time-picker class="custom-date-picker"
                                   formControlName="customCdate"
                                   displaySeconds="false"
@@ -71,9 +72,9 @@
         </div>
         <div class="columns small-12 medium-5 medium-push-2 custom-edit-date">
             <gtx-checkbox [label]="'editor.item_custom_edit_date_label' | i18n"
-                          [checked]="customEdateEnabled"
+                          [value]="customEdateEnabled"
                           [disabled]="disabled"
-                          (change)="onCustomDateEnabledChange('customEdateEnabled', $event)">
+                          (valueChange)="onCustomDateEnabledChange('customEdateEnabled', $event)">
             </gtx-checkbox>
             <gtx-date-time-picker class="custom-date-picker"
                                   formControlName="customEdate"

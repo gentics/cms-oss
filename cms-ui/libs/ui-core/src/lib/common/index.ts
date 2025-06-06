@@ -1,3 +1,4 @@
+export * from './checkbox';
 export * from './colors';
 export * from './date-time-picker';
 export * from './docs';

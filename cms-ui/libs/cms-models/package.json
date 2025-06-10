@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-models",
-  "version": "6.2.12",
+  "version": "6.3.0",
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {

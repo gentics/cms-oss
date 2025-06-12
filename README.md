@@ -187,7 +187,7 @@ If some changelog entries are missing in the generated changelog, check the dire
 The CMS OSS Guides can be built in a container with the following command (path to the workspace needs to be inserted):
 
 ```
-docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.gentics.com/jenkinsbuilds/jenkins-slave:master -c "cd /guides ; guides build"
 ```
 
 The generated guides can be found at `cms-oss/cms-oss-doc/src/main/output`.

@@ -1,19 +1,19 @@
-h1. Support
+h2. Support
 
 endprologue.
 
-h2. Support login
+h3. Support login
 
 To enable access to a Gentics CMS installation for our support staff, a special support login can be enabled by placing the Gentics support login public key in the @keys@ directory of the CMS installation. This key is then used to verify JSON web tokens used by Gentics support staff to login to the system. To obtain the public key, please contact our support at __support [at] gentics [dot] com__ or create a ticket via our "ticket tracker system":https://support.gentics.com.
 
-h2. Support tickets
+h3. Support tickets
 
-h3. Before you write a ticket
+h4. Before you write a ticket
 
 * Make sure your software is up to date
 * Check that the changelog does not contain the fix for your bug
 
-h3. How to write a ticket
+h4. How to write a ticket
 
 The following guidelines can be used to enhance your ticket with additional and useful information.
 

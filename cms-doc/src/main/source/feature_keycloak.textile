@@ -22,39 +22,49 @@ keycloak:
   resource: "cms"
   # keys: "keycloak/keys.json"
   user_created_callback: your.companyname.custom.SsoUserCreated
-  init_groups: |
-    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
-      [3],
-      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
-        [4],
-        [5]
-      )
-    )
+  sync_groups: true
+  init_groups:
+    roles.realm.realm-role-1: RealmRoleGroup1
+    roles.realm.realm-role-2:
+      - RealmRoleGroup2a
+      - RealmRoleGroup2b
+    roles.realm.realm-role-3:
+      - RealmRoleGroup1
+      - RealmRoleGroupX
+      - group: RealmRoleGroup3
+        nodes: Node 3
+    roles.resource.cms.cms-role:
+      - group: CmsRoleGroup
+        nodes:
+          - Node 1
+          - 4488.c0767dce-f8fd-11ef-8735-769f09e19595
+          - NonExistantNode
+  show_sso_button: true
 </shell>
 
-The configuration entries @auth-server-url@, @realm@ and @resource@ correspond exactly
-to the respective fields in the @keycloak.json@ you can
-generate in the Keycloak admin front-end.
+h4. Configuration options
 
-If @keys@ is set to the relative path to a .json file (relativ to the conf path) containing the keys, which were downloaded via the URL
+The following configuration entries define how SSO login via Keycloak is handled.
+
+# @auth-server-url@, @realm@ and @resource@: These entries correspond exactly to the respective fields in the @keycloak.json@ you can generate in the Keycloak admin front-end.
+# @keys@: If this is set to the relative path to a .json file (relativ to the conf path) containing the keys, which were downloaded via the URL
 @https://your.keycloak.instance/realms/[realmname]/protocol/openid-connect/certs@, those keys will be used to validate the access tokens.
 Otherwise, the CMS server will try to download the keys directly from keycloak.
-
-The optional setting @user_created_callback@ is the full class name of a callback implementing
+# @user_created_callback@: This can be set to the full class name of a callback implementing
 "SsoUserCreatedCallback":https://www.gentics.com/Content.Node/guides/api-javadoc/com/gentics/api/contentnode/auth/filter/SsoUserCreatedCallback.html.
 When a new user is created by the SSO process, the callback will be executed with the data of the new user.
 The @attributes@ map contains the following information:
-* @firstname@: the "given name" claim in the access token
-* @lastname@: the "family name" claim in the access token
-* @email@: the "email" claim in the access token
-* @roles@: a map containing
-** @realm@: the list of realm roles for the user
-** @resource@: a mapping from resource names to the respective resource roles for the user
-
-The init parameter @initGroups@ is an expression that must return the IDs of the initial groups, new users shall
-be put in. The expression can resolve systemuser attributes via @user.*@ or claims from the access token via
-@attr.*@ (the most interesting attributes probably being the realm roles @attr.roles.realm@, and the resource
-specific roles @attr.roles.resource.RESOURCENAME@).
+** @firstname@: the "given name" claim in the access token
+** @lastname@: the "family name" claim in the access token
+** @email@: the "email" claim in the access token
+** @roles@: a map containing
+*** @realm@: the list of realm roles for the user
+*** @resource@: a mapping from resource names to the respective resource roles for the user
+# @sync_groups@: Whether an already existing users groups should be checked everytime an SSO login is performed. If the attributes of the user changed (e.g. the assigned roles in Keycloak), the groups of the user will be changed to match the new attributes.
+# @init_groups@: Mappings from user attributes to lists of CMS user groups. In the example above, this means that if @roles.realm.realm-role-1@ can be resolved in the user attributes, the created user will be assigned to the group @RealmRoleGroup1@. The groups may be a single group name or a list of groups. In a list of groups each entry may be a single string which must be the name of the group, or a mapping with the keys @group@ and @nodes@ which hava the group name and a list of nodes to which the group assignment is restricted respectively. Nodes may be specified by their name or their global ID. Non-existing groups and nodes will produce a warning in the logs, but will otherwiese be ignored.
+# @show_sso_button@: When this is set to `true` (see example configuration above), the login masks
+for the editor-ui and admin-ui will show the login mask with an additional "Login with SSO" button which will redirect
+to Keycloak. When the setting is `false` (which is the default) the UIs will immediately redirect to the Keycloak login mask.
 
 WARNING: For security reasons, it is not possible to add users to groups 1 or 2.
 
@@ -69,30 +79,6 @@ When using Keycloak, the CMS will access the following claims in the JWT:
 | email              | Mapped to the email address of the user     | no         |
 | realm_access       | Can be used for mapping roles to CMS groups | no         |
 | resource_access    | Can be used for mapping roles to CMS groups | no         |
-
-h3. Synchronizing group IDs
-
-Setting `sync_groups` to `true` in the Keycloak configuration section will cause synchronization of user groups on every login
-
-<javascript filename="conf/*.yml">
-keycloak:
-  sync_groups: true
-</javascript>
-
-|_. Name |_. Description |_. Default |
-| keycloak.init_groups | Expression that will return the group IDs for the users. All attributes passed along by the authenticating system will be available in the object +attr+ | attr.group |
-| keycloak.sync_groups | When set to true, groups will be synchronized on every login request, not only when the user is created | false |
-
-h4. Restricting group assignments to nodes
-
-In order to restrict group assignments to nodes/channels, the group IDs must be encoded like +[groupId]|[nodeId]~[nodeId]~[nodeId]...+.
-
-The following example shows the definition of the initial groups statically set to the group +17+ (restricted to nodes +8+ and +11+) and the group +18+ (not restricted to specific nodes):
-
-<javascript>
-keycloak:
-  init_groups: '["17|8~11", 18]'
-</javascript>
 
 h3. Using an Identity Provider
 
@@ -133,7 +119,7 @@ By activating the feature
 
 <shell filename="keycloak.yml">
 feature:
-	keycloak_signout: true
+  keycloak_signout: true
 </shell>
 
 users will automatically be logged out from Keycloak, if they log out from the CMS using the Editor User Interface or Administration User Interface.

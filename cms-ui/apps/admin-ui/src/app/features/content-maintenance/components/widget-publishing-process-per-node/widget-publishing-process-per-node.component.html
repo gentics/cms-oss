@@ -91,7 +91,7 @@
                 <gtx-checkbox
                     [label]="'widget.select_all_nodes' | i18n"
                     [disabled]="tableIsLoading"
-                    (change)="checkAll($event)"
+                    (valueChange)="checkAll($event)"
                 ></gtx-checkbox>
             </th>
             <td
@@ -121,8 +121,8 @@
                         *ngIf="selectable"
                         [label]="node.name"
                         [disabled]="tableIsLoading"
-                        [checked]="infoStatsPerNodeState[node.id]?.selected"
-                        (change)="checkRow(node.id)"
+                        [value]="infoStatsPerNodeState[node.id]?.selected"
+                        (valueChange)="checkRow(node.id)"
                     ></gtx-checkbox>
                     <span
                         *ngIf="node.disablePublish"

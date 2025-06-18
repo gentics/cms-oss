@@ -149,7 +149,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         this.autosizeDir.adjust(true);
     }
 
-    protected override getFinalValue(): string {
-        return normalizeValue(this.value);
+    protected override getFinalValue(newValue: string | null): string {
+        return normalizeValue(newValue);
     }
 }

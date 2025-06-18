@@ -240,9 +240,9 @@ describe('SelectComponent', () => {
 
             const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map(de => de.componentInstance);
 
-            expect(checkboxes[0].checked).toBe(false);
-            expect(checkboxes[1].checked).toBe(true);
-            expect(checkboxes[2].checked).toBe(true);
+            expect(checkboxes[0].value).toBe(false);
+            expect(checkboxes[1].value).toBe(true);
+            expect(checkboxes[2].value).toBe(true);
 
             tick(1000);
         },

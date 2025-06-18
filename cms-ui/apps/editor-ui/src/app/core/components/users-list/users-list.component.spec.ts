@@ -11,7 +11,7 @@ describe('UsersList', () => {
 
     beforeEach(() => {
         configureComponentTest({
-            imports: [GenticsUICoreModule],
+            imports: [GenticsUICoreModule.forRoot()],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
@@ -23,7 +23,7 @@ describe('UsersList', () => {
         fixture.detectChanges();
 
         const checkboxes = getUserCheckboxes(fixture);
-        const checked = checkboxes.filter(checkbox => checkbox.checked);
+        const checked = checkboxes.filter(checkbox => checkbox.value === true);
         expect(checked.length).toBe(0);
     }));
 
@@ -32,52 +32,52 @@ describe('UsersList', () => {
         fixture.detectChanges();
 
         const checkboxes = getUserCheckboxes(fixture);
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([true, false, true, false]);
+        expect(checkboxes.map(checkbox => checkbox.value === true)).toEqual([true, false, true, false]);
 
         instance.selected = [];
         fixture.detectChanges();
 
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([false, false, false, false]);
+        expect(checkboxes.map(checkbox => checkbox.value === true)).toEqual([false, false, false, false]);
 
         instance.selected = [1, 2, 3, 4];
         fixture.detectChanges();
 
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([true, true, true, true]);
+        expect(checkboxes.map(checkbox => checkbox.value === true)).toEqual([true, true, true, true]);
     }));
 
-    it('emits selectionChange with new selection', componentTest(() => TestComponent, (fixture, instance) => {
+    it('emits selectedChange with new selection', componentTest(() => TestComponent, (fixture, instance) => {
         fixture.detectChanges();
-        spyOn(instance, 'selectionChange').and.callThrough();
+        const spy = spyOn(instance, 'selectedChange').and.callThrough();
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(1);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1]);
+        expect(spy.calls.count()).toBe(1);
 
         clickCheckbox(fixture, 3);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1, 3]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(2);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1, 3]);
+        expect(spy.calls.count()).toBe(2);
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([3]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(3);
+        expect(instance.selectedChange).toHaveBeenCalledWith([3]);
+        expect(spy.calls.count()).toBe(3);
     }));
 
-    it('emits selectionChange when selectAll clicked', componentTest(() => TestComponent, (fixture, instance) => {
+    it('emits selectedChange when selectAll clicked', componentTest(() => TestComponent, (fixture, instance) => {
         fixture.detectChanges();
-        spyOn(instance, 'selectionChange').and.callThrough();
+        const spy = spyOn(instance, 'selectedChange').and.callThrough();
 
         clickCheckbox(fixture, 0);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1, 2, 3, 4]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(1);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1, 2, 3, 4]);
+        expect(spy.calls.count()).toBe(1);
 
         clickCheckbox(fixture, 0);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(2);
+        expect(instance.selectedChange).toHaveBeenCalledWith([]);
+        expect(spy.calls.count()).toBe(2);
     }));
 
     it('allows toggling', componentTest(() => TestComponent, (fixture) => {
@@ -86,11 +86,11 @@ describe('UsersList', () => {
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(checkboxes[0].checked).toBe(true);
+        expect(checkboxes[0].value).toBe(true);
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(checkboxes[0].checked).toBe(false);
+        expect(checkboxes[0].value).toBe(false);
     }));
 });
 
@@ -102,19 +102,19 @@ const getUserCheckboxes = (fixture: ComponentFixture<TestComponent>): CheckboxCo
     .map(del => del.componentInstance);
 
 function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number): void {
-    fixture.debugElement.queryAll(By.css('gtx-checkbox input'))[index].nativeElement.click();
+    fixture.debugElement.queryAll(By.css('gtx-checkbox label'))[index].nativeElement.click();
     tick();
 }
-
-
 @Component({
     selector: 'test-component',
     template: `
-        <users-list [users]="users"
-                    [selected]="selected"
-                    (selectionChange)="selectionChange($event)">
-        </users-list>`
-    })
+        <users-list
+            [users]="users"
+            [selected]="selected"
+            (selectedChange)="selectedChange($event)"
+        ></users-list>
+    `,
+})
 class TestComponent {
     users: any[] = [];
     selected: number[] = [];
@@ -129,7 +129,7 @@ class TestComponent {
         }
     }
 
-    selectionChange(newSelection: number[]): void {
+    selectedChange(newSelection: number[]): void {
         this.selected = newSelection;
     }
 }

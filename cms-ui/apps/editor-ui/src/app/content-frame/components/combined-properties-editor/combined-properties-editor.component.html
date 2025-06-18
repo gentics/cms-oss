@@ -138,9 +138,9 @@
                     <div *ngIf="!tagFillLightEnabled" class="activate-obj-prop">
                         <gtx-checkbox
                             [label]="'editor.obj_prop_active_label' | i18n"
-                            [checked]="editedObjectProperty?.active"
+                            [value]="editedObjectProperty?.active"
                             [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
-                            (change)="toggleDisplayContent()"
+                            (valueChange)="toggleDisplayContent()"
                         ></gtx-checkbox>
                     </div>
 

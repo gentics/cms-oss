@@ -1,5 +1,10 @@
 <div class="left-items">
-    <icon-checkbox class="left" [selected]="items | allItemsSelected:selectedItems" (change)="toggleSelectAll($event)" [icon]="icon"></icon-checkbox>
+    <icon-checkbox
+        class="left"
+        [icon]="icon"
+        [selected]="items | allItemsSelected:selectedItems"
+        (selectedChange)="toggleSelectAll($event)"
+    ></icon-checkbox>
     <span class="type">
         <ng-template [ngIf]="0 < selectedItems.length" [ngIfElse]="noneSelected">
             <span class="count-full">
@@ -101,8 +106,8 @@
                     (click)="toggleDisplayAllLanguages($event)"
                 >
                     <gtx-checkbox
-                        [checked]="showAllLanguages"
-                        (change)="toggleDisplayAllLanguages()"
+                        [value]="showAllLanguages"
+                        (valueChange)="toggleDisplayAllLanguages()"
                     ></gtx-checkbox>
                     {{ 'editor.display_all_languages_label' | i18n }}
                 </gtx-dropdown-item>
@@ -114,8 +119,8 @@
                         class="page-language-toggle"
                     >
                         <gtx-checkbox
-                            [checked]="showStatusIcons"
-                            (change)="toggleDisplayStatusIcons()"
+                            [value]="showStatusIcons"
+                            (valueChange)="toggleDisplayStatusIcons()"
                         ></gtx-checkbox>
                         {{ 'editor.display_status_icons_label' | i18n }}
                     </gtx-dropdown-item>
@@ -126,8 +131,8 @@
                         (click)="toggleDisplayDeleted()"
                     >
                         <gtx-checkbox
-                            [checked]="showDeleted"
-                            (change)="toggleDisplayDeleted()"
+                            [value]="showDeleted"
+                            (valueChange)="toggleDisplayDeleted()"
                         ></gtx-checkbox>
                         {{ 'editor.display_deleted_label' | i18n }}
                     </gtx-dropdown-item>

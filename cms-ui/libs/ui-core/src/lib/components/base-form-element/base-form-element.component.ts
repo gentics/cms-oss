@@ -6,6 +6,14 @@ import { BaseComponent } from '../base-component/base.component';
  * Base class for all components which can/are used in a form (via ngModel or via FormControls).
  * Provides a basic and consistent way to use them and prevents basic boilerplate
  * code in every component.
+ *
+ * ## Pure Components
+ *
+ * All form elements can be defined as `pure`, which determines that the
+ * value (and state as far as possible) is only controlled by the parent.
+ * This means, that the component itself, should never change a `Input` property
+ * directly, but trigger a event instead and make the parent component do it instead.
+ * This ensures a correct data-flow and a consistent state.
  */
 @Component({ template: '' })
 export abstract class BaseFormElementComponent<T>
@@ -88,8 +96,8 @@ export abstract class BaseFormElementComponent<T>
     /**
      * Optional hook to get the final value which is being emitted on value changes/triggers.
      */
-    protected getFinalValue(): T | null {
-        return this.value;
+    protected getFinalValue(newValue: T | null): T | null {
+        return newValue
     }
 
     /**
@@ -110,7 +118,7 @@ export abstract class BaseFormElementComponent<T>
             this.changeDetector.markForCheck();
         }
 
-        const changeValue = this.getFinalValue();
+        const changeValue = this.getFinalValue(value);
         if (typeof this.cvaChange === 'function') {
             this.cvaChange(changeValue);
         }

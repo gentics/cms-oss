@@ -59,4 +59,4 @@ cache/*
 data/
 logs/
 packages/
-cms-license/keys
+cms-license/keys/*

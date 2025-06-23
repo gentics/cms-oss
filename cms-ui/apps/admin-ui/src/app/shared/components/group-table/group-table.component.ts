@@ -1,9 +1,9 @@
 import { GroupBO } from '@admin-ui/common';
 import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoaderService, I18nService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
@@ -65,7 +65,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         // If the user- or group-id changed, we need to reload the table content

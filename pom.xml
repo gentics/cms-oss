@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms-oss</artifactId>
-	<version>6.2.14-SNAPSHOT</version>
+	<version>6.2.13-SNAPSHOT</version>
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
@@ -63,6 +63,7 @@
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.9.0</jsonpath.version>
+		<jsonsmart.version>2.5.2</jsonsmart.version>
 		<log4j.version>2.23.1</log4j.version>
 		<xerces.version>2.12.2</xerces.version>
 		<xalan.version>2.7.3</xalan.version>

@@ -259,7 +259,7 @@
 						<groupId>com.sun.xml.bind</groupId>
 						<artifactId>jaxb-impl</artifactId>
 					</exclusion>
-				</exclusions> 
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.mesh</groupId>

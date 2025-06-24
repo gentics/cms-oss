@@ -192,7 +192,6 @@ export interface StagedNode extends StagingBase, Pick<Node,
 | 'publishDir'
 | 'binaryPublishDir'
 | 'pubDirSegment'
-| 'https'
 | 'publishImageVariants'
 | 'publishFs'
 | 'publishFsPages'

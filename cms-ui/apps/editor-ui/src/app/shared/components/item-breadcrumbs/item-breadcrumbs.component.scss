@@ -1,6 +1,10 @@
 @import "variables";
 
 .item-breadcrumbs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
 
     .item-breadcrumb {
         font-size: 14px;

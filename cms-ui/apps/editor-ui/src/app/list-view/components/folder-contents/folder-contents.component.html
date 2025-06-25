@@ -97,30 +97,28 @@
     </div>
 </gtx-file-drop-area>
 
-<div [hidden]="(loading$ | async)">
-    <ng-container *ngIf="(noErrors$ | async); else notFound">
-        <item-list
-            *ngFor="let type of (itemTypes$ | async)"
-            [class]="type || ''"
-            [itemType]="type"
-            [linkPaths]="!!(searchTerm$ | async)"
-            [startPageId]="startPageId$ | async"
-            [acceptUploads]="allowedMimeTypes(type)"
-            [uploadProgress]="getUploadProgress(type)"
-            [activeNode]="activeNode$ | async"
-            [currentFolderId]="currentFolderId"
-            [filterTerm]="filterTerm$ | async"
-            [items]="listService.itemStreams[type] | async | filterItems:(filterTerm$ | async):(showPath$ | async)[type]"
-            [itemsInfo]="listService.itemInfoStreams[type] | async"
-            [itemInEditor]="itemInEditor$ | async"
-            [folderPermissions]="permissions$ | async"
-            [currentFolderId]="currentFolderId"
-            [uiMode]="uiMode$ | async"
-            [stagingMap]="stagingMap$ | async"
-            (pageChange)="pageChange(type, $event)"
-            (itemsPerPageChange)="itemsPerPageChange(type, $event)"
-        ></item-list>
-    </ng-container>
+<div class="list-wrapper" *ngIf="(noErrors$ | async); else notFound">
+    <item-list
+        *ngFor="let type of (itemTypes$ | async)"
+        [class]="type || ''"
+        [itemType]="type"
+        [linkPaths]="!!(searchTerm$ | async)"
+        [startPageId]="startPageId$ | async"
+        [acceptUploads]="allowedMimeTypes(type)"
+        [uploadProgress]="getUploadProgress(type)"
+        [activeNode]="activeNode$ | async"
+        [currentFolderId]="currentFolderId"
+        [filterTerm]="filterTerm$ | async"
+        [items]="listService.itemStreams[type] | async | filterItems:(filterTerm$ | async):(showPath$ | async)[type]"
+        [itemsInfo]="listService.itemInfoStreams[type] | async"
+        [itemInEditor]="itemInEditor$ | async"
+        [folderPermissions]="permissions$ | async"
+        [currentFolderId]="currentFolderId"
+        [uiMode]="uiMode$ | async"
+        [stagingMap]="stagingMap$ | async"
+        (pageChange)="pageChange(type, $event)"
+        (itemsPerPageChange)="itemsPerPageChange(type, $event)"
+    ></item-list>
 </div>
 
 <ng-template #notFound>

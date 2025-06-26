@@ -15,6 +15,7 @@ import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, O
 import { NormalizableEntityType } from '@gentics/cms-models';
 import {
     BaseComponent,
+    ChangesOf,
     ModalService,
     TableAction,
     TableActionClickEvent,
@@ -144,7 +145,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         this.actionRebuildTrigger.next();
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         coerceInstance(this, this.booleanInputs, changes);
@@ -156,6 +157,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
                 }
                 return String(value);
             });
+        }
+
+        if (changes.filters) {
+            this.onFilterChange();
         }
 
         if (changes.extraActions) {
@@ -192,10 +197,17 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         this.reload();
     }
 
+    /**
+     * Hook which is/should be called whenever the {@link filters} change.
+     */
+    protected onFilterChange(): void {}
+
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public applyFilterValue(field: string, value: any): void {
         this.filters[field] = value;
         this.query = value;
+
+        this.onFilterChange();
 
         // Reload the table with the new filter value
         this.loadTrigger.next();

@@ -2,9 +2,9 @@ import { ScheduleExecutionBO } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, ScheduleExecution } from '@gentics/cms-models';
-import { ModalService, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { ScheduleExecutionsTableLoaderOptions, ScheduleExecutionsTableLoaderService } from '../../providers';
 import { ScheduleExecutionDetailModalComponent } from '../schedule-execution-detail-modal/schedule-execution-detail-modal.component';
 
@@ -68,7 +68,7 @@ export class ScheduleExecutionsTableComponent
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.scheduleId) {

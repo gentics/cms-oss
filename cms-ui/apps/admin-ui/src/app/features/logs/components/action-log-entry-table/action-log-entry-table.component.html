@@ -1,13 +1,13 @@
 <div *ngIf="!hideActions" class="entity-table-actions-bar">
     <gtx-button
-        class="table-action-button reload-button"
+        class="table-action-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
-        (click)="reload()"
+        (click)="clear()"
     >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+        <icon right>filter_alt</icon> {{ 'common.reset_filter' | i18n }}
     </gtx-button>
 
     <gtx-button
@@ -16,9 +16,9 @@
         size="small"
         type="primary"
         [disabled]="disabled || loading"
-        (click)="clear()"
+        (click)="reload()"
     >
-        <icon right>filter_alt</icon> {{ 'common.reset_filter' | i18n }}
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 
@@ -141,7 +141,7 @@
             [clearable]="false"
             [placeholder]="'common.date_filter_placeholder' | i18n"
             [value]="filters['start']"
-            [max]="getMaxFilterDate()"
+            [max]="startMax"
             (valueChange)="applyFilterValue('start', $event)"
         />
         <gtx-date-time-picker
@@ -149,7 +149,7 @@
             [clearable]="false"
             [placeholder]="'common.date_filter_placeholder' | i18n"
             [value]="filters['end']"
-            [min]="getMinFilterDate()"
+            [min]="endMin"
             (valueChange)="applyFilterValue('end', $event)"
         />
     </gtx-table-filter-wrapper>

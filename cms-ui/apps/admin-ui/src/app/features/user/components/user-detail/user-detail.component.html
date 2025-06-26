@@ -153,6 +153,7 @@
                         *ngIf="currentEntity && (permissionGroupsRead$ | async); else unauthorized"
                         [userId]="currentEntity.id"
                         [showSearch]="true"
+                        [hideActions]="true"
                         class="small-12"
                     ></gtx-group-table>
 

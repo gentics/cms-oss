@@ -22,6 +22,19 @@
     </gtx-button>
 
     <gtx-button
+        *ngIf="userId"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'user.assignUserToGroup'"
+        (click)="handleAssignUsersButton()"
+    >
+        <icon left>link</icon> {{ 'shared.assign_user_to_groups_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
         class="table-action-button reload-button"
         flat
         size="small"

@@ -27,10 +27,10 @@ function gtx_alohalink(tag, renderMode, options) {
                 .replaceAll('\'', '&apos;')
                 .replaceAll('<', '&lt;')
                 .replaceAll('>', '&gt;')
-                .replaceAll('\\', '&bsol;')
+                .replaceAll('\\\\', '&bsol;')
                 .replaceAll(':', '&col;')
-                .replaceAll('(', '&lpar;')
-                .replaceAll(')', '&rpar;') 
+                .replaceAll('\\(', '&lpar;')
+                .replaceAll('\\)', '&rpar;')
             + '"';
     }
 

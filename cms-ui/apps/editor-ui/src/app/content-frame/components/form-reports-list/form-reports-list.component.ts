@@ -202,13 +202,20 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.api.forms.createBinaryDownload(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
-                    takeWhile(status => status.requestPending || !status.downloadReady, true),
+                    takeWhile(status => status.requestPending, true),
                 )),
             ).subscribe(status => {
-                this.notification.show({
-                    message: 'editor.form_reports_binary_generate_finished',
-                    type: 'success',
-                });
+                if (status.downloadReady && !status.requestPending) {
+                    this.notification.show({
+                        message: 'editor.form_reports_binary_generate_finished',
+                        type: 'success',
+                    });
+                } else if (!status.requestPending && status.error) {
+                    this.notification.show({
+                        message: 'editor.form_reports_binary_generate_failed',
+                        type: 'alert',
+                    });
+                }
 
                 this.binaryStatus = status;
                 this.changeDetector.markForCheck();
@@ -240,13 +247,20 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.api.forms.createExportDownload(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.api.forms.getExportStatus(this.form.id)),
-                    takeWhile(status => status.requestPending || !status.downloadReady, true),
+                    takeWhile(status => status.requestPending, true),
                 )),
             ).subscribe(status => {
-                this.notification.show({
-                    message: 'editor.form_reports_csv_generate_finished',
-                    type: 'success',
-                });
+                if (status.downloadReady && !status.requestPending) {
+                    this.notification.show({
+                        message: 'editor.form_reports_csv_generate_finished',
+                        type: 'success',
+                    });
+                } else if (!status.requestPending && status.error) {
+                    this.notification.show({
+                        message: 'editor.form_reports_csv_generate_failed',
+                        type: 'alert',
+                    });
+                }
 
                 this.exportStatus = status;
                 this.changeDetector.markForCheck();

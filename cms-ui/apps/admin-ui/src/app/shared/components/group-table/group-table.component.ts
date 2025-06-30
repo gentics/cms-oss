@@ -1,5 +1,5 @@
 import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoaderService, I18nService, PermissionsService } from '@admin-ui/core';
+import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoaderService, I18nService, PermissionsService, UserTableLoaderService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 import { CreateGroupModalComponent } from '../create-group-modal/create-group-modal.component';
 import { MoveGroupsModalComponent } from '../move-groups-modal/move-groups-modal.component';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 
 const CREATE_SUB_GROUP_ACTION = 'createSubGroup';
 const MOVE_MULTIPLE_GROUPS_ACTION = 'moveGroups';
@@ -55,6 +56,8 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         protected permissions: PermissionsService,
         protected errorHandler: ErrorHandler,
         protected operations: GroupOperations,
+        protected contextMenu: ContextMenuService,
+        protected userLoader: UserTableLoaderService,
     ) {
         super(
             changeDetector,
@@ -193,5 +196,12 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         await dialog.open();
 
         this.loader.reload();
+    }
+
+    protected async handleAssignUsersButton(): Promise<void> {
+        await this.contextMenu.changeGroupsOfUsersModalOpen([this.userId]);
+
+        this.loader.reload();
+        this.userLoader.reload();
     }
 }

@@ -26,7 +26,7 @@
                         >
                             <div *ngIf="!(tagfillLightState$ | async)" class="activate-obj-prop">
                                 <gtx-checkbox
-                                    [checked]="propertiesMap[activeTab].construct.active"
+                                    [value]="propertiesMap[activeTab].construct.active"
                                     [label]="'editor.obj_prop_active_label' | i18n"
                                 ></gtx-checkbox>
                             </div>

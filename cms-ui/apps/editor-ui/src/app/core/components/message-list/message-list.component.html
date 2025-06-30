@@ -6,7 +6,7 @@
     <icon-checkbox
         icon="mail"
         [selected]="isSelected(msg)"
-        (change)="toggleSelect(msg, $event)"
+        (selectedChange)="toggleSelect(msg, $event)"
     ></icon-checkbox>
 
     <span class="name" (click)="messageClick.emit(msg)">{{ getFullName(msg?.sender) }}</span>:

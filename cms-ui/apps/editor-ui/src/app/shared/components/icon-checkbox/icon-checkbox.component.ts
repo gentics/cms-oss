@@ -9,19 +9,21 @@ import { Image } from '@gentics/cms-models';
  * `icon-checkbox-trigger`. This allows an implementation where hovering anywhere on a row will display the
  * checkbox, rather than only hovering over the icon.
  *
- * ```
+ * ```html
  * <!-- Icon mode -->
- * <icon-checkbox [selected]="isSelected"
- *                (change)="toggleSelect()"
- *                icon="folder">
- * </icon-checkbox>
+ * <icon-checkbox
+ *     [selected]="isSelected"
+ *     (selectedChange)="toggleSelect()"
+ *     icon="folder"
+ * ></icon-checkbox>
  *
  * <!-- Image mode -->
- * <icon-checkbox [selected]="isSelected"
- *                (change)="toggleSelect()"
- *                image="imageItem"
- *                [nodeId]="nodeId">
- * </icon-checkbox>
+ * <icon-checkbox
+ *     [selected]="isSelected"
+ *     (selectedChange)="toggleSelect()"
+ *     image="imageItem"
+ *     [nodeId]="nodeId"
+ * ></icon-checkbox>
  * ```
  */
 @Component({
@@ -67,9 +69,9 @@ export class IconCheckbox {
      * When the checkbox is clicked, emits the opposite of the current check state.
      */
     @Output()
-    public change = new EventEmitter<boolean>();
+    public selectedChange = new EventEmitter<boolean>();
 
     checkboxClicked(checkState: boolean): void {
-        this.change.emit(checkState);
+        this.selectedChange.emit(checkState);
     }
 }

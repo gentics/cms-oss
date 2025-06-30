@@ -1,20 +1,30 @@
-<div>
-    <input type="checkbox"
-           [attr.id]="id"
-           [attr.name]="name"
-           [checked]="checkState === true"
-           [indeterminate]="checkState === 'indeterminate'"
-           [disabled]="disabled"
-           [required]="required"
-           [value]="value"
+<div class="checkbox-wrapper">
+    <input
+        type="checkbox"
+        tabindex="-1"
+        aria-hidden="true"
+        [attr.id]="id"
+        [attr.name]="name"
+        [attr.state]="value"
+        [disabled]="disabled"
+        [required]="required"
+        [checked]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+        [indeterminate]="value === CHECKBOX_STATE_INDETERMINATE"
+        [value]="formValue"
 
-           (blur)="onBlur()"
-           (focus)="onFocus()"
-           (change)="onInputChanged($event, input)"
+        (blur)="handleBlur()"
+        (change)="cancelEvent"
+    />
 
-           [class.tabbed]="tabbedFocus"
-
-           #input
-    >
-    <label [attr.for]="id" #labelElement>{{ label }}</label>
+    <label
+        tabindex="0"
+        role="checkbox"
+        [attr.for]="id"
+        [attr.aria-checked]="value === CHECKBOX_STATE_INDETERMINATE ? 'mixed' : value"
+        [attr.aria-disabled]="disabled"
+        [attr.aria-current]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+        [attr.aria-required]="required"
+        (click)="toggleState($event)"
+        (keydown)="handleKeyDown($event)"
+    >{{ label }}</label>
 </div>

@@ -12,6 +12,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { replaceInState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { SynchronizeChannelModal } from './synchonize-channel-modal.component';
+import { CheckboxState } from '@gentics/ui-core';
 
 describe('SynchronizeChannelModal', () => {
 
@@ -107,7 +108,7 @@ describe('SynchronizeChannelModal', () => {
     { labels: string[], checkboxes: MockCheckbox[], checked: string[] } {
         const rows = fixture.debugElement.queryAll(By.css('.affected-objects-row'));
         const checkboxes = rows.map(row => row.query(By.directive(MockCheckbox)).componentInstance);
-        const checked = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
+        const checked = checkboxes.filter(cb => cb.value === true).map(cb => cb.label);
         const labels = checkboxes.map(cb => cb.label);
         expect(labels).toEqual(['folder', 'page', 'file', 'image', 'template']);
         return { checkboxes, checked, labels };
@@ -147,7 +148,7 @@ describe('SynchronizeChannelModal', () => {
             fixture.detectChanges();
 
             const recursive: MockCheckbox = fixture.debugElement.query(By.css('.recursive-checkbox')).componentInstance;
-            expect(recursive.checked).toBe(false);
+            expect(recursive.value).toBe(false);
         }),
     );
 
@@ -271,7 +272,7 @@ describe('SynchronizeChannelModal', () => {
             expect(folderActions.getChannelSyncReport).toHaveBeenCalledTimes(1);
 
             const recursive: MockCheckbox = fixture.debugElement.query(By.css('.recursive-checkbox')).componentInstance;
-            recursive.change.emit();
+            recursive.valueChange.emit();
             expect(folderActions.getChannelSyncReport).toHaveBeenCalledTimes(2);
         }),
     );
@@ -393,9 +394,9 @@ describe('SynchronizeChannelModal', () => {
             fixture.detectChanges();
 
             const { checkboxes } = getObjectTypeSection(fixture);
-            checkboxes[0].change.emit(); // toggle folders to "off"
-            checkboxes[2].change.emit(); // toggle files to "off"
-            checkboxes[4].change.emit(); // toggle templates to "off"
+            checkboxes[0].valueChange.emit(); // toggle folders to "off"
+            checkboxes[2].valueChange.emit(); // toggle files to "off"
+            checkboxes[4].valueChange.emit(); // toggle templates to "off"
 
             expect(modal.selectedTypes).toEqual({
                 folder: false,
@@ -416,7 +417,7 @@ describe('SynchronizeChannelModal', () => {
 
             expect(lastModalResult).toEqual(expected);
 
-            checkboxes[4].change.emit(); // toggle templates to "on"
+            checkboxes[4].valueChange.emit(); // toggle templates to "on"
             getConfirmButton(fixture).click.emit();
             expected.types.push('template');
 
@@ -441,9 +442,9 @@ class MockProgressBar {
 
 @Component({ selector: 'gtx-checkbox', template: '' })
 class MockCheckbox {
-    @Input() checked: boolean;
+    @Input() value: CheckboxState;
     @Input() label: string;
-    @Output() change = new EventEmitter();
+    @Output() valueChange = new EventEmitter();
 }
 
 @Component({ selector: 'node-selector', template: '' })

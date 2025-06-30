@@ -18,9 +18,9 @@
 
     <div *ngIf="selected || !disabled" class="item-checkbox">
         <gtx-checkbox
-            [checked]="selected"
+            [value]="selected"
             [disabled]="disabled"
-            (change)="checkboxClicked($event)"
+            (valueChange)="checkboxClicked($event)"
         ></gtx-checkbox>
     </div>
 </div>

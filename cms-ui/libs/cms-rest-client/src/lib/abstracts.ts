@@ -2,6 +2,7 @@ import {
     AccessControlledType,
     AssignEntityToContentPackageOptions,
     BaseListOptionsWithPaging,
+    BulkLinkUpdateRequest,
     CancelPageEditOptions,
     ChannelSyncRequest,
     ClusterInformationResponse,
@@ -214,7 +215,6 @@ import {
     NodeListOptions,
     NodeListRequestOptions,
     NodeListResponse,
-    NodeMultiLinkRequest,
     NodeResponse,
     NodeSaveRequest,
     NodeSettingsResponse,
@@ -865,8 +865,8 @@ export interface AbstractObjectPropertyAPI extends BasicAPI {
 
     constructs: (id: number | string) => ConstructListResponse;
     listNodes: (id: number | string) => NodeListResponse;
-    linkToNode: (body: NodeMultiLinkRequest) => Response;
-    unlinkFromNode: (body: NodeMultiLinkRequest) => Response;
+    linkToNode: (body: BulkLinkUpdateRequest) => Response;
+    unlinkFromNode: (body: BulkLinkUpdateRequest) => Response;
     hash: (id: number | string) => ImplementationHashResponse;
 }
 

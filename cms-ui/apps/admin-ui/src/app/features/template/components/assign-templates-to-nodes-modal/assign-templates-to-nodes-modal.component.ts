@@ -1,9 +1,9 @@
 import { TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, NodeOperations, NodeTableLoaderService, TemplateOperations } from '@admin-ui/core';
+import { I18nNotificationService, NodeOperations, TemplateOperations } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { EntityIdType, IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal } from '@gentics/ui-core';
+import { IndexById, Node, Raw } from '@gentics/cms-models';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -13,23 +13,25 @@ import { map } from 'rxjs/operators';
     styleUrls: ['./assign-templates-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
+export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
     @Input()
     public templates: TemplateBO[] = [];
 
     public loading = false;
-    public selectedIds: string[] = [];
+    public selected: TableSelection = {};
 
     protected nodes: IndexById<Node<Raw>> = {};
-    protected selectedPerTemplate: { [templateId: EntityIdType]: number[] } = {};
+    /**
+     * @key nodeId
+     */
+    protected currentAssignment: Record<number, Set<number>> = {};
     protected subscriptions: Subscription[] = [];
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected nodeData: NodeDataService,
         protected nodeOperations: NodeOperations,
-        protected nodeTableLoader: NodeTableLoaderService,
         protected notification: I18nNotificationService,
         protected templateOperations: TemplateOperations,
     ) {
@@ -40,51 +42,52 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(combineLatest([this.nodeData.watchAllEntities(), forkJoin(this.templates.map(template => {
-            // for every template, get the list of nodes to which the template is assigned
-            return this.templateOperations.getLinkedNodes(template.id).pipe(
-                map(linkedNodes => [template, linkedNodes]),
-            );
-        }))],
-        ).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
-            const nodeIds: number[] = [];
+        this.subscriptions.push(combineLatest([
+            this.nodeData.watchAllEntities(),
+            forkJoin(this.templates.map(template => {
+                // for every template, get the list of nodes to which the template is assigned
+                return this.templateOperations.getLinkedNodes(template.id).pipe(
+                    map(linkedNodes => [template, linkedNodes]),
+                );
+            })),
+        ]).subscribe(([allNodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
+            const assignment: Record<number, Set<number>> = {};
+            const newSelection: TableSelection = {};
             this.nodes = {};
-            nodes.forEach(node => {
-                this.nodes[node.id] = node;
-                nodeIds.push(node.id);
-            });
 
-            const newSelection = new Set<string>();
-            const templateIds = this.templates.map(t => Number(t.id));
-
-            // for every template, collect the node IDs to which the template is assigned
-            this.selectedPerTemplate = {};
-            templateData.forEach(([template, linkedNodes]) => {
-                linkedNodes.forEach(node => {
-                    const templateId = Number(template.id);
-                    const nodeId = Number(node.id);
-                    this.selectedPerTemplate[templateId] = this.selectedPerTemplate[templateId] ?? [];
-                    this.selectedPerTemplate[templateId].push(nodeId);
-                });
-            });
-
-            // for every node, check whether all given templates are assigned
-            nodeIds.forEach(nodeId => {
-                let nodeHasAllTemplates = true;
-                for (const id of templateIds) {
-                    if (!this.selectedPerTemplate[id] || !this.selectedPerTemplate[id].includes(nodeId)) {
-                        nodeHasAllTemplates = false;
-                        break;
+            // Create a reverse mapping
+            for (const [template, linkedNodes] of templateData) {
+                for (const node of linkedNodes) {
+                    if (!assignment[node.id]) {
+                        assignment[node.id] = new Set();
                     }
+                    assignment[node.id].add(template.id);
                 }
+            }
 
-                // If a node contains all templates, then it should be marked as selected in the list
-                if (nodeHasAllTemplates) {
-                    newSelection.add(nodeId.toString());
+            // Check each nodes selection state
+            for (const node of allNodes) {
+                this.nodes[node.id] = node;
+                const templateCount = assignment[node.id]?.size ?? 0;
+
+                switch (templateCount) {
+                    case 0:
+                        newSelection[node.id] = false;
+                        break;
+
+                    case this.templates.length:
+                        newSelection[node.id] = true;
+                        break;
+
+                    default:
+                        newSelection[node.id] = CHECKBOX_STATE_INDETERMINATE;
+                        break;
                 }
-            });
+            }
 
-            this.selectedIds = Array.from(newSelection);
+            this.selected = newSelection;
+            this.currentAssignment = assignment;
+
             this.loading = false;
             this.changeDetector.markForCheck();
         }));
@@ -94,32 +97,31 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    selectionChange(newSelection: string[]): void {
-        this.selectedIds = newSelection;
+    async okButtonClicked(): Promise<void> {
+        this.closeFn(await this.applySelection());
     }
 
-    async okButtonClicked(): Promise<void> {
+    async applySelection(): Promise<boolean> {
         this.loading = true;
         this.changeDetector.markForCheck();
-        const addSuccess = new Set<string>();
-        const removeSucess = new Set<string>();
+
+        const addSuccess = new Set<number>();
+        const removeSucess = new Set<number>();
+        let didChange = false;
 
         for (const template of this.templates) {
-            const toAdd = new Set<string>(this.selectedIds);
-            const nodeIds = this.selectedPerTemplate[template.id].map(id => id.toString())
-            const toRemove = new Set<string>(nodeIds);
-
-            for (const alreadAssigned of nodeIds) {
-                toAdd.delete(alreadAssigned);
-            }
-            for (const stillAssigned of this.selectedIds) {
-                toRemove.delete(stillAssigned);
-            }
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
 
             for (const nodeToAdd of toAdd) {
+                if (this.currentAssignment[nodeToAdd]?.has?.(template.id)) {
+                    continue;
+                }
+
                 try {
                     await this.nodeOperations.linkTemplate(nodeToAdd, template.id).toPromise();
                     addSuccess.add(nodeToAdd);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -135,9 +137,14 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
 
             for (const nodeToRemove of toRemove) {
+                if (!this.currentAssignment[nodeToRemove]?.has?.(template.id)) {
+                    continue;
+                }
+
                 try {
                     await this.nodeOperations.unlinkTemplate(nodeToRemove, template.id).toPromise();
                     removeSucess.add(nodeToRemove);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -195,9 +202,9 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
         }
 
-        this.nodeTableLoader.reload();
         this.loading = false;
         this.changeDetector.markForCheck();
-        this.closeFn();
+
+        return didChange;
     }
 }

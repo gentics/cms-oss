@@ -23,6 +23,7 @@ import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
+import { overrideFunction, revertKeyedFunctionOverrides } from '../../utils';
 
 export interface NormalizedSlotDisplay {
     name: string;
@@ -154,6 +155,8 @@ function normalizeToolbarSizeSettings(
         tabs,
     };
 }
+
+const INTEGRATION_KEY = Symbol('gcmsui-integration');
 
 @Injectable({ providedIn: 'root' })
 export class AlohaIntegrationService {
@@ -387,14 +390,22 @@ export class AlohaIntegrationService {
 
     public registerComponent(slot: string, component: AlohaComponent): void {
         this.registeredComponents[slot] = component;
+
+        // Add override of show/hide
+        overrideFunction(component, 'show', () => {
+            component.visible = true;
+            this.toolbarReloadSub.next();
+        }, INTEGRATION_KEY);
+        overrideFunction(component, 'hide', () => {
+            component.visible = false;
+            this.toolbarReloadSub.next();
+        }, INTEGRATION_KEY);
+
         this.componentsSub.next({ ...this.registeredComponents });
     }
 
     public unregisterComponent(slot: string): void {
+        revertKeyedFunctionOverrides(this.registeredComponents[slot], INTEGRATION_KEY);
         delete this.registeredComponents[slot];
-    }
-
-    public reloadToolbarSettings(): void {
-        this.toolbarReloadSub.next();
     }
 }

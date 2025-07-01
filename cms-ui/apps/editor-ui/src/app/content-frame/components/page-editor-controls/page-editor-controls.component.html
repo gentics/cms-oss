@@ -32,19 +32,22 @@
                 [class.active]="activeTab === tab.id && tab.hasVisibleGroups"
             >
                 <ng-container *ngFor="let group of tab.componentGroups; last as last; trackBy: identifyComponentGroup">
-                    <div class="component-group" [class.hidden]="!group.hasVisibleSlots">
-                        <ng-container *ngFor="let slot of group.slots; trackBy: identifySlot">
-                            <gtx-aloha-component-renderer
-                                class="dynamic-component gtx-menu-element"
-                                [class.hidden]="!slot.visible"
-                                [attr.slot]="slot.name"
-                                [slot]="slot.name"
-                                [component]="components[slot.name]"
-                                [disabled]="tagEditorOpen"
-                            ></gtx-aloha-component-renderer>
-                        </ng-container>
-                    </div>
-                    <div *ngIf="!last && group.hasVisibleSlots" class="group-separator"></div>
+                    <ng-container *ngIf="group.hasVisibleSlots">
+                        <div class="component-group">
+                            <ng-container *ngFor="let slot of group.slots; trackBy: identifySlot">
+                                <gtx-aloha-component-renderer
+                                    *ngIf="slot.visible"
+                                    class="dynamic-component gtx-menu-element"
+                                    [attr.slot]="slot.name"
+                                    [slot]="slot.name"
+                                    [component]="components[slot.name]"
+                                    [disabled]="tagEditorOpen"
+                                ></gtx-aloha-component-renderer>
+                            </ng-container>
+                        </div>
+
+                        <div *ngIf="!last" class="group-separator"></div>
+                    </ng-container>
                 </ng-container>
             </div>
         </ng-container>

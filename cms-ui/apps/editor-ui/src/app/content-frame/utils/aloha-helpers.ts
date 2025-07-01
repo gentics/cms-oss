@@ -87,9 +87,18 @@ export function patchAlohaFunction<T extends object, K extends ExtractFunctions<
     }
 
     const original = obj[name];
-    (obj as any)[name] = fn;
-    obj[name][PATCHED_ALOHA_FN] = true;
-    obj[name][ORIGINAL_ALOHA_FN] = original;
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    const tmpName = `patched_${name as any}`;
+    const patched = {
+        [tmpName]: function(...args) {
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            return (fn as Function).call(this, ...args);
+        },
+    }[tmpName];
+    patched[PATCHED_ALOHA_FN] = true;
+    patched[ORIGINAL_ALOHA_FN] = original;
+
+    (obj as any)[name] = patched;
 }
 
 export function patchMultipleAlohaFunctions<T extends object>(
@@ -138,5 +147,5 @@ export function unpatchAllAlohaFunctions<T extends object>(obj: T): void {
         return;
     }
 
-    unpatchAlohaFunctions(obj, Object.keys(obj) as any);
+    unpatchAlohaFunctions(obj, ...Object.keys(obj) as any);
 }

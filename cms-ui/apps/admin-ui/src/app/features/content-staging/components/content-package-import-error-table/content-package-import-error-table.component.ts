@@ -11,13 +11,12 @@ import {
     OnChanges,
     OnInit,
     Output,
-    SimpleChanges,
 } from '@angular/core';
 import {
     ContentPackageBO,
     ContentPackageImportError,
 } from '@gentics/cms-models';
-import { ModalService, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableColumn } from '@gentics/ui-core';
 import {
     ContentPackageImportErrorTableLoaderService,
     ContentPackageTableLoaderService,
@@ -103,7 +102,7 @@ export class ContentPackageImportErrorTableComponent
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.contentPackage) {

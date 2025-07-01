@@ -3,6 +3,8 @@
 </div>
 
 <div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <gtx-object-property-category-properties
         *ngIf="form"
         [formControl]="form"
@@ -13,7 +15,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!form || !form.valid || form.pristine"
+        [disabled]="!form || !form.valid || form.pristine || loading"
         (click)="buttonCreateEntityClicked()"
     >
         {{ 'modal.create_button' | i18n }}

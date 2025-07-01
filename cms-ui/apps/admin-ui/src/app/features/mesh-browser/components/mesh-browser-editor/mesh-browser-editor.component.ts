@@ -71,6 +71,10 @@ export class MeshBrowserEditorComponent  implements OnChanges {
     }
 
     public loadNode(nodeUuid: string): void {
+        if (nodeUuid == null) {
+            return;
+        }
+
         this.navigator.navigateToDetails(this.route, {
             project: this.project,
             branch: this.branch,

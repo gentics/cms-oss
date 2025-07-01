@@ -1,11 +1,9 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaToolbarTabsSettings } from '@gentics/aloha-models';
 import { TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { NodeFeature } from '@gentics/cms-models';
 import { Subscription, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { DefaultEditorControlTabs } from '../../../common/models';
 import { AlohaIntegrationService, NormalizedTabsSettings } from '../../providers/aloha-integration/aloha-integration.service';
 import { OverflowManager } from '../../utils';
 
@@ -26,9 +24,17 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
     public tabContainerRef: ElementRef<HTMLElement>;
 
     public activeTab: string;
-    public tabs: AlohaToolbarTabsSettings[] = [];
+    public tabs: NormalizedTabsSettings[] = [];
+    public visibleTabs: NormalizedTabsSettings[] = [];
     public tagEditorOpen = false;
     public linkCheckerEnabled = false;
+
+    /**
+     * When we "force" the user to a different tab, because the initial one wasn't visible anymore,
+     * then we save the id in here to recover it.
+     * Will be reset once the user manually changes the tab.
+     */
+    protected forcedOffTabId: string | null = null;
 
     protected subscriptions: Subscription[] = [];
     protected overflow: OverflowManager;
@@ -63,17 +69,13 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
             }),
         ).subscribe(enabled => {
             this.linkCheckerEnabled = enabled;
-            if (!enabled && this.activeTab === TAB_ID_LINK_CHECKER) {
-                this.aloha.changeActivePageEditorTab(this.tabs?.[0]?.id);
-            }
+            this.updateVisibleTabs();
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(toolbar => {
             this.tabs = toolbar?.tabs ?? [];
-            if (!this.tabs.some(tab => tab.id === this.activeTab)) {
-                this.setActiveTab(DefaultEditorControlTabs.FORMATTING);
-            }
+            this.updateVisibleTabs();
             this.changeDetector.markForCheck();
         }));
 
@@ -102,8 +104,26 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
         return tab.id;
     }
 
+    public updateVisibleTabs(): void {
+        this.visibleTabs = this.tabs.filter(tab => tab.hasVisibleGroups && tab.id !== TAB_ID_LINK_CHECKER || this.linkCheckerEnabled);
+
+        // In case the active tab is a tab which isn't visible anymore, we update the active tab to the first best one
+        if (!this.visibleTabs.some(tab => tab.id === this.activeTab)) {
+            this.forcedOffTabId = this.activeTab;
+            this.setActiveTab(this.visibleTabs[0]?.id);
+        } else if (this.forcedOffTabId != null) {
+            this.setActiveTab(this.forcedOffTabId);
+            this.forcedOffTabId = null;
+        }
+    }
+
     public setActiveTab(tab: string): void {
         this.aloha.changeActivePageEditorTab(tab);
         this.aloha.restoreSelection();
+    }
+
+    public handleUserChangeTab(tab: string): void {
+        this.forcedOffTabId = null;
+        this.setActiveTab(tab);
     }
 }

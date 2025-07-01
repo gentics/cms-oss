@@ -1,6 +1,6 @@
 import { GroupOperations } from '@admin-ui/core';
 import { GroupDataService } from '@admin-ui/shared/providers';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { Group, GroupCreateRequest, Normalized, Raw } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
@@ -26,7 +26,11 @@ export class CreateGroupModalComponent implements IModalDialog, OnInit {
     /** Group the new group will be created in. */
     parentGroup$: Observable<Group<Normalized>>;
 
+    /** Will be set when the create call is sent */
+    loading = false;
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private groupData: GroupDataService,
         private groups: GroupOperations,
     ) {
@@ -76,8 +80,19 @@ export class CreateGroupModalComponent implements IModalDialog, OnInit {
      * If group clicks to create a new group
      */
     buttonCreateEntityClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createEntity()
-            .then(groupCreated => this.closeFn(groupCreated));
+            .then(groupCreated => {
+                this.loading = false;
+                this.closeFn(groupCreated);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createEntity(): Promise<Group<Raw>> {

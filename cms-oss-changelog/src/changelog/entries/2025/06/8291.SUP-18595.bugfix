@@ -1,0 +1,2 @@
+Editor User Interface: When comparing page versions with each other, the difference is now computed
+with another algorithm, which better handles HTML differences.

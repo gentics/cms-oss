@@ -52,7 +52,7 @@
     </div>
 
     <ng-container *ngFor="let row of rows; trackBy: trackRow">
-        <ng-container *ngTemplateOutlet="rowTemplate; context: { row: row, isSelected: (selected | gtxIncludes:row.id) }"></ng-container>
+        <ng-container *ngTemplateOutlet="rowTemplate; context: { row: row, isSelected: selected[row.id] === true }"></ng-container>
     </ng-container>
 
     <ng-template #rowTemplate let-row="row" let-rowSelected="isSelected">

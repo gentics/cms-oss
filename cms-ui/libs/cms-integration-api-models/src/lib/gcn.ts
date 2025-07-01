@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AlohaPlugin } from '@gentics/aloha-models';
+import { AlohaPlugin, AlohaRangeObject } from '@gentics/aloha-models';
 import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
 
 /** Aloha/Edit-Mode Tab-ID to insert/manage constructs in a Page. */
@@ -117,13 +117,28 @@ export interface GCNLinkCheckerPluginSettings {
 
 export interface GCNAlohaPlugin extends AlohaPlugin {
     settings: GCNPluginSettings;
-    createTag(constructId: number, async?: boolean, successCallback?: (html: string, tag: any, data: any) => any): void;
-    handleBlock(data: any, insert: boolean, onInsert: () => void, content?: any): void;
+    createTag(
+        constructId: number,
+        async?: boolean,
+        successCallback?: (html: string, tag: any, data: any) => any,
+        range?: Range | AlohaRangeObject,
+    ): void;
+    handleBlock(
+        data: any,
+        insert: boolean,
+        onInsert: () => void,
+        content?: any,
+        range?: Range | AlohaRangeObject,
+    ): void;
     openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
 }
 
 export interface GCNTags {
-    insert(data: any, callback?: (data: any) => void): JQuery;
+    insert(
+        data: any,
+        callback?: (data: any) => void,
+        range?: Range | AlohaRangeObject,
+    ): JQuery;
     decorate(tag: any, data: any, callback?: () => void): void;
 }
 

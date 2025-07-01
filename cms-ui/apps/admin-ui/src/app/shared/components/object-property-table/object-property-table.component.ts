@@ -1,16 +1,17 @@
 import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
+    ErrorHandler,
     I18nService,
     ObjectPropertyTableLoaderOptions,
     ObjectPropertyTableLoaderService,
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { typeIdsToName } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -86,6 +87,7 @@ export class ObjectPropertyTableComponent
         contextMenu: ContextMenuService,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -98,7 +100,7 @@ export class ObjectPropertyTableComponent
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.type) {
@@ -132,6 +134,7 @@ export class ObjectPropertyTableComponent
                         type: 'primary',
                         enabled: canDeleteAndEdit,
                         single: true,
+                        multiple: true,
                     },
                     {
                         id: DELETE_ACTION,
@@ -182,20 +185,31 @@ export class ObjectPropertyTableComponent
     public override handleAction(event: TableActionClickEvent<ObjectPropertyBO>): void {
         switch (event.actionId) {
             case ASSIGN_TO_NODES_ACTION:
-                this.setObjectpropertyNodeRestrictions(event.item);
+                this.setObjectpropertyNodeRestrictions(this.getAffectedEntityIds(event).map(Number));
                 return;
         }
 
         super.handleAction(event);
     }
 
-    protected async setObjectpropertyNodeRestrictions(objectProperty: ObjectPropertyBO): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
-            AssignNodeRestrictionsToObjectPropertiesModalComponent,
-            { closeOnOverlayClick: false, width: '75%' },
-            { objectProperty },
-        );
-        await dialog.open();
-        this.reload();
+    protected async setObjectpropertyNodeRestrictions(ids: number[]): Promise<void> {
+        if (ids == null || ids.length === 0) {
+            return;
+        }
+
+        try {
+            const dialog = await this.modalService.fromComponent(
+                AssignNodeRestrictionsToObjectPropertiesModalComponent,
+                { closeOnOverlayClick: false, width: '75%' },
+                { objectProperties: ids },
+            );
+            const didChange = await dialog.open();
+
+            if (didChange) {
+                this.reload();
+            }
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 }

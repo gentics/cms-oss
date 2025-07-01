@@ -1,9 +1,9 @@
 import { createMoveActions, EditableEntity, LanguageBO } from '@admin-ui/common';
 import { I18nService, LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { AnyModelType, Language, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
@@ -65,7 +65,7 @@ export class LanguageTableComponent
         this.languageLoader = loader;
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.nodeId) {

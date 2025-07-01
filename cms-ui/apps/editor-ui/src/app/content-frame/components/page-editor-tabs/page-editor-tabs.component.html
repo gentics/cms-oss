@@ -1,12 +1,11 @@
 <div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
-    <ng-container *ngFor="let tab of tabs; trackBy: identifyTab">
+    <ng-container *ngFor="let tab of visibleTabs; trackBy: identifyTab">
         <button
-            *ngIf="tab.hasVisibleGroups && (tab.id !== TAB_ID_LINK_CHECKER || linkCheckerEnabled)"
             class="editor-tab"
             [attr.data-id]="tab.id"
             [class.active]="tab.id === activeTab"
             [disabled]="tagEditorOpen"
-            (click)="setActiveTab(tab.id)"
+            (click)="handleUserChangeTab(tab.id)"
         >
             <div class="tab-icon">
                 <icon>{{ tab.icon }}</icon>

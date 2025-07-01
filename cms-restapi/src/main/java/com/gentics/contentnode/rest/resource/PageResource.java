@@ -407,13 +407,15 @@ public interface PageResource extends AuthenticatedResource {
 	 * @param oldVersion old page version
 	 * @param newVersion new page version
 	 * @param source true to show the diff in the source code, otherwise the diff is shown in the html
+	 * @param daisyDiff true to use the daisy diff algorithm when rendering html diff (ignored when rendering source diff)
 	 * @return page content response
 	 */
 	@GET
 	@Path("/diff/versions/{id}")
 	Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
-			@QueryParam("source") @DefaultValue("false") boolean source);
+			@QueryParam("source") @DefaultValue("false") boolean source,
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff);
 
 	/**
 	 * Render the difference between the page and another page
@@ -421,13 +423,15 @@ public interface PageResource extends AuthenticatedResource {
 	 * @param nodeId optional node ID
 	 * @param otherPageId ID of the other page
 	 * @param source true to show the diff in the source code, otherwise the diff is shown in the html
+	 * @param daisyDiff true to use the daisy diff algorithm when rendering html diff (ignored when rendering source diff)
 	 * @return page content response
 	 */
 	@GET
 	@Path("/diff/{id}")
 	Response diffWithOtherPage(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
-			@QueryParam("source") @DefaultValue("false") boolean source);
+			@QueryParam("source") @DefaultValue("false") boolean source,
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff);
 
 	/**
 	 * Render a tag preview for the posted page

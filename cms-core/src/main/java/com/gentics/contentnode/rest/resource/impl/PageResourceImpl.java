@@ -134,6 +134,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
+import com.gentics.contentnode.rest.model.request.DaisyDiffRequest;
 import com.gentics.contentnode.rest.model.request.DiffRequest;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
@@ -2202,14 +2203,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@GET
 	@Path("/diff/versions/{id}")
 	public Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
-			@QueryParam("old") @DefaultValue("0") int oldVersion,
-			@QueryParam("new") @DefaultValue("0") int newVersion,
-			@QueryParam("source") @DefaultValue("false") boolean source) {
+			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
+			@QueryParam("source") @DefaultValue("false") boolean source,
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Page page = getPage(id, ObjectPermission.view);
 
-			String diff = renderDiff(source, () -> {
+			String diff = renderDiff(source, daisyDiff, () -> {
 				Page p = t.getObject(Page.class, page.getId(), oldVersion);
 				if (p == null) {
 					I18nString message = new CNI18nString("page.notfound");
@@ -2247,13 +2248,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	public Response diffWithOtherPage(@PathParam("id") String id,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
-			@QueryParam("source") @DefaultValue("false") boolean source) {
+			@QueryParam("source") @DefaultValue("false") boolean source,
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Page page = getPage(id, ObjectPermission.view);
 			Page otherPage = getPage(ObjectTransformer.getString(otherPageId, null),
 					ObjectPermission.view);
 
-			String diff = renderDiff(source, () -> {
+			String diff = renderDiff(source, daisyDiff, () -> {
 				return page;
 			}, () -> {
 				return otherPage;
@@ -2273,15 +2275,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 	/**
 	 * Helper method to render the diff between two pages
-	 *
-	 * @param source             true to show diff in source code
-	 * @param firstPageSupplier  supplier for the first page
+	 * @param source true to show diff in source code
+	 * @param daisyDiff true to show html diff using the daisy diff algorithm (ignored when rendering source diff)
+	 * @param firstPageSupplier supplier for the first page
 	 * @param secondPageSupplier supplier for the second page
 	 * @return diff
 	 * @throws NodeException
 	 */
-	protected String renderDiff(boolean source, Supplier<Page> firstPageSupplier,
-			Supplier<Page> secondPageSupplier) throws NodeException {
+	protected String renderDiff(boolean source, boolean daisyDiff, Supplier<Page> firstPageSupplier, Supplier<Page> secondPageSupplier) throws NodeException {
 		Page firstPage = firstPageSupplier.supply();
 		Page secondPage = secondPageSupplier.supply();
 
@@ -2293,18 +2294,24 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					RenderUtils.getPreviewTemplate(secondPage, RenderType.EM_PREVIEW), new RenderResult(),
 					null, null, null, null);
 
+			DiffResponse response;
 			DiffResource diffResource = new DiffResourceImpl();
-			DiffRequest request = new DiffRequest();
-			request.setContent1(firstContent);
-			request.setContent2(secondContent);
-
-			DiffResponse response = null;
 			if (source) {
+				DiffRequest request = new DiffRequest();
+				request.setContent1(firstContent);
+				request.setContent2(secondContent);
 				response = diffResource.diffSource(request);
+			} else if (daisyDiff) {
+				DaisyDiffRequest request = new DaisyDiffRequest();
+				request.setOlder(firstContent);
+				request.setNewer(secondContent);
+				response = diffResource.daisyDiff(request);
 			} else {
+				DiffRequest request = new DiffRequest();
+				request.setContent1(firstContent);
+				request.setContent2(secondContent);
 				response = diffResource.diffHTML(request);
 			}
-
 			return response.getDiff();
 		}
 	}

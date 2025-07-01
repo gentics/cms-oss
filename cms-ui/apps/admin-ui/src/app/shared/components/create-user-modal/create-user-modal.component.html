@@ -1,4 +1,6 @@
 <div class="gtx-modal-datagrid-in-tab">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <div class="modal-title">
         <h5>{{ 'modal.create_user_title' | i18n }}</h5>
     </div>
@@ -150,19 +152,10 @@
             {{ 'modal.next_button' | i18n }}
         </gtx-button>
 
-        <!-- NOTE: `gtxActionAllowed` will override any `disabled` directive, thus the code below is a workaround -->
         <gtx-button
-            *ngIf="!allIsValid()"
             type="primary"
             (click)="buttonCreateUserClicked()"
-            [disabled]="!allIsValid()"
-        >
-            {{ 'modal.create_user_button' | i18n }}
-        </gtx-button>
-        <gtx-button
-            *ngIf="allIsValid()"
-            type="primary"
-            (click)="buttonCreateUserClicked()"
+            [disabled]="!allIsValid() || loading"
             gtxActionAllowed="user.createUser"
         >
             {{ 'modal.create_user_button' | i18n }}

@@ -3,6 +3,8 @@
 </div>
 
 <div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-cr-fragment-modal-tab-content-body-form">
         <div class="input-container small-12 medium-12 row">
             <div class="input-container small-12 medium-12 columns">
@@ -23,7 +25,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!form.valid"
+        [disabled]="!form.valid || loading"
         (click)="buttonCreateEntityClicked()"
         gtxActionAllowed="dataSource.createDataSource"
     >

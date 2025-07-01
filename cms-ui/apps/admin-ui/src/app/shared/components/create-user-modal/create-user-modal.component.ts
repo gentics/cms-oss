@@ -1,5 +1,5 @@
 import { PASSWORD_VALIDATORS, getPatternEmail } from '@admin-ui/shared/utils';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors } from '@angular/forms';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -26,6 +26,9 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
      * This group assignment must be performed in two steps as a user can only be created in one group initially.
      */
     userGroupIds: number[] = [];
+
+    /** Will be set when the create call is sent */
+    loading = false;
 
     /** Convenience getter for confirm username input */
     get login(): AbstractControl {
@@ -58,6 +61,7 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
     private _searchTerm = new BehaviorSubject<string>(null);
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private groupData: GroupDataService,
         private entityExistsValidator: EntityExistsValidator<User<Normalized>>,
     ) {
@@ -112,8 +116,19 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
      * If user clicks to create a new user
      */
     buttonCreateUserClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createUser()
-            .then(entityCreated => this.closeFn(entityCreated));
+            .then(entityCreated => {
+                this.loading = false;
+                this.closeFn(entityCreated);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createUser(): Promise<User<Normalized>> {

@@ -3,6 +3,8 @@
 </div>
 
 <div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <gtx-data-source-properties
         [formControl]="form"
     ></gtx-data-source-properties>
@@ -11,7 +13,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!form.valid"
+        [disabled]="!form.valid || loading"
         (click)="buttonCreateEntityClicked()"
         gtxActionAllowed="dataSource.createDataSource"
     >

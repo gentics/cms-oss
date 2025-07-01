@@ -200,7 +200,8 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             itemType$,
         ]).subscribe(([pageSize, itemType]) => {
             if ((Math.ceil(this.itemsInfo.list.length / pageSize)) < this.paginationConfig.currentPage) {
-                this.itemsInfo.currentPage = this.paginationConfig.currentPage = 1;
+                this.paginationConfig.currentPage = 1;
+                this.folderActions.setCurrentPage(this.itemType, this.paginationConfig.currentPage);
             }
             this.paginationConfig.itemsPerPage = pageSize;
             this.userSettings.setItemsPerPage(itemType, pageSize);
@@ -252,6 +253,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             } else if (this.itemsInfo.fetching === false) {
                 this.paginationConfig.totalItems = undefined;
             }
+            this.paginationConfig.itemsPerPage = this.itemsInfo.itemsPerPage;
             this.paginationConfig.currentPage = this.itemsInfo.currentPage;
         }
 

@@ -488,4 +488,6 @@ export interface FormDownloadInfo {
     downloadUuid?: string;
     /** ISO Date string for when the download has been created. */
     downloadTimestamp?: string;
+    /** Optional error */
+    error?: string;
 }

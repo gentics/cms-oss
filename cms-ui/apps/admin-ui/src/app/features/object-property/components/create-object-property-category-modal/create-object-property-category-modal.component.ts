@@ -1,5 +1,5 @@
 import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ObjectPropertyCategory } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -17,7 +17,11 @@ export class CreateObjectPropertyCategoryModalComponent extends BaseModal<Object
 
     public form: UntypedFormControl;
 
+    /** Will be set when the create call is sent */
+    loading = false;
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private handler: ObjectPropertyCategoryHandlerService,
     ) {
         super();
@@ -34,8 +38,18 @@ export class CreateObjectPropertyCategoryModalComponent extends BaseModal<Object
      * If user clicks to create a new objectPropertyCategory
      */
     buttonCreateEntityClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createEntity()
-            .then(created => this.closeFn(created));
+            .then(created => {
+                this.closeFn(created);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createEntity(): Promise<ObjectPropertyCategory> {

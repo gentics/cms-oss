@@ -149,6 +149,7 @@ import {
     UpdateEntitiesAction,
 } from '../../modules/entity/entity.actions';
 import {
+    ChangeListSelectionAction,
     ChannelSyncReportFetchingErrorAction,
     ChannelSyncReportFetchingSuccessAction,
     CreateItemSuccessAction,
@@ -835,8 +836,6 @@ export class FolderActionsService {
     getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
     getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
     async getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
-        await this.appState.dispatch(new StartListFetchingAction(plural[type], fetchAll)).toPromise();
-
         // assign query params from state
         const nodeId = options && options.nodeId || this.getCurrentNodeId();
         const itemInfo: ItemsInfo = this.appState.now.folder[`${type}s` as FolderItemTypePlural];
@@ -885,6 +884,14 @@ export class FolderActionsService {
 
         const elasticSearchMode = this.shouldUseElasticSearch();
         const searchFilters = this.appState.now.folder.searchFilters;
+
+        await this.appState.dispatch(new StartListFetchingAction(plural[type], fetchAll, isSearchActive)).toPromise();
+
+        // If we have a search, we have to clear the selection, as we can't tell what's going to be displayed.
+        // TODO: Do the same when we return from the search - Not sure how, as the state management is a utter mess.
+        if (isSearchActive) {
+            await this.appState.dispatch(new ChangeListSelectionAction(plural[type], 'clear')).toPromise();
+        }
 
         // get nodeId and folderId query params
         let correctedParentId = parentId;

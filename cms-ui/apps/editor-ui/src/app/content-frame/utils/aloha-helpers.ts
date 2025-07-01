@@ -19,8 +19,10 @@ const FORWARD_METHODS: (keyof ExposedControl<any>)[] = [
     'updateValueAndValidity',
 ];
 
-export const PATCHED_ALOHA_FN = Symbol('gtx-patched-aloha-fn');
-export const ORIGINAL_ALOHA_FN = Symbol('gtx-original-aloha-fn');
+export const OVERRIDE_FN = Symbol('gtx-fn-override');
+export const ORIGINAL_FN = Symbol('gtx-original-fn');
+export const DEFAULT_KEY = Symbol('gtx-override');
+export const ALOHA_KEY = Symbol('gtx-aloha');
 
 export function exposeControl<T>(formControl: AbstractControl<T>): ExposedControl<T> {
     const obj: ExposedControl<T> = {} as any;
@@ -70,10 +72,11 @@ export type FunctionsOnly<T extends object> = {
     [K in ExtractFunctions<T>]: T[K];
 }
 
-export function patchAlohaFunction<T extends object, K extends ExtractFunctions<T>>(
+export function overrideFunction<T extends object, K extends ExtractFunctions<T>>(
     obj: T,
     name: K,
     fn: T[K],
+    overrideKey: any = DEFAULT_KEY,
 ): void {
     if (
         // Type safety
@@ -81,15 +84,24 @@ export function patchAlohaFunction<T extends object, K extends ExtractFunctions<
         || typeof obj !== 'object'
         || typeof obj[name] !== 'function'
         // Already patched, nothing to do
-        || obj[name][PATCHED_ALOHA_FN]
+        || obj[name][OVERRIDE_FN]
     ) {
         return;
     }
 
     const original = obj[name];
-    (obj as any)[name] = fn;
-    obj[name][PATCHED_ALOHA_FN] = true;
-    obj[name][ORIGINAL_ALOHA_FN] = original;
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    const tmpName = `patched_${name as any}`;
+    const patched = {
+        [tmpName]: function(...args) {
+            // eslint-disable-next-line @typescript-eslint/ban-types
+            return (fn as Function).call(this, ...args);
+        },
+    }[tmpName];
+    patched[OVERRIDE_FN] = overrideKey;
+    patched[ORIGINAL_FN] = original;
+
+    (obj as any)[name] = patched;
 }
 
 export function patchMultipleAlohaFunctions<T extends object>(
@@ -106,30 +118,47 @@ export function patchMultipleAlohaFunctions<T extends object>(
     }
 
     Object.entries(mapping).forEach(([key, fn]) => {
-        patchAlohaFunction(obj, key as any, fn);
+        overrideFunction(obj, key as any, fn, ALOHA_KEY);
     });
 }
 
-export function unpatchAlohaFunctions<T extends object, K extends ExtractFunctions<T>>(obj: T, ...names: K[]): void {
-    if (obj == null || names == null) {
-        return;
-    }
-    if (typeof names === 'string') {
-        names = [names];
-    } else if (!Array.isArray(names)) {
+export function revertFunctionOverride<T extends object, K extends ExtractFunctions<T>>(
+    obj: T,
+    fnName: K,
+    key: any = null,
+): void {
+    // Can't work with that
+    if (obj == null || fnName == null) {
         return;
     }
 
+    if (
+        typeof obj[fnName] !== 'function'
+        || !obj[fnName]?.[OVERRIDE_FN]
+        || (key != null && obj[fnName][OVERRIDE_FN] !== key)
+    ) {
+        return;
+    }
+
+    const fn = obj[fnName]?.[ORIGINAL_FN];
+    if (!fn) {
+        console.warn(`Patched function "${fnName as string}" does not have an original function stored!`, obj);
+    }
+
+    obj[fnName] = fn;
+}
+
+export function revertKeyedFunctionOverrides<T extends object>(
+    obj: T,
+    key: any = DEFAULT_KEY,
+): void {
+    if (obj == null) {
+        return;
+    }
+
+    const names = Object.keys(obj);
     for (const fnName of names) {
-        if (typeof obj[fnName] !== 'function' || !obj[fnName]?.[PATCHED_ALOHA_FN]) {
-            continue;
-        }
-        const fn = obj[fnName]?.[ORIGINAL_ALOHA_FN];
-        if (!fn) {
-            console.warn(`Patched function "${fnName as string}" does not have an original function stored!`, obj);
-            continue;
-        }
-        obj[fnName] = fn;
+        revertFunctionOverride(obj, fnName as any, key);
     }
 }
 
@@ -138,5 +167,5 @@ export function unpatchAllAlohaFunctions<T extends object>(obj: T): void {
         return;
     }
 
-    unpatchAlohaFunctions(obj, Object.keys(obj) as any);
+    revertKeyedFunctionOverrides(obj, ALOHA_KEY);
 }

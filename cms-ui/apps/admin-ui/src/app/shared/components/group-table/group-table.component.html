@@ -22,6 +22,19 @@
     </gtx-button>
 
     <gtx-button
+        *ngIf="userId"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'user.assignUserToGroup'"
+        (click)="handleAssignUsersButton()"
+    >
+        <icon left>link</icon> {{ 'shared.assign_user_to_groups_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
         class="table-action-button reload-button"
         flat
         size="small"
@@ -34,7 +47,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_groups' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'shared.info_selected_groups' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
@@ -51,6 +64,7 @@
     [rows]="rows"
     [actions]="actions"
     [selected]="selected"
+    [useSelectionMap]="useSelectionMap"
     [active]="activeEntity"
     [totalCount]="totalCount"
 

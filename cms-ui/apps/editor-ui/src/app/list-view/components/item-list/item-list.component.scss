@@ -16,6 +16,7 @@ $item-list-min-height: 63px;
 
 .content-list {
     @include item-type-icon-colors;
+    position: relative;
 
     margin-bottom: 20px;
 

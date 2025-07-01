@@ -8,11 +8,9 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
-import { TableRow, TableSelectAllType } from '../../common';
-import { cancelEvent } from '../../utils';
+import { TableRow, TableSelectAllType, TableSelection } from '../../common';
+import { cancelEvent, randomId, toSelectionArray } from '../../utils';
 import { BaseTableComponent } from '../base-table/base-table.component';
-
-let uniqueComponentId = 0;
 
 /**
  * A regular Table component which displays elements in a table view.
@@ -28,7 +26,7 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
 
     public readonly TableSelectAllType = TableSelectAllType;
 
-    public readonly UNIQUE_ID = `gtx-table-${uniqueComponentId++}`;
+    public readonly UNIQUE_ID = `gtx-table-${randomId()}`;
 
     /** If this table's content is paginated and should display the pagination. */
     @Input()
@@ -68,7 +66,7 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push(['paginated', true], ['allSelected', false]);
+        this.booleanInputs.push(['paginated', true]);
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
@@ -97,24 +95,17 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
             return;
         }
 
-        const copy = [...this.selected];
-        if (this.allSelected) {
-            for (const row of this.rows) {
-                const idx = copy.indexOf(row.id);
-                if (idx > -1) {
-                    copy.splice(idx, 1);
-                }
-            }
-        } else {
-            for (const row of this.rows) {
-                const idx = copy.indexOf(row.id);
-                if (idx === -1) {
-                    copy.push(row.id);
-                }
-            }
+        const copy = structuredClone(this.selected) as TableSelection;
+        for (const row of this.rows) {
+            copy[row.id] = !this.allSelected;
         }
 
-        this.selectedChange.emit(copy);
+        if (this.useSelectionMap) {
+            this.selectedChange.emit(copy);
+            return;
+        }
+
+        this.selectedChange.emit(toSelectionArray(copy));
     }
 
     public handlePageChange(toPage: number): void {
@@ -129,6 +120,6 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
             return;
         }
 
-        this.allSelected = (this.rows || []).every(row => this.selected.includes(row.id));
+        this.allSelected = (this.rows || []).every(row => this.selected[row.id] === true);
     }
 }

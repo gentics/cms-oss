@@ -190,6 +190,9 @@ form_reports_binary_generate_started:
 form_reports_binary_generate_finished:
     en: 'Binaries have been generated'
     de: 'Binärdaten wurden erstellt'
+form_reports_binary_generate_failed:
+    en: 'Binaries generation failed'
+    de: 'Erstellung der Binärdaten ist fehlgeschlagen'
 form_reports_download_csv_button:
     en: 'Download CSV'
     de: 'CSV herunterladen'
@@ -205,6 +208,9 @@ form_reports_csv_generate_started:
 form_reports_csv_generate_finished:
     en: 'Export has been generated'
     de: 'Export wurde erstellt'
+form_reports_csv_generate_failed:
+    en: 'Export generation failed'
+    de: 'Erstellung des Exports ist fehlgeschlagen'
 form_reports_download_started:
     en: 'The download will be started'
     de: 'Der Download wird gestartet'

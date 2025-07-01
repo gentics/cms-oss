@@ -869,9 +869,16 @@ export interface TemplateListRequest extends BaseListOptionsWithPaging<Template>
     reduce?: boolean;
 }
 
+export interface BulkLinkUpdateRequest {
+    /** Node Ids */
+    ids: number[];
+    /** The entity ids */
+    targetIds: number[];
+}
+
 export interface NodeMultiLinkRequest {
     nodeIds: number[];
-    ids: string[];
+    ids: (number | string)[];
 }
 
 export interface ObjectMoveRequest {

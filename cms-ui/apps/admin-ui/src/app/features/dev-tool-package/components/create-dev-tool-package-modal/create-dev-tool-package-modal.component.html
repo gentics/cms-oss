@@ -1,4 +1,6 @@
 <div class="gtx-modal-datagrid-in-tab">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <div class="modal-title">
         <h5>{{ 'modal.create_package_title' | i18n }}</h5>
     </div>
@@ -28,7 +30,7 @@
         <gtx-button
             type="primary"
             (click)="buttonCreatePackageClicked()"
-            [disabled]="!form.valid"
+            [disabled]="!form.valid || loading"
         >
             {{ 'modal.create_package_button' | i18n }}
         </gtx-button>

@@ -1,0 +1,2 @@
+Administrator User Interface: The modals for creating new entities will now all show a loading indicator
+during the request to add the entity in the backend. This will prevent involuntary creation of duplicates (by clicking the "create" button multiple times).

@@ -7,9 +7,9 @@ import {
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, combineLatest, interval } from 'rxjs';
 import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AssignPackagesToNodeModalComponent } from '../assign-packages-to-node-modal/assign-packages-to-node-modal.component';
@@ -153,7 +153,7 @@ export class DevToolPackageTableComponent
         this.syncCheck$.next(!this.hideSync);
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.nodeId) {

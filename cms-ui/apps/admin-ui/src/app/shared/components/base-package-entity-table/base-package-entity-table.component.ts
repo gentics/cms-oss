@@ -1,8 +1,8 @@
 import { BusinessObject, PackageTableEntityLoader } from '@admin-ui/common';
 import { DevToolPackageTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { ModalService, TableActionClickEvent } from '@gentics/ui-core';
+import { ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { ChangesOf, ModalService, TableActionClickEvent } from '@gentics/ui-core';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
@@ -37,7 +37,7 @@ export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject,
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.packageName) {

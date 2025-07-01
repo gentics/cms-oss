@@ -2,9 +2,9 @@ import { BO_NEW_SORT_ORDER, createMoveActions, DataSourceEntryBO } from '@admin-
 import { I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
 import { AnyModelType, DataSourceEntry, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
-import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DataSourceEntryTableLoaderOptions, DataSourceEntryTableLoaderService } from '../../providers';
@@ -63,7 +63,7 @@ export class DataSourceEntryTableComponent
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.dataSourceId) {

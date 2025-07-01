@@ -1270,19 +1270,28 @@ define([
 		 * @param success
 		 *            callback function to be called, when the tag was created, if not
 		 *            set, the tag will be inserted into the page
+		 * @param range A Range object where the tag should be inserted into. If null, it'll
+		 * 			  use the current user selection via `Aloha.Selection.getRangeObject()`
 		 * @return void
 		 */
-		createTag: function (constructId, async, success) {
+		createTag: function (constructId, async, success, range) {
 			var plugin = this;
-			var selection = Aloha.Selection.getRangeObject();
-			var magicValue = (selection && selection.getText)
-				? selection.getText()
+
+			if (range == null) {
+				range = Aloha.Selection.getRangeObject();
+			} else {
+				range = new GENTICS.Utils.RangeObject(range);
+			}
+
+			var magicValue = (range && typeof range.getText === 'function')
+				? range.getText()
 				: '';
+
 			if (typeof success !== 'function') {
 				success = function (html, tag, data, frontendEditing) {
 					plugin.handleBlock(data, true, function () {
 						Tags.decorate(tag, data);
-					}, html);
+					}, html, range);
 				}
 			}
 
@@ -1297,8 +1306,14 @@ define([
 				// insert a placeholder for the tag at the current position
 				var blockId = "GENTICS_BLOCK_" + tag.prop("id");
 				var tagname = tag.prop("name");
+
+				var placeholder = $('<span>', {
+					id: blockId,
+					class: 'aloha-block gcn-tag-insert-placeholder material-symbols-outlined',
+				});
+
 				Tags.insert({
-					content: "<span id='" + blockId + "' class='aloha-block'></span>"
+					content: placeholder,
 				}, function () {
 					// track the block for the new tag
 					GCN.PageAPI.trackRenderedTags(plugin.page, {
@@ -1316,7 +1331,7 @@ define([
 						return editable.element == currentEditable;
 					});
 					tag.edit(success);
-				});
+				}, range);
 			});
 		},
 
@@ -1416,12 +1431,13 @@ define([
 		 *                         the current selection, false if not.
 		 * @param {function} onInsert
 		 * @param {string} content Optional. Processed version of data.content.
+		 * @param {} range The range where the content should be inserted at
 		 */
-		handleBlock: function (data, insert, onInsert, content) {
+		handleBlock: function (data, insert, onInsert, content, range) {
 			var plugin = this;
 
 			var handle = function (data) {
-				var $handled = Tags.insert(data, onInsert);
+				var $handled = Tags.insert(data, onInsert, range);
 
 				if (0 === $handled.length) {
 					plugin.log('error', 'Could not insert new tag');

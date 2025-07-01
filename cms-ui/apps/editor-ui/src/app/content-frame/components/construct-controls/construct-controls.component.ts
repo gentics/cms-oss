@@ -135,6 +135,8 @@ export class ConstructControlsComponent implements OnChanges {
             return;
         }
 
+        const range = this.alohaRef.Selection.getRangeObject();
+
         this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
             this.gcnPlugin.handleBlock(data, true, () => {
                 this.gcnTags.decorate(tag, data);
@@ -153,8 +155,8 @@ export class ConstructControlsComponent implements OnChanges {
                     this.gcnPlugin.settings.id,
                     construct.editorControlStyle === EditorControlStyle.CLICK,
                 );
-            }, html);
-        });
+            }, html, range);
+        }, range);
     }
 
     protected safeRequire(dependency: string): any {

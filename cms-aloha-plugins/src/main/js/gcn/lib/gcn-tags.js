@@ -311,11 +311,17 @@ define('gcn/gcn-tags', [
 	 * @param {HTMLElement<HTMLElement>} $element
 	 * @return {boolean} True if element was inserted
 	 */
-	function insertElement($element) {
-		var range = Aloha.Selection.getRangeObject();
+	function insertElement($element, range) {
+		if (range == null) {
+			range = Aloha.Selection.getRangeObject();
+		} else {
+			range = new GENTICS.Utils.RangeObject(range);
+		}
+
 		if (!range || typeof range.isCollapsed !== 'function') {
 			return false;
 		}
+
 		if (!range.isCollapsed()) {
 			Dom.removeRange(range);
 			range.select();
@@ -429,7 +435,7 @@ define('gcn/gcn-tags', [
 	 * @return {jQuery<HTMLElement>} A jQuery object containing the DOM element
 	 *                               that was inserted.
 	 */
-	function insertTagForEditing(data, callback) {
+	function insertTagForEditing(data, callback, range) {
 		var $block = $(data.content);
 		// There should be only one element with a certain ID, but it is
 		// possible to create more for example by copying tags in the tag
@@ -455,14 +461,14 @@ define('gcn/gcn-tags', [
 			// overwriting the block.
 			if (currentNodeName === 'SPAN' && currentNodeName != $block[0].nodeName) {
 				$current.remove();
-				insertElement($block);
+				insertElement($block, range);
 			} else {
 				$current.each(function () {
 					overwriteElement($(this), data.content);
 				});
 			}
 		} else {
-			insertElement($block);
+			insertElement($block, range);
 		}
 
 		// Because CropnResize functions would have been detached

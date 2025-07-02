@@ -385,7 +385,7 @@ spec:
             steps {
                 script {
                     def integrationCmsVersion = tagName != null && !tagName.isEmpty() ? tagName : branchName;
-                    def testJob = build(job: 'cms-ui-integration-tests/' + branchName,
+                    def testJob = build(job: 'CMP_DEV/CMS/cms-ui-integration-tests/' + branchName,
                         parameters: [
                             string(name: 'variant', value: 'OSS'),
                             string(name: 'cmsVersion', value: branchName),

@@ -31,6 +31,10 @@ export async function selectTableRow(row: Locator): Promise<void> {
     return row.locator('.select-column gtx-checkbox label').click();
 }
 
+export async function selectTab(source: Page, id: number | string): Promise<void> {
+    return source.locator(`gtx-tabs .tab-link[data-id="${id}"]`).click();
+}
+
 /**
  * Expands a trable row (tree-table row)
  */

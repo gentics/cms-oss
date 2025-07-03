@@ -388,7 +388,7 @@ spec:
                     def testJob = build(job: 'CMP_DEV/CMS/cms-ui-integration-tests/' + branchName,
                         parameters: [
                             string(name: 'variant', value: 'OSS'),
-                            string(name: 'cmsVersion', value: branchName),
+                            string(name: 'cmsVersion', value: integrationCmsVersion),
                             // TODO: Get Mesh Version from POM?
                             // string(name: 'meshVersion', value: '2.1.0')
                         ],

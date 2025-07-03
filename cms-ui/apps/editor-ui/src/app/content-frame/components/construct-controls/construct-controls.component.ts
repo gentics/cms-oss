@@ -137,13 +137,15 @@ export class ConstructControlsComponent implements OnChanges {
 
         const range = this.alohaRef.Selection.getRangeObject();
 
+        // Close the dropdown if it's still open
+        if (this.currentlyOpenDropdown?.isOpen) {
+            this.currentlyOpenDropdown.closeDropdown();
+            this.currentlyOpenDropdown = null;
+        }
+
         this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
             this.gcnPlugin.handleBlock(data, true, () => {
                 this.gcnTags.decorate(tag, data);
-                if (this.currentlyOpenDropdown?.isOpen) {
-                    this.currentlyOpenDropdown.closeDropdown();
-                    this.currentlyOpenDropdown = null;
-                }
 
                 if (!construct.openEditorOnInsert) {
                     return;

@@ -135,16 +135,14 @@ export class ConstructControlsComponent implements OnChanges {
             return;
         }
 
-        const range = this.alohaRef.Selection.getRangeObject();
+        // Close the dropdown if it's still open
+        if (this.currentlyOpenDropdown?.isOpen) {
+            this.currentlyOpenDropdown.closeDropdown();
+            this.currentlyOpenDropdown = null;
+        }
 
-        this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
-            this.gcnPlugin.handleBlock(data, true, () => {
-                this.gcnTags.decorate(tag, data);
-                if (this.currentlyOpenDropdown?.isOpen) {
-                    this.currentlyOpenDropdown.closeDropdown();
-                    this.currentlyOpenDropdown = null;
-                }
-
+        this.gcnPlugin.insertNewTag(construct.id, this.alohaRef.Selection.getRangeObject())
+            .then((tag) => {
                 if (!construct.openEditorOnInsert) {
                     return;
                 }
@@ -155,8 +153,10 @@ export class ConstructControlsComponent implements OnChanges {
                     this.gcnPlugin.settings.id,
                     construct.editorControlStyle === EditorControlStyle.CLICK,
                 );
-            }, html, range);
-        }, range);
+            })
+            .catch(err => {
+                console.error(err);
+            })
     }
 
     protected safeRequire(dependency: string): any {

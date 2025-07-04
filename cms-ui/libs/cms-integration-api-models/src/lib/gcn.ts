@@ -126,6 +126,10 @@ export interface GCNAlohaPlugin extends AlohaPlugin {
         range?: Range | AlohaRangeObject,
     ): void;
     openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
+    insertNewTag(
+        constructId: number,
+        range: Range | AlohaRangeObject,
+    ): Promise<any>;
 }
 
 export interface GCNTags {

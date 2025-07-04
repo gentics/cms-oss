@@ -185,7 +185,7 @@ define([
 					// in order to render what is currently stored in the tag object, not in the DB
 					page.tag(tagname).edit(true, function (html, tag, data) {
 						gcn.handleBlock(data, false, function () {
-							Tags.decorate(tag, data, function() {
+							Tags.decorate(tag, data, function () {
 								resolve();
 							});
 						}, html);
@@ -1224,7 +1224,7 @@ define([
 		_getEditDo: function (tagid, success, error) {
 			var page = this.page;
 			Tags.getById(page, tagid, function (tag) {
-				Util.getConstructFromId(tag.prop('constructId')).then(function(construct) {
+				Util.getConstructFromId(tag.prop('constructId')).then(function (construct) {
 					success(construct.editdo);
 				}).catch(error);
 			}, error);
@@ -1244,11 +1244,11 @@ define([
 		openTagFill: function (tagId, pageId, options) {
 			var gcn = this;
 
-			return new Promise(function(resolve, reject) {
+			return new Promise(function (resolve, reject) {
 				Tags.getById(GCN.page(pageId), tagId, function (tag) {
-					openTagFill(tag, gcn, options).then(function() {
+					openTagFill(tag, gcn, options).then(function () {
 						resolve();
-					}).catch(function(err) {
+					}).catch(function (err) {
 						// Ignore use close "errors"
 						if (err instanceof OverlayElement.OverlayCloseError && err.reason !== 'error') {
 							return;
@@ -1256,6 +1256,92 @@ define([
 						reject(err);
 					});
 				});
+			});
+		},
+
+		insertNewTag: function (constructId, range) {
+			if (range == null) {
+				range = Aloha.Selection.getRangeObject();
+			} else {
+				range = new GENTICS.Utils.RangeObject(range);
+			}
+
+			var magicValue = (range && typeof range.getText === 'function')
+				? range.getText()
+				: '';
+
+			// The placeholder where we want to add the tag into.
+			var $placeholder = $('<span>', {
+				class: 'gcn-tag-insert-placeholder material-symbols-outlined',
+			});
+
+			/** @type {jQuery.<HTMLElement>} */
+			Tags.insert({
+				content: $placeholder,
+			}, null, range);
+
+			return new Promise(function (resolve, reject) {
+				function handleError(err) {
+					$placeholder.remove();
+					reject(err);
+				}
+
+				function onTagCreate(tag) {
+					try {
+						var blockId = "GENTICS_BLOCK_" + tag.prop("id");
+						var tagname = tag.prop("name");
+
+						$placeholder.attr('id', blockId);
+						$placeholder.addClass('aloha-block');
+
+						// track the block for the new tag
+						GCN.PageAPI.trackRenderedTags(gcnPlugin.page, {
+							tags: [
+								{
+									element: blockId,
+									tagname: tagname,
+									onlyeditables: true
+								}
+							]
+						});
+						var currentEditable = Aloha.activeEditable.getId();
+						// have the current editable updated, so that the page's data contains the placeholder for the new tag
+						gcnPlugin.page._updateEditableBlocks(function (editable) {
+							return editable.element == currentEditable;
+						});
+
+						tag.edit(onTagRender, handleError);
+					} catch (err) {
+						handleError(err);
+					}
+				}
+
+				function onTagRender(html, tag, data) {
+					try {
+						$placeholder.replaceWith(html);
+	
+						Aloha.trigger('gcn-block-handled', $placeholder);
+	
+						PubSub.pub('gcn.block.handled', {
+							$block: $placeholder
+						});
+	
+						Tags.decorate(tag, data, function onTagDecorated() {
+							resolve(tag);
+						});
+					} catch (err) {
+						handleError(err);
+					}
+				}
+
+				try {
+					gcnPlugin.page.createTag({
+						constructId: constructId,
+						magicValue: magicValue
+					}, onTagCreate, handleError);
+				} catch (err) {
+					handleError(err);
+				}
 			});
 		},
 

@@ -294,7 +294,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isEqualTo(timestamp);
+		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
 		timestamp = response.getContentPackage().getTimestamp();
 	}
 

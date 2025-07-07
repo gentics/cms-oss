@@ -5,6 +5,11 @@
  * @property {boolean=} skipInsert If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
  * @property {boolean=} withDelete If the tag-fill/user should be able to delete the tag in question.
  */
+/**
+ * @typedef {object} TagInsertOptionsProperties
+ * @property {boolean=} skipInsertFill If it should skip/ignore the construct option `openEditorOnInsert` and not open the tag fill once the tag has been inserted.
+ */
+/** @typedef {TagFillOptions & TagInsertOptionsProperties} TagInsertOptions */
 
 /*!
  * Aloha Editor
@@ -41,6 +46,7 @@ define([
 ], function (
 	_GCN_,
 	Aloha,
+	/** @type {jQueryStatic} */
 	jQuery,
 	PubSub,
 	Plugin,
@@ -1259,13 +1265,37 @@ define([
 			});
 		},
 
-		insertNewTag: function (constructId, range) {
+		/**
+		 * Inserts a new tag into the page at the specified range.
+		 *
+		 * @param {number} constructId The construct-id of the construct which should be created and inserted
+		 * @param {Range|GENTICS.Utils.RangeObject=} range The range where the placeholder and later on the tag should be inserted to. Defaults to the current
+		 * 	selection/range of the page if none is provided.
+		 * @param {TagInsertOptions=} options The options for inserting the tag
+		 * @returns {Promise.<Tag>} A promise which resolves once the tag has been fully inserted (and edited if it should open the tag-fill on insert).
+		 */
+		insertNewTag: function (constructId, range, options) {
+			// On default get the current range, or otherwise use the constructor of the
+			// custom range which will handle the init already.
 			if (range == null) {
 				range = Aloha.Selection.getRangeObject();
 			} else {
 				range = new GENTICS.Utils.RangeObject(range);
 			}
 
+			// Make sure the options have the correct type
+			if (options == null || typeof options !== 'object') {
+				options = {};
+			}
+			// Apply default values
+			options = Object.assign({}, {
+				skipInsertFill: false
+			}, options);
+
+			// "Magic Value" in this case is simply the text content of a selection.
+			// This was used in server-side rendering of inline-links for example,
+			// but isn't really used practically anymore.
+			// But stays here for compatibility for now.
 			var magicValue = (range && typeof range.getText === 'function')
 				? range.getText()
 				: '';
@@ -1275,73 +1305,104 @@ define([
 				class: 'gcn-tag-insert-placeholder material-symbols-outlined',
 			});
 
-			/** @type {jQuery.<HTMLElement>} */
+			// Insert the placeholder at the range
 			Tags.insert({
 				content: $placeholder,
 			}, null, range);
 
-			return new Promise(function (resolve, reject) {
-				function handleError(err) {
-					$placeholder.remove();
-					reject(err);
+			var $tmpElem = $(range.startContainer == null
+				? range.limitObject
+				: range.startContainer);
+			var editableOfRange = Aloha.getEditableHost($tmpElem);
+
+			return Util.getConstructFromId(constructId).then(function (construct) {
+				if (construct == null) {
+					throw new Error('Construct with ID "' + constructId + '" could not be determined!');
 				}
 
-				function onTagCreate(tag) {
-					try {
-						var blockId = "GENTICS_BLOCK_" + tag.prop("id");
-						var tagname = tag.prop("name");
-
-						$placeholder.attr('id', blockId);
-						$placeholder.addClass('aloha-block');
-
-						// track the block for the new tag
-						GCN.PageAPI.trackRenderedTags(gcnPlugin.page, {
-							tags: [
-								{
-									element: blockId,
-									tagname: tagname,
-									onlyeditables: true
-								}
-							]
-						});
-						var currentEditable = Aloha.activeEditable.getId();
-						// have the current editable updated, so that the page's data contains the placeholder for the new tag
-						gcnPlugin.page._updateEditableBlocks(function (editable) {
-							return editable.element == currentEditable;
-						});
-
-						tag.edit(onTagRender, handleError);
-					} catch (err) {
-						handleError(err);
-					}
-				}
-
-				function onTagRender(html, tag, data) {
-					try {
-						$placeholder.replaceWith(html);
-	
-						Aloha.trigger('gcn-block-handled', $placeholder);
-	
-						PubSub.pub('gcn.block.handled', {
-							$block: $placeholder
-						});
-	
-						Tags.decorate(tag, data, function onTagDecorated() {
-							resolve(tag);
-						});
-					} catch (err) {
-						handleError(err);
-					}
-				}
-
-				try {
+				return new Promise(function (resolve, reject) {
 					gcnPlugin.page.createTag({
 						constructId: constructId,
 						magicValue: magicValue
-					}, onTagCreate, handleError);
-				} catch (err) {
-					handleError(err);
-				}
+					}, resolve, reject);
+				}).then(function (tag) {
+					var blockId = "GENTICS_BLOCK_" + tag.prop("id");
+					var tagname = tag.prop("name");
+
+					// Update the placeholder with the appropiate ID and class
+					$placeholder.attr('id', blockId);
+					$placeholder.addClass('aloha-block');
+
+					// track the block for the new tag
+					GCN.PageAPI.trackRenderedTags(gcnPlugin.page, {
+						tags: [
+							{
+								element: blockId,
+								tagname: tagname,
+								onlyeditables: true
+							}
+						]
+					});
+
+					if (editableOfRange != null) {
+						// have the current editable updated, so that the page's data contains the placeholder for the new tag
+						gcnPlugin.page._updateEditableBlocks(function (editable) {
+							return editable.element == editableOfRange;
+						});
+					}
+
+					// Render the tag for edit-mode
+					return new Promise(function (resolve, reject) {
+						tag.edit(function(html, tag, data, frontendEditing) {
+							// Promises only allow one single value/parameter, therefore we create a "result" object for this
+							resolve({
+								html,
+								tag,
+								data,
+								frontendEditing,
+							})
+						}, reject);
+					});
+				}).then(function (response) {
+					// Replace the placeholder with the rendered tag
+					$placeholder.replaceWith(response.html);
+
+					// Trigger appropiate events
+					Aloha.trigger('gcn-block-handled', $placeholder);
+					PubSub.pub('gcn.block.handled', {
+						$block: $placeholder
+					});
+
+					return new Promise(function (resolve, reject) {
+						// "Decorate" the tag for editing, i.E. add controls and other setup
+						Tags.decorate(response.tag, response.data, function () {
+							// Trigger events that the element has been successfully rendered
+							response.frontendEditing(function () {
+								// No-op
+							});
+							resolve(response.tag);
+						});
+					});
+				}).then(function (tag) {
+					if (options.skipInsertFill || !construct.openEditorOnInsert) {
+						return tag;
+					}
+
+					return openTagFill(tag, gcnPlugin, options).then(function () {
+						return tag;
+					}).catch(function (err) {
+						// Ignore use close "errors"
+						if (err instanceof OverlayElement.OverlayCloseError && err.reason !== 'error') {
+							return tag;
+						}
+
+						throw err;
+					});
+				}).catch(function (err) {
+					$placeholder.remove();
+
+					throw err;
+				});
 			});
 		},
 

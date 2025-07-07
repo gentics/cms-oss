@@ -3,10 +3,11 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { AlohaEditable } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
-import { Construct, ConstructCategory, EditorControlStyle } from '@gentics/cms-models';
+import { Construct, ConstructCategory } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { AlohaGlobal } from '../../models/content-frame';
+import { AlohaIntegrationService } from '../../providers';
 
 interface DisplayGroup {
     id: number;
@@ -74,7 +75,7 @@ export class ConstructControlsComponent implements OnChanges {
 
     constructor(
         protected i18n: I18nService,
-        protected tagEditor: TagEditorService,
+        protected aloha: AlohaIntegrationService,
     ) {}
 
     public ngOnChanges(changes: SimpleChanges): void {
@@ -141,22 +142,12 @@ export class ConstructControlsComponent implements OnChanges {
             this.currentlyOpenDropdown = null;
         }
 
-        this.gcnPlugin.insertNewTag(construct.id, this.alohaRef.Selection.getRangeObject())
-            .then((tag) => {
-                if (!construct.openEditorOnInsert) {
-                    return;
-                }
-
-                this.gcnPlugin.openTagFill(
-                    // eslint-disable-next-line no-underscore-dangle
-                    tag._data.id,
-                    this.gcnPlugin.settings.id,
-                    construct.editorControlStyle === EditorControlStyle.CLICK,
-                );
-            })
+        this.gcnPlugin.insertNewTag(construct.id)
             .catch(err => {
                 console.error(err);
-            })
+            });
+
+        this.aloha.restoreSelection();
     }
 
     protected safeRequire(dependency: string): any {

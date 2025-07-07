@@ -132,7 +132,7 @@ export class TagEditorService {
         try {
             result = await this.tagEditorModal.open();
 
-            if (result.tag) {
+            if (result?.tag) {
                 delete result.tag.tagType;
             }
         } catch (err) {

@@ -1326,9 +1326,9 @@ define([
 						constructId: constructId,
 						magicValue: magicValue
 					}, resolve, reject);
-				}).then(function (tag) {
-					var blockId = "GENTICS_BLOCK_" + tag.prop("id");
-					var tagname = tag.prop("name");
+				}).then(function (createdTag) {
+					var blockId = "GENTICS_BLOCK_" + createdTag.prop("id");
+					var tagname = createdTag.prop("name");
 
 					// Update the placeholder with the appropiate ID and class
 					$placeholder.attr('id', blockId);
@@ -1354,17 +1354,17 @@ define([
 
 					// Render the tag for edit-mode
 					return new Promise(function (resolve, reject) {
-						tag.edit(function (html, tag, data, frontendEditing) {
+						createdTag.edit(function (html, editedTag, data, frontendEditing) {
 							// Promises only allow one single value/parameter, therefore we create a "result" object for this
 							resolve({
 								html,
-								tag,
+								tag: editedTag,
 								data,
 								frontendEditing,
 							})
 						}, reject);
 					});
-				}).then(function (response) {
+				}).then(function (result) {
 					var tmpRange = document.createRange();
 					tmpRange.setStartBefore($placeholder[0]);
 					tmpRange.collapse(true);
@@ -1372,7 +1372,7 @@ define([
 					// Replace the placeholder with the rendered tag
 					$placeholder.remove();
 					Tags.insert({
-						content: response.html,
+						content: result.html,
 					}, null, new GENTICS.Utils.RangeObject(tmpRange));
 
 					// Trigger appropiate events
@@ -1383,12 +1383,12 @@ define([
 
 					return new Promise(function (resolve, reject) {
 						// "Decorate" the tag for editing, i.E. add controls and other setup
-						Tags.decorate(response.tag, response.data, function () {
+						Tags.decorate(result.tag, result.data, function () {
 							// Trigger events that the element has been successfully rendered
-							response.frontendEditing(function () {
+							result.frontendEditing(function () {
 								// No-op
 							});
-							resolve(response.tag);
+							resolve(result.tag);
 						});
 					});
 				}).then(function (tag) {

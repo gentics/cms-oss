@@ -1,9 +1,12 @@
 package com.gentics.contentnode.testutils.mesh;
 
+import static org.assertj.core.api.Assertions.fail;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -15,6 +18,8 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Timing;
 import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.etc.config.ImageManipulationMode;
 import com.gentics.mesh.etc.config.ImageManipulatorOptions;
@@ -23,6 +28,11 @@ import com.gentics.mesh.etc.config.search.ElasticSearchOptions;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.ProtocolVersion;
+
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.OkHttpClient.Builder;
 
 /**
  * Mesh Context that starts a Mesh container
@@ -120,14 +130,34 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	@Override
 	public void start() {
 		super.start();
+
+		// we build our own okhttp client, because we want to increase the timeout to 2 minutes
+		Dispatcher dispatcher = new Dispatcher();
+		dispatcher.setMaxRequestsPerHost(64);
+
+		Builder builder = new OkHttpClient.Builder()
+			.callTimeout(Duration.ofMinutes(2))
+			.connectTimeout(Duration.ofMinutes(2))
+			.writeTimeout(Duration.ofMinutes(2))
+			.readTimeout(Duration.ofMinutes(2))
+			.protocols(Collections.singletonList(Protocol.H2_PRIOR_KNOWLEDGE))
+			.dispatcher(dispatcher);
+
 		client = MeshRestClient.create(new MeshRestClientConfig.Builder()
 				.setHost(getContainerIpAddress())
 				.setPort(getMappedPort(8080))
 				.setSsl(false)
 				.setProtocolVersion(ProtocolVersion.HTTP_2)
-				.build());
+				.build(), builder.build());
 		client.setLogin("admin", "admin");
-		client.login().blockingGet();
+
+		try (Timing tim = Timing.get(-1, duration -> {
+			System.out.println("Initial login took %d ms".formatted(duration));
+		})) {
+			client.login().blockingGet();
+		} catch (NodeException e) {
+			fail("Failed when doing initial login", e);
+		}
 	}
 
 	public MeshRestClient client() {

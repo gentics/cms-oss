@@ -2,7 +2,7 @@
 
 /**
  * @typedef {object} TagFillOptions
- * @property {boolean=} skipInsert If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
+ * @property {boolean=} skipInsert DEPRECATED. If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
  * @property {boolean=} withDelete If the tag-fill/user should be able to delete the tag in question.
  */
 /**
@@ -46,7 +46,7 @@ define([
 ], function (
 	_GCN_,
 	Aloha,
-	/** @type {jQueryStatic} */
+	/** @type {JQueryStatic} */
 	jQuery,
 	PubSub,
 	Plugin,
@@ -1267,6 +1267,8 @@ define([
 
 		/**
 		 * Inserts a new tag into the page at the specified range.
+		 * Will handle the creation of the tag, placeholder and insertion logic, rendering,
+		 * and will open the tag-fill when the construct has it setup.
 		 *
 		 * @param {number} constructId The construct-id of the construct which should be created and inserted
 		 * @param {Range|GENTICS.Utils.RangeObject=} range The range where the placeholder and later on the tag should be inserted to. Defaults to the current
@@ -1287,10 +1289,6 @@ define([
 			if (options == null || typeof options !== 'object') {
 				options = {};
 			}
-			// Apply default values
-			options = Object.assign({}, {
-				skipInsertFill: false
-			}, options);
 
 			// "Magic Value" in this case is simply the text content of a selection.
 			// This was used in server-side rendering of inline-links for example,
@@ -1300,25 +1298,28 @@ define([
 				? range.getText()
 				: '';
 
-			// The placeholder where we want to add the tag into.
-			var $placeholder = $('<span>', {
-				class: 'gcn-tag-insert-placeholder material-symbols-outlined',
-			});
-
-			// Insert the placeholder at the range
-			Tags.insert({
-				content: $placeholder,
-			}, null, range);
-
 			var $tmpElem = $(range.startContainer == null
 				? range.limitObject
 				: range.startContainer);
 			var editableOfRange = Aloha.getEditableHost($tmpElem);
 
+			var $placeholder = $();
+
 			return Util.getConstructFromId(constructId).then(function (construct) {
 				if (construct == null) {
 					throw new Error('Construct with ID "' + constructId + '" could not be determined!');
 				}
+
+				// The placeholder where we want to add the tag into.
+				$placeholder = $('<' + (construct.liveEditorTagName || 'div') + '>', {
+					class: 'gcn-tag-insert-placeholder aloha-ephemera material-symbols-outlined',
+					contentEditable: false
+				});
+
+				// Insert the placeholder at the range
+				Tags.insert({
+					content: $placeholder,
+				}, null, range);
 
 				return new Promise(function (resolve, reject) {
 					gcnPlugin.page.createTag({
@@ -1353,7 +1354,7 @@ define([
 
 					// Render the tag for edit-mode
 					return new Promise(function (resolve, reject) {
-						tag.edit(function(html, tag, data, frontendEditing) {
+						tag.edit(function (html, tag, data, frontendEditing) {
 							// Promises only allow one single value/parameter, therefore we create a "result" object for this
 							resolve({
 								html,
@@ -1364,8 +1365,15 @@ define([
 						}, reject);
 					});
 				}).then(function (response) {
+					var tmpRange = document.createRange();
+					tmpRange.setStartBefore($placeholder[0]);
+					tmpRange.collapse(true);
+
 					// Replace the placeholder with the rendered tag
-					$placeholder.replaceWith(response.html);
+					$placeholder.remove();
+					Tags.insert({
+						content: response.html,
+					}, null, new GENTICS.Utils.RangeObject(tmpRange));
 
 					// Trigger appropiate events
 					Aloha.trigger('gcn-block-handled', $placeholder);

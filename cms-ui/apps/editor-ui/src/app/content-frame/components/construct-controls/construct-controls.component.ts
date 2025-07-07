@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { AlohaEditable } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
 import { Construct, ConstructCategory } from '@gentics/cms-models';

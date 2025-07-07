@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaPlugin, AlohaRangeObject } from '@gentics/aloha-models';
 import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
+import { TagEditorOptions } from './tag-editor';
 
 export interface GCNPluginSettings {
     blocks?: GCNPluginBlockDefintion[];
@@ -110,14 +111,7 @@ export interface GCNLinkCheckerPluginSettings {
     tagtypeWhitelist?: string[];
 }
 
-export interface TagFillOptions {
-    /** If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well. */
-    skipInsert?: boolean;
-    /** If the tag-fill/user should be able to delete the tag in question. */
-    withDelete?: boolean;
-}
-
-export interface TagInsertOptions extends TagFillOptions {
+export interface TagInsertOptions extends TagEditorOptions {
     /** If it should skip/ignore the construct option `openEditorOnInsert` and not open the tag fill once the tag has been inserted. */
     skipInsertFill?: boolean;
 }
@@ -137,7 +131,7 @@ export interface GCNAlohaPlugin extends AlohaPlugin {
         content?: any,
         range?: Range | AlohaRangeObject,
     ): void;
-    openTagFill(tagId: string | number, pageId: string | number, options?: TagFillOptions): void;
+    openTagFill(tagId: string | number, pageId: string | number, options?: TagEditorOptions): void;
     insertNewTag(
         constructId: number,
         range?: Range | AlohaRangeObject,

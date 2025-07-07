@@ -152,7 +152,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 		client.setLogin("admin", "admin");
 
 		try (Timing tim = Timing.get(-1, duration -> {
-			System.out.println("Initial login took %d ms".formatted(duration));
+			log.info("Initial login took %d ms".formatted(duration));
 		})) {
 			client.login().blockingGet();
 		} catch (NodeException e) {

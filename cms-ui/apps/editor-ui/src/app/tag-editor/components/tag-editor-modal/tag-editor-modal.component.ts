@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
-import { ModalClosingReason, TagEditorContext, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { ModalCloseError, TagEditorContext, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { BaseModal } from '@gentics/ui-core';
 import { TagEditorHostComponent } from '../tag-editor-host/tag-editor-host.component';
 
@@ -25,12 +25,12 @@ export class TagEditorModal extends BaseModal<TagEditorResult> implements AfterV
         this.initEditor();
     }
 
-    protected async initEditor(): Promise<void> {
-        try {
-            const result = await this.host.editTag(this.context.editedTag, this.context);
+    protected initEditor(): Promise<void> {
+        return this.host.editTag(this.context.editedTag, this.context).then(result => {
             this.closeFn(result);
-        } catch (err) {
-            this.closeFn(null, ModalClosingReason.ERROR);
-        }
+        }).catch(reason => {
+            const err = new ModalCloseError(reason);
+            this.cancelFn(null, err.reason);
+        });
     }
 }

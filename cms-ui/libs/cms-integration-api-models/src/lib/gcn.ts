@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaPlugin, AlohaRangeObject } from '@gentics/aloha-models';
 import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
+import { TagEditorOptions } from './tag-editor';
 
 /** Aloha/Edit-Mode Tab-ID to insert/manage constructs in a Page. */
 export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
@@ -115,6 +116,11 @@ export interface GCNLinkCheckerPluginSettings {
     tagtypeWhitelist?: string[];
 }
 
+export interface TagInsertOptions extends TagEditorOptions {
+    /** If it should skip/ignore the construct option `openEditorOnInsert` and not open the tag fill once the tag has been inserted. */
+    skipInsertFill?: boolean;
+}
+
 export interface GCNAlohaPlugin extends AlohaPlugin {
     settings: GCNPluginSettings;
     createTag(
@@ -130,7 +136,12 @@ export interface GCNAlohaPlugin extends AlohaPlugin {
         content?: any,
         range?: Range | AlohaRangeObject,
     ): void;
-    openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
+    openTagFill(tagId: string | number, pageId: string | number, options?: TagEditorOptions): void;
+    insertNewTag(
+        constructId: number,
+        range?: Range | AlohaRangeObject,
+        options?: TagInsertOptions,
+    ): Promise<any>;
 }
 
 export interface GCNTags {

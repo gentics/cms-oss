@@ -1371,14 +1371,14 @@ define([
 
 					// Replace the placeholder with the rendered tag
 					$placeholder.remove();
-					Tags.insert({
+					var $inserted = Tags.insert({
 						content: result.html,
 					}, null, new GENTICS.Utils.RangeObject(tmpRange));
 
 					// Trigger appropiate events
-					Aloha.trigger('gcn-block-handled', $placeholder);
+					Aloha.trigger('gcn-block-handled', $inserted);
 					PubSub.pub('gcn.block.handled', {
-						$block: $placeholder
+						$block: $inserted
 					});
 
 					return new Promise(function (resolve, reject) {

@@ -1,5 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import {
+    AlohaBlockManager,
     AlohaComponent,
     AlohaComponentSetting,
     AlohaCoreComponentNames,
@@ -19,7 +20,7 @@ import {
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
 import { Construct } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
@@ -375,6 +376,16 @@ export class AlohaIntegrationService {
     public restoreSelection(): void {
         setTimeout(() => {
             if (!this.currentWindow) {
+                return;
+            }
+
+            const range = this.currentWindow.Aloha?.Selection?.getRangeObject?.();
+            if (range) {
+                let start = range.startContainer;
+                if (start.nodeType !== document.ELEMENT_NODE) {
+                    start = start.parentElement;
+                }
+                start.focus();
                 return;
             }
 

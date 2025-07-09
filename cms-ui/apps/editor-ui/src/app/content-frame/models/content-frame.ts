@@ -107,6 +107,7 @@ export interface AlohaGlobal {
     trigger(eventName: string, data: any): void;
     activeEditable?: AlohaEditable;
     getEditableById(id: string | number): AlohaEditable | null;
+    getEditableHost($element: JQuery): AlohaEditable | null;
     jQuery: JQueryStatic;
     scrollToSelection(): void;
 }

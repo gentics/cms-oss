@@ -57,7 +57,6 @@ module.exports = {
             },
         ],
         '@angular-eslint/directive-class-suffix': 'error',
-        '@angular-eslint/no-host-metadata-property': 'error',
         '@angular-eslint/no-input-rename': 'error',
         '@angular-eslint/no-inputs-metadata-property': 'error',
         '@angular-eslint/no-output-on-prefix': 'error',

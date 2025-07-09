@@ -20,7 +20,7 @@ services:
       retries: 3
 
   mesh:
-    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.0.0-SNAPSHOT}
+    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.1.0}
 
     environment:
       MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
@@ -55,6 +55,7 @@ services:
       ELASTICSEARCH_ENABLED: false
       ELASTICSEARCH_URL:
       CONF_FILES: cms
+      KEYCLOAK_ACTIVE: false
 
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example
@@ -83,4 +84,31 @@ services:
       mariadb:
         condition: service_healthy
       mesh:
+        condition: service_healthy
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.53.2-noble
+    entrypoint: "npx -y playwright@1.53.2 run-server --port 3000 --host 0.0.0.0"
+    ports:
+      - 3000:3000
+
+    extra_hosts:
+      - hostmachine:host-gateway
+
+    healthcheck:
+      test: [ "CMD", "curl",
+        "--include",
+        "--no-buffer",
+        "--header", "Connection: close",
+        "--header", "Upgrade: websocket",
+        "--header", "Sec-WebSocket-Version: 13",
+        "http://localhost:3000",
+      ]
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+    depends_on:
+      cms:
         condition: service_healthy

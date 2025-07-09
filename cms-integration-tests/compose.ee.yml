@@ -21,6 +21,7 @@ services:
       ELASTICSEARCH_ENABLED: "true"
       ELASTICSEARCH_URL: "http://elasticsearch:9200"
       LICENSEKEY: "${CI_LICENSEKEY:-}"
+      KEYCLOAK_ACTIVE: true
 
     volumes:
       - ./cms/ui-conf:/cms/ui-conf
@@ -66,10 +67,7 @@ services:
     healthcheck:
       # Really stupid health check because the keycloak image doesn't contain curl nor wget
       # https://stackoverflow.com/a/78229437
-      test: [
-        "CMD-SHELL",
-        'exec 3<>/dev/tcp/localhost/8080; echo -e "GET /health/ready HTTP/1.1\nhost: localhost:8080\n" >&3; timeout --preserve-status 1 cat <&3 | grep -m 1 status | grep -m 1 UP; ERROR=$?; exec 3<&-; exec 3>&-; exit $ERROR'
-      ]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $$? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;"]
       start_period: 300s
       # start_interval: 10s
       interval: 60s
@@ -114,3 +112,12 @@ services:
       interval: 60s
       timeout: 10s
       retries: 3
+
+  playwright:
+    extends:
+      file: compose.yml
+      service: playwright
+
+    extra_hosts:
+      - hostmachine:host-gateway
+      - "keycloak.localhost.gentics.com:host-gateway"

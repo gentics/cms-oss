@@ -173,6 +173,7 @@ node_modules/
 *.tgz
 # dotenv environment variable files
 .env
+!cms-ui/.env
 .env.development.local
 .env.test.local
 .env.production.local

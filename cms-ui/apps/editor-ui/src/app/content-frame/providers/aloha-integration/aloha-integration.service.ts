@@ -1,6 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
 import {
-    AlohaBlockManager,
     AlohaComponent,
     AlohaComponentSetting,
     AlohaCoreComponentNames,
@@ -20,7 +19,7 @@ import {
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
 import { Construct } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';

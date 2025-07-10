@@ -1,6 +1,6 @@
-import { createRange, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
+import { createRange, selectRange, selectText, updateAlohaRange, isCIEnvironment, ENV_BASE_URL } from '@gentics/e2e-utils';
 import { Locator, Page } from '@playwright/test';
-import { RENDERABLE_ALOHA_COMPONENTS } from './common';
+import { RENDERABLE_ALOHA_COMPONENTS, LoginData } from './common';
 
 export interface HelperWindow extends Window {
     createRange: typeof createRange;
@@ -19,6 +19,28 @@ const AUTH = {
         password: 'node',
     },
 };
+
+export async function navigateToApp(page: Page, path: string = '/', omitSkipSSO?: boolean): Promise<void> {
+    const hasBasePathOverride = !!process.env[ENV_BASE_URL];
+    const isCI = isCIEnvironment();
+
+    const fullPath = `${isCI && !hasBasePathOverride ? '/admin' : ''}/${!omitSkipSSO ? '?skip-sso' : ''}#/${path}`;
+    await page.goto(fullPath);
+}
+
+export async function loginWithForm(source: Page | Locator, login: (keyof typeof AUTH) | LoginData): Promise<void> {
+    // Get auth data and login
+    const loginData: LoginData = typeof login === 'string' ? AUTH[login] : login;
+    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
+        .first()
+        .fill(loginData.username);
+    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
+        .first()
+        .fill(loginData.password);
+    await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
+        .first()
+        .click();
+}
 
 export async function login(page: Page, account: string): Promise<void> {
     const data = AUTH[account];
@@ -48,7 +70,7 @@ export async function openContext(element: Locator): Promise<Locator> {
         throw new Error(`Cannot open element context, since attribute "${ATTR_ID}" is missing!`);
     }
 
-    await element.locator('gtx-dropdown-trigger [data-context-trigger]').click();
+    await element.locator('gtx-dropdown-trigger gtx-button[data-context-trigger]').click();
     return element.page().locator(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
 }
 
@@ -81,7 +103,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
-    await page.click('content-frame .content-frame-container>.properties-tabs .tab-link[data-id="properties"]');
+    await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');
 }
 
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {

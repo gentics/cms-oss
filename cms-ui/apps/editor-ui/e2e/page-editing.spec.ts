@@ -29,7 +29,7 @@ import {
 } from './helpers';
 
 // Skipped until we find out why it can't find the iframe content in jenkins
-test.describe.skip('Page Editing', () => {
+test.describe('Page Editing', () => {
     // Mark this suite as slow - Because it is
     test.slow();
 
@@ -51,10 +51,9 @@ test.describe.skip('Page Editing', () => {
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
         await initPage(page);
-
         await page.goto('/');
         await login(page, AUTH_ADMIN);
-        await selectNode(page, IMPORTER.get(minimalNode).id);
+        await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
     test.describe('Edit Mode', () => {
